@@ -1,0 +1,11 @@
+jobs:
+
+  ci:
+    name: ci
+    uses: ecmwf-actions/reusable-workflows/.github/workflows/ci-python.yml@v1
+    with:
+      codecov_upload: true
+      notify_teams: false
+      build_package_inputs: |
+        self_build: false
+    secrets: []
