@@ -1,0 +1,4 @@
+examples/data/*.grib filter=lfs diff=lfs merge=lfs -text
+examples/data/*.jpg filter=lfs diff=lfs merge=lfs -text
+examples/data/*.shp filter=lfs diff=lfs merge=lfs -text
+tests/data/*.grib filter=lfs diff=lfs merge=lfs -text
