@@ -1,3 +1,26 @@
+name: ci
+
+# Controls when the workflow will run
+on:
+
+  # Trigger the workflow on all pushes
+  push:
+    branches:
+    - '**'
+    tags:
+    - '**'
+
+  # Trigger the workflow on all pull requests
+  pull_request: ~
+
+  # Trigger the workflow on release creation
+  release:
+    types:
+    - created
+
+  # Allow workflow to be dispatched on demand
+  workflow_dispatch: ~
+
 jobs:
 
   ci:
