@@ -1,13 +1,11 @@
-import xarray as xr
 import numpy as np
-from decimal import *
+import xarray as xr
 
+from polytope.datacube.datacube_axis import IntAxis
 from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
-from polytope.shapes import *
 from polytope.polytope import Polytope
-from polytope.datacube.datacube_axis import IntAxis
-
+from polytope.shapes import Box
 
 
 class TestRequestTreesAfterSlicing():
@@ -15,29 +13,28 @@ class TestRequestTreesAfterSlicing():
     def setup_method(self, method):
 
         array = xr.DataArray(
-            np.random.randn(4,100),
-            dims=("step","level"),
+            np.random.randn(4, 100),
+            dims=("step", "level"),
             coords={
                 "step": np.arange(3, 15, 3),
-                "level": np.arange(0,100,1),
+                "level": np.arange(0, 100, 1),
             }
         )
-
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)
 
     def test_path_values(self):
-        box = Box(["step", "level"],[3.,1.],[6.,3.])
+        box = Box(["step", "level"], [3., 1.], [6., 3.])
         polytope = box.polytope()
         request = self.slicer.extract(self.xarraydatacube, polytope)
         datacube_path = request.leaves[0].flatten()
-        request.pprint()
-        assert datacube_path.values() == tuple([3.,1.])
+        # request.pprint()
+        assert datacube_path.values() == tuple([3., 1.])
         assert len(datacube_path.values()) == 2
 
     def test_path_keys(self):
-        box = Box(["step", "level"],[3.,1.],[6.,3.])
+        box = Box(["step", "level"], [3., 1.], [6., 3.])
         polytope = box.polytope()
         request = self.slicer.extract(self.xarraydatacube, polytope)
         datacube_path = request.leaves[0].flatten()
@@ -45,14 +42,14 @@ class TestRequestTreesAfterSlicing():
         assert datacube_path.keys()[1] == "level"
 
     def test_path_pprint(self):
-        box = Box(["step", "level"],[3.,1.],[6.,3.])
+        box = Box(["step", "level"], [3., 1.], [6., 3.])
         polytope = box.polytope()
         request = self.slicer.extract(self.xarraydatacube, polytope)
         datacube_path = request.leaves[0].flatten()
         datacube_path.pprint()
 
     def test_flatten(self):
-        box = Box(["step", "level"],[3.,1.],[6.,3.])
+        box = Box(["step", "level"], [3., 1.], [6., 3.])
         polytope = box.polytope()
         request = self.slicer.extract(self.xarraydatacube, polytope)
         path = request.leaves[0].flatten()
@@ -60,7 +57,7 @@ class TestRequestTreesAfterSlicing():
         assert path["level"] == 1.
 
     def test_add_child(self):
-        box = Box(["step", "level"],[3.,1.],[6.,3.])
+        box = Box(["step", "level"], [3., 1.], [6., 3.])
         polytope = box.polytope()
         request = self.slicer.extract(self.xarraydatacube, polytope)
         request1 = request.leaves[0]
@@ -78,13 +75,13 @@ class TestRequestTreesAfterSlicing():
         assert request1.create_child(axis2, 3.).value == 3.
 
     def test_pprint(self):
-        box = Box(["step", "level"],[3.,1.],[6.,3.])
+        box = Box(["step", "level"], [3., 1.], [6., 3.])
         polytope = box.polytope()
         request = self.slicer.extract(self.xarraydatacube, polytope)
         request.pprint()
 
     def test_remove_branch(self):
-        box = Box(["step", "level"],[3.,1.],[6.,3.])
+        box = Box(["step", "level"], [3., 1.], [6., 3.])
         polytope = box.polytope()
         request = self.slicer.extract(self.xarraydatacube, polytope)
         prev_request_size = len(request.leaves)
@@ -99,4 +96,4 @@ class TestRequestTreesAfterSlicing():
         request1 = request.create_child(axis1, 1.)
         request2 = request1.create_child(axis2, 0.)
         request2.remove_branch()
-        assert request1.is_root() # removed from original
+        assert request1.is_root()  # removed from original

@@ -1,7 +1,8 @@
 import pytest
 
-from polytope.utility.exceptions import AxisOverdefinedError, AxisNotFoundError
 from polytope.datacube.mock import MockDatacube
+from polytope.utility.exceptions import AxisNotFoundError, AxisOverdefinedError
+
 
 class TestMockDatacube():
 
@@ -17,10 +18,9 @@ class TestMockDatacube():
 
         with pytest.raises(AxisNotFoundError):
             datacube.validate(["x", "y", "z", "w"])
-        
+
         with pytest.raises(AxisNotFoundError):
             datacube.validate(["w", "x", "y", "z"])
 
         with pytest.raises(AxisOverdefinedError):
             datacube.validate(["x", "x", "y", "z"])
-        

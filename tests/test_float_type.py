@@ -1,12 +1,12 @@
-import xarray as xr
 import numpy as np
 import pytest
-from decimal import *
+import xarray as xr
 
 from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
-from polytope.shapes import *
-from polytope.polytope import Request, Polytope
+from polytope.polytope import Polytope, Request
+from polytope.shapes import Select, Span
+
 
 class TestFloatType():
 
@@ -29,67 +29,65 @@ class TestFloatType():
     def test_slicing_span(self):
         # TODO: some problems with floating point values and values inside the datacube being slightly off.
         # This has been fixed by introducing tolerances, but could be better handled using exact arithmetic.
-        
         request = Request(
-            Span("lat", 4.1,4.3),
-            Select("long",[4.1]),
-            Select("alt",[4.1])
+            Span("lat", 4.1, 4.3),
+            Select("long", [4.1]),
+            Select("alt", [4.1])
         )
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 3
 
     def test_slicing_point(self):
-    
+
         request = Request(
             Select("lat", [4.1]),
-            Select("long",[4.1]),
-            Select("alt",[4.1])
+            Select("long", [4.1]),
+            Select("alt", [4.1])
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 1 and result.leaves[0].is_root() == False
-
+        assert len(result.leaves) == 1 and not result.leaves[0].is_root()
 
     @pytest.mark.skip(reason="Points too close, need exact arithmetic")
     def test_slicing_very_close_point(self):
-        
+
         request = Request(
             Select("lat", [4.1]),
-            Select("long",[4.0999919,4.1]),
-            Select("alt",[4.1])
+            Select("long", [4.0999919, 4.1]),
+            Select("alt", [4.1])
         )
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 1
 
     def test_slicing_points_higher_precision(self):
-        
+
         request = Request(
             Select("lat", [4.12]),
-            Select("long",[4.1]),
-            Select("alt",[4.1])
+            Select("long", [4.1]),
+            Select("alt", [4.1])
         )
         result = self.API.retrieve(request)
         result.pprint()
         assert result.leaves[0].is_root()
 
     def test_slicing_points_empty_span_higher_precision(self):
-        
+
         request = Request(
             Span("lat", 4.11, 4.12),
-            Select("long",[4.1]),
-            Select("alt",[4.1])
+            Select("long", [4.1]),
+            Select("alt", [4.1])
         )
         result = self.API.retrieve(request)
         assert result.leaves[0].is_root()
 
     def test_slicing_points_span_higher_precision(self):
-        
+
         request = Request(
             Span("lat", 4.09, 4.12),
-            Select("long",[4.1]),
-            Select("alt",[4.1])
+            Select("long", [4.1]),
+            Select("alt", [4.1])
         )
         result = self.API.retrieve(request)
-        assert result.leaves[0].is_root() == False and len(result.leaves) == 1
+        assert not result.leaves[0].is_root() and len(result.leaves) == 1

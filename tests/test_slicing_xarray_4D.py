@@ -1,14 +1,24 @@
-import xarray as xr
 import numpy as np
 import pandas as pd
 import pytest
+import xarray as xr
 
+from polytope.datacube.datacube_request_tree import DatacubeRequestTree
 from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
-from polytope.shapes import *
-from polytope.polytope import Request, Polytope
-from polytope.utility.exceptions import AxisUnderdefinedError, AxisOverdefinedError
-from polytope.datacube.datacube_request_tree import DatacubeRequestTree
+from polytope.polytope import Polytope, Request
+from polytope.shapes import (
+    Box,
+    Disk,
+    Ellipsoid,
+    Path,
+    PathSegment,
+    Polygon,
+    Select,
+    Span,
+    Union,
+)
+from polytope.utility.exceptions import AxisOverdefinedError, AxisUnderdefinedError
 
 
 class TestSlicing4DXarrayDatacube():
@@ -21,8 +31,8 @@ class TestSlicing4DXarrayDatacube():
             coords={
                 "date": pd.date_range("2000-01-01", "2000-01-03", 3),
                 "step": [0, 3, 6, 9, 12, 15, 18],
-                "level": range(1,130), 
-                "lat": np.around(np.arange(0.,10.,0.1), 15)
+                "level": range(1, 130),
+                "lat": np.around(np.arange(0., 10., 0.1), 15)
             }
         )
 
@@ -30,11 +40,7 @@ class TestSlicing4DXarrayDatacube():
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)
 
-
-
-
     # Testing different shapes
-
 
     def test_3D_box(self):
 
@@ -45,12 +51,10 @@ class TestSlicing4DXarrayDatacube():
         result = self.API.retrieve(request)
         assert len(result.leaves) == 2*2*11
 
-
     def test_4D_box(self):
         request = Request(
             Box(["step", "level", "lat", "date"], [3, 10, 5., "2000-01-01"], [6, 11, 6., "2000-01-02"]),
         )
-         
         result = self.API.retrieve(request)
         assert len(result.leaves) == 2*2*11*2
 
@@ -65,9 +69,9 @@ class TestSlicing4DXarrayDatacube():
         assert len(result.leaves) == 37
 
     def test_circles_barely_touching_int(self):
-    
-        disk1= Disk(["step", "level"], [6, 10], [5.9, 6])
-        disk2= Disk(["step", "level"], [15, 10], [2.9, 3])
+
+        disk1 = Disk(["step", "level"], [6, 10], [5.9, 6])
+        disk2 = Disk(["step", "level"], [15, 10], [2.9, 3])
         request = Request(
             Union(['step', 'level'], disk1, disk2),
             Select("date", ["2000-01-01"]),
@@ -78,8 +82,8 @@ class TestSlicing4DXarrayDatacube():
 
     def test_circles_intersecting_float(self):
 
-        disk1= Disk(["step", "lat"], [6, 4.], [6.99, 0.1])
-        disk2= Disk(["step", "lat"], [15, 2.], [4.99, 0.3])
+        disk1 = Disk(["step", "lat"], [6, 4.], [6.99, 0.1])
+        disk2 = Disk(["step", "lat"], [15, 2.], [4.99, 0.3])
         request = Request(
             Union(['step', 'lat'], disk1, disk2),
             Select("date", ["2000-01-01"]),
@@ -90,10 +94,10 @@ class TestSlicing4DXarrayDatacube():
 
     def test_circles_touching_float(self):
 
-        disk1= Disk(["step", "lat"], [6, 4.], [3, 1.9])
-        disk2= Disk(["step", "lat"], [15, 2.], [3, 2.1])
+        disk1 = Disk(["step", "lat"], [6, 4.], [3, 1.9])
+        disk2 = Disk(["step", "lat"], [15, 2.], [3, 2.1])
         request = Request(
-            Union(['step','lat'], disk1, disk2),
+            Union(['step', 'lat'], disk1, disk2),
             Select("date", ["2000-01-01"]),
             Select("level", [10])
         )
@@ -161,9 +165,9 @@ class TestSlicing4DXarrayDatacube():
 
     def test_polygon_other_than_triangle(self):
 
-        polygon = Polygon(["step", "level"], [[3,3],[3,5], [6,5], [6,7]])
+        polygon = Polygon(["step", "level"], [[3, 3], [3, 5], [6, 5], [6, 7]])
         request = Request(
-            polygon, 
+            polygon,
             Select("lat", [4.3]),
             Select("date", ["2000-01-01"])
         )
@@ -172,19 +176,15 @@ class TestSlicing4DXarrayDatacube():
 
     def test_ellipsoid(self):
 
-        ellipsoid = Ellipsoid(["step", "level", "lat"],[6, 3, 2.1],[3,1,0.1])
+        ellipsoid = Ellipsoid(["step", "level", "lat"], [6, 3, 2.1], [3, 1, 0.1])
         request = Request(
-            ellipsoid, 
+            ellipsoid,
             Select("date", ["2000-01-01"])
         )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 7
 
-
-
     # Testing empty shapes
-
-
 
     def test_empty_circle(self):
         # Slices a circle with no data inside
@@ -195,7 +195,7 @@ class TestSlicing4DXarrayDatacube():
         )
         result = self.API.retrieve(request)
         assert result.leaves[0].axis == DatacubeRequestTree.root
-    
+
     def test_float_box(self):
         # Slices a box with no data inside
         request = Request(
@@ -230,23 +230,20 @@ class TestSlicing4DXarrayDatacube():
 
     def test_ellipsoid_empty(self):
         # Slices an empty ellipsoid which doesn't have any step value
-        ellipsoid = Ellipsoid(["step", "level", "lat"],[5, 3, 2.1],[0,0,0])
+        ellipsoid = Ellipsoid(["step", "level", "lat"], [5, 3, 2.1], [0, 0, 0])
         request = Request(
-            ellipsoid, 
+            ellipsoid,
             Select("date", ["2000-01-01"])
         )
-        result = self.API.retrieve(request)   
+        result = self.API.retrieve(request)
         assert result.leaves[0].axis == DatacubeRequestTree.root
 
-
     # Testing special properties
-
-
 
     def test_span_bounds(self):
         # Tests that span also works in reverse order
         request = Request(
-            Span("level", 100, 98), 
+            Span("level", 100, 98),
             Select("step", [3]),
             Select("lat", [5.5]),
             Select("date", ["2000-01-01"])
@@ -254,26 +251,21 @@ class TestSlicing4DXarrayDatacube():
         result = self.API.retrieve(request)
         assert len(result.leaves) == 3
 
-    
-
-
-
     # Testing edge cases
 
     def test_ellipsoid_one_point(self):
         # Slices through a point (center of the ellipsoid)
-        ellipsoid = Ellipsoid(["step", "level", "lat"],[6, 3, 2.1],[0,0,0])
+        ellipsoid = Ellipsoid(["step", "level", "lat"], [6, 3, 2.1], [0, 0, 0])
         request = Request(
-            ellipsoid, 
+            ellipsoid,
             Select("date", ["2000-01-01"])
         )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
         assert not result.leaves[0].axis == DatacubeRequestTree.root
 
-
     def test_flat_box_level(self):
-       # Slices a line in the step direction
+        # Slices a line in the step direction
         request = Request(
             Select("lat", [6]),
             Box(["level", "step"], [3, 3], [3, 9]),
@@ -325,7 +317,7 @@ class TestSlicing4DXarrayDatacube():
         assert len(result.leaves) == 3
 
     def test_flat_disk_empty(self):
-        # Slices an empty disk because there is no step 
+        # Slices an empty disk because there is no step
         request = Request(
             Disk(["level", "step"], [4, 5], [0, 0.5]),
             Select("lat", [6]),
@@ -334,7 +326,7 @@ class TestSlicing4DXarrayDatacube():
         result = self.API.retrieve(request)
         # result.pprint()
         assert result.leaves[0].axis == DatacubeRequestTree.root
-    
+
     def test_disk_point(self):
         # Slices a point because the origin of the disk is a datacube point
         request = Request(
@@ -360,9 +352,9 @@ class TestSlicing4DXarrayDatacube():
 
     def test_polygon_line(self):
         # Slices a line defined through the polygon shape
-        polygon = Polygon(["step", "level"], [[3,3], [3,6], [3,3], [3,3]])
+        polygon = Polygon(["step", "level"], [[3, 3], [3, 6], [3, 3], [3, 3]])
         request = Request(
-            polygon, 
+            polygon,
             Select("lat", [4.3]),
             Select("date", ["2000-01-01"])
         )
@@ -370,13 +362,12 @@ class TestSlicing4DXarrayDatacube():
         # result.pprint()
         assert len(result.leaves) == 4
 
-
     def test_polygon_point(self):
         # Slices a point defined through the polygon object with several initial point entries.
         # Tests whether duplicate points are removed as they should
-        polygon = Polygon(["step", "level"], [[3,3], [3,3], [3,3], [3,3]])
+        polygon = Polygon(["step", "level"], [[3, 3], [3, 3], [3, 3], [3, 3]])
         request = Request(
-            polygon, 
+            polygon,
             Select("lat", [4.3]),
             Select("date", ["2000-01-01"])
         )
@@ -389,7 +380,7 @@ class TestSlicing4DXarrayDatacube():
         # Slices a point which isn't in the datacube (defined through the polygon shape)
         polygon = Polygon(["step", "level"], [[2, 3.1]])
         request = Request(
-            polygon, 
+            polygon,
             Select("lat", [4.3]),
             Select("date", ["2000-01-01"])
         )
@@ -399,21 +390,21 @@ class TestSlicing4DXarrayDatacube():
 # Test exceptions are returned correctly
 
     def test_axis_specified_twice(self):
-        with pytest.raises(AxisOverdefinedError):  
-            request = Request(
-            Box(["step", "level"], [3, 10], [6, 11]),
-            Box(["step", "lat", "date"], [3, 5., "2000-01-01"], [6, 6., "2000-01-02"])
-            ) 
+        with pytest.raises(AxisOverdefinedError):
+            request = Request(Box(["step", "level"], [3, 10], [6, 11]),
+                              Box(["step", "lat", "date"], [3, 5., "2000-01-01"], [6, 6., "2000-01-02"])
+                              )
             result = self.API.retrieve(request)
+            result.pprint()
 
     def test_not_all_axes_defined(self):
         with pytest.raises(AxisUnderdefinedError):
-            request = Request(Box(["step", "level"], [3,10], [6,11]))
+            request = Request(Box(["step", "level"], [3, 10], [6, 11]))
             result = self.API.retrieve(request)
+            result.pprint()
 
     def test_not_all_axes_exist(self):
         with pytest.raises(KeyError):
-            request = Request(Box(["weather", "level"], [3,10], [6,11]))
+            request = Request(Box(["weather", "level"], [3, 10], [6, 11]))
             result = self.API.retrieve(request)
-        
-        
+            result.pprint()

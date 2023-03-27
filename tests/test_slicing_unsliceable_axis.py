@@ -1,13 +1,14 @@
-import xarray as xr
 import numpy as np
 import pandas as pd
 import pytest
+import xarray as xr
 
 from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
-from polytope.shapes import *
-from polytope.polytope import Request, Polytope
+from polytope.polytope import Polytope, Request
+from polytope.shapes import Box, Select
 from polytope.utility.exceptions import UnsliceableShapeError
+
 
 class TestSlicing3DXarrayDatacube():
 
@@ -26,19 +27,14 @@ class TestSlicing3DXarrayDatacube():
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)
 
-
-
-
     # Testing different shapes
-
-
 
     def test_finding_existing_variable(self):
 
         request = Request(
             Box(["level"], [10], [11]),
             Select("date", ["2000-01-01"]),
-            Select("variable", ["a"])  
+            Select("variable", ["a"])
         )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 2
@@ -47,11 +43,11 @@ class TestSlicing3DXarrayDatacube():
         request = Request(
             Box(["level"], [10], [11]),
             Select("date", ["2000-01-01"]),
-            Select("variable", ["b"])  
+            Select("variable", ["b"])
         )
         with pytest.raises(ValueError):
             result = self.API.retrieve(request)
-        
+            result.pprint()
 
     def test_unsliceable_axis_in_a_shape(self):
         # does it work when we ask a box or disk of an unsliceable axis?
@@ -61,5 +57,4 @@ class TestSlicing3DXarrayDatacube():
         )
         with pytest.raises(UnsliceableShapeError):
             result = self.API.retrieve(request)
-
-
+            result.pprint()
