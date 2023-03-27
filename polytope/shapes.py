@@ -1,11 +1,11 @@
+import copy
+import math
 from abc import ABC, abstractmethod
 from typing import List
-import math
-import copy
+
 # import PIL.ImageDraw as ImageDraw
 # import PIL.Image as Image
 import tripy
-
 
 """
 Shapes used for the constructive geometry API of Polytope
@@ -16,12 +16,13 @@ class Shape(ABC):
     """Represents a multi-axis shape to be expanded"""
 
     @abstractmethod
-    def polytope():
+    def polytope(self):
         raise NotImplementedError()
 
     @abstractmethod
-    def axes() -> List[str]:
+    def axes(self) -> List[str]:
         raise NotImplementedError()
+
 
 class ConvexPolytope(Shape):
     def __init__(self, axes, points):
@@ -31,16 +32,16 @@ class ConvexPolytope(Shape):
     def extents(self, axis):
         slice_axis_idx = self.axes().index(axis)
         axis_values = [point[slice_axis_idx] for point in self.points]
-        lower = min( axis_values )
-        upper = max( axis_values )
+        lower = min(axis_values)
+        upper = max(axis_values)
         return (lower, upper)
-    
+
     def __str__(self):
         return f"Polytope in {self.axes} with points {self.points}"
 
     def axes(self):
         return self._axes
-    
+
     def polytope(self):
         return [self]
 
@@ -90,9 +91,9 @@ class Box(Shape):
         assert len(lower_corner) == dimension
         assert len(upper_corner) == dimension
 
-        if lower_corner == None:
+        if lower_corner is None:
             lower_corner = [-math.inf] * dimension
-        if upper_corner == None:
+        if upper_corner is None:
             upper_corner = [math.inf] * dimension
 
         # Build every vertex of the box from the two extremes
@@ -143,7 +144,6 @@ class Disk(Shape):
             y = centre[1] + self.points[i][1] * radius[1]
             self.points[i] = [x, y]
 
-
     # def _plot(self):
 
     #     CANVAS = (3200, 2400)
@@ -188,7 +188,7 @@ class Disk(Shape):
 class Ellipsoid(Shape):
     # Here we use the formula for the inscribed circle in an icosahedron
     # See https://en.wikipedia.org/wiki/Platonic_solid
-    
+
     def __init__(self, axes, centre=[0, 0, 0], radius=[1, 1, 1]):
 
         self._axes = axes
@@ -207,7 +207,7 @@ class Ellipsoid(Shape):
             y = centre[1] + self.points[i][1] * radius[1]
             z = centre[2] + self.points[i][2] * radius[2]
             self.points[i] = [x, y, z]
-    
+
     def axes(self):
         return self._axes
 
@@ -218,10 +218,10 @@ class Ellipsoid(Shape):
             [0, coeff/2, -coeff * golden_ratio/2],
             [0, -coeff/2, coeff * golden_ratio/2],
             [0, -coeff/2, -coeff * golden_ratio/2],
-            [coeff/2, coeff * golden_ratio/2,0],
-            [coeff/2, -coeff * golden_ratio/2,0],
-            [-coeff/2, coeff * golden_ratio/2,0],
-            [-coeff/2, -coeff * golden_ratio/2,0],
+            [coeff/2, coeff * golden_ratio/2, 0],
+            [coeff/2, -coeff * golden_ratio/2, 0],
+            [-coeff/2, coeff * golden_ratio/2, 0],
+            [-coeff/2, -coeff * golden_ratio/2, 0],
             [coeff * golden_ratio/2, 0, coeff/2],
             [coeff * golden_ratio/2, 0, -coeff/2],
             [-coeff * golden_ratio/2, 0, coeff/2],
@@ -311,7 +311,7 @@ class Union(Shape):
         self.polytopes = []
 
         for s in shapes:
-            # TODO: Maybe here if it is a certain shape with not many polytopes, use append instead of extend? Didn't help...
+            # TODO: Maybe here if it is a certain shape with not many polytopes, use append instead of extend?
             self.polytopes.extend(s.polytope())
 
     def axes(self):
@@ -333,7 +333,7 @@ class Polygon(Shape):
         triangles = tripy.earclip(points)
         self.polytopes = []
 
-        if len(points)>0 and len(triangles)==0:
+        if len(points) > 0 and len(triangles) == 0:
             self.polytopes = [ConvexPolytope(self.axes(), points)]
 
         else:

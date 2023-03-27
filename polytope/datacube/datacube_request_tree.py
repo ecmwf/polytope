@@ -1,8 +1,10 @@
-from sortedcontainers import SortedList
-from typing import OrderedDict
 import json
+from typing import OrderedDict
+
+from sortedcontainers import SortedList
 
 from .datacube_axis import IntAxis
+
 
 class DatacubePath(OrderedDict):
 
@@ -25,7 +27,7 @@ class DatacubeRequestTree(object):
     root.name = "root"
 
     def __init__(self, axis=root, value=None):
-        self.value = value 
+        self.value = value
         self.children = SortedList()
         self._parent = None
         self.result = None
@@ -54,12 +56,12 @@ class DatacubeRequestTree(object):
 
     def __hash__(self):
         return hash((self.axis.name, self.value))
-    
+
     def __eq__(self, other):
         if not isinstance(other, DatacubeRequestTree):
             return False
         return (self.axis.name, self.value) == (other.axis.name, other.value)
-    
+
     def __lt__(self, other):
         return (self.axis.name, self.value) < (other.axis.name, other.value)
 
@@ -86,27 +88,26 @@ class DatacubeRequestTree(object):
             return node
         return existing
 
-    @property 
+    @property
     def parent(self):
         return self._parent
-    
+
     @parent.setter
     def set_parent(self, node):
-        if self.parent != None:
+        if self.parent is not None:
             self.parent.children.remove(self)
         self._parent = node
         self._parent.children.add(self)
 
-
     def get_root(self):
         node = self
-        while node.parent != None:
+        while node.parent is not None:
             node = node.parent
         return node
 
     def is_root(self):
-        return self.parent == None
-    
+        return self.parent is None
+
     def find_child(self, node):
         index = self.children.bisect_left(node)
         if index >= len(self.children):
@@ -116,7 +117,6 @@ class DatacubeRequestTree(object):
             return None
         return child
 
-
     def merge(self, other):
         for other_child in other.children:
             my_child = self.find_child(other_child)
@@ -124,7 +124,6 @@ class DatacubeRequestTree(object):
                 self.add_child(other_child)
             else:
                 my_child.merge(other_child)
-
 
     def intersect(self, other):
         for my_child in self.children:
@@ -134,14 +133,12 @@ class DatacubeRequestTree(object):
             else:
                 my_child.intersect(other_child)
 
-
     def pprint(self, level=0):
         if self.axis == "root":
             print("\n")
         print("\t"*level + "\u21b3" + str(self))
         for child in self.children:
             child.pprint(level+1)
-
 
     def remove_branch(self):
         if not self.is_root():
@@ -166,11 +163,11 @@ class DatacubeRequestTree(object):
             current_node = current_node.parent
         return ancestors[::-1]
 
-
     def to_dict(self):
         dico = dict()
         if self.children != []:
-            # Need to create these lists in case different children have different axis and we need to give values to each axis
+            # Need to create these lists in case different children have different axis and we need to give values
+            # to each axis
             axis_names = [c.axis.name for c in self.children]
             sub_dicts = [dict() for axis in axis_names]
             for i in range(len(axis_names)):
@@ -180,14 +177,9 @@ class DatacubeRequestTree(object):
                 axis_name = c.axis.name
                 dico[axis_name][key] = c.to_dict()
         if self.children == []:
-                return self.result
+            return self.result
         return dico
-
-
 
     def to_json(self):
         dico = self.to_dict()
         return json.dumps(dico, default=str)
-
-
-
