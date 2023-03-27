@@ -1,18 +1,18 @@
+import time
+
 import numpy as np
 import xarray as xr
-import time
 
 from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
+from polytope.polytope import Polytope, Request
 from polytope.shapes import *
-from polytope.polytope import Request, Polytope
-
 
 
 class Test():
 
     def setup_method(self):
-        array = xr.open_dataset("temp_model_levels.grib", engine='cfgrib')
+        array = xr.open_dataset("../examples/data/temp_model_levels.grib", engine='cfgrib')
         options= {"longitude":{"Cyclic":[0,360.]}}
         self.xarraydatacube = XArrayDatacube(array)
         for dim in array.dims:
