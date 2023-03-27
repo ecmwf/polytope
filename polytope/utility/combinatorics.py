@@ -1,9 +1,10 @@
-from typing import List
 import itertools
 from collections import Counter
+from typing import List
 
 from ..shapes import ConvexPolytope
-from .exceptions import AxisOverdefinedError, AxisUnderdefinedError, AxisNotFoundError
+from .exceptions import AxisNotFoundError, AxisOverdefinedError, AxisUnderdefinedError
+
 
 def group(polytopes: List[ConvexPolytope]):
 
@@ -22,6 +23,7 @@ def product(groups):
 
     # Compute the tensor product of polytope groups
     return list(itertools.product(*groups.values()))
+
 
 def validate_axes(actual_axes, test_axes):
 
@@ -46,12 +48,14 @@ def validate_axes(actual_axes, test_axes):
 
 def unique(points):
     points.sort()
-    points = [k for k,_ in itertools.groupby(points)]
+    points = [k for k, _ in itertools.groupby(points)]
     return points
+
 
 def argmin(points):
     amin = min(range(len(points)), key=points.__getitem__)
-    return amin 
+    return amin
+
 
 def argmax(points):
     amax = max(range(len(points)), key=points.__getitem__)

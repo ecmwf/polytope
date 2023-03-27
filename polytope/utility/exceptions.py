@@ -18,6 +18,7 @@ class AxisNotFoundError(KeyError):
         self.axis = axis
         self.message = f"Axis {axis} does not exist in the datacube."
 
+
 class UnsliceableShapeError(KeyError):
     def __init__(self, axis):
         self.axis = axis
