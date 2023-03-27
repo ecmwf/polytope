@@ -5,13 +5,13 @@ decorator==5.1.1
 eccodes==1.5.0
 ee==0.2
 Fiona==1.8.22
+numpy==1.23.5
 GDAL==3.5.3
 geopandas==0.12.2
 h5netcdf==1.1.0
 h5py==3.8.0
 matplotlib==3.6.2
 matplotlib-inline==0.1.6
-numpy==1.23.5
 pandas==1.5.2
 Pillow==9.3.0
 pip==22.3.1
