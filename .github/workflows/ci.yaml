@@ -8,4 +8,3 @@ jobs:
       notify_teams: false
       build_package_inputs: |
         self_build: false
-    secrets: []
