@@ -7,22 +7,19 @@ from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
 
 
-class TestSlicingEra5Data():
-
+class TestSlicingEra5Data:
     def setup_method(self, method):
-
-        array = xr.open_dataset("./tests/data/era5-levels-members.grib", engine='cfgrib')
+        array = xr.open_dataset("./tests/data/era5-levels-members.grib", engine="cfgrib")
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)
 
     @pytest.mark.skip(reason="Doesn't work because git lfs data not downloaded")
     def test_2D_box(self):
-
         request = Request(
             Box(["number", "isobaricInhPa"], [3, 0.0], [6, 1000.0]),
             Select("time", ["2017-01-02T12:00:00"]),
-            Box(["latitude", "longitude"], lower_corner=[10.0, 0.0], upper_corner=[0.0, 30.0])
+            Box(["latitude", "longitude"], lower_corner=[10.0, 0.0], upper_corner=[0.0, 30.0]),
         )
 
         result = self.API.retrieve(request)

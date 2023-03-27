@@ -35,11 +35,12 @@ class Request:
 #       which builds its datacube. No need to create the "pair" here.
 #       Engine could be renamed "extractor" or something more descriptive.
 
-class Polytope:
 
+class Polytope:
     def __init__(self, datacube, engine, options={}):
         from .datacube import Datacube
         from .engine import Engine
+
         self.datacube = Datacube.create(datacube, options)
         self.engine = engine if engine is not None else Engine.default()
 

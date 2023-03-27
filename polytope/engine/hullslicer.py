@@ -14,7 +14,6 @@ from .engine import Engine
 
 
 class HullSlicer(Engine):
-
     def __init__(self):
         pass
 
@@ -51,7 +50,6 @@ class HullSlicer(Engine):
                 for node in current_nodes:
                     for polytope in node["unsliced_polytopes"]:
                         if axis_name in polytope.axes():
-
                             lower, upper = polytope.extents(axis_name)
 
                             # here, first check if the axis is an unsliceable axis and directly build node if it is
@@ -93,7 +91,6 @@ class HullSlicer(Engine):
 
 
 def slice(polytope: ConvexPolytope, axis, value):
-
     slice_axis_idx = polytope._axes.index(axis)
 
     if len(polytope.points[0]) == 1:
@@ -116,14 +113,13 @@ def slice(polytope: ConvexPolytope, axis, value):
 
         for a in above_slice:
             for b in below_slice:
-
                 # edge is incident with slice plane, don't need these points
                 if a[slice_axis_idx] == b[slice_axis_idx]:
                     intersects.append(b)
                     continue
 
                 # Linearly interpolate all coordinates of two points (a,b) of the polytope
-                interp_coeff = (value-b[slice_axis_idx])/(a[slice_axis_idx] - b[slice_axis_idx])
+                interp_coeff = (value - b[slice_axis_idx]) / (a[slice_axis_idx] - b[slice_axis_idx])
                 intersect = lerp(a, b, interp_coeff)
                 intersects.append(intersect)
 
@@ -141,7 +137,7 @@ def slice(polytope: ConvexPolytope, axis, value):
 
     axes = [ax for ax in polytope.axes() if ax != axis]
 
-    if len(intersects) < len(intersects[0])+1:
+    if len(intersects) < len(intersects[0]) + 1:
         return ConvexPolytope(axes, intersects)
 
     # Compute convex hull (removing interior points)
@@ -162,5 +158,6 @@ def slice(polytope: ConvexPolytope, axis, value):
 
     # Sliced result is simply the convex hull
     return ConvexPolytope(axes, [intersects[i] for i in vertices])
+
 
 # To profile, put @profile in front of slice and then do: kernprof -l -v tests/test_hull_slicer.py in terminal

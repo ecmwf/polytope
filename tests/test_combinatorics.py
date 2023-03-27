@@ -10,13 +10,11 @@ from polytope.utility.exceptions import (
 )
 
 
-class TestCombinatorics():
-
+class TestCombinatorics:
     def setup_method(self, method):
         pass
 
     def test_group_and_product(self):
-
         p1 = ConvexPolytope(["x", "y"], [[1, 2], [3, 4], [5, 6]])
         p2 = ConvexPolytope(["a", "b"], [[1, 2], [3, 4], [5, 6]])
         p3 = ConvexPolytope(["b", "a"], [[1, 2], [3, 4], [5, 6]])
@@ -37,7 +35,6 @@ class TestCombinatorics():
             assert len(c) == 2
 
     def test_group_with_different_number_of_axes(self):
-
         p1 = ConvexPolytope(["x", "y"], [[1, 2], [3, 4], [5, 6]])
         p2 = ConvexPolytope(["a", "b", "c"], [[1, 2], [3, 4], [5, 6]])
 
@@ -49,7 +46,6 @@ class TestCombinatorics():
         assert len(all_axes) == 5
 
     def test_validate_axes(self):
-
         with pytest.raises(AxisNotFoundError):
             validate_axes(["x", "y", "z"], ["x", "y", "z", "a"])
         with pytest.raises(AxisUnderdefinedError):

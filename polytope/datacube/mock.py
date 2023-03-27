@@ -7,9 +7,7 @@ from .datacube_axis import IntAxis
 
 
 class MockDatacube(Datacube):
-
     def __init__(self, dimensions):
-
         assert isinstance(dimensions, dict)
 
         self.dimensions = dimensions
@@ -26,7 +24,6 @@ class MockDatacube(Datacube):
             stride_cumulative *= self.dimensions[k]
 
     def get(self, requests: DatacubeRequestTree):
-
         # Takes in a datacube and verifies the leaves of the tree are complete
         # (ie it found values for all datacube axis)
 
@@ -51,7 +48,7 @@ class MockDatacube(Datacube):
             else:
                 return []
         lower = max(0, math.ceil(lower))
-        upper = min(self.dimensions[axis.name], math.floor(upper)+1)
+        upper = min(self.dimensions[axis.name], math.floor(upper) + 1)
         return range(lower, upper)
 
     def has_index(self, path: DatacubePath, label, index):

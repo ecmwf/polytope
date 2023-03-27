@@ -10,22 +10,20 @@ from polytope.polytope import Polytope, Request
 from polytope.shapes import Polygon, Union
 
 
-class Test():
-
+class Test:
     def setup_method(self, method):
-        array = xr.open_dataset(".examples/data/output8.grib", engine='cfgrib')
-        options = {"longitude" : {"Cyclic" : [0, 360.]}}
+        array = xr.open_dataset(".examples/data/output8.grib", engine="cfgrib")
+        options = {"longitude": {"Cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 
     def test_slice_country(self):
-
         # Read a shapefile for a given country and extract the geometry polygons
         worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
         fig, ax = plt.subplots(figsize=(12, 6))
         worldmap.plot(color="darkgrey", ax=ax)
-        whole_lat_old = np.arange(-90., 90., 0.125)
+        whole_lat_old = np.arange(-90.0, 90.0, 0.125)
         whole_long_old = np.arange(-180, 180, 0.125)
         whole_lat = np.repeat(whole_lat_old, len(whole_long_old))
         whole_long = np.tile(whole_long_old, len(whole_lat_old))
@@ -42,11 +40,33 @@ class Test():
         country = shapefile
         shapefile = shapefile.set_index("COUNTRY")
 
-        ECMWF_country_list_multipolygon = ["Croatia", "Denmark", "Estonia", "Finland", "France", "Germany", "Greece",
-                                           "Ireland", "Italy", "Netherlands", "Norway", "Spain", "Sweden", "Turkiye",
-                                           "United Kingdom"]
-        ECMWF_country_list_polygon = ["Austria", "Belgium", "Iceland", "Luxembourg", "Portugal", "Serbia", "Slovenia",
-                                      "Switzerland"]
+        ECMWF_country_list_multipolygon = [
+            "Croatia",
+            "Denmark",
+            "Estonia",
+            "Finland",
+            "France",
+            "Germany",
+            "Greece",
+            "Ireland",
+            "Italy",
+            "Netherlands",
+            "Norway",
+            "Spain",
+            "Sweden",
+            "Turkiye",
+            "United Kingdom",
+        ]
+        ECMWF_country_list_polygon = [
+            "Austria",
+            "Belgium",
+            "Iceland",
+            "Luxembourg",
+            "Portugal",
+            "Serbia",
+            "Slovenia",
+            "Switzerland",
+        ]
 
         for country_name_polygon in ECMWF_country_list_polygon:
             country = shapefile.loc[country_name_polygon]

@@ -7,7 +7,6 @@ import pandas as pd
 
 
 class DatacubeAxis(ABC):
-
     @abstractproperty
     def name(self):
         pass
@@ -124,8 +123,8 @@ class IntAxisCyclic(DatacubeAxis):
             # We first want to obtain [-270, 0] as the first range, where 0 is the remapped cyclic axis upper
             # but if we wanted to break [-270, -180] into intervals, we would want to get [-270,-180],
             # where -180 is the asked upper range value.
-            loops = int((axis_upper-lower)/axis_range)
-            remapped_up = axis_upper - (loops)*axis_range
+            loops = int((axis_upper - lower) / axis_range)
+            remapped_up = axis_upper - (loops) * axis_range
             new_upper = min(upper, remapped_up)
         else:
             # In this case, since lower >= axis_upper, we need to either go to the asked upper range
@@ -139,7 +138,7 @@ class IntAxisCyclic(DatacubeAxis):
         new_up = deepcopy(new_upper)
         while new_up < upper:
             new_upper = new_up
-            new_up = min(upper, new_upper+axis_range)
+            new_up = min(upper, new_upper + axis_range)
             intervals.append([new_upper, new_up])
         # Once we have added all the in-between ranges, we need to add the last interval
         intervals.append([new_up, upper])
@@ -154,15 +153,15 @@ class IntAxisCyclic(DatacubeAxis):
         if lower < axis_lower:
             # In this case we need to calculate the number of loops between the axis lower
             # and the lower to recenter the lower
-            loops = int((axis_lower-lower-self.tol)/axis_range)
-            return_lower = lower + (loops+1) * axis_range
-            return_upper = upper + (loops+1) * axis_range
+            loops = int((axis_lower - lower - self.tol) / axis_range)
+            return_lower = lower + (loops + 1) * axis_range
+            return_upper = upper + (loops + 1) * axis_range
         elif lower >= axis_upper:
             # In this case we need to calculate the number of loops between the axis upper
             # and the lower to recenter the lower
-            loops = int((lower - axis_upper)/axis_range)
-            return_lower = lower - (loops+1)*axis_range
-            return_upper = upper - (loops+1)*axis_range
+            loops = int((lower - axis_upper) / axis_range)
+            return_lower = lower - (loops + 1) * axis_range
+            return_upper = upper - (loops + 1) * axis_range
         else:
             # In this case, the lower value is already in the right range
             return_lower = lower
@@ -174,37 +173,40 @@ class IntAxisCyclic(DatacubeAxis):
         return return_range[0]
 
     def remap(self, range: List):
-        if abs(range[0]-range[1]) <= 2*self.tol:
+        if abs(range[0] - range[1]) <= 2 * self.tol:
             # If we have a range that is just one point, then it should still be counted
             # and so we should take a small interval around it to find values inbetween
-            range = [self.remap_val_to_axis_range(range[0])-self.tol, self.remap_val_to_axis_range(range[0])+self.tol]
+            range = [
+                self.remap_val_to_axis_range(range[0]) - self.tol,
+                self.remap_val_to_axis_range(range[0]) + self.tol,
+            ]
             return [range]
-        if self.range[0]-self.tol <= range[0] <= self.range[1]+self.tol:
-            if self.range[0]-self.tol <= range[1] <= self.range[1]+self.tol:
+        if self.range[0] - self.tol <= range[0] <= self.range[1] + self.tol:
+            if self.range[0] - self.tol <= range[1] <= self.range[1] + self.tol:
                 # If we are in cyclic range, return it
                 return [range]
         range_intervals = self.to_intervals(range)
         ranges = []
         for interval in range_intervals:
-            if abs(interval[0]-interval[1]) > 0:
+            if abs(interval[0] - interval[1]) > 0:
                 # If the interval is not just a single point, we remap it to the axis range
                 range = self.remap_range_to_axis_range([interval[0], interval[1]])
                 up = range[1]
                 low = range[0]
                 if up < low:
                     # Make sure we remap in the right order
-                    ranges.append([up-self.tol, low+self.tol])
+                    ranges.append([up - self.tol, low + self.tol])
                 else:
-                    ranges.append([low-self.tol, up+self.tol])
+                    ranges.append([low - self.tol, up + self.tol])
         return ranges
 
     def offset(self, range):
         # We first unpad the range by the axis tolerance to make sure that
         # we find the wanted range of the cyclic axis since we padded by the axis tolerance before.
         # Also, it's safer that we find the offset of a value inside the range instead of on the border
-        unpadded_range = [range[0]+1.5*self.tol, range[1]-1.5*self.tol]
+        unpadded_range = [range[0] + 1.5 * self.tol, range[1] - 1.5 * self.tol]
         cyclic_range = self.remap_range_to_axis_range(unpadded_range)
-        offset = unpadded_range[0]-cyclic_range[0]
+        offset = unpadded_range[0] - cyclic_range[0]
         return offset
 
 
@@ -278,8 +280,8 @@ class FloatAxisCyclic(DatacubeAxis):
             # We first want to obtain [-270, 0] as the first range, where 0 is the remapped cyclic axis upper
             # but if we wanted to break [-270, -180] into intervals, we would want to get [-270,-180],
             # where -180 is the asked upper range value.
-            loops = int((axis_upper-lower)/axis_range)
-            remapped_up = axis_upper - (loops)*axis_range
+            loops = int((axis_upper - lower) / axis_range)
+            remapped_up = axis_upper - (loops) * axis_range
             new_upper = min(upper, remapped_up)
         else:
             # In this case, since lower >= axis_upper, we need to either go to the asked upper range
@@ -293,7 +295,7 @@ class FloatAxisCyclic(DatacubeAxis):
         new_up = deepcopy(new_upper)
         while new_up < upper:
             new_upper = new_up
-            new_up = min(upper, new_upper+axis_range)
+            new_up = min(upper, new_upper + axis_range)
             intervals.append([new_upper, new_up])
         # Once we have added all the in-between ranges, we need to add the last interval
         intervals.append([new_up, upper])
@@ -308,15 +310,15 @@ class FloatAxisCyclic(DatacubeAxis):
         if lower < axis_lower:
             # In this case we need to calculate the number of loops between the axis lower
             # and the lower to recenter the lower
-            loops = int((axis_lower-lower-self.tol)/axis_range)
-            return_lower = lower + (loops+1) * axis_range
-            return_upper = upper + (loops+1) * axis_range
+            loops = int((axis_lower - lower - self.tol) / axis_range)
+            return_lower = lower + (loops + 1) * axis_range
+            return_upper = upper + (loops + 1) * axis_range
         elif lower >= axis_upper:
             # In this case we need to calculate the number of loops between the axis upper
             # and the lower to recenter the lower
-            loops = int((lower - axis_upper)/axis_range)
-            return_lower = lower - (loops+1)*axis_range
-            return_upper = upper - (loops+1)*axis_range
+            loops = int((lower - axis_upper) / axis_range)
+            return_lower = lower - (loops + 1) * axis_range
+            return_upper = upper - (loops + 1) * axis_range
         else:
             # In this case, the lower value is already in the right range
             return_lower = lower
@@ -328,37 +330,40 @@ class FloatAxisCyclic(DatacubeAxis):
         return return_range[0]
 
     def remap(self, range: List):
-        if self.range[0]-self.tol <= range[0] <= self.range[1]+self.tol:
-            if self.range[0]-self.tol <= range[1] <= self.range[1]+self.tol:
+        if self.range[0] - self.tol <= range[0] <= self.range[1] + self.tol:
+            if self.range[0] - self.tol <= range[1] <= self.range[1] + self.tol:
                 # If we are already in the cyclic range, return it
                 return [range]
-        elif abs(range[0]-range[1]) <= 2*self.tol:
+        elif abs(range[0] - range[1]) <= 2 * self.tol:
             # If we have a range that is just one point, then it should still be counted
             # and so we should take a small interval around it to find values inbetween
-            range = [self.remap_val_to_axis_range(range[0])-self.tol, self.remap_val_to_axis_range(range[0])+self.tol]
+            range = [
+                self.remap_val_to_axis_range(range[0]) - self.tol,
+                self.remap_val_to_axis_range(range[0]) + self.tol,
+            ]
             return [range]
         range_intervals = self.to_intervals(range)
         ranges = []
         for interval in range_intervals:
-            if abs(interval[0]-interval[1]) > 0:
+            if abs(interval[0] - interval[1]) > 0:
                 # If the interval is not just a single point, we remap it to the axis range
                 range = self.remap_range_to_axis_range([interval[0], interval[1]])
                 up = range[1]
                 low = range[0]
                 if up < low:
                     # Make sure we remap in the right order
-                    ranges.append([up-self.tol, low+self.tol])
+                    ranges.append([up - self.tol, low + self.tol])
                 else:
-                    ranges.append([low-self.tol, up+self.tol])
+                    ranges.append([low - self.tol, up + self.tol])
         return ranges
 
     def offset(self, range):
         # We first unpad the range by the axis tolerance to make sure that
         # we find the wanted range of the cyclic axis since we padded by the axis tolerance before.
         # Also, it's safer that we find the offset of a value inside the range instead of on the border
-        unpadded_range = [range[0]+1.5*self.tol, range[1]-1.5*self.tol]
+        unpadded_range = [range[0] + 1.5 * self.tol, range[1] - 1.5 * self.tol]
         cyclic_range = self.remap_range_to_axis_range(unpadded_range)
-        offset = unpadded_range[0]-cyclic_range[0]
+        offset = unpadded_range[0] - cyclic_range[0]
         return offset
 
 
@@ -373,10 +378,10 @@ class PandasTimestampAxis(DatacubeAxis):
         return pd.Timestamp(value)
 
     def to_float(self, value: pd.Timestamp):
-        return float(value.value/10**9)
+        return float(value.value / 10**9)
 
     def from_float(self, value):
-        return pd.Timestamp(int(value), unit='s')
+        return pd.Timestamp(int(value), unit="s")
 
     def serialize(self, value):
         return str(value)
@@ -411,10 +416,10 @@ class PandasTimedeltaAxis(DatacubeAxis):
         return pd.Timedelta(value)
 
     def to_float(self, value: pd.Timedelta):
-        return float(value.value/10**9)
+        return float(value.value / 10**9)
 
     def from_float(self, value):
-        return pd.Timedelta(int(value), unit='s')
+        return pd.Timedelta(int(value), unit="s")
 
     def serialize(self, value):
         return str(value)

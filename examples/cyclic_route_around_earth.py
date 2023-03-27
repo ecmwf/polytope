@@ -9,11 +9,10 @@ from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, PathSegment
 
 
-class Test():
-
+class Test:
     def setup_method(self, method):
-        array = xr.open_dataset("./examples/data/output8.grib", engine='cfgrib')
-        options = {"longitude" : {"Cyclic" : [0, 360.]}}
+        array = xr.open_dataset("./examples/data/output8.grib", engine="cfgrib")
+        options = {"longitude": {"Cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer, options=options)
@@ -23,7 +22,7 @@ class Test():
         request_obj = PathSegment(["latitude", "longitude"], bounding_box, [-88, -719], [88, 720])
         request = Request(request_obj)
 
-# Extract the values of the long and lat from the tree
+        # Extract the values of the long and lat from the tree
         result = self.API.retrieve(request)
         result.pprint()
         country_points_plotting = []
@@ -39,8 +38,8 @@ class Test():
                 long = long + 360
             if -180 <= long < 180:
                 long = long
-            if 180 <= long < 180+360:
-                long = long-360
+            if 180 <= long < 180 + 360:
+                long = long - 360
             if 180 + 360 <= long < 180 + 360 + 360:
                 long = long - 720
             latlong_point = [lat, long]
@@ -52,7 +51,7 @@ class Test():
             country_points_plotting.append(latlong_point)
         temps = np.array(temps)
 
-# Plot all the points on a world map
+        # Plot all the points on a world map
         worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
         fig, ax = plt.subplots(figsize=(12, 6))
         worldmap.plot(color="darkgrey", ax=ax)

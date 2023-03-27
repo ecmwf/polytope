@@ -12,16 +12,14 @@ from polytope.polytope import Polytope, Request
 from polytope.shapes import Ellipsoid, Path
 
 
-class Test():
-
+class Test:
     def setup_method(self):
-        array = xr.open_dataset("./examples/data/winds.grib", engine='cfgrib')
+        array = xr.open_dataset("./examples/data/winds.grib", engine="cfgrib")
         self.array = array
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)
 
     def test_slice_shipping_route(self):
-
         time1 = time.time()
         shapefile = gpd.read_file("./examples/data/Shipping-Lanes-v1.shp")
         geometry_multiline = shapefile.iloc[2]
@@ -34,12 +32,12 @@ class Test():
             for point in line.coords:
                 point_list = list(point)
                 if list(point)[0] < 0:
-                    point_list[0] = list(point)[0]+360
+                    point_list[0] = list(point)[0] + 360
                 lines.append(point_list)
 
         speed_km_hr = 100
-        initial_distance = math.sqrt(lines[0][0]**2 + lines[0][1]**2)  # This is technically only the degrees...
-        time_hours = [(math.sqrt(pt[0]**2 + pt[1]**2)-initial_distance)/speed_km_hr for pt in lines]
+        initial_distance = math.sqrt(lines[0][0] ** 2 + lines[0][1] ** 2)  # This is technically only the degrees...
+        time_hours = [(math.sqrt(pt[0] ** 2 + pt[1] ** 2) - initial_distance) / speed_km_hr for pt in lines]
         step_list_seconds = np.array(time_hours)
         step_list_seconds = step_list_seconds * 3600 * 1000 * 1000 * 1000
         step_list_seconds = [int(a) for a in step_list_seconds]
@@ -60,11 +58,9 @@ class Test():
         # Then somehow make this list of points into just a sequence of points
 
         ship_route_polytope = Path(["latitude", "longitude", "step"], initial_shape, *new_points)
-        request = Request(
-            ship_route_polytope
-                )
+        request = Request(ship_route_polytope)
         result = self.API.retrieve(request)
-        print(time.time()-time1)
+        print(time.time() - time1)
 
         # Associate the results to the lat/long points in an array
         lats = []

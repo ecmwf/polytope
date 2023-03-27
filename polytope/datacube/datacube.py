@@ -8,7 +8,6 @@ from .datacube_request_tree import DatacubePath, DatacubeRequestTree
 
 
 class Datacube(ABC):
-
     @abstractmethod
     def get(self, requests: List[DatacubeRequestTree]) -> Any:
         """Return data given a set of request trees"""
@@ -39,11 +38,12 @@ class Datacube(ABC):
 
     @abstractmethod
     def validate(self, axes) -> bool:
-        """ returns true if the input axes can be resolved against the datacube axes """
+        """returns true if the input axes can be resolved against the datacube axes"""
 
     @staticmethod
     def create(datacube, options):
         if isinstance(datacube, (xr.core.dataarray.DataArray, xr.core.dataset.Dataset)):
             from .xarray import XArrayDatacube
+
             xadatacube = XArrayDatacube(datacube, options=options)
             return xadatacube

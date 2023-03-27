@@ -7,7 +7,6 @@ from .datacube_axis import IntAxis
 
 
 class DatacubePath(OrderedDict):
-
     def values(self):
         return tuple(super().values())
 
@@ -22,7 +21,6 @@ class DatacubePath(OrderedDict):
 
 
 class DatacubeRequestTree(object):
-
     root = IntAxis()
     root.name = "root"
 
@@ -136,9 +134,9 @@ class DatacubeRequestTree(object):
     def pprint(self, level=0):
         if self.axis == "root":
             print("\n")
-        print("\t"*level + "\u21b3" + str(self))
+        print("\t" * level + "\u21b3" + str(self))
         for child in self.children:
-            child.pprint(level+1)
+            child.pprint(level + 1)
 
     def remove_branch(self):
         if not self.is_root():

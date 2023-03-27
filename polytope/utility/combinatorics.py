@@ -7,7 +7,6 @@ from .exceptions import AxisNotFoundError, AxisOverdefinedError, AxisUnderdefine
 
 
 def group(polytopes: List[ConvexPolytope]):
-
     # Group polytopes into polytopes which share the same axes
     groups = {}
     for p in polytopes:
@@ -20,13 +19,11 @@ def group(polytopes: List[ConvexPolytope]):
 
 
 def product(groups):
-
     # Compute the tensor product of polytope groups
     return list(itertools.product(*groups.values()))
 
 
 def validate_axes(actual_axes, test_axes):
-
     # Each axis should be defined only once
     count = Counter(test_axes)
     axes = list(count.keys())

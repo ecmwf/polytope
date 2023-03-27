@@ -14,25 +14,24 @@ from polytope.polytope import Polytope, Request
 from polytope.shapes import Polygon, Select, Union
 
 
-class Test():
-
+class Test:
     def setup_method(self):
-        array = xr.open_dataset("./examples/data/winds.grib", engine='cfgrib')
+        array = xr.open_dataset("./examples/data/winds.grib", engine="cfgrib")
         self.array = array
-        options = {"longitude" : {"Cyclic" : [0, 360.]}}
+        options = {"longitude": {"Cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 
     def test_slice_shipping_route(self):
-        gdal.SetConfigOption('SHAPE_RESTORE_SHX', 'YES')
+        gdal.SetConfigOption("SHAPE_RESTORE_SHX", "YES")
 
         shapefile = gpd.read_file("./examples/data/EMODnet_HA_WindFarms_pg_20220324.shp")
         polygons = []
         for i in range(306):
             country = shapefile.iloc[i]
             multi_polygon = shape(country["geometry"])
-            if multi_polygon.geom_type == 'MultiPolygon':
+            if multi_polygon.geom_type == "MultiPolygon":
                 true_polygons = list(multi_polygon.geoms)
                 for true_polygon in true_polygons:
                     polygons.append(true_polygon)
@@ -55,8 +54,7 @@ class Test():
         request_obj = poly[0]
         for obj in poly:
             request_obj = Union(["longitude", "latitude"], request_obj, obj)
-        request = Request(request_obj,
-                          Select("step", [np.timedelta64(0, "ns")]))
+        request = Request(request_obj, Select("step", [np.timedelta64(0, "ns")]))
 
         # Extract the values of the long and lat from the tree
         result = self.API.retrieve(request)

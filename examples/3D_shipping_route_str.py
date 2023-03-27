@@ -11,21 +11,21 @@ from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Path
 
 
-class Test():
-
+class Test:
     def setup_method(self):
-        array = xr.open_dataset("./examples/data/output4.grib", engine='cfgrib')
+        array = xr.open_dataset("./examples/data/output4.grib", engine="cfgrib")
         self.xarraydatacube = XArrayDatacube(array)
         self.array = array
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)
 
     def test_slice_shipping_route(self):
-
         # First give in the travel points of the shipping route in format: lat/long/time( in step right now)
-        travel_points = [[29.9, 39.8, np.timedelta64(3600, "s")],
-                         [30.8, 40.5, np.timedelta64(3600, "s")],
-                         [31.3, 41.4, np.timedelta64(7200, "s")]]
+        travel_points = [
+            [29.9, 39.8, np.timedelta64(3600, "s")],
+            [30.8, 40.5, np.timedelta64(3600, "s")],
+            [31.3, 41.4, np.timedelta64(7200, "s")],
+        ]
 
         padded_point_upper = [0.1, 0.1, np.timedelta64(1900, "s")]
 
@@ -76,7 +76,7 @@ class Test():
         worldmap.plot(color="lightgrey", ax=ax)
 
         translated_array = parameter_values - np.min(parameter_values)
-        scaling = 1/np.max(translated_array)
+        scaling = 1 / np.max(translated_array)
         coloring = translated_array * scaling
         colors = []
 

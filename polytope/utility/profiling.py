@@ -10,5 +10,5 @@ class benchmark(object):
 
     def __exit__(self, ty, val, tb):
         end = time.perf_counter()
-        print("%s : %0.7f seconds" % (self.name, end-self.start))
+        print("%s : %0.7f seconds" % (self.name, end - self.start))
         return False

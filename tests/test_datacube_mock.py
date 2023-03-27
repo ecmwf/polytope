@@ -4,14 +4,12 @@ from polytope.datacube.mock import MockDatacube
 from polytope.utility.exceptions import AxisNotFoundError, AxisOverdefinedError
 
 
-class TestMockDatacube():
-
+class TestMockDatacube:
     def setup_method(self, method):
         pass
 
     def test_validate(self):
-
-        datacube = MockDatacube({"x" : 1, "y" : 1, "z": 1})
+        datacube = MockDatacube({"x": 1, "y": 1, "z": 1})
 
         datacube.validate(["x", "y", "z"])
         datacube.validate(["x", "z", "y"])

@@ -11,10 +11,9 @@ from polytope.polytope import Polytope, Request
 from polytope.shapes import Polygon, Select, Union
 
 
-class Test():
-
+class Test:
     def setup_method(self):
-        array = xr.open_dataset("./examples/data/timeseries_t2m.grib", engine='cfgrib')
+        array = xr.open_dataset("./examples/data/timeseries_t2m.grib", engine="cfgrib")
         self.xarraydatacube = XArrayDatacube(array)
         for dim in array.dims:
             array = array.sortby(dim)
@@ -23,7 +22,6 @@ class Test():
         self.API = Polytope(datacube=array, engine=self.slicer)
 
     def test_slice_shipping_route(self):
-
         shapefile = gpd.read_file("./examples/data/World_Countries__Generalized_.shp")
         country = shapefile
         shapefile = shapefile.set_index("COUNTRY")
@@ -54,8 +52,7 @@ class Test():
         for obj in poly:
             request_obj = Union(["longitude", "latitude"], request_obj, obj)
 
-        request = Request(request_obj,
-                          Select("time", [np.datetime64("2022-05-14T12:00:00")]))
+        request = Request(request_obj, Select("time", [np.datetime64("2022-05-14T12:00:00")]))
 
         result = self.API.retrieve(request)
         return None
@@ -154,10 +151,30 @@ class Test():
             ax[3, 0].plot(*geom.exterior.xy, color="black", linewidth=0.7)
             ax[3, 1].plot(*geom.exterior.xy, color="black", linewidth=0.7)
 
-        minmin = np.min([np.min(temps1), np.min(temps2), np.min(temps3), np.min(temps4), np.min(temps5), np.min(temps6),
-                         np.min(temps7), np.min(temps8)])
-        maxmax = np.max([np.max(temps1), np.max(temps2), np.max(temps3), np.max(temps4), np.max(temps5), np.max(temps6),
-                         np.max(temps7), np.max(temps8)])
+        minmin = np.min(
+            [
+                np.min(temps1),
+                np.min(temps2),
+                np.min(temps3),
+                np.min(temps4),
+                np.min(temps5),
+                np.min(temps6),
+                np.min(temps7),
+                np.min(temps8),
+            ]
+        )
+        maxmax = np.max(
+            [
+                np.max(temps1),
+                np.max(temps2),
+                np.max(temps3),
+                np.max(temps4),
+                np.max(temps5),
+                np.max(temps6),
+                np.max(temps7),
+                np.max(temps8),
+            ]
+        )
         ax[0, 0].scatter(longs1, lats1, s=8, vmin=minmin, vmax=maxmax, c=temps1, cmap="YlOrRd")
         ax[0, 1].scatter(longs2, lats2, s=8, vmin=minmin, vmax=maxmax, c=temps2, cmap="YlOrRd")
         ax[1, 0].scatter(longs3, lats3, s=8, vmin=minmin, vmax=maxmax, c=temps3, cmap="YlOrRd")

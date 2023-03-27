@@ -4,8 +4,7 @@ from polytope.datacube.datacube_axis import IntAxis
 from polytope.datacube.datacube_request_tree import DatacubeRequestTree
 
 
-class TestRequestTree():
-
+class TestRequestTree:
     def setup_method(self, method):
         pass
 
@@ -308,16 +307,7 @@ class TestRequestTree():
         root_node1.add_child(child1)
         root_node1.add_child(child2)
         tree_dict = root_node1.to_dict()
-        assert tree_dict == {'child1' :
-                             {None :
-                              {'grandchild1':
-                               {None:
-                                {'greatgrandchild1':
-                                 {None: 1}
-                                 }
-                                }
-                               }
-                              },
-                             'child2':
-                             {None : None}
-                             }
+        assert tree_dict == {
+            "child1": {None: {"grandchild1": {None: {"greatgrandchild1": {None: 1}}}}},
+            "child2": {None: None},
+        }

@@ -9,21 +9,13 @@ from polytope.datacube.xarray import XArrayDatacube
 from polytope.utility.exceptions import AxisNotFoundError, AxisOverdefinedError
 
 
-class TestXarrayDatacube():
-
+class TestXarrayDatacube:
     def setup_method(self, method):
         pass
 
     def test_validate(self):
         dims = np.random.randn(1, 1, 1)
-        array = xr.Dataset(
-            data_vars=dict(param=(["x", "y", "z"], dims)),
-            coords={
-                "x": [1],
-                "y": [1],
-                "z": [1]
-            }
-        )
+        array = xr.Dataset(data_vars=dict(param=(["x", "y", "z"], dims)), coords={"x": [1], "y": [1], "z": [1]})
 
         datacube = Datacube.create(array, options={})
         datacube = Datacube.create(array, options={})
@@ -41,7 +33,6 @@ class TestXarrayDatacube():
             datacube.validate(["x", "x", "y", "z"])
 
     def test_create(self):
-
         # Create a dataarray with 3 labelled axes using different index types
         array = xr.DataArray(
             np.random.randn(3, 6, 129),
@@ -49,8 +40,8 @@ class TestXarrayDatacube():
             coords={
                 "date": pd.date_range("2000-01-01", "2000-01-03", 3),
                 "step": [0, 3, 6, 9, 12, 15],
-                "level": range(1, 130)
-            }
+                "level": range(1, 130),
+            },
         )
 
         for d, v in array.coords.variables.items():
@@ -89,8 +80,9 @@ class TestXarrayDatacube():
 
         # Check discretizing along 'date' axis at a date which does not exist in discrete space gives no values
         label = PandasTimestampAxis()
-        idxs = datacube.get_indices(partial_request, label, pd.Timestamp("2000-01-01-1200"),
-                                    pd.Timestamp("2000-01-01-1200"))
+        idxs = datacube.get_indices(
+            partial_request, label, pd.Timestamp("2000-01-01-1200"), pd.Timestamp("2000-01-01-1200")
+        )
         assert len(idxs) == 0
 
         # Tests on "step" axis, path is a sub-datacube at a specific date

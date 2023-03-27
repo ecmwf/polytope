@@ -17,14 +17,14 @@ from .datacube_axis import (
 )
 
 _mappings = {
-    pd.Int64Dtype : IntAxis(),
-    pd.Timestamp : PandasTimestampAxis(),
+    pd.Int64Dtype: IntAxis(),
+    pd.Timestamp: PandasTimestampAxis(),
     np.int64: IntAxis(),
-    np.datetime64 : PandasTimestampAxis(),
-    np.timedelta64 : PandasTimedeltaAxis(),
+    np.datetime64: PandasTimestampAxis(),
+    np.timedelta64: PandasTimedeltaAxis(),
     np.float64: FloatAxis(),
-    np.str_ : UnsliceableaAxis(),
-    str : UnsliceableaAxis()
+    np.str_: UnsliceableaAxis(),
+    str: UnsliceableaAxis(),
 }
 
 
@@ -49,8 +49,9 @@ class XArrayDatacube(Datacube):
                         value_type = values.dtype.type
                         axes_type_str = type(_mappings[value_type]).__name__
                         axes_type_str += "Cyclic"
-                        cyclic_axis_type = deepcopy(getattr(sys.modules["polytope.datacube.datacube_axis"],
-                                                            axes_type_str)())
+                        cyclic_axis_type = deepcopy(
+                            getattr(sys.modules["polytope.datacube.datacube_axis"], axes_type_str)()
+                        )
                         self.mappers[name] = cyclic_axis_type
                         self.mappers[name].name = name
                         self.mappers[name].range = self.options[name]["Cyclic"]
@@ -116,8 +117,8 @@ class XArrayDatacube(Datacube):
             # Find the range of indexes between lower and upper
             # https://pandas.pydata.org/docs/reference/api/pandas.Index.searchsorted.html
             # Assumes the indexes are already sorted (could sort to be sure) and monotonically increasing
-            start = indexes.searchsorted(low, 'left')  # TODO: catch start=0 (not found)?
-            end = indexes.searchsorted(up, 'right')  # TODO: catch end=length (not found)?
+            start = indexes.searchsorted(low, "left")  # TODO: catch start=0 (not found)?
+            end = indexes.searchsorted(up, "right")  # TODO: catch end=length (not found)?
             indexes_between = indexes[start:end].to_list()
 
             # Now the indexes_between are values on the cyclic range so need to remap them to their original
