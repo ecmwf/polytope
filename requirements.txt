@@ -15,6 +15,7 @@ Pillow==9.3.0
 Shapely==1.8.5.post1
 shp==1.0.2
 Fiona==1.8.22
+GDAL==3.5.3
 geopandas==0.12.2
 plotly==5.11.0
 pypi==2.1
