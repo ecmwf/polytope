@@ -20,7 +20,7 @@ on:
     types: [labeled]
 
 jobs:
-   my-job:
+  my-job:
     runs-on: macOS-latest
     steps:
     - name: Install Homebrew
@@ -30,7 +30,7 @@ jobs:
       run: brew install eccodes
     - name: Run Tests
       run: pytest tests
-      
+
   ci:
     name: ci
     uses: ecmwf-actions/reusable-workflows/.github/workflows/ci-python.yml@v1
