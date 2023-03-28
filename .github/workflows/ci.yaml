@@ -20,21 +20,7 @@ on:
     types: [labeled]
 
 jobs:
-  build:
-      runs-on: ubuntu-latest
-
-      container:
-        image: osgeo/gdal:ubuntu-small-latest
-
-      steps:
-      - name: Install dependencies
-        run: |
-          apt-get update
-          apt-get install -y python-gdal
-      - name: Build
-        run: |
-          # Your build steps here
-
+  
   ci:
     name: ci
     uses: ecmwf-actions/reusable-workflows/.github/workflows/ci-python.yml@v1
