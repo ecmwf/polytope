@@ -28,7 +28,7 @@ setup(
     packages=find_packages(),
     # install_requires=requirements,
     install_requires=[
-        'gdal',
+        "gdal",
         # other dependencies here
     ],
     # install_requires=read("requirements.txt").splitlines(),
