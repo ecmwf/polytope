@@ -26,17 +26,12 @@ jobs:
     uses: ecmwf-actions/reusable-workflows/.github/workflows/ci-python.yml@v1
     with:
       codecov_upload: true
-      notify_teams: false
+      notify_teams: true
       build_package_inputs: |
+        dependencies: |
+          ecmwf/ecbuild
+          ecmwf/eckit
+          ecmwf/odc
+          ecmwf/eccodes
+        dependency_branch: develop
         self_build: false
-  
-  build_gdal: 
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Install GDAL
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gdal-bin
