@@ -32,6 +32,5 @@ jobs:
           ecmwf/ecbuild
           ecmwf/eckit
           ecmwf/odc
-          ecmwf/eccodes
         dependency_branch: develop
         self_build: false
