@@ -9,7 +9,7 @@ from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select, Union
 
 
-class Test:
+class Performance:
     def setup_method(self):
         array = xr.open_dataset("../examples/data/temp_model_levels.grib", engine="cfgrib")
         options = {"longitude": {"Cyclic": [0, 360.0]}}
