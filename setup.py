@@ -15,7 +15,7 @@ setup(
     name="polytope",
     version=__version__,
     description="Polytope datacube slicing library",
-    url="https://github.com/ecmwf-projects/polytope",
+    url="https://github.com/ecmwf/polytope",
     author="ECMWF",
     author_email="James.Hawkes@ecmwf.int",
     packages=find_packages(),
