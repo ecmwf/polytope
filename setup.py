@@ -27,10 +27,6 @@ setup(
     author_email="James.Hawkes@ecmwf.int",
     packages=find_packages(),
     # install_requires=requirements,
-    install_requires=[
-        "gdal",
-        # other dependencies here
-    ],
     # install_requires=read("requirements.txt").splitlines(),
     zip_safe=False,
     include_package_data=True,
