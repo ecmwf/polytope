@@ -29,3 +29,14 @@ jobs:
       notify_teams: false
       build_package_inputs: |
         self_build: false
+  
+  build_gdal: 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        
+      - name: Install GDAL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gdal-bin python-gdal
