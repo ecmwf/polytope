@@ -1,4 +1,3 @@
-import pytest
 import xarray as xr
 
 from polytope.datacube.xarray import XArrayDatacube
@@ -14,7 +13,6 @@ class TestSlicingEra5Data:
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)
 
-    @pytest.mark.skip(reason="Doesn't work because git lfs data not downloaded")
     def test_2D_box(self):
         request = Request(
             Box(["number", "isobaricInhPa"], [3, 0.0], [6, 1000.0]),
