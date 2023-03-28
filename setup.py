@@ -1,5 +1,4 @@
 import io
-import os
 import re
 
 from setuptools import find_packages, setup
@@ -10,14 +9,6 @@ __version__ = re.search(
 ).group(1)
 
 
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
-
-
-# with open("./requirements.txt") as f:
-#     requirements = f.read().splitlines()
-
-
 setup(
     name="polytope",
     version=__version__,
@@ -26,8 +17,6 @@ setup(
     author="ECMWF",
     author_email="James.Hawkes@ecmwf.int",
     packages=find_packages(),
-    # install_requires=requirements,
-    # install_requires=read("requirements.txt").splitlines(),
     zip_safe=False,
     include_package_data=True,
 )
