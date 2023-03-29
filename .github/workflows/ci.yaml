@@ -15,9 +15,9 @@ on:
   # Trigger the workflow manually
   workflow_dispatch: ~
 
-  # Trigger after public PR approved for CI
-  pull_request_target:
-    types: [labeled]
+  # # Trigger after public PR approved for CI
+  # pull_request_target:
+  #   types: [labeled]
 
 jobs:
   # my-job:
@@ -43,7 +43,7 @@ jobs:
     uses: ecmwf-actions/reusable-workflows/.github/workflows/ci-python.yml@v1
     with:
       codecov_upload: true
-      notify_teams: true
+      # notify_teams: true
       build_package_inputs: |
         dependencies: |
           ecmwf/ecbuild
@@ -51,4 +51,3 @@ jobs:
           ecmwf/odc
           ecmwf/eccodes
         dependency_branch: develop
-        self_build: false
