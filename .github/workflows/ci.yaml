@@ -20,23 +20,23 @@ on:
     types: [labeled]
 
 jobs:
-  my-job:
-    runs-on: macOS-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Install Homebrew
-      run: |
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    - name: Install Software with Homebrew
-      run: brew install eccodes
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.9'
-    - name: Install dependencies
-      run: pip install -r requirements.txt
-    - name: Run Tests
-      run: pytest tests
+  # my-job:
+  #   runs-on: macOS-latest
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Install Homebrew
+  #     run: |
+  #       /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  #   - name: Install Software with Homebrew
+  #     run: brew install eccodes
+  #   - name: Set up Python
+  #     uses: actions/setup-python@v2
+  #     with:
+  #       python-version: '3.9'
+  #   - name: Install dependencies
+  #     run: pip install -r requirements.txt
+  #   - name: Run Tests
+  #     run: pytest tests
 
   ci:
     name: ci
@@ -49,5 +49,6 @@ jobs:
           ecmwf/ecbuild
           ecmwf/eckit
           ecmwf/odc
+          ecmwf/eccodes
         dependency_branch: develop
         self_build: false
