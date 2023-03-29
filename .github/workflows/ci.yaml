@@ -38,36 +38,16 @@ jobs:
   #   - name: Run Tests
   #     run: pytest tests
 
-  # ci:
-  #   name: ci
-  #   uses: ecmwf-actions/reusable-workflows/.github/workflows/ci-python.yml@v1
-  #   with:
-  #     codecov_upload: true
-  #     # notify_teams: true
-  #     build_package_inputs: |
-  #       dependencies: |
-  #         ecmwf/ecbuild
-  #         ecmwf/eckit
-  #         ecmwf/odc
-  #         ecmwf/eccodes
-  #       dependency_branch: develop
-
-    ci:
+  ci:
     name: ci
-    uses: ecmwf-actions/build-package@v2
+    uses: ecmwf-actions/reusable-workflows/.github/workflows/ci-python.yml@v1
     with:
-      self_coverage: true
-      force_build: true
-      cache_suffix: "${{ matrix.build_type }}-${{ env.CACHE_SUFFIX }}"
-      recreate_cache: ${{ matrix.caching == false }}
+      codecov_upload: true
       # notify_teams: true
-      dependencies: |
-        ecmwf/ecbuild
-        ecmwf/eckit
-        ecmwf/odc
-        ecmwf/eccodes
-      dependency_branch: develop
-      dependency_cmake_options: |
-        ecmwf/eckit: "-G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DENABLE_TESTS=OFF  -DENABLE_ECKIT_SQL=OFF"
-      cmake_options: "-G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DENABLE_LEGACY_IFSIO=ON ${{ matrix.cmake_options }}"
-      ctest_options: "${{ matrix.ctest_options }}"
+      build_package_inputs: |
+        dependencies: |
+          ecmwf/ecbuild
+          ecmwf/eckit
+          ecmwf/odc
+          ecmwf/eccodes
+        dependency_branch: develop
