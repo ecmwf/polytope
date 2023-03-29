@@ -3,7 +3,6 @@ cffi==1.15.1
 cfgrib==0.9.10.3
 contourpy==1.0.6
 decorator==5.1.1
-ecmwflibs==0.5.1
 eccodes==1.5.0
 ee==0.2
 numpy==1.23.5
