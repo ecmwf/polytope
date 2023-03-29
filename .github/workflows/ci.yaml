@@ -49,5 +49,6 @@ jobs:
           ecmwf/ecbuild
           ecmwf/eckit
           ecmwf/odc
+          unidata/netcdf4-python
           ecmwf/eccodes
         dependency_branch: develop
