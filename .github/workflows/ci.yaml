@@ -200,7 +200,7 @@ jobs:
     - name: Run script
       run: |
         chmod +x list_files.sh
-        ../list_files.sh
+        ./list_files.sh
   
   test:
     name: test
