@@ -10,7 +10,7 @@ Polytope supports datacubes which have branching, non-uniform indexing, and even
 
 # Installation 
 
-Install the polytope software with Python 3 (>=3.7) and pip using either
+Install the polytope software with Python 3 (>=3.7) from GitHub directly with the command
 
     python3 -m pip install --upgrade git+https://github.com/ecmwf/polytope.git@master
 
@@ -19,6 +19,29 @@ or from Pypi with the command
     python3 -m pip install polytope
 
 # Example
+
+Here is a step-by-step example of how to use this software.
+
+1. First, instantiate all necessary Polytope components. In particular, provide a datacube, an API and a slicer instance. 
+
+In the following example, we first specify the data which will be in our Xarray datacube. Note that the data here comes from the GRIB file called "winds.grib".
+
+    import xarray as xr
+    xr.open_dataset("winds.grib", engine="cfgrib")
+
+We then choose an appropriate slicer component,
+
+    slicer = HullSlicer()
+
+which we finally use to build an appropriate mid-level API, with all the necessary information to run our software. 
+
+    options = {"longitude": {"Cyclic": [0, 360.0]}}
+    
+    API = Polytope(datacube=array, engine=slicer, options=options)
+
+Note that the API is the component which instantiates the Datacube component. We thus provide the additional datacube options, such as the cyclicity information of some axes in this step.
+
+2. Second, instantiate 
 
 <!-- # Requirements
 
