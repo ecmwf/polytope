@@ -16,7 +16,6 @@ on:
 
 jobs:
   ci:
-    needs: setup
     name: ci
     uses: ./.github/workflows/ci-python-template.yaml
     with:
