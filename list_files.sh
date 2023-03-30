@@ -1,3 +1,3 @@
-#!/bin/bash
+#!/bin/bash -l
 
-sudo apt-get install libeccodes-dev
+eccodes .
