@@ -27,14 +27,17 @@ In the following example, we first specify the data which will be in our Xarray 
 
     import xarray as xr
     xr.open_dataset("winds.grib", engine="cfgrib")
+
 We then choose an appropriate slicer component,
 
     slicer = HullSlicer()
+
 before building an appropriate mid-level API, with all the necessary information to run our software. 
 
     options = {"longitude": {"Cyclic": [0, 360.0]}}
 
     API = Polytope(datacube=array, engine=slicer, options=options)
+    
 Note that the API is the component which instantiates the Datacube component. We thus provide the additional datacube options, such as the cyclicity information of some axes in this step.<br />
 
 2. Second, instantiate 
