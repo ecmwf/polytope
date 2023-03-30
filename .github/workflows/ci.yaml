@@ -166,7 +166,7 @@ jobs:
 
     - name: Install Dependencies
       id: install-dependencies
-      uses: ecmwf-actions/build-package@v2
+      uses: ecmwf-actions/build-package@v1
       with: ${{ fromJSON(needs.setup.outputs.inputs) }}
 
     - name: Setup Python
