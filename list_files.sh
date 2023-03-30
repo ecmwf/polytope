@@ -1,3 +1,5 @@
 #!/bin/bash -l
 
-eccodes .
+# set -x
+
+echo $ (sudo apt-get install libeccodes-dev)
