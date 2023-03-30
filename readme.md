@@ -53,7 +53,7 @@ Here is a step-by-step example of how to use this software.
     which we then incorporate into a Polytope request.
 
         from polytope.polytope import Request
-        
+
         request = Request(box, step_point)
 
 3. Third, using the selected API, extract the request from the datacube. 
@@ -61,6 +61,8 @@ Here is a step-by-step example of how to use this software.
         result = API.retrieve(request)
 
     Note that the result is stored as a request tree containing the retrieved axis indices as nodes.
+
+
 
 
 <!-- # Requirements
