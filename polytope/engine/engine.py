@@ -3,8 +3,8 @@ from typing import List
 from ..datacube.datacube import Datacube
 from ..shapes import ConvexPolytope
 
-class Engine():
 
+class Engine:
     def __init__(self):
         pass
 
@@ -14,5 +14,5 @@ class Engine():
     @staticmethod
     def default():
         from .hullslicer import HullSlicer
-        return HullSlicer()
 
+        return HullSlicer()

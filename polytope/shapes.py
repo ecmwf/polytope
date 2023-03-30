@@ -1,11 +1,11 @@
+import copy
+import math
 from abc import ABC, abstractmethod
 from typing import List
-import math
-import copy
+
 # import PIL.ImageDraw as ImageDraw
 # import PIL.Image as Image
 import tripy
-
 
 """
 Shapes used for the constructive geometry API of Polytope
@@ -16,12 +16,13 @@ class Shape(ABC):
     """Represents a multi-axis shape to be expanded"""
 
     @abstractmethod
-    def polytope():
+    def polytope(self):
         raise NotImplementedError()
 
     @abstractmethod
-    def axes() -> List[str]:
+    def axes(self) -> List[str]:
         raise NotImplementedError()
+
 
 class ConvexPolytope(Shape):
     def __init__(self, axes, points):
@@ -31,16 +32,16 @@ class ConvexPolytope(Shape):
     def extents(self, axis):
         slice_axis_idx = self.axes().index(axis)
         axis_values = [point[slice_axis_idx] for point in self.points]
-        lower = min( axis_values )
-        upper = max( axis_values )
+        lower = min(axis_values)
+        upper = max(axis_values)
         return (lower, upper)
-    
+
     def __str__(self):
         return f"Polytope in {self.axes} with points {self.points}"
 
     def axes(self):
         return self._axes
-    
+
     def polytope(self):
         return [self]
 
@@ -48,6 +49,7 @@ class ConvexPolytope(Shape):
 # This is the only shape which can slice on axes without a discretizer or interpolator
 class Select(Shape):
     """Matches several discrete value"""
+
     def __init__(self, axis, values):
         self.axis = axis
         self.values = values
@@ -77,6 +79,7 @@ class Span(Shape):
 
 class All(Span):
     """Matches all indices in an axis"""
+
     def __init__(self, axis):
         super().__init__(axis)
 
@@ -90,9 +93,9 @@ class Box(Shape):
         assert len(lower_corner) == dimension
         assert len(upper_corner) == dimension
 
-        if lower_corner == None:
+        if lower_corner is None:
             lower_corner = [-math.inf] * dimension
-        if upper_corner == None:
+        if upper_corner is None:
             upper_corner = [math.inf] * dimension
 
         # Build every vertex of the box from the two extremes
@@ -100,7 +103,7 @@ class Box(Shape):
         # ... [00, 01, 10, 11] in 2D
         # ... take lower/upper corner for each 0/1
         self.vertices = []
-        for i in range(0, 2 ** dimension):
+        for i in range(0, 2**dimension):
             vertex = copy.copy(lower_corner)
             for d in range(0, dimension):
                 if i >> d & 1:
@@ -109,7 +112,7 @@ class Box(Shape):
 
         assert lower_corner in self.vertices
         assert upper_corner in self.vertices
-        assert len(self.vertices) == 2 ** dimension
+        assert len(self.vertices) == 2**dimension
 
     def axes(self):
         return self._axes
@@ -125,7 +128,6 @@ class Disk(Shape):
     # NB number of segments is hard-coded, not exposed to user
 
     def __init__(self, axes, centre=[0, 0], radius=[1, 1]):
-
         self._axes = axes
         self.centre = centre
         self.radius = radius
@@ -142,7 +144,6 @@ class Disk(Shape):
             x = centre[0] + self.points[i][0] * radius[0]
             y = centre[1] + self.points[i][1] * radius[1]
             self.points[i] = [x, y]
-
 
     # def _plot(self):
 
@@ -169,10 +170,7 @@ class Disk(Shape):
     #     image.save("./circle1.png")
 
     def _points_on_circle(self, n, r):
-        return [
-            [math.cos(2 * math.pi / n * x) * r, math.sin(2 * math.pi / n * x) * r]
-            for x in range(0, n)
-        ]
+        return [[math.cos(2 * math.pi / n * x) * r, math.sin(2 * math.pi / n * x) * r] for x in range(0, n)]
 
     def _expansion_to_circumscribe_circle(self, n):
         half_angle_between_segments = math.pi / n
@@ -188,9 +186,8 @@ class Disk(Shape):
 class Ellipsoid(Shape):
     # Here we use the formula for the inscribed circle in an icosahedron
     # See https://en.wikipedia.org/wiki/Platonic_solid
-    
-    def __init__(self, axes, centre=[0, 0, 0], radius=[1, 1, 1]):
 
+    def __init__(self, axes, centre=[0, 0, 0], radius=[1, 1, 1]):
         self._axes = axes
         self.centre = centre
         self.radius = radius
@@ -207,32 +204,32 @@ class Ellipsoid(Shape):
             y = centre[1] + self.points[i][1] * radius[1]
             z = centre[2] + self.points[i][2] * radius[2]
             self.points[i] = [x, y, z]
-    
+
     def axes(self):
         return self._axes
 
     def _points_on_icosahedron(self, coeff):
-        golden_ratio = (1+math.sqrt(5))/2
+        golden_ratio = (1 + math.sqrt(5)) / 2
         return [
-            [0, coeff/2, coeff * golden_ratio/2],
-            [0, coeff/2, -coeff * golden_ratio/2],
-            [0, -coeff/2, coeff * golden_ratio/2],
-            [0, -coeff/2, -coeff * golden_ratio/2],
-            [coeff/2, coeff * golden_ratio/2,0],
-            [coeff/2, -coeff * golden_ratio/2,0],
-            [-coeff/2, coeff * golden_ratio/2,0],
-            [-coeff/2, -coeff * golden_ratio/2,0],
-            [coeff * golden_ratio/2, 0, coeff/2],
-            [coeff * golden_ratio/2, 0, -coeff/2],
-            [-coeff * golden_ratio/2, 0, coeff/2],
-            [-coeff * golden_ratio/2, 0, -coeff/2]
+            [0, coeff / 2, coeff * golden_ratio / 2],
+            [0, coeff / 2, -coeff * golden_ratio / 2],
+            [0, -coeff / 2, coeff * golden_ratio / 2],
+            [0, -coeff / 2, -coeff * golden_ratio / 2],
+            [coeff / 2, coeff * golden_ratio / 2, 0],
+            [coeff / 2, -coeff * golden_ratio / 2, 0],
+            [-coeff / 2, coeff * golden_ratio / 2, 0],
+            [-coeff / 2, -coeff * golden_ratio / 2, 0],
+            [coeff * golden_ratio / 2, 0, coeff / 2],
+            [coeff * golden_ratio / 2, 0, -coeff / 2],
+            [-coeff * golden_ratio / 2, 0, coeff / 2],
+            [-coeff * golden_ratio / 2, 0, -coeff / 2],
         ]
         pass
 
     def _icosahedron_edge_length_coeff(self):
         # theta is the dihedral angle for an icosahedron here
-        theta = (138.19/180)*math.pi
-        edge_length = (2/math.tan(theta/2))*math.tan(math.pi/3)
+        theta = (138.19 / 180) * math.pi
+        edge_length = (2 / math.tan(theta / 2)) * math.tan(math.pi / 3)
         return edge_length
 
     def polytope(self):
@@ -243,7 +240,6 @@ class PathSegment(Shape):
     """N-D polytope defined by a shape which is swept along a straight line between two points"""
 
     def __init__(self, axes, shape: Shape, start: List, end: List):
-
         self._axes = axes
 
         assert shape.axes() == self.axes()
@@ -252,7 +248,6 @@ class PathSegment(Shape):
 
         self.polytopes = []
         for polytope in shape.polytope():
-
             # We can generate a polytope by taking all the start points and all the end points and passing them
             # to the polytope constructor as-is. This is not a convex hull, there will inevitably be interior points.
             # This is currently OK, because the triangulation step will delaunay the polytope using the interior points.
@@ -276,7 +271,6 @@ class Path(Shape):
     """N-D polytope defined by a shape which is swept along a polyline defined by multiple points"""
 
     def __init__(self, axes, shape, *points, closed=False):
-
         self._axes = axes
 
         assert shape.axes() == self.axes()
@@ -311,7 +305,7 @@ class Union(Shape):
         self.polytopes = []
 
         for s in shapes:
-            # TODO: Maybe here if it is a certain shape with not many polytopes, use append instead of extend? Didn't help...
+            # TODO: Maybe here if it is a certain shape with not many polytopes, use append instead of extend?
             self.polytopes.extend(s.polytope())
 
     def axes(self):
@@ -333,7 +327,7 @@ class Polygon(Shape):
         triangles = tripy.earclip(points)
         self.polytopes = []
 
-        if len(points)>0 and len(triangles)==0:
+        if len(points) > 0 and len(triangles) == 0:
             self.polytopes = [ConvexPolytope(self.axes(), points)]
 
         else:

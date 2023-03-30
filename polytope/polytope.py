@@ -1,6 +1,8 @@
 from typing import List
-from .utility.exceptions import AxisOverdefinedError
+
 from .shapes import ConvexPolytope
+from .utility.exceptions import AxisOverdefinedError
+
 
 class Request:
     """Encapsulates a request for data"""
@@ -33,11 +35,12 @@ class Request:
 #       which builds its datacube. No need to create the "pair" here.
 #       Engine could be renamed "extractor" or something more descriptive.
 
-class Polytope:
 
-    def __init__(self, datacube, engine, options = {}):
-        from .engine import Engine
+class Polytope:
+    def __init__(self, datacube, engine, options={}):
         from .datacube import Datacube
+        from .engine import Engine
+
         self.datacube = Datacube.create(datacube, options)
         self.engine = engine if engine is not None else Engine.default()
 
@@ -49,5 +52,4 @@ class Polytope:
         """Higher-level API which takes a request and uses it to slice the datacube"""
         request_tree = self.engine.extract(self.datacube, request.polytopes())
         self.datacube.get(request_tree)
-        return request_tree 
-
+        return request_tree

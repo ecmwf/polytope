@@ -8,18 +8,15 @@ __version__ = re.search(
     io.open("polytope/version.py", encoding="utf_8_sig").read(),
 ).group(1)
 
-with open("requirements.txt") as f:
-    requirements = f.read().splitlines()
 
 setup(
     name="polytope",
     version=__version__,
     description="Polytope datacube slicing library",
-    url="https://github.com/ecmwf-projects/polytope",
+    url="https://github.com/ecmwf/polytope",
     author="ECMWF",
     author_email="James.Hawkes@ecmwf.int",
     packages=find_packages(),
-    install_requires=requirements,
     zip_safe=False,
     include_package_data=True,
 )

@@ -1,30 +1,21 @@
-import xarray as xr
 import numpy as np
 import pandas as pd
 import pytest
+import xarray as xr
 
 from polytope.datacube import Datacube, DatacubePath
+from polytope.datacube.datacube_axis import FloatAxis, IntAxis, PandasTimestampAxis
 from polytope.datacube.xarray import XArrayDatacube
 from polytope.utility.exceptions import AxisNotFoundError, AxisOverdefinedError
-from polytope.datacube.datacube_axis import PandasTimestampAxis, IntAxis, FloatAxis
-from polytope.datacube.datacube_axis import PandasTimestampAxis, IntAxis, FloatAxis
 
 
-class TestXarrayDatacube():
-
+class TestXarrayDatacube:
     def setup_method(self, method):
         pass
 
     def test_validate(self):
         dims = np.random.randn(1, 1, 1)
-        array = xr.Dataset(
-            data_vars=dict(param=(["x", "y", "z"], dims)),
-            coords={
-                "x": [1],
-                "y": [1],
-                "z": [1]
-            }
-        )
+        array = xr.Dataset(data_vars=dict(param=(["x", "y", "z"], dims)), coords={"x": [1], "y": [1], "z": [1]})
 
         datacube = Datacube.create(array, options={})
         datacube = Datacube.create(array, options={})
@@ -34,16 +25,14 @@ class TestXarrayDatacube():
 
         with pytest.raises(AxisNotFoundError):
             datacube.validate(["x", "y", "z", "w"])
-        
+
         with pytest.raises(AxisNotFoundError):
             datacube.validate(["w", "x", "y", "z"])
 
         with pytest.raises(AxisOverdefinedError):
             datacube.validate(["x", "x", "y", "z"])
 
-
     def test_create(self):
-
         # Create a dataarray with 3 labelled axes using different index types
         array = xr.DataArray(
             np.random.randn(3, 6, 129),
@@ -51,20 +40,18 @@ class TestXarrayDatacube():
             coords={
                 "date": pd.date_range("2000-01-01", "2000-01-03", 3),
                 "step": [0, 3, 6, 9, 12, 15],
-                "level": range(1,130)
-            }
+                "level": range(1, 130),
+            },
         )
 
-        for d,v in array.coords.variables.items():
+        for d, v in array.coords.variables.items():
             print(v.dtype)
-
 
         datacube = Datacube.create(array, options={})
         datacube = Datacube.create(array, options={})
 
         # Check the factory created the correct type of datacube
         assert isinstance(datacube, XArrayDatacube)
-
 
         # Tests on "date" axis, path is empty so we look at the whole datacube
         partial_request = DatacubePath()
@@ -80,22 +67,23 @@ class TestXarrayDatacube():
 
         # Check discretizing along 'date' axis with a range of dates
         label = PandasTimestampAxis()
-        idxs = datacube.get_indices( partial_request, label, pd.Timestamp("2000-01-02"), pd.Timestamp("2000-03-31") )
+        idxs = datacube.get_indices(partial_request, label, pd.Timestamp("2000-01-02"), pd.Timestamp("2000-03-31"))
         assert (idxs == pd.date_range(pd.Timestamp("2000-01-02"), pd.Timestamp("2000-01-03"), 2)).all()
         assert type(idxs[0]) == pd.Timestamp
 
         # Check discretizing along 'date' axis at a specific date gives one value
         label = PandasTimestampAxis()
-        idxs = datacube.get_indices( partial_request, label, pd.Timestamp("2000-01-02"), pd.Timestamp("2000-01-02") )
+        idxs = datacube.get_indices(partial_request, label, pd.Timestamp("2000-01-02"), pd.Timestamp("2000-01-02"))
         assert len(idxs) == 1
         assert type(idxs[0]) == pd.Timestamp
         assert idxs[0] == pd.Timestamp(pd.Timestamp("2000-01-02"))
 
         # Check discretizing along 'date' axis at a date which does not exist in discrete space gives no values
         label = PandasTimestampAxis()
-        idxs = datacube.get_indices( partial_request, label, pd.Timestamp("2000-01-01-1200"), pd.Timestamp("2000-01-01-1200" ))
+        idxs = datacube.get_indices(
+            partial_request, label, pd.Timestamp("2000-01-01-1200"), pd.Timestamp("2000-01-01-1200")
+        )
         assert len(idxs) == 0
-
 
         # Tests on "step" axis, path is a sub-datacube at a specific date
         partial_request = DatacubePath(date="2000-01-01")
@@ -120,7 +108,6 @@ class TestXarrayDatacube():
         idxs = datacube.get_indices(partial_request, label, 4, 4)
         assert len(idxs) == 0
 
-
         # Tests on "level" axis, path is a sub-datacube at a specific date/step
         partial_request = DatacubePath(date="2000-01-01", step=3)
 
@@ -133,4 +120,3 @@ class TestXarrayDatacube():
         idxs = datacube.get_indices(partial_request, label, -0.3, 10)
         assert idxs == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         assert type(idxs[0]) == int
-

@@ -1,22 +1,25 @@
-import pytest
 import numpy as np
+import pytest
 
-from polytope.utility.combinatorics import group, product, validate_axes
-from polytope.utility.exceptions import AxisOverdefinedError, AxisUnderdefinedError, AxisNotFoundError
 from polytope import ConvexPolytope
+from polytope.utility.combinatorics import group, product, validate_axes
+from polytope.utility.exceptions import (
+    AxisNotFoundError,
+    AxisOverdefinedError,
+    AxisUnderdefinedError,
+)
 
-class TestCombinatorics():
 
+class TestCombinatorics:
     def setup_method(self, method):
         pass
 
     def test_group_and_product(self):
-
-        p1 = ConvexPolytope(["x", "y"], [[1,2],[3,4],[5,6]] )
-        p2 = ConvexPolytope(["a", "b"], [[1,2],[3,4],[5,6]] )
-        p3 = ConvexPolytope(["b", "a"], [[1,2],[3,4],[5,6]] )
-        p4 = ConvexPolytope(np.array(["a", "b"]), [[1,2],[3,4],[5,6]] )
-        p5 = ConvexPolytope(("a", "b"), [[1,2],[3,4],[5,6]] )
+        p1 = ConvexPolytope(["x", "y"], [[1, 2], [3, 4], [5, 6]])
+        p2 = ConvexPolytope(["a", "b"], [[1, 2], [3, 4], [5, 6]])
+        p3 = ConvexPolytope(["b", "a"], [[1, 2], [3, 4], [5, 6]])
+        p4 = ConvexPolytope(np.array(["a", "b"]), [[1, 2], [3, 4], [5, 6]])
+        p5 = ConvexPolytope(("a", "b"), [[1, 2], [3, 4], [5, 6]])
 
         groups, all_axes = group([p1, p2, p3, p4, p5])
 
@@ -32,9 +35,8 @@ class TestCombinatorics():
             assert len(c) == 2
 
     def test_group_with_different_number_of_axes(self):
-
-        p1 = ConvexPolytope(["x", "y"], [[1,2],[3,4],[5,6]] )
-        p2 = ConvexPolytope(["a", "b", "c"], [[1,2],[3,4],[5,6]] )
+        p1 = ConvexPolytope(["x", "y"], [[1, 2], [3, 4], [5, 6]])
+        p2 = ConvexPolytope(["a", "b", "c"], [[1, 2], [3, 4], [5, 6]])
 
         groups, all_axes = group([p1, p2])
 
@@ -44,10 +46,8 @@ class TestCombinatorics():
         assert len(all_axes) == 5
 
     def test_validate_axes(self):
-
         with pytest.raises(AxisNotFoundError):
             validate_axes(["x", "y", "z"], ["x", "y", "z", "a"])
-
         with pytest.raises(AxisUnderdefinedError):
             validate_axes(["x", "y", "z"], ["x", "y"])
         with pytest.raises(AxisUnderdefinedError):
@@ -56,7 +56,6 @@ class TestCombinatorics():
             validate_axes(["x", "y", "z"], [])
         with pytest.raises(AxisUnderdefinedError):
             validate_axes(["x", "y", "z"], ["a"])
-        
         with pytest.raises(AxisOverdefinedError):
             validate_axes(["x", "y", "z"], ["x", "x", "y", "z"])
         with pytest.raises(AxisOverdefinedError):

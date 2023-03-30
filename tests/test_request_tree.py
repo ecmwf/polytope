@@ -1,10 +1,10 @@
-from polytope.datacube.datacube_request_tree import DatacubeRequestTree
 from sortedcontainers import SortedList
 
 from polytope.datacube.datacube_axis import IntAxis
+from polytope.datacube.datacube_request_tree import DatacubeRequestTree
 
-class TestRequestTree():
 
+class TestRequestTree:
     def setup_method(self, method):
         pass
 
@@ -23,7 +23,7 @@ class TestRequestTree():
         root_node.add_child(child2)
         child1.add_child(grandchild1)
         assert child1.children == SortedList([grandchild1])
-    
+
     def test_add_child(self):
         axis1 = IntAxis()
         axis2 = IntAxis()
@@ -48,7 +48,6 @@ class TestRequestTree():
         root_node.add_child(child)
         assert child.parent == root_node
 
-
     def test_find_child(self):
         axis1 = IntAxis()
         axis2 = IntAxis()
@@ -59,8 +58,7 @@ class TestRequestTree():
         root_node = DatacubeRequestTree()
         root_node.add_child(child1)
         assert SortedList([child1]) == root_node.children
-        assert not child2 in root_node.children
-
+        assert child2 not in root_node.children
 
     def test_get_root(self):
         axis1 = IntAxis()
@@ -140,8 +138,7 @@ class TestRequestTree():
         root_node1.pprint()
         assert len(root_node1.children) == 3
         root_node1.pprint()
-        assert set([len(child.children) for child in root_node1.children]) == {2,2,3}
-
+        assert set([len(child.children) for child in root_node1.children]) == {2, 2, 3}
 
     def test_pprint(self):
         axis1 = IntAxis()
@@ -158,7 +155,6 @@ class TestRequestTree():
         root_node.add_child(child1)
         root_node.add_child(child2)
         root_node.pprint()
-
 
     def test_remove_branch(self):
         axis1 = IntAxis()
@@ -244,7 +240,6 @@ class TestRequestTree():
         assert len(list(root_node1.children)[0].children) == 1
         assert list(list(root_node1.children)[0].children)[0].axis.name == "grandchild1"
 
-
     def test_flatten(self):
         axis1 = IntAxis()
         axis2 = IntAxis()
@@ -262,10 +257,9 @@ class TestRequestTree():
         path = grandchild1.flatten()
         assert len(path) == 2
         assert "child1" in path.keys() and "grandchild1" in path.keys()
-        assert path["child1"] == None
-        assert path["grandchild1"] == None
+        assert path["child1"] is None
+        assert path["grandchild1"] is None
 
-    
     def test_get_ancestors(self):
         axis1 = IntAxis()
         axis2 = IntAxis()
@@ -282,7 +276,6 @@ class TestRequestTree():
         root_node1.add_child(child1)
         assert greatgrandchild1.get_ancestors() == SortedList([greatgrandchild1, grandchild1, child1])
 
-
     def test_add_or_get_child(self):
         axis1 = IntAxis()
         axis1.name = "child1"
@@ -292,8 +285,7 @@ class TestRequestTree():
         root_node = DatacubeRequestTree()
         root_node.add_child(child1)
         assert root_node.create_child(axis1, None) == child1
-        assert root_node.create_child(axis2, None).parent == root_node 
-        
+        assert root_node.create_child(axis2, None).parent == root_node
 
     def test_to_dict(self):
         axis1 = IntAxis()
@@ -315,19 +307,7 @@ class TestRequestTree():
         root_node1.add_child(child1)
         root_node1.add_child(child2)
         tree_dict = root_node1.to_dict()
-        assert tree_dict == {'child1':
-             {None: 
-                {'grandchild1': 
-                    {None: 
-                        {'greatgrandchild1': 
-                            {None: 1}
-                        }
-                    }
-                }
-            },
-             'child2': 
-                {None: None}
+        assert tree_dict == {
+            "child1": {None: {"grandchild1": {None: {"greatgrandchild1": {None: 1}}}}},
+            "child2": {None: None},
         }
-        
-
-        

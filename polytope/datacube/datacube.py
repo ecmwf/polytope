@@ -1,13 +1,13 @@
-import xarray as xr
 from abc import ABC, abstractmethod
 from typing import Any, List
 
-from .datacube_request_tree import DatacubeRequestTree, DatacubePath
+import xarray as xr
+
 from .datacube_axis import DatacubeAxis
+from .datacube_request_tree import DatacubePath, DatacubeRequestTree
 
 
 class Datacube(ABC):
-
     @abstractmethod
     def get(self, requests: List[DatacubeRequestTree]) -> Any:
         """Return data given a set of request trees"""
@@ -17,7 +17,7 @@ class Datacube(ABC):
         """
         Get the type mapper for a subaxis of the datacube given by label
         """
-    
+
     @abstractmethod
     def get_indices(self, path: DatacubePath, label: str, lower: Any, upper: Any) -> List:
         """
@@ -27,6 +27,10 @@ class Datacube(ABC):
         e.g. returns integer discrete points between two floats
         """
 
+    @abstractmethod
+    def has_index(self, path: DatacubePath, label, index) -> bool:
+        "Given a path to a subset of the datacube, checks if the index exists on that sub-datacube axis"
+
     @property
     @abstractmethod
     def axes(self):
@@ -34,13 +38,12 @@ class Datacube(ABC):
 
     @abstractmethod
     def validate(self, axes) -> bool:
-        """ returns true if the input axes can be resolved against the datacube axes """
-
+        """returns true if the input axes can be resolved against the datacube axes"""
 
     @staticmethod
     def create(datacube, options):
         if isinstance(datacube, (xr.core.dataarray.DataArray, xr.core.dataset.Dataset)):
             from .xarray import XArrayDatacube
-            xadatacube = XArrayDatacube(datacube, options = options)
-            return xadatacube
 
+            xadatacube = XArrayDatacube(datacube, options=options)
+            return xadatacube
