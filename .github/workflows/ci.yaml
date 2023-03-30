@@ -18,7 +18,7 @@ jobs:
   ci:
     needs: setup
     name: ci
-    uses: ./ci-python-template.yaml
+    uses: ./.github/workflows/ci-python-template.yaml@${{ github.ref }}
     with:
       codecov_upload: true
       notify_teams: false
