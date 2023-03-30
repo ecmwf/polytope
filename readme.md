@@ -23,7 +23,7 @@ or from Pypi with the command
 Here is a step-by-step example of how to use this software.
 
 1. First, instantiate all necessary Polytope components. In particular, provide a datacube, an API and a slicer instance.  
- In the following example, we first specify the data which will be in our Xarray datacube. Note that the data here comes from the GRIB file called "winds.grib", which is 3-dimensional with dimensions: step, latitude and longitude.
+ In this example, we first specify the data which will be in our Xarray datacube. Note that the data here comes from the GRIB file called "winds.grib", which is 3-dimensional with dimensions: step, latitude and longitude.
 
         import xarray as xr
 
