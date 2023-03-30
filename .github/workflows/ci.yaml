@@ -15,7 +15,16 @@ on:
     types: [labeled]
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgdal-dev libaec-dev
+
   ci:
+    needs: setup
     name: ci
     uses: ecmwf-actions/reusable-workflows/.github/workflows/ci-python.yml@v1
     with:
@@ -23,9 +32,3 @@ jobs:
       notify_teams: false
       build_package_inputs: |
         self_build: false
-
-    steps:
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgdal-dev libaec-dev
