@@ -27,7 +27,7 @@ Here is a step-by-step example of how to use this software.
 
         import xarray as xr
         array = xr.open_dataset("winds.grib", engine="cfgrib")
- - We then choose an appropriate slicer component,
+    We then choose an appropriate slicer component,
 
         from polytope.engine.hullslicer import HullSlicer
         slicer = HullSlicer()
