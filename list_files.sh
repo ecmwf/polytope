@@ -2,4 +2,4 @@
 
 # set -x
 
-echo $ (sudo apt-get install libeccodes-dev)
+echo $ sudo apt-get install libeccodes-dev
