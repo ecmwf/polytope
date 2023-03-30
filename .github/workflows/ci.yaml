@@ -164,10 +164,10 @@ jobs:
         repository: ${{ inputs.repository }}
         ref: ${{ inputs.ref }}
 
-    - name: Install Dependencies
-      id: install-dependencies
-      uses: ecmwf-actions/build-package@v1
-      with: ${{ fromJSON(needs.setup.outputs.inputs) }}
+    # - name: Install Dependencies
+    #   id: install-dependencies
+    #   uses: ecmwf-actions/build-package@v1
+    #   with: ${{ fromJSON(needs.setup.outputs.inputs) }}
 
     - name: Checkout eccodes Repository
       uses: actions/checkout@v3
