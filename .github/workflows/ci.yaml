@@ -148,27 +148,13 @@ jobs:
       run: |
         echo inputs=$(echo "${{ inputs.build_package_inputs || '{}' }}" | yq eval '.' --output-format json --indent 0 -) >> $GITHUB_OUTPUT
         echo inputs-for-ubuntu=$(echo "${{ inputs.build_package_inputs || '{}' }}" | yq eval '. * {"os":"ubuntu-20.04","compiler":"gnu-10","compiler_cc":"gcc-10","compiler_cxx":"g++-10","compiler_fc":"gfortran-10"}' --output-format json --indent 0 -) >> $GITHUB_OUTPUT
-  test:
-    name: test
+  
+  eccodes:
+    name: eccodes
     needs:
     - qa
     - setup
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
-    runs-on: ${{ matrix.os }}
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
-      with:
-        repository: ${{ inputs.repository }}
-        ref: ${{ inputs.ref }}
-
-    # - name: Install Dependencies
-    #   id: install-dependencies
-    #   uses: ecmwf-actions/build-package@v1
-    #   with: ${{ fromJSON(needs.setup.outputs.inputs) }}
-
+    steps: 
     - name: Checkout eccodes Repository
       uses: actions/checkout@v3
       with:
@@ -188,6 +174,48 @@ jobs:
         workspace: ${{ github.workspace }}/eccodes
         repository: ecmwf/eccodes
         sha: ${{ env.ECCODES_SHA }}
+  
+  test:
+    name: test
+    needs:
+    - qa
+    - setup
+    - eccodes
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+      with:
+        repository: ${{ inputs.repository }}
+        ref: ${{ inputs.ref }}
+
+    # - name: Install Dependencies
+    #   id: install-dependencies
+    #   uses: ecmwf-actions/build-package@v1
+    #   with: ${{ fromJSON(needs.setup.outputs.inputs) }}
+
+    # - name: Checkout eccodes Repository
+    #   uses: actions/checkout@v3
+    #   with:
+    #     repository: ecmwf/eccodes
+    #     ref: develop
+    #     path: ${{ github.workspace }}/eccodes
+
+    # - name: Retrieve eccodes SHA
+    #   working-directory: ${{ github.workspace }}/eccodes
+    #   shell: bash -eux {0}
+    #   run: echo "ECCODES_SHA=$(git log -1 --format='%H')" >> $GITHUB_ENV
+
+    # - name: Build & Test
+    #   id: build-test
+    #   uses: ./
+    #   with:
+    #     workspace: ${{ github.workspace }}/eccodes
+    #     repository: ecmwf/eccodes
+    #     sha: ${{ env.ECCODES_SHA }}
 
     - name: Setup Python
       uses: actions/setup-python@v4
