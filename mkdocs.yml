@@ -1,0 +1,6 @@
+site_name: Polytope
+theme:
+    name: readthedocs
+    # logo: destination-earth-logo.png
+markdown_extensions:
+    - admonition
