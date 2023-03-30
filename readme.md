@@ -8,7 +8,19 @@ Polytope is designed to extend different datacube backends.
 
 Polytope supports datacubes which have branching, non-uniform indexing, and even cyclic axes. If the datacube backend supports byte-addressability and efficient random access (either in-memory on direct from storage), *polytope* can be used to dramatically decrease overall IO load.
 
-# Requirements
+# Installation 
+
+Install the polytope software with Python 3 (>=3.7) and pip using either
+
+    python3 -m pip install --upgrade git+https://github.com/ecmwf/polytope.git@master
+
+or from Pypi with the command
+
+    python3 -m pip install polytope
+
+# Example
+
+<!-- # Requirements
 
 Python >= 3.7 (for OrderedDict)
-TODO: populate requirements.txt
+TODO: populate requirements.txt -->
