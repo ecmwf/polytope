@@ -39,7 +39,7 @@ Here is a step-by-step example of how to use this software.
         API = Polytope(datacube=array, engine=slicer, options=options)
     Note that the API is the component which instantiates the Datacube component. We thus provide the additional datacube options, such as the cyclicity information of some axes in this step.
 
-2. Second, create a request shape to extract from the datacube.
+2. Second, create a request shape to extract from the datacube.  
   In this example, we want to extract a simple 2D box in latitude and longitude at step 0. We thus create the two relevant shapes we need to build this 3-dimensional object,
 
         from polytope.shapes import Box, Select
