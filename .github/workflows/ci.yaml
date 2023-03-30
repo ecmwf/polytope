@@ -149,8 +149,40 @@ jobs:
         echo inputs=$(echo "${{ inputs.build_package_inputs || '{}' }}" | yq eval '.' --output-format json --indent 0 -) >> $GITHUB_OUTPUT
         echo inputs-for-ubuntu=$(echo "${{ inputs.build_package_inputs || '{}' }}" | yq eval '. * {"os":"ubuntu-20.04","compiler":"gnu-10","compiler_cc":"gcc-10","compiler_cxx":"g++-10","compiler_fc":"gfortran-10"}' --output-format json --indent 0 -) >> $GITHUB_OUTPUT
   
-  eccodes:
-    name: eccodes
+  # eccodes:
+  #   name: eccodes
+  #   needs:
+  #   - qa
+  #   - setup
+  #   strategy:
+  #     fail-fast: false
+  #     matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+  #   runs-on: ${{ matrix.os }}
+  #   steps: 
+  #   - name: Checkout Repository
+  #     uses: actions/checkout@v3
+  #   - name: Checkout eccodes Repository
+  #     uses: actions/checkout@v3
+  #     with:
+  #       repository: ecmwf/eccodes
+  #       ref: develop
+  #       path: ${{ github.workspace }}/eccodes
+
+  #   - name: Retrieve eccodes SHA
+  #     working-directory: ${{ github.workspace }}/eccodes
+  #     shell: bash -eux {0}
+  #     run: echo "ECCODES_SHA=$(git log -1 --format='%H')" >> $GITHUB_ENV
+
+  #   - name: Build & Test
+  #     id: build-test
+  #     uses: ./
+  #     with:
+  #       workspace: ${{ github.workspace }}/eccodes
+  #       repository: ecmwf/eccodes
+  #       sha: ${{ env.ECCODES_SHA }}
+
+  build:
+    name: build
     needs:
     - qa
     - setup
@@ -158,35 +190,24 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
-    steps: 
-    - name: Checkout Repository
-      uses: actions/checkout@v3
-    - name: Checkout eccodes Repository
-      uses: actions/checkout@v3
-      with:
-        repository: ecmwf/eccodes
-        ref: develop
-        path: ${{ github.workspace }}/eccodes
-
-    - name: Retrieve eccodes SHA
-      working-directory: ${{ github.workspace }}/eccodes
-      shell: bash -eux {0}
-      run: echo "ECCODES_SHA=$(git log -1 --format='%H')" >> $GITHUB_ENV
-
-    - name: Build & Test
-      id: build-test
-      uses: ./
-      with:
-        workspace: ${{ github.workspace }}/eccodes
-        repository: ecmwf/eccodes
-        sha: ${{ env.ECCODES_SHA }}
-
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y curl
+    - name: Run script
+      run: |
+        chmod +x list_files.sh
+        ../list_files.sh
   
   test:
     name: test
     needs:
     - qa
     - setup
+    - build
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
