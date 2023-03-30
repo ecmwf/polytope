@@ -15,14 +15,6 @@ on:
     types: [labeled]
 
 jobs:
-  setup:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgdal-dev libaec-dev
-
   ci:
     needs: setup
     name: ci
@@ -32,3 +24,9 @@ jobs:
       notify_teams: false
       build_package_inputs: |
         self_build: false
+        dependencies: |
+          ecmwf/ecbuild
+          ecmwf/eckit
+          ecmwf/eccodes
+        dependency_branch: develop
+      system_dependencies: libgdal-dev libaec-dev
