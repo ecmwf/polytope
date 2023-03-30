@@ -1,68 +1,19 @@
-name: ci-python
+name: ci
 
-# Controls when the workflow will run
 on:
+  push:
+    branches:
+      - 'master'
+      - 'develop'
+    tags-ignore:
+      - '**'
 
-  # Allow the workflow to be reusable
-  workflow_call:
-    inputs:
+  pull_request: ~
+  workflow_dispatch: ~
 
-      # Inputs for job steps.
-      skip_matrix_jobs:
-        description: A list of matrix jobs to skip. Job names should be the full form of `<compiler>@<platform>`.
-        required: false
-        default: ''
-        type: string
-      codecov_upload:
-        description: Whether to generate and upload code coverage to codecov service for main branches.
-        required: false
-        default: false
-        type: boolean
-      notify_teams:
-        description: Whether to notify about workflow status via Microsoft Teams. Note that you must supply
-          `incoming_webhook` secret if you switch on this feature.
-        required: false
-        default: false
-        type: boolean
-      python_version:
-        description: The version of Python binary to use.
-        required: false
-        default: '3.x'
-        type: string
-      repository:
-        description: The source repository name, in case it differs from the current one. Repository names should
-          follow the standard Github `owner/name` format.
-        required: false
-        default: ${{ github.repository }}
-        type: string
-      ref:
-        description: The source repository reference, in case it differs from the current one.
-        required: false
-        default: ${{ github.ref }}
-        type: string
+  pull_request_target:
+    types: [labeled]
 
-      # Inputs for build-package action.
-      build_package_inputs:
-        description: Optional inputs for the `build-package` action, provided as a YAML object value.
-        required: false
-        type: string
-
-    secrets:
-
-      # Secrets for PyPI upload.
-      pypi_username:
-        description: Username of the PyPI account. The account must have sufficient permissions to deploy the current
-          project.
-        required: false
-      pypi_password:
-        description: Password of the PyPI account.
-        required: false
-
-      # Secret for notify-teams action.
-      incoming_webhook:
-        description: Public URL of the Microsoft Teams incoming webhook. To get the value, make sure that channel in
-          Teams has the appropriate connector set up. It will only be used if `notify_teams` input is switched on.
-        required: false
 
 jobs:
   qa:
