@@ -154,33 +154,37 @@ jobs:
     needs:
     - qa
     - setup
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+    runs-on: ${{ matrix.os }}
     steps: 
-    - name: Checkout eccodes Repository
-      uses: actions/checkout@v3
-      with:
-        repository: ecmwf/eccodes
-        ref: develop
-        path: ${{ github.workspace }}/eccodes
+     - name: Checkout eccodes Repository
+       uses: actions/checkout@v3
+       with:
+         repository: ecmwf/eccodes
+         ref: develop
+         path: ${{ github.workspace }}/eccodes
 
-    - name: Retrieve eccodes SHA
-      working-directory: ${{ github.workspace }}/eccodes
-      shell: bash -eux {0}
-      run: echo "ECCODES_SHA=$(git log -1 --format='%H')" >> $GITHUB_ENV
+     - name: Retrieve eccodes SHA
+       working-directory: ${{ github.workspace }}/eccodes
+       shell: bash -eux {0}
+       run: echo "ECCODES_SHA=$(git log -1 --format='%H')" >> $GITHUB_ENV
 
-    - name: Build & Test
-      id: build-test
-      uses: ./
-      with:
-        workspace: ${{ github.workspace }}/eccodes
-        repository: ecmwf/eccodes
-        sha: ${{ env.ECCODES_SHA }}
+     - name: Build & Test
+       id: build-test
+       uses: ./
+       with:
+         workspace: ${{ github.workspace }}/eccodes
+         repository: ecmwf/eccodes
+         sha: ${{ env.ECCODES_SHA }}
+
   
   test:
     name: test
     needs:
     - qa
     - setup
-    - eccodes
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
