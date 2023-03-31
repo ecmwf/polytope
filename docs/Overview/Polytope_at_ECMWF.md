@@ -6,3 +6,5 @@ Numerical weather prediction (NWP) data produced at ECMWF can be viewed as a hig
         <img src="../images_overview/ecmwf_datacube.png" alt="ECMWF datacube" width="350"/>
     </p>
     </div>
+
+Traditional extraction methods on such a datacube only extract so called "bounding boxes" of data where ranges along each axis are specified. 
