@@ -4,3 +4,5 @@ theme:
     # logo: destination-earth-logo.png
 markdown_extensions:
     - admonition
+extra_css:
+    - extra.css
