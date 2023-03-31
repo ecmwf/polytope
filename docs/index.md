@@ -8,7 +8,7 @@ In particular, it can be used to request:
 - 2D cut-outs, such as country cut-outs, from a datacube
     <div style="text-align:center">
     <p style="float: middle; margin: 0 5px 0 0px;">
-        <img src="./images/greece.png" alt="Greece cut-out" width="200"/>
+        <img src="./images/greece.png" alt="Greece cut-out" width="250"/>
     </p>
     </div>
 
@@ -28,20 +28,20 @@ In particular, it can be used to request:
 
 - and many more high-dimensional shapes in arbitrary dimensions...
 
-<div style="text-align:center">
+<!-- <div style="text-align:center">
 <div class="note", style="border: 1px solid black">
 Note that Polytope reads only the user-requested data, instead of whole fields. Importantly, this implies a significant decrease of the I/O usage when reading data from a datacube.
 </div>
-</div>
+</div> -->
+
+!!! important
+    Note that Polytope reads only the user-requested data, instead of whole fields. Importantly, this implies a significant decrease of the I/O usage when reading data from a datacube.
 
 
-# User Guide
+See <a href="./Overview/Overview">Overview</a> for more information.
 
-## Quickstart
-
-# Developer Guide
-
-# Contributing
+To learn more about how to use Polytope, refer to the <a href="./User_Guide/Overview">User Guide</a>. In particular, see the Quickstart page for a step-by-step example of how to use the Polytope software.
+For a more in-depth explanation of how Polytope achieves its feature exctraction, refer to the <a href="./Developer_Guide/Overview">Developer Guide</a>.
 
 # License
 
