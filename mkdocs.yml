@@ -19,6 +19,6 @@ nav:
         - Overview: Developer_Guide/Overview.md
         - Datacube: Developer_Guide/Datacube.md
         - Slicer: Developer_Guide/Slicer.md
-        - APIs: 
-            - API levels: Developer_Guide/API.md
-            - Mid-level Shapes: Developer_Guide/shapes.md
+        - APIs: Developer_Guide/API.md
+            # - API levels: Developer_Guide/API.md
+            # - Mid-level Shapes: Developer_Guide/shapes.md

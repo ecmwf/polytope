@@ -13,7 +13,7 @@ More details about the individual components and their implementations are provi
 
 - [Datacube](../Developer_Guide/Datacube.md)
 
- - [Slicer](../Developer_Guide/Slicer.md)
+- [Slicer](../Developer_Guide/Slicer.md)
 
- - [API](../Developer_Guide/API.md)
+- [API](../Developer_Guide/API.md)
 
