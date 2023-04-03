@@ -1,4 +1,4 @@
-# APIs
+# API Levels
 
 The Polytope software has 3 API levels: the high-, mid- and low-level APIs. 
 Each level can be used to request different types of shapes from the datacube. 
@@ -46,3 +46,4 @@ An example request on this API level looks like:
 
 !!! note
     Note that these API levels are built one on top of another. In particular, the high-level API uses the mid-level API, which itself uses the low-level API.
+    In particular, this implies that all shapes are in fact a combination of low-level convex polytopes.
