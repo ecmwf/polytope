@@ -11,8 +11,8 @@ This shape takes as input a list of the axes on which it is defined, as well as 
     points = [[0, 0], [10, 10], [0, 10]]
     ConvexPolytope(["latitude", "longitude"], points)
 
-!!! important 
-    This shape can be defined on arbitrarily many dimensions.
+<!-- !!! important 
+    This shape can be defined on arbitrarily many dimensions. -->
 
 #### Select
 
@@ -22,8 +22,8 @@ This shape takes as input an axis, as well as a list of indices to select. An ex
 
     Select("latitude", [10.5, 11.5, 12.5])
 
-!!! important
-    This shape is 1-dimensional and cannot accept more or less than 1 datacube axis in its definition.
+<!-- !!! important
+    This shape is 1-dimensional and cannot accept more or less than 1 datacube axis in its definition. -->
 
 #### Span 
 
@@ -33,8 +33,8 @@ This shape takes as input an axis, as well as the lower and upper values of the 
 
     Span("latitude", 10.5, 11.5)
 
-!!! important
-    This shape is 1-dimensional and cannot accept more or less than 1 datacube axis in its definition.
+<!-- !!! important
+    This shape is 1-dimensional and cannot accept more or less than 1 datacube axis in its definition. -->
 
 #### All
 
@@ -44,8 +44,8 @@ This shape takes as sole input an axis. An example All shape is given by:
 
     All("latitude")
 
-!!! important
-    This shape is 1-dimensional and cannot accept more or less than 1 datacube axis in its definition.
+<!-- !!! important
+    This shape is 1-dimensional and cannot accept more or less than 1 datacube axis in its definition. -->
 
 #### Box
 
@@ -57,8 +57,8 @@ This shape takes as input a list of the box axes, as well as the lower and upper
     upper = [10, 30, 3]
     Box(["latitude", "longitude", "timestep"], lower, upper)
 
-!!! important 
-    This shape can be defined on arbitrarily many dimensions.
+<!-- !!! important 
+    This shape can be defined on arbitrarily many dimensions. -->
 
 #### Disk
 
@@ -125,8 +125,8 @@ An example PathSegment shape is given by:
     The axes of the swept shape and PathSegment have to match exactly. A PathSegment just sweeps a shape diagonally on the plane on which the swept shape is defined. 
     It can not be used to sweep a shape along any additional dimensions.
 
-!!! important 
-    This shape can be defined on arbitrarily many dimensions.
+<!-- !!! important 
+    This shape can be defined on arbitrarily many dimensions. -->
 
 #### Union
 
@@ -142,8 +142,8 @@ This shape takes as input the axes along which the union will be defined as well
 !!! note
     The axes of the merged shape and Union have to match exactly. 
 
-!!! important 
-    This shape can be defined on arbitrarily many dimensions.
+<!-- !!! important 
+    This shape can be defined on arbitrarily many dimensions. -->
 
 #### Path
 
@@ -162,8 +162,8 @@ An example Path shape is given by:
     The axes of the swept shape and Path have to match exactly. A Path just sweeps a shape diagonally on the plane on which the swept shape is defined. 
     It can not be used to sweep a shape along any additional dimensions.
 
-!!! important 
-    This shape can be defined on arbitrarily many dimensions.
+<!-- !!! important 
+    This shape can be defined on arbitrarily many dimensions. -->
 
 
 
