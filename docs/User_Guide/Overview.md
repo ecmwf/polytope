@@ -7,10 +7,25 @@ Consider for example a user who wants to extract wind speed data over a shipping
         <img src="../images_users/shipping_route.png" alt="Shipping Route" width="450"/>
     </p>
     </div>
-    
+
 Polytope and its APIs make such complex data requests easily possible for everyone with just a few lines of code.   
 For a quick guide of how to install and use Polytope, refer to the links below:
 
 - <a href="../Getting_started">Getting Started</a> 
 
 - <a href="../Example">Example</a> 
+
+!!!note 
+    <!-- For more information about Polytopes' APIs, refer to the [API page](../Developer_Guide/API.md).  -->
+    An exhaustive list of all shapes that can currently be requested using Polytope can be found [here](../Developer_Guide/shapes.md).
+
+
+
+<!-- <div class="admonition note">
+<details>
+<summary><p class="admonition-title">Note</p></summary>
+<br>
+<p>
+This is how you dropdown.</p>
+</details>
+</div> -->
