@@ -165,5 +165,15 @@ An example Path shape is given by:
 <!-- !!! important 
     This shape can be defined on arbitrarily many dimensions. -->
 
+### General Shape Structure
 
+For each shape, the following methods and attributes need to be defined:
+
+- **_axes**
+
+- **points**
+
+- **axes**
+
+- **polytopes**
 
