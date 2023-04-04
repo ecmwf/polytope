@@ -8,7 +8,7 @@ Polytope is designed to extend different datacube backends.
 
 Polytope supports datacubes which have branching, non-uniform indexing, and even cyclic axes. If the datacube backend supports byte-addressability and efficient random access (either in-memory or direct from storage), *polytope* can be used to dramatically decrease overall IO load.
 
-# Before Installation 
+## Before Installation 
 
 ### Git Large File Storage
 
@@ -21,7 +21,7 @@ The Polytope software requires the installation of the eccodes and GDAL librarie
 It is possible to install both of these dependencies using either a package manager or manually.
 
 
-# Installation 
+## Installation 
 
 Install the polytope software with Python 3 (>=3.7) from GitHub directly with the command
 
@@ -31,7 +31,7 @@ or from Pypi with the command
 
     python3 -m pip install polytope
 
-# Example
+## Example
 
 Here is a step-by-step example of how to use this software.
 
