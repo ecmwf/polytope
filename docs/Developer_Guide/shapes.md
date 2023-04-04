@@ -75,7 +75,7 @@ This shape takes as input a list of the two ellipse axes, the center point of th
     It is in fact a larger dodecagon (12-sided polygon) which circumscribes the specified ellipse. 
     This implies in particular that it might return some additional points outside of the requested ellipse.
 
-!!! important
+!!! Caution
     This shape is 2-dimensional and cannot accept more or less than 2 datacube axes in its definition.
 
 #### Ellipsoid
@@ -93,7 +93,7 @@ This shape takes as input a list of the three ellipsoid axes, the center point o
     It is in fact a larger icosahedron which circumscribes the specified ellipsoid. 
     This implies in particular that it might return some additional points outside of the requested ellipsoid.
 
-!!! important
+!!! Caution
     This shape is 3-dimensional and cannot accept more or less than 3 datacube axes in its definition.
 
 #### Polygon
@@ -108,7 +108,7 @@ This shape takes as input a list of the two polygon axes, as well as a list of a
 !!! note
     It is possible to request concave polygons using this shape.
 
-!!! important
+!!! caution
     This shape is 2-dimensional and cannot accept more or less than 2 datacube axes in its definition.
 
 #### PathSegment

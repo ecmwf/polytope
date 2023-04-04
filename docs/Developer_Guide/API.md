@@ -13,6 +13,8 @@ This choice of levels makes the Polytope software flexible for various types of 
 The high-level API supports domain-specific requests. For meteorological use cases, like for ECMWF's weather datacube, this includes timeseries or spatio-temporal flight paths for example. 
 
 An example request on this API level looks like: 
+!!! warning
+    Still to be implemented
 
 ### Mid-level API
 The mid-level API supports primitive shapes, such as boxes or disks, as well as constructive geometry, such as unions or paths.
@@ -33,7 +35,8 @@ or using constructive geometry:
     union = Union(["latitude", "longitude"], box1, box2)
     request = Request(union)
 
-For an exhaustive list of all shapes which can be requested using this API level, click [here](../Developer_Guide/shapes.md).
+!!! note "Available Shapes"
+    For an exhaustive list of all shapes which can be requested using this API level, click [here](../Developer_Guide/shapes.md).
 
 ### Low-level API
 The low-level API supports raw convex polytope requests. Polytopes here are defined as a list of their vertices. 
@@ -45,5 +48,5 @@ An example request on this API level looks like:
     request = Request(polytope)
 
 !!! note
-    Note that these API levels are built one on top of another. In particular, the high-level API uses the mid-level API, which itself uses the low-level API.
-    In particular, this implies that all shapes are in fact a combination of low-level convex polytopes.
+    These API levels are built one on top of another. In particular, the high-level API uses the mid-level API, which itself uses the low-level API.
+    This implies that all shapes are in fact a combination of low-level convex polytopes.

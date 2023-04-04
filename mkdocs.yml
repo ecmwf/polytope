@@ -1,9 +1,14 @@
 site_name: Polytope
 theme:
     name: readthedocs
+    icon:
+        admonition:
+            shapes: :material-shape
     # logo: destination-earth-logo.png
 markdown_extensions:
     - admonition
+    # - pymdownx.details
+    # - pymdownx.superfences
 extra_css:
     - extra.css
 nav: 
