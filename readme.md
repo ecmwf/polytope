@@ -6,16 +6,16 @@ Polytope is designed to extend different datacube backends.
 * Xarray dataarrays
 * FDB object stores (coming soon)
 
-Polytope supports datacubes which have branching, non-uniform indexing, and even cyclic axes. If the datacube backend supports byte-addressability and efficient random access (either in-memory or direct from storage), *polytope* can be used to dramatically decrease overall IO load.
+Polytope supports datacubes which have branching, non-uniform indexing, and even cyclic axes. If the datacube backend supports byte-addressability and efficient random access (either in-memory or direct from storage), *polytope* can be used to dramatically decrease overall I/O load.
 
 ## Before Installation 
 
-### Git Large File Storage
+#### Git Large File Storage
 
 Polytope uses Git Large File Storage (LFS) to store its large data files. 
 Before installing Polytope, it is thus necessary to install Git LFS locally as well, by following instructions provided [here](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage) for example.
 
-### Dependencies
+#### Dependencies
 
 The Polytope software requires the installation of the eccodes and GDAL libraries.
 It is possible to install both of these dependencies using either a package manager or manually.
