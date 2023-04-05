@@ -171,9 +171,20 @@ For each shape, the following methods and attributes need to be defined:
 
 - **_axes**
 
+    Attribute storing a list of the axis names on which the shape is defined.  
+    This is usually set in the shapes' initialisation function.
+
 - **points**
+
+    Attribute storing a list of all points defining the shape.  
+    This is usually set in the shapes' initialisation function.
 
 - **axes**
 
+    Method returning the list of the axis names on which the shape is defined.  
+    This can usually just return the previously defined _axes attribute.
+
 - **polytopes**
+
+    Method returning a list of ConvexPolytopes which together make up the whole shape.
 

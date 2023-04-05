@@ -27,17 +27,17 @@ For each Polytope Datacube axis, the following methods and attributes need to be
 
 - **name**
 
-    An attribute storing the name of the axis.  
+    Attribute storing the name of the axis.  
     This can initially always be set to None as the axes are assigned names during the slicing process.
 
 - **tol**
 
-    An attribute storing the tolerance associated with the axis.  
+    Attribute storing the tolerance associated with the axis.  
     This tolerance is used later on when slicing the user-requested shapes along the associated axis.
 
 - **range**
 
-    An attribute storing the range over which the axis is defined.  
+    Attribute storing the range over which the axis is defined.  
     This can initially always be set to None as the axes are assigned ranges during the slicing process.
     !!! note "Example"
 

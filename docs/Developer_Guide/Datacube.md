@@ -4,6 +4,15 @@ Datacubes are multi-dimensional arrays which store data along several "axes" of 
 The Polytope Datacube component provides an interface to such datacubes. 
 In particular, it describes essential features of the underlying datacubes, such as their axes, and specifies data querying mechanisms on them.
 
+### Datacube Structure
+
+The datacube does not necessarily have the same dimensionality in all directions. In particular, on some axes, it is possible to have indices which give rise to different subsequent axes or axis indices. 
+!!! note "Example"
+    In ECMWF's NWP datacube, choosing the "oper" stream will give different "variable" axis indices than when choosing the "wave" stream. Choosing a specific "stream" index thus changes the subsequent choice of "variable" axis indices. 
+
+This suggests that there is a natural axis ordering which we should follow when extracting data. 
+Polytope's Datacube component implements such an axis ordering. This in turn ensures that Polytope is able to support all types of branching and non-branching datacubes.
+
 ### Datacube Axes
 
 Axes in a datacube refer to the dimensions along which the data is stored. Values along these axes are called indices. 
@@ -24,12 +33,6 @@ Polytope distinguishes two main types of axes: the ordered and unordered categor
     !!! note "Example"
         In ECMWF's NWP datacube, the "variable" axis is a categorical axis. Indeed, the "variable" axis stores the names of the available variables such as "temperature" or "wind speed". These name strings are not comparable and can thus not be ordered, but rather form distinct categories.
 
+### Datacube Request Trees
 
-### Datacube Structure
-
-The datacube does not necessarily have the same dimensionality in all directions. In particular, on some axes, it is possible to have indices which give rise to different subsequent axes or axis indices. 
-!!! note "Example"
-    In ECMWF's NWP datacube, choosing the "oper" stream will give different "variable" axis indices than when choosing the "wave" stream. Choosing a specific "stream" index thus changes the subsequent choice of "variable" axis indices. 
-
-This suggests that there is a natural axis ordering which we should follow when extracting data. 
-Polytope's Datacube component implements such an axis ordering. This in turn ensures that Polytope is able to support all types of branching and non-branching datacubes.
+Datacube request trees are a custom tree data structure used to store the successive axis indices found by the Slicer component during the extraction process. They are used to communicate between the Datacube and Slicer components as well as to query specific axis indices from the datacube.
