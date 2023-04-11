@@ -224,7 +224,6 @@ class Ellipsoid(Shape):
             [-coeff * golden_ratio / 2, 0, coeff / 2],
             [-coeff * golden_ratio / 2, 0, -coeff / 2],
         ]
-        pass
 
     def _icosahedron_edge_length_coeff(self):
         # theta is the dihedral angle for an icosahedron here
