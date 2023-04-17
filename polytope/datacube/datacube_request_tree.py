@@ -132,7 +132,7 @@ class DatacubeRequestTree(object):
                 my_child.intersect(other_child)
 
     def pprint(self, level=0):
-        if self.axis == "root":
+        if self.axis.name == "root":
             print("\n")
         print("\t" * level + "\u21b3" + str(self))
         for child in self.children:
