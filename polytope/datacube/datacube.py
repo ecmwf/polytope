@@ -9,7 +9,7 @@ from .datacube_request_tree import DatacubePath, DatacubeRequestTree
 
 class Datacube(ABC):
     @abstractmethod
-    def get(self, requests: List[DatacubeRequestTree]) -> Any:
+    def get(self, requests: DatacubeRequestTree) -> Any:
         """Return data given a set of request trees"""
 
     @abstractmethod
