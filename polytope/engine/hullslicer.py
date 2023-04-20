@@ -29,67 +29,67 @@ class HullSlicer(Engine):
         # Remove duplicate points
         unique(p.points)
 
+    def build_unsliceable_child(self, polytope, ax, node, datacube, lower, next_nodes):
+        if polytope.axes() != [ax.name]:
+            raise UnsliceableShapeError(ax)
+        path = node.flatten()
+        if datacube.has_index(path, ax, lower):
+            child = node.create_child(ax, lower)
+            child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
+            child["unsliced_polytopes"].remove(polytope)
+            next_nodes.append(child)
+        else:
+            # raise a value not found error
+            raise ValueError()
+
+    def build_sliceable_child(self, polytope, ax, node, datacube, lower, upper, next_nodes):
+        tol = ax.tol
+        lower = ax.from_float(lower - tol)
+        upper = ax.from_float(upper + tol)
+        flattened = node.flatten()
+        for value in datacube.get_indices(flattened, ax, lower, upper):
+            # convert to float for slicing
+            fvalue = ax.to_float(value)
+            new_polytope = slice(polytope, ax.name, fvalue)
+            # store the native type
+            child = node.create_child(ax, value)
+            child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
+            child["unsliced_polytopes"].remove(polytope)
+            if new_polytope is not None:
+                child["unsliced_polytopes"].add(new_polytope)
+            next_nodes.append(child)
+
+    def build_branch(self, ax, node, datacube, next_nodes):
+        for polytope in node["unsliced_polytopes"]:
+            if ax.name in polytope.axes():
+                lower, upper = polytope.extents(ax.name)
+                # here, first check if the axis is an unsliceable axis and directly build node if it is
+                if isinstance(ax, UnsliceableaAxis):
+                    self.build_unsliceable_child(polytope, ax, node, datacube, lower, next_nodes)
+                else:
+                    self.build_sliceable_child(polytope, ax, node, datacube, lower, upper, next_nodes)
+        del node["unsliced_polytopes"]
+
     def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
         # Convert the polytope points to float type to support triangulation and interpolation
-
         for p in polytopes:
             self.unique_points(p, datacube)
 
         groups, input_axes = group(polytopes)
-
         datacube.validate(input_axes)
-
         request = DatacubeRequestTree()
         combinations = product(groups)
-
-        # TODO: maybe use generators here?
 
         for c in combinations:
             r = DatacubeRequestTree()
             r["unsliced_polytopes"] = set(c)
             current_nodes = [r]
-            for axis_name, ax in datacube.axes.items():
+            for ax in datacube.axes.values():
                 next_nodes = []
                 for node in current_nodes:
-                    for polytope in node["unsliced_polytopes"]:
-                        if axis_name in polytope.axes():
-                            lower, upper = polytope.extents(axis_name)
-
-                            # here, first check if the axis is an unsliceable axis and directly build node if it is
-                            if isinstance(ax, UnsliceableaAxis):
-                                if polytope.axes() != [ax.name]:
-                                    raise UnsliceableShapeError(ax)
-                                path = node.flatten()
-                                if datacube.has_index(path, ax, lower):
-                                    child = node.create_child(ax, lower)
-                                    child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
-                                    child["unsliced_polytopes"].remove(polytope)
-                                    next_nodes.append(child)
-                                else:
-                                    # raise a value not found error
-                                    raise ValueError()
-                            else:
-                                # convert to native type to discretize on datacube
-                                tol = ax.tol
-                                lower = ax.from_float(lower - tol)
-                                upper = ax.from_float(upper + tol)
-                                flattened = node.flatten()
-                                for value in datacube.get_indices(flattened, ax, lower, upper):
-                                    # convert to float for slicing
-                                    fvalue = ax.to_float(value)
-                                    new_polytope = slice(polytope, axis_name, fvalue)
-                                    # store the native type
-                                    child = node.create_child(ax, value)
-                                    child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
-                                    child["unsliced_polytopes"].remove(polytope)
-                                    if new_polytope is not None:
-                                        child["unsliced_polytopes"].add(new_polytope)
-                                    next_nodes.append(child)
-                    del node["unsliced_polytopes"]
+                    self.build_branch(ax, node, datacube, next_nodes)
                 current_nodes = next_nodes
-
             request.merge(r)
-
         return request
 
 
