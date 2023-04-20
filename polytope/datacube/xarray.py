@@ -77,8 +77,8 @@ class XArrayDatacube(Datacube):
             else:
                 r.remove_branch()
 
-    def get_mapper(self, label):
-        return self.mappers[label]
+    def get_mapper(self, axis):
+        return self.mappers[axis]
 
     def remap_path(self, path: DatacubePath):
         for key in path:
