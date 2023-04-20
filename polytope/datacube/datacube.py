@@ -9,17 +9,17 @@ from .datacube_request_tree import DatacubePath, DatacubeRequestTree
 
 class Datacube(ABC):
     @abstractmethod
-    def get(self, requests: List[DatacubeRequestTree]) -> Any:
+    def get(self, requests: DatacubeRequestTree) -> Any:
         """Return data given a set of request trees"""
 
     @abstractmethod
-    def get_mapper(self, label) -> DatacubeAxis:
+    def get_mapper(self, axis) -> DatacubeAxis:
         """
         Get the type mapper for a subaxis of the datacube given by label
         """
 
     @abstractmethod
-    def get_indices(self, path: DatacubePath, label: str, lower: Any, upper: Any) -> List:
+    def get_indices(self, path: DatacubePath, axis: str, lower: Any, upper: Any) -> List:
         """
         Given a path to a subset of the datacube, return the discrete indexes which exist between
         two non-discrete values (lower, upper) for a particular axis (given by label)
@@ -28,7 +28,7 @@ class Datacube(ABC):
         """
 
     @abstractmethod
-    def has_index(self, path: DatacubePath, label, index) -> bool:
+    def has_index(self, path: DatacubePath, axis, index) -> bool:
         "Given a path to a subset of the datacube, checks if the index exists on that sub-datacube axis"
 
     @property

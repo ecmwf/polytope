@@ -17,20 +17,23 @@ class HullSlicer(Engine):
     def __init__(self):
         pass
 
+    def unique_points(self, p: ConvexPolytope, datacube: Datacube):
+        for i, ax in enumerate(p.axes()):
+            mapper = datacube.get_mapper(ax)
+            if isinstance(mapper, UnsliceableaAxis):
+                break
+            for j, val in enumerate(p.points):
+                p.points[j] = list(p.points[j])
+                p.points[j][i] = mapper.to_float(mapper.parse(p.points[j][i]))
+
+        # Remove duplicate points
+        unique(p.points)
+
     def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
         # Convert the polytope points to float type to support triangulation and interpolation
 
         for p in polytopes:
-            for i, ax in enumerate(p.axes()):
-                mapper = datacube.get_mapper(ax)
-                if isinstance(mapper, UnsliceableaAxis):
-                    break
-                for j, val in enumerate(p.points):
-                    p.points[j] = list(p.points[j])
-                    p.points[j][i] = mapper.to_float(mapper.parse(p.points[j][i]))
-
-            # Remove duplicate points
-            unique(p.points)
+            self.unique_points(p, datacube)
 
         groups, input_axes = group(polytopes)
 
