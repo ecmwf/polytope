@@ -43,9 +43,7 @@ class XArrayDatacube(Datacube):
                 value_type = values.dtype.type
                 axes_type_str = type(_mappings[value_type]).__name__
                 axes_type_str += "Cyclic"
-                cyclic_axis_type = deepcopy(
-                    getattr(sys.modules["polytope.datacube.datacube_axis"], axes_type_str)()
-                )
+                cyclic_axis_type = deepcopy(getattr(sys.modules["polytope.datacube.datacube_axis"], axes_type_str)())
                 self.mappers[name] = cyclic_axis_type
                 self.mappers[name].name = name
                 self.mappers[name].range = self.options[name]["Cyclic"]
