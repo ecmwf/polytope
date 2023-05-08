@@ -22,4 +22,4 @@ class AxisNotFoundError(KeyError):
 class UnsliceableShapeError(KeyError):
     def __init__(self, axis):
         self.axis = axis
-        self.message = f"Higher-dimensional shape does not support unsliceable axis {axis}."
+        self.message = f"Higher-dimensional shape does not support unsliceable axis {axis.name}."
