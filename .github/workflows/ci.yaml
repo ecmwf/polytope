@@ -1,6 +1,7 @@
 name: ci
 
 on:
+  # Trigger the workflow on push to master or develop, except tag creation
   push:
     branches:
       - 'master'
@@ -8,23 +9,237 @@ on:
     tags-ignore:
       - '**'
 
+  # Trigger the workflow on pull request
   pull_request: ~
+
+  # Trigger the workflow manually
   workflow_dispatch: ~
 
+  # Trigger after public PR approved for CI
   pull_request_target:
     types: [labeled]
 
+# jobs:
+#   # my-job:
+#   #   runs-on: macOS-latest
+#   #   steps:
+#   #   - uses: actions/checkout@v2
+#   #   - name: Install Homebrew
+#   #     run: |
+#   #       /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+#   #   - name: Install Software with Homebrew
+#   #     run: brew install eccodes
+#   #   - name: Set up Python
+#   #     uses: actions/setup-python@v2
+#   #     with:
+#   #       python-version: '3.9'
+#   #   - name: Install dependencies
+#   #     run: pip install -r requirements.txt
+#   #   - name: Run Tests
+#   #     run: pytest tests
+
+#   ci:
+#     name: ci
+#     uses: ecmwf-actions/reusable-workflows/.github/workflows/ci-python.yml@v1
+#     with:
+#       codecov_upload: true
+#       # notify_teams: true
+#       build_package_inputs: |
+#         dependencies: |
+#           ecmwf/ecbuild
+#           ecmwf/eckit
+#           ecmwf/odc
+#           ecmwf/eccodes
+#         dependency_branch: develop
+
 jobs:
-  ci:
-    name: ci
-    uses: ./.github/workflows/ci-python-template.yaml
-    with:
-      codecov_upload: true
-      notify_teams: false
-      build_package_inputs: |
-        self_build: false
-        dependencies: |
-          ecmwf/ecbuild
-          ecmwf/eckit
-          ecmwf/eccodes
-        dependency_branch: develop
+  qa:
+    name: qa
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+      with:
+        repository: ${{ inputs.repository }}
+        ref: ${{ inputs.ref }}
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python_version }}
+
+    - name: Install Python Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install black flake8 isort
+    - name: Check isort
+      run: isort --check .
+
+    - name: Check black
+      run: black --check .
+
+    - name: Check flake8
+      run: flake8 .
+
+  setup:
+    name: setup
+    runs-on: ubuntu-20.04
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      inputs: ${{ steps.prepare-inputs.outputs.inputs }}
+      inputs-for-ubuntu: ${{ steps.prepare-inputs.outputs.inputs-for-ubuntu }}
+    steps:
+    - name: Set Matrix
+      id: set-matrix
+      shell: bash -eux {0}
+      run: |
+        MATRIX=$(cat << 'EOS'
+        name:
+        - gnu-10@ubuntu-20.04
+        - clang-12@ubuntu-20.04
+        - gnu-11@ubuntu-22.04
+        - clang-14@ubuntu-22.04
+        - clang-14@macos-12
+        include:
+        - name: gnu-10@ubuntu-20.04
+          os: ubuntu-20.04
+          compiler: gnu-10
+          compiler_cc: gcc-10
+          compiler_cxx: g++-10
+          compiler_fc: gfortran-10
+        - name: clang-12@ubuntu-20.04
+          os: ubuntu-20.04
+          compiler: clang-12
+          compiler_cc: clang-12
+          compiler_cxx: clang++-12
+          compiler_fc: gfortran-10
+        - name: gnu-11@ubuntu-22.04
+          os: ubuntu-22.04
+          compiler: gnu-11
+          compiler_cc: gcc-11
+          compiler_cxx: g++-11
+          compiler_fc: gfortran-11
+        - name: clang-14@ubuntu-22.04
+          os: ubuntu-22.04
+          compiler: clang-14
+          compiler_cc: clang-14
+          compiler_cxx: clang++-14
+          compiler_fc: gfortran-11
+        # Xcode compiler requires empty environment variables, so we pass null (~) here
+        - name: clang-14@macos-12
+          os: macos-12
+          compiler: clang-14
+          compiler_cc: ~
+          compiler_cxx: ~
+          compiler_fc: gfortran-11
+        EOS
+        )
+        SKIP_MATRIX_JOBS=$(cat << 'EOS'
+        ${{ inputs.skip_matrix_jobs }}
+        EOS
+        )
+        SELECT_NAME_COND="1 != 1"
+        SELECT_INCLUDE_COND="1 != 1"
+        for skip_job in $SKIP_MATRIX_JOBS; do SELECT_NAME_COND="$SELECT_NAME_COND or . == \"$skip_job\""; SELECT_INCLUDE_COND="$SELECT_INCLUDE_COND or .name == \"$skip_job\""; done
+        echo matrix=$(echo "$MATRIX" | yq eval "del(.name[] | select($SELECT_NAME_COND)) | del(.include[] | select($SELECT_INCLUDE_COND))" --output-format json --indent 0 -) >> $GITHUB_OUTPUT
+    - name: Prepare build-package Inputs
+      id: prepare-inputs
+      shell: bash -eux {0}
+      run: |
+        echo inputs=$(echo "${{ inputs.build_package_inputs || '{}' }}" | yq eval '.' --output-format json --indent 0 -) >> $GITHUB_OUTPUT
+        echo inputs-for-ubuntu=$(echo "${{ inputs.build_package_inputs || '{}' }}" | yq eval '. * {"os":"ubuntu-20.04","compiler":"gnu-10","compiler_cc":"gcc-10","compiler_cxx":"g++-10","compiler_fc":"gfortran-10"}' --output-format json --indent 0 -) >> $GITHUB_OUTPUT
+  
+  eccodes:
+    name: eccodes
+    needs:
+    - qa
+    - setup
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+    runs-on: ${{ matrix.os }}
+    
+  
+  test:
+    name: test
+    needs:
+    - qa
+    - setup
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+      with:
+        repository: ${{ inputs.repository }}
+        ref: ${{ inputs.ref }}
+
+    # - name: Install Dependencies
+    #   id: install-dependencies
+    #   uses: ecmwf-actions/build-package@v1
+    #   with: ${{ fromJSON(needs.setup.outputs.inputs) }}
+
+    # - name: Checkout eccodes Repository
+    #   uses: actions/checkout@v3
+    #   with:
+    #     repository: ecmwf/eccodes
+    #     ref: develop
+    #     path: ${{ github.workspace }}/eccodes
+
+    # - name: Retrieve eccodes SHA
+    #   working-directory: ${{ github.workspace }}/eccodes
+    #   shell: bash -eux {0}
+    #   run: echo "ECCODES_SHA=$(git log -1 --format='%H')" >> $GITHUB_ENV
+
+    # - name: Build & Test
+    #   id: build-test
+    #   uses: ./
+    #   with:
+    #     workspace: ${{ github.workspace }}/eccodes
+    #     repository: ecmwf/eccodes
+    #     sha: ${{ env.ECCODES_SHA }}
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python_version }}
+
+    - name: Install Python Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install pytest pytest-cov
+        python -m pip install -r requirements.txt
+    - name: Verify Source Distribution
+      shell: bash -eux {0}
+      run: |
+        python setup.py sdist
+        python -m pip install dist/*
+    - name: Run Tests with Repository Code
+      env:
+        LD_LIBRARY_PATH: ${{ steps.install-dependencies.outputs.lib_path }}
+      shell: bash -eux {0}
+      run: |
+        DYLD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }} python -m pytest tests --cov=./ --cov-report=xml
+        python -m coverage report
+    - name: Codecov Upload
+      if: inputs.codecov_upload && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')
+      uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
+
+# jobs:
+
+#   # Calls a reusable CI workflow to build & test current repository.
+#   #   It will pull in all needed dependencies and produce a code coverage report on success.
+#   #   In case the job fails, a message will be posted to a Microsoft Teams channel.
+#   ci:
+#     name: ci
+#     uses: ecmwf-actions/reusable-workflows/.github/workflows/ci.yml@v1
+#     with:
+#       codecov_upload: true
+#       notify_teams: false
+#       build_package_inputs: |
+#         dependencies: |
+#           ecmwf/ecbuild
+#           ecmwf/eckit
+#         dependency_branch: develop
