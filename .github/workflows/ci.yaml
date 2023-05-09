@@ -194,9 +194,9 @@ jobs:
       run: |
         DYLD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }} python -m pytest tests --cov=./ --cov-report=xml
         python -m coverage report
-    - name: Codecov Upload
-      if: inputs.codecov_upload && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')
-      uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
+    # - name: Codecov Upload
+    #   if: inputs.codecov_upload && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')
+    #   uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
 
 # jobs:
 
