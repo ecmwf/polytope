@@ -10,8 +10,7 @@ class TestSlicingEra5Data:
     def setup_method(self, method):
         array = xr.open_dataset(
             "./tests/data/era5-levels-members.grib",
-            engine="cfgrib",
-            backend_kwargs={"filter_by_keys": {"drop": ["paramId"]}},
+            engine="cfgrib"
         )
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
