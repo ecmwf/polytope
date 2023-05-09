@@ -8,8 +8,11 @@ from polytope.shapes import Box, Select
 
 class TestSlicingEra5Data:
     def setup_method(self, method):
-        array = xr.open_dataset("./tests/data/era5-levels-members.grib", engine="cfgrib",
-                                backend_kwargs={'filter_by_keys': {'drop': ['paramId']}})
+        array = xr.open_dataset(
+            "./tests/data/era5-levels-members.grib",
+            engine="cfgrib",
+            backend_kwargs={"filter_by_keys": {"drop": ["paramId"]}},
+        )
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)
