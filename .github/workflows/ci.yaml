@@ -62,8 +62,6 @@ jobs:
       with:
         repository: ${{ inputs.repository }}
         ref: ${{ inputs.ref }}
-    - name: Change write permission
-      run: chmod -R 777 ./tests/data/
 
     - name: Setup Python
       uses: actions/setup-python@v4
@@ -150,6 +148,8 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 3 # enable full clone to download Git LFS files
+    - name: Change write permission
+      run: chmod -R 777 ./tests/data/
     - name: Install Git LFS
       run: |
         sudo apt-get install git-lfs
