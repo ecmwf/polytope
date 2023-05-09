@@ -147,7 +147,7 @@ jobs:
     #     ref: ${{ inputs.ref }}
     - uses: actions/checkout@v2
       with:
-        fetch-depth: 0 # enable full clone to download Git LFS files
+        fetch-depth: 3 # enable full clone to download Git LFS files
     - name: Install Git LFS
       run: |
         sudo apt-get install git-lfs
