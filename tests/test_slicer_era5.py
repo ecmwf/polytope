@@ -1,3 +1,4 @@
+import cfgrib
 import xarray as xr
 
 from polytope.datacube.xarray import XArrayDatacube
@@ -8,6 +9,7 @@ from polytope.shapes import Box, Select
 
 class TestSlicingEra5Data:
     def setup_method(self, method):
+        cfgrib.open_file("./tests/data/era5-levels-members.grib")
         array = xr.open_dataset("./tests/data/era5-levels-members.grib", engine="cfgrib")
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
