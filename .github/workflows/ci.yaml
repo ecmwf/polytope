@@ -156,7 +156,7 @@ jobs:
         git lfs install
     - name: Download Git LFS file
       run: |
-        git lfs pull --include "./tests/data/era5-levels-members.grib"
+        git lfs pull
     - name: Install eccodes
       run: sudo apt-get install -y libeccodes-dev
 
