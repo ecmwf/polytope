@@ -95,24 +95,9 @@ jobs:
       run: |
         MATRIX=$(cat << 'EOS'
         name:
-        - gnu-10@ubuntu-20.04
-        - clang-12@ubuntu-20.04
         - gnu-11@ubuntu-22.04
         - clang-14@ubuntu-22.04
-        - clang-14@macos-12
         include:
-        - name: gnu-10@ubuntu-20.04
-          os: ubuntu-20.04
-          compiler: gnu-10
-          compiler_cc: gcc-10
-          compiler_cxx: g++-10
-          compiler_fc: gfortran-10
-        - name: clang-12@ubuntu-20.04
-          os: ubuntu-20.04
-          compiler: clang-12
-          compiler_cc: clang-12
-          compiler_cxx: clang++-12
-          compiler_fc: gfortran-10
         - name: gnu-11@ubuntu-22.04
           os: ubuntu-22.04
           compiler: gnu-11
@@ -126,12 +111,6 @@ jobs:
           compiler_cxx: clang++-14
           compiler_fc: gfortran-11
         # Xcode compiler requires empty environment variables, so we pass null (~) here
-        - name: clang-14@macos-12
-          os: macos-12
-          compiler: clang-14
-          compiler_cc: ~
-          compiler_cxx: ~
-          compiler_fc: gfortran-11
         EOS
         )
         SKIP_MATRIX_JOBS=$(cat << 'EOS'
@@ -148,17 +127,7 @@ jobs:
       run: |
         echo inputs=$(echo "${{ inputs.build_package_inputs || '{}' }}" | yq eval '.' --output-format json --indent 0 -) >> $GITHUB_OUTPUT
         echo inputs-for-ubuntu=$(echo "${{ inputs.build_package_inputs || '{}' }}" | yq eval '. * {"os":"ubuntu-20.04","compiler":"gnu-10","compiler_cc":"gcc-10","compiler_cxx":"g++-10","compiler_fc":"gfortran-10"}' --output-format json --indent 0 -) >> $GITHUB_OUTPUT
-  
-  eccodes:
-    name: eccodes
-    needs:
-    - qa
-    - setup
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
-    runs-on: ${{ matrix.os }}
-    
+
   
   test:
     name: test
@@ -170,6 +139,8 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
     steps:
+    - name: Install AEC library 
+
     - name: Checkout Repository
       uses: actions/checkout@v3
       with:
