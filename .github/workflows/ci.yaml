@@ -141,7 +141,7 @@ jobs:
     steps:
     # - name: Install AEC library 
     - name: Install eccodes
-        run: sudo apt-get install -y eccodes
+        run: sudo apt-get install -y libeccodes-dev
     - name: Checkout Repository
       uses: actions/checkout@v3
       with:
