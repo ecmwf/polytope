@@ -62,6 +62,8 @@ jobs:
       with:
         repository: ${{ inputs.repository }}
         ref: ${{ inputs.ref }}
+    - name: Change write permission
+        run: chmod -R 777 ./tests/data/
 
     - name: Setup Python
       uses: actions/setup-python@v4
