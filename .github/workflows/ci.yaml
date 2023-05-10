@@ -19,6 +19,39 @@ on:
   pull_request_target:
     types: [labeled]
 
+# jobs:
+#   # my-job:
+#   #   runs-on: macOS-latest
+#   #   steps:
+#   #   - uses: actions/checkout@v2
+#   #   - name: Install Homebrew
+#   #     run: |
+#   #       /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+#   #   - name: Install Software with Homebrew
+#   #     run: brew install eccodes
+#   #   - name: Set up Python
+#   #     uses: actions/setup-python@v2
+#   #     with:
+#   #       python-version: '3.9'
+#   #   - name: Install dependencies
+#   #     run: pip install -r requirements.txt
+#   #   - name: Run Tests
+#   #     run: pytest tests
+
+#   ci:
+#     name: ci
+#     uses: ecmwf-actions/reusable-workflows/.github/workflows/ci-python.yml@v1
+#     with:
+#       codecov_upload: true
+#       # notify_teams: true
+#       build_package_inputs: |
+#         dependencies: |
+#           ecmwf/ecbuild
+#           ecmwf/eckit
+#           ecmwf/odc
+#           ecmwf/eccodes
+#         dependency_branch: develop
+
 jobs:
   qa:
     name: qa
@@ -108,7 +141,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        fetch-depth: 1
+        fetch-depth: 3 # enable full clone to download Git LFS files
     - name: Change write permission
       run: chmod -R 777 ./tests/data/
     - name: Install Git LFS
@@ -143,3 +176,23 @@ jobs:
       run: |
         DYLD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }} python -m pytest tests --cov=./ --cov-report=xml
         python -m coverage report
+    # - name: Codecov Upload
+    #   if: inputs.codecov_upload && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')
+    #   uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
+
+# jobs:
+
+#   # Calls a reusable CI workflow to build & test current repository.
+#   #   It will pull in all needed dependencies and produce a code coverage report on success.
+#   #   In case the job fails, a message will be posted to a Microsoft Teams channel.
+#   ci:
+#     name: ci
+#     uses: ecmwf-actions/reusable-workflows/.github/workflows/ci.yml@v1
+#     with:
+#       codecov_upload: true
+#       notify_teams: false
+#       build_package_inputs: |
+#         dependencies: |
+#           ecmwf/ecbuild
+#           ecmwf/eckit
+#         dependency_branch: develop
