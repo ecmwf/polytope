@@ -16,12 +16,12 @@ if __name__ == "__main__":
     data_array = mat73.loadmat("./example_mri/data/data.mat")
     data_array = data_array["MRI_defaced"]
 
-    dims = data_array[230:360:5, 360:480:2, 40:140:2]
+    dims = data_array[230:480:5, 300:520:6, 40:140:2]
     data_array = xr.Dataset(
         data_vars=dict(param=(["x", "y", "z"], dims)),
         coords={
-            "x": range(230, 360, 5),
-            "y": range(360, 480, 2),
+            "x": range(230, 480, 5),
+            "y": range(300, 520, 6),
             "z": range(40, 140, 2),
         },
     )
@@ -31,9 +31,9 @@ if __name__ == "__main__":
     vertices = np.vstack((xx.flatten(), yy.flatten(), zz.flatten())).T
 
     trace = go.Scatter3d(x=vertices[:, 0], y=vertices[:, 1], z=vertices[:, 2], mode='markers', marker=dict(
-                size=2,
+                size=3,
                 color=data_array.values.flatten(),
-                opacity=0.15,
+                opacity=0.05,
                 colorscale='emrld'
             ))
     fig = go.Figure(data=[trace])
@@ -80,14 +80,20 @@ if __name__ == "__main__":
     parameter_values = []
     for i in range(len(result.leaves)):
         cubepath = result.leaves[i].flatten()
-        x.append(cubepath["x"])
-        y.append(cubepath["y"])
-        z.append(cubepath["z"])
-        parameter_values.append(result.leaves[i].result["param"].item())
+        if 230 < cubepath["x"] < 360:
+            if 360 < cubepath["y"] < 480:
+                if 40 < cubepath["z"] < 140:
+                    x.append(cubepath["x"])
+                    y.append(cubepath["y"])
+                    z.append(cubepath["z"])
+                    parameter_values.append(result.leaves[i].result["param"].item())
     intensity_color = np.array(parameter_values)
+    print(len(x))
+    print((max(x)-min(x))*(max(y)-min(y))*(max(z)-min(z))*8)
 
-    vessel_3D = go.Scatter3d(x=x, y=y, z=z, mode="markers", marker=dict(size=1.5, color=intensity_color,
-                                                                        colorscale="jet"))
+    vessel_3D = go.Scatter3d(x=x, y=y, z=z, mode="markers", marker_color='blanchedalmond', marker_size=1.5)
+                            #   marker=dict(size=1.5, color=intensity_color,
+                                                                        # colorscale="jet"))
     data = data.append(vessel_3D)
 
     fig.update_layout(scene=dict(xaxis=dict(showticklabels=False, title=''),

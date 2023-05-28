@@ -1,8 +1,6 @@
 import geopandas as gpd
 import matplotlib.pyplot as plt
-import numpy as np
 import xarray as xr
-from shapely.geometry import shape
 
 from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
@@ -24,12 +22,18 @@ class Test:
         # Shapefile taken from
         # https://hub.arcgis.com/datasets/esri::world-countries-generalized/explore?location=-0.131595%2C0.000000%2C2.00
         shapefile = gpd.read_file("./examples/data/World_Countries__Generalized_.shp")
-        country = shapefile
-        shapefile = shapefile.set_index("COUNTRY")
-        country = shapefile.loc["France"]
-        multi_polygon = shape(country["geometry"])
+        # shapefile = gpd.read_file("./examples/data/gadm41_FRA_0.shp")
+        # shapefile = gpd.read_file("~/downloads/World_Countries/World_Countries__Generalized_.shp")
+        # country = shapefile
+        print(shapefile)
+        # shapefile = shapefile.set_index("COUNTRY")
+        # country = shapefile.loc["France"]
+        country = shapefile.loc[167]
+        # multi_polygon = shape(country["geometry"])
+        multi_polygon = country["geometry"]
         # If country is a multipolygon
         polygons = list(multi_polygon.geoms)
+        # polygons = multi_polygon.explode()
         # If country is just a polygon
         # polygons = [multi_polygon]
         polygons_list = []
@@ -71,7 +75,10 @@ class Test:
             t = t_idx
             temps.append(t)
             country_points_plotting.append(latlong_point)
-        temps = np.array(temps)
+        # temps = np.array(temps)
+
+        print(len(lats))
+        print((max(lats)-min(lats))*(max(longs)-min(longs))*8*8)
 
         # Plot all the points on a world map
         worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
@@ -82,12 +89,13 @@ class Test:
         for geom in multi_polygon.geoms:
             plt.plot(*geom.exterior.xy, color="black", linewidth=0.7)
 
-        whole_lat_old = np.arange(-90.0, 90.0, 0.125)
-        whole_long_old = np.arange(-180, 180, 0.125)
-        whole_lat = np.repeat(whole_lat_old, len(whole_long_old))
-        whole_long = np.tile(whole_long_old, len(whole_lat_old))
+        # whole_lat_old = np.arange(-90.0, 90.0, 0.125)
+        # whole_long_old = np.arange(-180, 180, 0.125)
+        # whole_lat = np.repeat(whole_lat_old, len(whole_long_old))
+        # whole_long = np.tile(whole_long_old, len(whole_lat_old))
 
-        plt.scatter(whole_long, whole_lat, s=1, alpha=0.25, color="wheat")
-        plt.scatter(longs, lats, s=8, c=temps, cmap="YlOrRd")
+        # plt.scatter(whole_long, whole_lat, s=1, alpha=0.25, color="wheat")
+        # plt.scatter(longs, lats, s=8, c=temps, cmap="YlOrRd")
+        plt.scatter(longs, lats, s=8)
         plt.colorbar(label="Temperature")
         plt.show()
