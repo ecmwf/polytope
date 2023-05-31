@@ -23,6 +23,7 @@ _mappings = {
     np.datetime64: PandasTimestampAxis(),
     np.timedelta64: PandasTimedeltaAxis(),
     np.float64: FloatAxis(),
+    np.float32: FloatAxis(),
     np.str_: UnsliceableaAxis(),
     str: UnsliceableaAxis(),
 }

@@ -4,15 +4,25 @@ import xarray as xr
 import matplotlib.pyplot as plt
 import geopandas as gpd
 import numpy as np
+import rioxarray
+import pandas as pd
 
 from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Path, Select
 
-data = xr.open_rasterio('./example_eo/data/mangrove_cover_aus3.tif')
+da = rioxarray.open_rasterio('./example_eo/data/mangrove_cover_aus3.tif', mask=True)
+da = da.rio.reproject("EPSG:4326")
+df = da[0].to_pandas()
+df["y"] = df.index
+df = pd.melt(df, id_vars="y")
+df.set_index(['x', 'y'], inplace=True)
+data = df.to_xarray()
+
+# data = xr.open_rasterio('./example_eo/data/mangrove_cover_aus3.tif')
 print(data)
-data = data.to_dataset(name="mangrove_cover")
+# data = data.to_dataset(name="mangrove_cover")
 # data_band1 = data.isel(band=1)
 # data_band1 = data[dict(x=3199)]
 # print(data_band1.values)
@@ -21,7 +31,7 @@ data_band1 = data
 # plt.show()
 
 # now use the australia costlines hotspots shapefile
-
+# TODO: here instead take Australian costline shapefile in lat/lon
 shapefile = gpd.read_file("./example_eo/data/DEACoastlines_hotspots_v1.0.0.shp")
 print(shapefile)
 
@@ -47,7 +57,8 @@ API = Polytope(datacube=array, engine=slicer)
 
 # then extract shape
 
-request = Request(australia_coastline, Select("band", [1]))
+# request = Request(australia_coastline, Select("band", [1]))
+request = Request(australia_coastline)
 result = API.retrieve(request)
 result.pprint()
 
