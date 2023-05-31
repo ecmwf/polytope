@@ -36,13 +36,13 @@ actual_slicing_time_box_4D = [291284 * 4.1572485958679014e-07 + 404 * 6.35891089
 
 # PLOT 0 OF ALL EXTRACT AND SLICING TIMES IN ALL DIMENSIONS
 
-plt.plot(number_points_box_2D, extract_algo_time_box_2D, c="blue", linestyle="--")
-plt.plot(number_points_box_3D, extract_algo_time_box_3D, c="green", linestyle="--")
-plt.plot(number_points_box_4D, extract_algo_time_box_4D, c="orange", linestyle="--")
+plt.plot(number_points_box_2D, extract_algo_time_box_2D, c="blue", linestyle="--", marker="o")
+plt.plot(number_points_box_3D, extract_algo_time_box_3D, c="green", linestyle="--", marker="o")
+plt.plot(number_points_box_4D, extract_algo_time_box_4D, c="orange", linestyle="--", marker="o")
 
-plt.plot(number_points_box_2D, actual_slicing_time_box_2D, c="blue", label="2D")
-plt.plot(number_points_box_3D, actual_slicing_time_box_3D, c="green", label="3D")
-plt.plot(number_points_box_4D, actual_slicing_time_box_4D, c="orange", label="4D")
+plt.plot(number_points_box_2D, actual_slicing_time_box_2D, c="blue", label="2D", marker="o")
+plt.plot(number_points_box_3D, actual_slicing_time_box_3D, c="green", label="3D", marker="o")
+plt.plot(number_points_box_4D, actual_slicing_time_box_4D, c="orange", label="4D", marker="o")
 
 plt.title("Algorithm Run Time and Total Slicing Time")
 plt.xlabel("Number of extracted points (in millions)")
@@ -56,9 +56,9 @@ plt.show()
 
 # PLOT 3 OF DIFFERENT SLICING TIME IN ALL DIMENSIONS
 
-plt.plot(number_points_box_2D, actual_slicing_time_box_2D, c="blue", label="2D")
-plt.plot(number_points_box_3D, actual_slicing_time_box_3D, c="green", label="3D")
-plt.plot(number_points_box_4D, actual_slicing_time_box_4D, c="orange", label="4D")
+plt.plot(number_points_box_2D, actual_slicing_time_box_2D, c="blue", label="2D", marker="o")
+plt.plot(number_points_box_3D, actual_slicing_time_box_3D, c="green", label="3D", marker="o")
+plt.plot(number_points_box_4D, actual_slicing_time_box_4D, c="orange", label="4D", marker="o")
 
 plt.title("Total Slicing Times")
 plt.xlabel("Number of extracted points (in millions)")
@@ -76,8 +76,9 @@ actual_slicing_time_2D_box_unions = [304490 * 4.167460343527014e-07 + 2100 * 7.1
 
 # PLOT 4 OF ONE BOX VS 100 2D BOXES, THE SLICING TIME
 
-plt.plot(number_points_box_2D, actual_slicing_time_box_2D, c="blue", label="Single Box")
-plt.plot(number_of_points_2D_box_unions, actual_slicing_time_2D_box_unions, c="green", label="Union of 100 Boxes")
+plt.plot(number_points_box_2D, actual_slicing_time_box_2D, c="blue", label="Single Box", marker="o")
+plt.plot(number_of_points_2D_box_unions, actual_slicing_time_2D_box_unions, c="green", label="Union of 100 Boxes",
+         marker="o")
 
 plt.title("Total Slicing Times for Different Shapes")
 plt.xlabel("Number of extracted points (in millions)")
@@ -103,10 +104,10 @@ actual_slicing_time_2D_box_polygon = [289484*3.987992427904784e-07+402*4.4875621
 
 # PLOT 5 OF BOX VS DISK VS POLYGON, THE SLICING TIME
 
-plt.plot(number_points_box_2D, actual_slicing_time_box_2D, c="blue", label="Box")
+plt.plot(number_points_box_2D, actual_slicing_time_box_2D, c="blue", label="Box", marker="o")
 # plt.plot(number_of_points_2D_box_unions, actual_slicing_time_2D_box_unions, c="green")
-plt.plot(number_of_points_2D_disk, actual_slicing_time_2D_disk, c="green", label="Disk")
-plt.plot(number_of_points_2D_box_polygon, actual_slicing_time_2D_box_polygon, c="orange", label="Polygon")
+plt.plot(number_of_points_2D_disk, actual_slicing_time_2D_disk, c="green", label="Disk", marker="o")
+plt.plot(number_of_points_2D_box_polygon, actual_slicing_time_2D_box_polygon, c="orange", label="Polygon", marker="o")
 plt.title("Total Slicing Times for Different Shapes")
 plt.xlabel("Number of extracted points (in millions)")
 plt.ylabel("Time taken (in seconds)")
