@@ -88,6 +88,90 @@ class HullSlicer(Engine):
             request.merge(r)
 
         return request
+    
+    def extract_debugging(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
+        import time
+        time1 = time.process_time()
+    # Convert the polytope points to float type to support triangulation and interpolation
+        for p in polytopes:
+            for i, ax in enumerate(p.axes()):
+                mapper = datacube.get_mapper(ax)
+                for j in range(len(p.points)):
+                    p.points[j][i] = mapper.to_float(mapper.parse(p.points[j][i]))
+            unique(p.points)
+        groups, input_axes = group(polytopes)
+        datacube.validate(input_axes)
+        request = DatacubeRequestTree()
+        combinations = product(groups)
+        # TODO: maybe use generators here?
+
+        # TODO: want the number of types of slice, ie 2D,3D,4D etc
+        # TODO: want the min/max/average slice time for each of these types
+
+        counter_4D = 0
+        counter_3D = 0
+        counter_2D = 0
+        counter_1D = 0
+        times_4D = []
+        times_3D = []
+        times_2D = []
+        times_1D = []
+
+        for c in combinations:
+            r = DatacubeRequestTree()
+            r["unsliced_polytopes"] = set(c)
+            current_nodes = [r]
+            for axis_name, ax in datacube.axes.items():
+                next_nodes = []
+                for node in current_nodes:
+                    for polytope in node["unsliced_polytopes"]:
+                        if axis_name in polytope.axes(): 
+                            lower, upper = polytope.extents(axis_name)
+                            # convert to native type to discretize on datacube
+                            tol = ax.tol
+                            lower = ax.from_float(lower - tol) 
+                            upper = ax.from_float(upper + tol)
+                            flattened = node.flatten()
+                            for value in datacube.get_indices(flattened, ax, lower, upper):
+                                # convert to float for slicing
+                                fvalue = ax.to_float(value)
+                                new_polytope, slice_time = slice_debug_pb(polytope, axis_name, fvalue)
+                                if len(polytope.axes()) == 1:
+                                    counter_1D += 1
+                                    times_1D.append(slice_time)
+                                if len(polytope.axes()) == 2:
+                                    counter_2D += 1
+                                    times_2D.append(slice_time)
+                                if len(polytope.axes()) == 3:
+                                    counter_3D += 1
+                                    times_3D.append(slice_time)
+                                if len(polytope.axes()) == 4:
+                                    counter_4D += 1
+                                    times_4D.append(slice_time)
+                                # store the native type
+                                child = node.create_child(ax, value)
+                                child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
+                                child["unsliced_polytopes"].remove(polytope)
+                                if new_polytope is not None:
+                                    child["unsliced_polytopes"].add(new_polytope)
+                                next_nodes.append(child)
+                    del node["unsliced_polytopes"]
+                current_nodes = next_nodes
+
+            request.merge(r)
+        print("extract time")
+        print(time.process_time() - time1)
+        stats = {"1D": {"counter": counter_1D, "min_time": min(times_1D, default=0),
+                        "average_time": sum(times_1D)/(len(times_1D) or 1), "max_time": max(times_1D, default=0)}, 
+                 "2D": {"counter": counter_2D, "min_time": min(times_2D, default=0),
+                        "average_time": sum(times_2D)/(len(times_2D) or 1), "max_time": max(times_2D, default=0)},
+                 "3D": {"counter": counter_3D, "min_time": min(times_3D, default=0),
+                        "average_time": sum(times_3D)/(len(times_3D) or 1), "max_time": max(times_3D, default=0)}, 
+                 "4D": {"counter": counter_4D, "min_time": min(times_4D, default=0),
+                        "average_time": sum(times_4D)/(len(times_4D) or 1), "max_time": max(times_4D, default=0)}
+                 }
+
+        return (request, stats)
 
 
 def slice(polytope: ConvexPolytope, axis, value):
@@ -161,3 +245,79 @@ def slice(polytope: ConvexPolytope, axis, value):
 
 
 # To profile, put @profile in front of slice and then do: kernprof -l -v tests/test_hull_slicer.py in terminal
+
+def slice_debug_pb(polytope: ConvexPolytope, axis, value):
+    import time
+    time1 = time.process_time()
+    if len(polytope.points[0]) == 1:
+        slice_time = time.process_time() - time1
+        # Note that in this case, we do not need to do linear interpolation so we can save time
+        # if value in chain(*polytope.points):
+        return (None, slice_time)
+
+    # TODO: shortcut if number of points in polytope == 2 (and maybe some other trivial situations)
+
+    # TODO: if the polytope only has two dimensions/axis, maybe simplify?
+
+    else:
+        slice_axis_idx = polytope.axes().index(axis)
+        intersects = []
+        # Find all points above and below slice axis
+        above_slice = [p for p in polytope.points if p[slice_axis_idx] >= value]
+        below_slice = [p for p in polytope.points if p[slice_axis_idx] <= value]
+
+        # Get the intersection of every pair above and below, this will create excess interior points
+
+        for a in above_slice:
+            for b in below_slice:
+
+                # edge is incident with slice plane, don't need these points
+                if a[slice_axis_idx] == b[slice_axis_idx]:
+                    intersects.append(b)
+                    continue
+
+                # Linearly interpolate all coordinates of two points (a,b) of the polytope
+                interp_coeff = (value-b[slice_axis_idx])/(a[slice_axis_idx] - b[slice_axis_idx])
+                intersect = lerp(a, b, interp_coeff)
+                intersects.append(intersect)
+
+    if len(intersects) == 0:
+        slice_time = time.process_time() - time1
+        return (None, slice_time)
+
+    # Reduce dimension of intersection points, removing slice axis
+
+    # TODO: refactor this more efficiently
+    temp_intersects = []
+    for point in intersects:
+        point = [p for i, p in enumerate(point) if i != slice_axis_idx]
+        temp_intersects.append(point)
+    intersects = temp_intersects
+
+    axes = [ax for ax in polytope.axes() if ax != axis]
+
+    if len(intersects) < len(intersects[0])+1:
+        slice_time = time.process_time() - time1
+        return (ConvexPolytope(axes, intersects), slice_time)
+
+    # Compute convex hull (removing interior points)
+    if len(intersects[0]) == 0:
+        slice_time = time.process_time() - time1
+        return (None, slice_time)
+    elif len(intersects[0]) == 1:  # qhull doesn't like 1D, do it ourselves
+        amin = argmin(intersects)
+        amax = argmax(intersects)
+        vertices = [amin, amax]
+    else:
+        try:
+            hull = scipy.spatial.ConvexHull(intersects)
+            vertices = hull.vertices
+
+        except scipy.spatial.qhull.QhullError as e:
+            if "input is less than" or "simplex is flat" in str(e):
+                slice_time = time.process_time() - time1
+                return (ConvexPolytope(axes, intersects), slice_time)
+
+    # Sliced result is simply the convex hull
+    slice_time = time.process_time() - time1
+    return (ConvexPolytope(axes, [intersects[i] for i in vertices]), slice_time)

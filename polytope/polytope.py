@@ -53,3 +53,16 @@ class Polytope:
         request_tree = self.engine.extract(self.datacube, request.polytopes())
         self.datacube.get(request_tree)
         return request_tree
+
+    def retrieve_debugging(self, request: Request):
+        """Higher-level API which takes a request and uses it to slice the datacube"""
+        import time
+        time_start = time.process_time()
+        request_tree, stats = self.engine.extract_debugging(self.datacube, request.polytopes())
+        self.datacube.get_debugging(request_tree)
+        print("\n")
+        print("total time")
+        print(time.process_time()-time_start)  # TODO: this should be a log in the logging module
+        print("\n")
+        print("=====================")
+        return (request_tree, stats)

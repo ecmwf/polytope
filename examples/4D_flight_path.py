@@ -1,13 +1,28 @@
 import numpy as np
-import plotly
-import plotly.graph_objects as go
+
+# import plotly
+# import plotly.graph_objects as go
 import xarray as xr
-from PIL import Image
 
 from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Path
+
+# from PIL import Image
+
+
+def format_stats_nicely(stats):
+    for key in stats.keys():
+        print(key)
+        print("-----------------------" + "\n")
+        actual_stats = stats[key]
+        actual_stats_keys = list(actual_stats.keys())
+        print(str(actual_stats_keys[0]) + "\t" + str(actual_stats_keys[1]) + "\t" + str(actual_stats_keys[2])
+              + "\t" + str(actual_stats_keys[3]))
+        print(str(actual_stats[actual_stats_keys[0]]) + "\t" + str(actual_stats[actual_stats_keys[1]]) + "\t"
+              + str(actual_stats[actual_stats_keys[2]]) + "\t" + str(actual_stats[actual_stats_keys[3]]))
+        print("\n")
 
 
 class Test:
@@ -22,41 +37,41 @@ class Test:
         self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 
     def test_slice_shipping_route(self):
-        colorscale = [
-            [0.0, "rgb(30, 59, 117)"],
-            [0.1, "rgb(46, 68, 21)"],
-            [0.2, "rgb(74, 96, 28)"],
-            [0.3, "rgb(115,141,90)"],
-            [0.4, "rgb(122, 126, 75)"],
-            [0.6, "rgb(122, 126, 75)"],
-            [0.7, "rgb(141,115,96)"],
-            [0.8, "rgb(223, 197, 170)"],
-            [0.9, "rgb(237,214,183)"],
-            [1.0, "rgb(255, 255, 255)"],
-        ]
+        # colorscale = [
+        #     [0.0, "rgb(30, 59, 117)"],
+        #     [0.1, "rgb(46, 68, 21)"],
+        #     [0.2, "rgb(74, 96, 28)"],
+        #     [0.3, "rgb(115,141,90)"],
+        #     [0.4, "rgb(122, 126, 75)"],
+        #     [0.6, "rgb(122, 126, 75)"],
+        #     [0.7, "rgb(141,115,96)"],
+        #     [0.8, "rgb(223, 197, 170)"],
+        #     [0.9, "rgb(237,214,183)"],
+        #     [1.0, "rgb(255, 255, 255)"],
+        # ]
 
-        def sphere(size, texture):
-            N_lat = int(texture.shape[0])
-            N_lon = int(texture.shape[1])
-            theta = np.linspace(0, 2 * np.pi, N_lat)
-            phi = np.linspace(0, np.pi, N_lon)
+        # def sphere(size, texture):
+        #     N_lat = int(texture.shape[0])
+        #     N_lon = int(texture.shape[1])
+        #     theta = np.linspace(0, 2 * np.pi, N_lat)
+        #     phi = np.linspace(0, np.pi, N_lon)
 
-            # Set up coordinates for points on the sphere
-            x0 = size * np.outer(np.cos(theta), np.sin(phi))
-            y0 = size * np.outer(np.sin(theta), np.sin(phi))
-            z0 = size * np.outer(np.ones(N_lat), np.cos(phi))
+        #     # Set up coordinates for points on the sphere
+        #     x0 = size * np.outer(np.cos(theta), np.sin(phi))
+        #     y0 = size * np.outer(np.sin(theta), np.sin(phi))
+        #     z0 = size * np.outer(np.ones(N_lat), np.cos(phi))
 
-            # Set up trace
-            return x0, y0, z0
+        #     # Set up trace
+        #     return x0, y0, z0
 
-        texture = np.asarray(Image.open("./examples/data/earth_image.jpg")).T
-        radius = 1
-        x, y, z = sphere(radius, texture)
-        surf = go.Surface(x=x, y=y, z=z, surfacecolor=texture, colorscale=colorscale, hoverinfo="none")
-        layout = go.Layout(scene=dict(aspectratio=dict(x=1, y=1, z=1)), spikedistance=0)
-        fig = go.Figure(data=[surf], layout=layout)
-        fig.update_layout(scene=dict(xaxis_showspikes=False, yaxis_showspikes=False))
-        data = fig._data
+        # texture = np.asarray(Image.open("./examples/data/earth_image.jpg")).T
+        # radius = 1
+        # x, y, z = sphere(radius, texture)
+        # surf = go.Surface(x=x, y=y, z=z, surfacecolor=texture, colorscale=colorscale, hoverinfo="none")
+        # layout = go.Layout(scene=dict(aspectratio=dict(x=1, y=1, z=1)), spikedistance=0)
+        # fig = go.Figure(data=[surf], layout=layout)
+        # fig.update_layout(scene=dict(xaxis_showspikes=False, yaxis_showspikes=False))
+        # data = fig._data
 
         # Now add the flight path as a 3D shape...
 
@@ -83,70 +98,75 @@ class Test:
         flight_route_polytope = Path(["latitude", "longitude", "step", "hybrid"], initial_shape, *route_point_CDG_LHR)
 
         request = Request(flight_route_polytope)
-        result = self.API.retrieve(request)
-        result.pprint()
+        result, stats = self.API.retrieve_debugging(request)
+        print("stats")
+        print("=====================")
+        print("\n")
+        format_stats_nicely(stats)
 
-        lats = []
-        longs = []
-        levels = []
-        parameter_values = []
-        for i in range(len(result.leaves)):
-            cubepath = result.leaves[i].flatten()
-            lat = cubepath["latitude"]
-            long = cubepath["longitude"]
-            level = cubepath["hybrid"]
-            lats.append(lat)
-            longs.append(long)
-            levels.append(level)
-            t_idx = result.leaves[i].result["t"]
-            t = t_idx
-            parameter_values.append(t)
-        parameter_values = np.array(parameter_values)
+        # result.pprint()
 
-        # Get the right points of lat/long/alt
-        lats = [(lat) * np.pi / 180 for lat in lats]
-        longs = [(long - 180) * np.pi / 180 for long in longs]
-        alts = [level / 2 for level in levels]
+        # lats = []
+        # longs = []
+        # levels = []
+        # parameter_values = []
+        # for i in range(len(result.leaves)):
+        #     cubepath = result.leaves[i].flatten()
+        #     lat = cubepath["latitude"]
+        #     long = cubepath["longitude"]
+        #     level = cubepath["hybrid"]
+        #     lats.append(lat)
+        #     longs.append(long)
+        #     levels.append(level)
+        #     t_idx = result.leaves[i].result["t"]
+        #     t = t_idx
+        #     parameter_values.append(t)
+        # parameter_values = np.array(parameter_values)
 
-        x = []
-        y = []
-        z = []
-        for i in range(len(lats)):
-            x1 = radius * np.cos(longs[i]) * np.cos(lats[i])
-            y1 = radius * np.sin(longs[i]) * np.cos(lats[i])
-            z1 = radius * np.sin(lats[i]) + alts[i] / 300  # the 300 here should really be the earth of the radius
-            x.append(x1)
-            y.append(y1)
-            z.append(z1)
+        # # Get the right points of lat/long/alt
+        # lats = [(lat) * np.pi / 180 for lat in lats]
+        # longs = [(long - 180) * np.pi / 180 for long in longs]
+        # alts = [level / 2 for level in levels]
 
-        intensity_color = parameter_values
+        # x = []
+        # y = []
+        # z = []
+        # for i in range(len(lats)):
+        #     x1 = radius * np.cos(longs[i]) * np.cos(lats[i])
+        #     y1 = radius * np.sin(longs[i]) * np.cos(lats[i])
+        #     z1 = radius * np.sin(lats[i]) + alts[i] / 300  # the 300 here should really be the earth of the radius
+        #     x.append(x1)
+        #     y.append(y1)
+        #     z.append(z1)
 
-        # Plot it using plotly in 3D shape
-        flight_path = go.Scatter3d(
-            x=x, y=y, z=z, mode="markers", marker=dict(size=1.5, color=intensity_color, colorscale="YlOrRd")
-        )
+        # intensity_color = parameter_values
 
-        data.append(flight_path)
-        fig = go.Figure(data=data)
-        fig.update_layout(
-            title_text="Contour lines over globe<br>(Click and drag to rotate)",
-            showlegend=False,
-            geo=dict(
-                showland=True,
-                showcountries=True,
-                showocean=True,
-                countrywidth=0.5,
-                landcolor="rgb(230, 145, 56)",
-                lakecolor="rgb(0, 255, 255)",
-                oceancolor="rgb(0, 255, 255)",
-                projection=dict(type="orthographic", rotation=dict(lon=-100, lat=40, roll=0)),
-                lonaxis=dict(showgrid=True, gridcolor="rgb(102, 102, 102)", gridwidth=0.5),
-                lataxis=dict(showgrid=True, gridcolor="rgb(102, 102, 102)", gridwidth=0.5),
-            ),
-        )
+        # # Plot it using plotly in 3D shape
+        # flight_path = go.Scatter3d(
+        #     x=x, y=y, z=z, mode="markers", marker=dict(size=1.5, color=intensity_color, colorscale="YlOrRd")
+        # )
 
-        fig.update_xaxes(showgrid=False)
-        fig.update_scenes(hovermode=False)
-        fig.update_xaxes(showspikes=False)
-        fig.update_yaxes(showspikes=False)
-        plotly.offline.plot(fig)
+        # data.append(flight_path)
+        # fig = go.Figure(data=data)
+        # fig.update_layout(
+        #     title_text="Contour lines over globe<br>(Click and drag to rotate)",
+        #     showlegend=False,
+        #     geo=dict(
+        #         showland=True,
+        #         showcountries=True,
+        #         showocean=True,
+        #         countrywidth=0.5,
+        #         landcolor="rgb(230, 145, 56)",
+        #         lakecolor="rgb(0, 255, 255)",
+        #         oceancolor="rgb(0, 255, 255)",
+        #         projection=dict(type="orthographic", rotation=dict(lon=-100, lat=40, roll=0)),
+        #         lonaxis=dict(showgrid=True, gridcolor="rgb(102, 102, 102)", gridwidth=0.5),
+        #         lataxis=dict(showgrid=True, gridcolor="rgb(102, 102, 102)", gridwidth=0.5),
+        #     ),
+        # )
+
+        # fig.update_xaxes(showgrid=False)
+        # fig.update_scenes(hovermode=False)
+        # fig.update_xaxes(showspikes=False)
+        # fig.update_yaxes(showspikes=False)
+        # plotly.offline.plot(fig)

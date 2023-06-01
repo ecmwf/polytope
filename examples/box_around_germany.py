@@ -5,7 +5,7 @@ import xarray as xr
 from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Polygon, Union
+from polytope.shapes import Box
 
 
 def format_stats_nicely(stats):
@@ -30,42 +30,7 @@ class Test:
         self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 
     def test_slice_country(self):
-        # Read a shapefile for a given country and extract the geometry polygons
-
-        # Shapefile taken from
-        # https://hub.arcgis.com/datasets/esri::world-countries-generalized/explore?location=-0.131595%2C0.000000%2C2.00
-        shapefile = gpd.read_file("./examples/data/World_Countries__Generalized_.shp")
-        # shapefile = gpd.read_file("./examples/data/gadm41_FRA_0.shp")
-        # shapefile = gpd.read_file("~/downloads/World_Countries/World_Countries__Generalized_.shp")
-        # country = shapefile
-        # print(shapefile)
-        # shapefile = shapefile.set_index("COUNTRY")
-        # country = shapefile.loc["France"]
-        country = shapefile.loc[78]
-        # multi_polygon = shape(country["geometry"])
-        multi_polygon = country["geometry"]
-        # If country is a multipolygon
-        polygons = list(multi_polygon.geoms)
-        # polygons = multi_polygon.explode()
-        # If country is just a polygon
-        # polygons = [multi_polygon]
-        polygons_list = []
-
-        # Now create a list of x,y points for each polygon
-
-        for polygon in polygons:
-            xx, yy = polygon.exterior.coords.xy
-            polygon_points = [list(a) for a in zip(xx, yy)]
-            polygons_list.append(polygon_points)
-
-        # Then do union of the polygon objects and cut using the slicer
-        poly = []
-        for points in polygons_list:
-            polygon = Polygon(["longitude", "latitude"], points)
-            poly.append(polygon)
-        request_obj = poly[0]
-        for obj in poly:
-            request_obj = Union(["longitude", "latitude"], request_obj, obj)
+        request_obj = Box(["latitude", "longitude"], [47.25, 6], [55, 15])
         request = Request(request_obj)
 
         # Extract the values of the long and lat from the tree

@@ -77,6 +77,19 @@ class XArrayDatacube(Datacube):
             else:
                 r.remove_branch()
 
+    def get_debugging(self, requests: DatacubeRequestTree):
+        for r in requests.leaves:
+            path = r.flatten()
+            # TODO: Here, once we flatten the path, we want to remap the values on the axis to fit the datacube
+            if len(path.items()) == len(self.dataarray.dims):
+                r.result = 0
+                # subxarray = self.dataarray.sel(path, method="nearest")
+                # data_variables = subxarray.data_vars
+                # result_tuples = [(key, value) for key, value in data_variables.items()]
+                # r.result = dict(result_tuples)
+            else:
+                r.remove_branch()
+
     def get_mapper(self, label):
         return self.mappers[label]
 
