@@ -70,7 +70,7 @@ class XArrayDatacube(Datacube):
             path = r.flatten()
             path = self.remap_path(path)
             # TODO: Here, once we flatten the path, we want to remap the values on the axis to fit the datacube...
-            if len(path.items()) == len(self.dataarray.dims):
+            if len(path.items()) == len(self.dataarray.coords):
                 subxarray = self.dataarray.sel(path, method="nearest")
                 data_variables = subxarray.data_vars
                 result_tuples = [(key, value) for key, value in data_variables.items()]
