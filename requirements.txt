@@ -9,10 +9,11 @@ tripy==1.0.0
 typing==3.7.4.3
 xarray==2022.12.0
 pytest==7.2.0; extra == "tests"
+cffi==1.15.1; extra == "tests"
 cfgrib==0.9.10.3; extra == "tests"
 eccodes==1.5.0; extra == "tests"
-h5netcdf==1.1.0; extra == "examples"
-h5py==3.8.0; extra == "examples"
+h5netcdf==1.1.0; extra == "tests"
+h5py==3.8.0; extra == "tests"
 matplotlib==3.6.2; extra == "examples"
 matplotlib-inline==0.1.6; extra == "examples"
 Pillow==9.3.0; extra == "examples"
@@ -22,4 +23,3 @@ Fiona==1.8.22; extra == "examples"
 geopandas==0.12.2; extra == "examples"
 plotly==5.11.0; extra == "examples"
 pyshp==2.3.1; extra == "examples"
-cffi==1.15.1; extra == "examples"
