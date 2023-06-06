@@ -3,7 +3,7 @@
 <div>
 <p align="center">
 <!-- ![my image](./docs/images/logo.gif#center)   -->
-<img src="./docs/images/logo.gif" align="left" width="300" height="300">
+<img src="./docs/images/logo.gif" align="left" margin=2px width="300" height="300">
 
 <h3 align="center">
 <!-- <h2> -->
