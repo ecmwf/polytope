@@ -117,7 +117,7 @@ Here is a step-by-step example of how to use this software.
     
         result.pprint()
         
-        
+
         Output IndexTree: 
 
             ↳root=None
@@ -138,10 +138,15 @@ TODO: populate requirements.txt -->
 
 #### Git Large File Storage
 
-Polytope uses Git Large File Storage (LFS) to store large test data files used in its tests and examples. 
-Before cloning Polytope, it is thus necessary to install Git LFS, by following instructions provided [here](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage) for example.
+Polytope uses Git Large File Storage (LFS) to store large data files used in its tests and examples. 
+To run the tests and examples, it is thus necessary to install Git LFS, by following instructions provided [here](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage) for example. 
+Once Git LFS is installed, individual data files can be downloaded using the command
+
+    git lfs fetch --include="filename" --exclude="" 
 
 #### Extra Dependencies
 
-The Polytope tests and examples require the installation of eccodes and GDAL.
+The Polytope tests and examples require additional Python packages compared to the main polytope algorithm.
+The additional dependencies are provided in the requirements_test.txt and requirements_examples.txt files, which can be respectively found in the examples and tests folders.
+Moreover, the tests and examples also require the installation of eccodes and GDAL.
 It is possible to install both of these dependencies using either a package manager or manually.
