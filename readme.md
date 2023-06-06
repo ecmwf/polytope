@@ -1,7 +1,7 @@
 <!-- <h1 align="left" margin=0px> -->
 <div>
 <img style="float:left;margin:0 10px 10px 0" src="./docs/images/logo.gif" width="300" height="300">
-<h1 style="display: inline;">
+<h2 style="display: inline;">
 Feature Extraction for Datacubes
 </h2>
 </div>
