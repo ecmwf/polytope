@@ -8,18 +8,18 @@ sortedcontainers==2.4.0
 tripy==1.0.0
 typing==3.7.4.3
 xarray==2022.12.0
-pytest==7.2.0; extra == "tests"
-cffi==1.15.1; extra == "tests"
-cfgrib==0.9.10.3; extra == "tests"
-eccodes==1.5.0; extra == "tests"
-h5netcdf==1.1.0; extra == "tests"
-h5py==3.8.0; extra == "tests"
-matplotlib==3.6.2; extra == "examples"
-matplotlib-inline==0.1.6; extra == "examples"
-Pillow==9.3.0; extra == "examples"
-Shapely==1.8.5.post1; extra == "examples"
-shp==1.0.2; extra == "examples"
-Fiona==1.8.22; extra == "examples"
-geopandas==0.12.2; extra == "examples"
-plotly==5.11.0; extra == "examples"
-pyshp==2.3.1; extra == "examples"
+pytest[tests]==7.2.0 
+cffi[tests]==1.15.1
+cfgrib[tests]==0.9.10.3
+eccodes[tests]==1.5.0
+h5netcdf[tests]==1.1.0
+h5py[tests]==3.8.0
+matplotlib[examples]==3.6.2
+matplotlib-inline[examples]==0.1.6
+Pillow[examples]==9.3.0
+Shapely[examples]==1.8.5.post1
+shp[examples]==1.0.2
+Fiona[examples]==1.8.22
+geopandas[examples]==0.12.2
+plotly[examples]==5.11.0
+pyshp[examples]==2.3.1
