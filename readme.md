@@ -14,6 +14,8 @@ Feature Extraction
 </p>
 
 <br clear="center"/>
+<br>
+<br>
 <!-- <div id="container">
 <div class="content_left">
   <h5>Feature Extraction for Datacubes</h5>
