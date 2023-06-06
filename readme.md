@@ -8,7 +8,8 @@ Feature Extraction for Datacubes
 </h2>
 </p>
 
-<div id="container">
+<br clear="left"/>
+<!-- <div id="container">
 <div class="content_left">
   <h5>Feature Extraction for Datacubes</h5>
   <hr/>
@@ -16,7 +17,7 @@ Feature Extraction for Datacubes
 <div class="content_right">
   <img src="./docs/images/logo.gif" width="400" height="400">
 </div>
-</div>
+</div> -->
 
 <!-- [![GitHub release](https://img.shields.io/github/release/Naereen/StrapDown.js.svg)](https://GitHub.com/ecmwf/polytope/releases/) -->
 <!-- ![example event parameter](https://github.com/github/docs/actions/workflows/main.yml/badge.svg?event=push)
