@@ -9,8 +9,8 @@ tripy==1.0.0
 typing==3.7.4.3
 xarray==2022.12.0
 pytest==7.2.0; extra == "tests"
-cfgrib==0.9.10.3; extra == "examples"
-eccodes==1.5.0; extra == "examples"
+cfgrib==0.9.10.3; extra == "tests"
+eccodes==1.5.0; extra == "tests"
 h5netcdf==1.1.0; extra == "examples"
 h5py==3.8.0; extra == "examples"
 matplotlib==3.6.2; extra == "examples"
