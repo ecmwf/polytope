@@ -131,8 +131,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install pytest pytest-cov
-        python -m pip install -r requirements.txt
-        python -m pip install polytope[tests]
+        python -m pip install -r requirements.txt --extra "tests"
     - name: Verify Source Distribution
       shell: bash -eux {0}
       run: |
