@@ -1,13 +1,13 @@
 <!-- <h2 align="center" margin=0px> -->
 <!-- <p float="left"> -->
-<div align="center">
+<!-- <div align="center">
 <p align="center">
 <!-- ![my image](./docs/images/logo.gif#center)   -->
-<img src="./docs/images/logo.gif" align="left" margin=10px width="300" height="300">
+<!-- <img src="./docs/images/logo.gif" align="left" margin=10px width="300" height="300">
 
 <h3 align="center">
 <!-- <h2> -->
-<br>
+<!-- <br>
 <br>
 <br>
 Feature Extraction
@@ -16,7 +16,22 @@ Feature Extraction
 </p>
 </div>
 
-<br clear="left"/>
+<br clear="left"/> --> 
+
+
+<!-- ![my image](./docs/images/logo.gif#center)   -->
+<!-- <img src="./docs/images/logo.gif" align="left" margin=10px width="300" height="300"> -->
+
+<h3 align="center">
+<!-- <h2> -->
+<img src="./docs/images/logo.gif" align="left" margin=10px width="300" height="300">
+</br> 
+Feature Extraction for Datacubes
+</h3>
+<!-- </p>
+</div> -->
+
+<!-- <br clear="left"/> -->
 <!-- <br> -->
 <!-- <br> -->
 <!-- <div id="container">
