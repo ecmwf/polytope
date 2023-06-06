@@ -117,6 +117,7 @@ Here is a step-by-step example of how to use this software.
     
         result.pprint()
         
+        
         Output IndexTree: 
 
             ↳root=None
