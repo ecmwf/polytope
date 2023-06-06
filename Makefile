@@ -10,4 +10,14 @@ testx:
 test:
 	python3 -m pytest -vsrA tests/* -W ignore::DeprecationWarning -W ignore::FutureWarning --log-cli-level=DEBUG
 
+examples:
+	python3 -m pytest -vsrA examples/* -W ignore::DeprecationWarning -W ignore::FutureWarning --log-cli-level=DEBUG
+
+performance:
+	python3 -m pytest -vsrA performance/* -W ignore::DeprecationWarning -W ignore::FutureWarning --log-cli-level=DEBUG
+
+docs:
+	mkdocs build
+	mkdocs serve
+
 .PHONY: init test

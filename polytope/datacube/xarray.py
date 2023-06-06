@@ -7,7 +7,7 @@ import pandas as pd
 import xarray as xr
 
 from ..utility.combinatorics import unique, validate_axes
-from .datacube import Datacube, DatacubePath, DatacubeRequestTree
+from .datacube import Datacube, DatacubePath, IndexTree
 from .datacube_axis import (
     FloatAxis,
     IntAxis,
@@ -62,7 +62,7 @@ class XArrayDatacube(Datacube):
                 dataarray = dataarray.reset_coords(names=name, drop=True)
         self.dataarray = dataarray
 
-    def get(self, requests: DatacubeRequestTree):
+    def get(self, requests: IndexTree):
         for r in requests.leaves:
             path = r.flatten()
             path = self.remap_path(path)

@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from polytope.datacube.datacube_request_tree import DatacubeRequestTree
+from polytope.datacube.datacube_request_tree import IndexTree
 from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
@@ -114,49 +114,49 @@ class TestSlicing3DXarrayDatacube:
         seg2 = Span("step", 10, 11)
         request = Request(Union(["step"], seg1, seg2), Select("date", ["2000-01-01"]), Select("level", [100]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == DatacubeRequestTree.root
+        assert result.leaves[0].axis == IndexTree.root
 
     def test_empty_box_no_level(self):
         # Slices non-existing level data
         request = Request(Box(["step", "level"], [3, 10.5], [7, 10.99]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == DatacubeRequestTree.root
+        assert result.leaves[0].axis == IndexTree.root
 
     def test_empty_box_no_level_step(self):
         # Slices non-existing level and step data
         request = Request(Box(["step", "level"], [4, 10.5], [5, 10.99]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == DatacubeRequestTree.root
+        assert result.leaves[0].axis == IndexTree.root
 
     def test_empty_box_no_step(self):
         # Slices non-existing step and level data
         request = Request(Box(["step", "level"], [4, 10], [5, 10.49]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == DatacubeRequestTree.root
+        assert result.leaves[0].axis == IndexTree.root
 
     def test_empty_box_floating_steps(self):
         # Slices through no step data and float type level data
         request = Request(Box(["step", "level"], [4.1, 10.3], [5.7, 11.8]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == DatacubeRequestTree.root
+        assert result.leaves[0].axis == IndexTree.root
 
     def test_empty_box_no_step_level_float(self):
         # Slices empty step and level box
         request = Request(Box(["step", "level"], [4.1, 10.3], [5.7, 10.8]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == DatacubeRequestTree.root
+        assert result.leaves[0].axis == IndexTree.root
 
     def test_empty_no_step_unordered(self):
         # Slice empty box because no step is available
         request = Request(Box(["level", "step"], [10, 4], [10, 5]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == DatacubeRequestTree.root
+        assert result.leaves[0].axis == IndexTree.root
 
     def test_nonexisting_date(self):
         # Slices non-existing date data
         request = Request(Select("date", ["2000-01-04"]), Select("level", [100]), Select("step", [3]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == DatacubeRequestTree.root
+        assert result.leaves[0].axis == IndexTree.root
 
     def test_two_nonexisting_close_points(self):
         # Slices two close points neither of which are available in the datacube
@@ -164,7 +164,7 @@ class TestSlicing3DXarrayDatacube:
         pt2 = Select("step", [3.001])
         request = Request(Union(["step"], pt1, pt2), Select("level", [100]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == DatacubeRequestTree.root
+        assert result.leaves[0].axis == IndexTree.root
 
     def test_union_two_nonexisting_points(self):
         # Slices two close points neither of which are available in the datacube.
@@ -173,7 +173,7 @@ class TestSlicing3DXarrayDatacube:
         pt2 = Select("step", [3.001])
         request = Request(Union(["step"], pt1, pt2), Select("level", [100]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == DatacubeRequestTree.root
+        assert result.leaves[0].axis == IndexTree.root
 
     def test_two_close_points_no_level(self):
         # Slices non-existing step points and non-existing level
@@ -181,19 +181,19 @@ class TestSlicing3DXarrayDatacube:
         pt2 = Select("step", [3.001])
         request = Request(Union(["step"], pt1, pt2), Select("level", [100.1]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == DatacubeRequestTree.root
+        assert result.leaves[0].axis == IndexTree.root
 
     def test_nonexisting_point_float_level(self):
         # Slices non-existing level data
         request = Request(Select("step", [3]), Select("level", [99.1]), Select("date", ["2000-01-02"]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == DatacubeRequestTree.root
+        assert result.leaves[0].axis == IndexTree.root
 
     def test_nonexisting_segment(self):
         # Slices non-existing step data
         request = Request(Span("step", 3.2, 3.23), Select("level", [99]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == DatacubeRequestTree.root
+        assert result.leaves[0].axis == IndexTree.root
 
     # Testing edge cases
 

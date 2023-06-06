@@ -7,8 +7,8 @@ The concept behind the slicing algorithm is to successively slice the requested 
 
 ### Slicing Algorithm 
 
-To keep track of which points in the datacube are found during the data extraction process, the slicing algorithm builds a datacube request tree. 
-This request tree is built iteratively using the following method:
+To keep track of which points in the datacube are found during the data extraction process, the slicing algorithm builds an index tree. 
+This index tree is built iteratively using the following method:
 
     take input polytopes from requested shape
 
@@ -19,7 +19,7 @@ This request tree is built iteratively using the following method:
 
             find extents of polytope on axis
             extract indices between extents from the datacube
-            add extracted indices as children to the request tree
+            add extracted indices as children to the index tree
             for axis index in extracted indices:
 
                 slice polytope along axis index to get lower-dimensional polytope

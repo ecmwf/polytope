@@ -2,7 +2,7 @@ import math
 from copy import deepcopy
 
 from ..utility.combinatorics import validate_axes
-from .datacube import Datacube, DatacubePath, DatacubeRequestTree
+from .datacube import Datacube, DatacubePath, IndexTree
 from .datacube_axis import IntAxis
 
 
@@ -23,7 +23,7 @@ class MockDatacube(Datacube):
             self.stride[k] = stride_cumulative
             stride_cumulative *= self.dimensions[k]
 
-    def get(self, requests: DatacubeRequestTree):
+    def get(self, requests: IndexTree):
         # Takes in a datacube and verifies the leaves of the tree are complete
         # (ie it found values for all datacube axis)
 
