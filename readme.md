@@ -1,5 +1,5 @@
 <!-- <h1 align="left" margin=0px> -->
-<img style="display: inline;" src="./docs/images/logo.gif" width="400" height="400">
+<img style="float:left;margin:0 10px 10px 0" src="./docs/images/logo.gif" width="400" height="400">
 <h1 style="display: inline;">
 Feature Extraction for Datacubes
 </h2>
