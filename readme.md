@@ -117,14 +117,16 @@ Here is a step-by-step example of how to use this software.
     
         result.pprint()
         
-        Output IndexTree: ↳root=None
-        ↳step=0 days 00:00:00
-                ↳latitude=0.0
-                        ↳longitude=0.0
-                        ↳longitude=1.0
-                ↳latitude=1.0
-                        ↳longitude=0.0
-                        ↳longitude=1.0
+        Output IndexTree: 
+
+            ↳root=None
+                ↳step=0 days 00:00:00
+                        ↳latitude=0.0
+                                ↳longitude=0.0
+                                ↳longitude=1.0
+                        ↳latitude=1.0
+                                ↳longitude=0.0
+                                ↳longitude=1.0
 
 <!-- # Requirements
 
