@@ -1,6 +1,6 @@
-<!-- <h1 align="left" margin=0px> -->
+<h2 align="center" margin=0px>
 <!-- <p float="left"> -->
-<p align="center">
+<!-- <p align="center"> -->
 <!-- ![my image](./docs/images/logo.gif#center)   -->
 <img src="./docs/images/logo.gif" align="left" width="300" height="300">
 
@@ -12,7 +12,7 @@
 Feature Extraction
 </br> for Datacubes
 </h3>
-</p>
+</h2>
 
 <!-- <br clear="left"/> -->
 <!-- <br> -->
