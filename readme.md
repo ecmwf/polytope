@@ -1,5 +1,7 @@
 <h1 align="center" margin=0px>
-Polytope
+<img src="./docs/images/logo.gif" width="300" height="300">
+</br>
+Feature Extraction for Datacubes
 </h1>
 
 <!-- [![GitHub release](https://img.shields.io/github/release/Naereen/StrapDown.js.svg)](https://GitHub.com/ecmwf/polytope/releases/) -->
