@@ -12,6 +12,13 @@ Polytope supports datacubes which have branching, non-uniform indexing, and even
 | :warning: This project is BETA and will be experimental for the foreseeable future. Interfaces and functionality are likely to change. DO NOT use this software in any project/software that is operational. |
 |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
+The broad concept behind the Polytope algorithm is summarised in the figure below. 
+    <div style="text-align:center">
+    <p style="float: middle; margin: 0 5px 0 0px;">
+        <img src="./docs/Overview/images_overview/ecmwf_polytope.png" alt="Polytope Concept" width="450"/>
+    </p>
+    </div>
+
 ## Installation 
 
 Install the polytope software with Python 3 (>=3.7) from GitHub directly with the command
