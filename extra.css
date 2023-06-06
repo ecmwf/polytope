@@ -1,13 +1,15 @@
-#container {
-    width: yourwidth;
-    height: yourheight;
-  }
-  
-  .content_right {
-    float:right;
-    width: width of image;
-  }
-  .content_left {
-    float:left;
-    width: width of text;
-  }
+img[alt$=">"] {
+  float: right;
+}
+
+img[alt$="<"] {
+  float: left;
+}
+
+img[alt$="><"] {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: auto;
+  float: none!important;
+}
