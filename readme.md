@@ -3,9 +3,9 @@
 <div align="center">
 <p align="center">
 <!-- ![my image](./docs/images/logo.gif#center)   -->
-<img src="./docs/images/logo.gif" align="left" margin=2px width="300" height="300">
+<img src="./docs/images/logo.gif" align="center" margin=2px width="300" height="300">
 
-<h3 align="center">
+<h3 align="right">
 <!-- <h2> -->
 <br>
 <br>
@@ -16,7 +16,7 @@ Feature Extraction
 </p>
 </div>
 
-<br clear="left"/>
+<br clear="center"/>
 <!-- <br> -->
 <!-- <br> -->
 <!-- <div id="container">
