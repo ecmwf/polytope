@@ -1,4 +1,8 @@
 # Polytope
+[![GitHub release](https://img.shields.io/github/release/Naereen/StrapDown.js.svg)](https://GitHub.com/ecmwf/polytope/releases/)
+![example event parameter](https://github.com/github/docs/actions/workflows/main.yml/badge.svg?event=push)
+<!-- [![GitHub tag](https://img.shields.io/github/tag/MichaelCurrin/badge-generator?include_prereleases=&sort=semver)](https://github.com/ecmwf/polytope/releases/) -->
+[![Documentation Status](https://readthedocs.org/projects/polytope/badge/?version=latest)](https://polytope.readthedocs.io/en/latest/?badge=latest)
 
 Polytope is a library for extracting complex data from datacubes. It provides an API for non-orthogonal access to data, where the stencil used to extract data from the datacube can be any arbitrary n-dimensional polygon (called a *polytope*). This can be used to efficiently extract complex features from a datacube, such as polygon regions or spatio-temporal paths.
 
