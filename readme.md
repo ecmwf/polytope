@@ -1,5 +1,5 @@
 <h1 align="center" margin=0px>
-<img src="./docs/images/logo.gif" width="300" height="300">
+<img src="./docs/images/logo.gif" width="400" height="400">
 </br>
 Feature Extraction for Datacubes
 </h1>
