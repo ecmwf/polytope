@@ -1,6 +1,6 @@
 <!-- <h2 align="center" margin=0px> -->
 <!-- <p float="left"> -->
-<div>
+<div align="center">
 <p align="center">
 <!-- ![my image](./docs/images/logo.gif#center)   -->
 <img src="./docs/images/logo.gif" align="left" margin=2px width="300" height="300">
