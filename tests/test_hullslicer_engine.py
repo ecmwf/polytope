@@ -1,7 +1,7 @@
 import numpy as np
 import xarray as xr
 
-from polytope.datacube.datacube_request_tree import DatacubeRequestTree
+from polytope.datacube.datacube_request_tree import IndexTree
 from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope
@@ -27,7 +27,7 @@ class TestSlicerComponents:
         box = Box(["step", "level"], [3.0, 1.0], [6.0, 3.0])
         polytope = box.polytope()
         request = self.slicer.extract(self.xarraydatacube, polytope)
-        assert request.axis == DatacubeRequestTree.root
+        assert request.axis == IndexTree.root
         assert request.parent is None
         assert request.value is None
         assert len(request.leaves) == 6

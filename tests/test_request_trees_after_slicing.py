@@ -8,7 +8,7 @@ from polytope.polytope import Polytope
 from polytope.shapes import Box
 
 
-class TestRequestTreesAfterSlicing:
+class TestIndexTreesAfterSlicing:
     def setup_method(self, method):
         array = xr.DataArray(
             np.random.randn(4, 100),
