@@ -20,7 +20,7 @@ class DatacubePath(OrderedDict):
         print(result[:-1])
 
 
-class DatacubeRequestTree(object):
+class IndexTree(object):
     root = IntAxis()
     root.name = "root"
 
@@ -56,7 +56,7 @@ class DatacubeRequestTree(object):
         return hash((self.axis.name, self.value))
 
     def __eq__(self, other):
-        if not isinstance(other, DatacubeRequestTree):
+        if not isinstance(other, IndexTree):
             return False
         return (self.axis.name, self.value) == (other.axis.name, other.value)
 
@@ -74,12 +74,12 @@ class DatacubeRequestTree(object):
         node._parent = self
 
     def create_child(self, axis, value):
-        node = DatacubeRequestTree(axis, value)
+        node = IndexTree(axis, value)
         self.add_child(node)
         return node
 
     def create_child_safe(self, axis, value):
-        node = DatacubeRequestTree(axis, value)
+        node = IndexTree(axis, value)
         existing = self.find_child(node)
         if not existing:
             self.add_child(node)
@@ -156,7 +156,7 @@ class DatacubeRequestTree(object):
     def get_ancestors(self):
         ancestors = []
         current_node = self
-        while current_node.axis != DatacubeRequestTree.root:
+        while current_node.axis != IndexTree.root:
             ancestors.append(current_node)
             current_node = current_node.parent
         return ancestors[::-1]

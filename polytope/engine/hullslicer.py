@@ -4,7 +4,7 @@ from typing import List
 
 import scipy.spatial
 
-from ..datacube.datacube import Datacube, DatacubeRequestTree
+from ..datacube.datacube import Datacube, IndexTree
 from ..datacube.datacube_axis import UnsliceableaAxis
 from ..shapes import ConvexPolytope
 from ..utility.combinatorics import argmax, argmin, group, product, unique
@@ -76,11 +76,11 @@ class HullSlicer(Engine):
 
         groups, input_axes = group(polytopes)
         datacube.validate(input_axes)
-        request = DatacubeRequestTree()
+        request = IndexTree()
         combinations = product(groups)
 
         for c in combinations:
-            r = DatacubeRequestTree()
+            r = IndexTree()
             r["unsliced_polytopes"] = set(c)
             current_nodes = [r]
             for ax in datacube.axes.values():

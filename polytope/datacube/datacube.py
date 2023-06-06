@@ -4,12 +4,12 @@ from typing import Any, List
 import xarray as xr
 
 from .datacube_axis import DatacubeAxis
-from .datacube_request_tree import DatacubePath, DatacubeRequestTree
+from .datacube_request_tree import DatacubePath, IndexTree
 
 
 class Datacube(ABC):
     @abstractmethod
-    def get(self, requests: DatacubeRequestTree) -> Any:
+    def get(self, requests: IndexTree) -> Any:
         """Return data given a set of request trees"""
 
     @abstractmethod

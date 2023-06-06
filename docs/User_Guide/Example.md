@@ -39,4 +39,4 @@ Here is a step-by-step example of how to use the Polytope software.
 
         result = API.retrieve(request)
 
-    Note that the result is stored as a request tree containing the retrieved axis indices as nodes.
+    Note that the result is stored as an index tree containing the retrieved axis indices as nodes.
