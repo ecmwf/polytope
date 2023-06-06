@@ -144,9 +144,9 @@ Once Git LFS is installed, individual data files can be downloaded using the com
 
     git lfs fetch --include="filename" --exclude="" 
 
-#### Extra Dependencies
+#### Additional Dependencies
 
-The Polytope tests and examples require additional Python packages compared to the main polytope algorithm.
-The additional dependencies are provided in the requirements_test.txt and requirements_examples.txt files, which can be respectively found in the examples and tests folders.
-Moreover, the tests and examples also require the installation of eccodes and GDAL.
+The Polytope tests and examples require additional Python packages compared to the main Polytope algorithm.
+The additional dependencies are provided in the requirements_test.txt and requirements_examples.txt files, which can respectively be found in the examples and tests folders.
+Moreover, Polytope's tests and examples also require the installation of eccodes and GDAL.
 It is possible to install both of these dependencies using either a package manager or manually.
