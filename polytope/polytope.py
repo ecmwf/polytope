@@ -37,7 +37,7 @@ class Request:
 
 
 class Polytope:
-    def __init__(self, datacube, engine, options={}):
+    def __init__(self, datacube, engine=None, options={}):
         from .datacube import Datacube
         from .engine import Engine
 

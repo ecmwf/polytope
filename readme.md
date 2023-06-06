@@ -1,4 +1,25 @@
-# Polytope
+<h1 align="center" margin=0px>
+Polytope
+</h1>
+
+<!-- [![GitHub release](https://img.shields.io/github/release/Naereen/StrapDown.js.svg)](https://GitHub.com/ecmwf/polytope/releases/) -->
+<!-- ![example event parameter](https://github.com/github/docs/actions/workflows/main.yml/badge.svg?event=push)
+[![GitHub tag](https://img.shields.io/github/tag/MichaelCurrin/badge-generator?include_prereleases=&sort=semver)](https://github.com/ecmwf/polytope/releases/)
+[![Documentation Status](https://readthedocs.org/projects/polytope/badge/?version=latest)](https://polytope.readthedocs.io/en/latest/?badge=latest) -->
+<p align="center">
+   <a href="https://github.com/ecmwf/polytope/actions"><img src="https://github.com/ecmwf/polytope/workflows/ci/badge.svg?branch=main"></a>
+  <a href="https://codecov.io/gh/ecmwf/polytope"><img src="https://codecov.io/gh/ecmwf/polytope/branch/main/graph/badge.svg"></a>
+  <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
+  <a href="https://github.com/ecmwf/polytope/releases"><img src="https://img.shields.io/badge/Release-v0.0.1-blue.svg"></a>
+  <a href='https://polytope.readthedocs.io/en/latest/?badge=latest'><img src='https://readthedocs.org/projects/polytope/badge/?version=latest' alt='Documentation Status' /></a>
+</p>
+<p align="center">
+  <a href="#concept">Concept</a> •
+  <a href="#installation">Installation</a> •
+  <a href="#example">Example</a> •
+  <a href="#testing">Testing</a> •
+  <a href="https://polytope.readthedocs.io/en/latest/">Documentation</a>
+</p>
 
 Polytope is a library for extracting complex data from datacubes. It provides an API for non-orthogonal access to data, where the stencil used to extract data from the datacube can be any arbitrary n-dimensional polygon (called a *polytope*). This can be used to efficiently extract complex features from a datacube, such as polygon regions or spatio-temporal paths.
 
@@ -12,6 +33,38 @@ Polytope supports datacubes which have branching, non-uniform indexing, and even
 | :warning: This project is BETA and will be experimental for the foreseeable future. Interfaces and functionality are likely to change. DO NOT use this software in any project/software that is operational. |
 |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
+## Concept 
+
+The broad concept behind the Polytope algorithm is summarised in the figure below. 
+    <!-- <div style="text-align:center"> -->
+    <p align="center">
+        <img src="./docs/Overview/images_overview/ecmwf_polytope.png" alt="Polytope Concept" width="450"/>
+    </p>
+    <!-- </div> -->
+
+The Polytope algorithm can for example be used to extract:
+
+- 2D cut-outs, such as country cut-outs, from a datacube
+    <!-- <div style="text-align:center"> -->
+    <p align="center">
+        <img src="./docs/images/greece.png" alt="Greece cut-out" width="250"/>
+    </p>
+    <!-- </div> -->
+
+- timeseries from a datacube
+    <p align="center">
+        <img src="./docs/images/timeseries.png" alt="Timeseries" width="350"/>
+    </p>
+    <!-- </div> -->
+
+- more complicated spatio-temporal paths, such as flight paths, from a datacube
+    <p align="center">
+        <img src="./docs/images/flight_path.png" alt="Flight path" width="350"/>
+    </p>
+    <!-- </div> -->
+
+- and many more high-dimensional shapes in arbitrary dimensions...
+
 ## Installation 
 
 Install the polytope software with Python 3 (>=3.7) from GitHub directly with the command
@@ -20,7 +73,7 @@ Install the polytope software with Python 3 (>=3.7) from GitHub directly with th
 
 or from Pypi with the command
 
-    python3 -m pip install polytope
+    python3 -m pip install polytopy
 
 ## Example
 
@@ -44,9 +97,10 @@ Here is a step-by-step example of how to use this software.
 2. Second, create a request shape to extract from the datacube.  
   In this example, we want to extract a simple 2D box in latitude and longitude at step 0. We thus create the two relevant shapes we need to build this 3-dimensional object,
 
+        import numpy as np
         from polytope.shapes import Box, Select
 
-        box = Box(["latitude", "longitude"], [0,0], [10,10])
+        box = Box(["latitude", "longitude"], [0, 0], [1, 1])
         step_point = Select("step", [np.timedelta64(0, "s")])
 
     which we then incorporate into a Polytope request.
@@ -61,12 +115,19 @@ Here is a step-by-step example of how to use this software.
 
     The result is stored as an IndexTree containing the retrieved data organised hierarchically with axis indices for each point.
     
-        print(result)
+        result.pprint()
         
-        > 
 
+        Output IndexTree: 
 
-
+            ↳root=None
+                ↳step=0 days 00:00:00
+                        ↳latitude=0.0
+                                ↳longitude=0.0
+                                ↳longitude=1.0
+                        ↳latitude=1.0
+                                ↳longitude=0.0
+                                ↳longitude=1.0
 
 <!-- # Requirements
 
@@ -77,10 +138,15 @@ TODO: populate requirements.txt -->
 
 #### Git Large File Storage
 
-Polytope uses Git Large File Storage (LFS) to store large test data files. 
-Before cloning Polytope, it is thus necessary to install Git LFS, by following instructions provided [here](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage) for example.
+Polytope uses Git Large File Storage (LFS) to store large data files used in its tests and examples. 
+To run the tests and examples, it is thus necessary to install Git LFS, by following instructions provided [here](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage) for example. 
+Once Git LFS is installed, individual data files can be downloaded using the command
 
-#### Extra Dependencies
+    git lfs fetch --include="filename" --exclude="" 
 
-The Polytope tests require the installation of eccodes and GDAL.
+#### Additional Dependencies
+
+The Polytope tests and examples require additional Python packages compared to the main Polytope algorithm.
+The additional dependencies are provided in the requirements_test.txt and requirements_examples.txt files, which can respectively be found in the examples and tests folders.
+Moreover, Polytope's tests and examples also require the installation of eccodes and GDAL.
 It is possible to install both of these dependencies using either a package manager or manually.
