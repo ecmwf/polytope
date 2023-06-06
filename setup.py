@@ -12,10 +12,10 @@ __version__ = re.search(
 setup(
     name="polytope",
     version=__version__,
-    description="Polytope datacube slicing library",
+    description="Polytope datacube feature extraction library",
     url="https://github.com/ecmwf/polytope",
     author="ECMWF",
-    author_email="James.Hawkes@ecmwf.int",
+    author_email="James.Hawkes@ecmwf.int, Mathilde.Leuridan@ecmwf.int",
     packages=find_packages(),
     zip_safe=False,
     include_package_data=True,
