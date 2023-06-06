@@ -26,8 +26,15 @@ Feature Extraction
 <!-- <h2> -->
 <img src="./docs/images/logo.gif" align="left" margin=10px width="300" height="300">
 </br> 
+</br>
+</br>
 Feature Extraction for Datacubes
 </h3>
+</br>
+</br>
+</br>
+</br>
+</br>
 <!-- </p>
 </div> -->
 
