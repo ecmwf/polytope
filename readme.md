@@ -1,6 +1,7 @@
 <!-- <h1 align="left" margin=0px> -->
 <p float="left">
-<img src="./docs/images/logo.gif" align="left" width="300" height="300">
+![my image](./docs/images/logo.gif#center)  
+<!-- <img src="./docs/images/logo.gif" align="left" width="300" height="300"> -->
 
 <h2>
 <!-- <h2> -->
