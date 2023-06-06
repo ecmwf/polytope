@@ -1,6 +1,6 @@
 <!-- <h1 align="left" margin=0px> -->
 <p float="left">
-<img style="float:left;margin:0 10px 10px 0" src="./docs/images/logo.gif" width="300" height="300">
+<img src="./docs/images/logo.gif" align="left" width="300" height="300">
 
 <h2>
 <!-- <h2> -->
