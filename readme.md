@@ -1,12 +1,13 @@
 <!-- <h1 align="left" margin=0px> -->
 <p float="left">
-![my image](./docs/images/logo.gif#center)  
-<!-- <img src="./docs/images/logo.gif" align="left" width="300" height="300"> -->
+<!-- ![my image](./docs/images/logo.gif#center)   -->
+<img src="./docs/images/logo.gif" align="left" width="300" height="300">
 
-<h2>
+<h3>
 <!-- <h2> -->
-Feature Extraction for Datacubes
-</h2>
+Feature Extraction
+</br> for Datacubes
+</h3>
 </p>
 
 <br clear="left"/>
