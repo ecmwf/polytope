@@ -97,9 +97,10 @@ Here is a step-by-step example of how to use this software.
 2. Second, create a request shape to extract from the datacube.  
   In this example, we want to extract a simple 2D box in latitude and longitude at step 0. We thus create the two relevant shapes we need to build this 3-dimensional object,
 
+        import numpy as np
         from polytope.shapes import Box, Select
 
-        box = Box(["latitude", "longitude"], [0,0], [10,10])
+        box = Box(["latitude", "longitude"], [0, 0], [1, 1])
         step_point = Select("step", [np.timedelta64(0, "s")])
 
     which we then incorporate into a Polytope request.
@@ -116,10 +117,14 @@ Here is a step-by-step example of how to use this software.
     
         result.pprint()
         
-        > 
-
-
-
+        Output IndexTree: ↳root=None
+        ↳step=0 days 00:00:00
+                ↳latitude=0.0
+                        ↳longitude=0.0
+                        ↳longitude=1.0
+                ↳latitude=1.0
+                        ↳longitude=0.0
+                        ↳longitude=1.0
 
 <!-- # Requirements
 
