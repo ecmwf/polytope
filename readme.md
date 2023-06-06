@@ -12,19 +12,6 @@ Polytope supports datacubes which have branching, non-uniform indexing, and even
 | :warning: This project is BETA and will be experimental for the foreseeable future. Interfaces and functionality are likely to change. DO NOT use this software in any project/software that is operational. |
 |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
-## Before Installation 
-
-#### Git Large File Storage
-
-Polytope uses Git Large File Storage (LFS) to store its large data files. 
-Before installing Polytope, it is thus necessary to install Git LFS locally as well, by following instructions provided [here](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage) for example.
-
-#### Dependencies
-
-The Polytope software requires the installation of the eccodes and GDAL libraries.
-It is possible to install both of these dependencies using either a package manager or manually.
-
-
 ## Installation 
 
 Install the polytope software with Python 3 (>=3.7) from GitHub directly with the command
@@ -86,3 +73,15 @@ Here is a step-by-step example of how to use this software.
 
 Python >= 3.7 (for OrderedDict)
 TODO: populate requirements.txt -->
+
+## Testing
+
+#### Git Large File Storage
+
+Polytope uses Git Large File Storage (LFS) to store large test data files. 
+Before cloning Polytope, it is thus necessary to install Git LFS, by following instructions provided [here](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage) for example.
+
+#### Extra Dependencies
+
+The Polytope tests require the installation of eccodes and GDAL.
+It is possible to install both of these dependencies using either a package manager or manually.
