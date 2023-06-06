@@ -24,7 +24,7 @@ Feature Extraction
 
 <h3 align="center">
 <!-- <h2> -->
-<img src="./docs/images/logo.gif" align="left" margin=10px width="300" height="300">
+<img src="./docs/images/logo.gif" width=60%>
 </br> 
 </br>
 </br>
@@ -32,13 +32,13 @@ Feature Extraction
 </br>
 Feature Extraction for Datacubes
 </h3>
-
+<!-- 
 </br>
 </br>
 </br>
 </br>
 </br>
-</br>
+</br> -->
 <!-- </p>
 </div> -->
 
