@@ -12,12 +12,39 @@ Polytope supports datacubes which have branching, non-uniform indexing, and even
 | :warning: This project is BETA and will be experimental for the foreseeable future. Interfaces and functionality are likely to change. DO NOT use this software in any project/software that is operational. |
 |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
+## Concept 
+
 The broad concept behind the Polytope algorithm is summarised in the figure below. 
     <div style="text-align:center">
     <p style="float: middle; margin: 0 5px 0 0px;">
         <img src="./docs/Overview/images_overview/ecmwf_polytope.png" alt="Polytope Concept" width="450"/>
     </p>
     </div>
+
+The Polytope algorithm can for example be used to extract:
+
+- 2D cut-outs, such as country cut-outs, from a datacube
+    <div style="text-align:center">
+    <p style="float: middle; margin: 0 5px 0 0px;">
+        <img src="./docs/images/greece.png" alt="Greece cut-out" width="250"/>
+    </p>
+    </div>
+
+- timeseries from a datacube
+    <div style="text-align:center">
+    <p style="float: middle; margin: 0 5px 0 0px;">
+        <img src="./docs/images/timeseries.png" alt="Timeseries" width="350"/>
+    </p>
+    </div>
+
+- more complicated spatio-temporal paths, such as flight paths, from a datacube
+    <div style="text-align:center">
+    <p style="float: middle; margin: 0 5px 0 0px;">
+        <img src="./docs/images/flight_path.png" alt="Flight path" width="350"/>
+    </p>
+    </div>
+
+- and many more high-dimensional shapes in arbitrary dimensions...
 
 ## Installation 
 
@@ -27,7 +54,7 @@ Install the polytope software with Python 3 (>=3.7) from GitHub directly with th
 
 or from Pypi with the command
 
-    python3 -m pip install polytope
+    python3 -m pip install polytopy
 
 ## Example
 
@@ -68,7 +95,7 @@ Here is a step-by-step example of how to use this software.
 
     The result is stored as an IndexTree containing the retrieved data organised hierarchically with axis indices for each point.
     
-        print(result)
+        result.pprint()
         
         > 
 
