@@ -14,7 +14,7 @@ Feature Extraction
 </h3>
 </p>
 
-<br clear="left"/>
+<!-- <br clear="left"/> -->
 <!-- <br> -->
 <!-- <br> -->
 <!-- <div id="container">
