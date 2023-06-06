@@ -2,7 +2,7 @@
 <!-- <p float="left"> -->
 <!-- <p align="center"> -->
 <!-- ![my image](./docs/images/logo.gif#center)   -->
-<img src="./docs/images/logo.gif" align="left" width="300" height="300">
+<img src="./docs/images/logo.gif" width="300" height="300">
 
 <h3>
 <!-- <h2> -->
