@@ -1,16 +1,19 @@
 <!-- <h1 align="left" margin=0px> -->
-<p float="left">
+<p float="center">
 <!-- ![my image](./docs/images/logo.gif#center)   -->
 <img src="./docs/images/logo.gif" align="left" width="300" height="300">
 
 <h3>
 <!-- <h2> -->
+<br>
+<br>
+<br>
 Feature Extraction
 </br> for Datacubes
 </h3>
 </p>
 
-<br clear="left"/>
+<br clear="center"/>
 <!-- <div id="container">
 <div class="content_left">
   <h5>Feature Extraction for Datacubes</h5>
