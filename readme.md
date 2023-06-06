@@ -38,11 +38,11 @@ The broad concept behind the Polytope algorithm is summarised in the figure belo
 The Polytope algorithm can for example be used to extract:
 
 - 2D cut-outs, such as country cut-outs, from a datacube
-    <div style="text-align:center">
-    <p style="float: middle; margin: 0 5px 0 0px;">
+    <!-- <div style="text-align:center"> -->
+    <p align="center">
         <img src="./docs/images/greece.png" alt="Greece cut-out" width="250"/>
     </p>
-    </div>
+    <!-- </div> -->
 
 - timeseries from a datacube
     <div style="text-align:center">
