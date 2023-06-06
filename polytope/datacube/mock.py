@@ -51,7 +51,7 @@ class MockDatacube(Datacube):
         upper = min(self.dimensions[axis.name], math.floor(upper) + 1)
         return range(lower, upper)
 
-    def has_index(self, path: DatacubePath, label, index):
+    def has_index(self, path: DatacubePath, axis, index):
         return True
 
     @property
