@@ -3,6 +3,16 @@
 Feature Extraction for Datacubes
 </h1>
 
+<div id="container">
+<div class="content_left">
+  <h5>Feature Extraction for Datacubes</h5>
+  <hr/>
+</div>
+<div class="content_right">
+  <img src="./docs/images/logo.gif" width="400" height="400">
+</div>
+</div>
+
 <!-- [![GitHub release](https://img.shields.io/github/release/Naereen/StrapDown.js.svg)](https://GitHub.com/ecmwf/polytope/releases/) -->
 <!-- ![example event parameter](https://github.com/github/docs/actions/workflows/main.yml/badge.svg?event=push)
 [![GitHub tag](https://img.shields.io/github/tag/MichaelCurrin/badge-generator?include_prereleases=&sort=semver)](https://github.com/ecmwf/polytope/releases/)

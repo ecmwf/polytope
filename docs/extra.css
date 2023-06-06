@@ -1,6 +1,20 @@
 .wy-nav-content {
     max-width: 1000px !important;
 }
+
+#container {
+  width: yourwidth;
+  height: yourheight;
+}
+
+.content_right {
+  float:right;
+  width: width of image;
+}
+.content_left {
+  float:left;
+  width: width of text;
+}
 /* .note:before {
     content: '\f12a';
     font-family: FontAwesome;
