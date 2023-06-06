@@ -13,6 +13,13 @@ Polytope
   <a href="https://github.com/ecmwf/polytope/releases"><img src="https://img.shields.io/badge/Release-v0.0.1-blue.svg"></a>
   <a href='https://polytope.readthedocs.io/en/latest/?badge=latest'><img src='https://readthedocs.org/projects/polytope/badge/?version=latest' alt='Documentation Status' /></a>
 </p>
+<p align="center">
+  <a href="#concept">Concept</a> •
+  <a href="#installation">Installation</a> •
+  <a href="#example">Example</a> •
+  <a href="#testing">Testing</a> •
+  <a href="https://polytope.readthedocs.io/en/latest/">Documentation</a>
+</p>
 
 Polytope is a library for extracting complex data from datacubes. It provides an API for non-orthogonal access to data, where the stencil used to extract data from the datacube can be any arbitrary n-dimensional polygon (called a *polytope*). This can be used to efficiently extract complex features from a datacube, such as polygon regions or spatio-temporal paths.
 
@@ -29,11 +36,11 @@ Polytope supports datacubes which have branching, non-uniform indexing, and even
 ## Concept 
 
 The broad concept behind the Polytope algorithm is summarised in the figure below. 
-    <div style="text-align:center">
-    <p style="float: middle; margin: 0 5px 0 0px;">
+    <!-- <div style="text-align:center"> -->
+    <p align="center">
         <img src="./docs/Overview/images_overview/ecmwf_polytope.png" alt="Polytope Concept" width="450"/>
     </p>
-    </div>
+    <!-- </div> -->
 
 The Polytope algorithm can for example be used to extract:
 
@@ -45,18 +52,16 @@ The Polytope algorithm can for example be used to extract:
     <!-- </div> -->
 
 - timeseries from a datacube
-    <div style="text-align:center">
-    <p style="float: middle; margin: 0 5px 0 0px;">
+    <p align="center">
         <img src="./docs/images/timeseries.png" alt="Timeseries" width="350"/>
     </p>
-    </div>
+    <!-- </div> -->
 
 - more complicated spatio-temporal paths, such as flight paths, from a datacube
-    <div style="text-align:center">
-    <p style="float: middle; margin: 0 5px 0 0px;">
+    <p align="center">
         <img src="./docs/images/flight_path.png" alt="Flight path" width="350"/>
     </p>
-    </div>
+    <!-- </div> -->
 
 - and many more high-dimensional shapes in arbitrary dimensions...
 
@@ -125,10 +130,10 @@ TODO: populate requirements.txt -->
 
 #### Git Large File Storage
 
-Polytope uses Git Large File Storage (LFS) to store large test data files. 
+Polytope uses Git Large File Storage (LFS) to store large test data files used in its tests and examples. 
 Before cloning Polytope, it is thus necessary to install Git LFS, by following instructions provided [here](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage) for example.
 
 #### Extra Dependencies
 
-The Polytope tests require the installation of eccodes and GDAL.
+The Polytope tests and examples require the installation of eccodes and GDAL.
 It is possible to install both of these dependencies using either a package manager or manually.
