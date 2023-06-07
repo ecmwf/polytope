@@ -152,9 +152,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.5
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.5
 
     - name: Install packages needed to build the documentation
       run: |
