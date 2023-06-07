@@ -162,7 +162,7 @@ jobs:
         mkdocs
       working-directory: docs
 
-   check-version-tag:
+  check-version-tag:
     if: github.event_name == 'release' && github.event.action == 'created'
     name: Check versions and tags
     runs-on: ubuntu-latest
