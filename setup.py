@@ -18,5 +18,5 @@ setup(
     author_email="James.Hawkes@ecmwf.int, Mathilde.Leuridan@ecmwf.int",
     packages=find_packages(),
     zip_safe=False,
-    include_package_data=True,
+    # include_package_data=True,
 )
