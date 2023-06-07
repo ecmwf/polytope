@@ -155,11 +155,11 @@ jobs:
 
     - name: Install packages needed to build the documentation
       run: |
-        pip install -r docs/requirements.txt
+        pip install -r ../docs/requirements.txt
     
     - name: Documentation
       run: |
-        mkdocs
+        mkdocs build
       working-directory: docs
 
   check-version-tag:
