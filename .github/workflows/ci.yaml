@@ -118,7 +118,7 @@ jobs:
         git lfs install
     - name: Download Git LFS file
       run: |
-        git lfs pull
+        git lfs pull --include=./tests/data
     - name: Install eccodes
       run: sudo apt-get install -y libeccodes-dev
 
