@@ -151,11 +151,15 @@ jobs:
     name: Test building documentation
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.5
 
     - name: Install packages needed to build the documentation
       run: |
-        pip install -r docs/requirements.txt
+        python -m pip install --upgrade pip
+        python -m pip install -r docs/requirements.txt
     
     - name: Documentation
       run: |
