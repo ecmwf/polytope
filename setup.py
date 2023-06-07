@@ -10,7 +10,7 @@ __version__ = re.search(
 
 
 setup(
-    name="polytope",
+    name="polytope_python",
     version=__version__,
     description="Polytope datacube feature extraction library",
     url="https://github.com/ecmwf/polytope",
