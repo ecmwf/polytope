@@ -70,7 +70,7 @@ The Polytope algorithm can for example be used to extract:
 
 Install the polytope software with Python 3 (>=3.7) from GitHub directly with the command
 
-    python3 -m pip install --upgrade git+https://github.com/ecmwf/polytope.git@master
+    python3 -m pip install git+ssh://git@github.com/ecmwf/polytope.git@develop
 
 or from PyPI with the command
 
