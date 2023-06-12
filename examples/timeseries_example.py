@@ -2,7 +2,7 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import xarray as xr
+from earthkit import data
 from shapely.geometry import shape
 
 from polytope.datacube.xarray import XArrayDatacube
@@ -13,7 +13,9 @@ from polytope.shapes import Polygon, Select, Union
 
 class Test:
     def setup_method(self):
-        array = xr.open_dataset("./examples/data/timeseries_t2m.grib", engine="cfgrib")
+        ds = data.from_source("file", "./examples/data/timeseries_t2m.grib")
+        array = ds.to_xarray()
+        array = array.isel(step=0).isel(surface=0).isel(number=0)
         self.xarraydatacube = XArrayDatacube(array)
         for dim in array.dims:
             array = array.sortby(dim)
