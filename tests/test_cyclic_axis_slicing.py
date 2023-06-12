@@ -33,7 +33,6 @@ class TestSlicing3DXarrayDatacube:
             Box(["step", "long"], [0, 0.8], [3, 1.7]), Select("date", ["2000-01-01"]), Select("level", [128])
         )
         result = self.API.retrieve(request)
-        # result.pprint()
         assert len(result.leaves) == 20
         assert [leaf.value for leaf in result.leaves] == [
             0.8,

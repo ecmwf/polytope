@@ -37,5 +37,4 @@ class TestSlicerComponents:
         assert request.children[0].value == 3.0
         assert request.children[1].value == 6.0
         for i in range(len(request.leaves)):
-            # TODO: not sure in which order leaves are counted
             assert request.leaves[i].value in [1.0, 2.0, 3.0]

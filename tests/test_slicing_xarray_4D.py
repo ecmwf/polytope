@@ -115,7 +115,6 @@ class TestSlicing4DXarrayDatacube:
             Path(["step", "level"], box1, [3, 3], [6, 6]), Select("lat", [4.3]), Select("date", ["2000-01-01"])
         )
         result = self.API.retrieve(request)
-        # result.pprint()
         assert len(result.leaves) == 12
 
     def test_path_swept_box_3_points(self):
@@ -225,28 +224,24 @@ class TestSlicing4DXarrayDatacube:
         # Slices a line in the level direction
         request = Request(Disk(["level", "step"], [4, 6], [4, 0]), Select("lat", [6]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        # result.pprint()
         assert len(result.leaves) == 8
 
     def test_flat_disk_line_step(self):
         # Slices a line in the step direction
         request = Request(Disk(["level", "step"], [4, 6], [0, 3]), Select("lat", [6]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        # result.pprint()
         assert len(result.leaves) == 3
 
     def test_flat_disk_empty(self):
         # Slices an empty disk because there is no step
         request = Request(Disk(["level", "step"], [4, 5], [0, 0.5]), Select("lat", [6]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        # result.pprint()
         assert result.leaves[0].axis == IndexTree.root
 
     def test_disk_point(self):
         # Slices a point because the origin of the disk is a datacube point
         request = Request(Disk(["level", "step"], [4, 6], [0, 0]), Select("lat", [6]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        # result.pprint()
         assert len(result.leaves) == 1
         assert not result.leaves[0].axis == IndexTree.root
 
@@ -254,7 +249,6 @@ class TestSlicing4DXarrayDatacube:
         # Slices an empty object because the origin of the disk is not a datacube point
         request = Request(Disk(["level", "step"], [4, 5], [0, 0]), Select("lat", [6]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        # result.pprint()
         assert result.leaves[0].axis == IndexTree.root
 
     def test_polygon_line(self):
@@ -262,7 +256,6 @@ class TestSlicing4DXarrayDatacube:
         polygon = Polygon(["step", "level"], [[3, 3], [3, 6], [3, 3], [3, 3]])
         request = Request(polygon, Select("lat", [4.3]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        # result.pprint()
         assert len(result.leaves) == 4
 
     def test_polygon_point(self):
@@ -271,7 +264,6 @@ class TestSlicing4DXarrayDatacube:
         polygon = Polygon(["step", "level"], [[3, 3], [3, 3], [3, 3], [3, 3]])
         request = Request(polygon, Select("lat", [4.3]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        # result.pprint()
         assert len(result.leaves) == 1
         assert not result.leaves[0].axis == IndexTree.root
 
