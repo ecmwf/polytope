@@ -195,7 +195,7 @@ Polytope uses Git Large File Storage (LFS) to store large data files used in its
 To run the tests and examples, it is thus necessary to install Git LFS, by following instructions provided [here](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage) for example. 
 Once Git LFS is installed, individual data files can be downloaded using the command
 
-    git lfs fetch --include="filename" --exclude="" 
+    git lfs pull --include="*" --exclude="" 
 
 #### Additional Dependencies
 
