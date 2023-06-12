@@ -24,14 +24,13 @@ Feature Extraction
 
 <h3 align="center">
 <!-- <h2> -->
-<img src="./docs/images/logo.gif" width=60%>
+<img src="./docs/images/polytope_logo_new_animated.gif" width=60%>
 </br>
 <!-- </br> 
 </br>
 </br>
 </br>
 </br> -->
-Feature Extraction for Datacubes
 </h3>
 <!-- 
 </br>
