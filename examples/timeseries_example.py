@@ -55,7 +55,6 @@ class Test:
         request = Request(request_obj, Select("time", [np.datetime64("2022-05-14T12:00:00")]))
 
         result = self.API.retrieve(request)
-        return None
 
         # For each date/time, we plot an image
         # Note that only the temperatures should change so we can store them in different arrays

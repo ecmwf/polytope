@@ -1,5 +1,4 @@
 import math
-import time
 
 import geopandas as gpd
 import matplotlib as mpl
@@ -20,7 +19,6 @@ class Test:
         self.API = Polytope(datacube=array, engine=self.slicer)
 
     def test_slice_shipping_route(self):
-        time1 = time.time()
         shapefile = gpd.read_file("./examples/data/Shipping-Lanes-v1.shp")
         geometry_multiline = shapefile.iloc[2]
         geometry_object = geometry_multiline["geometry"]
@@ -60,7 +58,6 @@ class Test:
         ship_route_polytope = Path(["latitude", "longitude", "step"], initial_shape, *new_points)
         request = Request(ship_route_polytope)
         result = self.API.retrieve(request)
-        print(time.time() - time1)
 
         # Associate the results to the lat/long points in an array
         lats = []
