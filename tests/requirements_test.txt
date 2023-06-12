@@ -5,3 +5,5 @@ cfgrib==0.9.10.3
 eccodes==1.5.2
 h5netcdf==1.1.0
 h5py==3.8.0
+earthkit==0.0.1
+earthkit-data==0.1.3
