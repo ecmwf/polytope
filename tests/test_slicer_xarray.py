@@ -19,12 +19,13 @@ class TestXarraySlicing:
                 "level": range(1, 130),
             },
         )
-
+        array = array.to_array()
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)
 
     def test_2D_box(self):
-        request = Request(Box(["step", "level"], [3, 10], [6, 11]), Select("date", ["2000-01-01"]))
+        request = Request(Box(["step", "level"], [3, 10], [6, 11]), Select("date", ["2000-01-01"]),
+                          Select("variable", ["param"]))
         result = self.API.retrieve(request)
         result.pprint()
 
@@ -34,6 +35,7 @@ class TestXarraySlicing:
             # TODO: conversion from numpy to Point class should allow dropping the pd.Timestamp
             # It should convert to correct type
             Span("date", lower=pd.Timestamp("2000-01-01"), upper=pd.Timestamp("2000-01-05")),
+            Select("variable", ["param"])
         )
         result = self.API.retrieve(request)
         result.pprint()
@@ -41,6 +43,7 @@ class TestXarraySlicing:
     def test_3D_box_with_date(self):
         request = Request(
             Box(["step", "level", "date"], [3, 10, pd.Timestamp("2000-01-01")], [6, 11, pd.Timestamp("2000-01-01")]),
+            Select("variable", ["param"])
         )
         result = self.API.retrieve(request)
         result.pprint()

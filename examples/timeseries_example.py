@@ -13,7 +13,7 @@ from polytope.shapes import Polygon, Select, Union
 
 class Test:
     def setup_method(self):
-        array = xr.open_dataset("./examples/data/timeseries_t2m.grib", engine="cfgrib")
+        array = xr.open_dataset("./examples/data/timeseries_t2m.grib", engine="cfgrib").t2m
         self.xarraydatacube = XArrayDatacube(array)
         for dim in array.dims:
             array = array.sortby(dim)

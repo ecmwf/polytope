@@ -16,7 +16,7 @@ from polytope.shapes import Polygon, Select, Union
 
 class Test:
     def setup_method(self):
-        array = xr.open_dataset("./examples/data/winds.grib", engine="cfgrib")
+        array = xr.open_dataset("./examples/data/winds.grib", engine="cfgrib").u10
         self.array = array
         options = {"longitude": {"Cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
@@ -73,10 +73,12 @@ class Test:
                 long = long - 360
             lats.append(lat)
             longs.append(long)
-            u10_idx = result.leaves[i].result["u10"]
+            # u10_idx = result.leaves[i].result["u10"]
+            u10_idx = result.leaves[i].result[1]
             wind_u = u10_idx
-            v10_idx = result.leaves[i].result["v10"]
-            wind_v = v10_idx
+            # v10_idx = result.leaves[i].result["v10"]
+            # wind_v = v10_idx
+            wind_v = 0
             winds_u.append(wind_u)
             winds_v.append(wind_v)
             parameter_values.append(math.sqrt(wind_u**2 + wind_v**2))

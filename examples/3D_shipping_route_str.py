@@ -13,7 +13,7 @@ from polytope.shapes import Box, Path
 
 class Test:
     def setup_method(self):
-        array = xr.open_dataset("./examples/data/output4.grib", engine="cfgrib")
+        array = xr.open_dataset("./examples/data/output4.grib", engine="cfgrib").u10
         self.xarraydatacube = XArrayDatacube(array)
         self.array = array
         self.slicer = HullSlicer()

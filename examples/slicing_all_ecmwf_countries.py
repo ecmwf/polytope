@@ -12,7 +12,7 @@ from polytope.shapes import Polygon, Union
 
 class Test:
     def setup_method(self, method):
-        array = xr.open_dataset(".examples/data/output8.grib", engine="cfgrib")
+        array = xr.open_dataset(".examples/data/output8.grib", engine="cfgrib").t2m
         options = {"longitude": {"Cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()

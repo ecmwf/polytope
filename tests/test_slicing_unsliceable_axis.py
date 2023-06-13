@@ -18,6 +18,7 @@ class TestSlicing3DXarrayDatacube:
             data_vars=dict(param=(["date", "variable", "level"], dims)),
             coords={"date": pd.date_range("2000-01-01", "2000-01-03", 3), "variable": ["a"], "level": range(1, 130)},
         )
+        array = array.to_array(dim="parameter")
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)
@@ -25,19 +26,22 @@ class TestSlicing3DXarrayDatacube:
     # Testing different shapes
 
     def test_finding_existing_variable(self):
-        request = Request(Box(["level"], [10], [11]), Select("date", ["2000-01-01"]), Select("variable", ["a"]))
+        request = Request(Box(["level"], [10], [11]), Select("date", ["2000-01-01"]), Select("variable", ["a"]),
+                          Select("parameter", ["param"]))
         result = self.API.retrieve(request)
         assert len(result.leaves) == 2
 
     def test_finding_nonexisting_variable(self):
-        request = Request(Box(["level"], [10], [11]), Select("date", ["2000-01-01"]), Select("variable", ["b"]))
+        request = Request(Box(["level"], [10], [11]), Select("date", ["2000-01-01"]), Select("variable", ["b"]),
+                          Select("parameter", ["param"]))
         with pytest.raises(ValueError):
             result = self.API.retrieve(request)
             result.pprint()
 
     def test_unsliceable_axis_in_a_shape(self):
         # does it work when we ask a box or disk of an unsliceable axis?
-        request = Request(Box(["level", "variable"], [10, "a"], [11, "a"]), Select("date", ["2000-01-01"]))
+        request = Request(Box(["level", "variable"], [10, "a"], [11, "a"]), Select("date", ["2000-01-01"]),
+                          Select("parameter", ["param"]))
         with pytest.raises(UnsliceableShapeError):
             result = self.API.retrieve(request)
             result.pprint()

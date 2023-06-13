@@ -14,7 +14,7 @@ from polytope.shapes import Ellipsoid, Path
 
 class Test:
     def setup_method(self):
-        array = xr.open_dataset("./examples/data/winds.grib", engine="cfgrib")
+        array = xr.open_dataset("./examples/data/winds.grib", engine="cfgrib").u10
         self.array = array
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)

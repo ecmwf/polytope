@@ -8,7 +8,7 @@ from polytope.shapes import Box, Select
 
 class TestSlicingEra5Data:
     def setup_method(self, method):
-        array = xr.open_dataset("./tests/data/era5-levels-members.grib", engine="cfgrib")
+        array = xr.open_dataset("./tests/data/era5-levels-members.grib", engine="cfgrib").t
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)

@@ -4,7 +4,7 @@ import xarray as xr
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
 
-array = xr.open_dataset("./examples/data/winds.grib", engine="cfgrib")
+array = xr.open_dataset("./examples/data/winds.grib", engine="cfgrib").u10
 
 options = {"longitude": {"Cyclic": [0, 360.0]}}
 
