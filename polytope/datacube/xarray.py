@@ -25,6 +25,7 @@ _mappings = {
     np.float64: FloatAxis(),
     np.str_: UnsliceableaAxis(),
     str: UnsliceableaAxis(),
+    np.object_ : UnsliceableaAxis()
 }
 
 
@@ -116,8 +117,8 @@ class XArrayDatacube(Datacube):
 
         # Get the indexes of the axis we want to query
         # XArray does not support branching, so no need to use label, we just take the next axis
-        # TODO: should assert that the label == next axis
 
+        assert axis.name == next(iter(subarray.xindexes))
         indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
 
         # Here, we do a cyclic remapping so we look up on the right existing values in the cyclic range on the datacube
@@ -142,7 +143,7 @@ class XArrayDatacube(Datacube):
 
     def has_index(self, path: DatacubePath, axis, index):
         # when we want to obtain the value of an unsliceable axis, need to check the values does exist in the datacube
-        subarray = self.dataarray.sel(path)[axis.name]
+        subarray = self.dataarray.sel(path, method='nearest')[axis.name]
         subarray_vals = subarray.values
         return index in subarray_vals
 
