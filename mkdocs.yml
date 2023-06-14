@@ -4,7 +4,7 @@ theme:
     icon:
         admonition:
             shapes: :material-shape
-    # logo: destination-earth-logo.png
+    logo: images/polytope_logo_new_animated_AdobeExpress_3.gif
 markdown_extensions:
     - admonition
     # - pymdownx.details
