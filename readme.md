@@ -1,6 +1,59 @@
-<h1 align="center" margin=0px>
-Polytope
-</h1>
+<!-- <h2 align="center" margin=0px> -->
+<!-- <p float="left"> -->
+<!-- <div align="center">
+<p align="center">
+<!-- ![my image](./docs/images/logo.gif#center)   -->
+<!-- <img src="./docs/images/logo.gif" align="left" margin=10px width="300" height="300">
+
+<h3 align="center">
+<!-- <h2> -->
+<!-- <br>
+<br>
+<br>
+Feature Extraction
+</br> for Datacubes
+</h3>
+</p>
+</div>
+
+<br clear="left"/> --> 
+
+
+<!-- ![my image](./docs/images/logo.gif#center)   -->
+<!-- <img src="./docs/images/logo.gif" align="left" margin=10px width="300" height="300"> -->
+
+<h3 align="center">
+<!-- <h2> -->
+<img src="./docs/images/polytope_logo_new_animated_AdobeExpress_3.gif" width=60%>
+</br>
+<!-- </br> 
+</br>
+</br>
+</br>
+</br> -->
+</h3>
+<!-- 
+</br>
+</br>
+</br>
+</br>
+</br>
+</br> -->
+<!-- </p>
+</div> -->
+
+<!-- <br clear="left"/> -->
+<!-- <br> -->
+<!-- <br> -->
+<!-- <div id="container">
+<div class="content_left">
+  <h5>Feature Extraction for Datacubes</h5>
+  <hr/>
+</div>
+<div class="content_right">
+  <img src="./docs/images/logo.gif" width="400" height="400">
+</div>
+</div> -->
 
 <!-- [![GitHub release](https://img.shields.io/github/release/Naereen/StrapDown.js.svg)](https://GitHub.com/ecmwf/polytope/releases/) -->
 <!-- ![example event parameter](https://github.com/github/docs/actions/workflows/main.yml/badge.svg?event=push)
