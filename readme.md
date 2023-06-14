@@ -24,7 +24,7 @@ Feature Extraction
 
 <h3 align="center">
 <!-- <h2> -->
-<img src="./docs/images/polytope_logo_new_animated_AdobeExpress_3.gif" width=80% loop=1>
+<img src="./docs/images/polytope_logo_new_animated_AdobeExpress_4.gif" width=80%>
 </br>
 <!-- </br> 
 </br>
