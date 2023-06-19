@@ -25,9 +25,7 @@ class Test:
 
     def test_slice_shipping_route(self):
         shapefile = gpd.read_file("./examples/data/World_Countries__Generalized_.shp")
-        country = shapefile
-        shapefile = shapefile.set_index("COUNTRY")
-        country = shapefile.loc["Italy"]
+        country = shapefile.iloc[57]
         multi_polygon = shape(country["geometry"])
         # If country is a multipolygon
         polygons = list(multi_polygon.geoms)
@@ -92,8 +90,6 @@ class Test:
             long = cubepath["longitude"]
             latlong_point = [lat, long]
             t_idx = result.leaves[i].result["t2m"]
-            print(type(cubepath["time"]))
-            print(cubepath["time"] == pd.Timestamp("2022-05-14T12:00:00"))
             if cubepath["time"] == pd.Timestamp("2022-05-14T12:00:00"):
                 temps1.append(t_idx)
                 lats1.append(lat)

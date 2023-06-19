@@ -100,8 +100,7 @@ class Test:
             longs.append(long)
             levels.append(level)
             t_idx = result.leaves[i].result["t"]
-            t = t_idx
-            parameter_values.append(t)
+            parameter_values.append(t_idx)
         parameter_values = np.array(parameter_values)
 
         # Get the right points of lat/long/alt
