@@ -1,4 +1,4 @@
-import xarray as xr
+from earthkit import data
 
 from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
@@ -8,7 +8,8 @@ from polytope.shapes import Box, Select
 
 class TestSlicingEra5Data:
     def setup_method(self, method):
-        array = xr.open_dataset("./tests/data/era5-levels-members.grib", engine="cfgrib").t
+        ds = data.from_source("file", "./tests/data/era5-levels-members.grib")
+        array = ds.to_xarray().isel(step=0).t
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)

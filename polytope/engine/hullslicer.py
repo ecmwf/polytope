@@ -160,6 +160,3 @@ def slice(polytope: ConvexPolytope, axis, value):
                 return ConvexPolytope(axes, intersects)
     # Sliced result is simply the convex hull
     return ConvexPolytope(axes, [intersects[i] for i in vertices])
-
-
-# To profile, put @profile in front of slice and then do: kernprof -l -v tests/test_hull_slicer.py in terminal

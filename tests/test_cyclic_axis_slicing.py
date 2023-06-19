@@ -35,7 +35,6 @@ class TestSlicing3DXarrayDatacube:
             Select("variable", ["param"])
         )
         result = self.API.retrieve(request)
-        # result.pprint()
         assert len(result.leaves) == 20
         assert [leaf.parent.value for leaf in result.leaves] == [
             0.8,
@@ -63,7 +62,7 @@ class TestSlicing3DXarrayDatacube:
     def test_cyclic_float_axis_across_seam_repeated(self):
         request = Request(
             Box(["step", "long"], [0, 0.0], [3, 1.0]), Select("date", ["2000-01-01"]), Select("level", [128]),
-            Select("variable", ["param"])
+            # Select("variable", ["param"])
         )
         result = self.API.retrieve(request)
         # result.pprint()

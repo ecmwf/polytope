@@ -119,8 +119,8 @@ class IntAxisCyclic(DatacubeAxis):
         if lower < axis_upper:
             # In this case, we want to go from lower to the first remapped cyclic axis upper
             # or the asked upper range value.
-            # For example, if we have cyclic range [0,360] and we want to break [-270,180] into intervals.
-            # We first want to obtain [-270, 0] as the first range, where 0 is the remapped cyclic axis upper
+            # For example, if we have cyclic range [0,360] and we want to break [-270,180] into intervals,
+            # we first want to obtain [-270, 0] as the first range, where 0 is the remapped cyclic axis upper
             # but if we wanted to break [-270, -180] into intervals, we would want to get [-270,-180],
             # where -180 is the asked upper range value.
             loops = int((axis_upper - lower) / axis_range)
@@ -203,7 +203,7 @@ class IntAxisCyclic(DatacubeAxis):
     def offset(self, range):
         # We first unpad the range by the axis tolerance to make sure that
         # we find the wanted range of the cyclic axis since we padded by the axis tolerance before.
-        # Also, it's safer that we find the offset of a value inside the range instead of on the border
+        # Also, it's safer that we find the offset of a value inside the range instead of on the border.
         unpadded_range = [range[0] + 1.5 * self.tol, range[1] - 1.5 * self.tol]
         cyclic_range = self.remap_range_to_axis_range(unpadded_range)
         offset = unpadded_range[0] - cyclic_range[0]
@@ -249,7 +249,7 @@ class FloatAxis(DatacubeAxis):
 class FloatAxisCyclic(DatacubeAxis):
     # Note that in the cyclic axis here, we only retain the lower part when we remap
     # so for eg if the datacube has cyclic axis on [0,360]
-    # If we want 360, then we will in reality get back 0 (which is the same)
+    # then if we want 360, we will in reality get back 0 (which is the same)
     name = None
     tol = 1e-12
     range = None
@@ -276,8 +276,8 @@ class FloatAxisCyclic(DatacubeAxis):
         if lower < axis_upper:
             # In this case, we want to go from lower to the first remapped cyclic axis upper
             # or the asked upper range value.
-            # For example, if we have cyclic range [0,360] and we want to break [-270,180] into intervals.
-            # We first want to obtain [-270, 0] as the first range, where 0 is the remapped cyclic axis upper
+            # For example, if we have cyclic range [0,360] and we want to break [-270,180] into intervals,
+            # we first want to obtain [-270, 0] as the first range, where 0 is the remapped cyclic axis upper
             # but if we wanted to break [-270, -180] into intervals, we would want to get [-270,-180],
             # where -180 is the asked upper range value.
             loops = int((axis_upper - lower) / axis_range)

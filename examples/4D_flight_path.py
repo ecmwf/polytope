@@ -1,7 +1,7 @@
 import numpy as np
 import plotly
 import plotly.graph_objects as go
-import xarray as xr
+from earthkit import data
 from PIL import Image
 
 from polytope.datacube.xarray import XArrayDatacube
@@ -12,7 +12,9 @@ from polytope.shapes import Box, Path
 
 class Test:
     def setup_method(self):
-        array = xr.open_dataset("./examples/data/temp_model_levels.grib", engine="cfgrib").t
+        ds = data.from_source("file", "./examples/data/temp_model_levels.grib")
+        array = ds.to_xarray()
+        array = array.isel(time=0).t
         options = {"longitude": {"Cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         for dim in array.dims:
@@ -84,7 +86,6 @@ class Test:
 
         request = Request(flight_route_polytope)
         result = self.API.retrieve(request)
-        result.pprint()
 
         lats = []
         longs = []
@@ -99,8 +100,7 @@ class Test:
             longs.append(long)
             levels.append(level)
             t_idx = result.leaves[i].result["t"]
-            t = t_idx
-            parameter_values.append(t)
+            parameter_values.append(t_idx)
         parameter_values = np.array(parameter_values)
 
         # Get the right points of lat/long/alt
@@ -119,11 +119,9 @@ class Test:
             y.append(y1)
             z.append(z1)
 
-        intensity_color = parameter_values
-
         # Plot it using plotly in 3D shape
         flight_path = go.Scatter3d(
-            x=x, y=y, z=z, mode="markers", marker=dict(size=1.5, color=intensity_color, colorscale="YlOrRd")
+            x=x, y=y, z=z, mode="markers", marker=dict(size=1.5, color=parameter_values, colorscale="YlOrRd")
         )
 
         data.append(flight_path)

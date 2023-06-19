@@ -1,13 +1,72 @@
-<h1 align="center" margin=0px>
-Polytope
-</h1>
+<!-- <h2 align="center" margin=0px> -->
+<!-- <p float="left"> -->
+<!-- <div align="center">
+<p align="center">
+<!-- ![my image](./docs/images/logo.gif#center)   -->
+<!-- <img src="./docs/images/logo.gif" align="left" margin=10px width="300" height="300">
+
+<h3 align="center">
+<!-- <h2> -->
+<!-- <br>
+<br>
+<br>
+Feature Extraction
+</br> for Datacubes
+</h3>
+</p>
+</div>
+
+<br clear="left"/> --> 
+
+
+<!-- ![my image](./docs/images/logo.gif#center)   -->
+<!-- <img src="./docs/images/logo.gif" align="left" margin=10px width="300" height="300"> -->
+
+<h3 align="center">
+<!-- <h2> -->
+<img src="./docs/images/polytope_logo_new_animated_AdobeExpress_3.gif" width=60%>
+</br>
+<!-- </br> 
+</br>
+</br>
+</br>
+</br> -->
+</h3>
+<!-- 
+</br>
+</br>
+</br>
+</br>
+</br>
+</br> -->
+<!-- </p>
+</div> -->
+
+<!-- <br clear="left"/> -->
+<!-- <br> -->
+<!-- <br> -->
+<!-- <div id="container">
+<div class="content_left">
+  <h5>Feature Extraction for Datacubes</h5>
+  <hr/>
+</div>
+<div class="content_right">
+  <img src="./docs/images/logo.gif" width="400" height="400">
+</div>
+</div> -->
 
 <!-- [![GitHub release](https://img.shields.io/github/release/Naereen/StrapDown.js.svg)](https://GitHub.com/ecmwf/polytope/releases/) -->
 <!-- ![example event parameter](https://github.com/github/docs/actions/workflows/main.yml/badge.svg?event=push)
 [![GitHub tag](https://img.shields.io/github/tag/MichaelCurrin/badge-generator?include_prereleases=&sort=semver)](https://github.com/ecmwf/polytope/releases/)
 [![Documentation Status](https://readthedocs.org/projects/polytope/badge/?version=latest)](https://polytope.readthedocs.io/en/latest/?badge=latest) -->
+<!-- [![ci](https://github.com/ecmwf/polytope/actions/workflows/ci.yaml/badge.svg)](https://github.com/ecmwf/polytope/actions/workflows/ci.yaml) -->
 <p align="center">
-   <a href="https://github.com/ecmwf/polytope/actions"><img src="https://github.com/ecmwf/polytope/workflows/ci/badge.svg?branch=main"></a>
+<!--    <a href="https://github.com/ecmwf/polytope/actions"><img src="https://github.com/ecmwf/polytope/workflows/ci/badge.svg?branch=main"></a> -->
+<!--    <a href="https://github.com/ecmwf/polytope/actions/workflows/ci.yaml"><img src="https://github.com/ecmwf/polytope/workflows/ci.yaml/badge.svg"></a> -->
+<!--    [![ci](https://github.com/ecmwf/polytope/actions/workflows/ci.yaml/badge.svg)](https://github.com/ecmwf/polytope/actions/workflows/ci.yaml) -->
+  <a href="https://github.com/ecmwf/polytope/actions/workflows/ci.yaml">
+  <img src="https://github.com/ecmwf/polytope/actions/workflows/ci.yaml/badge.svg" alt="ci">
+</a>
   <a href="https://codecov.io/gh/ecmwf/polytope"><img src="https://codecov.io/gh/ecmwf/polytope/branch/main/graph/badge.svg"></a>
   <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
   <a href="https://github.com/ecmwf/polytope/releases"><img src="https://img.shields.io/badge/Release-v0.0.1-blue.svg"></a>
@@ -142,7 +201,7 @@ Polytope uses Git Large File Storage (LFS) to store large data files used in its
 To run the tests and examples, it is thus necessary to install Git LFS, by following instructions provided [here](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage) for example. 
 Once Git LFS is installed, individual data files can be downloaded using the command
 
-    git lfs fetch --include="filename" --exclude="" 
+    git lfs pull --include="*" --exclude="" 
 
 #### Additional Dependencies
 

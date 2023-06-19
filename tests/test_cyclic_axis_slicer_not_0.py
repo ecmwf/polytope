@@ -35,7 +35,6 @@ class TestSlicing3DXarrayDatacube:
             Select("variable", ["param"])
         )
         result = self.API.retrieve(request)
-        # result.pprint()
         assert len(result.leaves) == 20
         assert [leaf.parent.value for leaf in result.leaves] == [
             0.8,

@@ -1,10 +1,12 @@
 import numpy as np
-import xarray as xr
+from earthkit import data
 
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
 
-array = xr.open_dataset("./examples/data/winds.grib", engine="cfgrib").u10
+ds = data.from_source("file", "./examples/data/winds.grib")
+array = ds.to_xarray()
+array = array.isel(time=0).isel(surface=0).isel(number=0).u10
 
 options = {"longitude": {"Cyclic": [0, 360.0]}}
 

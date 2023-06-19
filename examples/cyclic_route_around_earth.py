@@ -1,7 +1,7 @@
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
-import xarray as xr
+from earthkit import data
 
 from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
@@ -11,20 +11,21 @@ from polytope.shapes import Box, PathSegment
 
 class Test:
     def setup_method(self, method):
-        array = xr.open_dataset("./examples/data/output8.grib", engine="cfgrib").t2m
+        ds = data.from_source("file", ".examples/data/output8.grib")
+        array = ds.to_xarray()
+        array = array.isel(surface=0).isel(step=0).isel(number=0).isel(time=0).t2m
         options = {"longitude": {"Cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 
     def test_slice_country(self):
-        bounding_box = Box(["latitude", "longitude"], [-0.125, -0.125], [0.125, 0.125])
-        request_obj = PathSegment(["latitude", "longitude"], bounding_box, [-88, -719], [88, 720])
+        bounding_box = Box(["latitude", "longitude"], [-0.1, -0.1], [0.1, 0.1])
+        request_obj = PathSegment(["latitude", "longitude"], bounding_box, [-88, -67], [68, 170])
         request = Request(request_obj)
 
         # Extract the values of the long and lat from the tree
         result = self.API.retrieve(request)
-        result.pprint()
         country_points_plotting = []
         lats = []
         longs = []
@@ -33,21 +34,11 @@ class Test:
             cubepath = result.leaves[i].flatten()
             lat = cubepath["latitude"]
             long = cubepath["longitude"]
-            # here need to remap the longitude to be between -180 and 180 so that they appear on the map...
-            if long < -180:
-                long = long + 360
-            if -180 <= long < 180:
-                long = long
-            if 180 <= long < 180 + 360:
-                long = long - 360
-            if 180 + 360 <= long < 180 + 360 + 360:
-                long = long - 720
             latlong_point = [lat, long]
             lats.append(lat)
             longs.append(long)
             t_idx = result.leaves[i].result["t2m"]
-            t = t_idx
-            temps.append(t)
+            temps.append(t_idx)
             country_points_plotting.append(latlong_point)
         temps = np.array(temps)
 

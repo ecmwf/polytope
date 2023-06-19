@@ -30,12 +30,6 @@ class Request:
         return polytopes
 
 
-# TODO: Perhaps our API should just be an "engine" and we have a factory here that creates it
-#       Engine depends on datacube; datacube does not depend on engine. So build an engine,
-#       which builds its datacube. No need to create the "pair" here.
-#       Engine could be renamed "extractor" or something more descriptive.
-
-
 class Polytope:
     def __init__(self, datacube, engine=None, options={}):
         from .datacube import Datacube

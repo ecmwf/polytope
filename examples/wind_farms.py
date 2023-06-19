@@ -4,7 +4,7 @@ import geopandas as gpd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-import xarray as xr
+from earthkit import data
 from osgeo import gdal
 from shapely.geometry import shape
 
@@ -16,14 +16,16 @@ from polytope.shapes import Polygon, Select, Union
 
 class Test:
     def setup_method(self):
-        array = xr.open_dataset("./examples/data/winds.grib", engine="cfgrib").u10
+        ds = data.from_source("file", "./examples/data/winds.grib")
+        array = ds.to_xarray()
+        array = array.isel(time=0).isel(surface=0).isel(number=0).u10
         self.array = array
         options = {"longitude": {"Cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 
-    def test_slice_shipping_route(self):
+    def test_slice_wind_farms(self):
         gdal.SetConfigOption("SHAPE_RESTORE_SHX", "YES")
 
         shapefile = gpd.read_file("./examples/data/EMODnet_HA_WindFarms_pg_20220324.shp")
@@ -67,10 +69,6 @@ class Test:
             cubepath = result.leaves[i].flatten()
             lat = cubepath["latitude"]
             long = cubepath["longitude"]
-            if long < -180:
-                long = long + 360
-            if long > 180:
-                long = long - 360
             lats.append(lat)
             longs.append(long)
             # u10_idx = result.leaves[i].result["u10"]
