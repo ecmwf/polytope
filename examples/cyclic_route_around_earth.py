@@ -18,13 +18,12 @@ class Test:
         self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 
     def test_slice_country(self):
-        bounding_box = Box(["latitude", "longitude"], [-0.125, -0.125], [0.125, 0.125])
-        request_obj = PathSegment(["latitude", "longitude"], bounding_box, [-88, -719], [88, 720])
+        bounding_box = Box(["latitude", "longitude"], [-0.1, -0.1], [0.1, 0.1])
+        request_obj = PathSegment(["latitude", "longitude"], bounding_box, [-88, -67], [68, 170])
         request = Request(request_obj)
 
         # Extract the values of the long and lat from the tree
         result = self.API.retrieve(request)
-        result.pprint()
         country_points_plotting = []
         lats = []
         longs = []
@@ -33,21 +32,11 @@ class Test:
             cubepath = result.leaves[i].flatten()
             lat = cubepath["latitude"]
             long = cubepath["longitude"]
-            # here need to remap the longitude to be between -180 and 180 so that they appear on the map...
-            if long < -180:
-                long = long + 360
-            if -180 <= long < 180:
-                long = long
-            if 180 <= long < 180 + 360:
-                long = long - 360
-            if 180 + 360 <= long < 180 + 360 + 360:
-                long = long - 720
             latlong_point = [lat, long]
             lats.append(lat)
             longs.append(long)
             t_idx = result.leaves[i].result["t2m"]
-            t = t_idx
-            temps.append(t)
+            temps.append(t_idx)
             country_points_plotting.append(latlong_point)
         temps = np.array(temps)
 
