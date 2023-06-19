@@ -4,7 +4,7 @@ theme:
     icon:
         admonition:
             shapes: :material-shape
-    logo: images/polytope_logo_new_animated_AdobeExpress_3.gif
+    logo: images/logo_read_the_docs.png
 markdown_extensions:
     - admonition
     # - pymdownx.details
