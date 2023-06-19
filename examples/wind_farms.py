@@ -67,10 +67,6 @@ class Test:
             cubepath = result.leaves[i].flatten()
             lat = cubepath["latitude"]
             long = cubepath["longitude"]
-            if long < -180:
-                long = long + 360
-            if long > 180:
-                long = long - 360
             lats.append(lat)
             longs.append(long)
             u10_idx = result.leaves[i].result["u10"]
