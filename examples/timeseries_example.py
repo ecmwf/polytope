@@ -2,7 +2,7 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import xarray as xr
+from earthkit import data
 from shapely.geometry import shape
 
 from polytope.datacube.xarray import XArrayDatacube
@@ -13,7 +13,9 @@ from polytope.shapes import Polygon, Select, Union
 
 class Test:
     def setup_method(self):
-        array = xr.open_dataset("./examples/data/timeseries_t2m.grib", engine="cfgrib")
+        ds = data.from_source("file", "./examples/data/timeseries_t2m.grib")
+        array = ds.to_xarray()
+        array = array.isel(step=0).isel(surface=0).isel(number=0)
         self.xarraydatacube = XArrayDatacube(array)
         for dim in array.dims:
             array = array.sortby(dim)
@@ -23,9 +25,7 @@ class Test:
 
     def test_slice_shipping_route(self):
         shapefile = gpd.read_file("./examples/data/World_Countries__Generalized_.shp")
-        country = shapefile
-        shapefile = shapefile.set_index("COUNTRY")
-        country = shapefile.loc["Italy"]
+        country = shapefile.iloc[57]
         multi_polygon = shape(country["geometry"])
         # If country is a multipolygon
         polygons = list(multi_polygon.geoms)
@@ -55,7 +55,6 @@ class Test:
         request = Request(request_obj, Select("time", [np.datetime64("2022-05-14T12:00:00")]))
 
         result = self.API.retrieve(request)
-        return None
 
         # For each date/time, we plot an image
         # Note that only the temperatures should change so we can store them in different arrays
@@ -91,8 +90,6 @@ class Test:
             long = cubepath["longitude"]
             latlong_point = [lat, long]
             t_idx = result.leaves[i].result["t2m"]
-            print(type(cubepath["time"]))
-            print(cubepath["time"] == pd.Timestamp("2022-05-14T12:00:00"))
             if cubepath["time"] == pd.Timestamp("2022-05-14T12:00:00"):
                 temps1.append(t_idx)
                 lats1.append(lat)

@@ -1,7 +1,7 @@
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
-import xarray as xr
+from earthkit import data
 from shapely.geometry import shape
 
 from polytope.datacube.xarray import XArrayDatacube
@@ -12,7 +12,9 @@ from polytope.shapes import Polygon, Union
 
 class Test:
     def setup_method(self, method):
-        array = xr.open_dataset("./examples/data/output8.grib", engine="cfgrib")
+        ds = data.from_source("file", "./examples/data/output8.grib")
+        array = ds.to_xarray()
+        array = array.isel(surface=0).isel(step=0).isel(number=0).isel(time=0)
         options = {"longitude": {"Cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
@@ -24,14 +26,12 @@ class Test:
         # Shapefile taken from
         # https://hub.arcgis.com/datasets/esri::world-countries-generalized/explore?location=-0.131595%2C0.000000%2C2.00
         shapefile = gpd.read_file("./examples/data/World_Countries__Generalized_.shp")
-        country = shapefile
-        shapefile = shapefile.set_index("COUNTRY")
-        country = shapefile.loc["United Kingdom"]
+        country = shapefile.iloc[13]
         multi_polygon = shape(country["geometry"])
         # If country is a multipolygon
-        polygons = list(multi_polygon.geoms)
+        # polygons = list(multi_polygon.geoms)
         # If country is just a polygon
-        # polygons = [multi_polygon]
+        polygons = [multi_polygon]
         polygons_list = []
 
         # Now create a list of x,y points for each polygon
@@ -61,14 +61,11 @@ class Test:
             cubepath = result.leaves[i].flatten()
             lat = cubepath["latitude"]
             long = cubepath["longitude"]
-            if long >= 180:
-                long = long - 360
             latlong_point = [lat, long]
             lats.append(lat)
             longs.append(long)
             t_idx = result.leaves[i].result["t2m"]
-            t = t_idx
-            temps.append(t)
+            temps.append(t_idx)
             country_points_plotting.append(latlong_point)
         temps = np.array(temps)
 
@@ -78,7 +75,10 @@ class Test:
         worldmap.plot(color="darkgrey", ax=ax)
 
         # For multipolygon country
-        for geom in multi_polygon.geoms:
+        # for geom in multi_polygon.geoms:
+        #     plt.plot(*geom.exterior.xy, color="black", linewidth=0.7)
+        # For polygon country
+        for geom in [multi_polygon]:
             plt.plot(*geom.exterior.xy, color="black", linewidth=0.7)
 
         whole_lat_old = np.arange(-90.0, 90.0, 0.125)

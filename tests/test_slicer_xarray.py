@@ -31,8 +31,6 @@ class TestXarraySlicing:
     def test_2D_box_with_date_range(self):
         request = Request(
             Box(["step", "level"], [3, 10], [6, 11]),
-            # TODO: conversion from numpy to Point class should allow dropping the pd.Timestamp
-            # It should convert to correct type
             Span("date", lower=pd.Timestamp("2000-01-01"), upper=pd.Timestamp("2000-01-05")),
         )
         result = self.API.retrieve(request)

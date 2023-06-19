@@ -38,8 +38,6 @@ class XArrayDatacube(Datacube):
         if name in self.options.keys():
             # The options argument here is supposed to be a nested dictionary
             # like {"latitude":{"Cyclic":range}, ...}
-            # TODO: would it be faster if instead we just add an option when it's cyclic and then evaluate to
-            # true or false? Maybe there is a better/faster way of accessing options
             if "Cyclic" in self.options[name].keys():
                 value_type = values.dtype.type
                 axes_type_str = type(_mappings[value_type]).__name__
@@ -67,7 +65,6 @@ class XArrayDatacube(Datacube):
         for r in requests.leaves:
             path = r.flatten()
             path = self.remap_path(path)
-            # TODO: Here, once we flatten the path, we want to remap the values on the axis to fit the datacube...
             if len(path.items()) == len(self.dataarray.coords):
                 subxarray = self.dataarray.sel(path, method="nearest")
                 data_variables = subxarray.data_vars
@@ -112,6 +109,7 @@ class XArrayDatacube(Datacube):
 
     def get_indices(self, path: DatacubePath, axis, lower, upper):
         path = self.remap_path(path)
+
         # Open a view on the subset identified by the path
         subarray = self.dataarray.sel(path, method="nearest")
 
@@ -143,7 +141,7 @@ class XArrayDatacube(Datacube):
 
     def has_index(self, path: DatacubePath, axis, index):
         # when we want to obtain the value of an unsliceable axis, need to check the values does exist in the datacube
-        subarray = self.dataarray.sel(path, method="nearest")[axis.name]
+        subarray = self.dataarray.sel(path)[axis.name]
         subarray_vals = subarray.values
         return index in subarray_vals
 

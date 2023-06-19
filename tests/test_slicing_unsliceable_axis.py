@@ -36,7 +36,6 @@ class TestSlicing3DXarrayDatacube:
             result.pprint()
 
     def test_unsliceable_axis_in_a_shape(self):
-        # does it work when we ask a box or disk of an unsliceable axis?
         request = Request(Box(["level", "variable"], [10, "a"], [11, "a"]), Select("date", ["2000-01-01"]))
         with pytest.raises(UnsliceableShapeError):
             result = self.API.retrieve(request)
