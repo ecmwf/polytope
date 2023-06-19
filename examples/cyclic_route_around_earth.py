@@ -1,7 +1,7 @@
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
-import xarray as xr
+from earthkit import data
 
 from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
@@ -11,7 +11,9 @@ from polytope.shapes import Box, PathSegment
 
 class Test:
     def setup_method(self, method):
-        array = xr.open_dataset("./examples/data/output8.grib", engine="cfgrib")
+        ds = data.from_source("file", ".examples/data/output8.grib")
+        array = ds.to_xarray()
+        array = array.isel(surface=0).isel(step=0).isel(number=0).isel(time=0)
         options = {"longitude": {"Cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()

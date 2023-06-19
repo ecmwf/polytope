@@ -4,7 +4,7 @@ import geopandas as gpd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-import xarray as xr
+from earthkit import data
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
@@ -13,7 +13,9 @@ from polytope.shapes import Ellipsoid, Path
 
 class Test:
     def setup_method(self):
-        array = xr.open_dataset("./examples/data/winds.grib", engine="cfgrib")
+        ds = data.from_source("file", "./examples/data/winds.grib")
+        array = ds.to_xarray()
+        array = array.isel(time=0).isel(surface=0).isel(number=0)
         self.array = array
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)
