@@ -94,7 +94,7 @@ Polytope supports datacubes which have branching, non-uniform indexing, and even
 
 ## Concept 
 
-Polytope is designed to enable extraction of arbitrary extraction of data from a datacube. Instead of the typical range-based bounding-box approach, Polytope can extract any shape of data from a datacube using a "polytope" (n-dimenstional polygon) stencil.
+Polytope is designed to enable extraction of arbitrary extraction of data from a datacube. Instead of the typical range-based bounding-box approach, Polytope can extract any shape of data from a datacube using a "polytope" (n-dimensional polygon) stencil.
 
 <!-- <div style="text-align:center"> -->
 <p align="center">
