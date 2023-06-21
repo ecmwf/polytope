@@ -144,9 +144,9 @@ jobs:
         python -m pip install -r requirements.txt 
         python -m pip install -r ./tests/requirements_test.txt
 
-    # - name: Create code cov report
-    #   run: |
-    #     pytest --cov=./ --cov-report=xml tests
+    # # - name: Create code cov report
+    # #   run: |
+    # #     pytest --cov=./ --cov-report=xml tests
 
     - name: Verify Source Distribution
       shell: bash -eux {0}
@@ -162,17 +162,33 @@ jobs:
         python -m coverage report
 
     
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+    # - name: Upload coverage to Codecov
+    #   uses: codecov/codecov-action@v3
+    #   with:
+    #     token: ${{ secrets.CODECOV_TOKEN }}
+    #     directory: ./coverage/reports/
+    #     env_vars: OS,PYTHON
+    #     fail_ci_if_error: true
+    #     files: ./coverage1.xml,./coverage2.xml,!./cache
+    #     flags: unittests
+    #     name: codecov-umbrella
+    #     verbose: true
+    - name: Test with pytest
+      run: |
+        pytest --cov
+    - name: Creating coverage folder
+      run: |
+        mkdir -p coverage
+    - name: Coverage Bagdge
+      uses: tj-actions/coverage-badge-py@v1.8
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        directory: ./coverage/reports/
-        env_vars: OS,PYTHON
-        fail_ci_if_error: true
-        files: ./coverage1.xml,./coverage2.xml,!./cache
-        flags: unittests
-        name: codecov-umbrella
-        verbose: true
+        output: coverage/coverage.svg
+    - name: Publish coverage report to coverage-badge branch
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        branch: coverage-badge
+        folder: coverage
+
 
 
 
