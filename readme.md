@@ -60,7 +60,6 @@ Feature Extraction
 [![GitHub tag](https://img.shields.io/github/tag/MichaelCurrin/badge-generator?include_prereleases=&sort=semver)](https://github.com/ecmwf/polytope/releases/)
 [![Documentation Status](https://readthedocs.org/projects/polytope/badge/?version=latest)](https://polytope.readthedocs.io/en/latest/?badge=latest) -->
 <!-- [![ci](https://github.com/ecmwf/polytope/actions/workflows/ci.yaml/badge.svg)](https://github.com/ecmwf/polytope/actions/workflows/ci.yaml) -->
-![code coverage](https://raw.githubusercontent.com/ecmwf/polytope/coverage-badge/coverage.svg?raw=true)
 <p align="center">
   <a href="https://github.com/ecmwf/polytope/actions/workflows/ci.yaml">
   <img src="https://github.com/ecmwf/polytope/actions/workflows/ci.yaml/badge.svg" alt="ci">
