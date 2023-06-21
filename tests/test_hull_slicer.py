@@ -61,9 +61,6 @@ class TestHullSlicer:
 
     @pytest.mark.skip(reason="This is too slow.")
     def test_extract(self):
-        # TODO: This is slow in 6D, just because of the huge multiplication of polytopes (11x11x11x11x6)
-        # Early prototyping shows it is not the convex hull computation which is slow,
-        # but the python code for slicing/deleting axes
         self.datacube = MockDatacube({"a": 20, "b": 20, "c": 20, "d": 20, "x": 10, "y": 10})
         p1 = self.construct_nd_cube(4, 0, 10)
         p2 = self.construct_nd_cube(2, 0, 5)
@@ -85,5 +82,3 @@ if __name__ == "__main__":
     pr.disable()
     pr.dump_stats("hull_extract.prof")
     pr.print_stats(sort="time")
-
-    # view with `snakeviz hull_extract.prof`

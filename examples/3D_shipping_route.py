@@ -1,11 +1,10 @@
 import math
-import time
 
 import geopandas as gpd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-import xarray as xr
+from earthkit import data
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
@@ -14,13 +13,14 @@ from polytope.shapes import Ellipsoid, Path
 
 class Test:
     def setup_method(self):
-        array = xr.open_dataset("./examples/data/winds.grib", engine="cfgrib")
+        ds = data.from_source("file", "./examples/data/winds.grib")
+        array = ds.to_xarray()
+        array = array.isel(time=0).isel(surface=0).isel(number=0)
         self.array = array
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)
 
     def test_slice_shipping_route(self):
-        time1 = time.time()
         shapefile = gpd.read_file("./examples/data/Shipping-Lanes-v1.shp")
         geometry_multiline = shapefile.iloc[2]
         geometry_object = geometry_multiline["geometry"]
@@ -60,7 +60,6 @@ class Test:
         ship_route_polytope = Path(["latitude", "longitude", "step"], initial_shape, *new_points)
         request = Request(ship_route_polytope)
         result = self.API.retrieve(request)
-        print(time.time() - time1)
 
         # Associate the results to the lat/long points in an array
         lats = []

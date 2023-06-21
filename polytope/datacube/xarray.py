@@ -37,8 +37,6 @@ class XArrayDatacube(Datacube):
         if name in self.options.keys():
             # The options argument here is supposed to be a nested dictionary
             # like {"latitude":{"Cyclic":range}, ...}
-            # TODO: would it be faster if instead we just add an option when it's cyclic and then evaluate to
-            # true or false? Maybe there is a better/faster way of accessing options
             if "Cyclic" in self.options[name].keys():
                 value_type = values.dtype.type
                 axes_type_str = type(_mappings[value_type]).__name__
@@ -66,7 +64,6 @@ class XArrayDatacube(Datacube):
         for r in requests.leaves:
             path = r.flatten()
             path = self.remap_path(path)
-            # TODO: Here, once we flatten the path, we want to remap the values on the axis to fit the datacube...
             if len(path.items()) == len(self.dataarray.coords):
                 subxarray = self.dataarray.sel(path, method="nearest")
                 data_variables = subxarray.data_vars
@@ -111,13 +108,12 @@ class XArrayDatacube(Datacube):
 
     def get_indices(self, path: DatacubePath, axis, lower, upper):
         path = self.remap_path(path)
+
         # Open a view on the subset identified by the path
         subarray = self.dataarray.sel(path, method="nearest")
 
         # Get the indexes of the axis we want to query
         # XArray does not support branching, so no need to use label, we just take the next axis
-        # TODO: should assert that the label == next axis
-
         indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
 
         # Here, we do a cyclic remapping so we look up on the right existing values in the cyclic range on the datacube

@@ -1,7 +1,7 @@
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
-import xarray as xr
+from earthkit import data
 from shapely.geometry import shape
 
 from polytope.datacube.xarray import XArrayDatacube
@@ -12,7 +12,9 @@ from polytope.shapes import Polygon, Union
 
 class Test:
     def setup_method(self, method):
-        array = xr.open_dataset(".examples/data/output8.grib", engine="cfgrib")
+        ds = data.from_source("file", "./examples/data/output8.grib")
+        array = ds.to_xarray()
+        array = array.isel(surface=0).isel(step=0).isel(number=0).isel(time=0)
         options = {"longitude": {"Cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
@@ -23,53 +25,27 @@ class Test:
         worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
         fig, ax = plt.subplots(figsize=(12, 6))
         worldmap.plot(color="darkgrey", ax=ax)
-        whole_lat_old = np.arange(-90.0, 90.0, 0.125)
-        whole_long_old = np.arange(-180, 180, 0.125)
-        whole_lat = np.repeat(whole_lat_old, len(whole_long_old))
-        whole_long = np.tile(whole_long_old, len(whole_lat_old))
         countries_lats = []
         countries_longs = []
         countries_temps = []
         country_points_plotting = []
 
-        plt.scatter(whole_long, whole_lat, s=1, alpha=0.25, color="wheat")
-
         # Shapefile taken from
         # https://hub.arcgis.com/datasets/esri::world-countries-generalized/explore?location=-0.131595%2C0.000000%2C2.00
         shapefile = gpd.read_file("./examples/data/World_Countries__Generalized_.shp")
-        country = shapefile
-        shapefile = shapefile.set_index("COUNTRY")
 
         ECMWF_country_list_multipolygon = [
-            "Croatia",
-            "Denmark",
-            "Estonia",
-            "Finland",
-            "France",
-            "Germany",
-            "Greece",
-            "Ireland",
-            "Italy",
-            "Netherlands",
-            "Norway",
-            "Spain",
-            "Sweden",
-            "Turkiye",
-            "United Kingdom",
+            57,
+            62,
+            71,
         ]
         ECMWF_country_list_polygon = [
-            "Austria",
-            "Belgium",
-            "Iceland",
-            "Luxembourg",
-            "Portugal",
-            "Serbia",
-            "Slovenia",
-            "Switzerland",
+            13,
+            21,
         ]
 
         for country_name_polygon in ECMWF_country_list_polygon:
-            country = shapefile.loc[country_name_polygon]
+            country = shapefile.iloc[country_name_polygon]
             multi_polygon = shape(country["geometry"])
             polygons = [multi_polygon]
             polygons_list = []
@@ -114,7 +90,7 @@ class Test:
             plt.plot(*multi_polygon.exterior.xy, color="black", linewidth=0.7)
 
         for country_name_multipolygon in ECMWF_country_list_multipolygon:
-            country = shapefile.loc[country_name_multipolygon]
+            country = shapefile.iloc[country_name_multipolygon]
             multi_polygon = shape(country["geometry"])
             polygons = list(multi_polygon.geoms)
             polygons_list = []
