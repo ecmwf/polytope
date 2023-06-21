@@ -2,7 +2,7 @@
 
 Polytope provides a novel way of accessing petabyte-scale datacubes. 
 In particular, it provides access to a novel feature and data extraction algorithm designed using computational geometry concepts. 
-Developed by ECMWF - the European Center for Medium-Range Weather Forecasts - its main aims are to:
+Developed by ECMWF - the European Centre for Medium-Range Weather Forecasts - its main aims are to:
 
 - Reduce I/O usage when requesting data from large datacubes and
 
