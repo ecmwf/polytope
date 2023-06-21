@@ -61,13 +61,10 @@ Feature Extraction
 [![Documentation Status](https://readthedocs.org/projects/polytope/badge/?version=latest)](https://polytope.readthedocs.io/en/latest/?badge=latest) -->
 <!-- [![ci](https://github.com/ecmwf/polytope/actions/workflows/ci.yaml/badge.svg)](https://github.com/ecmwf/polytope/actions/workflows/ci.yaml) -->
 <p align="center">
-<!--    <a href="https://github.com/ecmwf/polytope/actions"><img src="https://github.com/ecmwf/polytope/workflows/ci/badge.svg?branch=main"></a> -->
-<!--    <a href="https://github.com/ecmwf/polytope/actions/workflows/ci.yaml"><img src="https://github.com/ecmwf/polytope/workflows/ci.yaml/badge.svg"></a> -->
-<!--    [![ci](https://github.com/ecmwf/polytope/actions/workflows/ci.yaml/badge.svg)](https://github.com/ecmwf/polytope/actions/workflows/ci.yaml) -->
   <a href="https://github.com/ecmwf/polytope/actions/workflows/ci.yaml">
   <img src="https://github.com/ecmwf/polytope/actions/workflows/ci.yaml/badge.svg" alt="ci">
 </a>
-  <a href="https://codecov.io/gh/ecmwf/polytope"><img src="https://codecov.io/gh/ecmwf/polytope/branch/main/graph/badge.svg"></a>
+  <a href="https://codecov.io/gh/ecmwf/polytope"><img src="https://codecov.io/gh/ecmwf/polytope/branch/develop/graph/badge.svg"></a>
   <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
   <a href="https://github.com/ecmwf/polytope/releases"><img src="https://img.shields.io/badge/Release-v0.0.1-blue.svg"></a>
   <a href='https://polytope.readthedocs.io/en/latest/?badge=latest'><img src='https://readthedocs.org/projects/polytope/badge/?version=latest' alt='Documentation Status' /></a>
