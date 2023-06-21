@@ -61,9 +61,6 @@ Feature Extraction
 [![Documentation Status](https://readthedocs.org/projects/polytope/badge/?version=latest)](https://polytope.readthedocs.io/en/latest/?badge=latest) -->
 <!-- [![ci](https://github.com/ecmwf/polytope/actions/workflows/ci.yaml/badge.svg)](https://github.com/ecmwf/polytope/actions/workflows/ci.yaml) -->
 <p align="center">
-<!--    <a href="https://github.com/ecmwf/polytope/actions"><img src="https://github.com/ecmwf/polytope/workflows/ci/badge.svg?branch=main"></a> -->
-<!--    <a href="https://github.com/ecmwf/polytope/actions/workflows/ci.yaml"><img src="https://github.com/ecmwf/polytope/workflows/ci.yaml/badge.svg"></a> -->
-<!--    [![ci](https://github.com/ecmwf/polytope/actions/workflows/ci.yaml/badge.svg)](https://github.com/ecmwf/polytope/actions/workflows/ci.yaml) -->
   <a href="https://github.com/ecmwf/polytope/actions/workflows/ci.yaml">
   <img src="https://github.com/ecmwf/polytope/actions/workflows/ci.yaml/badge.svg" alt="ci">
 </a>
