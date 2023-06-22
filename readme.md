@@ -1,75 +1,17 @@
-<!-- <h2 align="center" margin=0px> -->
-<!-- <p float="left"> -->
-<!-- <div align="center">
-<p align="center">
-<!-- ![my image](./docs/images/logo.gif#center)   -->
-<!-- <img src="./docs/images/logo.gif" align="left" margin=10px width="300" height="300">
 
 <h3 align="center">
-<!-- <h2> -->
-<!-- <br>
-<br>
-<br>
-Feature Extraction
-</br> for Datacubes
-</h3>
-</p>
-</div>
-
-<br clear="left"/> --> 
-
-
-<!-- ![my image](./docs/images/logo.gif#center)   -->
-<!-- <img src="./docs/images/logo.gif" align="left" margin=10px width="300" height="300"> -->
-
-<h3 align="center">
-<!-- <h2> -->
 <img src="./docs/images/polytope_logo_new_animated_AdobeExpress_3.gif" width=60%>
 </br>
-<!-- </br> 
-</br>
-</br>
-</br>
-</br> -->
+
 </h3>
-<!-- 
-</br>
-</br>
-</br>
-</br>
-</br>
-</br> -->
-<!-- </p>
-</div> -->
 
-<!-- <br clear="left"/> -->
-<!-- <br> -->
-<!-- <br> -->
-<!-- <div id="container">
-<div class="content_left">
-  <h5>Feature Extraction for Datacubes</h5>
-  <hr/>
-</div>
-<div class="content_right">
-  <img src="./docs/images/logo.gif" width="400" height="400">
-</div>
-</div> -->
-
-<!-- [![GitHub release](https://img.shields.io/github/release/Naereen/StrapDown.js.svg)](https://GitHub.com/ecmwf/polytope/releases/) -->
-<!-- ![example event parameter](https://github.com/github/docs/actions/workflows/main.yml/badge.svg?event=push)
-[![GitHub tag](https://img.shields.io/github/tag/MichaelCurrin/badge-generator?include_prereleases=&sort=semver)](https://github.com/ecmwf/polytope/releases/)
-[![Documentation Status](https://readthedocs.org/projects/polytope/badge/?version=latest)](https://polytope.readthedocs.io/en/latest/?badge=latest) -->
-<!-- [![ci](https://github.com/ecmwf/polytope/actions/workflows/ci.yaml/badge.svg)](https://github.com/ecmwf/polytope/actions/workflows/ci.yaml) -->
 <p align="center">
-<!--    <a href="https://github.com/ecmwf/polytope/actions"><img src="https://github.com/ecmwf/polytope/workflows/ci/badge.svg?branch=main"></a> -->
-<!--    <a href="https://github.com/ecmwf/polytope/actions/workflows/ci.yaml"><img src="https://github.com/ecmwf/polytope/workflows/ci.yaml/badge.svg"></a> -->
-<!--    [![ci](https://github.com/ecmwf/polytope/actions/workflows/ci.yaml/badge.svg)](https://github.com/ecmwf/polytope/actions/workflows/ci.yaml) -->
   <a href="https://github.com/ecmwf/polytope/actions/workflows/ci.yaml">
   <img src="https://github.com/ecmwf/polytope/actions/workflows/ci.yaml/badge.svg" alt="ci">
 </a>
-  <a href="https://codecov.io/gh/ecmwf/polytope"><img src="https://codecov.io/gh/ecmwf/polytope/branch/main/graph/badge.svg"></a>
+  <a href="https://codecov.io/gh/ecmwf/polytope"><img src="https://codecov.io/gh/ecmwf/polytope/branch/develop/graph/badge.svg"></a>
   <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
-  <a href="https://github.com/ecmwf/polytope/releases"><img src="https://img.shields.io/badge/Release-v0.0.1-blue.svg"></a>
+  <a href="https://github.com/ecmwf/polytope/releases"><img src="https://img.shields.io/github/v/release/ecmwf/polytope?color=blue&label=Release&style=flat-square"></a>
   <a href='https://polytope.readthedocs.io/en/latest/?badge=latest'><img src='https://readthedocs.org/projects/polytope/badge/?version=latest' alt='Documentation Status' /></a>
 </p>
 <p align="center">
@@ -124,6 +66,9 @@ The Polytope algorithm can for example be used to extract:
     <!-- </div> -->
 
 - and many more high-dimensional shapes in arbitrary dimensions...
+
+For more information about the Polytope algorithm, refer to our [paper] (https://arxiv.org/abs/2306.11553). 
+If this project is useful for your work, please consider citing this paper.
 
 ## Installation 
 
