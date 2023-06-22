@@ -67,7 +67,7 @@ The Polytope algorithm can for example be used to extract:
 
 - and many more high-dimensional shapes in arbitrary dimensions...
 
-For more information about the Polytope algorithm, refer to our [paper] (https://arxiv.org/abs/2306.11553). 
+For more information about the Polytope algorithm, refer to our [paper](https://arxiv.org/abs/2306.11553). 
 If this project is useful for your work, please consider citing this paper.
 
 ## Installation 
