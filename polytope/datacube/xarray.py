@@ -25,7 +25,7 @@ _mappings = {
     np.float64: FloatAxis(),
     np.str_: UnsliceableaAxis(),
     str: UnsliceableaAxis(),
-    np.object_ : UnsliceableaAxis()
+    np.object_: UnsliceableaAxis(),
 }
 
 
@@ -69,9 +69,6 @@ class XArrayDatacube(Datacube):
                 subxarray = self.dataarray.sel(path, method="nearest")
                 value = subxarray.item()
                 key = subxarray.name
-                # data_variables = subxarray.data_vars
-                # result_tuples = [(key, value) for key, value in data_variables.items()]
-                # r.result = dict(result_tuples)
                 r.result = (key, value)
             else:
                 r.remove_branch()
@@ -142,7 +139,7 @@ class XArrayDatacube(Datacube):
 
     def has_index(self, path: DatacubePath, axis, index):
         # when we want to obtain the value of an unsliceable axis, need to check the values does exist in the datacube
-        subarray = self.dataarray.sel(path, method='nearest')[axis.name]
+        subarray = self.dataarray.sel(path)[axis.name]
         subarray_vals = subarray.values
         return index in subarray_vals
 

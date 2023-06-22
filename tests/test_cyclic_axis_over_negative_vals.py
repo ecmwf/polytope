@@ -11,9 +11,9 @@ from polytope.shapes import Box, Select
 class TestSlicing3DXarrayDatacube:
     def setup_method(self, method):
         # Create a dataarray with 3 labelled axes using different index types
-        dims = np.random.randn(3, 6, 129, 11)
-        array = xr.Dataset(
-            data_vars=dict(param=(["date", "step", "level", "long"], dims)),
+        array = xr.DataArray(
+            np.random.randn(3, 6, 129, 11),
+            dims=("date", "step", "level", "long"),
             coords={
                 "date": pd.date_range("2000-01-01", "2000-01-03", 3),
                 "step": [0, 3, 6, 9, 12, 15],
@@ -21,7 +21,6 @@ class TestSlicing3DXarrayDatacube:
                 "long": [-0.1, -0.2, -0.3, -0.4, -0.5, -0.6, -0.7, -0.8, -0.9, -1.0, -1.1],
             },
         )
-        array = array.to_array()
         options = {"long": {"Cyclic": [-1.1, -0.1]}, "level": {"Cyclic": [1, 129]}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
@@ -31,13 +30,12 @@ class TestSlicing3DXarrayDatacube:
 
     def test_cyclic_float_axis_across_seam(self):
         request = Request(
-            Box(["step", "long"], [0, 0.8], [3, 1.7]), Select("date", ["2000-01-01"]), Select("level", [128]),
-            Select("variable", ["param"])
+            Box(["step", "long"], [0, 0.8], [3, 1.7]), Select("date", ["2000-01-01"]), Select("level", [128])
         )
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 20
-        assert [leaf.parent.value for leaf in result.leaves] == [
+        assert [leaf.value for leaf in result.leaves] == [
             0.8,
             0.9,
             1.0,
@@ -62,13 +60,12 @@ class TestSlicing3DXarrayDatacube:
 
     def test_cyclic_float_axis_inside_cyclic_range(self):
         request = Request(
-            Box(["step", "long"], [0, 0.0], [3, 0.7]), Select("date", ["2000-01-01"]), Select("level", [128]),
-            Select("variable", ["param"])
+            Box(["step", "long"], [0, 0.0], [3, 0.7]), Select("date", ["2000-01-01"]), Select("level", [128])
         )
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 16
-        assert [leaf.parent.value for leaf in result.leaves] == [
+        assert [leaf.value for leaf in result.leaves] == [
             0.0,
             0.1,
             0.2,
@@ -89,23 +86,21 @@ class TestSlicing3DXarrayDatacube:
 
     def test_cyclic_float_axis_above_axis_range(self):
         request = Request(
-            Box(["step", "long"], [0, 1.3], [3, 1.7]), Select("date", ["2000-01-01"]), Select("level", [128]),
-            Select("variable", ["param"])
+            Box(["step", "long"], [0, 1.3], [3, 1.7]), Select("date", ["2000-01-01"]), Select("level", [128])
         )
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 10
-        assert [leaf.parent.value for leaf in result.leaves] == [1.3, 1.4, 1.5, 1.6, 1.7, 1.3, 1.4, 1.5, 1.6, 1.7]
+        assert [leaf.value for leaf in result.leaves] == [1.3, 1.4, 1.5, 1.6, 1.7, 1.3, 1.4, 1.5, 1.6, 1.7]
 
     def test_cyclic_float_axis_two_range_loops(self):
         request = Request(
-            Box(["step", "long"], [0, 0.3], [3, 2.7]), Select("date", ["2000-01-01"]), Select("level", [128]),
-            Select("variable", ["param"])
+            Box(["step", "long"], [0, 0.3], [3, 2.7]), Select("date", ["2000-01-01"]), Select("level", [128])
         )
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 50
-        assert [leaf.parent.value for leaf in result.leaves] == [
+        assert [leaf.value for leaf in result.leaves] == [
             0.3,
             0.4,
             0.5,
@@ -160,24 +155,21 @@ class TestSlicing3DXarrayDatacube:
 
     def test_cyclic_float_axis_below_axis_range(self):
         request = Request(
-            Box(["step", "long"], [0, -0.7], [3, -0.3]), Select("date", ["2000-01-01"]), Select("level", [128]),
-            Select("variable", ["param"])
+            Box(["step", "long"], [0, -0.7], [3, -0.3]), Select("date", ["2000-01-01"]), Select("level", [128])
         )
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 10
-        assert [leaf.parent.value for leaf in result.leaves] == [-0.7, -0.6, -0.5, -0.4, -0.3, -0.7, -0.6, -0.5, -0.4,
-                                                                 -0.3]
+        assert [leaf.value for leaf in result.leaves] == [-0.7, -0.6, -0.5, -0.4, -0.3, -0.7, -0.6, -0.5, -0.4, -0.3]
 
     def test_cyclic_float_axis_below_axis_range_crossing_seam(self):
         request = Request(
-            Box(["step", "long"], [0, -0.7], [3, 0.3]), Select("date", ["2000-01-01"]), Select("level", [128]),
-            Select("variable", ["param"])
+            Box(["step", "long"], [0, -0.7], [3, 0.3]), Select("date", ["2000-01-01"]), Select("level", [128])
         )
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 22
-        assert [leaf.parent.value for leaf in result.leaves] == [
+        assert [leaf.value for leaf in result.leaves] == [
             -0.7,
             -0.6,
             -0.5,
