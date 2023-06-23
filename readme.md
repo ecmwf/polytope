@@ -174,7 +174,7 @@ Main contributors:
 - Emanuele Danovaro - [ECMWF](www.ecmwf.int)
 - Tiago Quintino - [ECMWF](www.ecmwf.int) -->
 
-See also the [contributors](https://github.com/ecmwf-projects/thermofeel/contributors) for a more complete list. 
+See also the [contributors](https://github.com/ecmwf/polytope/contributors) for a more complete list. 
 
 ## License 
 
