@@ -85,40 +85,45 @@ or from PyPI with the command
 Here is a step-by-step example of how to use this software.
 
 1. In this example, we first specify the data which will be in our Xarray datacube. Note that the data here comes from the GRIB file called "winds.grib", which is 3-dimensional with dimensions: step, latitude and longitude.
-
+    ```Python
         import xarray as xr
 
         array = xr.open_dataset("winds.grib", engine="cfgrib")
+    ```
    
     We then construct the Polytope object, passing in some additional metadata describing properties of the longitude axis.
-
+    ```Python
         options = {"longitude": {"Cyclic": [0, 360.0]}}
 
         from polytope.polytope import Polytope
 
         p = Polytope(datacube=array, options=options)
+    ```
 
 2. Next, we create a request shape to extract from the datacube.  
   In this example, we want to extract a simple 2D box in latitude and longitude at step 0. We thus create the two relevant shapes we need to build this 3-dimensional object,
-
+    ```Python
         import numpy as np
         from polytope.shapes import Box, Select
 
         box = Box(["latitude", "longitude"], [0, 0], [1, 1])
         step_point = Select("step", [np.timedelta64(0, "s")])
+    ```
 
     which we then incorporate into a Polytope request.
-
+    ```Python
         from polytope.polytope import Request
 
         request = Request(box, step_point)
+    ```
 
 3. Finally, extract the request from the datacube. 
-
+    ```Python
         result = p.retrieve(request)
+    ```
 
     The result is stored as an IndexTree containing the retrieved data organised hierarchically with axis indices for each point.
-    
+    ```Python
         result.pprint()
         
 
@@ -132,6 +137,7 @@ Here is a step-by-step example of how to use this software.
                         ↳latitude=1.0
                                 ↳longitude=0.0
                                 ↳longitude=1.0
+    ```
 
 <!-- # Requirements
 
@@ -196,6 +202,6 @@ In this software is useful in your work, please consider citing our [paper](http
 
 ## Acknowledgements
 
-Past and current funding and support for **polytope** is listed in the adjoining [Acknowledgements](./AKNOWLEDGEMENTS.rst)
+Past and current funding and support for **polytope** is listed in the adjoining [Acknowledgements](./AKNOWLEDGEMENTS.rst).
 
 
