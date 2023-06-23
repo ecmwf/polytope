@@ -154,3 +154,50 @@ The Polytope tests and examples require additional Python packages compared to t
 The additional dependencies are provided in the requirements_test.txt and requirements_examples.txt files, which can respectively be found in the examples and tests folders.
 Moreover, Polytope's tests and examples also require the installation of eccodes and GDAL.
 It is possible to install both of these dependencies using either a package manager or manually.
+
+## Contributing 
+
+The main repository is hosted on GitHub; testing, bug reports and contributions are highly welcomed and appreciated. 
+Please see the [Contributing](./CONTRIBUTING.rst) document for the best way to help. 
+
+Main contributors: 
+
+- Mathilde Leuridan - [ECMWF](www.ecmwf.int)
+- James Hawkes - [ECMWF](www.ecmwf.int)
+<!-- - Simon Smart - [ECMWF](www.ecmwf.int)
+- Emanuele Danovaro - [ECMWF](www.ecmwf.int)
+- Tiago Quintino - [ECMWF](www.ecmwf.int) -->
+
+See also the [contributors](https://github.com/ecmwf-projects/thermofeel/contributors) for a more complete list. 
+
+## License 
+
+Copyright 2021 European Centre for Medium-Range Weather Forecasts (ECMWF)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+In applying this licence, ECMWF does not waive the privileges and immunities
+granted to it by virtue of its status as an intergovernmental organisation nor
+does it submit to any jurisdiction.
+
+## Citing 
+
+In this software is useful in your work, please consider citing our [paper](https://arxiv.org/abs/2306.11553) as 
+
+    Leuridan, M., Hawkes, J., Smart, S., Danovaro, E., and Quintino, T., “Polytope: An Algorithm for Efficient Feature Extraction on Hypercubes”, <i>arXiv e-prints</i>, 2023. doi:10.48550/arXiv.2306.11553.
+
+## Acknowledgements
+
+Past and current funding and support for **polytope** is listed in the adjoining [Acknowledgements](./AKNOWLEDGEMENTS.rst)
+
+
