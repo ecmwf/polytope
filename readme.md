@@ -202,6 +202,6 @@ In this software is useful in your work, please consider citing our [paper](http
 
 ## Acknowledgements
 
-Past and current funding and support for **polytope** is listed in the adjoining [Acknowledgements](./ACKNOWLEDGEMENTS.rst).
+Past and current funding and support for *polytope* is listed in the adjoining [Acknowledgements](./ACKNOWLEDGEMENTS.rst).
 
 
