@@ -168,8 +168,8 @@ Please see the [Contributing](./CONTRIBUTING.rst) document for the best way to h
 
 Main contributors: 
 
-- Mathilde Leuridan - [ECMWF](www.ecmwf.int)
-- James Hawkes - [ECMWF](www.ecmwf.int)
+- Mathilde Leuridan - [ECMWF](https://www.ecmwf.int)
+- James Hawkes - [ECMWF](https://www.ecmwf.int)
 <!-- - Simon Smart - [ECMWF](www.ecmwf.int)
 - Emanuele Danovaro - [ECMWF](www.ecmwf.int)
 - Tiago Quintino - [ECMWF](www.ecmwf.int) -->
