@@ -170,9 +170,9 @@ Main contributors:
 
 - Mathilde Leuridan - [ECMWF](https://www.ecmwf.int)
 - James Hawkes - [ECMWF](https://www.ecmwf.int)
-<!-- - Simon Smart - [ECMWF](www.ecmwf.int)
+- Simon Smart - [ECMWF](www.ecmwf.int)
 - Emanuele Danovaro - [ECMWF](www.ecmwf.int)
-- Tiago Quintino - [ECMWF](www.ecmwf.int) -->
+- Tiago Quintino - [ECMWF](www.ecmwf.int)
 
 See also the [contributors](https://github.com/ecmwf/polytope/contributors) for a more complete list. 
 
