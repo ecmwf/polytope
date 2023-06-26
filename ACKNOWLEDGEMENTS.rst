@@ -2,7 +2,7 @@ Acknowledgements
 ================
 
 Destination Earth
-    This work has been partially funded by the European Union's Destination Earth initiative.
+    This software is developed with co-funding by the European Union under the Destination Earth initiative.
 
 LEXIS 
-    This work has been partially funded by the LEXIS project of the European Union’s Horizon 2020 Research and Innovation programme under Grant Agreement no .
+    This software is part of a project that has received funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement No 825532.
