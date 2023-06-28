@@ -11,7 +11,7 @@ from polytope.shapes import Box, Disk, Ellipsoid, Select
 
 class Test:
     def setup_method(self):
-        array = xr.open_dataset("../examples/data/temp_model_levels.grib", engine="cfgrib")
+        array = xr.open_dataset("../examples/data/temp_model_levels.grib", engine="cfgrib").t
         options = {"longitude": {"Cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         for dim in array.dims:
