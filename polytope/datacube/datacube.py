@@ -43,7 +43,7 @@ class Datacube(ABC):
     @staticmethod
     def create(datacube, options):
         if isinstance(datacube, (xr.core.dataarray.DataArray, xr.core.dataset.Dataset)):
-            from .xarray import XArrayDatacube
+            from .octahedral_xarray import XArrayDatacube
 
             xadatacube = XArrayDatacube(datacube, options=options)
             return xadatacube
