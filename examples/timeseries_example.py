@@ -1,7 +1,5 @@
 import geopandas as gpd
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from earthkit import data
 from shapely.geometry import shape
 
@@ -16,6 +14,10 @@ class Test:
         ds = data.from_source("file", "./examples/data/timeseries_t2m.grib")
         array = ds.to_xarray()
         array = array.isel(step=0).isel(surface=0).isel(number=0).t2m
+        array = array.reset_coords(names="valid_time", drop=True)
+        array = array.reset_coords(names="step", drop=True)
+        array = array.reset_coords(names="surface", drop=True)
+        array = array.reset_coords(names="number", drop=True)
         self.xarraydatacube = XArrayDatacube(array)
         for dim in array.dims:
             array = array.sortby(dim)
@@ -56,9 +58,12 @@ class Test:
 
         result = self.API.retrieve(request)
 
+        result.pprint()
+
         # For each date/time, we plot an image
         # Note that only the temperatures should change so we can store them in different arrays
 
+        """
         country_points_plotting = []
         lats1 = []
         lats2 = []
@@ -89,7 +94,7 @@ class Test:
             lat = cubepath["latitude"]
             long = cubepath["longitude"]
             latlong_point = [lat, long]
-            t_idx = result.leaves[i].result["t2m"]
+            t_idx = result.leaves[i].result[1]
             if cubepath["time"] == pd.Timestamp("2022-05-14T12:00:00"):
                 temps1.append(t_idx)
                 lats1.append(lat)
@@ -216,3 +221,4 @@ class Test:
         ax[3, 1].set_xticks([])
         plt.gca().axes.get_yaxis().set_visible(False)
         plt.show()
+        """

@@ -16,6 +16,10 @@ class Test:
         ds = data.from_source("file", "./examples/data/winds.grib")
         array = ds.to_xarray()
         array = array.isel(time=0).isel(surface=0).isel(number=0).u10
+        array = array.reset_coords(names="time", drop=True)
+        array = array.reset_coords(names="valid_time", drop=True)
+        array = array.reset_coords(names="number", drop=True)
+        array = array.reset_coords(names="surface", drop=True)
         self.array = array
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)
@@ -65,8 +69,6 @@ class Test:
         lats = []
         longs = []
         parameter_values = []
-        winds_u = []
-        winds_v = []
         for i in range(len(result.leaves)):
             cubepath = result.leaves[i].flatten()
             lat = cubepath["latitude"]
@@ -74,13 +76,9 @@ class Test:
             lats.append(lat)
             longs.append(long)
 
-            u10_idx = result.leaves[i].result["u10"]
+            u10_idx = result.leaves[i].result[1]
             wind_u = u10_idx
-            v10_idx = result.leaves[i].result["v10"]
-            wind_v = v10_idx
-            winds_u.append(wind_u)
-            winds_v.append(wind_v)
-            parameter_values.append(math.sqrt(wind_u**2 + wind_v**2))
+            parameter_values.append(wind_u)
 
         parameter_values = np.array(parameter_values)
         # Plot this last array according to different colors for the result on a world map

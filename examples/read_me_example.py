@@ -7,6 +7,10 @@ from polytope.shapes import Box, Select
 ds = data.from_source("file", "./examples/data/winds.grib")
 array = ds.to_xarray()
 array = array.isel(time=0).isel(surface=0).isel(number=0).u10
+array = array.reset_coords(names="time", drop=True)
+array = array.reset_coords(names="valid_time", drop=True)
+array = array.reset_coords(names="number", drop=True)
+array = array.reset_coords(names="surface", drop=True)
 
 options = {"longitude": {"Cyclic": [0, 360.0]}}
 

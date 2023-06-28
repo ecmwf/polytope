@@ -15,6 +15,8 @@ class Test:
         ds = data.from_source("file", "./examples/data/temp_model_levels.grib")
         array = ds.to_xarray()
         array = array.isel(time=0).t
+        array = array.reset_coords(names="time", drop=True)
+        array = array.reset_coords(names="valid_time", drop=True)
         options = {"longitude": {"Cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         for dim in array.dims:
@@ -99,7 +101,7 @@ class Test:
             lats.append(lat)
             longs.append(long)
             levels.append(level)
-            t_idx = result.leaves[i].result["t"]
+            t_idx = result.leaves[i].result[1]
             parameter_values.append(t_idx)
         parameter_values = np.array(parameter_values)
 

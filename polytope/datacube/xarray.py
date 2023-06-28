@@ -54,11 +54,8 @@ class XArrayDatacube(Datacube):
         self.options = options
         self.mappers = {}
         for name, values in dataarray.coords.variables.items():
-            if name in dataarray.dims:
-                dataarray = dataarray.sortby(name)
-                self._set_mapper(values, name)
-            else:  # drop non-necessary coordinates which we don't slice on
-                dataarray = dataarray.reset_coords(names=name, drop=True)
+            dataarray = dataarray.sortby(name)
+            self._set_mapper(values, name)
         self.dataarray = dataarray
 
     def get(self, requests: IndexTree):

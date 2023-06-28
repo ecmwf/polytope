@@ -12,9 +12,14 @@ from polytope.shapes import Polygon, Union
 
 class Test:
     def setup_method(self, method):
-        ds = data.from_source("file", ".examples/data/output8.grib")
+        ds = data.from_source("file", "./examples/data/output8.grib")
         array = ds.to_xarray()
         array = array.isel(surface=0).isel(step=0).isel(number=0).isel(time=0).t2m
+        array = array.reset_coords(names="time", drop=True)
+        array = array.reset_coords(names="valid_time", drop=True)
+        array = array.reset_coords(names="step", drop=True)
+        array = array.reset_coords(names="surface", drop=True)
+        array = array.reset_coords(names="number", drop=True)
         options = {"longitude": {"Cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
@@ -64,7 +69,7 @@ class Test:
             latlong_point = [lat, long]
             lats.append(lat)
             longs.append(long)
-            t_idx = result.leaves[i].result["t2m"]
+            t_idx = result.leaves[i].result[1]
             temps.append(t_idx)
             country_points_plotting.append(latlong_point)
         temps = np.array(temps)
