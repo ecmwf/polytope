@@ -28,7 +28,7 @@ _mappings = {
 }
 
 
-class XArrayDatacube(Datacube):
+class OctahedralXArrayDatacube(Datacube):
     """Xarray arrays are labelled, axes can be defined as strings or integers (e.g. "time" or 0)."""
 
     def _set_mapper(self, values, name):
@@ -52,7 +52,6 @@ class XArrayDatacube(Datacube):
     def __init__(self, dataarray: xr.DataArray, options={}):
         self.options = options
         self.mappers = {}
-        # print(dataarray.coords)
         for name, values in dataarray.coords.variables.items():
             if values.data.size != 1:
                 dataarray = dataarray.sortby(name)
@@ -127,35 +126,18 @@ class XArrayDatacube(Datacube):
 
     def get_indices(self, path: DatacubePath, axis, lower, upper):
         path = self.remap_path(path)
-        print(axis.name)
-        print(path)
         # Open a view on the subset identified by the path
         lat_val = path.get("latitude", None)
         path.pop("longitude", None)
         path.pop("latitude", None)
-        print(path)
         subarray = self.dataarray.sel(path, method="nearest")
 
         # Get the indexes of the axis we want to query
         # XArray does not support branching, so no need to use label, we just take the next axis
-        # indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
         if axis.name == "latitude":
-            # subxarray_lat = xr.DataArray(self.lat_val_available(), dims=("latitude"),
-            #                              coords={
-            #     "latitude": self.lat_val_available(),
-            # },)
-            # indexes = next(iter(subxarray_lat.xindexes.values())).to_pandas_index()
             indexes = self.lat_val_available()
-            # indexes = pd.Index(tuple(indexes)) if indexes else None
         elif axis.name == "longitude":
-            # lat_val = path["latitude"]
-            # subxarray_lon = xr.DataArray(self.lon_val_available(lat_val), dims=("longitude"),
-            #                              coords={
-            #     "longitude": self.lon_val_available(lat_val),
-            # },)
-            # indexes = next(iter(subxarray_lon.xindexes.values())).to_pandas_index()
             indexes = self.lon_val_available(lat_val)
-            # indexes = indexes[0].to_pandas_index() if indexes else None
         else:
             indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
 
@@ -202,23 +184,23 @@ class XArrayDatacube(Datacube):
         lat_spacing = 90/1280
         lat_start = 0
         lat_idx = (lat-lat_start)/lat_spacing
-        num_points_on_lon = 4 * lat_idx + 16
-        lon_spacing = 180/num_points_on_lon
+        num_points_on_lon = 4 * (1280-lat_idx) + 16
+        lon_spacing = 360/num_points_on_lon
         lon_start = 0
         return_lon = [lon_start + i * lon_spacing for i in range(int(num_points_on_lon))]
         return return_lon
 
 
-def octa_idx_to_latlon_idx(idx):
-    lat_j = math.floor(-3.5 + (math.sqrt(81+2*idx)/2))
-    lon_j = idx - 2 * lat_j * lat_j - 14 * lat_j + 16
+# def octa_idx_to_latlon_idx(idx):
+#     lat_j = math.floor(-3.5 + (math.sqrt(81+2*idx)/2))
+#     lon_j = idx - 2 * lat_j * lat_j - 14 * lat_j + 16
 
-    # NOTE to get idx of lat and lon, need to substract 1 to start from 0 for lat
+#     # NOTE to get idx of lat and lon, need to substract 1 to start from 0 for lat
 
-    lat_idx = lat_j - 1
-    lon_idx = lon_j
+#     lat_idx = lat_j - 1
+#     lon_idx = lon_j
 
-    return (lat_idx, lon_idx)
+#     return (lat_idx, lon_idx)
 
 
 def latlon_idx_to_octa_idx(lat_idx, lon_idx):
@@ -228,8 +210,8 @@ def latlon_idx_to_octa_idx(lat_idx, lon_idx):
 def latlon_idx_to_val(lat_idx, lon_idx):
     # spacing between different lat levels
     lat_spacing = 90/1280
-    num_points_on_lon = 4 * lat_idx + 16
-    lon_spacing = 180/num_points_on_lon
+    num_points_on_lon = 4 * (1280-lat_idx) + 16
+    lon_spacing = 360/num_points_on_lon
 
     # TODO: this might be wrong, and the spacing above too for the lat,
     # depends on how the grid is laid out onto the sphere
@@ -243,8 +225,8 @@ def latlon_val_to_idx(lat, lon):
     lat_start = 0
     lat_idx = (lat-lat_start)/lat_spacing
 
-    num_points_on_lon = 4 * lat_idx + 16
-    lon_spacing = 180/num_points_on_lon
+    num_points_on_lon = 4 * (1280-lat_idx) + 16
+    lon_spacing = 360/num_points_on_lon
     lon_start = 0
     lon_idx = (lon-lon_start)/lon_spacing
 
