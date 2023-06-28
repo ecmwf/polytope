@@ -11,9 +11,9 @@ from polytope.shapes import Box, Select
 class TestSlicing3DXarrayDatacube:
     def setup_method(self, method):
         # Create a dataarray with 3 labelled axes using different index types
-        dims = np.random.randn(3, 6, 129, 11)
-        array = xr.Dataset(
-            data_vars=dict(param=(["date", "step", "level", "long"], dims)),
+        array = xr.DataArray(
+            np.random.randn(3, 6, 129, 11),
+            dims=("date", "step", "level", "long"),
             coords={
                 "date": pd.date_range("2000-01-01", "2000-01-03", 3),
                 "step": [0, 3, 6, 9, 12, 15],
@@ -169,7 +169,9 @@ class TestSlicing3DXarrayDatacube:
 
     def test_cyclic_float_axis_above_axis_range(self):
         request = Request(
-            Box(["step", "long"], [0, 1.3], [3, 1.7]), Select("date", ["2000-01-01"]), Select("level", [128])
+            Box(["step", "long"], [0, 1.3], [3, 1.7]),
+            Select("date", ["2000-01-01"]),
+            Select("level", [128]),
         )
         result = self.API.retrieve(request)
         # result.pprint()

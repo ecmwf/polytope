@@ -6,7 +6,7 @@ from polytope.shapes import Box, Select
 
 ds = data.from_source("file", "./examples/data/winds.grib")
 array = ds.to_xarray()
-array = array.isel(time=0).isel(surface=0).isel(number=0)
+array = array.isel(time=0).isel(surface=0).isel(number=0).u10
 
 options = {"longitude": {"Cyclic": [0, 360.0]}}
 

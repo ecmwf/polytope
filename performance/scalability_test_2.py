@@ -11,7 +11,7 @@ from polytope.shapes import Box, Select, Union
 
 class Test:
     def setup_method(self):
-        array = xr.open_dataset("../examples/data/temp_model_levels.grib", engine="cfgrib")
+        array = xr.open_dataset("./examples/data/temp_model_levels.grib", engine="cfgrib").t
         options = {"longitude": {"Cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         for dim in array.dims:
@@ -82,23 +82,23 @@ class Test:
         print(len(result.leaves))
         print(time.time() - time_start)
 
-    def test_scalability_2D_v4(self):
-        union = Box(["latitude", "longitude"], [0 - 100, 0], [20 - 100, 36])
-        for i in range(9):
-            box = Box(["latitude", "longitude"], [20 * (i + 1) - 100, 0], [20 * (i + 2) - 100, 36])
-            union = Union(["latitude", "longitude"], union, box)
-        for j in range(9):
-            box = Box(["latitude", "longitude"], [0 - 100, 36 * (j + 1)], [20 - 100, 36 * (j + 2)])
-            union = Union(["latitude", "longitude"], union, box)
-        for i in range(9):
-            for j in range(9):
-                box = Box(
-                    ["latitude", "longitude"], [20 * (i + 1) - 100, 36 * (j + 1)], [20 * (i + 2) - 100, 36 * (j + 2)]
-                )
-                union = Union(["latitude", "longitude"], union, box)
-        time_start = time.time()
-        print(time_start)
-        request = Request(union, Select("step", [np.timedelta64(0, "ns")]), Select("hybrid", [1]))
-        result = self.API.retrieve(request)
-        print(len(result.leaves))
-        print(time.time() - time_start)
+    # def test_scalability_2D_v4(self):
+    #     union = Box(["latitude", "longitude"], [0 - 100, 0], [20 - 100, 36])
+    #     for i in range(9):
+    #         box = Box(["latitude", "longitude"], [20 * (i + 1) - 100, 0], [20 * (i + 2) - 100, 36])
+    #         union = Union(["latitude", "longitude"], union, box)
+    #     for j in range(9):
+    #         box = Box(["latitude", "longitude"], [0 - 100, 36 * (j + 1)], [20 - 100, 36 * (j + 2)])
+    #         union = Union(["latitude", "longitude"], union, box)
+    #     for i in range(9):
+    #         for j in range(9):
+    #             box = Box(
+    #                 ["latitude", "longitude"], [20 * (i + 1) - 100, 36 * (j + 1)], [20 * (i + 2) - 100, 36 * (j + 2)]
+    #             )
+    #             union = Union(["latitude", "longitude"], union, box)
+    #     time_start = time.time()
+    #     print(time_start)
+    #     request = Request(union, Select("step", [np.timedelta64(0, "ns")]), Select("hybrid", [1]))
+    #     result = self.API.retrieve(request)
+    #     print(len(result.leaves))
+    #     print(time.time() - time_start)

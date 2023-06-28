@@ -15,7 +15,7 @@ class Test:
     def setup_method(self):
         ds = data.from_source("file", "./examples/data/timeseries_t2m.grib")
         array = ds.to_xarray()
-        array = array.isel(step=0).isel(surface=0).isel(number=0)
+        array = array.isel(step=0).isel(surface=0).isel(number=0).t2m
         self.xarraydatacube = XArrayDatacube(array)
         for dim in array.dims:
             array = array.sortby(dim)

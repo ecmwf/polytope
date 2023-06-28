@@ -85,40 +85,45 @@ or from PyPI with the command
 Here is a step-by-step example of how to use this software.
 
 1. In this example, we first specify the data which will be in our Xarray datacube. Note that the data here comes from the GRIB file called "winds.grib", which is 3-dimensional with dimensions: step, latitude and longitude.
-
+    ```Python
         import xarray as xr
 
         array = xr.open_dataset("winds.grib", engine="cfgrib")
+    ```
    
     We then construct the Polytope object, passing in some additional metadata describing properties of the longitude axis.
-
+    ```Python
         options = {"longitude": {"Cyclic": [0, 360.0]}}
 
         from polytope.polytope import Polytope
 
         p = Polytope(datacube=array, options=options)
+    ```
 
 2. Next, we create a request shape to extract from the datacube.  
   In this example, we want to extract a simple 2D box in latitude and longitude at step 0. We thus create the two relevant shapes we need to build this 3-dimensional object,
-
+    ```Python
         import numpy as np
         from polytope.shapes import Box, Select
 
         box = Box(["latitude", "longitude"], [0, 0], [1, 1])
         step_point = Select("step", [np.timedelta64(0, "s")])
+    ```
 
     which we then incorporate into a Polytope request.
-
+    ```Python
         from polytope.polytope import Request
 
         request = Request(box, step_point)
+    ```
 
 3. Finally, extract the request from the datacube. 
-
+    ```Python
         result = p.retrieve(request)
+    ```
 
     The result is stored as an IndexTree containing the retrieved data organised hierarchically with axis indices for each point.
-    
+    ```Python
         result.pprint()
         
 
@@ -132,6 +137,7 @@ Here is a step-by-step example of how to use this software.
                         ↳latitude=1.0
                                 ↳longitude=0.0
                                 ↳longitude=1.0
+    ```
 
 <!-- # Requirements
 
@@ -154,3 +160,48 @@ The Polytope tests and examples require additional Python packages compared to t
 The additional dependencies are provided in the requirements_test.txt and requirements_examples.txt files, which can respectively be found in the examples and tests folders.
 Moreover, Polytope's tests and examples also require the installation of eccodes and GDAL.
 It is possible to install both of these dependencies using either a package manager or manually.
+
+## Contributing 
+
+The main repository is hosted on GitHub; testing, bug reports and contributions are highly welcomed and appreciated. 
+Please see the [Contributing](./CONTRIBUTING.rst) document for the best way to help. 
+
+Main contributors: 
+
+- Mathilde Leuridan - [ECMWF](https://www.ecmwf.int)
+- James Hawkes - [ECMWF](https://www.ecmwf.int)
+- Simon Smart - [ECMWF](www.ecmwf.int)
+- Emanuele Danovaro - [ECMWF](www.ecmwf.int)
+- Tiago Quintino - [ECMWF](www.ecmwf.int)
+
+See also the [contributors](https://github.com/ecmwf/polytope/contributors) for a more complete list. 
+
+## License 
+
+Copyright 2021 European Centre for Medium-Range Weather Forecasts (ECMWF)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0).
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+In applying this licence, ECMWF does not waive the privileges and immunities
+granted to it by virtue of its status as an intergovernmental organisation nor
+does it submit to any jurisdiction.
+
+## Citing 
+
+In this software is useful in your work, please consider citing our [paper](https://arxiv.org/abs/2306.11553) as 
+
+> Leuridan, M., Hawkes, J., Smart, S., Danovaro, E., and Quintino, T., “Polytope: An Algorithm for Efficient Feature Extraction on Hypercubes”, <i>arXiv e-prints</i>, 2023. doi:10.48550/arXiv.2306.11553.
+
+## Acknowledgements
+
+Past and current funding and support for **Polytope** is listed in the adjoining [Acknowledgements](./ACKNOWLEDGEMENTS.rst).
+
+

@@ -18,7 +18,6 @@ class TestSlicerComponents:
                 "level": np.arange(0, 100, 1),
             },
         )
-
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)
