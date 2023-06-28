@@ -11,23 +11,20 @@ from polytope.shapes import Select, Span
 class TestFloatType:
     def setup_method(self, method):
         # Create a dataarray with 3 labelled axes using float type
-        dims = np.random.randn(100, 101, 200)
-        array = xr.Dataset(
-            data_vars=dict(param=(["lat", "long", "alt"], dims)),
+        array = xr.DataArray(
+            np.random.randn(100, 101, 200),
+            dims=("lat", "long", "alt"),
             coords={
                 "lat": np.arange(0.0, 10.0, 0.1),
                 "long": np.arange(4.09999, 4.1 + 0.0000001, 0.0000001),
                 "alt": np.arange(0.0, 20.0, 0.1),
             },
         )
-
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)
 
     def test_slicing_span(self):
-        # TODO: some problems with floating point values and values inside the datacube being slightly off.
-        # This has been fixed by introducing tolerances, but could be better handled using exact arithmetic.
         request = Request(Span("lat", 4.1, 4.3), Select("long", [4.1]), Select("alt", [4.1]))
         result = self.API.retrieve(request)
         result.pprint()

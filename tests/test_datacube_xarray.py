@@ -16,21 +16,22 @@ class TestXarrayDatacube:
     def test_validate(self):
         dims = np.random.randn(1, 1, 1)
         array = xr.Dataset(data_vars=dict(param=(["x", "y", "z"], dims)), coords={"x": [1], "y": [1], "z": [1]})
+        array = array.to_array()
 
         datacube = Datacube.create(array, options={})
         datacube = Datacube.create(array, options={})
 
-        datacube.validate(["x", "y", "z"])
-        datacube.validate(["x", "z", "y"])
+        datacube.validate(["x", "y", "z", "variable"])
+        datacube.validate(["x", "z", "y", "variable"])
 
         with pytest.raises(AxisNotFoundError):
-            datacube.validate(["x", "y", "z", "w"])
+            datacube.validate(["x", "y", "z", "w", "variable"])
 
         with pytest.raises(AxisNotFoundError):
-            datacube.validate(["w", "x", "y", "z"])
+            datacube.validate(["w", "x", "y", "z", "variable"])
 
         with pytest.raises(AxisOverdefinedError):
-            datacube.validate(["x", "x", "y", "z"])
+            datacube.validate(["x", "x", "y", "z", "variable"])
 
     def test_create(self):
         # Create a dataarray with 3 labelled axes using different index types

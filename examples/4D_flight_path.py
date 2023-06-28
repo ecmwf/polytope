@@ -14,7 +14,7 @@ class Test:
     def setup_method(self):
         ds = data.from_source("file", "./examples/data/temp_model_levels.grib")
         array = ds.to_xarray()
-        array = array.isel(time=0)
+        array = array.isel(time=0).t
         options = {"longitude": {"Cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         for dim in array.dims:

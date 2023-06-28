@@ -24,9 +24,9 @@ from polytope.utility.exceptions import AxisOverdefinedError, AxisUnderdefinedEr
 class TestSlicing4DXarrayDatacube:
     def setup_method(self, method):
         # Create a dataarray with 4 labelled axes using different index types
-        dims = np.random.randn(3, 7, 129, 100)
-        array = xr.Dataset(
-            data_vars=dict(param=(["date", "step", "level", "lat"], dims)),
+        array = xr.DataArray(
+            np.random.randn(3, 7, 129, 100),
+            dims=("date", "step", "level", "lat"),
             coords={
                 "date": pd.date_range("2000-01-01", "2000-01-03", 3),
                 "step": [0, 3, 6, 9, 12, 15, 18],
@@ -34,7 +34,6 @@ class TestSlicing4DXarrayDatacube:
                 "lat": np.around(np.arange(0.0, 10.0, 0.1), 15),
             },
         )
-
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)
@@ -47,9 +46,7 @@ class TestSlicing4DXarrayDatacube:
         assert len(result.leaves) == 2 * 2 * 11
 
     def test_4D_box(self):
-        request = Request(
-            Box(["step", "level", "lat", "date"], [3, 10, 5.0, "2000-01-01"], [6, 11, 6.0, "2000-01-02"]),
-        )
+        request = Request(Box(["step", "level", "lat", "date"], [3, 10, 5.0, "2000-01-01"], [6, 11, 6.0, "2000-01-02"]))
         result = self.API.retrieve(request)
         assert len(result.leaves) == 2 * 2 * 11 * 2
 

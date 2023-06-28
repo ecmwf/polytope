@@ -25,6 +25,7 @@ _mappings = {
     np.float64: FloatAxis(),
     np.str_: UnsliceableaAxis(),
     str: UnsliceableaAxis(),
+    np.object_: UnsliceableaAxis(),
 }
 
 
@@ -66,9 +67,9 @@ class XArrayDatacube(Datacube):
             path = self.remap_path(path)
             if len(path.items()) == len(self.dataarray.coords):
                 subxarray = self.dataarray.sel(path, method="nearest")
-                data_variables = subxarray.data_vars
-                result_tuples = [(key, value) for key, value in data_variables.items()]
-                r.result = dict(result_tuples)
+                value = subxarray.item()
+                key = subxarray.name
+                r.result = (key, value)
             else:
                 r.remove_branch()
 
