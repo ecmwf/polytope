@@ -43,14 +43,14 @@ def find_nearest_latlon(grib_file, target_lat, target_lon):
 ds = data.from_source("file", "./foo.grib")
 latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
 latlon_array = latlon_array.t2m
-# print([val for val in latlon_array["latitude"].values[:] if val>0][-1])
+print([val for val in latlon_array["latitude"].values[:] if val<0][-1])
 
 latlon_xarray_datacube = OctahedralXArrayDatacube(latlon_array)
 
 slicer = HullSlicer()
 API = Polytope(datacube=latlon_array, engine=slicer)
 
-request = Request(Box(["latitude", "longitude"], [89, -1], [89.5, 181]))
+request = Request(Box(["latitude", "longitude"], [-1, 1], [1, 2]))
 result = API.retrieve(request)
 result.pprint()
 

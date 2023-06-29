@@ -176,17 +176,23 @@ class OctahedralXArrayDatacube(Datacube):
 
     def lat_val_available(self):
         lat_spacing = 90/1280
-        # lat_start = 0.035149384215604956
-        lat_start = 0.03515625
-        return_lat = [lat_start + i * lat_spacing for i in range(1280)]
+        lat_start = 0.035149384215604956
+        # lat_start = 0.026906142167192115
+        # lat_start = -(90-89.94618771566562)
+        return_lat = [lat_start + i * lat_spacing - 90 for i in range(1280*2)]
         return return_lat
 
     def lon_val_available(self, lat):
         lat_spacing = 90/1280
-        # lat_start = 0.035149384215604956
-        lat_start = 0.03515625
-        lat_idx = (lat-lat_start)/lat_spacing
-        num_points_on_lon = 4 * (1280-lat_idx) + 16
+        lat_start = 0.035149384215604956
+        # lat_start = 0.026906142167192115
+        # lat_start = -(90-89.94618771566562)
+        if lat_start <= lat < 90:
+            lat_idx = 1280 - ((lat-lat_start)/lat_spacing)
+        else:
+            lat_idx = (lat+90-lat_start)/lat_spacing
+        # lat_idx = 1280 - ((lat-lat_start)/lat_spacing)
+        num_points_on_lon = 4 * lat_idx + 16
         lon_spacing = 360/num_points_on_lon
         lon_start = 0
         return_lon = [lon_start + i * lon_spacing for i in range(int(num_points_on_lon))]
@@ -217,19 +223,25 @@ def latlon_idx_to_val(lat_idx, lon_idx):
 
     # TODO: this might be wrong, and the spacing above too for the lat,
     # depends on how the grid is laid out onto the sphere
-    # lat_start = 0.035149384215604956
-    lat_start = 0.03515625
+    lat_start = 0.035149384215604956
+    # lat_start = 0.026906142167192115
+    # lat_start = -(90-89.94618771566562)
     lon_start = 0
     return (lat_idx*lat_spacing + lat_start, lon_idx*lon_spacing + lon_start)
 
 
 def latlon_val_to_idx(lat, lon):
     lat_spacing = 90/1280
-    # lat_start = 0.035149384215604956
-    lat_start = 0.03515625
+    lat_start = 0.035149384215604956
+    # lat_start = 0.026906142167192115
+    # lat_start = -(90-89.94618771566562)
     lat_idx = (lat-lat_start)/lat_spacing
-
-    num_points_on_lon = 4 * (1280-lat_idx) + 16
+    if lat_start <= lat < 90:
+        lat_idx = 1280 - ((lat-lat_start)/lat_spacing)
+    else:
+        lat_idx = (lat+90-lat_start)/lat_spacing
+    # lat_idx = 1280 - ((lat-lat_start)/lat_spacing)
+    num_points_on_lon = 4 * lat_idx + 16
     lon_spacing = 360/num_points_on_lon
     lon_start = 0
     lon_idx = (lon-lon_start)/lon_spacing
