@@ -60,6 +60,7 @@ class XArrayDatacube(Datacube):
             else:  # drop non-necessary coordinates which we don't slice on
                 dataarray = dataarray.reset_coords(names=name, drop=True)
         self.dataarray = dataarray
+        
 
     def get(self, requests: IndexTree):
         for r in requests.leaves:
