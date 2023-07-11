@@ -13,8 +13,9 @@ class TestOctahedralGrid:
         latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
         latlon_array = latlon_array.t2m
         self.xarraydatacube = OctahedralXArrayDatacube(latlon_array)
+        grid_options = {"values" : {"grid_map" : {"type" : ["octahedral", 1280], "axes" : ["latitude", "longitude"]}}}
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=latlon_array, engine=self.slicer)
+        self.API = Polytope(datacube=latlon_array, engine=self.slicer, grid_options=grid_options)
 
     def find_nearest_latlon(self, grib_file, target_lat, target_lon):
         # Open the GRIB file
@@ -48,7 +49,7 @@ class TestOctahedralGrid:
         lons = []
         eccodes_lats = []
         eccodes_lons = []
-        tol = 1e-3
+        tol = 1e-8
         for i in range(len(result.leaves)):
             cubepath = result.leaves[i].flatten()
             lat = cubepath["latitude"]
