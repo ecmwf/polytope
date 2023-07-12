@@ -7,7 +7,7 @@ from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
 from matplotlib import markers
 from shapely.geometry import shape
 
-from polytope.datacube.octahedral_xarray import OctahedralXArrayDatacube
+from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Polygon, Union
@@ -41,10 +41,13 @@ ds = data.from_source("file", "./foo.grib")
 latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
 latlon_array = latlon_array.t2m
 
-latlon_xarray_datacube = OctahedralXArrayDatacube(latlon_array)
+latlon_xarray_datacube = XArrayDatacube(latlon_array)
 
 slicer = HullSlicer()
-API = Polytope(datacube=latlon_array, engine=slicer)
+
+grid_options = {"values": {"grid_map": {"type": ["octahedral", 1280], "axes": ["latitude", "longitude"]}}}
+
+API = Polytope(datacube=latlon_array, engine=slicer, grid_options=grid_options)
 
 shapefile = gpd.read_file("./examples/data/World_Countries__Generalized_.shp")
 country = shapefile.iloc[13]

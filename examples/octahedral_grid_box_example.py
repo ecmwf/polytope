@@ -6,7 +6,7 @@ from earthkit import data
 from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
 from matplotlib import markers
 
-from polytope.datacube.octahedral_xarray import OctahedralXArrayDatacube
+from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box
@@ -41,12 +41,16 @@ latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(t
 latlon_array = latlon_array.t2m
 nearest_points = find_nearest_latlon("./foo.grib", 0, 0)
 
-latlon_xarray_datacube = OctahedralXArrayDatacube(latlon_array)
+latlon_xarray_datacube = XArrayDatacube(latlon_array)
 
 slicer = HullSlicer()
-API = Polytope(datacube=latlon_array, engine=slicer)
+
+grid_options = {"values": {"grid_map": {"type": ["octahedral", 1280], "axes": ["latitude", "longitude"]}}}
+
+API = Polytope(datacube=latlon_array, engine=slicer, grid_options=grid_options)
 
 request = Request(Box(["latitude", "longitude"], [0, 0], [0.5, 0.5]))
+
 result = API.retrieve(request)
 result.pprint()
 

@@ -71,6 +71,7 @@ class XArrayDatacube(Datacube):
         self.mappers = {}
         for name, values in dataarray.coords.variables.items():
             if name in dataarray.dims:
+                dataarray = dataarray.sortby(name)
                 self._set_mapper(values, name)
                 self.axis_counter += 1
             if self.grid_mapper is not None:
