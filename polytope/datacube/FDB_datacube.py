@@ -26,11 +26,14 @@ _mappings = {
     np.str_: UnsliceableaAxis(),
     str: UnsliceableaAxis(),
     np.object_: UnsliceableaAxis(),
+    "int" : IntAxis(),
+    "float" : FloatAxis(),
 }
 
 
 def get_datacube_indices(partial_request):
     datacube_dico = {"step": [0, 3, 6],
+                     "level" : [10, 11, 12],
                      "values": [1, 2, 3, 4]}
     return datacube_dico
 
@@ -42,21 +45,20 @@ def glue(path):
 class FDBDatacube(Datacube):
 
     def _set_mapper(self, values, name):
-        if values.dtype.type not in _mappings:
-            raise ValueError(f"Could not create a mapper for index type {values.dtype.type} for axis {name}")
+        if type(values[0]).__name__ not in _mappings:
+            raise ValueError(f"Could not create a mapper for index type {type(values[0]).__name__} for axis {name}")
         if name in self.options.keys():
             # The options argument here is supposed to be a nested dictionary
             # like {"latitude":{"Cyclic":range}, ...}
             if "Cyclic" in self.options[name].keys():
-                value_type = values.dtype.type
-                axes_type_str = type(_mappings[value_type]).__name__
+                axes_type_str = type(values[0]).__name__
                 axes_type_str += "Cyclic"
                 cyclic_axis_type = deepcopy(getattr(sys.modules["polytope.datacube.datacube_axis"], axes_type_str)())
                 self.mappers[name] = cyclic_axis_type
                 self.mappers[name].name = name
                 self.mappers[name].range = self.options[name]["Cyclic"]
         else:
-            self.mappers[name] = deepcopy(_mappings[values.dtype.type])
+            self.mappers[name] = deepcopy(_mappings[type(values[0]).__name__])
             self.mappers[name].name = name
 
     def _set_grid_mapper(self, name):
@@ -86,7 +88,7 @@ class FDBDatacube(Datacube):
         dataarray = get_datacube_indices(partial_request)
 
         for name, values in dataarray.items():
-            values = values.sort()
+            values.sort()
             self._set_mapper(values, name)
             self.axis_counter += 1
             if self.grid_mapper is not None:
@@ -97,7 +99,7 @@ class FDBDatacube(Datacube):
                     for axis_name in self.grid_mapper._mapped_axes:
                         self._set_mapper(self.grid_mapper._value_type, axis_name)
                         self.axis_counter += 1
-            self.dataarray[name] = values
+        self.dataarray = dataarray
 
     def get(self, requests: IndexTree):
         for r in requests.leaves:
@@ -116,8 +118,8 @@ class FDBDatacube(Datacube):
                     path[self.grid_mapper._base_axis] = unmapped_idx
                     # Ask FDB what values it has on the path
                     subxarray = glue(path)
-                    value = subxarray.item()
-                    key = subxarray.name
+                    key = list(subxarray.keys())[0]
+                    value = subxarray[key]
                     r.result = (key, value)
                 else:
                     # if we have no grid map, still need to assign values

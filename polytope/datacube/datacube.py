@@ -47,3 +47,5 @@ class Datacube(ABC):
 
             xadatacube = XArrayDatacube(datacube, options=options, grid_options=grid_options)
             return xadatacube
+        else:
+            return datacube
