@@ -15,6 +15,10 @@ class GridMappers(ABC):
     def _resolution(self):
         pass
 
+    @abstractproperty
+    def _value_type(self):
+        pass
+
     @abstractmethod
     def map_first_axis(self, lower, upper):
         pass
@@ -33,6 +37,7 @@ class OctahedralGridMap(ABC):
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
         self._resolution = resolution
+        self._value_type = 1.2e0
 
     def gauss_first_guess(self):
         i = 0

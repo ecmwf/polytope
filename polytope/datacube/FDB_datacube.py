@@ -4,7 +4,6 @@ from copy import deepcopy
 
 import numpy as np
 import pandas as pd
-import xarray as xr
 
 from ..utility.combinatorics import unique, validate_axes
 from .datacube import Datacube, DatacubePath, IndexTree
@@ -28,6 +27,16 @@ _mappings = {
     str: UnsliceableaAxis(),
     np.object_: UnsliceableaAxis(),
 }
+
+
+def get_datacube_indices(partial_request):
+    datacube_dico = {"step": [0, 3, 6],
+                     "values": [1, 2, 3, 4]}
+    return datacube_dico
+
+
+def glue(path):
+    return {"t" : 0}
 
 
 class FDBDatacube(Datacube):
@@ -71,16 +80,24 @@ class FDBDatacube(Datacube):
             self._set_grid_mapper(name)
         self.mappers = {}
 
-        for name, values in dataarray.coords.variables.items():
-            if name in dataarray.dims:
-                dataarray = dataarray.sortby(name)
-                self._set_mapper(values, name)
-                self.axis_counter += 1
+        partial_request = config
+        # Find values in the level 3 FDB datacube
+        # Will be in the form of a dictionary? {axis_name:values_available, ...}
+        dataarray = get_datacube_indices(partial_request)
+
+        for name, values in dataarray.items():
+            values = values.sort()
+            self._set_mapper(values, name)
+            self.axis_counter += 1
             if self.grid_mapper is not None:
-                if name in self.grid_mapper._mapped_axes:
-                    self._set_mapper(values, name)
-                    self.axis_counter += 1
-        self.dataarray = dataarray
+                if name == self.grid_mapper._base_axis:
+                    # Need to remove the base axis and replace with the mapped grid axes
+                    del self.mappers[name]
+                    self.axis_counter -= 1
+                    for axis_name in self.grid_mapper._mapped_axes:
+                        self._set_mapper(self.grid_mapper._value_type, axis_name)
+                        self.axis_counter += 1
+            self.dataarray[name] = values
 
     def get(self, requests: IndexTree):
         for r in requests.leaves:
@@ -94,16 +111,17 @@ class FDBDatacube(Datacube):
                     second_val = path[second_axis]
                     path.pop(first_axis, None)
                     path.pop(second_axis, None)
-                    subxarray = self.dataarray.sel(path, method="nearest")
                     # need to remap the lat, lon in path to dataarray index
                     unmapped_idx = self.grid_mapper.unmap(first_val, second_val)
-                    subxarray = subxarray.isel(values=unmapped_idx)
+                    path[self.grid_mapper._base_axis] = unmapped_idx
+                    # Ask FDB what values it has on the path
+                    subxarray = glue(path)
                     value = subxarray.item()
                     key = subxarray.name
                     r.result = (key, value)
                 else:
                     # if we have no grid map, still need to assign values
-                    subxarray = self.dataarray.sel(path, method="nearest")
+                    subxarray = glue(path)
                     value = subxarray.item()
                     key = subxarray.name
                     r.result = (key, value)
@@ -135,16 +153,9 @@ class FDBDatacube(Datacube):
                 elif axis.name == second_axis:
                     indexes_between = self.grid_mapper.map_second_axis(first_val, low, up)
                 else:
-                    start = indexes.searchsorted(low, "left")  # TODO: catch start=0 (not found)?
-                    end = indexes.searchsorted(up, "right")  # TODO: catch end=length (not found)?
-                    indexes_between = indexes[start:end].to_list()
+                    indexes_between = [i for i in indexes if low <= i <= up]
             else:
-                # Find the range of indexes between lower and upper
-                # https://pandas.pydata.org/docs/reference/api/pandas.Index.searchsorted.html
-                # Assumes the indexes are already sorted (could sort to be sure) and monotonically increasing
-                start = indexes.searchsorted(low, "left")  # TODO: catch start=0 (not found)?
-                end = indexes.searchsorted(up, "right")  # TODO: catch end=length (not found)?
-                indexes_between = indexes[start:end].to_list()
+                indexes_between = [i for i in indexes if low <= i <= up]
 
             # Now the indexes_between are values on the cyclic range so need to remap them to their original
             # values before returning them
@@ -166,21 +177,14 @@ class FDBDatacube(Datacube):
             second_axis = self.grid_mapper._mapped_axes[1]
             path.pop(first_axis, None)
             path.pop(second_axis, None)
-
-        # Open a view on the subset identified by the path
-        subarray = self.dataarray.sel(path, method="nearest")
-
-        # Get the indexes of the axis we want to query
-        # XArray does not support branching, so no need to use label, we just take the next axis
-        if self.grid_mapper is not None:
             if axis.name == first_axis:
                 indexes = []
             elif axis.name == second_axis:
                 indexes = []
             else:
-                indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
+                indexes = self.dataarray[axis.name]
         else:
-            indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
+            indexes = self.dataarray[axis.name]
 
         # Here, we do a cyclic remapping so we look up on the right existing values in the cyclic range on the datacube
         search_ranges = axis.remap([lower, upper])
@@ -204,8 +208,7 @@ class FDBDatacube(Datacube):
 
     def has_index(self, path: DatacubePath, axis, index):
         # when we want to obtain the value of an unsliceable axis, need to check the values does exist in the datacube
-        subarray = self.dataarray.sel(path)[axis.name]
-        subarray_vals = subarray.values
+        subarray_vals = self.dataarray[axis.name]
         return index in subarray_vals
 
     @property
