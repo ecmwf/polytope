@@ -37,7 +37,7 @@ def find_nearest_latlon(grib_file, target_lat, target_lon):
     return nearest_points
 
 
-ds = data.from_source("file", "./foo.grib")
+ds = data.from_source("file", "./tests/data/foo.grib")
 latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
 latlon_array = latlon_array.t2m
 
@@ -85,7 +85,7 @@ for i in range(len(result.leaves)):
     long = cubepath["longitude"]
     lats.append(lat)
     longs.append(long)
-    nearest_points = find_nearest_latlon("./foo.grib", lat, long)
+    nearest_points = find_nearest_latlon("./tests/data/foo.grib", lat, long)
     eccodes_lats.append(nearest_points[0][0]["lat"])
     eccodes_longs.append(nearest_points[0][0]["lon"])
     t = result.leaves[i].result[1]

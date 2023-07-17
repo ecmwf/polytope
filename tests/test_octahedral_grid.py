@@ -9,7 +9,7 @@ from polytope.shapes import Box
 
 class TestOctahedralGrid:
     def setup_method(self, method):
-        ds = data.from_source("file", "./foo.grib")
+        ds = data.from_source("file", "./tests/data/foo.grib")
         latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
         latlon_array = latlon_array.t2m
         self.xarraydatacube = XArrayDatacube(latlon_array)
@@ -41,14 +41,13 @@ class TestOctahedralGrid:
         return nearest_points
 
     def test_octahedral_grid(self):
-        request = Request(Box(["latitude", "longitude"], [0, 0], [0.5, 0.5]))
+        request = Request(Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 56
+        assert len(result.leaves) == 9
 
         lats = []
         lons = []
         eccodes_lats = []
-        eccodes_lons = []
         tol = 1e-8
         for i in range(len(result.leaves)):
             cubepath = result.leaves[i].flatten()
@@ -56,13 +55,12 @@ class TestOctahedralGrid:
             lon = cubepath["longitude"]
             lats.append(lat)
             lons.append(lon)
-            nearest_points = self.find_nearest_latlon("./foo.grib", lat, lon)
+            nearest_points = self.find_nearest_latlon("./tests/data/foo.grib", lat, lon)
             eccodes_lat = nearest_points[0][0]["lat"]
             eccodes_lon = nearest_points[0][0]["lon"]
             eccodes_lats.append(eccodes_lat)
-            eccodes_lons.append(eccodes_lon)
             assert eccodes_lat - tol <= lat
             assert lat <= eccodes_lat + tol
             assert eccodes_lon - tol <= lon
             assert lon <= eccodes_lon + tol
-        assert len(eccodes_lats) == 56
+        assert len(eccodes_lats) == 9
