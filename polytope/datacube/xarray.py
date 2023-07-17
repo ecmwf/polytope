@@ -59,6 +59,7 @@ class XArrayDatacube(Datacube):
                 self._set_mapper(values, name)
             else:  # drop non-necessary coordinates which we don't slice on
                 dataarray = dataarray.reset_coords(names=name, drop=True)
+        self._axes = list(self.mappers.keys())
         self.dataarray = dataarray
 
     def get(self, requests: IndexTree):
@@ -148,4 +149,4 @@ class XArrayDatacube(Datacube):
         return self.mappers
 
     def validate(self, axes):
-        return validate_axes(self.axes, axes)
+        return validate_axes(self._axes, axes)
