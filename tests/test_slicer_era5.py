@@ -10,8 +10,6 @@ class TestSlicingEra5Data:
     def setup_method(self, method):
         ds = data.from_source("file", "./tests/data/era5-levels-members.grib")
         array = ds.to_xarray().isel(step=0).t
-        array = array.reset_coords(names="step", drop=True)
-        array = array.reset_coords(names="valid_time", drop=True)
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)

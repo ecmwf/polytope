@@ -53,16 +53,26 @@ class XArrayDatacube(Datacube):
     def __init__(self, dataarray: xr.DataArray, options={}):
         self.options = options
         self.mappers = {}
+        self.pre_path = {}
+        self.axis_counter = 0
         for name, values in dataarray.coords.variables.items():
-            dataarray = dataarray.sortby(name)
-            self._set_mapper(values, name)
+            if name in dataarray.dims:
+                # dataarray = dataarray.expand_dims(dim={name: 1})
+                dataarray = dataarray.sortby(name)
+                self._set_mapper(values, name)
+                self.axis_counter += 1
+            else:
+                if dataarray[name].dims == ():
+                    # Here the coordinate is not a dimension, but it also doesn't depend on any other dimension
+                    # So this coordinate just store a "metadata" value that we extract
+                    self.pre_path[name] = dataarray[name].values
         self.dataarray = dataarray
 
     def get(self, requests: IndexTree):
         for r in requests.leaves:
             path = r.flatten()
             path = self.remap_path(path)
-            if len(path.items()) == len(self.dataarray.coords):
+            if len(path.items()) == self.axis_counter:
                 subxarray = self.dataarray.sel(path, method="nearest")
                 value = subxarray.item()
                 key = subxarray.name
@@ -112,9 +122,7 @@ class XArrayDatacube(Datacube):
 
         # Get the indexes of the axis we want to query
         # XArray does not support branching, so no need to use label, we just take the next axis
-
-        assert axis.name == next(iter(subarray.xindexes))
-        indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
+        indexes = subarray.indexes[axis.name]
 
         # Here, we do a cyclic remapping so we look up on the right existing values in the cyclic range on the datacube
         search_ranges = axis.remap([lower, upper])
