@@ -56,16 +56,19 @@ class XArrayDatacube(Datacube):
         self.pre_path = {}
         self.axis_counter = 0
         for name, values in dataarray.coords.variables.items():
-            if name in dataarray.dims:
-                # dataarray = dataarray.expand_dims(dim={name: 1})
+            # dataarray = dataarray.expand_dims(dim={name: 1})
+            if dataarray[name].dims == ():
+                self._set_mapper(values, name)
+                self.axis_counter += 1
+            elif name in dataarray.dims:
                 dataarray = dataarray.sortby(name)
                 self._set_mapper(values, name)
                 self.axis_counter += 1
-            else:
-                if dataarray[name].dims == ():
-                    # Here the coordinate is not a dimension, but it also doesn't depend on any other dimension
-                    # So this coordinate just store a "metadata" value that we extract
-                    self.pre_path[name] = dataarray[name].values
+            # else:
+            #     if dataarray[name].dims == ():
+            #         # Here the coordinate is not a dimension, but it also doesn't depend on any other dimension
+            #         # So this coordinate just stores a "metadata" value that we extract
+            #         self.pre_path[name] = dataarray[name].values
         self.dataarray = dataarray
 
     def get(self, requests: IndexTree):
@@ -99,9 +102,10 @@ class XArrayDatacube(Datacube):
             # Find the range of indexes between lower and upper
             # https://pandas.pydata.org/docs/reference/api/pandas.Index.searchsorted.html
             # Assumes the indexes are already sorted (could sort to be sure) and monotonically increasing
-            start = indexes.searchsorted(low, "left")  # TODO: catch start=0 (not found)?
-            end = indexes.searchsorted(up, "right")  # TODO: catch end=length (not found)?
-            indexes_between = indexes[start:end].to_list()
+            # start = indexes.searchsorted(low, "left")  # TODO: catch start=0 (not found)?
+            # end = indexes.searchsorted(up, "right")  # TODO: catch end=length (not found)?
+            # indexes_between = indexes[start:end].to_list()
+            indexes_between = [i for i in indexes if low <= i <= up]
 
             # Now the indexes_between are values on the cyclic range so need to remap them to their original
             # values before returning them
@@ -122,7 +126,10 @@ class XArrayDatacube(Datacube):
 
         # Get the indexes of the axis we want to query
         # XArray does not support branching, so no need to use label, we just take the next axis
-        indexes = subarray.indexes[axis.name]
+        if axis.name in self.dataarray.dims:
+            indexes = list(subarray.indexes[axis.name])
+        else:
+            indexes = [subarray[axis.name].values]
 
         # Here, we do a cyclic remapping so we look up on the right existing values in the cyclic range on the datacube
         search_ranges = axis.remap([lower, upper])
