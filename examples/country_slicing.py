@@ -50,12 +50,14 @@ class Test:
         request_obj = poly[0]
         for obj in poly:
             request_obj = Union(["longitude", "latitude"], request_obj, obj)
-        request = Request(request_obj,
-                          Select("number", [0]),
-                          Select("time", ["2022-02-06T12:00:00"]),
-                          Select("step", ["00:00:00"]),
-                          Select("surface", [0]),
-                          Select("valid_time", ["2022-02-06T12:00:00"]))
+        request = Request(
+            request_obj,
+            Select("number", [0]),
+            Select("time", ["2022-02-06T12:00:00"]),
+            Select("step", ["00:00:00"]),
+            Select("surface", [0]),
+            Select("valid_time", ["2022-02-06T12:00:00"]),
+        )
 
         # Extract the values of the long and lat from the tree
         result = self.API.retrieve(request)

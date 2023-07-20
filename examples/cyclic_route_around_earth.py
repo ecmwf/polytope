@@ -22,12 +22,14 @@ class Test:
     def test_slice_country(self):
         bounding_box = Box(["latitude", "longitude"], [-0.1, -0.1], [0.1, 0.1])
         request_obj = PathSegment(["latitude", "longitude"], bounding_box, [-88, -67], [68, 170])
-        request = Request(request_obj,
-                          Select("number", [0]),
-                          Select("time", ["2022-02-06T12:00:00"]),
-                          Select("step", ["00:00:00"]),
-                          Select("surface", [0]),
-                          Select("valid_time", ["2022-02-06T12:00:00"]))
+        request = Request(
+            request_obj,
+            Select("number", [0]),
+            Select("time", ["2022-02-06T12:00:00"]),
+            Select("step", ["00:00:00"]),
+            Select("surface", [0]),
+            Select("valid_time", ["2022-02-06T12:00:00"]),
+        )
 
         # Extract the values of the long and lat from the tree
         result = self.API.retrieve(request)

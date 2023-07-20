@@ -58,10 +58,9 @@ class Test:
         # Then somehow make this list of points into just a sequence of points
 
         ship_route_polytope = Path(["latitude", "longitude", "step"], initial_shape, *new_points)
-        request = Request(ship_route_polytope,
-                          Select("number", [0]),
-                          Select("surface", [0]),
-                          Select("time", ["2022-09-30T12:00:00"]))
+        request = Request(
+            ship_route_polytope, Select("number", [0]), Select("surface", [0]), Select("time", ["2022-09-30T12:00:00"])
+        )
         result = self.API.retrieve(request)
 
         # Associate the results to the lat/long points in an array

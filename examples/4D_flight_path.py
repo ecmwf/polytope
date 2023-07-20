@@ -84,8 +84,7 @@ class Test:
 
         flight_route_polytope = Path(["latitude", "longitude", "step", "hybrid"], initial_shape, *route_point_CDG_LHR)
 
-        request = Request(flight_route_polytope,
-                          Select("time", ["2022-12-02T12:00:00"]))
+        request = Request(flight_route_polytope, Select("time", ["2022-12-02T12:00:00"]))
         result = self.API.retrieve(request)
 
         lats = []

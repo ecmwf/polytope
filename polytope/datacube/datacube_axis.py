@@ -420,7 +420,7 @@ class PandasTimedeltaAxis(DatacubeAxis):
 
     def to_float(self, value: pd.Timedelta):
         if type(value) == np.timedelta64:
-            return value.astype('timedelta64[s]').astype(int)
+            return value.astype("timedelta64[s]").astype(int)
         else:
             return float(value.value / 10**9)
 

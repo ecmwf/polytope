@@ -50,11 +50,13 @@ class Test:
         for obj in poly:
             request_obj = Union(["longitude", "latitude"], request_obj, obj)
 
-        request = Request(request_obj,
-                          Select("time", [np.datetime64("2022-05-14T12:00:00")]),
-                          Select("number", [0]),
-                          Select("step", ["00:00:00"]),
-                          Select("surface", [0]))
+        request = Request(
+            request_obj,
+            Select("time", [np.datetime64("2022-05-14T12:00:00")]),
+            Select("number", [0]),
+            Select("step", ["00:00:00"]),
+            Select("surface", [0]),
+        )
 
         result = self.API.retrieve(request)
 
