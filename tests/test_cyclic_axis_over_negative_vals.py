@@ -24,7 +24,7 @@ class TestSlicing3DXarrayDatacube:
         options = {"long": {"Cyclic": [-1.1, -0.1]}, "level": {"Cyclic": [1, 129]}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
+        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
 
     # Testing different shapes
 

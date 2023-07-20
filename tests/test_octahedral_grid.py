@@ -13,7 +13,7 @@ class TestOctahedralGrid:
         latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
         latlon_array = latlon_array.t2m
         self.xarraydatacube = XArrayDatacube(latlon_array)
-        grid_options = {"values": {"grid_map": {"type": ["octahedral", 1280], "axes": ["latitude", "longitude"]}}}
+        grid_options = {"values": {"mapper": {"type": ["octahedral", 1280], "axes": ["latitude", "longitude"]}}}
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=latlon_array, engine=self.slicer, grid_options=grid_options)
 

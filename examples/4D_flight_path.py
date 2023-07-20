@@ -15,13 +15,13 @@ class Test:
         ds = data.from_source("file", "./examples/data/temp_model_levels.grib")
         array = ds.to_xarray()
         array = array.isel(time=0).t
-        options = {"longitude": {"Cyclic": [0, 360.0]}}
+        axis_options = {"longitude": {"Cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         for dim in array.dims:
             array = array.sortby(dim)
         self.array = array
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
+        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=axis_options)
 
     def test_slice_shipping_route(self):
         colorscale = [

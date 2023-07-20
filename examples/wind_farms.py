@@ -20,10 +20,10 @@ class Test:
         array = ds.to_xarray()
         array = array.isel(time=0).isel(surface=0).isel(number=0).u10
         self.array = array
-        options = {"longitude": {"Cyclic": [0, 360.0]}}
+        axis_options = {"longitude": {"Cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
+        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=axis_options)
 
     def test_slice_wind_farms(self):
         gdal.SetConfigOption("SHAPE_RESTORE_SHX", "YES")

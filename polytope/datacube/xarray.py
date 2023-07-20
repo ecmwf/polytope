@@ -36,33 +36,33 @@ class XArrayDatacube(Datacube):
     def _set_mapper(self, values, name):
         if values.dtype.type not in _mappings:
             raise ValueError(f"Could not create a mapper for index type {values.dtype.type} for axis {name}")
-        if name in self.options.keys():
+        if name in self.axis_options.keys():
             # The options argument here is supposed to be a nested dictionary
             # like {"latitude":{"Cyclic":range}, ...}
-            if "Cyclic" in self.options[name].keys():
+            if "Cyclic" in self.axis_options[name].keys():
                 value_type = values.dtype.type
                 axes_type_str = type(_mappings[value_type]).__name__
                 axes_type_str += "Cyclic"
                 cyclic_axis_type = deepcopy(getattr(sys.modules["polytope.datacube.datacube_axis"], axes_type_str)())
                 self.mappers[name] = cyclic_axis_type
                 self.mappers[name].name = name
-                self.mappers[name].range = self.options[name]["Cyclic"]
+                self.mappers[name].range = self.axis_options[name]["Cyclic"]
         else:
             self.mappers[name] = deepcopy(_mappings[values.dtype.type])
             self.mappers[name].name = name
 
     def _set_grid_mapper(self, name):
         if name in self.grid_options.keys():
-            if "grid_map" in self.grid_options[name].keys():
-                grid_mapping_options = self.grid_options[name]["grid_map"]
+            if "mapper" in self.grid_options[name].keys():
+                grid_mapping_options = self.grid_options[name]["mapper"]
                 grid_type = grid_mapping_options["type"]
                 grid_axes = grid_mapping_options["axes"]
                 if grid_type[0] == "octahedral":
                     resolution = grid_type[1]
                     self.grid_mapper = OctahedralGridMap(name, grid_axes, resolution)
 
-    def __init__(self, dataarray: xr.DataArray, options={}, grid_options={}):
-        self.options = options
+    def __init__(self, dataarray: xr.DataArray, axis_options={}, grid_options={}):
+        self.axis_options = axis_options
         self.grid_options = grid_options
         self.grid_mapper = None
         self.axis_counter = 0
