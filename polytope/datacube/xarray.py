@@ -170,14 +170,17 @@ class XArrayDatacube(Datacube):
 
         # Get the indexes of the axis we want to query
         # XArray does not support branching, so no need to use label, we just take the next axis
+
         if self.grid_mapper is not None:
             if axis.name == first_axis:
                 indexes = []
             elif axis.name == second_axis:
                 indexes = []
             else:
+                assert axis.name == next(iter(subarray.xindexes))
                 indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
         else:
+            assert axis.name == next(iter(subarray.xindexes))
             indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
 
         # Here, we do a cyclic remapping so we look up on the right existing values in the cyclic range on the datacube
@@ -211,4 +214,4 @@ class XArrayDatacube(Datacube):
         return self.mappers
 
     def validate(self, axes):
-        return validate_axes(self.axes, axes)
+        return validate_axes(list(self.axes.keys()), axes)

@@ -12,7 +12,7 @@ from polytope.shapes import Polygon, Union
 
 class Test:
     def setup_method(self, method):
-        ds = data.from_source("file", ".examples/data/output8.grib")
+        ds = data.from_source("file", "./examples/data/output8.grib")
         array = ds.to_xarray()
         array = array.isel(surface=0).isel(step=0).isel(number=0).isel(time=0).t2m
         axis_options = {"longitude": {"Cyclic": [0, 360.0]}}

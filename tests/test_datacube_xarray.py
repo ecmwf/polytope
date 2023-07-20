@@ -68,12 +68,14 @@ class TestXarrayDatacube:
 
         # Check discretizing along 'date' axis with a range of dates
         label = PandasTimestampAxis()
+        label.name = "date"
         idxs = datacube.get_indices(partial_request, label, pd.Timestamp("2000-01-02"), pd.Timestamp("2000-03-31"))
         assert (idxs == pd.date_range(pd.Timestamp("2000-01-02"), pd.Timestamp("2000-01-03"), 2)).all()
         assert type(idxs[0]) == pd.Timestamp
 
         # Check discretizing along 'date' axis at a specific date gives one value
         label = PandasTimestampAxis()
+        label.name = "date"
         idxs = datacube.get_indices(partial_request, label, pd.Timestamp("2000-01-02"), pd.Timestamp("2000-01-02"))
         assert len(idxs) == 1
         assert type(idxs[0]) == pd.Timestamp
@@ -81,6 +83,7 @@ class TestXarrayDatacube:
 
         # Check discretizing along 'date' axis at a date which does not exist in discrete space gives no values
         label = PandasTimestampAxis()
+        label.name = "date"
         idxs = datacube.get_indices(
             partial_request, label, pd.Timestamp("2000-01-01-1200"), pd.Timestamp("2000-01-01-1200")
         )
@@ -95,6 +98,7 @@ class TestXarrayDatacube:
 
         # Check discretizing along 'step' axis with a range of steps
         label = IntAxis()
+        label.name = "step"
         idxs = datacube.get_indices(partial_request, label, 0, 10)
         assert idxs == [0, 3, 6, 9]
         assert type(idxs[0]) == int
@@ -118,6 +122,7 @@ class TestXarrayDatacube:
 
         # Check discretizing along 'level' axis with a range of levels
         label = FloatAxis()
+        label.name = "level"
         idxs = datacube.get_indices(partial_request, label, -0.3, 10)
         assert idxs == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         assert type(idxs[0]) == int
