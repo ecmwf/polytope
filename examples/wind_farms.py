@@ -17,10 +17,6 @@ class Test:
         ds = data.from_source("file", "./examples/data/winds.grib")
         array = ds.to_xarray()
         array = array.isel(time=0).isel(surface=0).isel(number=0).u10
-        array = array.reset_coords(names="time", drop=True)
-        array = array.reset_coords(names="valid_time", drop=True)
-        array = array.reset_coords(names="number", drop=True)
-        array = array.reset_coords(names="surface", drop=True)
         self.array = array
         options = {"longitude": {"Cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
@@ -58,7 +54,11 @@ class Test:
         request_obj = poly[0]
         for obj in poly:
             request_obj = Union(["longitude", "latitude"], request_obj, obj)
-        request = Request(request_obj, Select("step", [np.timedelta64(0, "ns")]))
+        request = Request(request_obj,
+                          Select("step", [np.timedelta64(0, "ns")]),
+                          Select("number", [0]),
+                          Select("surface", [0]),
+                          Select("time", ["2022-09-30T12:00:00"]))
 
         # Extract the values of the long and lat from the tree
         result = self.API.retrieve(request)

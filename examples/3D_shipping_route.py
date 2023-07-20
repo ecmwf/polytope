@@ -8,7 +8,7 @@ from earthkit import data
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Ellipsoid, Path
+from polytope.shapes import Ellipsoid, Path, Select
 
 
 class Test:
@@ -16,10 +16,6 @@ class Test:
         ds = data.from_source("file", "./examples/data/winds.grib")
         array = ds.to_xarray()
         array = array.isel(time=0).isel(surface=0).isel(number=0).u10
-        array = array.reset_coords(names="time", drop=True)
-        array = array.reset_coords(names="valid_time", drop=True)
-        array = array.reset_coords(names="number", drop=True)
-        array = array.reset_coords(names="surface", drop=True)
         self.array = array
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)
@@ -62,7 +58,10 @@ class Test:
         # Then somehow make this list of points into just a sequence of points
 
         ship_route_polytope = Path(["latitude", "longitude", "step"], initial_shape, *new_points)
-        request = Request(ship_route_polytope)
+        request = Request(ship_route_polytope,
+                          Select("number", [0]),
+                          Select("surface", [0]),
+                          Select("time", ["2022-09-30T12:00:00"]))
         result = self.API.retrieve(request)
 
         # Associate the results to the lat/long points in an array

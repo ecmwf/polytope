@@ -56,25 +56,21 @@ class XArrayDatacube(Datacube):
         self.pre_path = {}
         self.axis_counter = 0
         for name, values in dataarray.coords.variables.items():
-            # dataarray = dataarray.expand_dims(dim={name: 1})
             if dataarray[name].dims == ():
                 self._set_mapper(values, name)
-                self.axis_counter += 1
             elif name in dataarray.dims:
                 dataarray = dataarray.sortby(name)
                 self._set_mapper(values, name)
                 self.axis_counter += 1
-            # else:
-            #     if dataarray[name].dims == ():
-            #         # Here the coordinate is not a dimension, but it also doesn't depend on any other dimension
-            #         # So this coordinate just stores a "metadata" value that we extract
-            #         self.pre_path[name] = dataarray[name].values
         self.dataarray = dataarray
 
     def get(self, requests: IndexTree):
         for r in requests.leaves:
             path = r.flatten()
             path = self.remap_path(path)
+            for key in path.keys():
+                if self.dataarray[key].dims == ():
+                    path.pop(key)
             if len(path.items()) == self.axis_counter:
                 subxarray = self.dataarray.sel(path, method="nearest")
                 value = subxarray.item()
@@ -102,9 +98,6 @@ class XArrayDatacube(Datacube):
             # Find the range of indexes between lower and upper
             # https://pandas.pydata.org/docs/reference/api/pandas.Index.searchsorted.html
             # Assumes the indexes are already sorted (could sort to be sure) and monotonically increasing
-            # start = indexes.searchsorted(low, "left")  # TODO: catch start=0 (not found)?
-            # end = indexes.searchsorted(up, "right")  # TODO: catch end=length (not found)?
-            # indexes_between = indexes[start:end].to_list()
             indexes_between = [i for i in indexes if low <= i <= up]
 
             # Now the indexes_between are values on the cyclic range so need to remap them to their original
@@ -120,6 +113,10 @@ class XArrayDatacube(Datacube):
 
     def get_indices(self, path: DatacubePath, axis, lower, upper):
         path = self.remap_path(path)
+
+        for key in path.keys():
+            if self.dataarray[key].dims == ():
+                path.pop(key)
 
         # Open a view on the subset identified by the path
         subarray = self.dataarray.sel(path, method="nearest")

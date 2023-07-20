@@ -14,10 +14,6 @@ class Test:
         ds = data.from_source("file", "./examples/data/timeseries_t2m.grib")
         array = ds.to_xarray()
         array = array.isel(step=0).isel(surface=0).isel(number=0).t2m
-        array = array.reset_coords(names="valid_time", drop=True)
-        array = array.reset_coords(names="step", drop=True)
-        array = array.reset_coords(names="surface", drop=True)
-        array = array.reset_coords(names="number", drop=True)
         self.xarraydatacube = XArrayDatacube(array)
         for dim in array.dims:
             array = array.sortby(dim)
@@ -54,7 +50,11 @@ class Test:
         for obj in poly:
             request_obj = Union(["longitude", "latitude"], request_obj, obj)
 
-        request = Request(request_obj, Select("time", [np.datetime64("2022-05-14T12:00:00")]))
+        request = Request(request_obj,
+                          Select("time", [np.datetime64("2022-05-14T12:00:00")]),
+                          Select("number", [0]),
+                          Select("step", ["00:00:00"]),
+                          Select("surface", [0]))
 
         result = self.API.retrieve(request)
 

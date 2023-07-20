@@ -6,7 +6,7 @@ from earthkit import data
 from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, PathSegment
+from polytope.shapes import Box, PathSegment, Select
 
 
 class Test:
@@ -14,11 +14,6 @@ class Test:
         ds = data.from_source("file", "./examples/data/output8.grib")
         array = ds.to_xarray()
         array = array.isel(surface=0).isel(step=0).isel(number=0).isel(time=0).t2m
-        array = array.reset_coords(names="time", drop=True)
-        array = array.reset_coords(names="valid_time", drop=True)
-        array = array.reset_coords(names="step", drop=True)
-        array = array.reset_coords(names="surface", drop=True)
-        array = array.reset_coords(names="number", drop=True)
         options = {"longitude": {"Cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
@@ -27,7 +22,12 @@ class Test:
     def test_slice_country(self):
         bounding_box = Box(["latitude", "longitude"], [-0.1, -0.1], [0.1, 0.1])
         request_obj = PathSegment(["latitude", "longitude"], bounding_box, [-88, -67], [68, 170])
-        request = Request(request_obj)
+        request = Request(request_obj,
+                          Select("number", [0]),
+                          Select("time", ["2022-02-06T12:00:00"]),
+                          Select("step", ["00:00:00"]),
+                          Select("surface", [0]),
+                          Select("valid_time", ["2022-02-06T12:00:00"]))
 
         # Extract the values of the long and lat from the tree
         result = self.API.retrieve(request)
