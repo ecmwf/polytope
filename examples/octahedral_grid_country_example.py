@@ -10,7 +10,7 @@ from shapely.geometry import shape
 from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Polygon, Union
+from polytope.shapes import Polygon, Select, Union
 
 
 def find_nearest_latlon(grib_file, target_lat, target_lon):
@@ -45,9 +45,9 @@ latlon_xarray_datacube = XArrayDatacube(latlon_array)
 
 slicer = HullSlicer()
 
-grid_options = {"values": {"grid_map": {"type": ["octahedral", 1280], "axes": ["latitude", "longitude"]}}}
+grid_options = {"values": {"grid_map": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}}}
 
-API = Polytope(datacube=latlon_array, engine=slicer, grid_options=grid_options)
+API = Polytope(datacube=latlon_array, engine=slicer, axis_options=grid_options)
 
 shapefile = gpd.read_file("./examples/data/World_Countries__Generalized_.shp")
 country = shapefile.iloc[13]
@@ -71,7 +71,14 @@ for points in polygons_list:
 request_obj = poly[0]
 for obj in poly:
     request_obj = Union(["longitude", "latitude"], request_obj, obj)
-request = Request(request_obj)
+request = Request(
+    request_obj,
+    Select("number", [0]),
+    Select("time", ["2023-06-25T12:00:00"]),
+    Select("step", ["00:00:00"]),
+    Select("surface", [0]),
+    Select("valid_time", ["2023-06-25T12:00:00"]),
+)
 result = API.retrieve(request)
 
 lats = []

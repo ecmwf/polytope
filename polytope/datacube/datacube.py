@@ -41,9 +41,9 @@ class Datacube(ABC):
         """returns true if the input axes can be resolved against the datacube axes"""
 
     @staticmethod
-    def create(datacube, axis_options, grid_options):
+    def create(datacube, axis_options):
         if isinstance(datacube, (xr.core.dataarray.DataArray, xr.core.dataset.Dataset)):
             from .xarray import XArrayDatacube
 
-            xadatacube = XArrayDatacube(datacube, axis_options=axis_options, grid_options=grid_options)
+            xadatacube = XArrayDatacube(datacube, axis_options=axis_options)
             return xadatacube

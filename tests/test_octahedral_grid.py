@@ -4,7 +4,7 @@ from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
 from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Box
+from polytope.shapes import Box, Select
 
 
 class TestOctahedralGrid:
@@ -12,10 +12,13 @@ class TestOctahedralGrid:
         ds = data.from_source("file", "./tests/data/foo.grib")
         latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
         latlon_array = latlon_array.t2m
+        print(latlon_array)
         self.xarraydatacube = XArrayDatacube(latlon_array)
-        grid_options = {"values": {"mapper": {"type": ["octahedral", 1280], "axes": ["latitude", "longitude"]}}}
+        grid_options = {
+            "values": {"mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}}
+        }
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=latlon_array, engine=self.slicer, grid_options=grid_options)
+        self.API = Polytope(datacube=latlon_array, engine=self.slicer, axis_options=grid_options)
 
     def find_nearest_latlon(self, grib_file, target_lat, target_lon):
         # Open the GRIB file
@@ -41,7 +44,14 @@ class TestOctahedralGrid:
         return nearest_points
 
     def test_octahedral_grid(self):
-        request = Request(Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]))
+        request = Request(
+            Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
+            Select("number", [0]),
+            Select("time", ["2023-06-25T12:00:00"]),
+            Select("step", ["00:00:00"]),
+            Select("surface", [0]),
+            Select("valid_time", ["2023-06-25T12:00:00"]),
+        )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 9
 
