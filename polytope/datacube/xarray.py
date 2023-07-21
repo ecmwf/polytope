@@ -80,6 +80,57 @@ class XArrayDatacube(Datacube):
                     self.axis_counter += 1
         self.dataarray = dataarray
 
+    def __init__v2(self, dataarray: xr.DataArray, axis_options={}):
+        self.axis_options = axis_options
+        self.grid_mapper = None
+        self.axis_counter = 0
+        for name, values in dataarray.coords.variables.items():
+            options = axis_options.get(name, {})
+            self.create_axis(options, name, values)
+
+    def create_axis(self, options, name, values):
+        if options == {}:
+            self.create_standard(name, values)
+        if "mapper" in options.keys():
+            self.create_mapper(options, name)
+        if "Cyclic" in options.keys():
+            self.create_cyclic(options, name, values)
+
+    def create_cyclic(self, options, name, values):
+        value_type = values.dtype.type
+        axes_type_str = type(_mappings[value_type]).__name__
+        axes_type_str += "Cyclic"
+        cyclic_axis_type = deepcopy(getattr(sys.modules["polytope.datacube.datacube_axis"], axes_type_str)())
+        self.mappers[name] = cyclic_axis_type
+        self.mappers[name].name = name
+        self.mappers[name].range = options["Cyclic"]
+
+    def create_mapper(self, options, name):
+        grid_mapping_options = options["mapper"]
+        grid_type = grid_mapping_options["type"]
+        grid_resolution = grid_mapping_options["resolution"]
+        grid_axes = grid_mapping_options["axes"]
+        if grid_type == "octahedral":
+            self.grid_mapper = OctahedralGridMap(name, grid_axes, grid_resolution)
+        # Once we have created mapper, create axis for the mapped axes
+        for i in range(len(grid_axes)):
+            axis_name = grid_axes[i]
+            new_axis_options = self.axis_options.get(axis_name, {})
+            if i == 1:
+                values = self.grid_mapper.first_axis_vals()
+            if i == 2:
+                values = self.grid_mapper.second_axis_vals(values[0])  # the values[0] will be a value on the first axis
+            self.create_axis(new_axis_options, axis_name, values)
+
+    def create_standard(self, name, values):
+        self.check_axis_type(name, values)
+        self.mappers[name] = deepcopy(_mappings[values.dtype.type])
+        self.mappers[name].name = name
+
+    def check_axis_type(self, name, values):
+        if values.dtype.type not in _mappings:
+            raise ValueError(f"Could not create a mapper for index type {values.dtype.type} for axis {name}")
+
     def get(self, requests: IndexTree):
         for r in requests.leaves:
             path = r.flatten()
