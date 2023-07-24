@@ -18,8 +18,8 @@ class TestXarrayDatacube:
         array = xr.Dataset(data_vars=dict(param=(["x", "y", "z"], dims)), coords={"x": [1], "y": [1], "z": [1]})
         array = array.to_array()
 
-        datacube = Datacube.create(array, axis_options={}, grid_options={})
-        datacube = Datacube.create(array, axis_options={}, grid_options={})
+        datacube = Datacube.create(array, axis_options={})
+        datacube = Datacube.create(array, axis_options={})
 
         datacube.validate(["x", "y", "z", "variable"])
         datacube.validate(["x", "z", "y", "variable"])
@@ -48,8 +48,8 @@ class TestXarrayDatacube:
         for d, v in array.coords.variables.items():
             print(v.dtype)
 
-        datacube = Datacube.create(array, axis_options={}, grid_options={})
-        datacube = Datacube.create(array, axis_options={}, grid_options={})
+        datacube = Datacube.create(array, axis_options={})
+        datacube = Datacube.create(array, axis_options={})
 
         # Check the factory created the correct type of datacube
         assert isinstance(datacube, XArrayDatacube)
