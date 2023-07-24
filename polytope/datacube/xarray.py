@@ -1,6 +1,7 @@
 import math
 import sys
 from copy import deepcopy
+from importlib import import_module
 
 import numpy as np
 import pandas as pd
@@ -15,7 +16,6 @@ from .datacube_axis import (
     PandasTimestampAxis,
     UnsliceableaAxis,
 )
-from .mappers import OctahedralGridMap
 
 _mappings = {
     pd.Int64Dtype: IntAxis(),
@@ -28,6 +28,8 @@ _mappings = {
     str: UnsliceableaAxis(),
     np.object_: UnsliceableaAxis(),
 }
+
+_grid_mappings = {"octahedral": "OctahedralGridMap"}
 
 
 class XArrayDatacube(Datacube):
@@ -79,8 +81,10 @@ class XArrayDatacube(Datacube):
         grid_type = grid_mapping_options["type"]
         grid_resolution = grid_mapping_options["resolution"]
         grid_axes = grid_mapping_options["axes"]
-        if grid_type == "octahedral":
-            self.grid_mapper = OctahedralGridMap(name, grid_axes, grid_resolution)
+        map_type = _grid_mappings[grid_type]
+        module = import_module("polytope.datacube.mappers")
+        constructor = getattr(module, map_type)
+        self.grid_mapper = constructor(name, grid_axes, grid_resolution)
         # Once we have created mapper, create axis for the mapped axes
         for i in range(len(grid_axes)):
             axis_name = grid_axes[i]
