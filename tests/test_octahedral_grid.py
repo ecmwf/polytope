@@ -12,7 +12,6 @@ class TestOctahedralGrid:
         ds = data.from_source("file", "./tests/data/foo.grib")
         latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
         latlon_array = latlon_array.t2m
-        print(latlon_array)
         self.xarraydatacube = XArrayDatacube(latlon_array)
         grid_options = {
             "values": {"mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}}
