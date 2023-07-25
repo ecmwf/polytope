@@ -42,11 +42,13 @@ class XArrayDatacube(Datacube):
         self.mappers = {}
         self.dataarray = dataarray
         treated_axes = []
+        self.complete_axes = []
         for name, values in dataarray.coords.variables.items():
             if name in dataarray.dims:
                 options = axis_options.get(name, {})
                 self.create_axis(options, name, values)
                 treated_axes.append(name)
+                self.complete_axes.append(name)
             else:
                 if self.dataarray[name].dims == ():
                     options = axis_options.get(name, {})
@@ -163,7 +165,12 @@ class XArrayDatacube(Datacube):
                 elif axis.name == second_axis:
                     indexes_between = self.grid_mapper.map_second_axis(first_val, low, up)
                 else:
-                    indexes_between = [i for i in indexes if low <= i <= up]
+                    if axis.name in self.complete_axes:
+                        start = indexes.searchsorted(low, "left")
+                        end = indexes.searchsorted(up, "right")
+                        indexes_between = indexes[start:end].to_list()
+                    else:
+                        indexes_between = [i for i in indexes if low <= i <= up]
                     # start = indexes.searchsorted(low, "left")  # TODO: catch start=0 (not found)?
                     # end = indexes.searchsorted(up, "right")  # TODO: catch end=length (not found)?
                     # indexes_between = indexes[start:end].to_list()
@@ -174,7 +181,12 @@ class XArrayDatacube(Datacube):
                 # start = indexes.searchsorted(low, "left")  # TODO: catch start=0 (not found)?
                 # end = indexes.searchsorted(up, "right")  # TODO: catch end=length (not found)?
                 # indexes_between = indexes[start:end].to_list()
-                indexes_between = [i for i in indexes if low <= i <= up]
+                if axis.name in self.complete_axes:
+                    start = indexes.searchsorted(low, "left")
+                    end = indexes.searchsorted(up, "right")
+                    indexes_between = indexes[start:end].to_list()
+                else:
+                    indexes_between = [i for i in indexes if low <= i <= up]
 
             # Now the indexes_between are values on the cyclic range so need to remap them to their original
             # values before returning them
@@ -219,13 +231,15 @@ class XArrayDatacube(Datacube):
             else:
                 # assert axis.name == next(iter(subarray.xindexes))
                 # indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
-                if axis.name in self.dataarray.dims:
-                    indexes = list(subarray.indexes[axis.name])
+                if axis.name in self.complete_axes:
+                    # indexes = list(subarray.indexes[axis.name])
+                    indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
                 else:
                     indexes = [subarray[axis.name].values]
         else:
-            if axis.name in self.dataarray.dims:
-                indexes = list(subarray.indexes[axis.name])
+            if axis.name in self.complete_axes:
+                # indexes = list(subarray.indexes[axis.name])
+                indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
             else:
                 indexes = [subarray[axis.name].values]
             # assert axis.name == next(iter(subarray.xindexes))
