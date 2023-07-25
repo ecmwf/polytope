@@ -8,15 +8,15 @@ import pandas as pd
 
 class DatacubeAxis(ABC):
     @abstractproperty
-    def name(self):
+    def name(self) -> str:
         pass
 
     @abstractproperty
-    def tol(self):
+    def tol(self) -> Any:
         pass
 
     @abstractproperty
-    def range(self):
+    def range(self) -> List[Any]:
         pass
 
     # Convert from user-provided value to CONTINUOUS type (e.g. float, pd.timestamp)
@@ -34,25 +34,25 @@ class DatacubeAxis(ABC):
     def from_float(self, value: float) -> Any:
         pass
 
-    def serialize(self, value) -> Any:
+    def serialize(self, value: Any) -> Any:
         pass
 
-    def remap(self, range: List) -> Any:
+    def remap(self, range: List[Any]) -> Any:
         pass
 
-    def to_intervals(self, range):
+    def to_intervals(self, range: List[Any]) -> List[List[Any]]:
         pass
 
-    def remap_val_to_axis_range(self, value):
+    def remap_val_to_axis_range(self, value: Any) -> Any:
         pass
 
-    def remap_range_to_axis_range(self, range):
+    def remap_range_to_axis_range(self, range: List[Any]) -> List[Any]:
         pass
 
-    def to_cyclic_value(self, value):
+    def to_cyclic_value(self, value: Any) -> Any:
         pass
 
-    def offset(self, value):
+    def offset(self, value: Any) -> int:
         pass
 
 
