@@ -45,6 +45,7 @@ class XArrayDatacube(Datacube):
         self.complete_axes = []
         for name, values in dataarray.coords.variables.items():
             if name in dataarray.dims:
+                self.dataarray = self.dataarray.sortby(name)
                 options = axis_options.get(name, {})
                 self.create_axis(options, name, values)
                 treated_axes.append(name)
