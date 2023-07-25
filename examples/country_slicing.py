@@ -7,7 +7,7 @@ from shapely.geometry import shape
 from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Polygon, Union
+from polytope.shapes import Polygon, Select, Union
 
 
 class Test:
@@ -49,7 +49,14 @@ class Test:
         request_obj = poly[0]
         for obj in poly:
             request_obj = Union(["longitude", "latitude"], request_obj, obj)
-        request = Request(request_obj)
+        request = Request(
+            request_obj,
+            Select("number", [0]),
+            Select("time", ["2022-02-06T12:00:00"]),
+            Select("step", ["00:00:00"]),
+            Select("surface", [0]),
+            Select("valid_time", ["2022-02-06T12:00:00"]),
+        )
 
         # Extract the values of the long and lat from the tree
         result = self.API.retrieve(request)
@@ -64,7 +71,7 @@ class Test:
             latlong_point = [lat, long]
             lats.append(lat)
             longs.append(long)
-            t_idx = result.leaves[i].result["t2m"]
+            t_idx = result.leaves[i].result[1]
             temps.append(t_idx)
             country_points_plotting.append(latlong_point)
         temps = np.array(temps)

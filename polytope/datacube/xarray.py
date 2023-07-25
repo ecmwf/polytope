@@ -201,6 +201,10 @@ class XArrayDatacube(Datacube):
             path.pop(first_axis, None)
             path.pop(second_axis, None)
 
+        for key in path.keys():
+            if self.dataarray[key].dims == ():
+                path.pop(key)
+
         # Open a view on the subset identified by the path
         subarray = self.dataarray.sel(path, method="nearest")
 

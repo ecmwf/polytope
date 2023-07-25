@@ -7,7 +7,7 @@ from PIL import Image
 from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Path
+from polytope.shapes import Box, Path, Select
 
 
 class Test:
@@ -84,7 +84,7 @@ class Test:
 
         flight_route_polytope = Path(["latitude", "longitude", "step", "hybrid"], initial_shape, *route_point_CDG_LHR)
 
-        request = Request(flight_route_polytope)
+        request = Request(flight_route_polytope, Select("time", ["2022-12-02T12:00:00"]))
         result = self.API.retrieve(request)
 
         lats = []
@@ -99,7 +99,7 @@ class Test:
             lats.append(lat)
             longs.append(long)
             levels.append(level)
-            t_idx = result.leaves[i].result["t"]
+            t_idx = result.leaves[i].result[1]
             parameter_values.append(t_idx)
         parameter_values = np.array(parameter_values)
 

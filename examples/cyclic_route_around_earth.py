@@ -6,7 +6,7 @@ from earthkit import data
 from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, PathSegment
+from polytope.shapes import Box, PathSegment, Select
 
 
 class Test:
@@ -22,7 +22,14 @@ class Test:
     def test_slice_country(self):
         bounding_box = Box(["latitude", "longitude"], [-0.1, -0.1], [0.1, 0.1])
         request_obj = PathSegment(["latitude", "longitude"], bounding_box, [-88, -67], [68, 170])
-        request = Request(request_obj)
+        request = Request(
+            request_obj,
+            Select("number", [0]),
+            Select("time", ["2022-02-06T12:00:00"]),
+            Select("step", ["00:00:00"]),
+            Select("surface", [0]),
+            Select("valid_time", ["2022-02-06T12:00:00"]),
+        )
 
         # Extract the values of the long and lat from the tree
         result = self.API.retrieve(request)
@@ -37,7 +44,7 @@ class Test:
             latlong_point = [lat, long]
             lats.append(lat)
             longs.append(long)
-            t_idx = result.leaves[i].result["t2m"]
+            t_idx = result.leaves[i].result[1]
             temps.append(t_idx)
             country_points_plotting.append(latlong_point)
         temps = np.array(temps)

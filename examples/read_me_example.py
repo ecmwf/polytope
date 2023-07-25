@@ -15,7 +15,9 @@ p = Polytope(datacube=array, axis_options=axis_options)
 box = Box(["latitude", "longitude"], [0, 0], [1, 1])
 step_point = Select("step", [np.timedelta64(0, "s")])
 
-request = Request(box, step_point)
+request = Request(
+    box, step_point, Select("number", [0]), Select("surface", [0]), Select("time", ["2022-09-30T12:00:00"])
+)
 
 result = p.retrieve(request)
 
