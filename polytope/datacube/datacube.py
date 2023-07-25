@@ -4,7 +4,7 @@ from typing import Any, List
 import xarray as xr
 
 from .datacube_axis import DatacubeAxis
-from .datacube_request_tree import DatacubePath, IndexTree
+from .index_tree import DatacubePath, IndexTree
 
 
 class Datacube(ABC):

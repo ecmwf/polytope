@@ -5,7 +5,7 @@ from typing import List
 import scipy.spatial
 
 from ..datacube.datacube import Datacube, IndexTree
-from ..datacube.datacube_axis import UnsliceableaAxis
+from ..datacube.datacube_axis import UnsliceableDatacubeAxis
 from ..shapes import ConvexPolytope
 from ..utility.combinatorics import argmax, argmin, group, product, unique
 from ..utility.exceptions import UnsliceableShapeError
@@ -20,7 +20,7 @@ class HullSlicer(Engine):
     def _unique_continuous_points(self, p: ConvexPolytope, datacube: Datacube):
         for i, ax in enumerate(p.axes()):
             mapper = datacube.get_mapper(ax)
-            if isinstance(mapper, UnsliceableaAxis):
+            if isinstance(mapper, UnsliceableDatacubeAxis):
                 break
             for j, val in enumerate(p.points):
                 p.points[j] = list(p.points[j])
@@ -63,7 +63,7 @@ class HullSlicer(Engine):
             if ax.name in polytope.axes():
                 lower, upper = polytope.extents(ax.name)
                 # here, first check if the axis is an unsliceable axis and directly build node if it is
-                if isinstance(ax, UnsliceableaAxis):
+                if isinstance(ax, UnsliceableDatacubeAxis):
                     self._build_unsliceable_child(polytope, ax, node, datacube, lower, next_nodes)
                 else:
                     self._build_sliceable_child(polytope, ax, node, datacube, lower, upper, next_nodes)
