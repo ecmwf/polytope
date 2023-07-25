@@ -1,7 +1,7 @@
 from typing import List
 
 from ..datacube.datacube import Datacube
-from ..datacube.datacube_request_tree import IndexTree
+from ..datacube.index_tree import IndexTree
 from ..shapes import ConvexPolytope
 
 

@@ -1,17 +1,14 @@
 import math
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 
 
-class GridMappers(ABC):
-    @abstractproperty
+class DatacubeMapper(ABC):
     def _mapped_axes(self):
         pass
 
-    @abstractproperty
     def _base_axis(self):
         pass
 
-    @abstractproperty
     def _resolution(self):
         pass
 
@@ -28,7 +25,7 @@ class GridMappers(ABC):
         pass
 
 
-class OctahedralGridMap(ABC):
+class OctahedralGridMapper(DatacubeMapper):
     def __init__(self, base_axis, mapped_axes, resolution):
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
@@ -2742,3 +2739,6 @@ class OctahedralGridMap(ABC):
         second_idx = second_axis_vals.index(second_val)
         octahedral_index = self.axes_idx_to_octahedral_idx(first_idx, second_idx)
         return octahedral_index
+
+
+_type_to_datacube_mapper_lookup = {"octahedral": "OctahedralGridMapper"}

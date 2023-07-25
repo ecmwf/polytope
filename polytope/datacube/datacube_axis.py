@@ -1,9 +1,13 @@
+import sys
 from abc import ABC, abstractmethod, abstractproperty
 from copy import deepcopy
+from importlib import import_module
 from typing import Any, List
 
 import numpy as np
 import pandas as pd
+
+from .datacube_mappers import _type_to_datacube_mapper_lookup
 
 
 class DatacubeAxis(ABC):
@@ -55,8 +59,62 @@ class DatacubeAxis(ABC):
     def offset(self, value: Any) -> int:
         pass
 
+    @staticmethod
+    def create_axis(options, name, values, datacube):
+        if options == {}:
+            DatacubeAxis.create_standard(name, values, datacube)
+        if "mapper" in options.keys():
+            DatacubeAxis.create_mapper(options, name, datacube)
+        if "Cyclic" in options.keys():
+            DatacubeAxis.create_cyclic(options, name, values, datacube)
 
-class IntAxis(DatacubeAxis):
+    @staticmethod
+    def create_cyclic(options, name, values, datacube):
+        value_type = values.dtype.type
+        axes_type_str = type(_type_to_axis_lookup[value_type]).__name__
+        axes_type_str += "Cyclic"
+        cyclic_axis_type = deepcopy(getattr(sys.modules["polytope.datacube.datacube_axis"], axes_type_str)())
+        datacube._axes[name] = cyclic_axis_type
+        datacube._axes[name].name = name
+        datacube._axes[name].range = options["Cyclic"]
+        datacube.axis_counter += 1
+
+    @staticmethod
+    def create_standard(name, values, datacube):
+        DatacubeAxis.check_axis_type(name, values)
+        datacube._axes[name] = deepcopy(_type_to_axis_lookup[values.dtype.type])
+        datacube._axes[name].name = name
+        datacube.axis_counter += 1
+
+    @staticmethod
+    def check_axis_type(name, values):
+        if values.dtype.type not in _type_to_axis_lookup:
+            raise ValueError(f"Could not create a mapper for index type {values.dtype.type} for axis {name}")
+
+    @staticmethod
+    def create_mapper(options, name, datacube):
+        grid_mapping_options = options["mapper"]
+        grid_type = grid_mapping_options["type"]
+        grid_resolution = grid_mapping_options["resolution"]
+        grid_axes = grid_mapping_options["axes"]
+        map_type = _type_to_datacube_mapper_lookup[grid_type]
+        module = import_module("polytope.datacube.datacube_mappers")
+        constructor = getattr(module, map_type)
+        datacube.grid_mapper = constructor(name, grid_axes, grid_resolution)
+        # Once we have created mapper, create axis for the mapped axes
+        for i in range(len(grid_axes)):
+            axis_name = grid_axes[i]
+            new_axis_options = datacube.axis_options.get(axis_name, {})
+            if i == 0:
+                values = np.array(datacube.grid_mapper.first_axis_vals())
+                DatacubeAxis.create_axis(new_axis_options, axis_name, values, datacube)
+            if i == 1:
+                # the values[0] will be a value on the first axis
+                values = np.array(datacube.grid_mapper.second_axis_vals(values[0]))
+                DatacubeAxis.create_axis(new_axis_options, axis_name, values, datacube)
+
+
+class IntDatacubeAxis(DatacubeAxis):
     name = None
     tol = 1e-12
     range = None
@@ -92,7 +150,7 @@ class IntAxis(DatacubeAxis):
         return 0
 
 
-class IntAxisCyclic(DatacubeAxis):
+class IntDatacubeAxisCyclic(DatacubeAxis):
     name = None
     tol = 1e-12
     range = None
@@ -210,7 +268,7 @@ class IntAxisCyclic(DatacubeAxis):
         return offset
 
 
-class FloatAxis(DatacubeAxis):
+class FloatDatacubeAxis(DatacubeAxis):
     name = None
     tol = 1e-12
     range = None
@@ -246,7 +304,7 @@ class FloatAxis(DatacubeAxis):
         return 0
 
 
-class FloatAxisCyclic(DatacubeAxis):
+class FloatDatacubeAxisCyclic(DatacubeAxis):
     # Note that in the cyclic axis here, we only retain the lower part when we remap
     # so for eg if the datacube has cyclic axis on [0,360]
     # then if we want 360, we will in reality get back 0 (which is the same)
@@ -367,7 +425,7 @@ class FloatAxisCyclic(DatacubeAxis):
         return offset
 
 
-class PandasTimestampAxis(DatacubeAxis):
+class PandasTimestampDatacubeAxis(DatacubeAxis):
     name = None
     tol = 1e-12
     range = None
@@ -408,7 +466,7 @@ class PandasTimestampAxis(DatacubeAxis):
         return None
 
 
-class PandasTimedeltaAxis(DatacubeAxis):
+class PandasTimedeltaDatacubeAxis(DatacubeAxis):
     name = None
     tol = 1e-12
     range = None
@@ -449,7 +507,7 @@ class PandasTimedeltaAxis(DatacubeAxis):
         return None
 
 
-class UnsliceableaAxis(DatacubeAxis):
+class UnsliceableDatacubeAxis(DatacubeAxis):
     name = None
     tol = float("NaN")
     range = None
@@ -468,3 +526,16 @@ class UnsliceableaAxis(DatacubeAxis):
 
     def remap_val_to_axis_range(self, value):
         return value
+
+
+_type_to_axis_lookup = {
+    pd.Int64Dtype: IntDatacubeAxis(),
+    pd.Timestamp: PandasTimestampDatacubeAxis(),
+    np.int64: IntDatacubeAxis(),
+    np.datetime64: PandasTimestampDatacubeAxis(),
+    np.timedelta64: PandasTimedeltaDatacubeAxis(),
+    np.float64: FloatDatacubeAxis(),
+    np.str_: UnsliceableDatacubeAxis(),
+    str: UnsliceableDatacubeAxis(),
+    np.object_: UnsliceableDatacubeAxis(),
+}

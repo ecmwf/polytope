@@ -4,7 +4,11 @@ import pytest
 import xarray as xr
 
 from polytope.datacube import Datacube, DatacubePath
-from polytope.datacube.datacube_axis import FloatAxis, IntAxis, PandasTimestampAxis
+from polytope.datacube.datacube_axis import (
+    FloatDatacubeAxis,
+    IntDatacubeAxis,
+    PandasTimestampDatacubeAxis,
+)
 from polytope.datacube.xarray import XArrayDatacube
 from polytope.utility.exceptions import AxisNotFoundError, AxisOverdefinedError
 
@@ -67,14 +71,14 @@ class TestXarrayDatacube:
         assert parsed == from_float
 
         # Check discretizing along 'date' axis with a range of dates
-        label = PandasTimestampAxis()
+        label = PandasTimestampDatacubeAxis()
         label.name = "date"
         idxs = datacube.get_indices(partial_request, label, pd.Timestamp("2000-01-02"), pd.Timestamp("2000-03-31"))
         assert (idxs == pd.date_range(pd.Timestamp("2000-01-02"), pd.Timestamp("2000-01-03"), 2)).all()
         assert isinstance(idxs[0], pd.Timestamp)
 
         # Check discretizing along 'date' axis at a specific date gives one value
-        label = PandasTimestampAxis()
+        label = PandasTimestampDatacubeAxis()
         label.name = "date"
         idxs = datacube.get_indices(partial_request, label, pd.Timestamp("2000-01-02"), pd.Timestamp("2000-01-02"))
         assert len(idxs) == 1
@@ -82,7 +86,7 @@ class TestXarrayDatacube:
         assert idxs[0] == pd.Timestamp(pd.Timestamp("2000-01-02"))
 
         # Check discretizing along 'date' axis at a date which does not exist in discrete space gives no values
-        label = PandasTimestampAxis()
+        label = PandasTimestampDatacubeAxis()
         label.name = "date"
         idxs = datacube.get_indices(
             partial_request, label, pd.Timestamp("2000-01-01-1200"), pd.Timestamp("2000-01-01-1200")
@@ -97,7 +101,7 @@ class TestXarrayDatacube:
         assert type(datacube.get_mapper("step").parse(3.0)) == float
 
         # Check discretizing along 'step' axis with a range of steps
-        label = IntAxis()
+        label = IntDatacubeAxis()
         label.name = "step"
         idxs = datacube.get_indices(partial_request, label, 0, 10)
         assert idxs == [0, 3, 6, 9]
@@ -121,7 +125,7 @@ class TestXarrayDatacube:
         assert type(datacube.get_mapper("level").parse(3.0)) == float
 
         # Check discretizing along 'level' axis with a range of levels
-        label = FloatAxis()
+        label = FloatDatacubeAxis()
         label.name = "level"
         idxs = datacube.get_indices(partial_request, label, -0.3, 10)
         assert idxs == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
