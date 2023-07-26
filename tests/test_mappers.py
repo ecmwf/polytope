@@ -42,4 +42,18 @@ class TestMapper:
         base_axis = "base"
         resolution = 1280
         octahedral_mapper = OctahedralGridMap(base_axis, mapped_axes, resolution)
+        assert octahedral_mapper.second_axis_vals(0.035149384215604956)[0] == 0
+        assert octahedral_mapper.second_axis_vals(10.017574499477174)[0] == 0
+        assert octahedral_mapper.second_axis_vals(89.94618771566562)[10] == 180
+        assert len(octahedral_mapper.second_axis_vals(89.94618771566562)) == 20
+        assert len(octahedral_mapper.second_axis_vals(89.87647835333229)) == 24
+        assert len(octahedral_mapper.second_axis_vals(0.035149384215604956)) == 5136
+
+    def test_map_second_axis(self):
+        pass
+
+    def test_axes_idx_to_octahedral_idx(self):
+        pass
+
+    def test_unmap(self):
         pass
