@@ -2721,14 +2721,14 @@ class OctahedralGridMap(ABC):
         else:
             for i in range(first_idx - 1):
                 if i <= self._resolution - 1:
-                    octa_idx += 16 + 4 * i
+                    octa_idx += 20 + 4 * i
                 else:
                     i = i - self._resolution + 1
                     if i == 1:
                         octa_idx += 16 + 4 * self._resolution
                     else:
                         i = i - 1
-                        octa_idx += 16 + 4 * (self._resolution - i + 1)
+                        octa_idx += 16 + 4 * (self._resolution - i)
             octa_idx += second_idx
         return octa_idx
 
