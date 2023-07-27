@@ -15,6 +15,8 @@ from .datacube_axis import (
     UnsliceableaAxis,
 )
 from .mappers import OctahedralGridMap
+import pyfdb
+
 
 _mappings = {
     pd.Int64Dtype: IntAxis(),
@@ -40,6 +42,26 @@ def get_datacube_indices(partial_request):
 
 def glue(path):
     return {"t" : 0}
+
+
+def update_fdb_dataarray(fdb_dataarray):
+    new_dict = {}
+    for key, values in fdb_dataarray.items():
+        if key in ["levelist", "param", "step"]:
+            new_values = []
+            for val in values:
+                new_values.append(int(val))
+            new_dict[key] = new_values
+        elif key == "date":
+            time = fdb_dataarray["time"][0]
+            time = time + "00"
+            new_val = [fdb_dataarray[key][0] + "T" + time]
+            new_dict[key] = new_val
+        elif key == "time":
+            pass
+        else:
+            new_dict[key] = values
+    new_dict["values"] = [0.0]
 
 
 class FDBDatacube(Datacube):
@@ -85,7 +107,10 @@ class FDBDatacube(Datacube):
         partial_request = config
         # Find values in the level 3 FDB datacube
         # Will be in the form of a dictionary? {axis_name:values_available, ...}
-        dataarray = get_datacube_indices(partial_request)
+        # dataarray = get_datacube_indices(partial_request)
+        fdb = pyfdb.FDB()
+        fdb_dataarray = fdb.axes(partial_request).as_dict()
+        dataarray = update_fdb_dataarray(fdb_dataarray)
 
         for name, values in dataarray.items():
             values.sort()
