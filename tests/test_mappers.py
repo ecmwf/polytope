@@ -16,26 +16,40 @@ class TestMapper:
         base_axis = "base"
         resolution = 1280
         octahedral_mapper = OctahedralGridMap(base_axis, mapped_axes, resolution)
-        assert octahedral_mapper.first_axis_vals()[:5] == [89.94618771566562, 89.87647835333229, 89.80635731954224,
-                                                           89.73614327160958, 89.6658939412157]
-        assert len(octahedral_mapper.first_axis_vals()) == 1280*2
+        assert octahedral_mapper.first_axis_vals()[:5] == [
+            89.94618771566562,
+            89.87647835333229,
+            89.80635731954224,
+            89.73614327160958,
+            89.6658939412157,
+        ]
+        assert len(octahedral_mapper.first_axis_vals()) == 1280 * 2
 
     def test_first_axis_vals_other_grid(self):
         mapped_axes = ["lat", "lon"]
         base_axis = "base"
         resolution = 640
         octahedral_mapper = OctahedralGridMap(base_axis, mapped_axes, resolution)
-        assert octahedral_mapper.first_axis_vals()[:5] == [89.89239644559007, 89.75300494317403, 89.61279025859908,
-                                                           89.47238958206113, 89.33191835438183]
-        assert len(octahedral_mapper.first_axis_vals()) == 640*2
+        assert octahedral_mapper.first_axis_vals()[:5] == [
+            89.89239644559007,
+            89.75300494317403,
+            89.61279025859908,
+            89.47238958206113,
+            89.33191835438183,
+        ]
+        assert len(octahedral_mapper.first_axis_vals()) == 640 * 2
 
     def test_map_first_axis(self):
         mapped_axes = ["lat", "lon"]
         base_axis = "base"
         resolution = 1280
         octahedral_mapper = OctahedralGridMap(base_axis, mapped_axes, resolution)
-        assert octahedral_mapper.map_first_axis(89.7, 89.96) == [89.94618771566562, 89.87647835333229,
-                                                                 89.80635731954224, 89.73614327160958]
+        assert octahedral_mapper.map_first_axis(89.7, 89.96) == [
+            89.94618771566562,
+            89.87647835333229,
+            89.80635731954224,
+            89.73614327160958,
+        ]
 
     def test_second_axis_vals(self):
         mapped_axes = ["lat", "lon"]
@@ -67,9 +81,9 @@ class TestMapper:
         assert octahedral_mapper.axes_idx_to_octahedral_idx(1, 17) == 17
         assert octahedral_mapper.axes_idx_to_octahedral_idx(2, 0) == 20
         assert octahedral_mapper.axes_idx_to_octahedral_idx(3, 0) == 44
-        assert octahedral_mapper.axes_idx_to_octahedral_idx(1279, 0) == 3299840-5136 - 5136 + 4
+        assert octahedral_mapper.axes_idx_to_octahedral_idx(1279, 0) == 3299840 - 5136 - 5136 + 4
         # at lat line 1280, we start the 1280th line, which has 5136 points
-        assert octahedral_mapper.axes_idx_to_octahedral_idx(1280, 0) == 3299840-5136
+        assert octahedral_mapper.axes_idx_to_octahedral_idx(1280, 0) == 3299840 - 5136
         # the 1281th lat line also has 5136 points, and we are exactly at the half of the number of points in the grid
         assert octahedral_mapper.axes_idx_to_octahedral_idx(1281, 0) == 3299840
         assert octahedral_mapper.axes_idx_to_octahedral_idx(1281, 12) == 3299852
@@ -79,7 +93,7 @@ class TestMapper:
         assert octahedral_mapper.axes_idx_to_octahedral_idx(1283, 0) == 3299840 + 5136 + 5136 - 4
         assert octahedral_mapper.axes_idx_to_octahedral_idx(1284, 0) == 3299840 + 5136 + 5136 - 4 + 5136 - 8
         # at the last lat line, we only have 20 points left in the grid
-        assert octahedral_mapper.axes_idx_to_octahedral_idx(2560, 0) == 3299840*2 - 20
+        assert octahedral_mapper.axes_idx_to_octahedral_idx(2560, 0) == 3299840 * 2 - 20
 
     def test_unmap(self):
         mapped_axes = ["lat", "lon"]
@@ -87,5 +101,5 @@ class TestMapper:
         resolution = 1280
         octahedral_mapper = OctahedralGridMap(base_axis, mapped_axes, resolution)
         assert octahedral_mapper.unmap(89.94618771566562, 0) == 0
-        assert octahedral_mapper.unmap(0.035149384215604956, 0) == 3299840-5136
+        assert octahedral_mapper.unmap(0.035149384215604956, 0) == 3299840 - 5136
         assert octahedral_mapper.unmap(-0.035149384215604956, 0) == 3299840
