@@ -4,6 +4,7 @@ from copy import deepcopy
 
 import numpy as np
 import pandas as pd
+import pyfdb
 
 from ..utility.combinatorics import unique, validate_axes
 from .datacube import Datacube, DatacubePath, IndexTree
@@ -15,8 +16,6 @@ from .datacube_axis import (
     UnsliceableaAxis,
 )
 from .mappers import OctahedralGridMap
-import pyfdb
-
 
 _mappings = {
     pd.Int64Dtype: IntAxis(),

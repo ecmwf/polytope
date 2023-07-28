@@ -8,7 +8,11 @@ class TestSlicing3DXarrayDatacube:
     def setup_method(self, method):
         # Create a dataarray with 3 labelled axes using different index types
         grid_options = {"values": {"grid_map": {"type": ["octahedral", 1280], "axes": ["latitude", "longitude"]}}}
-        self.xarraydatacube = FDBDatacube(config={}, options={}, grid_options=grid_options)
+        config = {"class" : "od",
+                  "expver" : "0001",
+                  "levtype" : "pl",
+                  "step" : 4}
+        self.xarraydatacube = FDBDatacube(config, options={}, grid_options=grid_options)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.xarraydatacube, engine=self.slicer)
 
