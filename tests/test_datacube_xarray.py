@@ -71,14 +71,14 @@ class TestXarrayDatacube:
         label.name = "date"
         idxs = datacube.get_indices(partial_request, label, pd.Timestamp("2000-01-02"), pd.Timestamp("2000-03-31"))
         assert (idxs == pd.date_range(pd.Timestamp("2000-01-02"), pd.Timestamp("2000-01-03"), 2)).all()
-        assert type(idxs[0]) == pd.Timestamp
+        assert isinstance(idxs[0], pd.Timestamp)
 
         # Check discretizing along 'date' axis at a specific date gives one value
         label = PandasTimestampAxis()
         label.name = "date"
         idxs = datacube.get_indices(partial_request, label, pd.Timestamp("2000-01-02"), pd.Timestamp("2000-01-02"))
         assert len(idxs) == 1
-        assert type(idxs[0]) == pd.Timestamp
+        assert isinstance(idxs[0], pd.Timestamp)
         assert idxs[0] == pd.Timestamp(pd.Timestamp("2000-01-02"))
 
         # Check discretizing along 'date' axis at a date which does not exist in discrete space gives no values
@@ -101,13 +101,13 @@ class TestXarrayDatacube:
         label.name = "step"
         idxs = datacube.get_indices(partial_request, label, 0, 10)
         assert idxs == [0, 3, 6, 9]
-        assert type(idxs[0]) == int
+        assert isinstance(idxs[0], int)
 
         # Check discretizing along 'step' axis at a specific step gives one value
         idxs = datacube.get_indices(partial_request, label, 3, 3)
         assert len(idxs) == 1
         assert idxs[0] == 3
-        assert type(idxs[0]) == int
+        assert isinstance(idxs[0], int)
 
         # Check discretizing along 'step' axis at a step which does not exist in discrete space gives no values
         idxs = datacube.get_indices(partial_request, label, 4, 4)
@@ -125,4 +125,4 @@ class TestXarrayDatacube:
         label.name = "level"
         idxs = datacube.get_indices(partial_request, label, -0.3, 10)
         assert idxs == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        assert type(idxs[0]) == int
+        assert isinstance(idxs[0], int)
