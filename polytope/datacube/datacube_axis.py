@@ -378,7 +378,10 @@ class PandasTimestampAxis(DatacubeAxis):
         return pd.Timestamp(value)
 
     def to_float(self, value: pd.Timestamp):
-        return float(value.value / 10**9)
+        if isinstance(value, np.datetime64):
+            return float((value - np.datetime64("1970-01-01T00:00:00")).astype("int"))
+        else:
+            return float(value.value / 10**9)
 
     def from_float(self, value):
         return pd.Timestamp(int(value), unit="s")
@@ -416,7 +419,10 @@ class PandasTimedeltaAxis(DatacubeAxis):
         return pd.Timedelta(value)
 
     def to_float(self, value: pd.Timedelta):
-        return float(value.value / 10**9)
+        if isinstance(value, np.timedelta64):
+            return value.astype("timedelta64[s]").astype(int)
+        else:
+            return float(value.value / 10**9)
 
     def from_float(self, value):
         return pd.Timedelta(int(value), unit="s")

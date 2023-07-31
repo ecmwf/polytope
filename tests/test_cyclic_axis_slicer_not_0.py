@@ -24,7 +24,7 @@ class TestSlicing3DXarrayDatacube:
         options = {"long": {"Cyclic": [-1.1, -0.1]}, "level": {"Cyclic": [1, 129]}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
+        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
 
     # Testing different shapes
 
@@ -62,7 +62,6 @@ class TestSlicing3DXarrayDatacube:
             Box(["step", "long"], [0, 0.0], [3, 0.7]), Select("date", ["2000-01-01"]), Select("level", [128])
         )
         result = self.API.retrieve(request)
-        # result.pprint()
         assert len(result.leaves) == 16
         assert [leaf.value for leaf in result.leaves] == [
             0.0,
@@ -88,7 +87,6 @@ class TestSlicing3DXarrayDatacube:
             Box(["step", "long"], [0, 1.3], [3, 1.7]), Select("date", ["2000-01-01"]), Select("level", [128])
         )
         result = self.API.retrieve(request)
-        # result.pprint()
         assert len(result.leaves) == 10
         assert [leaf.value for leaf in result.leaves] == [1.3, 1.4, 1.5, 1.6, 1.7, 1.3, 1.4, 1.5, 1.6, 1.7]
 
@@ -97,7 +95,6 @@ class TestSlicing3DXarrayDatacube:
             Box(["step", "long"], [0, 0.3], [3, 2.7]), Select("date", ["2000-01-01"]), Select("level", [128])
         )
         result = self.API.retrieve(request)
-        # result.pprint()
         assert len(result.leaves) == 50
         assert [leaf.value for leaf in result.leaves] == [
             0.3,
@@ -157,7 +154,6 @@ class TestSlicing3DXarrayDatacube:
             Box(["step", "long"], [0, -0.7], [3, -0.3]), Select("date", ["2000-01-01"]), Select("level", [128])
         )
         result = self.API.retrieve(request)
-        # result.pprint()
         assert len(result.leaves) == 10
         assert [leaf.value for leaf in result.leaves] == [-0.7, -0.6, -0.5, -0.4, -0.3, -0.7, -0.6, -0.5, -0.4, -0.3]
 
@@ -166,7 +162,6 @@ class TestSlicing3DXarrayDatacube:
             Box(["step", "long"], [0, -0.7], [3, 0.3]), Select("date", ["2000-01-01"]), Select("level", [128])
         )
         result = self.API.retrieve(request)
-        # result.pprint()
         assert len(result.leaves) == 22
         assert [leaf.value for leaf in result.leaves] == [
             -0.7,

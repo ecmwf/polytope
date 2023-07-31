@@ -1,5 +1,3 @@
-import math
-
 import geopandas as gpd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -20,10 +18,10 @@ class Test:
         array = ds.to_xarray()
         array = array.isel(time=0).isel(surface=0).isel(number=0).u10
         self.array = array
-        options = {"longitude": {"Cyclic": [0, 360.0]}}
+        axis_options = {"longitude": {"Cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
+        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=axis_options)
 
     def test_slice_wind_farms(self):
         gdal.SetConfigOption("SHAPE_RESTORE_SHX", "YES")
@@ -56,7 +54,13 @@ class Test:
         request_obj = poly[0]
         for obj in poly:
             request_obj = Union(["longitude", "latitude"], request_obj, obj)
-        request = Request(request_obj, Select("step", [np.timedelta64(0, "ns")]))
+        request = Request(
+            request_obj,
+            Select("step", [np.timedelta64(0, "ns")]),
+            Select("number", [0]),
+            Select("surface", [0]),
+            Select("time", ["2022-09-30T12:00:00"]),
+        )
 
         # Extract the values of the long and lat from the tree
         result = self.API.retrieve(request)
@@ -64,22 +68,16 @@ class Test:
         longs = []
         parameter_values = []
         winds_u = []
-        winds_v = []
         for i in range(len(result.leaves)):
             cubepath = result.leaves[i].flatten()
             lat = cubepath["latitude"]
             long = cubepath["longitude"]
             lats.append(lat)
             longs.append(long)
-            # u10_idx = result.leaves[i].result["u10"]
             u10_idx = result.leaves[i].result[1]
             wind_u = u10_idx
-            # v10_idx = result.leaves[i].result["v10"]
-            # wind_v = v10_idx
-            wind_v = 0
             winds_u.append(wind_u)
-            winds_v.append(wind_v)
-            parameter_values.append(math.sqrt(wind_u**2 + wind_v**2))
+            parameter_values.append(wind_u)
 
         parameter_values = np.array(parameter_values)
         # Plot this last array according to different colors for the result on a world map
