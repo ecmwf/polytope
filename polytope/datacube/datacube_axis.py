@@ -1,13 +1,10 @@
 import sys
 from abc import ABC, abstractmethod, abstractproperty
 from copy import deepcopy
-from importlib import import_module
 from typing import Any, List
 
 import numpy as np
 import pandas as pd
-
-from .datacube_mappers import _type_to_datacube_mapper_lookup
 
 
 class DatacubeAxis(ABC):
@@ -59,14 +56,14 @@ class DatacubeAxis(ABC):
     def offset(self, value: Any) -> int:
         pass
 
-    @staticmethod
-    def create_axis(options, name, values, datacube):
-        if options == {}:
-            DatacubeAxis.create_standard(name, values, datacube)
-        if "mapper" in options.keys():
-            DatacubeAxis.create_mapper(options, name, datacube)
-        if "Cyclic" in options.keys():
-            DatacubeAxis.create_cyclic(options, name, values, datacube)
+    # @staticmethod
+    # def create_axis(options, name, values, datacube):
+    #     if options == {}:
+    #         DatacubeAxis.create_standard(name, values, datacube)
+    #     if "mapper" in options.keys():
+    #         DatacubeAxis.create_mapper(options, name, datacube)
+    #     if "Cyclic" in options.keys():
+    #         DatacubeAxis.create_cyclic(options, name, values, datacube)
 
     @staticmethod
     def create_cyclic(options, name, values, datacube):
@@ -76,7 +73,7 @@ class DatacubeAxis(ABC):
         cyclic_axis_type = deepcopy(getattr(sys.modules["polytope.datacube.datacube_axis"], axes_type_str)())
         datacube._axes[name] = cyclic_axis_type
         datacube._axes[name].name = name
-        datacube._axes[name].range = options["Cyclic"]
+        datacube._axes[name].range = options["cyclic"]
         datacube.axis_counter += 1
 
     @staticmethod
@@ -90,28 +87,6 @@ class DatacubeAxis(ABC):
     def check_axis_type(name, values):
         if values.dtype.type not in _type_to_axis_lookup:
             raise ValueError(f"Could not create a mapper for index type {values.dtype.type} for axis {name}")
-
-    @staticmethod
-    def create_mapper(options, name, datacube):
-        grid_mapping_options = options["mapper"]
-        grid_type = grid_mapping_options["type"]
-        grid_resolution = grid_mapping_options["resolution"]
-        grid_axes = grid_mapping_options["axes"]
-        map_type = _type_to_datacube_mapper_lookup[grid_type]
-        module = import_module("polytope.datacube.datacube_mappers")
-        constructor = getattr(module, map_type)
-        datacube.grid_mapper = constructor(name, grid_axes, grid_resolution)
-        # Once we have created mapper, create axis for the mapped axes
-        for i in range(len(grid_axes)):
-            axis_name = grid_axes[i]
-            new_axis_options = datacube.axis_options.get(axis_name, {})
-            if i == 0:
-                values = np.array(datacube.grid_mapper.first_axis_vals())
-                DatacubeAxis.create_axis(new_axis_options, axis_name, values, datacube)
-            if i == 1:
-                # the values[0] will be a value on the first axis
-                values = np.array(datacube.grid_mapper.second_axis_vals(values[0]))
-                DatacubeAxis.create_axis(new_axis_options, axis_name, values, datacube)
 
 
 class IntDatacubeAxis(DatacubeAxis):

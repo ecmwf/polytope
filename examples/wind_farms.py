@@ -18,7 +18,7 @@ class Test:
         array = ds.to_xarray()
         array = array.isel(time=0).isel(surface=0).isel(number=0).u10
         self.array = array
-        axis_options = {"longitude": {"Cyclic": [0, 360.0]}}
+        axis_options = {"longitude": {"cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer, axis_options=axis_options)

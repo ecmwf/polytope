@@ -3,8 +3,7 @@ import math
 import xarray as xr
 
 from ..utility.combinatorics import unique, validate_axes
-from .datacube import Datacube, DatacubePath, IndexTree
-from .datacube_axis import DatacubeAxis
+from .datacube import Datacube, DatacubePath, IndexTree, configure_datacube_axis
 
 
 class XArrayDatacube(Datacube):
@@ -22,19 +21,19 @@ class XArrayDatacube(Datacube):
             if name in dataarray.dims:
                 self.dataarray = self.dataarray.sortby(name)
                 options = axis_options.get(name, {})
-                DatacubeAxis.create_axis(options, name, values, self)
+                configure_datacube_axis(options, name, values, self)
                 treated_axes.append(name)
                 self.complete_axes.append(name)
             else:
                 if self.dataarray[name].dims == ():
                     options = axis_options.get(name, {})
-                    DatacubeAxis.create_axis(options, name, values, self)
+                    configure_datacube_axis(options, name, values, self)
                     treated_axes.append(name)
         for name in dataarray.dims:
             if name not in treated_axes:
                 options = axis_options.get(name, {})
                 val = dataarray[name].values[0]
-                DatacubeAxis.create_axis(options, name, val, self)
+                configure_datacube_axis(options, name, val, self)
 
     def get(self, requests: IndexTree):
         for r in requests.leaves:
