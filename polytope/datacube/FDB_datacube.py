@@ -1,21 +1,24 @@
 import math
+import os
 import sys
 from copy import deepcopy
 
 import numpy as np
 import pandas as pd
-import pyfdb
 
-from ..utility.combinatorics import unique, validate_axes
-from .datacube import Datacube, DatacubePath, IndexTree
-from .datacube_axis import (
+os.environ['FDB_HOME'] = '/Users/male/git/fdb-home'
+import pyfdb  # noqa: E402
+
+from ..utility.combinatorics import unique, validate_axes  # noqa: E402
+from .datacube import Datacube, DatacubePath, IndexTree  # noqa: E402
+from .datacube_axis import (  # noqa: E402
     FloatAxis,
     IntAxis,
     PandasTimedeltaAxis,
     PandasTimestampAxis,
     UnsliceableaAxis,
 )
-from .mappers import OctahedralGridMap
+from .mappers import OctahedralGridMap  # noqa: E402
 
 _mappings = {
     pd.Int64Dtype: IntAxis(),
@@ -25,18 +28,11 @@ _mappings = {
     np.timedelta64: PandasTimedeltaAxis(),
     np.float64: FloatAxis(),
     np.str_: UnsliceableaAxis(),
-    str: UnsliceableaAxis(),
+    str.__name__: UnsliceableaAxis(),
     np.object_: UnsliceableaAxis(),
     "int" : IntAxis(),
     "float" : FloatAxis(),
 }
-
-
-def get_datacube_indices(partial_request):
-    datacube_dico = {"step": [0, 3, 6],
-                     "level" : [10, 11, 12],
-                     "values": [1, 2, 3, 4]}
-    return datacube_dico
 
 
 def glue(path):
@@ -61,6 +57,7 @@ def update_fdb_dataarray(fdb_dataarray):
         else:
             new_dict[key] = values
     new_dict["values"] = [0.0]
+    return new_dict
 
 
 class FDBDatacube(Datacube):
@@ -106,11 +103,9 @@ class FDBDatacube(Datacube):
         partial_request = config
         # Find values in the level 3 FDB datacube
         # Will be in the form of a dictionary? {axis_name:values_available, ...}
-        # dataarray = get_datacube_indices(partial_request)
         fdb = pyfdb.FDB()
         fdb_dataarray = fdb.axes(partial_request).as_dict()
         dataarray = update_fdb_dataarray(fdb_dataarray)
-
         for name, values in dataarray.items():
             values.sort()
             self._set_mapper(values, name)

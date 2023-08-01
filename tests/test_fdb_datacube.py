@@ -1,7 +1,7 @@
 from polytope.datacube.FDB_datacube import FDBDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Box
+from polytope.shapes import Box, Select
 
 
 class TestSlicing3DXarrayDatacube:
@@ -10,8 +10,8 @@ class TestSlicing3DXarrayDatacube:
         grid_options = {"values": {"grid_map": {"type": ["octahedral", 1280], "axes": ["latitude", "longitude"]}}}
         config = {"class" : "od",
                   "expver" : "0001",
-                  "levtype" : "pl",
-                  "step" : 4}
+                  "levtype" : "sfc",
+                  "step" : 11}
         self.xarraydatacube = FDBDatacube(config, options={}, grid_options=grid_options)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.xarraydatacube, engine=self.slicer)
@@ -19,8 +19,16 @@ class TestSlicing3DXarrayDatacube:
     # Testing different shapes
 
     def test_2D_box(self):
-        request = Request(Box(["step", "level"], [3, 10], [6, 11]),
+        request = Request(Select("step", [11]),
+                          Select("levtype", ["sfc"]),
+                          Select("date", ["20230710T120000"]),
+                          Select("domain", ["g"]),
+                          Select("expver", ["0001"]),
+                          Select("param", [151130]),
+                          Select("class", ["od"]),
+                          Select("stream", ["oper"]),
+                          Select("type", ["fc"]),
                           Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]))
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 36
+        assert len(result.leaves) == 9
