@@ -15,7 +15,7 @@ class Test:
         ds = data.from_source("file", "./examples/data/temp_model_levels.grib")
         array = ds.to_xarray()
         array = array.isel(time=0).t
-        axis_options = {"longitude": {"Cyclic": [0, 360.0]}}
+        axis_options = {"longitude": {"cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         for dim in array.dims:
             array = array.sortby(dim)

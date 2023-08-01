@@ -14,7 +14,7 @@ class Test:
         ds = data.from_source("file", "./examples/data/output8.grib")
         array = ds.to_xarray()
         array = array.isel(surface=0).isel(step=0).isel(number=0).isel(time=0).t2m
-        axis_options = {"longitude": {"Cyclic": [0, 360.0]}}
+        axis_options = {"longitude": {"cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer, axis_options=axis_options)

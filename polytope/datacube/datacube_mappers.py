@@ -1,5 +1,10 @@
 import math
 from abc import ABC, abstractmethod
+from importlib import import_module
+
+import numpy as np
+
+from .datacube import configure_datacube_axis
 
 
 class DatacubeMapper(ABC):
@@ -23,6 +28,28 @@ class DatacubeMapper(ABC):
     @abstractmethod
     def unmap(self):
         pass
+
+    @staticmethod
+    def create_mapper(options, name, datacube):
+        grid_mapping_options = options["mapper"]
+        grid_type = grid_mapping_options["type"]
+        grid_resolution = grid_mapping_options["resolution"]
+        grid_axes = grid_mapping_options["axes"]
+        map_type = _type_to_datacube_mapper_lookup[grid_type]
+        module = import_module("polytope.datacube.datacube_mappers")
+        constructor = getattr(module, map_type)
+        datacube.grid_mapper = constructor(name, grid_axes, grid_resolution)
+        # Once we have created mapper, create axis for the mapped axes
+        for i in range(len(grid_axes)):
+            axis_name = grid_axes[i]
+            new_axis_options = datacube.axis_options.get(axis_name, {})
+            if i == 0:
+                values = np.array(datacube.grid_mapper.first_axis_vals())
+                configure_datacube_axis(new_axis_options, axis_name, values, datacube)
+            if i == 1:
+                # the values[0] will be a value on the first axis
+                values = np.array(datacube.grid_mapper.second_axis_vals(values[0]))
+                configure_datacube_axis(new_axis_options, axis_name, values, datacube)
 
 
 class OctahedralGridMapper(DatacubeMapper):
