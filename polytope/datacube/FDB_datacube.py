@@ -6,7 +6,7 @@ from copy import deepcopy
 import numpy as np
 import pandas as pd
 
-os.environ['FDB_HOME'] = '/Users/male/git/fdb-home'
+os.environ["FDB_HOME"] = "/Users/male/git/fdb-home"
 import pyfdb  # noqa: E402
 
 from ..utility.combinatorics import unique, validate_axes  # noqa: E402
@@ -30,13 +30,13 @@ _mappings = {
     np.str_: UnsliceableaAxis(),
     str.__name__: UnsliceableaAxis(),
     np.object_: UnsliceableaAxis(),
-    "int" : IntAxis(),
-    "float" : FloatAxis(),
+    "int": IntAxis(),
+    "float": FloatAxis(),
 }
 
 
 def glue(path):
-    return {"t" : 0}
+    return {"t": 0}
 
 
 def update_fdb_dataarray(fdb_dataarray):
@@ -61,7 +61,6 @@ def update_fdb_dataarray(fdb_dataarray):
 
 
 class FDBDatacube(Datacube):
-
     def _set_mapper(self, values, name):
         if type(values[0]).__name__ not in _mappings:
             raise ValueError(f"Could not create a mapper for index type {type(values[0]).__name__} for axis {name}")
