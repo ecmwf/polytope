@@ -16,12 +16,16 @@ class DatacubeAxisTransformation(ABC):
         # TODO: next line, what happens if there are several transformation options?
         transformation_type_key = list(transformation_options["type"].keys())[0]
         transformation_type = _type_to_datacube_transformation_lookup[transformation_type_key]
+        transformation_file_name = _type_to_transformation_file_lookup[transformation_type_key]
 
-        # TODO: import from each module individually since they are not all in the same file
-        module = import_module("polytope.datacube.datacube_transformations")
+        module = import_module("polytope.datacube.datacube_" + transformation_file_name)
         constructor = getattr(module, transformation_type)
         transformation_type_option = transformation_options["type"][transformation_type_key]
+        # NOTE: the transformation in the datacube takes in now an option dico like
+        # {"with":"step", "linkers": ["T", "00"]}}
+        # TODO: here, would be better to have a dico of transformations along with name of axis to keep flags
         datacube.transformation = constructor(name, transformation_type_option)
+
         # TODO: then in subclasses, create init, and inside init, create sub transformation
         # and update datacube.transformation
 
@@ -47,3 +51,6 @@ class DatacubeAxisTransformation(ABC):
 
 _type_to_datacube_transformation_lookup = {"merge": "DatacubeAxisMerger",
                                            "mapper": "DatacubeMapper"}
+
+_type_to_transformation_file_lookup = {"merge" : "merger",
+                                       "mapper" : "mappers"}
