@@ -1,7 +1,7 @@
 import numpy as np
 import xarray as xr
 
-from polytope.datacube.datacube_axis import IntAxis
+from polytope.datacube.datacube_axis import IntDatacubeAxis
 from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope
@@ -61,12 +61,12 @@ class TestIndexTreesAfterSlicing:
         request1 = request.leaves[0]
         request2 = request.leaves[0]
         # Test adding child
-        axis1 = IntAxis()
+        axis1 = IntDatacubeAxis()
         axis1.name = "lat"
         request2.create_child(axis1, 4.1)
         assert request2.leaves[0].axis.name == "lat"
         assert request2.leaves[0].value == 4.1
-        axis2 = IntAxis()
+        axis2 = IntDatacubeAxis()
         axis2.name = "level"
         # Test getting child
         assert request1.create_child(axis2, 3.0).axis.name == "level"
@@ -86,8 +86,8 @@ class TestIndexTreesAfterSlicing:
         request.leaves[0].remove_branch()
         new_request_size = len(request.leaves)
         assert prev_request_size == new_request_size + 1
-        axis1 = IntAxis()
-        axis2 = IntAxis()
+        axis1 = IntDatacubeAxis()
+        axis2 = IntDatacubeAxis()
         axis1.name = "step"
         axis2.name = "level"
         # Test if remove_branch() also removes longer branches

@@ -1,38 +1,11 @@
 import math
 import os
-import sys
-from copy import deepcopy
 
-import numpy as np
-import pandas as pd
+from ..utility.combinatorics import unique, validate_axes
+from .datacube import Datacube, DatacubePath, IndexTree, configure_datacube_axis
 
 os.environ["FDB_HOME"] = "/Users/male/git/fdb-home"
 import pyfdb  # noqa: E402
-
-from ..utility.combinatorics import unique, validate_axes  # noqa: E402
-from .datacube import Datacube, DatacubePath, IndexTree  # noqa: E402
-from .datacube_axis import (  # noqa: E402
-    FloatAxis,
-    IntAxis,
-    PandasTimedeltaAxis,
-    PandasTimestampAxis,
-    UnsliceableaAxis,
-)
-from .mappers import OctahedralGridMap  # noqa: E402
-
-_mappings = {
-    pd.Int64Dtype: IntAxis(),
-    pd.Timestamp: PandasTimestampAxis(),
-    np.int64: IntAxis(),
-    np.datetime64: PandasTimestampAxis(),
-    np.timedelta64: PandasTimedeltaAxis(),
-    np.float64: FloatAxis(),
-    np.str_: UnsliceableaAxis(),
-    str.__name__: UnsliceableaAxis(),
-    np.object_: UnsliceableaAxis(),
-    "int": IntAxis(),
-    "float": FloatAxis(),
-}
 
 
 def glue(path):
@@ -61,43 +34,13 @@ def update_fdb_dataarray(fdb_dataarray):
 
 
 class FDBDatacube(Datacube):
-    def _set_mapper(self, values, name):
-        if type(values[0]).__name__ not in _mappings:
-            raise ValueError(f"Could not create a mapper for index type {type(values[0]).__name__} for axis {name}")
-        if name in self.options.keys():
-            # The options argument here is supposed to be a nested dictionary
-            # like {"latitude":{"Cyclic":range}, ...}
-            if "Cyclic" in self.options[name].keys():
-                axes_type_str = type(values[0]).__name__
-                axes_type_str += "Cyclic"
-                cyclic_axis_type = deepcopy(getattr(sys.modules["polytope.datacube.datacube_axis"], axes_type_str)())
-                self.mappers[name] = cyclic_axis_type
-                self.mappers[name].name = name
-                self.mappers[name].range = self.options[name]["Cyclic"]
-        else:
-            self.mappers[name] = deepcopy(_mappings[type(values[0]).__name__])
-            self.mappers[name].name = name
 
-    def _set_grid_mapper(self, name):
-        if name in self.grid_options.keys():
-            if "grid_map" in self.grid_options[name].keys():
-                grid_mapping_options = self.grid_options[name]["grid_map"]
-                grid_type = grid_mapping_options["type"]
-                grid_axes = grid_mapping_options["axes"]
-                if grid_type[0] == "octahedral":
-                    resolution = grid_type[1]
-                    self.grid_mapper = OctahedralGridMap(name, grid_axes, resolution)
-
-    def __init__(self, config={}, options={}, grid_options={}):
+    def __init__(self, config={}, axis_options={}):
         # Need to get the cyclic options and grid options from somewhere
-        self.options = options
-        self.grid_options = grid_options
-
+        self.axis_options = axis_options
         self.grid_mapper = None
         self.axis_counter = 0
-        for name in self.grid_options.keys():
-            self._set_grid_mapper(name)
-        self.mappers = {}
+        self._axes = {}
 
         partial_request = config
         # Find values in the level 3 FDB datacube
@@ -105,18 +48,12 @@ class FDBDatacube(Datacube):
         fdb = pyfdb.FDB()
         fdb_dataarray = fdb.axes(partial_request).as_dict()
         dataarray = update_fdb_dataarray(fdb_dataarray)
+
         for name, values in dataarray.items():
             values.sort()
-            self._set_mapper(values, name)
-            self.axis_counter += 1
-            if self.grid_mapper is not None:
-                if name == self.grid_mapper._base_axis:
-                    # Need to remove the base axis and replace with the mapped grid axes
-                    del self.mappers[name]
-                    self.axis_counter -= 1
-                    for axis_name in self.grid_mapper._mapped_axes:
-                        self._set_mapper(self.grid_mapper._value_type, axis_name)
-                        self.axis_counter += 1
+            options = axis_options.get(name, {})
+            configure_datacube_axis(options, name, values, self)
+
         self.dataarray = dataarray
 
     def get(self, requests: IndexTree):
@@ -149,12 +86,12 @@ class FDBDatacube(Datacube):
                 r.remove_branch()
 
     def get_mapper(self, axis):
-        return self.mappers[axis]
+        return self._axes[axis]
 
     def remap_path(self, path: DatacubePath):
         for key in path:
             value = path[key]
-            path[key] = self.mappers[key].remap_val_to_axis_range(value)
+            path[key] = self._axes[key].remap_val_to_axis_range(value)
         return path
 
     def _look_up_datacube(self, search_ranges, search_ranges_offset, indexes, axis, first_val):
@@ -233,7 +170,7 @@ class FDBDatacube(Datacube):
 
     @property
     def axes(self):
-        return self.mappers
+        return self._axes
 
     def validate(self, axes):
         return validate_axes(self.axes, axes)

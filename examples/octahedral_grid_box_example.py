@@ -9,7 +9,7 @@ from matplotlib import markers
 from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Box
+from polytope.shapes import Box, Select
 
 
 def find_nearest_latlon(grib_file, target_lat, target_lon):
@@ -36,20 +36,27 @@ def find_nearest_latlon(grib_file, target_lat, target_lon):
     return nearest_points
 
 
-ds = data.from_source("file", "./foo.grib")
+ds = data.from_source("file", "./tests/data/foo.grib")
 latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
 latlon_array = latlon_array.t2m
-nearest_points = find_nearest_latlon("./foo.grib", 0, 0)
+nearest_points = find_nearest_latlon("./tests/data/foo.grib", 0, 0)
 
 latlon_xarray_datacube = XArrayDatacube(latlon_array)
 
 slicer = HullSlicer()
 
-grid_options = {"values": {"grid_map": {"type": ["octahedral", 1280], "axes": ["latitude", "longitude"]}}}
+grid_options = {"values": {"grid_map": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}}}
 
-API = Polytope(datacube=latlon_array, engine=slicer, grid_options=grid_options)
+API = Polytope(datacube=latlon_array, engine=slicer, axis_options=grid_options)
 
-request = Request(Box(["latitude", "longitude"], [0, 0], [0.5, 0.5]))
+request = Request(
+    Box(["latitude", "longitude"], [0, 0], [0.5, 0.5]),
+    Select("number", [0]),
+    Select("time", ["2023-06-25T12:00:00"]),
+    Select("step", ["00:00:00"]),
+    Select("surface", [0]),
+    Select("valid_time", ["2023-06-25T12:00:00"]),
+)
 
 result = API.retrieve(request)
 result.pprint()

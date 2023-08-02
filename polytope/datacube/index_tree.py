@@ -3,7 +3,7 @@ from typing import OrderedDict
 
 from sortedcontainers import SortedList
 
-from .datacube_axis import IntAxis
+from .datacube_axis import IntDatacubeAxis
 
 
 class DatacubePath(OrderedDict):
@@ -21,7 +21,7 @@ class DatacubePath(OrderedDict):
 
 
 class IndexTree(object):
-    root = IntAxis()
+    root = IntDatacubeAxis()
     root.name = "root"
 
     def __init__(self, axis=root, value=None):

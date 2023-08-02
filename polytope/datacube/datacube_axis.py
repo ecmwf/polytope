@@ -1,3 +1,4 @@
+import sys
 from abc import ABC, abstractmethod, abstractproperty
 from copy import deepcopy
 from typing import Any, List
@@ -8,15 +9,15 @@ import pandas as pd
 
 class DatacubeAxis(ABC):
     @abstractproperty
-    def name(self):
+    def name(self) -> str:
         pass
 
     @abstractproperty
-    def tol(self):
+    def tol(self) -> Any:
         pass
 
     @abstractproperty
-    def range(self):
+    def range(self) -> List[Any]:
         pass
 
     # Convert from user-provided value to CONTINUOUS type (e.g. float, pd.timestamp)
@@ -34,29 +35,64 @@ class DatacubeAxis(ABC):
     def from_float(self, value: float) -> Any:
         pass
 
-    def serialize(self, value) -> Any:
+    def serialize(self, value: Any) -> Any:
         pass
 
-    def remap(self, range: List) -> Any:
+    def remap(self, range: List[Any]) -> Any:
         pass
 
-    def to_intervals(self, range):
+    def to_intervals(self, range: List[Any]) -> List[List[Any]]:
         pass
 
-    def remap_val_to_axis_range(self, value):
+    def remap_val_to_axis_range(self, value: Any) -> Any:
         pass
 
-    def remap_range_to_axis_range(self, range):
+    def remap_range_to_axis_range(self, range: List[Any]) -> List[Any]:
         pass
 
-    def to_cyclic_value(self, value):
+    def to_cyclic_value(self, value: Any) -> Any:
         pass
 
-    def offset(self, value):
+    def offset(self, value: Any) -> int:
         pass
 
+    # @staticmethod
+    # def create_axis(options, name, values, datacube):
+    #     if options == {}:
+    #         DatacubeAxis.create_standard(name, values, datacube)
+    #     if "mapper" in options.keys():
+    #         DatacubeAxis.create_mapper(options, name, datacube)
+    #     if "Cyclic" in options.keys():
+    #         DatacubeAxis.create_cyclic(options, name, values, datacube)
 
-class IntAxis(DatacubeAxis):
+    @staticmethod
+    def create_cyclic(options, name, values, datacube):
+        values = np.array(values)
+        value_type = values.dtype.type
+        axes_type_str = type(_type_to_axis_lookup[value_type]).__name__
+        axes_type_str += "Cyclic"
+        cyclic_axis_type = deepcopy(getattr(sys.modules["polytope.datacube.datacube_axis"], axes_type_str)())
+        datacube._axes[name] = cyclic_axis_type
+        datacube._axes[name].name = name
+        datacube._axes[name].range = options["cyclic"]
+        datacube.axis_counter += 1
+
+    @staticmethod
+    def create_standard(name, values, datacube):
+        values = np.array(values)
+        DatacubeAxis.check_axis_type(name, values)
+        datacube._axes[name] = deepcopy(_type_to_axis_lookup[values.dtype.type])
+        datacube._axes[name].name = name
+        datacube.axis_counter += 1
+
+    @staticmethod
+    def check_axis_type(name, values):
+        # NOTE: The values here need to be a numpy array which has a dtype attribute
+        if values.dtype.type not in _type_to_axis_lookup:
+            raise ValueError(f"Could not create a mapper for index type {values.dtype.type} for axis {name}")
+
+
+class IntDatacubeAxis(DatacubeAxis):
     name = None
     tol = 1e-12
     range = None
@@ -92,7 +128,7 @@ class IntAxis(DatacubeAxis):
         return 0
 
 
-class IntAxisCyclic(DatacubeAxis):
+class IntDatacubeAxisCyclic(DatacubeAxis):
     name = None
     tol = 1e-12
     range = None
@@ -210,7 +246,7 @@ class IntAxisCyclic(DatacubeAxis):
         return offset
 
 
-class FloatAxis(DatacubeAxis):
+class FloatDatacubeAxis(DatacubeAxis):
     name = None
     tol = 1e-12
     range = None
@@ -246,7 +282,7 @@ class FloatAxis(DatacubeAxis):
         return 0
 
 
-class FloatAxisCyclic(DatacubeAxis):
+class FloatDatacubeAxisCyclic(DatacubeAxis):
     # Note that in the cyclic axis here, we only retain the lower part when we remap
     # so for eg if the datacube has cyclic axis on [0,360]
     # then if we want 360, we will in reality get back 0 (which is the same)
@@ -367,7 +403,7 @@ class FloatAxisCyclic(DatacubeAxis):
         return offset
 
 
-class PandasTimestampAxis(DatacubeAxis):
+class PandasTimestampDatacubeAxis(DatacubeAxis):
     name = None
     tol = 1e-12
     range = None
@@ -378,7 +414,10 @@ class PandasTimestampAxis(DatacubeAxis):
         return pd.Timestamp(value)
 
     def to_float(self, value: pd.Timestamp):
-        return float(value.value / 10**9)
+        if isinstance(value, np.datetime64):
+            return float((value - np.datetime64("1970-01-01T00:00:00")).astype("int"))
+        else:
+            return float(value.value / 10**9)
 
     def from_float(self, value):
         return pd.Timestamp(int(value), unit="s")
@@ -405,7 +444,7 @@ class PandasTimestampAxis(DatacubeAxis):
         return None
 
 
-class PandasTimedeltaAxis(DatacubeAxis):
+class PandasTimedeltaDatacubeAxis(DatacubeAxis):
     name = None
     tol = 1e-12
     range = None
@@ -416,7 +455,10 @@ class PandasTimedeltaAxis(DatacubeAxis):
         return pd.Timedelta(value)
 
     def to_float(self, value: pd.Timedelta):
-        return float(value.value / 10**9)
+        if isinstance(value, np.timedelta64):
+            return value.astype("timedelta64[s]").astype(int)
+        else:
+            return float(value.value / 10**9)
 
     def from_float(self, value):
         return pd.Timedelta(int(value), unit="s")
@@ -443,7 +485,7 @@ class PandasTimedeltaAxis(DatacubeAxis):
         return None
 
 
-class UnsliceableaAxis(DatacubeAxis):
+class UnsliceableDatacubeAxis(DatacubeAxis):
     name = None
     tol = float("NaN")
     range = None
@@ -462,3 +504,16 @@ class UnsliceableaAxis(DatacubeAxis):
 
     def remap_val_to_axis_range(self, value):
         return value
+
+
+_type_to_axis_lookup = {
+    pd.Int64Dtype: IntDatacubeAxis(),
+    pd.Timestamp: PandasTimestampDatacubeAxis(),
+    np.int64: IntDatacubeAxis(),
+    np.datetime64: PandasTimestampDatacubeAxis(),
+    np.timedelta64: PandasTimedeltaDatacubeAxis(),
+    np.float64: FloatDatacubeAxis(),
+    np.str_: UnsliceableDatacubeAxis(),
+    str: UnsliceableDatacubeAxis(),
+    np.object_: UnsliceableDatacubeAxis(),
+}
