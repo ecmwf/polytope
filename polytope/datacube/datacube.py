@@ -4,7 +4,6 @@ from typing import Any, List
 import xarray as xr
 
 from .datacube_axis import DatacubeAxis
-from .datacube_transformations import DatacubeAxisTransformation
 from .index_tree import DatacubePath, IndexTree
 
 
@@ -62,6 +61,7 @@ def configure_datacube_axis(options, name, values, datacube):
     if "merge" in options.keys():
         # the merge options will look like "time": {"merge": {"with":"step", "linker": "00T"}}
         # Need to make sure we do not loop infinitely over this option
+        from .datacube_transformations import DatacubeAxisTransformation
         DatacubeAxisTransformation.create_transformation(options, name, values, datacube)
     if "mapper" in options.keys():
         from .datacube_mappers import DatacubeMapper
