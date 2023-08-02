@@ -7,6 +7,8 @@ from .datacube import Datacube, DatacubePath, IndexTree, configure_datacube_axis
 os.environ["FDB_HOME"] = "/Users/male/git/fdb-home"
 import pyfdb  # noqa: E402
 
+# TODO: currently, because the date and time are strings, the data will be treated as an unsliceable axis...
+
 
 def glue(path):
     return {"t": 0}
@@ -20,13 +22,6 @@ def update_fdb_dataarray(fdb_dataarray):
             for val in values:
                 new_values.append(int(val))
             new_dict[key] = new_values
-        elif key == "date":
-            time = fdb_dataarray["time"][0]
-            time = time + "00"
-            new_val = [fdb_dataarray[key][0] + "T" + time]
-            new_dict[key] = new_val
-        elif key == "time":
-            pass
         else:
             new_dict[key] = values
     new_dict["values"] = [0.0]
@@ -40,6 +35,7 @@ class FDBDatacube(Datacube):
         self.grid_mapper = None
         self.axis_counter = 0
         self._axes = {}
+        self.blocked_axes = []
 
         partial_request = config
         # Find values in the level 3 FDB datacube
@@ -47,13 +43,12 @@ class FDBDatacube(Datacube):
         fdb = pyfdb.FDB()
         fdb_dataarray = fdb.axes(partial_request).as_dict()
         dataarray = update_fdb_dataarray(fdb_dataarray)
+        self.dataarray = dataarray
 
         for name, values in dataarray.items():
             values.sort()
             options = axis_options.get(name, {})
             configure_datacube_axis(options, name, values, self)
-
-        self.dataarray = dataarray
 
     def get(self, requests: IndexTree):
         for r in requests.leaves:
@@ -175,6 +170,7 @@ class FDBDatacube(Datacube):
         return validate_axes(self.axes, axes)
 
     def ax_vals(self, name):
+        print(self.dataarray)
         for _name, values in self.dataarray.items():
             if _name == name:
                 return values

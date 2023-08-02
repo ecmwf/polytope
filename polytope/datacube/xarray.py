@@ -17,6 +17,7 @@ class XArrayDatacube(Datacube):
         self.dataarray = dataarray
         treated_axes = []
         self.complete_axes = []
+        self.blocked_axes = []
         for name, values in dataarray.coords.variables.items():
             if name in dataarray.dims:
                 self.dataarray = self.dataarray.sortby(name)

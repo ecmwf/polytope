@@ -60,3 +60,6 @@ class MockDatacube(Datacube):
 
     def validate(self, axes):
         return validate_axes(self.axes, axes)
+
+    def ax_vals(self, name):
+        return []
