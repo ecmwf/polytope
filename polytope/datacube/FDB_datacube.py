@@ -34,7 +34,6 @@ def update_fdb_dataarray(fdb_dataarray):
 
 
 class FDBDatacube(Datacube):
-
     def __init__(self, config={}, axis_options={}):
         # Need to get the cyclic options and grid options from somewhere
         self.axis_options = axis_options
@@ -174,3 +173,8 @@ class FDBDatacube(Datacube):
 
     def validate(self, axes):
         return validate_axes(self.axes, axes)
+
+    def ax_vals(self, name):
+        for _name, values in self.dataarray.items():
+            if _name == name:
+                return values

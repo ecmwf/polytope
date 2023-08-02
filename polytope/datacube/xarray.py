@@ -203,3 +203,14 @@ class XArrayDatacube(Datacube):
 
     def validate(self, axes):
         return validate_axes(list(self.axes.keys()), axes)
+
+    def ax_vals(self, name):
+        treated_axes = []
+        for _name, values in self.dataarray.coords.variables.items():
+            treated_axes.append(_name)
+            if _name == name:
+                return values
+        for _name in self.dataarray.dims:
+            if _name not in treated_axes:
+                if _name == name:
+                    return self.dataarray[name].values[0]

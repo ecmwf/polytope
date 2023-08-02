@@ -65,6 +65,23 @@ class DatacubeAxis(ABC):
     #     if "Cyclic" in options.keys():
     #         DatacubeAxis.create_cyclic(options, name, values, datacube)
 
+    # @staticmethod
+    # def merge(options, name, values, datacube):
+    #     # This function will not actually create an axis, it will compute values of when we merge the axes together
+    #     # the merge options will look like "time": {"merge": {"with":"step", "linker": "00T"}}
+    #     first_ax_vals = values
+    #     second_ax_name = options["merge"]["with"]
+    #     second_ax_vals = datacube.ax_vals(second_ax_name)
+    #     linker = options["merge"]["linker"]
+    #     merged_values = []
+    #     for first_val in first_ax_vals:
+    #         for second_val in second_ax_vals:
+    #             merged_val = first_val + linker + second_val
+    #             merged_values.append(merged_val)
+    #     merged_values = np.array(merged_values)
+
+    #     return merged_values
+
     @staticmethod
     def create_cyclic(options, name, values, datacube):
         values = np.array(values)
