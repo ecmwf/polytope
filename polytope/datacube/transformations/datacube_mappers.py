@@ -1,13 +1,19 @@
 import math
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from importlib import import_module
 
 import numpy as np
 
-from .datacube import configure_datacube_axis
+from ..datacube import configure_datacube_axis
+from .datacube_transformations import DatacubeAxisTransformation
 
 
-class DatacubeMapper(ABC):
+class DatacubeMapper(DatacubeAxisTransformation):
+
+    def __init__(self):
+        # TODO: should create an __init__ which initialises sub-class of itself
+        pass
+
     def _mapped_axes(self):
         pass
 
