@@ -1,4 +1,4 @@
-from polytope.datacube.mock import MockDatacube
+from polytope.datacube.backends.mock import MockDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.shapes import Box, Polygon
 

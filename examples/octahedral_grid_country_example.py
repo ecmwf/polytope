@@ -7,7 +7,7 @@ from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
 from matplotlib import markers
 from shapely.geometry import shape
 
-from polytope.datacube.xarray import XArrayDatacube
+from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Polygon, Select, Union
