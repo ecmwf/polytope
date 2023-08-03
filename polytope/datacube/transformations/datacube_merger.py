@@ -7,6 +7,7 @@ from .datacube_transformations import DatacubeAxisTransformation
 class DatacubeAxisMerger(DatacubeAxisTransformation):
 
     def __init__(self, name, merge_options):
+        self.transformation_options = merge_options
         self.name = name
         self._first_axis = name
         self._second_axis = merge_options["with"]
@@ -27,9 +28,15 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
 
     def apply_transformation(self, name, datacube, values):
         merged_values = self.merged_values(values, datacube)
-        axis_options = datacube.axis_options.get(name)
+        # Remove the merge option from the axis options since we have already handled it
+        # so do not want to handle it again
+        axis_options = datacube.axis_options[name]["transformation"]
         axis_options.pop("merge")
-        configure_datacube_axis(axis_options, name, merged_values, datacube)
+        # Update the nested dictionary with the modified axis option for our axis
+        new_datacube_axis_options = datacube.axis_options
+        new_datacube_axis_options[name]["transformation"] = axis_options
+        # Reconfigure the axis with the rest of its configurations
+        configure_datacube_axis(new_datacube_axis_options, name, merged_values, datacube)
         self.finish_transformation(datacube, merged_values)
 
     def finish_transformation(self, datacube, values):
@@ -37,3 +44,6 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         datacube.blocked_axes.append(self._second_axis)
         # NOTE: we change the axis values here directly, which will not work with xarray
         datacube.dataarray[self._first_axis] = values
+
+    def generate_final_transformation(self):
+        return self

@@ -18,8 +18,10 @@ class XArrayDatacube(Datacube):
         treated_axes = []
         self.complete_axes = []
         self.blocked_axes = []
+        self.transformation = {}
         for name, values in dataarray.coords.variables.items():
             if name in dataarray.dims:
+                self.transformation[name] = []
                 self.dataarray = self.dataarray.sortby(name)
                 options = axis_options.get(name, {})
                 configure_datacube_axis(options, name, values, self)
@@ -27,11 +29,13 @@ class XArrayDatacube(Datacube):
                 self.complete_axes.append(name)
             else:
                 if self.dataarray[name].dims == ():
+                    self.transformation[name] = []
                     options = axis_options.get(name, {})
                     configure_datacube_axis(options, name, values, self)
                     treated_axes.append(name)
         for name in dataarray.dims:
             if name not in treated_axes:
+                self.transformation[name] = []
                 options = axis_options.get(name, {})
                 val = dataarray[name].values[0]
                 configure_datacube_axis(options, name, val, self)

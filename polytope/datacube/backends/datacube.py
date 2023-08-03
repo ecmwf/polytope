@@ -60,19 +60,36 @@ class Datacube(ABC):
 def configure_datacube_axis(options, name, values, datacube):
     # TODO: this will not work with the generic transformation class anymore
     # TODO: need to see where the axes are created now
+
+    # NOTE: Maybe here, with new generic transformation class,
+    # instead of handling the options, we should just create an axis and look
+    # up the associated transformation to
+
+    # First need to check we are not initialising an axis which should not be initialised
+    print("first name")
+    print(name)
     if name not in datacube.blocked_axes:
+        # Now look at the options passed in
         if options == {}:
             DatacubeAxis.create_standard(name, values, datacube)
         if "transformation" in options.keys():
-            # the merge options will look like "time": {"merge": {"with":"step", "linker": "00T"}}
-            # Need to make sure we do not loop infinitely over this option
-            from ..transformations.datacube_transformations import (
-                DatacubeAxisTransformation,
-            )
-            DatacubeAxisTransformation.create_transformation(options, name, values, datacube)
-        if "mapper" in options.keys():
-            from ..transformations.datacube_mappers import DatacubeMapper
+            # options = options["transformation"]
+            if options == {}:
+                DatacubeAxis.create_standard(name, values, datacube)
+            else:
+                # the merge options will look like "time": {"merge": {"with":"step", "linker": "00T"}}
+                # Need to make sure we do not loop infinitely over this option
+                from ..transformations.datacube_transformations import (
+                    DatacubeAxisTransformation,
+                )
+                print(name)
+                print(options)
+                DatacubeAxisTransformation.create_transformation(options, name, values, datacube)
+        # if "mapper" in options.keys():
+        #     from ..transformations.datacube_mappers import DatacubeMapper
 
-            DatacubeMapper.create_mapper(options, name, datacube)
+        #     DatacubeMapper.create_mapper(options, name, datacube)
+
+        # TODO: This will need to come as a transformation later
         if "cyclic" in options.keys():
             DatacubeAxis.create_cyclic(options, name, values, datacube)
