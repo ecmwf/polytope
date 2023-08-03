@@ -1,6 +1,6 @@
 from typing import List
 
-from ..datacube.datacube import Datacube
+from ..datacube.backends.datacube import Datacube
 from ..datacube.index_tree import IndexTree
 from ..shapes import ConvexPolytope
 

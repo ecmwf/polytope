@@ -4,7 +4,7 @@ from typing import List
 
 import scipy.spatial
 
-from ..datacube.datacube import Datacube, IndexTree
+from ..datacube.backends.datacube import Datacube, IndexTree
 from ..datacube.datacube_axis import UnsliceableDatacubeAxis
 from ..shapes import ConvexPolytope
 from ..utility.combinatorics import argmax, argmin, group, product, unique

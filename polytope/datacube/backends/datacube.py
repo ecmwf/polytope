@@ -3,8 +3,8 @@ from typing import Any, List
 
 import xarray as xr
 
-from .datacube_axis import DatacubeAxis
-from .index_tree import DatacubePath, IndexTree
+from ..datacube_axis import DatacubeAxis
+from ..index_tree import DatacubePath, IndexTree
 
 
 class Datacube(ABC):
@@ -54,18 +54,24 @@ class Datacube(ABC):
     def ax_vals(self, name: str) -> List:
         pass
 
+    # TODO: need to add transformation properties like the datacube.transformations dico
+
 
 def configure_datacube_axis(options, name, values, datacube):
+    # TODO: this will not work with the generic transformation class anymore
+    # TODO: need to see where the axes are created now
     if name not in datacube.blocked_axes:
         if options == {}:
             DatacubeAxis.create_standard(name, values, datacube)
         if "transformation" in options.keys():
             # the merge options will look like "time": {"merge": {"with":"step", "linker": "00T"}}
             # Need to make sure we do not loop infinitely over this option
-            from .datacube_transformations import DatacubeAxisTransformation
+            from ..transformations.datacube_transformations import (
+                DatacubeAxisTransformation,
+            )
             DatacubeAxisTransformation.create_transformation(options, name, values, datacube)
         if "mapper" in options.keys():
-            from .datacube_mappers import DatacubeMapper
+            from ..transformations.datacube_mappers import DatacubeMapper
 
             DatacubeMapper.create_mapper(options, name, datacube)
         if "cyclic" in options.keys():

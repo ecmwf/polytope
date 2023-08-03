@@ -1,13 +1,13 @@
 import numpy as np
 
+from ..backends.datacube import configure_datacube_axis
 from .datacube_transformations import DatacubeAxisTransformation
 
 
 class DatacubeAxisMerger(DatacubeAxisTransformation):
+
     def __init__(self, name, merge_options):
-        # TODO: not here, but in datacube, create a big flag dictionary where for each axis,
-        # we add a flag like grid_mapper if there is a mapper or datacube_merger if there is a merger
-        # with the relevant info for later. Can initalise these flags here/ add them to flag dictionary here
+        self.name = name
         self._first_axis = name
         self._second_axis = merge_options["with"]
         self._linkers = merge_options["linkers"]
@@ -25,7 +25,15 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         merged_values = np.array(merged_values)
         return merged_values
 
+    def apply_transformation(self, name, datacube, values):
+        merged_values = self.merged_values(values, datacube)
+        axis_options = datacube.axis_options.get(name)
+        axis_options.pop("merge")
+        configure_datacube_axis(axis_options, name, merged_values, datacube)
+        self.finish_transformation(datacube, merged_values)
+
     def finish_transformation(self, datacube, values):
+        # Need to "delete" the second axis we do not use anymore
         datacube.blocked_axes.append(self._second_axis)
-        # NOTE: we change the axis values here directly
-        datacube.dataarray[self._first_axis] = self.merged_values(values, datacube)
+        # NOTE: we change the axis values here directly, which will not work with xarray
+        datacube.dataarray[self._first_axis] = values

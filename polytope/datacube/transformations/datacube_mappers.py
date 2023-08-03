@@ -4,7 +4,7 @@ from importlib import import_module
 
 import numpy as np
 
-from ..datacube import configure_datacube_axis
+from ..backends.datacube import configure_datacube_axis
 from .datacube_transformations import DatacubeAxisTransformation
 
 

@@ -2,7 +2,7 @@ import math
 
 import xarray as xr
 
-from ..utility.combinatorics import unique, validate_axes
+from ...utility.combinatorics import unique, validate_axes
 from .datacube import Datacube, DatacubePath, IndexTree, configure_datacube_axis
 
 

@@ -1,9 +1,9 @@
 import math
 from copy import deepcopy
 
-from ..utility.combinatorics import validate_axes
+from ...utility.combinatorics import validate_axes
+from ..datacube_axis import IntDatacubeAxis
 from .datacube import Datacube, DatacubePath, IndexTree
-from .datacube_axis import IntDatacubeAxis
 
 
 class MockDatacube(Datacube):
