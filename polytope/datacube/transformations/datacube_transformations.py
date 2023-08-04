@@ -4,10 +4,8 @@ from importlib import import_module
 
 
 class DatacubeAxisTransformation(ABC):
-
     @staticmethod
     def create_transformation(options, name, values, datacube):
-
         # transformation options look like
         # "time":{"transformation": { "type" : {"merge" : {"with":"step", "linkers": ["T", "00"]}}}}
         # But the last dictionary can vary and change according to transformation, which can be handled inside the
@@ -69,4 +67,4 @@ class DatacubeAxisTransformation(ABC):
 
 _type_to_datacube_transformation_lookup = {"mapper": "DatacubeMapper"}
 
-_type_to_transformation_file_lookup = {"mapper" : "mappers"}
+_type_to_transformation_file_lookup = {"mapper": "mappers"}

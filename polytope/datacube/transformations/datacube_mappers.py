@@ -9,10 +9,9 @@ from .datacube_transformations import DatacubeAxisTransformation
 
 
 class DatacubeMapper(DatacubeAxisTransformation):
-
     # Needs to implements DatacubeAxisTransformation methods
 
-    def __init__(self, name , mapper_options):
+    def __init__(self, name, mapper_options):
         self.transformation_options = mapper_options
         self.grid_type = mapper_options["type"]
         self.grid_resolution = mapper_options["resolution"]
