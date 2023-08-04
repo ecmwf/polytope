@@ -3,6 +3,7 @@ import math
 import xarray as xr
 
 from ...utility.combinatorics import unique, validate_axes
+from ..transformations.datacube_cyclic import DatacubeAxisCyclic
 from ..transformations.datacube_mappers import DatacubeMapper
 from .datacube import Datacube, DatacubePath, IndexTree, configure_datacube_axis
 
@@ -113,6 +114,14 @@ class XArrayDatacube(Datacube):
                                 indexes_between = indexes[start:end].to_list()
                             else:
                                 indexes_between = [i for i in indexes if low <= i <= up]
+                    if isinstance(transform, DatacubeAxisCyclic):
+                        if axis.name in self.complete_axes:
+                            start = indexes.searchsorted(low, "left")
+                            end = indexes.searchsorted(up, "right")
+                            indexes_between = indexes[start:end].to_list()
+                        else:
+                            indexes_between = [i for i in indexes if low <= i <= up]
+
             else:
                 # Find the range of indexes between lower and upper
                 # https://pandas.pydata.org/docs/reference/api/pandas.Index.searchsorted.html
@@ -175,6 +184,11 @@ class XArrayDatacube(Datacube):
                             indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
                         else:
                             indexes = [subarray[axis.name].values]
+                if isinstance(transform, DatacubeAxisCyclic):
+                    if axis.name in self.complete_axes:
+                        indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
+                    else:
+                        indexes = [subarray[axis.name].values]
         else:
             if axis.name in self.complete_axes:
                 indexes = next(iter(subarray.xindexes.values())).to_pandas_index()

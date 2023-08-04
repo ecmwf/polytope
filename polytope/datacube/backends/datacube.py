@@ -69,12 +69,7 @@ def configure_datacube_axis(options, name, values, datacube):
     if name not in datacube.blocked_axes:
         # Now look at the options passed in
         if options == {}:
-            DatacubeAxis.create_standard(name, values, datacube)
-
-        # TODO: this will need to be a transformation
-        elif "cyclic" in options.keys():
-            DatacubeAxis.create_cyclic(options, name, values, datacube)
-
+            DatacubeAxis.create_axis(name, values, datacube)
         else:
             from ..transformations.datacube_transformations import (
                 DatacubeAxisTransformation,

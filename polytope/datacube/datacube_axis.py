@@ -57,15 +57,6 @@ class DatacubeAxis(ABC):
         pass
 
     # @staticmethod
-    # def create_axis(options, name, values, datacube):
-    #     if options == {}:
-    #         DatacubeAxis.create_standard(name, values, datacube)
-    #     if "mapper" in options.keys():
-    #         DatacubeAxis.create_mapper(options, name, datacube)
-    #     if "Cyclic" in options.keys():
-    #         DatacubeAxis.create_cyclic(options, name, values, datacube)
-
-    # @staticmethod
     # def merge(options, name, values, datacube):
     #     # This function will not actually create an axis, it will compute values of when we merge the axes together
     #     # the merge options will look like "time": {"merge": {"with":"step", "linker": "00T"}}
@@ -83,7 +74,22 @@ class DatacubeAxis(ABC):
     #     return merged_values
 
     @staticmethod
-    def create_cyclic(options, name, values, datacube):
+    def create_axis(name, values, datacube):
+        if name in datacube.transformation.keys():
+            axis_transforms = datacube.transformation[name]
+            for transform in axis_transforms:
+                from .transformations.datacube_cyclic import DatacubeAxisCyclic
+
+                if isinstance(transform, DatacubeAxisCyclic):
+                    DatacubeAxis.create_cyclic(transform, name, values, datacube)
+                else:
+                    # if we don't have a cyclic transform, then we create a standard axis
+                    DatacubeAxis.create_standard(name, values, datacube)
+        else:
+            DatacubeAxis.create_standard(name, values, datacube)
+
+    @staticmethod
+    def create_cyclic(cyclic_transform, name, values, datacube):
         values = np.array(values)
         value_type = values.dtype.type
         axes_type_str = type(_type_to_axis_lookup[value_type]).__name__
@@ -91,7 +97,7 @@ class DatacubeAxis(ABC):
         cyclic_axis_type = deepcopy(getattr(sys.modules["polytope.datacube.datacube_axis"], axes_type_str)())
         datacube._axes[name] = cyclic_axis_type
         datacube._axes[name].name = name
-        datacube._axes[name].range = options["cyclic"]
+        datacube._axes[name].range = cyclic_transform.range
         datacube.axis_counter += 1
 
     @staticmethod

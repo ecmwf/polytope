@@ -11,7 +11,6 @@ class DatacubeAxisTransformation(ABC):
         # But the last dictionary can vary and change according to transformation, which can be handled inside the
         # specialised transformations
         transformation_options = options["transformation"]
-
         # NOTE: we do the following for each transformation of each axis
         for transformation_type_key in transformation_options.keys():
             transformation_type = _type_to_datacube_transformation_lookup[transformation_type_key]
@@ -65,6 +64,6 @@ class DatacubeAxisTransformation(ABC):
         pass
 
 
-_type_to_datacube_transformation_lookup = {"mapper": "DatacubeMapper"}
+_type_to_datacube_transformation_lookup = {"mapper": "DatacubeMapper", "cyclic": "DatacubeAxisCyclic"}
 
-_type_to_transformation_file_lookup = {"mapper": "mappers"}
+_type_to_transformation_file_lookup = {"mapper": "mappers", "cyclic": "cyclic"}
