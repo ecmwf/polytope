@@ -34,11 +34,17 @@ class DatacubeAxisTransformation(ABC):
             # and then for eg for grid mapper transformation, can have the first axis name in there to make things
             # easier to handle in the datacube
 
-            # In case there are nested derived classes, want to get the final transformation in our
-            # transformation dico
-            new_transformation = new_transformation.generate_final_transformation()
             new_transformation.name = name
-            datacube.transformation[name].append(new_transformation)
+            transformation_axis_names = new_transformation.transformation_axes_final()
+            for axis_name in transformation_axis_names:
+                # if there are no transformations for that axis yet, create an empty list of transforms.
+                # else, take the old list and append new transformation we are working on
+                key_val = datacube.transformation.get(axis_name, [])
+                datacube.transformation[axis_name] = key_val
+                # the transformation dico keeps track of the type of transformation, not the exact transformations
+                # For grid mappers, it keeps track that we have a grid_mapper, but won't know the exact grid map we
+                # implement
+                datacube.transformation[axis_name].append(new_transformation)
             new_transformation.apply_transformation(name, datacube, values)
 
     def name(self):
@@ -49,6 +55,10 @@ class DatacubeAxisTransformation(ABC):
 
     @abstractmethod
     def generate_final_transformation(self):
+        pass
+
+    @abstractmethod
+    def transformation_axes_final(self):
         pass
 
     # TODO: do we need this? to apply transformation to datacube yes...

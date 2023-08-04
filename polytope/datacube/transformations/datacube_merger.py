@@ -39,6 +39,9 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         configure_datacube_axis(new_datacube_axis_options, name, merged_values, datacube)
         self.finish_transformation(datacube, merged_values)
 
+    def transformation_axes_final(self):
+        return [self._first_axis]
+
     def finish_transformation(self, datacube, values):
         # Need to "delete" the second axis we do not use anymore
         datacube.blocked_axes.append(self._second_axis)

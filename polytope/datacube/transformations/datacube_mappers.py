@@ -10,29 +10,6 @@ from .datacube_transformations import DatacubeAxisTransformation
 
 class DatacubeMapper(DatacubeAxisTransformation):
 
-    # # TODO: check if we still need this and it's right
-    # @staticmethod
-    # def create_mapper(options, name, datacube):
-    #     grid_mapping_options = options["mapper"]
-    #     grid_type = grid_mapping_options["type"]
-    #     grid_resolution = grid_mapping_options["resolution"]
-    #     grid_axes = grid_mapping_options["axes"]
-    #     map_type = _type_to_datacube_mapper_lookup[grid_type]
-    #     module = import_module("polytope.datacube.datacube_mappers")
-    #     constructor = getattr(module, map_type)
-    #     datacube.grid_mapper = constructor(name, grid_axes, grid_resolution)
-    #     # Once we have created mapper, create axis for the mapped axes
-    #     for i in range(len(grid_axes)):
-    #         axis_name = grid_axes[i]
-    #         new_axis_options = datacube.axis_options.get(axis_name, {})
-    #         if i == 0:
-    #             values = np.array(datacube.grid_mapper.first_axis_vals())
-    #             configure_datacube_axis(new_axis_options, axis_name, values, datacube)
-    #         if i == 1:
-    #             # the values[0] will be a value on the first axis
-    #             values = np.array(datacube.grid_mapper.second_axis_vals(values[0]))
-    #             configure_datacube_axis(new_axis_options, axis_name, values, datacube)
-
     # Needs to implements DatacubeAxisTransformation methods
 
     def __init__(self, name , mapper_options):
@@ -47,49 +24,54 @@ class DatacubeMapper(DatacubeAxisTransformation):
         module = import_module("polytope.datacube.transformations.datacube_mappers")
         constructor = getattr(module, map_type)
         transformation = deepcopy(constructor(self.old_axis, self.grid_axes, self.grid_resolution))
-        print("here")
-        print(self.grid_axes)
         return transformation
 
     def apply_transformation(self, name, datacube, values):
         # TODO: how is this going to work once the cyclicity is a transformation?
         # Create mapped axes here
-        for i in range(len(self._mapped_axes)):
-            # axis_name = self.grid_axes[i]
-            axis_name = name
+        transformation = self.generate_final_transformation()
+        for i in range(len(transformation._mapped_axes)):
+            axis_name = transformation._mapped_axes[i]
+            # axis_name = name
             new_axis_options = datacube.axis_options.get(axis_name, {})
             if i == 0:
-                values = np.array(self.first_axis_vals())
+                values = np.array(transformation.first_axis_vals())
                 configure_datacube_axis(new_axis_options, axis_name, values, datacube)
             if i == 1:
                 # the values[0] will be a value on the first axis
-                values = np.array(self.second_axis_vals(values[0]))
+                values = np.array(transformation.second_axis_vals(values[0]))
                 configure_datacube_axis(new_axis_options, axis_name, values, datacube)
 
-    # Needs to also implement its own methods
-    # @abstractproperty
-    def _mapped_axes(self):
-        pass
+    def transformation_axes_final(self):
+        final_transformation = self.generate_final_transformation()
+        final_axes = final_transformation._mapped_axes
+        return final_axes
 
-    # @abstractproperty
+    # Needs to also implement its own methods
+
+    def _mapped_axes(self):
+        # NOTE: Each of the mapper method needs to call it's sub mapper method
+        final_transformation = self.generate_final_transformation()
+        final_axes = final_transformation._mapped_axes
+        return final_axes
+
     def _base_axis(self):
         pass
 
-    # @abstractproperty
     def _resolution(self):
         pass
 
-    # @abstractmethod
     def map_first_axis(self, lower, upper):
-        pass
+        final_transformation = self.generate_final_transformation()
+        return final_transformation.map_first_axis(lower, upper)
 
-    # @abstractmethod
     def map_second_axis(self, first_val, lower, upper):
-        pass
+        final_transformation = self.generate_final_transformation()
+        return final_transformation.map_second_axis(first_val, lower, upper)
 
-    # @abstractmethod
-    def unmap(self):
-        pass
+    def unmap(self, first_val, second_val):
+        final_transformation = self.generate_final_transformation()
+        return final_transformation.unmap(first_val, second_val)
 
 
 class OctahedralGridMapper(DatacubeMapper):

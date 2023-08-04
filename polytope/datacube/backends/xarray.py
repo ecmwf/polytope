@@ -3,6 +3,7 @@ import math
 import xarray as xr
 
 from ...utility.combinatorics import unique, validate_axes
+from ..transformations.datacube_mappers import DatacubeMapper
 from .datacube import Datacube, DatacubePath, IndexTree, configure_datacube_axis
 
 
@@ -21,7 +22,6 @@ class XArrayDatacube(Datacube):
         self.transformation = {}
         for name, values in dataarray.coords.variables.items():
             if name in dataarray.dims:
-                self.transformation[name] = []
                 self.dataarray = self.dataarray.sortby(name)
                 options = axis_options.get(name, {})
                 configure_datacube_axis(options, name, values, self)
@@ -29,13 +29,11 @@ class XArrayDatacube(Datacube):
                 self.complete_axes.append(name)
             else:
                 if self.dataarray[name].dims == ():
-                    self.transformation[name] = []
                     options = axis_options.get(name, {})
                     configure_datacube_axis(options, name, values, self)
                     treated_axes.append(name)
         for name in dataarray.dims:
             if name not in treated_axes:
-                self.transformation[name] = []
                 options = axis_options.get(name, {})
                 val = dataarray[name].values[0]
                 configure_datacube_axis(options, name, val, self)
@@ -45,19 +43,27 @@ class XArrayDatacube(Datacube):
             path = r.flatten()
             path = self.remap_path(path)
             if len(path.items()) == self.axis_counter:
+                # first, find the grid mapper transform
+                grid_map_transform = None
                 for key in path.keys():
                     if self.dataarray[key].dims == ():
                         path.pop(key)
-                if self.grid_mapper is not None:
-                    first_axis = self.grid_mapper._mapped_axes[0]
+                    if key in self.transformation.keys():
+                        axis_transforms = self.transformation[key]
+                        for transform in axis_transforms:
+                            if isinstance(transform, DatacubeMapper):
+                                grid_map_transform = transform
+                if grid_map_transform is not None:
+                    # if we have a grid_mapper transform, find the new axis indices
+                    first_axis = grid_map_transform._mapped_axes()[0]
                     first_val = path[first_axis]
-                    second_axis = self.grid_mapper._mapped_axes[1]
+                    second_axis = grid_map_transform._mapped_axes()[1]
                     second_val = path[second_axis]
                     path.pop(first_axis, None)
                     path.pop(second_axis, None)
                     subxarray = self.dataarray.sel(path, method="nearest")
                     # need to remap the lat, lon in path to dataarray index
-                    unmapped_idx = self.grid_mapper.unmap(first_val, second_val)
+                    unmapped_idx = grid_map_transform.unmap(first_val, second_val)
                     subxarray = subxarray.isel(values=unmapped_idx)
                     value = subxarray.item()
                     key = subxarray.name
@@ -88,30 +94,29 @@ class XArrayDatacube(Datacube):
             low = r[0]
             up = r[1]
 
-            if self.grid_mapper is not None:
-                first_axis = self.grid_mapper._mapped_axes[0]
-                second_axis = self.grid_mapper._mapped_axes[1]
-                if axis.name == first_axis:
-                    indexes_between = self.grid_mapper.map_first_axis(low, up)
-                elif axis.name == second_axis:
-                    indexes_between = self.grid_mapper.map_second_axis(first_val, low, up)
-                else:
-                    if axis.name in self.complete_axes:
-                        start = indexes.searchsorted(low, "left")
-                        end = indexes.searchsorted(up, "right")
-                        indexes_between = indexes[start:end].to_list()
-                    else:
-                        indexes_between = [i for i in indexes if low <= i <= up]
-                    # start = indexes.searchsorted(low, "left")  # TODO: catch start=0 (not found)?
-                    # end = indexes.searchsorted(up, "right")  # TODO: catch end=length (not found)?
-                    # indexes_between = indexes[start:end].to_list()
+            if axis.name in self.transformation.keys():
+                axis_transforms = self.transformation[axis.name]
+                for transform in axis_transforms:
+                    if isinstance(transform, DatacubeMapper):
+                        # The if and for above loop through the transforms for that axis and
+                        # determine if there is a grid mapper transform
+                        first_axis = transform._mapped_axes()[0]
+                        second_axis = transform._mapped_axes()[1]
+                        if axis.name == first_axis:
+                            indexes_between = transform.map_first_axis(low, up)
+                        elif axis.name == second_axis:
+                            indexes_between = transform.map_second_axis(first_val, low, up)
+                        else:
+                            if axis.name in self.complete_axes:
+                                start = indexes.searchsorted(low, "left")
+                                end = indexes.searchsorted(up, "right")
+                                indexes_between = indexes[start:end].to_list()
+                            else:
+                                indexes_between = [i for i in indexes if low <= i <= up]
             else:
                 # Find the range of indexes between lower and upper
                 # https://pandas.pydata.org/docs/reference/api/pandas.Index.searchsorted.html
                 # Assumes the indexes are already sorted (could sort to be sure) and monotonically increasing
-                # start = indexes.searchsorted(low, "left")  # TODO: catch start=0 (not found)?
-                # end = indexes.searchsorted(up, "right")  # TODO: catch end=length (not found)?
-                # indexes_between = indexes[start:end].to_list()
                 if axis.name in self.complete_axes:
                     start = indexes.searchsorted(low, "left")
                     end = indexes.searchsorted(up, "right")
@@ -137,12 +142,15 @@ class XArrayDatacube(Datacube):
                 path.pop(key)
 
         first_val = None
-        if self.grid_mapper is not None:
-            first_axis = self.grid_mapper._mapped_axes[0]
-            first_val = path.get(first_axis, None)
-            second_axis = self.grid_mapper._mapped_axes[1]
-            path.pop(first_axis, None)
-            path.pop(second_axis, None)
+        if axis.name in self.transformation.keys():
+            axis_transforms = self.transformation[axis.name]
+            for transform in axis_transforms:
+                if isinstance(transform, DatacubeMapper):
+                    first_axis = transform._mapped_axes()[0]
+                    first_val = path.get(first_axis, None)
+                    second_axis = transform._mapped_axes()[1]
+                    path.pop(first_axis, None)
+                    path.pop(second_axis, None)
 
         for key in path.keys():
             if self.dataarray[key].dims == ():
@@ -154,27 +162,24 @@ class XArrayDatacube(Datacube):
         # Get the indexes of the axis we want to query
         # XArray does not support branching, so no need to use label, we just take the next axis
 
-        if self.grid_mapper is not None:
-            if axis.name == first_axis:
-                indexes = []
-            elif axis.name == second_axis:
-                indexes = []
-            else:
-                # assert axis.name == next(iter(subarray.xindexes))
-                # indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
-                if axis.name in self.complete_axes:
-                    # indexes = list(subarray.indexes[axis.name])
-                    indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
-                else:
-                    indexes = [subarray[axis.name].values]
+        if axis.name in self.transformation.keys():
+            axis_transforms = self.transformation[axis.name]
+            for transform in axis_transforms:
+                if isinstance(transform, DatacubeMapper):
+                    if axis.name == first_axis:
+                        indexes = []
+                    elif axis.name == second_axis:
+                        indexes = []
+                    else:
+                        if axis.name in self.complete_axes:
+                            indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
+                        else:
+                            indexes = [subarray[axis.name].values]
         else:
             if axis.name in self.complete_axes:
-                # indexes = list(subarray.indexes[axis.name])
                 indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
             else:
                 indexes = [subarray[axis.name].values]
-            # assert axis.name == next(iter(subarray.xindexes))
-            # indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
 
         # Here, we do a cyclic remapping so we look up on the right existing values in the cyclic range on the datacube
         search_ranges = axis.remap([lower, upper])
