@@ -64,6 +64,10 @@ class DatacubeAxisTransformation(ABC):
         pass
 
 
-_type_to_datacube_transformation_lookup = {"mapper": "DatacubeMapper", "cyclic": "DatacubeAxisCyclic"}
+_type_to_datacube_transformation_lookup = {
+    "mapper": "DatacubeMapper",
+    "cyclic": "DatacubeAxisCyclic",
+    "merge": "DatacubeAxisMerger",
+}
 
-_type_to_transformation_file_lookup = {"mapper": "mappers", "cyclic": "cyclic"}
+_type_to_transformation_file_lookup = {"mapper": "mappers", "cyclic": "cyclic", "merge": "merger"}
