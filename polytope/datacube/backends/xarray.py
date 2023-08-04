@@ -233,7 +233,8 @@ class XArrayDatacube(Datacube):
         for _name, values in self.dataarray.coords.variables.items():
             treated_axes.append(_name)
             if _name == name:
-                return values
+                # print(values.values)
+                return values.values
         for _name in self.dataarray.dims:
             if _name not in treated_axes:
                 if _name == name:

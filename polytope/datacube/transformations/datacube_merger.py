@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import numpy as np
 
 from ..backends.datacube import configure_datacube_axis
@@ -13,7 +15,8 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         self._linkers = merge_options["linkers"]
 
     def merged_values(self, values, datacube):
-        first_ax_vals = values
+        # first_ax_vals = values
+        first_ax_vals = datacube.ax_vals(self.name)
         second_ax_name = self._second_axis
         second_ax_vals = datacube.ax_vals(second_ax_name)
         linkers = self._linkers
@@ -29,13 +32,17 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         merged_values = self.merged_values(values, datacube)
         # Remove the merge option from the axis options since we have already handled it
         # so do not want to handle it again
-        axis_options = datacube.axis_options[name]["transformation"]
+        axis_options = deepcopy(datacube.axis_options[name]["transformation"])
         axis_options.pop("merge")
         # Update the nested dictionary with the modified axis option for our axis
-        new_datacube_axis_options = datacube.axis_options
-        new_datacube_axis_options[name]["transformation"] = axis_options
+        new_datacube_axis_options = deepcopy(datacube.axis_options)
+        # new_datacube_axis_options[name]["transformation"] = axis_options
+        if axis_options == {}:
+            new_datacube_axis_options[name] = {}
+        else:
+            new_datacube_axis_options[name]["transformation"] = axis_options
         # Reconfigure the axis with the rest of its configurations
-        configure_datacube_axis(new_datacube_axis_options, name, merged_values, datacube)
+        configure_datacube_axis(new_datacube_axis_options[name], name, merged_values, datacube)
         self.finish_transformation(datacube, merged_values)
 
     def transformation_axes_final(self):
