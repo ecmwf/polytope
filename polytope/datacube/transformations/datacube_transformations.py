@@ -58,7 +58,6 @@ class DatacubeAxisTransformation(ABC):
     def transformation_axes_final(self):
         pass
 
-    # TODO: do we need this? to apply transformation to datacube yes...
     @abstractmethod
     def apply_transformation(self, name, datacube, values):
         pass

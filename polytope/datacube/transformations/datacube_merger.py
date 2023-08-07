@@ -15,7 +15,6 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         self._linkers = merge_options["linkers"]
 
     def merged_values(self, datacube):
-        # first_ax_vals = values
         first_ax_vals = datacube.ax_vals(self.name)
         second_ax_name = self._second_axis
         second_ax_vals = datacube.ax_vals(second_ax_name)
@@ -36,7 +35,6 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         axis_options.pop("merge")
         # Update the nested dictionary with the modified axis option for our axis
         new_datacube_axis_options = deepcopy(datacube.axis_options)
-        # new_datacube_axis_options[name]["transformation"] = axis_options
         if axis_options == {}:
             new_datacube_axis_options[name] = {}
         else:

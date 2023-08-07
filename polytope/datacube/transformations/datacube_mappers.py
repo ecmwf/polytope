@@ -26,7 +26,6 @@ class DatacubeMapper(DatacubeAxisTransformation):
         return transformation
 
     def apply_transformation(self, name, datacube, values):
-        # TODO: how is this going to work once the cyclicity is a transformation?
         # Create mapped axes here
         transformation = self.generate_final_transformation()
         for i in range(len(transformation._mapped_axes)):

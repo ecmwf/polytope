@@ -106,6 +106,7 @@ class XArrayDatacube(Datacube):
     def get_mapper(self, axis):
         return self._axes[axis]
 
+    # TODO: should this be in DatacubePath?
     def remap_path(self, path: DatacubePath):
         for key in path:
             value = path[key]
@@ -133,6 +134,7 @@ class XArrayDatacube(Datacube):
                 axis_transforms = self.transformation[axis.name]
                 for transform in axis_transforms:
                     if isinstance(transform, DatacubeMapper):
+                        # TODO: add this in the transformations as a find_transformation_idx_between method
                         # The if and for above loop through the transforms for that axis and
                         # determine if there is a grid mapper transform
                         first_axis = transform._mapped_axes()[0]
@@ -204,6 +206,7 @@ class XArrayDatacube(Datacube):
         if axis.name in self.transformation.keys():
             axis_transforms = self.transformation[axis.name]
             for transform in axis_transforms:
+                # TODO: put this within the transform as transformed_indices method
                 if isinstance(transform, DatacubeMapper):
                     if axis.name == first_axis:
                         indexes = []
@@ -321,7 +324,6 @@ class XArrayDatacube(Datacube):
         for _name, values in self.dataarray.coords.variables.items():
             treated_axes.append(_name)
             if _name == name:
-                # print(values.values)
                 return values.values
         for _name in self.dataarray.dims:
             if _name not in treated_axes:

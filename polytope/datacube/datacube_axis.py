@@ -6,6 +6,10 @@ from typing import Any, List
 import numpy as np
 import pandas as pd
 
+# TODO: for the cyclic axes, implement them as a decorator that can be turned on or off according to
+# a special is_cyclic property of the DatacubeAxis
+# TODO: maybe create dico of which axes can be cyclic too
+
 
 class DatacubeAxis(ABC):
     @abstractproperty
@@ -56,23 +60,6 @@ class DatacubeAxis(ABC):
     def offset(self, value: Any) -> int:
         pass
 
-    # @staticmethod
-    # def merge(options, name, values, datacube):
-    #     # This function will not actually create an axis, it will compute values of when we merge the axes together
-    #     # the merge options will look like "time": {"merge": {"with":"step", "linker": "00T"}}
-    #     first_ax_vals = values
-    #     second_ax_name = options["merge"]["with"]
-    #     second_ax_vals = datacube.ax_vals(second_ax_name)
-    #     linker = options["merge"]["linker"]
-    #     merged_values = []
-    #     for first_val in first_ax_vals:
-    #         for second_val in second_ax_vals:
-    #             merged_val = first_val + linker + second_val
-    #             merged_values.append(merged_val)
-    #     merged_values = np.array(merged_values)
-
-    #     return merged_values
-
     @staticmethod
     def create_axis(name, values, datacube):
         cyclic_transform = None
@@ -94,6 +81,7 @@ class DatacubeAxis(ABC):
     @staticmethod
     def create_cyclic(cyclic_transform, name, values, datacube):
         values = np.array(values)
+        DatacubeAxis.check_axis_type(name, values)
         value_type = values.dtype.type
         axes_type_str = type(_type_to_axis_lookup[value_type]).__name__
         axes_type_str += "Cyclic"

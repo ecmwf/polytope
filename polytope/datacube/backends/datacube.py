@@ -44,7 +44,6 @@ class Datacube(ABC):
     def create(datacube, axis_options: dict):
         if isinstance(datacube, (xr.core.dataarray.DataArray, xr.core.dataset.Dataset)):
             from .xarray import XArrayDatacube
-
             xadatacube = XArrayDatacube(datacube, axis_options=axis_options)
             return xadatacube
         else:
@@ -58,13 +57,6 @@ class Datacube(ABC):
 
 
 def configure_datacube_axis(options, name, values, datacube):
-    # TODO: this will not work with the generic transformation class anymore
-    # TODO: need to see where the axes are created now
-
-    # NOTE: Maybe here, with new generic transformation class,
-    # instead of handling the options, we should just create an axis and look
-    # up the associated transformation to
-
     # First need to check we are not initialising an axis which should not be initialised
     if name not in datacube.blocked_axes:
         # Now look at the options passed in
@@ -74,5 +66,4 @@ def configure_datacube_axis(options, name, values, datacube):
             from ..transformations.datacube_transformations import (
                 DatacubeAxisTransformation,
             )
-
             DatacubeAxisTransformation.create_transformation(options, name, values, datacube)
