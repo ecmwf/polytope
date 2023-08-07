@@ -112,6 +112,15 @@ class XArrayDatacube(Datacube):
             path[key] = self._axes[key].remap_val_to_axis_range(value)
         return path
 
+    def _find_indexes_between(self, axis, indexes, low, up):
+        if axis.name in self.complete_axes:
+            start = indexes.searchsorted(low, "left")
+            end = indexes.searchsorted(up, "right")
+            indexes_between = indexes[start:end].to_list()
+        else:
+            indexes_between = [i for i in indexes if low <= i <= up]
+        return indexes_between
+
     def _look_up_datacube(self, search_ranges, search_ranges_offset, indexes, axis, first_val):
         idx_between = []
         for i in range(len(search_ranges)):
@@ -133,46 +142,21 @@ class XArrayDatacube(Datacube):
                         elif axis.name == second_axis:
                             indexes_between = transform.map_second_axis(first_val, low, up)
                         else:
-                            if axis.name in self.complete_axes:
-                                start = indexes.searchsorted(low, "left")
-                                end = indexes.searchsorted(up, "right")
-                                indexes_between = indexes[start:end].to_list()
-                            else:
-                                indexes_between = [i for i in indexes if low <= i <= up]
+                            indexes_between = self._find_indexes_between(axis, indexes, low, up)
                     if isinstance(transform, DatacubeAxisCyclic):
-                        if axis.name in self.complete_axes:
-                            start = indexes.searchsorted(low, "left")
-                            end = indexes.searchsorted(up, "right")
-                            indexes_between = indexes[start:end].to_list()
-                        else:
-                            indexes_between = [i for i in indexes if low <= i <= up]
+                        indexes_between = self._find_indexes_between(axis, indexes, low, up)
                     if isinstance(transform, DatacubeAxisReverse):
-                        if axis.name in self.complete_axes:
-                            sorted_indexes = indexes.sort_values()
-                            start = sorted_indexes.searchsorted(low, "left")
-                            end = sorted_indexes.searchsorted(up, "right")
-                            indexes_between = sorted_indexes[start:end].to_list()
-                        else:
-                            indexes_between = [i for i in indexes if low <= i <= up]
+                        sorted_indexes = indexes.sort_values()
+                        indexes_between = self._find_indexes_between(axis, sorted_indexes, low, up)
                     if isinstance(transform, DatacubeAxisMerger):
                         # TODO: does this work?
-                        if axis.name in self.complete_axes:
-                            start = indexes.searchsorted(low, "left")
-                            end = indexes.searchsorted(up, "right")
-                            indexes_between = indexes[start:end].to_list()
-                        else:
-                            indexes_between = [i for i in indexes if low <= i <= up]
+                        indexes_between = self._find_indexes_between(axis, indexes, low, up)
 
             else:
                 # Find the range of indexes between lower and upper
                 # https://pandas.pydata.org/docs/reference/api/pandas.Index.searchsorted.html
                 # Assumes the indexes are already sorted (could sort to be sure) and monotonically increasing
-                if axis.name in self.complete_axes:
-                    start = indexes.searchsorted(low, "left")
-                    end = indexes.searchsorted(up, "right")
-                    indexes_between = indexes[start:end].to_list()
-                else:
-                    indexes_between = [i for i in indexes if low <= i <= up]
+                indexes_between = self._find_indexes_between(axis, indexes, low, up)
 
             # Now the indexes_between are values on the cyclic range so need to remap them to their original
             # values before returning them
