@@ -5,6 +5,7 @@ import xarray as xr
 from ...utility.combinatorics import unique, validate_axes
 from ..transformations.datacube_cyclic import DatacubeAxisCyclic
 from ..transformations.datacube_mappers import DatacubeMapper
+from ..transformations.datacube_merger import DatacubeAxisMerger
 from ..transformations.datacube_reverse import DatacubeAxisReverse
 from .datacube import Datacube, DatacubePath, IndexTree, configure_datacube_axis
 
@@ -47,6 +48,7 @@ class XArrayDatacube(Datacube):
             if len(path.items()) == self.axis_counter:
                 # first, find the grid mapper transform
                 grid_map_transform = None
+                merger_transform = None
                 for key in path.keys():
                     if self.dataarray[key].dims == ():
                         path.pop(key)
@@ -55,6 +57,8 @@ class XArrayDatacube(Datacube):
                         for transform in axis_transforms:
                             if isinstance(transform, DatacubeMapper):
                                 grid_map_transform = transform
+                            if isinstance(transform, DatacubeAxisMerger):
+                                merger_transform = transform
                 if grid_map_transform is not None:
                     # if we have a grid_mapper transform, find the new axis indices
                     first_axis = grid_map_transform._mapped_axes()[0]
@@ -70,8 +74,28 @@ class XArrayDatacube(Datacube):
                     value = subxarray.item()
                     key = subxarray.name
                     r.result = (key, value)
+                elif merger_transform is not None:
+                    merged_ax = merger_transform._first_axis
+                    merged_val = path[merged_ax]
+                    removed_ax = merger_transform._second_axis
+                    path.pop(merged_ax, None)
+                    path.pop(removed_ax, None)
+                    unmapped_first_val = merger_transform.unmerge(merged_val)[0]
+                    unmapped_second_val = merger_transform.unmerge(merged_val)[1]
+                    first_unmap_path = {merged_ax : unmapped_first_val}
+                    second_unmap_path = {removed_ax : unmapped_second_val}
+                    # Here, need to unmap the merged val into the two original merged axes
+                    # and select these values
+                    subxarray = self.dataarray.sel(path, method="nearest")
+                    # subxarray = subxarray.isel(merged_ax=val)
+                    subxarray = subxarray.sel(first_unmap_path)
+                    subxarray = subxarray.sel(second_unmap_path)
+                    value = subxarray.item()
+                    key = subxarray.name
+                    r.result = (key, value)
                 else:
                     # if we have no grid map, still need to assign values
+                    print(path)
                     subxarray = self.dataarray.sel(path, method="nearest")
                     value = subxarray.item()
                     key = subxarray.name
@@ -130,6 +154,14 @@ class XArrayDatacube(Datacube):
                             indexes_between = sorted_indexes[start:end].to_list()
                         else:
                             indexes_between = [i for i in indexes if low <= i <= up]
+                    if isinstance(transform, DatacubeAxisMerger):
+                        # TODO: does this work?
+                        if axis.name in self.complete_axes:
+                            start = indexes.searchsorted(low, "left")
+                            end = indexes.searchsorted(up, "right")
+                            indexes_between = indexes[start:end].to_list()
+                        else:
+                            indexes_between = [i for i in indexes if low <= i <= up]
 
             else:
                 # Find the range of indexes between lower and upper
@@ -169,6 +201,11 @@ class XArrayDatacube(Datacube):
                     second_axis = transform._mapped_axes()[1]
                     path.pop(first_axis, None)
                     path.pop(second_axis, None)
+                if isinstance(transform, DatacubeAxisMerger):
+                    # Need to remove the path key that it won't find because we created new
+                    # merged values
+                    merged_ax = transform._first_axis
+                    path.pop(merged_ax, None)
 
         for key in path.keys():
             if self.dataarray[key].dims == ():
@@ -203,6 +240,8 @@ class XArrayDatacube(Datacube):
                         indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
                     else:
                         indexes = [subarray[axis.name].values]
+                if isinstance(transform, DatacubeAxisMerger):
+                    indexes = [transform.merged_values(self)]
 
         else:
             if axis.name in self.complete_axes:
@@ -232,9 +271,57 @@ class XArrayDatacube(Datacube):
 
     def has_index(self, path: DatacubePath, axis, index):
         # when we want to obtain the value of an unsliceable axis, need to check the values does exist in the datacube
-        subarray = self.dataarray.sel(path)[axis.name]
-        subarray_vals = subarray.values
-        return index in subarray_vals
+        # subarray = self.dataarray.sel(path)[axis.name]
+        # subarray_vals = subarray.values
+        path = self.remap_path(path)
+        for key in path.keys():
+            if self.dataarray[key].dims == ():
+                path.pop(key)
+
+        if axis.name in self.transformation.keys():
+            axis_transforms = self.transformation[axis.name]
+            for transform in axis_transforms:
+                if isinstance(transform, DatacubeMapper):
+                    first_axis = transform._mapped_axes()[0]
+                    second_axis = transform._mapped_axes()[1]
+                    path.pop(first_axis, None)
+                    path.pop(second_axis, None)
+
+        for key in path.keys():
+            if self.dataarray[key].dims == ():
+                path.pop(key)
+
+        # Open a view on the subset identified by the path
+        subarray = self.dataarray.sel(path, method="nearest")
+        if axis.name in self.transformation.keys():
+            axis_transforms = self.transformation[axis.name]
+            for transform in axis_transforms:
+                if isinstance(transform, DatacubeMapper):
+                    first_axis = transform._mapped_axes()[0]
+                    second_axis = transform._mapped_axes()[1]
+                    if axis.name == first_axis:
+                        indexes = []
+                    elif axis.name == second_axis:
+                        indexes = []
+                    else:
+                        if axis.name in self.complete_axes:
+                            indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
+                        else:
+                            indexes = [subarray[axis.name].values]
+                if isinstance(transform, DatacubeAxisCyclic):
+                    if axis.name in self.complete_axes:
+                        indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
+                    else:
+                        indexes = [subarray[axis.name].values]
+                if isinstance(transform, DatacubeAxisReverse):
+                    if axis.name in self.complete_axes:
+                        indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
+                    else:
+                        indexes = [subarray[axis.name].values]
+                if isinstance(transform, DatacubeAxisMerger):
+                    indexes = [transform.merged_values(self)]
+        # return index in subarray_vals
+        return index in indexes
 
     @property
     def axes(self):

@@ -14,7 +14,7 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         self._second_axis = merge_options["with"]
         self._linkers = merge_options["linkers"]
 
-    def merged_values(self, values, datacube):
+    def merged_values(self, datacube):
         # first_ax_vals = values
         first_ax_vals = datacube.ax_vals(self.name)
         second_ax_name = self._second_axis
@@ -29,7 +29,7 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         return merged_values
 
     def apply_transformation(self, name, datacube, values):
-        merged_values = self.merged_values(values, datacube)
+        merged_values = self.merged_values(datacube)
         # Remove the merge option from the axis options since we have already handled it
         # so do not want to handle it again
         axis_options = deepcopy(datacube.axis_options[name]["transformation"])
@@ -51,9 +51,15 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
     def finish_transformation(self, datacube, values):
         # Need to "delete" the second axis we do not use anymore
         datacube.blocked_axes.append(self._second_axis)
-        # NOTE: we change the axis values here directly, which will not work with xarray
-        # TODO: fix this?
-        datacube.dataarray[self._first_axis] = values
 
     def generate_final_transformation(self):
         return self
+
+    def unmerge(self, merged_val):
+        first_idx = merged_val.find(self._linkers[0])
+        # second_idx = merged_val.find(self._linkers[1])
+        first_val = merged_val[:first_idx]
+        first_linker_size = len(self._linkers[0])
+        second_linked_size = len(self._linkers[1])
+        second_val = merged_val[first_idx + first_linker_size:-second_linked_size]
+        return (first_val, second_val)
