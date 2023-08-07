@@ -81,6 +81,7 @@ class DatacubeAxis(ABC):
             axis_transforms = datacube.transformation[name]
             for transform in axis_transforms:
                 from .transformations.datacube_cyclic import DatacubeAxisCyclic
+
                 if isinstance(transform, DatacubeAxisCyclic):
                     cyclic_transform = transform
 
