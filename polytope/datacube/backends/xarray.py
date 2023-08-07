@@ -6,7 +6,6 @@ from ...utility.combinatorics import unique, validate_axes
 from ..transformations.datacube_cyclic import DatacubeAxisCyclic
 from ..transformations.datacube_mappers import DatacubeMapper
 from ..transformations.datacube_merger import DatacubeAxisMerger
-from ..transformations.datacube_reverse import DatacubeAxisReverse
 from .datacube import Datacube, DatacubePath, IndexTree, configure_datacube_axis
 
 
@@ -25,7 +24,7 @@ class XArrayDatacube(Datacube):
         self.transformation = {}
         for name, values in dataarray.coords.variables.items():
             if name in dataarray.dims:
-                # self.dataarray = self.dataarray.sortby(name)
+                self.dataarray = self.dataarray.sortby(name)
                 options = axis_options.get(name, {})
                 configure_datacube_axis(options, name, values, self)
                 treated_axes.append(name)
@@ -146,14 +145,6 @@ class XArrayDatacube(Datacube):
                             indexes_between = indexes[start:end].to_list()
                         else:
                             indexes_between = [i for i in indexes if low <= i <= up]
-                    if isinstance(transform, DatacubeAxisReverse):
-                        if axis.name in self.complete_axes:
-                            sorted_indexes = indexes.sort_values()
-                            start = sorted_indexes.searchsorted(low, "left")
-                            end = sorted_indexes.searchsorted(up, "right")
-                            indexes_between = sorted_indexes[start:end].to_list()
-                        else:
-                            indexes_between = [i for i in indexes if low <= i <= up]
                     if isinstance(transform, DatacubeAxisMerger):
                         # TODO: does this work?
                         if axis.name in self.complete_axes:
@@ -235,11 +226,6 @@ class XArrayDatacube(Datacube):
                         indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
                     else:
                         indexes = [subarray[axis.name].values]
-                if isinstance(transform, DatacubeAxisReverse):
-                    if axis.name in self.complete_axes:
-                        indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
-                    else:
-                        indexes = [subarray[axis.name].values]
                 if isinstance(transform, DatacubeAxisMerger):
                     indexes = [transform.merged_values(self)]
 
@@ -313,13 +299,10 @@ class XArrayDatacube(Datacube):
                         indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
                     else:
                         indexes = [subarray[axis.name].values]
-                if isinstance(transform, DatacubeAxisReverse):
-                    if axis.name in self.complete_axes:
-                        indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
-                    else:
-                        indexes = [subarray[axis.name].values]
                 if isinstance(transform, DatacubeAxisMerger):
                     indexes = [transform.merged_values(self)]
+        else:
+            indexes = subarray[axis.name].values
         # return index in subarray_vals
         return index in indexes
 
