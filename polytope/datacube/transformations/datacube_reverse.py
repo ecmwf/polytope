@@ -14,17 +14,6 @@ class DatacubeAxisReverse(DatacubeAxisTransformation):
         return self
 
     def apply_transformation(self, name, datacube, values):
-        # axis_options = deepcopy(datacube.axis_options[name]["transformation"])
-        # axis_options.pop("reverse")
-        # # Update the nested dictionary with the modified axis option for our axis
-        # new_datacube_axis_options = deepcopy(datacube.axis_options)
-        # # if we have no transformations left, then empty the transformation dico
-        # if axis_options == {}:
-        #     new_datacube_axis_options[name] = {}
-        # else:
-        #     new_datacube_axis_options[name]["transformation"] = axis_options
-        # configure_datacube_axis(new_datacube_axis_options[name], name, values, datacube)
-
         reversed_values = self.reversed_values(datacube)
         # Remove the merge option from the axis options since we have already handled it
         # so do not want to handle it again
