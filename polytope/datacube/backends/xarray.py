@@ -82,8 +82,8 @@ class XArrayDatacube(Datacube):
                     path.pop(removed_ax, None)
                     unmapped_first_val = merger_transform.unmerge(merged_val)[0]
                     unmapped_second_val = merger_transform.unmerge(merged_val)[1]
-                    first_unmap_path = {merged_ax : unmapped_first_val}
-                    second_unmap_path = {removed_ax : unmapped_second_val}
+                    first_unmap_path = {merged_ax: unmapped_first_val}
+                    second_unmap_path = {removed_ax: unmapped_second_val}
                     # Here, need to unmap the merged val into the two original merged axes
                     # and select these values
                     subxarray = self.dataarray.sel(path, method="nearest")
@@ -321,6 +321,8 @@ class XArrayDatacube(Datacube):
                 if isinstance(transform, DatacubeAxisMerger):
                     indexes = [transform.merged_values(self)]
         # return index in subarray_vals
+        else:
+            indexes = subarray[axis.name].values
         return index in indexes
 
     @property
