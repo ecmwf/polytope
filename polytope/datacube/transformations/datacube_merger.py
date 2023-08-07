@@ -52,6 +52,7 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         # Need to "delete" the second axis we do not use anymore
         datacube.blocked_axes.append(self._second_axis)
         # NOTE: we change the axis values here directly, which will not work with xarray
+        # TODO: fix this?
         datacube.dataarray[self._first_axis] = values
 
     def generate_final_transformation(self):

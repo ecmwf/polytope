@@ -68,6 +68,10 @@ _type_to_datacube_transformation_lookup = {
     "mapper": "DatacubeMapper",
     "cyclic": "DatacubeAxisCyclic",
     "merge": "DatacubeAxisMerger",
+    "reverse": "DatacubeAxisReverse"
 }
 
-_type_to_transformation_file_lookup = {"mapper": "mappers", "cyclic": "cyclic", "merge": "merger"}
+_type_to_transformation_file_lookup = {"mapper": "mappers",
+                                       "cyclic": "cyclic",
+                                       "merge": "merger",
+                                       "reverse": "reverse"}

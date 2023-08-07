@@ -75,16 +75,18 @@ class DatacubeAxis(ABC):
 
     @staticmethod
     def create_axis(name, values, datacube):
+        cyclic_transform = None
+        # First check if axis has any cyclicity transformation
         if name in datacube.transformation.keys():
             axis_transforms = datacube.transformation[name]
             for transform in axis_transforms:
                 from .transformations.datacube_cyclic import DatacubeAxisCyclic
-
                 if isinstance(transform, DatacubeAxisCyclic):
-                    DatacubeAxis.create_cyclic(transform, name, values, datacube)
-                else:
-                    # if we don't have a cyclic transform, then we create a standard axis
-                    DatacubeAxis.create_standard(name, values, datacube)
+                    cyclic_transform = transform
+
+        if cyclic_transform is not None:
+            # the axis has a cyclic transformation
+            DatacubeAxis.create_cyclic(transform, name, values, datacube)
         else:
             DatacubeAxis.create_standard(name, values, datacube)
 
