@@ -63,3 +63,6 @@ class MockDatacube(Datacube):
 
     def ax_vals(self, name):
         return []
+
+    def _find_indexes_between(self, axis, indexes, low, up):
+        pass

@@ -62,6 +62,10 @@ class DatacubeAxisTransformation(ABC):
     def apply_transformation(self, name, datacube, values):
         pass
 
+    @abstractmethod
+    def _find_transformed_indices_between(self, axis, datacube, indexes, low, up, first_val):
+        pass
+
 
 _type_to_datacube_transformation_lookup = {
     "mapper": "DatacubeMapper",

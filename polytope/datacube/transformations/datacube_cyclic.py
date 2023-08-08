@@ -38,3 +38,7 @@ class DatacubeAxisCyclic(DatacubeAxisTransformation):
         else:
             new_datacube_axis_options[name]["transformation"] = axis_options
         configure_datacube_axis(new_datacube_axis_options[name], name, values, datacube)
+
+    def _find_transformed_indices_between(self, axis, datacube, indexes, low, up, first_val):
+        indexes_between = datacube._find_indexes_between(axis, indexes, low, up)
+        return indexes_between

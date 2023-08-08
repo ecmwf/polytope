@@ -54,6 +54,10 @@ class Datacube(ABC):
     def ax_vals(self, name: str) -> List:
         pass
 
+    @abstractmethod
+    def _find_indexes_between(self, axis, indexes, low, up):
+        pass
+
     # TODO: need to add transformation properties like the datacube.transformations dico
 
 

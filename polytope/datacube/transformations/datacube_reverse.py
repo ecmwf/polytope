@@ -28,3 +28,8 @@ class DatacubeAxisReverse(DatacubeAxisTransformation):
 
     def transformation_axes_final(self):
         return [self.name]
+
+    def _find_transformed_indices_between(self, axis, datacube, indexes, low, up, first_val):
+        sorted_indexes = indexes.sort_values()
+        indexes_between = datacube._find_indexes_between(axis, sorted_indexes, low, up)
+        return indexes_between

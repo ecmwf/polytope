@@ -71,6 +71,17 @@ class DatacubeMapper(DatacubeAxisTransformation):
         final_transformation = self.generate_final_transformation()
         return final_transformation.unmap(first_val, second_val)
 
+    def _find_transformed_indices_between(self, axis, datacube, indexes, low, up, first_val):
+        first_axis = self._mapped_axes()[0]
+        second_axis = self._mapped_axes()[1]
+        if axis.name == first_axis:
+            indexes_between = self.map_first_axis(low, up)
+        elif axis.name == second_axis:
+            indexes_between = self.map_second_axis(first_val, low, up)
+        else:
+            indexes_between = datacube._find_indexes_between(axis, indexes, low, up)
+        return indexes_between
+
 
 class OctahedralGridMapper(DatacubeMapper):
     def __init__(self, base_axis, mapped_axes, resolution):
