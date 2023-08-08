@@ -65,3 +65,12 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
     def _find_transformed_indices_between(self, axis, datacube, indexes, low, up, first_val):
         indexes_between = datacube._find_indexes_between(axis, indexes, low, up)
         return indexes_between
+
+    def _adjust_path(self, path):
+        merged_ax = self._first_axis
+        path.pop(merged_ax, None)
+        return (path, None)
+
+    def _find_transformed_axis_indices(self, datacube, axis, subarray):
+        indexes = [self.merged_values(datacube)]
+        return indexes

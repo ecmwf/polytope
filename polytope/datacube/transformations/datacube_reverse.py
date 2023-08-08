@@ -33,3 +33,10 @@ class DatacubeAxisReverse(DatacubeAxisTransformation):
         sorted_indexes = indexes.sort_values()
         indexes_between = datacube._find_indexes_between(axis, sorted_indexes, low, up)
         return indexes_between
+
+    def _adjust_path(self, path):
+        return (path, None)
+
+    def _find_transformed_axis_indices(self, datacube, axis, subarray):
+        indexes = datacube.datacube_natural_indexes(axis, subarray)
+        return indexes

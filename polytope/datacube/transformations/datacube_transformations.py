@@ -62,8 +62,17 @@ class DatacubeAxisTransformation(ABC):
     def apply_transformation(self, name, datacube, values):
         pass
 
+    # Methods to deal with transformation in datacube backends
     @abstractmethod
     def _find_transformed_indices_between(self, axis, datacube, indexes, low, up, first_val):
+        pass
+
+    @abstractmethod
+    def _adjust_path(self, path):
+        pass
+
+    @abstractmethod
+    def _find_transformed_axis_indices(self, datacube, axis, subarray):
         pass
 
 
