@@ -44,6 +44,7 @@ class Datacube(ABC):
     def create(datacube, axis_options: dict):
         if isinstance(datacube, (xr.core.dataarray.DataArray, xr.core.dataset.Dataset)):
             from .xarray import XArrayDatacube
+
             xadatacube = XArrayDatacube(datacube, axis_options=axis_options)
             return xadatacube
         else:
@@ -66,4 +67,5 @@ def configure_datacube_axis(options, name, values, datacube):
             from ..transformations.datacube_transformations import (
                 DatacubeAxisTransformation,
             )
+
             DatacubeAxisTransformation.create_transformation(options, name, values, datacube)

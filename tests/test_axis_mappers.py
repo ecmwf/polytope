@@ -2,7 +2,6 @@ import pandas as pd
 
 from polytope.datacube.datacube_axis import (
     FloatDatacubeAxis,
-    FloatDatacubeAxisCyclic,
     IntDatacubeAxis,
     PandasTimedeltaDatacubeAxis,
     PandasTimestampDatacubeAxis,
@@ -27,7 +26,9 @@ class TestAxisMappers:
         assert axis.remap([2, 3]) == [[2, 3]]
 
     def test_float_axis_cyclic(self):
-        axis = FloatDatacubeAxisCyclic()
+        axis = FloatDatacubeAxis()
+        axis.is_cyclic = True
+        axis = axis.update_axis()
         assert axis.parse(2) == 2.0
         assert axis.to_float(2) == 2.0
         assert axis.from_float(2) == 2.0
