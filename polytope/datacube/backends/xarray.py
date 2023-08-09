@@ -3,8 +3,6 @@ import math
 import xarray as xr
 
 from ...utility.combinatorics import unique, validate_axes
-from ..transformations.datacube_mappers import DatacubeMapper
-from ..transformations.datacube_merger import DatacubeAxisMerger
 from .datacube import Datacube, DatacubePath, IndexTree, configure_datacube_axis
 
 
@@ -41,61 +39,20 @@ class XArrayDatacube(Datacube):
     def get(self, requests: IndexTree):
         for r in requests.leaves:
             path = r.flatten()
-            path = self.remap_path(path)
             if len(path.items()) == self.axis_counter:
                 # first, find the grid mapper transform
-                grid_map_transform = None
-                merger_transform = None
+                unmap_path = {}
+                considered_axes = []
                 for key in path.keys():
-                    if self.dataarray[key].dims == ():
-                        path.pop(key)
-                    if key in self.transformation.keys():
-                        axis_transforms = self.transformation[key]
-                        for transform in axis_transforms:
-                            if isinstance(transform, DatacubeMapper):
-                                grid_map_transform = transform
-                            if isinstance(transform, DatacubeAxisMerger):
-                                merger_transform = transform
-                if grid_map_transform is not None:
-                    # if we have a grid_mapper transform, find the new axis indices
-                    first_axis = grid_map_transform._mapped_axes()[0]
-                    first_val = path[first_axis]
-                    second_axis = grid_map_transform._mapped_axes()[1]
-                    second_val = path[second_axis]
-                    path.pop(first_axis, None)
-                    path.pop(second_axis, None)
-                    subxarray = self.dataarray.sel(path, method="nearest")
-                    # need to remap the lat, lon in path to dataarray index
-                    unmapped_idx = grid_map_transform.unmap(first_val, second_val)
-                    subxarray = subxarray.isel(values=unmapped_idx)
-                    value = subxarray.item()
-                    key = subxarray.name
-                    r.result = (key, value)
-                elif merger_transform is not None:
-                    merged_ax = merger_transform._first_axis
-                    merged_val = path[merged_ax]
-                    removed_ax = merger_transform._second_axis
-                    path.pop(merged_ax, None)
-                    path.pop(removed_ax, None)
-                    unmapped_first_val = merger_transform.unmerge(merged_val)[0]
-                    unmapped_second_val = merger_transform.unmerge(merged_val)[1]
-                    first_unmap_path = {merged_ax: unmapped_first_val}
-                    second_unmap_path = {removed_ax: unmapped_second_val}
-                    # Here, need to unmap the merged val into the two original merged axes
-                    # and select these values
-                    subxarray = self.dataarray.sel(path, method="nearest")
-                    # subxarray = subxarray.isel(merged_ax=val)
-                    subxarray = subxarray.sel(first_unmap_path)
-                    subxarray = subxarray.sel(second_unmap_path)
-                    value = subxarray.item()
-                    key = subxarray.name
-                    r.result = (key, value)
-                else:
-                    # if we have no grid map, still need to assign values
-                    subxarray = self.dataarray.sel(path, method="nearest")
-                    value = subxarray.item()
-                    key = subxarray.name
-                    r.result = (key, value)
+                    (path, first_val, considered_axes, unmap_path) = self.fit_path_to_datacube(
+                        key, path, considered_axes, unmap_path
+                    )
+                    considered_axes.append(key)
+                subxarray = self.dataarray.sel(path, method="nearest")
+                subxarray = subxarray.sel(unmap_path)
+                value = subxarray.item()
+                key = subxarray.name
+                r.result = (key, value)
             else:
                 r.remove_branch()
 
@@ -131,8 +88,9 @@ class XArrayDatacube(Datacube):
             if axis.name in self.transformation.keys():
                 axis_transforms = self.transformation[axis.name]
                 for transform in axis_transforms:
-                    indexes_between = transform._find_transformed_indices_between(axis, self, indexes, low, up,
-                                                                                  first_val)
+                    indexes_between = transform._find_transformed_indices_between(
+                        axis, self, indexes, low, up, first_val
+                    )
             else:
                 indexes_between = self._find_indexes_between(axis, indexes, low, up)
             # Now the indexes_between are values on the cyclic range so need to remap them to their original
@@ -152,21 +110,23 @@ class XArrayDatacube(Datacube):
             indexes = [subarray[axis.name].values]
         return indexes
 
-    def fit_path_to_datacube(self, axis, path):
+    def fit_path_to_datacube(self, axis_name, path, considered_axes=[], unmap_path={}):
         # TODO: how to make this also work for the get method?
         path = self.remap_path(path)
         for key in path.keys():
             if self.dataarray[key].dims == ():
                 path.pop(key)
         first_val = None
-        if axis.name in self.transformation.keys():
-            axis_transforms = self.transformation[axis.name]
+        if axis_name in self.transformation.keys():
+            axis_transforms = self.transformation[axis_name]
             for transform in axis_transforms:
-                (path, first_val) = transform._adjust_path(path)
-        return (path, first_val)
+                (path, first_val, considered_axes, unmap_path) = transform._adjust_path(
+                    path, considered_axes, unmap_path
+                )
+        return (path, first_val, considered_axes, unmap_path)
 
     def get_indices(self, path: DatacubePath, axis, lower, upper):
-        (path, first_val) = self.fit_path_to_datacube(axis, path)
+        (path, first_val, considered_axes, unmap_path) = self.fit_path_to_datacube(axis.name, path)
         # Open a view on the subset identified by the path
         subarray = self.dataarray.sel(path, method="nearest")
         # Get the indexes of the axis we want to query

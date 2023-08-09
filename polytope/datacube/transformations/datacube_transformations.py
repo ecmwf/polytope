@@ -68,7 +68,7 @@ class DatacubeAxisTransformation(ABC):
         pass
 
     @abstractmethod
-    def _adjust_path(self, path):
+    def _adjust_path(self, path, considered_axes=[], unmap_path={}):
         pass
 
     @abstractmethod
