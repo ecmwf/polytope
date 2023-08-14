@@ -1,6 +1,7 @@
 import math
 
 import xarray as xr
+from copy import deepcopy
 
 from ...utility.combinatorics import unique, validate_axes
 from .datacube import Datacube, DatacubePath, IndexTree, configure_datacube_axis
@@ -87,10 +88,15 @@ class XArrayDatacube(Datacube):
             up = r[1]
             if axis.name in self.transformation.keys():
                 axis_transforms = self.transformation[axis.name]
+                temp_indexes = deepcopy(indexes)
                 for transform in axis_transforms:
-                    indexes_between = transform._find_transformed_indices_between(
-                        axis, self, indexes, low, up, first_val
+                    # indexes_between = transform._find_transformed_indices_between(
+                    #     axis, self, indexes, low, up, first_val
+                    # )
+                    temp_indexes = transform._find_transformed_indices_between(
+                        axis, self, temp_indexes, low, up, first_val
                     )
+                indexes_between = temp_indexes
             else:
                 indexes_between = self._find_indexes_between(axis, indexes, low, up)
             # Now the indexes_between are values on the cyclic range so need to remap them to their original
