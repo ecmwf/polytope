@@ -69,6 +69,9 @@ class DatacubeAxisTransformation(ABC):
 
     @abstractmethod
     def _adjust_path(self, path, considered_axes=[], unmap_path={}):
+        # Some of the axes in the datacube should appear or disappear due to transformations
+        # When we ask the datacube for a path, we should thus remove these axes from the path
+        # But we want to keep track of the removed axes to be able to request data on the datacube still in unmap_path
         pass
 
     @abstractmethod
