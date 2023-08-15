@@ -62,9 +62,9 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         second_val = merged_val[first_idx + first_linker_size : -second_linked_size]
         return (first_val, second_val)
 
-    def _find_transformed_indices_between(self, axis, datacube, indexes, low, up, first_val):
+    def _find_transformed_indices_between(self, axis, datacube, indexes, low, up, first_val, offset):
         indexes_between = datacube._find_indexes_between(axis, indexes, low, up)
-        return indexes_between
+        return (offset, indexes_between)
 
     def _adjust_path(self, path, considered_axes=[], unmap_path={}):
         merged_ax = self._first_axis
@@ -79,6 +79,6 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
             unmap_path[removed_ax] = unmapped_second_val
         return (path, None, considered_axes, unmap_path)
 
-    def _find_transformed_axis_indices(self, datacube, axis, subarray):
+    def _find_transformed_axis_indices(self, datacube, axis, subarray, already_has_indexes):
         indexes = [self.merged_values(datacube)]
         return indexes

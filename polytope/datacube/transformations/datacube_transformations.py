@@ -64,7 +64,7 @@ class DatacubeAxisTransformation(ABC):
 
     # Methods to deal with transformation in datacube backends
     @abstractmethod
-    def _find_transformed_indices_between(self, axis, datacube, indexes, low, up, first_val):
+    def _find_transformed_indices_between(self, axis, datacube, indexes, low, up, first_val, offset):
         # Some of the axes in the datacube appear or disappear due to transformations
         # When we look up the datacube, for those axes, we should take particular care to find the right
         # values between low and up
@@ -78,7 +78,7 @@ class DatacubeAxisTransformation(ABC):
         pass
 
     @abstractmethod
-    def _find_transformed_axis_indices(self, datacube, axis, subarray):
+    def _find_transformed_axis_indices(self, datacube, axis, subarray, already_has_indexes):
         # Some of the axes in the datacube appear or disappear due to transformations
         # When we look up the datacube, for those axes, we should take particular care to find the right
         # values which exist on those axes

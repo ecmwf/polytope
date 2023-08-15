@@ -7,7 +7,7 @@ from polytope.polytope import Polytope, Request
 from polytope.shapes import Select
 
 
-class TestSlicing4DXarrayDatacube:
+class TestMergeTransformation:
     def setup_method(self, method):
         # Create a dataarray with 4 labelled axes using different index types
         array = xr.DataArray(

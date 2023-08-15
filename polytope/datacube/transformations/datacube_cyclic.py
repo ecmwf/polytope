@@ -39,13 +39,16 @@ class DatacubeAxisCyclic(DatacubeAxisTransformation):
             new_datacube_axis_options[name]["transformation"] = axis_options
         configure_datacube_axis(new_datacube_axis_options[name], name, values, datacube)
 
-    def _find_transformed_indices_between(self, axis, datacube, indexes, low, up, first_val):
+    def _find_transformed_indices_between(self, axis, datacube, indexes, low, up, first_val, offset):
         indexes_between = datacube._find_indexes_between(axis, indexes, low, up)
-        return indexes_between
+        return (offset, indexes_between)
 
     def _adjust_path(self, path, considered_axes=[], unmap_path={}):
-        return (path, None, [], None)
+        return (path, None, considered_axes, unmap_path)
 
-    def _find_transformed_axis_indices(self, datacube, axis, subarray):
-        indexes = datacube.datacube_natural_indexes(axis, subarray)
-        return indexes
+    def _find_transformed_axis_indices(self, datacube, axis, subarray, already_has_indexes):
+        if not already_has_indexes:
+            indexes = datacube.datacube_natural_indexes(axis, subarray)
+            return indexes
+        else:
+            pass
