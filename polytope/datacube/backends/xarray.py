@@ -162,6 +162,8 @@ class XArrayDatacube(Datacube):
             # in case there are multiple relevant transformations for an axis
             already_has_indexes = False
             for transform in axis_transforms:
+                # TODO: here, instead of creating the indices, would be better to create the standard datacube axes and
+                # then succesively map them to what they should be
                 indexes = transform._find_transformed_axis_indices(self, axis, subarray, already_has_indexes)
                 already_has_indexes = True
         else:
