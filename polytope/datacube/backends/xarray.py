@@ -41,23 +41,16 @@ class XArrayDatacube(Datacube):
     def get(self, requests: IndexTree):
         for r in requests.leaves:
             path = r.flatten()
-            print(path)
             if len(path.items()) == self.axis_counter:
                 # first, find the grid mapper transform
                 unmap_path = {}
                 considered_axes = []
-                # for key in path.keys():
                 if True:
-                    # (path, first_val, considered_axes, unmap_path) = self.fit_path_to_datacube(
-                    #     key, path, considered_axes, unmap_path
-                    # )
                     (path, first_val, considered_axes, unmap_path) = self.fit_path_to_original_datacube(
                         path
                     )
-                    # considered_axes.append(key)
                 subxarray = self.dataarray.sel(path, method="nearest")
                 subxarray = subxarray.sel(unmap_path)
-                print(subxarray)
                 value = subxarray.item()
                 key = subxarray.name
                 r.result = (key, value)
@@ -101,8 +94,6 @@ class XArrayDatacube(Datacube):
                         axis, self, temp_indexes, low, up, first_val, offset
                     )
                 indexes_between = temp_indexes
-                # print("idx between")
-                # print(indexes_between)
             else:
                 indexes_between = self._find_indexes_between(axis, indexes, low, up)
             # Now the indexes_between are values on the cyclic range so need to remap them to their original
@@ -142,13 +133,6 @@ class XArrayDatacube(Datacube):
 
     def fit_path_to_original_datacube(self, path):
         path = self.remap_path(path)
-        # for key in path.keys():
-        #     # if key in self.dataarray.keys():
-        #     print(key)
-        #     print(self.dataarray["step"])
-        #     if key in self.dataarray:
-        #         if self.dataarray[key].dims == ():
-        #             path.pop(key)
         first_val = None
         unmap_path = {}
         considered_axes = []
@@ -166,35 +150,7 @@ class XArrayDatacube(Datacube):
         return (path, first_val, considered_axes, unmap_path)
 
     def get_indices(self, path: DatacubePath, axis, lower, upper):
-        # print("inside get indices")
-        # print(path)
-        print(self.dataarray)
         (path, first_val, considered_axes, unmap_path) = self.fit_path_to_original_datacube(path)
-        # print("HERE NOW")
-        # print(path)
-        # print(unmap_path)
-        # Open a view on the subset identified by the path
-        # NOTE: THE UNMAP INFO DOES NOT COMMUNICATE BETWEEN UNSLICEABLE AND SLICEABLE CHILDREN NODES
-        # IS THIS OK BECAUSE UNSLICEABLE CHILDREN SHOULD NOT HAVE TRANSFORMATIONS?
-        # print("inside get_indices")
-        # print(path)
-        # print(self.dataarray["date"])
-        # first_val = None
-        # unmap_path = {}
-        # considered_axes = []
-        # for key in path.keys():
-        #     if key in self.fake_axes:
-        #         path.pop(key)
-        # for key in path.keys():
-        #     print(key)
-        #     (path, first_val, considered_axes, unmap_path) = self.fit_path_to_datacube(
-        #         key, path, considered_axes, unmap_path
-        #     )
-        #     print("here")
-        #     print(path)
-            # TODO: here, now go through the axes transformations and call something like transformation.remove_axes()
-            # to remove the axes that do not actually exist on the datacube
-            # considered_axes.append(key)
 
         subarray = self.dataarray.sel(path, method="nearest")
         subarray = subarray.sel(unmap_path)

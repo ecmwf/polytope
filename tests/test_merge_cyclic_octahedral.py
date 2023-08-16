@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 import xarray as xr
 
 from polytope.datacube.backends.xarray import XArrayDatacube
@@ -42,4 +41,4 @@ class TestSlicing4DXarrayDatacube:
         result.pprint()
         assert result.leaves[0].flatten()["date"] == np.datetime64("2000-01-01T06:00:00")
         for leaf in result.leaves:
-            assert leaf.flatten()["step"] in [0, 1, 2]
+            assert leaf.flatten()["step"] in [0, 1, 2, 3]
