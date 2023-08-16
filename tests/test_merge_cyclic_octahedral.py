@@ -12,12 +12,12 @@ class TestSlicing4DXarrayDatacube:
     def setup_method(self, method):
         # Create a dataarray with 4 labelled axes using different index types
         array = xr.DataArray(
-            np.random.randn(1, 1, 2, 3),
+            np.random.randn(1, 1, 4289589, 3),
             dims=("date", "time", "values", "step"),
             coords={
                 "date": ["2000-01-01"],
                 "time": ["06:00"],
-                "values": [0, 1],
+                "values": list(range(4289589)),
                 "step": [0, 1, 2],
             },
         )
@@ -25,18 +25,21 @@ class TestSlicing4DXarrayDatacube:
                    "values": {"transformation": {"mapper": {"type": "octahedral",
                                                             "resolution": 1280,
                                                             "axes": ["latitude", "longitude"]}}},
-                   "step": {"transformation": {"cyclic": [0, 1]}},
+                   "step": {"transformation": {"cyclic": [0, 2]}},
                    }
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
 
-    @pytest.mark.skip(reason="Need date time to not be strings")
+    # @pytest.mark.skip(reason="Need date time to not be strings")
     def test_merge_axis(self):
         # NOTE: does not work because the date is a string in the merge option...
-        request = Request(Select("date", ["2000-01-01T06:00:00"]),
+        date = np.datetime64("2000-01-01T06:00:00")
+        request = Request(Select("date", [date]),
                           Span("step", 0, 3),
                           Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]))
         result = self.API.retrieve(request)
         result.pprint()
-        assert result.leaves[0].flatten()["date"] == "2000-01-01T06:00:00"
+        assert result.leaves[0].flatten()["date"] == np.datetime64("2000-01-01T06:00:00")
+        for leaf in result.leaves:
+            assert leaf.flatten()["step"] in [0, 1, 2]

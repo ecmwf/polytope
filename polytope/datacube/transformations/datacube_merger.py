@@ -23,7 +23,7 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         for first_val in first_ax_vals:
             for second_val in second_ax_vals:
                 # TODO: check that the first and second val are strings
-                merged_values.append(first_val + linkers[0] + second_val + linkers[1])
+                merged_values.append(np.datetime64(first_val + linkers[0] + second_val + linkers[1]))
         merged_values = np.array(merged_values)
         return merged_values
 
@@ -54,6 +54,7 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         return self
 
     def unmerge(self, merged_val):
+        merged_val = str(merged_val)
         first_idx = merged_val.find(self._linkers[0])
         # second_idx = merged_val.find(self._linkers[1])
         first_val = merged_val[:first_idx]
@@ -67,8 +68,11 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         return (offset, indexes_between)
 
     def _adjust_path(self, path, considered_axes=[], unmap_path={}):
+        print("inside adjust path")
         merged_ax = self._first_axis
+        print(merged_ax)
         merged_val = path.get(merged_ax, None)
+        print(merged_val)
         removed_ax = self._second_axis
         path.pop(removed_ax, None)
         path.pop(merged_ax, None)
@@ -80,5 +84,7 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         return (path, None, considered_axes, unmap_path)
 
     def _find_transformed_axis_indices(self, datacube, axis, subarray, already_has_indexes):
-        indexes = [self.merged_values(datacube)]
+        datacube.complete_axes.remove(axis.name)
+        print(self.merged_values(datacube))
+        indexes = self.merged_values(datacube)
         return indexes

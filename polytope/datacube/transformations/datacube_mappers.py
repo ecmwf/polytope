@@ -39,6 +39,7 @@ class DatacubeMapper(DatacubeAxisTransformation):
                 # the values[0] will be a value on the first axis
                 values = np.array(transformation.second_axis_vals(values[0]))
                 configure_datacube_axis(new_axis_options, axis_name, values, datacube)
+            datacube.fake_axes.append(axis_name)
 
     def transformation_axes_final(self):
         final_transformation = self.generate_final_transformation()

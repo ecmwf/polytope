@@ -26,4 +26,4 @@ class TestMergeTransformation:
     def test_merge_axis(self):
         request = Request(Select("date", ["2000-01-01T06:00:00"]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].flatten()["date"] == "2000-01-01T06:00:00"
+        assert result.leaves[0].flatten()["date"] == np.datetime64("2000-01-01T06:00:00")
