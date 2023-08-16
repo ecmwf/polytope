@@ -83,7 +83,7 @@ class DatacubeMapper(DatacubeAxisTransformation):
             indexes_between = datacube._find_indexes_between(axis, indexes, low, up)
         return (None, indexes_between)
 
-    def _adjust_path(self, path, considered_axes=[], unmap_path={}):
+    def _adjust_path(self, path, considered_axes=[], unmap_path={}, changed_type_path={}):
         first_axis = self._mapped_axes()[0]
         first_val = path.get(first_axis, None)
         second_axis = self._mapped_axes()[1]
@@ -96,7 +96,7 @@ class DatacubeMapper(DatacubeAxisTransformation):
         if first_val is not None and second_val is not None:
             unmapped_idx = self.unmap(first_val, second_val)
             unmap_path[self.old_axis] = unmapped_idx
-        return (path, first_val, considered_axes, unmap_path)
+        return (path, first_val, considered_axes, unmap_path, changed_type_path)
 
     def _find_transformed_axis_indices(self, datacube, axis, subarray, already_has_indexes):
         first_axis = self._mapped_axes()[0]

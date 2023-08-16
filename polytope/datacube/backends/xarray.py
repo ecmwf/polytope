@@ -46,11 +46,15 @@ class XArrayDatacube(Datacube):
                 unmap_path = {}
                 considered_axes = []
                 if True:
-                    (path, first_val, considered_axes, unmap_path) = self.fit_path_to_original_datacube(
+                    (path, first_val, considered_axes, unmap_path,
+                     changed_type_path) = self.fit_path_to_original_datacube(
                         path
                     )
+                print(path)
+                print(self.dataarray)
                 subxarray = self.dataarray.sel(path, method="nearest")
                 subxarray = subxarray.sel(unmap_path)
+                subxarray = subxarray.sel(changed_type_path)
                 value = subxarray.item()
                 key = subxarray.name
                 r.result = (key, value)
@@ -120,40 +124,43 @@ class XArrayDatacube(Datacube):
             if self.dataarray[key].dims == ():
                 path.pop(key)
         first_val = None
+        changed_type_path = {}
         if axis_name in self.transformation.keys():
             axis_transforms = self.transformation[axis_name]
             first_val = None
             for transform in axis_transforms:
-                (path, temp_first_val, considered_axes, unmap_path) = transform._adjust_path(
-                    path, considered_axes, unmap_path
+                (path, temp_first_val, considered_axes, unmap_path, changed_type_path) = transform._adjust_path(
+                    path, considered_axes, unmap_path, changed_type_path
                 )
                 if temp_first_val:
                     first_val = temp_first_val
-        return (path, first_val, considered_axes, unmap_path)
+        return (path, first_val, considered_axes, unmap_path, changed_type_path)
 
     def fit_path_to_original_datacube(self, path):
         path = self.remap_path(path)
         first_val = None
         unmap_path = {}
         considered_axes = []
+        changed_type_path = {}
         for axis_name in self.transformation.keys():
             axis_transforms = self.transformation[axis_name]
             for transform in axis_transforms:
-                (path, temp_first_val, considered_axes, unmap_path) = transform._adjust_path(
-                    path, considered_axes, unmap_path
+                (path, temp_first_val, considered_axes, unmap_path, changed_type_path) = transform._adjust_path(
+                    path, considered_axes, unmap_path, changed_type_path
                 )
                 if temp_first_val:
                     first_val = temp_first_val
         for key in path.keys():
             if self.dataarray[key].dims == ():
                 path.pop(key)
-        return (path, first_val, considered_axes, unmap_path)
+        return (path, first_val, considered_axes, unmap_path, changed_type_path)
 
     def get_indices(self, path: DatacubePath, axis, lower, upper):
-        (path, first_val, considered_axes, unmap_path) = self.fit_path_to_original_datacube(path)
+        (path, first_val, considered_axes, unmap_path, changed_type_path) = self.fit_path_to_original_datacube(path)
 
         subarray = self.dataarray.sel(path, method="nearest")
         subarray = subarray.sel(unmap_path)
+        subarray = subarray.sel(changed_type_path)
         # Get the indexes of the axis we want to query
         # XArray does not support branching, so no need to use label, we just take the next axis
         if axis.name in self.transformation.keys():

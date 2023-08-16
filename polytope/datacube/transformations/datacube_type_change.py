@@ -15,7 +15,7 @@ class DatacubeAxisTypeChange(DatacubeAxisTransformation):
 
     def generate_final_transformation(self):
         map_type = _type_to_datacube_type_change_lookup[self.new_type]
-        module = import_module("polytope.datacube.transformations.datacube_mappers")
+        module = import_module("polytope.datacube.transformations.datacube_type_change")
         constructor = getattr(module, map_type)
         transformation = deepcopy(constructor(self.name, self.new_type))
         return transformation
@@ -40,23 +40,30 @@ class DatacubeAxisTypeChange(DatacubeAxisTransformation):
 
     def _find_transformed_indices_between(self, axis, datacube, indexes, low, up, first_val, offset):
         # NOTE: needs to be in new type
-        indexes_between = datacube._find_indexes_between(axis, indexes, low, up)
+        if axis.name == self.name:
+            transformation = self.generate_final_transformation()
+            indexes_between = [transformation.transform_type(i) for i in indexes
+                               if low <= transformation.transform_type(i) <= up]
+            # indexes_between = []
+        else:
+            indexes_between = datacube._find_indexes_between(axis, indexes, low, up)
         return (offset, indexes_between)
 
-    def _adjust_path(self, path, considered_axes=[], unmap_path={}):
+    def _adjust_path(self, path, considered_axes=[], unmap_path={}, changed_type_path={}):
         # NOTE: used to access values, so path for the axis needs to be replaced to original type index
         axis_new_val = path.get(self.name, None)
         axis_val_str = str(axis_new_val)
-        path.pop(self.name)
-        path[self.name] = axis_val_str
-        return (path, None, considered_axes, unmap_path)
+        if axis_new_val is not None:
+            path.pop(self.name)
+            changed_type_path[self.name] = axis_val_str
+        return (path, None, considered_axes, unmap_path, changed_type_path)
 
     def _find_transformed_axis_indices(self, datacube, axis, subarray, already_has_indexes):
         # NOTE: needs to be in new type
-        transformation = self.generate_final_transformation()
+        # transformation = self.generate_final_transformation()
         if not already_has_indexes:
             indexes = datacube.datacube_natural_indexes(axis, subarray)
-            indexes = [transformation.transform_type(i) for i in indexes]
+            # indexes = [transformation.transform_type(i) for i in indexes]
             return indexes
         else:
             pass

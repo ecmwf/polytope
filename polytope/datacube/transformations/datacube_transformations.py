@@ -71,7 +71,7 @@ class DatacubeAxisTransformation(ABC):
         pass
 
     @abstractmethod
-    def _adjust_path(self, path, considered_axes=[], unmap_path={}):
+    def _adjust_path(self, path, considered_axes=[], unmap_path={}, changed_type_path={}):
         # Some of the axes in the datacube should appear or disappear due to transformations
         # When we ask the datacube for a path, we should thus remove these axes from the path
         # But we want to keep track of the removed axes to be able to request data on the datacube still in unmap_path
@@ -90,6 +90,12 @@ _type_to_datacube_transformation_lookup = {
     "cyclic": "DatacubeAxisCyclic",
     "merge": "DatacubeAxisMerger",
     "reverse": "DatacubeAxisReverse",
+    "type_change" : "DatacubeAxisTypeChange"
 }
 
-_type_to_transformation_file_lookup = {"mapper": "mappers", "cyclic": "cyclic", "merge": "merger", "reverse": "reverse"}
+_type_to_transformation_file_lookup = {"mapper": "mappers",
+                                       "cyclic": "cyclic",
+                                       "merge": "merger",
+                                       "reverse": "reverse",
+                                       "type_change" : "type_change"
+                                       }
