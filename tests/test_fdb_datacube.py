@@ -10,7 +10,8 @@ class TestSlicingFDBDatacube:
         grid_options = {
             "values": {"transformation": {"mapper": {"type": "octahedral", "resolution": 1280,
                                                      "axes": ["latitude", "longitude"]}}},
-            "date" : {"transformation": {"merge" : {"with" : "time", "linkers": ["T", "00"]}}}
+            "date" : {"transformation": {"merge" : {"with" : "time", "linkers": ["T", "00"]}}},
+            "step": {"transformation": {"type_change": "int"}}
         }
         config = {"class": "od", "expver": "0001", "levtype": "sfc", "step": 11}
         self.xarraydatacube = FDBDatacube(config, axis_options=grid_options)
@@ -26,7 +27,7 @@ class TestSlicingFDBDatacube:
             Select("date", ["20230710T120000"]),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
-            Select("param", [151130]),
+            Select("param", ["151130"]),
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["fc"]),
