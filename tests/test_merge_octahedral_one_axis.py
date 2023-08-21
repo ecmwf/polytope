@@ -18,19 +18,20 @@ class TestSlicing4DXarrayDatacube:
                     "mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
                 }
             },
-            "longitude": {"transformation": {"cyclic": [0, 360.0]}}
+            "longitude": {"transformation": {"cyclic": [0, 360.0]}},
         }
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=latlon_array, engine=self.slicer, axis_options=grid_options)
 
     def test_merge_axis(self):
         request = Request(
-                        Select("number", [0]),
-                        Select("time", ["2023-06-25T12:00:00"]),
-                        Select("step", ["00:00:00"]),
-                        Select("surface", [0]),
-                        Select("valid_time", ["2023-06-25T12:00:00"]),
-                        Box(["latitude", "longitude"], [0, 359.8], [0.2, 361.2]))
+            Select("number", [0]),
+            Select("time", ["2023-06-25T12:00:00"]),
+            Select("step", ["00:00:00"]),
+            Select("surface", [0]),
+            Select("valid_time", ["2023-06-25T12:00:00"]),
+            Box(["latitude", "longitude"], [0, 359.8], [0.2, 361.2]),
+        )
         result = self.API.retrieve(request)
         # result.pprint()
         assert result.leaves[0].flatten()["longitude"] == 0.0

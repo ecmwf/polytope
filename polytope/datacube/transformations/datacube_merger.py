@@ -27,7 +27,7 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
                 # merged_values.append(np.datetime64(first_val + linkers[0] + second_val + linkers[1]))
                 val_to_add = pd.to_datetime(first_val + linkers[0] + second_val + linkers[1])
                 val_to_add = val_to_add.to_numpy()
-                val_to_add = val_to_add.astype('datetime64[s]')
+                val_to_add = val_to_add.astype("datetime64[s]")
                 # merged_values.append(pd.to_datetime(first_val + linkers[0] + second_val + linkers[1]))
                 merged_values.append(val_to_add)
         merged_values = np.array(merged_values)

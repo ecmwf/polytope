@@ -90,12 +90,13 @@ _type_to_datacube_transformation_lookup = {
     "cyclic": "DatacubeAxisCyclic",
     "merge": "DatacubeAxisMerger",
     "reverse": "DatacubeAxisReverse",
-    "type_change" : "DatacubeAxisTypeChange"
+    "type_change": "DatacubeAxisTypeChange",
 }
 
-_type_to_transformation_file_lookup = {"mapper": "mappers",
-                                       "cyclic": "cyclic",
-                                       "merge": "merger",
-                                       "reverse": "reverse",
-                                       "type_change" : "type_change"
-                                       }
+_type_to_transformation_file_lookup = {
+    "mapper": "mappers",
+    "cyclic": "cyclic",
+    "merge": "merger",
+    "reverse": "reverse",
+    "type_change": "type_change",
+}

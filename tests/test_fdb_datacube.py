@@ -8,10 +8,13 @@ class TestSlicingFDBDatacube:
     def setup_method(self, method):
         # Create a dataarray with 3 labelled axes using different index types
         grid_options = {
-            "values": {"transformation": {"mapper": {"type": "octahedral", "resolution": 1280,
-                                                     "axes": ["latitude", "longitude"]}}},
-            "date" : {"transformation": {"merge" : {"with" : "time", "linkers": ["T", "00"]}}},
-            "step": {"transformation": {"type_change": "int"}}
+            "values": {
+                "transformation": {
+                    "mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                }
+            },
+            "date": {"transformation": {"merge": {"with": "time", "linkers": ["T", "00"]}}},
+            "step": {"transformation": {"type_change": "int"}},
         }
         config = {"class": "od", "expver": "0001", "levtype": "sfc", "step": 11}
         self.xarraydatacube = FDBDatacube(config, axis_options=grid_options)

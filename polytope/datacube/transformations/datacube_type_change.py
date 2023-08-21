@@ -42,8 +42,9 @@ class DatacubeAxisTypeChange(DatacubeAxisTransformation):
         # NOTE: needs to be in new type
         if axis.name == self.name:
             transformation = self.generate_final_transformation()
-            indexes_between = [transformation.transform_type(i) for i in indexes
-                               if low <= transformation.transform_type(i) <= up]
+            indexes_between = [
+                transformation.transform_type(i) for i in indexes if low <= transformation.transform_type(i) <= up
+            ]
             # indexes_between = []
         else:
             indexes_between = datacube._find_indexes_between(axis, indexes, low, up)
@@ -70,7 +71,6 @@ class DatacubeAxisTypeChange(DatacubeAxisTransformation):
 
 
 class TypeChangeStrToInt(DatacubeAxisTypeChange):
-
     def __init__(self, axis_name, new_type):
         self.axis_name = axis_name
         self._new_type = new_type
@@ -82,4 +82,4 @@ class TypeChangeStrToInt(DatacubeAxisTypeChange):
         return str(value)
 
 
-_type_to_datacube_type_change_lookup = {"int" : "TypeChangeStrToInt"}
+_type_to_datacube_type_change_lookup = {"int": "TypeChangeStrToInt"}

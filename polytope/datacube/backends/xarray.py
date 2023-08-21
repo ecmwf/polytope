@@ -45,8 +45,9 @@ class XArrayDatacube(Datacube):
                 # first, find the grid mapper transform
                 unmap_path = {}
                 considered_axes = []
-                (path, first_val, considered_axes, unmap_path,
-                    changed_type_path) = self.fit_path_to_original_datacube(path)
+                (path, first_val, considered_axes, unmap_path, changed_type_path) = self.fit_path_to_original_datacube(
+                    path
+                )
                 unmap_path.update(changed_type_path)
                 subxarray = self.dataarray.sel(path, method="nearest")
                 subxarray = subxarray.sel(unmap_path)

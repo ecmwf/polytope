@@ -20,12 +20,15 @@ class TestSlicing4DXarrayDatacube:
                 "step": [0, 1, 2],
             },
         )
-        options = {"date": {"transformation": {"merge": {"with": "time", "linkers": ["T", ":00"]}}},
-                   "values": {"transformation": {"mapper": {"type": "octahedral",
-                                                            "resolution": 1280,
-                                                            "axes": ["latitude", "longitude"]}}},
-                   "step": {"transformation": {"cyclic": [0, 2]}},
-                   }
+        options = {
+            "date": {"transformation": {"merge": {"with": "time", "linkers": ["T", ":00"]}}},
+            "values": {
+                "transformation": {
+                    "mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                }
+            },
+            "step": {"transformation": {"cyclic": [0, 2]}},
+        }
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
@@ -34,9 +37,9 @@ class TestSlicing4DXarrayDatacube:
     def test_merge_axis(self):
         # NOTE: does not work because the date is a string in the merge option...
         date = np.datetime64("2000-01-01T06:00:00")
-        request = Request(Select("date", [date]),
-                          Span("step", 0, 3),
-                          Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]))
+        request = Request(
+            Select("date", [date]), Span("step", 0, 3), Box(["latitude", "longitude"], [0, 0], [0.2, 0.2])
+        )
         result = self.API.retrieve(request)
         result.pprint()
         assert result.leaves[0].flatten()["date"] == np.datetime64("2000-01-01T06:00:00")

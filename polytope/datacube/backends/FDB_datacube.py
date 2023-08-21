@@ -53,8 +53,9 @@ class FDBDatacube(Datacube):
                 # first, find the grid mapper transform
                 unmap_path = {}
                 considered_axes = []
-                (path, first_val, considered_axes, unmap_path,
-                    changed_type_path) = self.fit_path_to_original_datacube(path)
+                (path, first_val, considered_axes, unmap_path, changed_type_path) = self.fit_path_to_original_datacube(
+                    path
+                )
                 unmap_path.update(changed_type_path)
                 # Here, need to give the FDB the path and the unmap_path to select data
                 subxarray = glue(path, unmap_path)
