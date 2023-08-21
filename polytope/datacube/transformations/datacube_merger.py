@@ -1,6 +1,7 @@
 from copy import deepcopy
 
 import numpy as np
+import pandas as pd
 
 from ..backends.datacube import configure_datacube_axis
 from .datacube_transformations import DatacubeAxisTransformation
@@ -23,7 +24,12 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         for first_val in first_ax_vals:
             for second_val in second_ax_vals:
                 # TODO: check that the first and second val are strings
-                merged_values.append(np.datetime64(first_val + linkers[0] + second_val + linkers[1]))
+                # merged_values.append(np.datetime64(first_val + linkers[0] + second_val + linkers[1]))
+                val_to_add = pd.to_datetime(first_val + linkers[0] + second_val + linkers[1])
+                val_to_add = val_to_add.to_numpy()
+                val_to_add = val_to_add.astype('datetime64[s]')
+                # merged_values.append(pd.to_datetime(first_val + linkers[0] + second_val + linkers[1]))
+                merged_values.append(val_to_add)
         merged_values = np.array(merged_values)
         return merged_values
 

@@ -50,8 +50,8 @@ class XArrayDatacube(Datacube):
                      changed_type_path) = self.fit_path_to_original_datacube(
                         path
                     )
-                print(path)
-                print(self.dataarray)
+                # print(path)
+                # print(self.dataarray)
                 subxarray = self.dataarray.sel(path, method="nearest")
                 subxarray = subxarray.sel(unmap_path)
                 subxarray = subxarray.sel(changed_type_path)
@@ -72,6 +72,8 @@ class XArrayDatacube(Datacube):
         return path
 
     def _find_indexes_between(self, axis, indexes, low, up):
+        print("INSIDE FIND INDEXES")
+        print(indexes)
         if axis.name in self.complete_axes:
             # Find the range of indexes between lower and upper
             # https://pandas.pydata.org/docs/reference/api/pandas.Index.searchsorted.html
@@ -80,12 +82,15 @@ class XArrayDatacube(Datacube):
             end = indexes.searchsorted(up, "right")
             indexes_between = indexes[start:end].to_list()
         else:
+            print(indexes)
+            print(low)
             indexes_between = [i for i in indexes if low <= i <= up]
         return indexes_between
 
     def _look_up_datacube(self, search_ranges, search_ranges_offset, indexes, axis, first_val):
         idx_between = []
         for i in range(len(search_ranges)):
+            print(search_ranges[i])
             r = search_ranges[i]
             offset = search_ranges_offset[i]
             low = r[0]
@@ -94,9 +99,16 @@ class XArrayDatacube(Datacube):
                 axis_transforms = self.transformation[axis.name]
                 temp_indexes = deepcopy(indexes)
                 for transform in axis_transforms:
+                    print(low)
+                    print(up)
+                    print(first_val)
+                    print(axis)
+                    print(offset)
+                    print(temp_indexes)
                     (offset, temp_indexes) = transform._find_transformed_indices_between(
                         axis, self, temp_indexes, low, up, first_val, offset
                     )
+                    print(offset)
                 indexes_between = temp_indexes
             else:
                 indexes_between = self._find_indexes_between(axis, indexes, low, up)
