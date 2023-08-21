@@ -12,7 +12,7 @@ import pyfdb  # noqa: E402
 # TODO: currently, because the date and time are strings, the data will be treated as an unsliceable axis...
 
 
-def glue(path):
+def glue(path, unmap_path):
     return {"t": 0}
 
 
@@ -49,29 +49,18 @@ class FDBDatacube(Datacube):
     def get(self, requests: IndexTree):
         for r in requests.leaves:
             path = r.flatten()
-            path = self.remap_path(path)
             if len(path.items()) == self.axis_counter:
-                if self.grid_mapper is not None:
-                    first_axis = self.grid_mapper._mapped_axes[0]
-                    first_val = path[first_axis]
-                    second_axis = self.grid_mapper._mapped_axes[1]
-                    second_val = path[second_axis]
-                    path.pop(first_axis, None)
-                    path.pop(second_axis, None)
-                    # need to remap the lat, lon in path to dataarray index
-                    unmapped_idx = self.grid_mapper.unmap(first_val, second_val)
-                    path[self.grid_mapper._base_axis] = unmapped_idx
-                    # Ask FDB what values it has on the path
-                    subxarray = glue(path)
-                    key = list(subxarray.keys())[0]
-                    value = subxarray[key]
-                    r.result = (key, value)
-                else:
-                    # if we have no grid map, still need to assign values
-                    subxarray = glue(path)
-                    key = list(subxarray.keys())[0]
-                    value = subxarray[key]
-                    r.result = (key, value)
+                # first, find the grid mapper transform
+                unmap_path = {}
+                considered_axes = []
+                (path, first_val, considered_axes, unmap_path,
+                    changed_type_path) = self.fit_path_to_original_datacube(path)
+                unmap_path.update(changed_type_path)
+                # Here, need to give the FDB the path and the unmap_path to select data
+                subxarray = glue(path, unmap_path)
+                key = list(subxarray.keys())[0]
+                value = subxarray[key]
+                r.result = (key, value)
             else:
                 r.remove_branch()
 
