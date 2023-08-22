@@ -5,6 +5,7 @@ from copy import deepcopy
 from ...utility.combinatorics import unique, validate_axes
 from .datacube import Datacube, DatacubePath, IndexTree, configure_datacube_axis
 
+# TODO: probably need to do this more general...
 os.environ["DYLD_LIBRARY_PATH"] = "/Users/male/build/fdb-bundle/lib"
 os.environ["FDB_HOME"] = "/Users/male/git/fdb-home"
 import pyfdb  # noqa: E402
