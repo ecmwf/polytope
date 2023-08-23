@@ -4,11 +4,32 @@ from copy import deepcopy
 import xarray as xr
 
 from ...utility.combinatorics import unique, validate_axes
+from ..datacube_axis import DatacubeAxis
+from ..transformations.datacube_transformations import (
+    DatacubeAxisTransformation,
+    has_transform,
+)
 from .datacube import Datacube, DatacubePath, IndexTree, configure_datacube_axis
 
 
 class XArrayDatacube(Datacube):
     """Xarray arrays are labelled, axes can be defined as strings or integers (e.g. "time" or 0)."""
+
+    def create_axes(self, name, values, transformation_type_key, transformation_options):
+        # NOTE: THIS IS ONE OF THE REFACTORED FUNCTIONS
+        # NOTE: need to do this for all transformations on an axis
+
+        # first check what the final axes are for this axis name given transformations
+        final_axis_names = DatacubeAxisTransformation.get_final_axes(name, transformation_type_key,
+                                                                     transformation_options)
+        for axis_name in final_axis_names:
+            # if axis does not yet exist, create it
+            if axis_name not in self._axes.keys():
+                DatacubeAxis.create_standard(axis_name, values, self)
+            # add transformation tag to axis, as well as transformation options for later
+            setattr(self, has_transform[transformation_type_key], True)  # where has_transform is a factory inside
+            # datacube_transformations to set the has_transform, is_cyclic etc axis properties
+            # TODO: here now, still add the transformation to the axis object here
 
     def __init__(self, dataarray: xr.DataArray, axis_options={}):
         self.axis_options = axis_options
@@ -64,7 +85,7 @@ class XArrayDatacube(Datacube):
     def remap_path(self, path: DatacubePath):
         for key in path:
             value = path[key]
-            path[key] = self._axes[key].remap_val_to_axis_range(value)
+            path[key] = self._axes[key].remap([value, value])[0][0]
         return path
 
     def _find_indexes_between(self, axis, indexes, low, up):

@@ -47,7 +47,7 @@ def cyclic(cls):
             intervals.append([new_up, upper])
             return intervals
 
-        def remap_range_to_axis_range(range):
+        def _remap_range_to_axis_range(range):
             axis_lower = cls.range[0]
             axis_upper = cls.range[1]
             axis_range = axis_upper - axis_lower
@@ -71,8 +71,8 @@ def cyclic(cls):
                 return_upper = upper
             return [return_lower, return_upper]
 
-        def remap_val_to_axis_range(value):
-            return_range = remap_range_to_axis_range([value, value])
+        def _remap_val_to_axis_range(value):
+            return_range = _remap_range_to_axis_range([value, value])
             return return_range[0]
 
         def remap(range: List):
@@ -84,8 +84,8 @@ def cyclic(cls):
                 # If we have a range that is just one point, then it should still be counted
                 # and so we should take a small interval around it to find values inbetween
                 range = [
-                    cls.remap_val_to_axis_range(range[0]) - cls.tol,
-                    cls.remap_val_to_axis_range(range[0]) + cls.tol,
+                    _remap_val_to_axis_range(range[0]) - cls.tol,
+                    _remap_val_to_axis_range(range[0]) + cls.tol,
                 ]
                 return [range]
             range_intervals = cls.to_intervals(range)
@@ -93,7 +93,7 @@ def cyclic(cls):
             for interval in range_intervals:
                 if abs(interval[0] - interval[1]) > 0:
                     # If the interval is not just a single point, we remap it to the axis range
-                    range = remap_range_to_axis_range([interval[0], interval[1]])
+                    range = _remap_range_to_axis_range([interval[0], interval[1]])
                     up = range[1]
                     low = range[0]
                     if up < low:
@@ -108,16 +108,23 @@ def cyclic(cls):
             # we find the wanted range of the cyclic axis since we padded by the axis tolerance before.
             # Also, it's safer that we find the offset of a value inside the range instead of on the border
             unpadded_range = [range[0] + 1.5 * cls.tol, range[1] - 1.5 * cls.tol]
-            cyclic_range = remap_range_to_axis_range(unpadded_range)
+            cyclic_range = _remap_range_to_axis_range(unpadded_range)
             offset = unpadded_range[0] - cyclic_range[0]
             return offset
 
         cls.to_intervals = to_intervals
-        cls.remap_val_to_axis_range = remap_val_to_axis_range
         cls.remap = remap
         cls.offset = offset
 
     return cls
+
+
+def mapper(cls):
+    # NOTE: THIS IS ONE OF THE REFACTORED FUNCTIONS
+    if cls.has_mapper:
+        if cls.name in cls.transformation.keys():
+            # the name of the class is in the transformation dictionary
+            pass
 
 
 class DatacubeAxis(ABC):
@@ -160,9 +167,6 @@ class DatacubeAxis(ABC):
 
     def to_intervals(self, range):
         return [range]
-
-    def remap_val_to_axis_range(self, value):
-        return value
 
     def remap(self, range: List) -> Any:
         return [range]

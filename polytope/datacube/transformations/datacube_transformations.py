@@ -4,6 +4,21 @@ from importlib import import_module
 
 
 class DatacubeAxisTransformation(ABC):
+
+    @staticmethod
+    def get_final_axes(name, transformation_type_key, transformation_options):
+        # NOTE: THIS IS ONE OF THE REFACTORED FUNCTIONS
+        # TODO: refactor this because now it's creating whole transformations which we might not need yet?
+        transformation_type = _type_to_datacube_transformation_lookup[transformation_type_key]
+        transformation_file_name = _type_to_transformation_file_lookup[transformation_type_key]
+
+        module = import_module("polytope.datacube.transformations.datacube_" + transformation_file_name)
+        constructor = getattr(module, transformation_type)
+        transformation_type_option = transformation_options[transformation_type_key]
+        new_transformation = deepcopy(constructor(name, transformation_type_option))
+        transformation_axis_names = new_transformation.transformation_axes_final()
+        return transformation_axis_names
+
     @staticmethod
     def create_transformation(options, name, values, datacube):
         # transformation options look like
@@ -99,4 +114,9 @@ _type_to_transformation_file_lookup = {
     "merge": "merger",
     "reverse": "reverse",
     "type_change": "type_change",
+}
+
+has_transform = {
+    "mapper": "has_mapper",
+    "cyclic" : "is_cyclic",
 }

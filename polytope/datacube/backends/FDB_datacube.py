@@ -72,7 +72,7 @@ class FDBDatacube(Datacube):
     def remap_path(self, path: DatacubePath):
         for key in path:
             value = path[key]
-            path[key] = self._axes[key].remap_val_to_axis_range(value)
+            path[key] = self._axes[key].remap([value, value])[0][0]
         return path
 
     def _look_up_datacube(self, search_ranges, search_ranges_offset, indexes, axis, first_val):
