@@ -72,7 +72,7 @@ def cyclic(cls):
             return [return_lower, return_upper]
 
         def remap_val_to_axis_range(value):
-            return_range = cls.remap_range_to_axis_range([value, value])
+            return_range = remap_range_to_axis_range([value, value])
             return return_range[0]
 
         def remap(range: List):
@@ -93,7 +93,7 @@ def cyclic(cls):
             for interval in range_intervals:
                 if abs(interval[0] - interval[1]) > 0:
                     # If the interval is not just a single point, we remap it to the axis range
-                    range = cls.remap_range_to_axis_range([interval[0], interval[1]])
+                    range = remap_range_to_axis_range([interval[0], interval[1]])
                     up = range[1]
                     low = range[0]
                     if up < low:
@@ -108,12 +108,11 @@ def cyclic(cls):
             # we find the wanted range of the cyclic axis since we padded by the axis tolerance before.
             # Also, it's safer that we find the offset of a value inside the range instead of on the border
             unpadded_range = [range[0] + 1.5 * cls.tol, range[1] - 1.5 * cls.tol]
-            cyclic_range = cls.remap_range_to_axis_range(unpadded_range)
+            cyclic_range = remap_range_to_axis_range(unpadded_range)
             offset = unpadded_range[0] - cyclic_range[0]
             return offset
 
         cls.to_intervals = to_intervals
-        cls.remap_range_to_axis_range = remap_range_to_axis_range
         cls.remap_val_to_axis_range = remap_val_to_axis_range
         cls.remap = remap
         cls.offset = offset
@@ -164,9 +163,6 @@ class DatacubeAxis(ABC):
 
     def remap_val_to_axis_range(self, value):
         return value
-
-    def remap_range_to_axis_range(self, range):
-        return range
 
     def remap(self, range: List) -> Any:
         return [range]
