@@ -18,6 +18,9 @@ class DatacubeAxisCyclic(DatacubeAxisTransformation):
     def transformation_axes_final(self):
         return [self.name]
 
+    def change_val_type(self, axis_name, values):
+        return values
+
     def apply_transformation(self, name, datacube, values):
         # NOTE: we will handle all the cyclicity mapping here instead of in the DatacubeAxis
         # then we can generate just create_standard in the configure_axis at the end

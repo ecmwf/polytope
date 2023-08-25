@@ -6,9 +6,7 @@ from importlib import import_module
 class DatacubeAxisTransformation(ABC):
 
     @staticmethod
-    def get_final_axes(name, transformation_type_key, transformation_options):
-        # NOTE: THIS IS ONE OF THE REFACTORED FUNCTIONS
-        # TODO: refactor this because now it's creating whole transformations which we might not need yet?
+    def create_transform(name, transformation_type_key, transformation_options):
         transformation_type = _type_to_datacube_transformation_lookup[transformation_type_key]
         transformation_file_name = _type_to_transformation_file_lookup[transformation_type_key]
 
@@ -16,6 +14,16 @@ class DatacubeAxisTransformation(ABC):
         constructor = getattr(module, transformation_type)
         transformation_type_option = transformation_options[transformation_type_key]
         new_transformation = deepcopy(constructor(name, transformation_type_option))
+
+        new_transformation.name = name
+        return new_transformation
+
+    @staticmethod
+    def get_final_axes(name, transformation_type_key, transformation_options):
+        # NOTE: THIS IS ONE OF THE REFACTORED FUNCTIONS
+        # TODO: refactor this because now it's creating whole transformations which we might not need yet?
+        new_transformation = DatacubeAxisTransformation.create_transform(name, transformation_type_key,
+                                                                         transformation_options)
         transformation_axis_names = new_transformation.transformation_axes_final()
         return transformation_axis_names
 
@@ -97,6 +105,10 @@ class DatacubeAxisTransformation(ABC):
         # Some of the axes in the datacube appear or disappear due to transformations
         # When we look up the datacube, for those axes, we should take particular care to find the right
         # values which exist on those axes
+        pass
+
+    @abstractmethod
+    def change_val_type(self, axis_name, values):
         pass
 
 

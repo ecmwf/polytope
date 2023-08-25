@@ -43,3 +43,6 @@ class DatacubeAxisReverse(DatacubeAxisTransformation):
             return indexes
         else:
             pass
+
+    def change_val_type(self, axis_name, values):
+        return values

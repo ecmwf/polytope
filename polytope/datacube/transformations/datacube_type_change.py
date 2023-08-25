@@ -69,6 +69,10 @@ class DatacubeAxisTypeChange(DatacubeAxisTransformation):
         else:
             pass
 
+    def change_val_type(self, axis_name, values):
+        transformation = self.generate_final_transformation()
+        return [transformation.transform_type(val) for val in values]
+
 
 class TypeChangeStrToInt(DatacubeAxisTypeChange):
     def __init__(self, axis_name, new_type):

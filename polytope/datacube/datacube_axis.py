@@ -75,7 +75,7 @@ def cyclic(cls):
             return_range = _remap_range_to_axis_range([value, value])
             return return_range[0]
 
-        def remap(range: List):
+        def remap(range: List, path):
             if cls.range[0] - cls.tol <= range[0] <= cls.range[1] + cls.tol:
                 if cls.range[0] - cls.tol <= range[1] <= cls.range[1] + cls.tol:
                     # If we are already in the cyclic range, return it
@@ -120,15 +120,71 @@ def cyclic(cls):
 
 
 def mapper(cls):
+    from .transformations.datacube_mappers import DatacubeMapper
+
     # NOTE: THIS IS ONE OF THE REFACTORED FUNCTIONS
     if cls.has_mapper:
-        if cls.name in cls.transformation.keys():
-            # the name of the class is in the transformation dictionary
-            pass
+        # if cls.name in cls.transformation.keys():
+        #     # the name of the class is in the transformation dictionary
+        def remap(range, path):
+            # first, find the relevant transformation object that is a mapping in the cls.transformation dico
+            for transform in cls.transformations:
+                if isinstance(transform, DatacubeMapper):
+                    transformation = transform
+                    if cls.name == transformation._mapped_axes()[0]:
+                        return [transformation.first_axis_vals()]
+                    if cls.name == transformation._mapped_axes()[1]:
+                        first_val = path[transformation._mapped_axes()[0]]
+                        return [transformation.second_axis_vals(first_val)]
+
+        def unmap_to_datacube(path, unmapped_path):
+            for transform in cls.transformations:
+                if isinstance(transform, DatacubeMapper):
+                    transformation = transform
+                    if cls.name == transformation._mapped_axes()[0]:
+                        # if we are on the first axis, then need to add the first val to unmapped_path
+                        first_val = path.get(cls.name, None)
+                        path.pop(cls.name, None)
+                        if cls.name not in unmapped_path:
+                            # if for some reason, the unmapped_path already has the first axis val, then don't update
+                            unmapped_path[cls.name] = first_val
+                    if cls.name == transformation._mapped_axes()[1]:
+                        # if we are on the second axis, then the val of the first axis is stored
+                        # inside unmapped_path so can get it from there
+                        second_val = path.get(cls.name, None)
+                        path.pop(cls.name, None)
+                        first_val = unmapped_path.get(transformation._mapped_axes()[0], None)
+                        unmapped_path.pop(transformation._mapped_axes()[0], None)
+                        if first_val is not None and second_val is not None:
+                            unmapped_idx = transformation.unmap(first_val, second_val)
+                            unmapped_path[transformation.old_axis] = unmapped_idx
+            return (path, unmapped_path)
+
+        def remap_to_requested(path, unmapped_path):
+            return (path, unmapped_path)
+
+        def find_indices_between(cls, index_ranges, low, up, datacube):
+            indexes_between_ranges = []
+            for transform in cls.transformations:
+                if isinstance(transform, DatacubeMapper):
+                    transformation = transform
+                    if cls.name in transformation._mapped_axes():
+                        for indexes in index_ranges:
+                            indexes_between = [i for i in indexes if low <= i <= up]
+                            indexes_between_ranges.append(indexes_between)
+            return indexes_between_ranges
+
+        cls.remap = remap
+        cls.unmap_to_datacube = unmap_to_datacube
+        cls.remap_to_requested = remap_to_requested
+        cls.find_indices_between = find_indices_between
+
+    return cls
 
 
 class DatacubeAxis(ABC):
     is_cyclic = False
+    has_mapper = False
 
     def update_axis(self):
         if self.is_cyclic:
@@ -173,6 +229,30 @@ class DatacubeAxis(ABC):
 
     def offset(self, value):
         return 0
+
+    def unmap_to_datacube(path, unmapped_path):
+        return (path, unmapped_path)
+
+    def remap_to_requeest(path, unmapped_path):
+        return (path, unmapped_path)
+
+    def find_indices_between(self, index_ranges, low, up, datacube):
+        # TODO: do we need this ?
+        # TODO: how does this work for xarray where we get back indices as pandas.Index?
+        indexes_between_ranges = []
+        for indexes in index_ranges:
+            if self.name in datacube.complete_axes:
+                # Find the range of indexes between lower and upper
+                # https://pandas.pydata.org/docs/reference/api/pandas.Index.searchsorted.html
+                # Assumes the indexes are already sorted (could sort to be sure) and monotonically increasing
+                start = indexes.searchsorted(low, "left")
+                end = indexes.searchsorted(up, "right")
+                indexes_between = indexes[start:end].to_list()
+                indexes_between_ranges.append(indexes_between)
+            else:
+                indexes_between = [i for i in indexes if low <= i <= up]
+                indexes_between_ranges.append(indexes_between)
+        return indexes_between_ranges
 
     @staticmethod
     def create_axis(name, values, datacube):
@@ -223,6 +303,7 @@ class IntDatacubeAxis(DatacubeAxis):
     name = None
     tol = 1e-12
     range = None
+    transformations = []
 
     def parse(self, value: Any) -> Any:
         return float(value)
@@ -237,11 +318,13 @@ class IntDatacubeAxis(DatacubeAxis):
         return value
 
 
+@mapper
 @cyclic
 class FloatDatacubeAxis(DatacubeAxis):
     name = None
     tol = 1e-12
     range = None
+    transformations = []
 
     def parse(self, value: Any) -> Any:
         return float(value)
@@ -260,6 +343,7 @@ class PandasTimestampDatacubeAxis(DatacubeAxis):
     name = None
     tol = 1e-12
     range = None
+    transformations = []
 
     def parse(self, value: Any) -> Any:
         if isinstance(value, np.str_):
@@ -286,6 +370,7 @@ class PandasTimedeltaDatacubeAxis(DatacubeAxis):
     name = None
     tol = 1e-12
     range = None
+    transformations = []
 
     def parse(self, value: Any) -> Any:
         if isinstance(value, np.str_):
@@ -312,6 +397,7 @@ class UnsliceableDatacubeAxis(DatacubeAxis):
     name = None
     tol = float("NaN")
     range = None
+    transformations = []
 
     def parse(self, value: Any) -> Any:
         return value

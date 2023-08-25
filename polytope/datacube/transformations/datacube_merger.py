@@ -69,6 +69,9 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         second_val = merged_val[first_idx + first_linker_size : -second_linked_size]
         return (first_val, second_val)
 
+    def change_val_type(self, axis_name, values):
+        return values
+
     def _find_transformed_indices_between(self, axis, datacube, indexes, low, up, first_val, offset):
         indexes_between = datacube._find_indexes_between(axis, indexes, low, up)
         return (offset, indexes_between)

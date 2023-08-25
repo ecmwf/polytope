@@ -4,7 +4,7 @@ from importlib import import_module
 
 import numpy as np
 
-from ..backends.datacube import configure_datacube_axis
+# from ..backends.datacube import configure_datacube_axis
 from .datacube_transformations import DatacubeAxisTransformation
 
 
@@ -33,10 +33,12 @@ class DatacubeMapper(DatacubeAxisTransformation):
             # axis_name = name
             new_axis_options = datacube.axis_options.get(axis_name, {})
             if i == 0:
+                from ..backends.datacube import configure_datacube_axis
                 values = np.array(transformation.first_axis_vals())
                 configure_datacube_axis(new_axis_options, axis_name, values, datacube)
             if i == 1:
                 # the values[0] will be a value on the first axis
+                from ..backends.datacube import configure_datacube_axis
                 values = np.array(transformation.second_axis_vals(values[0]))
                 configure_datacube_axis(new_axis_options, axis_name, values, datacube)
             datacube.fake_axes.append(axis_name)
@@ -47,6 +49,10 @@ class DatacubeMapper(DatacubeAxisTransformation):
         return final_axes
 
     # Needs to also implement its own methods
+
+    def change_val_type(self, axis_name, values):
+        # the new axis_vals created will be floats
+        return [0.0]
 
     def _mapped_axes(self):
         # NOTE: Each of the mapper method needs to call it's sub mapper method
@@ -59,6 +65,14 @@ class DatacubeMapper(DatacubeAxisTransformation):
 
     def _resolution(self):
         pass
+
+    def first_axis_vals(self):
+        final_transformation = self.generate_final_transformation()
+        return final_transformation.first_axis_vals()
+
+    def second_axis_vals(self, first_val):
+        final_transformation = self.generate_final_transformation()
+        return final_transformation.second_axis_vals(first_val)
 
     def map_first_axis(self, lower, upper):
         final_transformation = self.generate_final_transformation()

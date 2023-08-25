@@ -1,4 +1,4 @@
-from copy import deepcopy
+"""from copy import deepcopy
 
 
 def create_axis_transformations(options, name, values, datacube):
@@ -78,4 +78,4 @@ def create_axis_transformation(name, transformation_type_key, transformation_opt
             # For grid mappers, it keeps track that we have a grid_mapper, but won't know the exact grid map we
             # implement
             datacube.transformation[axis_name].append(new_transformation)
-        new_transformation.apply_transformation(name, datacube, values)
+        new_transformation.apply_transformation(name, datacube, values)"""
