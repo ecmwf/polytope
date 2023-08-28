@@ -118,6 +118,8 @@ def cyclic(cls):
             (new_path, unmapped_path) = cls.unmap_to_datacube(path, unmapped_path)
             subarray = datacube.dataarray.sel(new_path, method="nearest")
             subarray = subarray.sel(unmapped_path)
+            # print(cls.name)
+            # print(datacube.datacube_natural_indexes(cls, subarray))
             return datacube.datacube_natural_indexes(cls, subarray)
 
         def offset(range):
@@ -147,8 +149,6 @@ def mapper(cls):
                 if isinstance(transform, DatacubeMapper):
                     transformation = transform
                     if cls.name == transformation._mapped_axes()[0]:
-                        # print("INSIDE THE MAPPING")
-                        # print(transformation.first_axis_vals())
                         return transformation.first_axis_vals()
                     if cls.name == transformation._mapped_axes()[1]:
                         first_val = path[transformation._mapped_axes()[0]]
@@ -172,6 +172,10 @@ def mapper(cls):
                         path.pop(cls.name, None)
                         first_val = unmapped_path.get(transformation._mapped_axes()[0], None)
                         unmapped_path.pop(transformation._mapped_axes()[0], None)
+                        # if the first_val was not in the unmapped_path, then it's still in path
+                        if first_val is None:
+                            first_val = path.get(transformation._mapped_axes()[0], None)
+                            path.pop(transformation._mapped_axes()[0], None)
                         if first_val is not None and second_val is not None:
                             unmapped_idx = transformation.unmap(first_val, second_val)
                             unmapped_path[transformation.old_axis] = unmapped_idx

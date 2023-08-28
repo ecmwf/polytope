@@ -52,7 +52,8 @@ class XArrayDatacube(Datacube):
             self._add_all_transformation_axes(options, name, values)
         else:
             if name not in self.blocked_axes:
-                DatacubeAxis.create_standard(name, values, self)
+                if name not in self._axes.keys():
+                    DatacubeAxis.create_standard(name, values, self)
 
     def __init__(self, dataarray: xr.DataArray, axis_options={}):
         self.axis_options = axis_options
@@ -86,13 +87,15 @@ class XArrayDatacube(Datacube):
                 treated_axes.append(name)
 
         # add other options to axis which were just created above like "lat" for the mapper transformations for eg
-        # for name in self._axes:
-        #     if name not in treated_axes:
-        #         options = axis_options.get(name, {})
-        #         val = dataarray[name].values[0]
-        #         self._check_and_add_axes(options, name, val)
-        # if "longitude" in self._axes:
-        #     print(self._axes["longitude"].transformations)
+        for name in self._axes:
+            if name not in treated_axes:
+                options = axis_options.get(name, {})
+                val = dataarray[name].values[0]
+                self._check_and_add_axes(options, name, val)
+        # if "latitude" in self._axes:
+        #     print(self._axes["latitude"].transformations)
+        #     print(self._axes["longitude"].has_mapper)
+        #     print(self._axes["longitude"].is_cyclic)
 
     def _look_up_datacube(self, search_ranges, search_ranges_offset, indexes, axis):
         idx_between = []
@@ -101,9 +104,6 @@ class XArrayDatacube(Datacube):
             offset = search_ranges_offset[i]
             low = r[0]
             up = r[1]
-            print(up)
-            print(low)
-            print(indexes)
             indexes_between = axis.find_indices_between([indexes], low, up, self)
             # Now the indexes_between are values on the cyclic range so need to remap them to their original
             # values before returning them
@@ -119,8 +119,6 @@ class XArrayDatacube(Datacube):
     def get_indices(self, path: DatacubePath, axis, lower, upper):
         path = self.fit_path(path)
         indexes = axis.find_indexes(path, self)
-        print("inside get indices")
-        print(indexes)
 
         search_ranges = axis.remap([lower, upper])
         original_search_ranges = axis.to_intervals([lower, upper])
@@ -170,7 +168,10 @@ class XArrayDatacube(Datacube):
         if axis.name in self.complete_axes:
             indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
         else:
-            indexes = [subarray[axis.name].values]
+            if subarray[axis.name].values.ndim == 0:
+                indexes = [subarray[axis.name].values]
+            else:
+                indexes = subarray[axis.name].values
         return indexes
 
     def fit_path(self, path):
