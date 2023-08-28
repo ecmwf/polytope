@@ -81,9 +81,9 @@ class DatacubeAxisTransformation(ABC):
     def transformation_axes_final(self):
         pass
 
-    @abstractmethod
-    def apply_transformation(self, name, datacube, values):
-        pass
+    # @abstractmethod
+    # def apply_transformation(self, name, datacube, values):
+    #     pass
 
     # Methods to deal with transformation in datacube backends
     @abstractmethod
@@ -131,4 +131,7 @@ _type_to_transformation_file_lookup = {
 has_transform = {
     "mapper": "has_mapper",
     "cyclic" : "is_cyclic",
+    "merge" : "has_merger",
+    "reverse": "reorder",
+    "type_change": "type_change"
 }

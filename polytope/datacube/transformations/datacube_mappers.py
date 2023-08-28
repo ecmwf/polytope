@@ -25,23 +25,26 @@ class DatacubeMapper(DatacubeAxisTransformation):
         transformation = deepcopy(constructor(self.old_axis, self.grid_axes, self.grid_resolution))
         return transformation
 
-    def apply_transformation(self, name, datacube, values):
-        # Create mapped axes here
-        transformation = self.generate_final_transformation()
-        for i in range(len(transformation._mapped_axes)):
-            axis_name = transformation._mapped_axes[i]
-            # axis_name = name
-            new_axis_options = datacube.axis_options.get(axis_name, {})
-            if i == 0:
-                from ..backends.datacube import configure_datacube_axis
-                values = np.array(transformation.first_axis_vals())
-                configure_datacube_axis(new_axis_options, axis_name, values, datacube)
-            if i == 1:
-                # the values[0] will be a value on the first axis
-                from ..backends.datacube import configure_datacube_axis
-                values = np.array(transformation.second_axis_vals(values[0]))
-                configure_datacube_axis(new_axis_options, axis_name, values, datacube)
-            datacube.fake_axes.append(axis_name)
+    def blocked_axes(self):
+        return []
+
+    # def apply_transformation(self, name, datacube, values):
+    #     # Create mapped axes here
+    #     transformation = self.generate_final_transformation()
+    #     for i in range(len(transformation._mapped_axes)):
+    #         axis_name = transformation._mapped_axes[i]
+    #         # axis_name = name
+    #         new_axis_options = datacube.axis_options.get(axis_name, {})
+    #         if i == 0:
+    #             from ..backends.datacube import configure_datacube_axis
+    #             values = np.array(transformation.first_axis_vals())
+    #             configure_datacube_axis(new_axis_options, axis_name, values, datacube)
+    #         if i == 1:
+    #             # the values[0] will be a value on the first axis
+    #             from ..backends.datacube import configure_datacube_axis
+    #             values = np.array(transformation.second_axis_vals(values[0]))
+    #             configure_datacube_axis(new_axis_options, axis_name, values, datacube)
+    #         datacube.fake_axes.append(axis_name)
 
     def transformation_axes_final(self):
         final_transformation = self.generate_final_transformation()

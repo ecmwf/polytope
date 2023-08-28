@@ -12,7 +12,15 @@ import pandas as pd
 def cyclic(cls):
     if cls.is_cyclic:
 
+        def update_range():
+            from .transformations.datacube_cyclic import DatacubeAxisCyclic
+            for transform in cls.transformations:
+                if isinstance(transform, DatacubeAxisCyclic):
+                    transformation = transform
+                    cls.range = transformation.range
+
         def to_intervals(range):
+            update_range()
             axis_lower = cls.range[0]
             axis_upper = cls.range[1]
             axis_range = axis_upper - axis_lower
@@ -48,6 +56,7 @@ def cyclic(cls):
             return intervals
 
         def _remap_range_to_axis_range(range):
+            update_range()
             axis_lower = cls.range[0]
             axis_upper = cls.range[1]
             axis_range = axis_upper - axis_lower
@@ -75,7 +84,8 @@ def cyclic(cls):
             return_range = _remap_range_to_axis_range([value, value])
             return return_range[0]
 
-        def remap(range: List, path):
+        def remap(range: List):
+            update_range()
             if cls.range[0] - cls.tol <= range[0] <= cls.range[1] + cls.tol:
                 if cls.range[0] - cls.tol <= range[1] <= cls.range[1] + cls.tol:
                     # If we are already in the cyclic range, return it
@@ -103,6 +113,13 @@ def cyclic(cls):
                         ranges.append([low - cls.tol, up + cls.tol])
             return ranges
 
+        def find_indexes(path, datacube):
+            unmapped_path = {}
+            (new_path, unmapped_path) = cls.unmap_to_datacube(path, unmapped_path)
+            subarray = datacube.dataarray.sel(new_path, method="nearest")
+            subarray = subarray.sel(unmapped_path)
+            return datacube.datacube_natural_indexes(cls, subarray)
+
         def offset(range):
             # We first unpad the range by the axis tolerance to make sure that
             # we find the wanted range of the cyclic axis since we padded by the axis tolerance before.
@@ -115,6 +132,7 @@ def cyclic(cls):
         cls.to_intervals = to_intervals
         cls.remap = remap
         cls.offset = offset
+        cls.find_indexes = find_indexes
 
     return cls
 
@@ -122,20 +140,19 @@ def cyclic(cls):
 def mapper(cls):
     from .transformations.datacube_mappers import DatacubeMapper
 
-    # NOTE: THIS IS ONE OF THE REFACTORED FUNCTIONS
     if cls.has_mapper:
-        # if cls.name in cls.transformation.keys():
-        #     # the name of the class is in the transformation dictionary
-        def remap(range, path):
+        def find_indexes(path, datacube):
             # first, find the relevant transformation object that is a mapping in the cls.transformation dico
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeMapper):
                     transformation = transform
                     if cls.name == transformation._mapped_axes()[0]:
-                        return [transformation.first_axis_vals()]
+                        # print("INSIDE THE MAPPING")
+                        # print(transformation.first_axis_vals())
+                        return transformation.first_axis_vals()
                     if cls.name == transformation._mapped_axes()[1]:
                         first_val = path[transformation._mapped_axes()[0]]
-                        return [transformation.second_axis_vals(first_val)]
+                        return transformation.second_axis_vals(first_val)
 
         def unmap_to_datacube(path, unmapped_path):
             for transform in cls.transformations:
@@ -163,7 +180,7 @@ def mapper(cls):
         def remap_to_requested(path, unmapped_path):
             return (path, unmapped_path)
 
-        def find_indices_between(cls, index_ranges, low, up, datacube):
+        def find_indices_between(index_ranges, low, up, datacube):
             indexes_between_ranges = []
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeMapper):
@@ -174,7 +191,159 @@ def mapper(cls):
                             indexes_between_ranges.append(indexes_between)
             return indexes_between_ranges
 
+        def remap(range):
+            return [range]
+
         cls.remap = remap
+        cls.find_indexes = find_indexes
+        cls.unmap_to_datacube = unmap_to_datacube
+        cls.remap_to_requested = remap_to_requested
+        cls.find_indices_between = find_indices_between
+
+    return cls
+
+
+def merge(cls):
+    from .transformations.datacube_merger import DatacubeAxisMerger
+
+    if cls.has_merger:
+        def find_indexes(path, datacube):
+            # first, find the relevant transformation object that is a mapping in the cls.transformation dico
+            for transform in cls.transformations:
+                if isinstance(transform, DatacubeAxisMerger):
+                    transformation = transform
+                    if cls.name == transformation._first_axis:
+                        return transformation.merged_values(datacube)
+
+        def unmap_to_datacube(path, unmapped_path):
+            for transform in cls.transformations:
+                if isinstance(transform, DatacubeAxisMerger):
+                    transformation = transform
+                    if cls.name == transformation._first_axis:
+                        old_val = path.get(cls.name, None)
+                        (first_val, second_val) = transformation.unmerge(old_val)
+                        path.pop(cls.name, None)
+                        path[transformation._first_axis] = first_val
+                        path[transformation._second_axis] = second_val
+            return (path, unmapped_path)
+
+        def remap_to_requested(path, unmapped_path):
+            return (path, unmapped_path)
+
+        def find_indices_between(index_ranges, low, up, datacube):
+            indexes_between_ranges = []
+            for transform in cls.transformations:
+                if isinstance(transform, DatacubeAxisMerger):
+                    transformation = transform
+                    if cls.name in transformation._mapped_axes():
+                        for indexes in index_ranges:
+                            indexes_between = [i for i in indexes if low <= i <= up]
+                            indexes_between_ranges.append(indexes_between)
+            return indexes_between_ranges
+
+        def remap(range):
+            return [range]
+
+        cls.remap = remap
+        cls.find_indexes = find_indexes
+        cls.unmap_to_datacube = unmap_to_datacube
+        cls.remap_to_requested = remap_to_requested
+        cls.find_indices_between = find_indices_between
+
+    return cls
+
+
+def reverse(cls):
+    from .transformations.datacube_reverse import DatacubeAxisReverse
+
+    if cls.reorder:
+        def find_indexes(path, datacube):
+            # first, find the relevant transformation object that is a mapping in the cls.transformation dico
+            subarray = datacube.dataarray.sel(path, method="nearest")
+            unordered_indices = datacube.datacube_natural_indexes(cls, subarray)
+            if cls.name in datacube.complete_axes:
+                ordered_indices = unordered_indices.sort_values()
+            else:
+                ordered_indices = unordered_indices
+            return ordered_indices
+
+        def unmap_to_datacube(path, unmapped_path):
+            return (path, unmapped_path)
+
+        def remap_to_requested(path, unmapped_path):
+            return (path, unmapped_path)
+
+        def find_indices_between(index_ranges, low, up, datacube):
+            indexes_between_ranges = []
+            for transform in cls.transformations:
+                if isinstance(transform, DatacubeAxisReverse):
+                    transformation = transform
+                    if cls.name == transformation.name:
+                        for indexes in index_ranges:
+                            indexes_between = [i for i in indexes if low <= i <= up]
+                            indexes_between_ranges.append(indexes_between)
+            return indexes_between_ranges
+
+        def remap(range):
+            return [range]
+
+        cls.remap = remap
+        cls.find_indexes = find_indexes
+        cls.unmap_to_datacube = unmap_to_datacube
+        cls.remap_to_requested = remap_to_requested
+        cls.find_indices_between = find_indices_between
+
+    return cls
+
+
+def type_change(cls):
+    from .transformations.datacube_type_change import DatacubeAxisTypeChange
+
+    if cls.type_change:
+
+        def find_indexes(path, datacube):
+            for transform in cls.transformations:
+                if isinstance(transform, DatacubeAxisTypeChange):
+                    transformation = transform
+                    if cls.name == transformation.name:
+                        unmapped_path = {}
+                        (new_path, unmapped_path) = cls.unmap_to_datacube(path, unmapped_path)
+                        subarray = datacube.dataarray.sel(new_path, method="nearest")
+                        subarray = subarray.sel(unmapped_path)
+                        original_vals = datacube.datacube_natural_indexes(cls, subarray)
+                        return transformation.change_val_type(cls.name, original_vals)
+
+        def unmap_to_datacube(path, unmapped_path):
+            for transform in cls.transformations:
+                if isinstance(transform, DatacubeAxisTypeChange):
+                    transformation = transform
+                    if cls.name == transformation.name:
+                        changed_val = path.get(cls.name, None)
+                        unchanged_val = transformation.make_str(changed_val)
+                        if cls.name in path:
+                            path.pop(cls.name, None)
+                            unmapped_path[cls.name] = unchanged_val
+            return (path, unmapped_path)
+
+        def remap_to_requested(path, unmapped_path):
+            return (path, unmapped_path)
+
+        def find_indices_between(index_ranges, low, up, datacube):
+            indexes_between_ranges = []
+            for transform in cls.transformations:
+                if isinstance(transform, DatacubeAxisTypeChange):
+                    transformation = transform
+                    if cls.name == transformation.name:
+                        for indexes in index_ranges:
+                            indexes_between = [i for i in indexes if low <= i <= up]
+                            indexes_between_ranges.append(indexes_between)
+            return indexes_between_ranges
+
+        def remap(range):
+            return [range]
+
+        cls.remap = remap
+        cls.find_indexes = find_indexes
         cls.unmap_to_datacube = unmap_to_datacube
         cls.remap_to_requested = remap_to_requested
         cls.find_indices_between = find_indices_between
@@ -185,6 +354,9 @@ def mapper(cls):
 class DatacubeAxis(ABC):
     is_cyclic = False
     has_mapper = False
+    has_merger = False
+    reorder = False
+    type_change = False
 
     def update_axis(self):
         if self.is_cyclic:
@@ -227,10 +399,18 @@ class DatacubeAxis(ABC):
     def remap(self, range: List) -> Any:
         return [range]
 
+    def find_indexes(self, path, datacube):
+        # TODO: does this do what it should?
+        unmapped_path = {}
+        (new_path, unmapped_path) = self.unmap_to_datacube(path, unmapped_path)
+        subarray = datacube.dataarray.sel(new_path, method="nearest")
+        subarray = subarray.sel(unmapped_path)
+        return datacube.datacube_natural_indexes(self, subarray)
+
     def offset(self, value):
         return 0
 
-    def unmap_to_datacube(path, unmapped_path):
+    def unmap_to_datacube(self, path, unmapped_path):
         return (path, unmapped_path)
 
     def remap_to_requeest(path, unmapped_path):
@@ -238,7 +418,6 @@ class DatacubeAxis(ABC):
 
     def find_indices_between(self, index_ranges, low, up, datacube):
         # TODO: do we need this ?
-        # TODO: how does this work for xarray where we get back indices as pandas.Index?
         indexes_between_ranges = []
         for indexes in index_ranges:
             if self.name in datacube.complete_axes:
@@ -298,7 +477,10 @@ class DatacubeAxis(ABC):
             raise ValueError(f"Could not create a mapper for index type {values.dtype.type} for axis {name}")
 
 
+@reverse
 @cyclic
+@mapper
+@type_change
 class IntDatacubeAxis(DatacubeAxis):
     name = None
     tol = 1e-12
@@ -318,8 +500,10 @@ class IntDatacubeAxis(DatacubeAxis):
         return value
 
 
-@mapper
+@reverse
 @cyclic
+@mapper
+@type_change
 class FloatDatacubeAxis(DatacubeAxis):
     name = None
     tol = 1e-12
@@ -339,6 +523,7 @@ class FloatDatacubeAxis(DatacubeAxis):
         return value
 
 
+@merge
 class PandasTimestampDatacubeAxis(DatacubeAxis):
     name = None
     tol = 1e-12
@@ -366,6 +551,7 @@ class PandasTimestampDatacubeAxis(DatacubeAxis):
         return None
 
 
+@merge
 class PandasTimedeltaDatacubeAxis(DatacubeAxis):
     name = None
     tol = 1e-12
@@ -393,6 +579,7 @@ class PandasTimedeltaDatacubeAxis(DatacubeAxis):
         return None
 
 
+@type_change
 class UnsliceableDatacubeAxis(DatacubeAxis):
     name = None
     tol = float("NaN")

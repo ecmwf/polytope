@@ -1,7 +1,7 @@
 from copy import deepcopy
 from importlib import import_module
 
-from ..backends.datacube import configure_datacube_axis
+# from ..backends.datacube import configure_datacube_axis
 from .datacube_transformations import DatacubeAxisTransformation
 
 
@@ -24,19 +24,19 @@ class DatacubeAxisTypeChange(DatacubeAxisTransformation):
         final_transformation = self.generate_final_transformation()
         return [final_transformation.axis_name]
 
-    def apply_transformation(self, name, datacube, values):
-        transformation = self.generate_final_transformation()
-        axis_options = deepcopy(datacube.axis_options[name]["transformation"])
-        axis_options.pop("type_change")
-        # Update the nested dictionary with the modified axis option for our axis
-        new_datacube_axis_options = deepcopy(datacube.axis_options)
-        # if we have no transformations left, then empty the transformation dico
-        if axis_options == {}:
-            new_datacube_axis_options[name] = {}
-        else:
-            new_datacube_axis_options[name]["transformation"] = axis_options
-        values = [transformation.transform_type(values[0])]  # only need 1 value to determine type in datacube config
-        configure_datacube_axis(new_datacube_axis_options[name], name, values, datacube)
+    # def apply_transformation(self, name, datacube, values):
+    #     transformation = self.generate_final_transformation()
+    #     axis_options = deepcopy(datacube.axis_options[name]["transformation"])
+    #     axis_options.pop("type_change")
+    #     # Update the nested dictionary with the modified axis option for our axis
+    #     new_datacube_axis_options = deepcopy(datacube.axis_options)
+    #     # if we have no transformations left, then empty the transformation dico
+    #     if axis_options == {}:
+    #         new_datacube_axis_options[name] = {}
+    #     else:
+    #         new_datacube_axis_options[name]["transformation"] = axis_options
+    #     values = [transformation.transform_type(values[0])]  # only need 1 value to determine type in datacube config
+    #     configure_datacube_axis(new_datacube_axis_options[name], name, values, datacube)
 
     def _find_transformed_indices_between(self, axis, datacube, indexes, low, up, first_val, offset):
         # NOTE: needs to be in new type
@@ -72,6 +72,13 @@ class DatacubeAxisTypeChange(DatacubeAxisTransformation):
     def change_val_type(self, axis_name, values):
         transformation = self.generate_final_transformation()
         return [transformation.transform_type(val) for val in values]
+
+    def make_str(self, value):
+        transformation = self.generate_final_transformation()
+        return transformation.make_str(value)
+
+    def blocked_axes(self):
+        return []
 
 
 class TypeChangeStrToInt(DatacubeAxisTypeChange):

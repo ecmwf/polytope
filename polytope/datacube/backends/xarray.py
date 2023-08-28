@@ -16,15 +16,14 @@ from .datacube import Datacube, DatacubePath, IndexTree
 class XArrayDatacube(Datacube):
     """Xarray arrays are labelled, axes can be defined as strings or integers (e.g. "time" or 0)."""
 
-    def create_axes(self, name, values, transformation_type_key, transformation_options):
-        # NOTE: THIS IS ONE OF THE REFACTORED FUNCTIONS
-        # NOTE: need to do this for all transformations on an axis
-
+    def _create_axes(self, name, values, transformation_type_key, transformation_options):
         # first check what the final axes are for this axis name given transformations
         final_axis_names = DatacubeAxisTransformation.get_final_axes(name, transformation_type_key,
                                                                      transformation_options)
         transformation = DatacubeAxisTransformation.create_transform(name, transformation_type_key,
                                                                      transformation_options)
+        for blocked_axis in transformation.blocked_axes():
+            self.blocked_axes.append(blocked_axis)
         for axis_name in final_axis_names:
             # if axis does not yet exist, create it
 
@@ -41,19 +40,19 @@ class XArrayDatacube(Datacube):
             decorator = getattr(decorator_module, transformation_type_key)
             decorator(self._axes[axis_name])
             if transformation not in self._axes[axis_name].transformations:  # Avoids duplicates being stored
-                # NOTE: TODO: here, the same transformation gets added twice to each axis? not sure why
                 self._axes[axis_name].transformations.append(transformation)
 
-    def add_all_transformation_axes(self, options, name, values):
+    def _add_all_transformation_axes(self, options, name, values):
         transformation_options = options["transformation"]
         for transformation_type_key in transformation_options.keys():
-            self.create_axes(name, values, transformation_type_key, transformation_options)
+            self._create_axes(name, values, transformation_type_key, transformation_options)
 
-    def check_and_add_axes(self, options, name, values):
+    def _check_and_add_axes(self, options, name, values):
         if "transformation" in options:
-            self.add_all_transformation_axes(options, name, values)
+            self._add_all_transformation_axes(options, name, values)
         else:
-            DatacubeAxis.create_standard(name, values, self)
+            if name not in self.blocked_axes:
+                DatacubeAxis.create_standard(name, values, self)
 
     def __init__(self, dataarray: xr.DataArray, axis_options={}):
         self.axis_options = axis_options
@@ -62,6 +61,7 @@ class XArrayDatacube(Datacube):
         self._axes = {}
         self.dataarray = dataarray
         treated_axes = []
+        self.non_complete_axes = []
         self.complete_axes = []
         self.blocked_axes = []
         self.transformation = {}
@@ -69,42 +69,59 @@ class XArrayDatacube(Datacube):
         for name, values in dataarray.coords.variables.items():
             if name in dataarray.dims:
                 options = axis_options.get(name, {})
-                self.check_and_add_axes(options, name, values)
+                self._check_and_add_axes(options, name, values)
                 treated_axes.append(name)
                 self.complete_axes.append(name)
             else:
                 if self.dataarray[name].dims == ():
                     options = axis_options.get(name, {})
-                    self.check_and_add_axes(options, name, values)
+                    self._check_and_add_axes(options, name, values)
                     treated_axes.append(name)
+                    self.non_complete_axes.append(name)
         for name in dataarray.dims:
             if name not in treated_axes:
                 options = axis_options.get(name, {})
                 val = dataarray[name].values[0]
-                self.check_and_add_axes(options, name, val)
+                self._check_and_add_axes(options, name, val)
+                treated_axes.append(name)
+
+        # add other options to axis which were just created above like "lat" for the mapper transformations for eg
+        # for name in self._axes:
+        #     if name not in treated_axes:
+        #         options = axis_options.get(name, {})
+        #         val = dataarray[name].values[0]
+        #         self._check_and_add_axes(options, name, val)
+        # if "longitude" in self._axes:
+        #     print(self._axes["longitude"].transformations)
+
+    def _look_up_datacube(self, search_ranges, search_ranges_offset, indexes, axis):
+        idx_between = []
+        for i in range(len(search_ranges)):
+            r = search_ranges[i]
+            offset = search_ranges_offset[i]
+            low = r[0]
+            up = r[1]
+            print(up)
+            print(low)
+            print(indexes)
+            indexes_between = axis.find_indices_between([indexes], low, up, self)
+            # Now the indexes_between are values on the cyclic range so need to remap them to their original
+            # values before returning them
+            for j in range(len(indexes_between)):
+                for k in range(len(indexes_between[j])):
+                    if offset is None:
+                        indexes_between[j][k] = indexes_between[j][k]
+                    else:
+                        indexes_between[j][k] = round(indexes_between[j][k] + offset, int(-math.log10(axis.tol)))
+                    idx_between.append(indexes_between[j][k])
+        return idx_between
 
     def get_indices(self, path: DatacubePath, axis, lower, upper):
-        # TODO: here now, use the axis decorator to handle all transformations
-        (path, first_val, considered_axes, unmap_path, changed_type_path) = self.fit_path_to_original_datacube(path)
+        path = self.fit_path(path)
+        indexes = axis.find_indexes(path, self)
+        print("inside get indices")
+        print(indexes)
 
-        subarray = self.dataarray.sel(path, method="nearest")
-        subarray = subarray.sel(unmap_path)
-        subarray = subarray.sel(changed_type_path)
-        # Get the indexes of the axis we want to query
-        # XArray does not support branching, so no need to use label, we just take the next axis
-        if axis.name in self.transformation.keys():
-            axis_transforms = self.transformation[axis.name]
-            # This bool will help us decide for which axes we need to calculate the indexes again or not
-            # in case there are multiple relevant transformations for an axis
-            already_has_indexes = False
-            for transform in axis_transforms:
-                # TODO: here, instead of creating the indices, would be better to create the standard datacube axes and
-                # then succesively map them to what they should be
-                indexes = transform._find_transformed_axis_indices(self, axis, subarray, already_has_indexes)
-                already_has_indexes = True
-        else:
-            indexes = self.datacube_natural_indexes(axis, subarray)
-        # Here, we do a cyclic remapping so we look up on the right existing values in the cyclic range on the datacube
         search_ranges = axis.remap([lower, upper])
         original_search_ranges = axis.to_intervals([lower, upper])
         # Find the offsets for each interval in the requested range, which we will need later
@@ -112,55 +129,27 @@ class XArrayDatacube(Datacube):
         for r in original_search_ranges:
             offset = axis.offset(r)
             search_ranges_offset.append(offset)
-        # Look up the values in the datacube for each cyclic interval range
-        idx_between = self._look_up_datacube(search_ranges, search_ranges_offset, indexes, axis, first_val)
+
+        idx_between = self._look_up_datacube(search_ranges, search_ranges_offset, indexes, axis)
         # Remove duplicates even if difference of the order of the axis tolerance
         if offset is not None:
             # Note that we can only do unique if not dealing with time values
             idx_between = unique(idx_between)
         return idx_between
 
-    # def __init__(self, dataarray: xr.DataArray, axis_options={}):
-    #     self.axis_options = axis_options
-    #     self.grid_mapper = None
-    #     self.axis_counter = 0
-    #     self._axes = {}
-    #     self.dataarray = dataarray
-    #     treated_axes = []
-    #     self.complete_axes = []
-    #     self.blocked_axes = []
-    #     self.transformation = {}
-    #     self.fake_axes = []
-    #     for name, values in dataarray.coords.variables.items():
-    #         if name in dataarray.dims:
-    #             options = axis_options.get(name, {})
-    #             configure_datacube_axis(options, name, values, self)
-    #             treated_axes.append(name)
-    #             self.complete_axes.append(name)
-    #         else:
-    #             if self.dataarray[name].dims == ():
-    #                 options = axis_options.get(name, {})
-    #                 configure_datacube_axis(options, name, values, self)
-    #                 treated_axes.append(name)
-    #     for name in dataarray.dims:
-    #         if name not in treated_axes:
-    #             options = axis_options.get(name, {})
-    #             val = dataarray[name].values[0]
-    #             configure_datacube_axis(options, name, val, self)
-
     def get(self, requests: IndexTree):
         for r in requests.leaves:
             path = r.flatten()
             if len(path.items()) == self.axis_counter:
                 # first, find the grid mapper transform
-                unmap_path = {}
-                considered_axes = []
-                (path, first_val, considered_axes, unmap_path, changed_type_path) = self.fit_path_to_original_datacube(
-                    path
-                )
-                unmap_path.update(changed_type_path)
+                unmapped_path = {}
+                path_copy = deepcopy(path)
+                for key in path_copy:
+                    axis = self._axes[key]
+                    (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
+                path = self.fit_path(path)
                 subxarray = self.dataarray.sel(path, method="nearest")
-                subxarray = subxarray.sel(unmap_path)
+                subxarray = subxarray.sel(unmapped_path)
                 value = subxarray.item()
                 key = subxarray.name
                 r.result = (key, value)
@@ -177,45 +166,6 @@ class XArrayDatacube(Datacube):
             path[key] = self._axes[key].remap([value, value])[0][0]
         return path
 
-    def _find_indexes_between(self, axis, indexes, low, up):
-        if axis.name in self.complete_axes:
-            # Find the range of indexes between lower and upper
-            # https://pandas.pydata.org/docs/reference/api/pandas.Index.searchsorted.html
-            # Assumes the indexes are already sorted (could sort to be sure) and monotonically increasing
-            start = indexes.searchsorted(low, "left")
-            end = indexes.searchsorted(up, "right")
-            indexes_between = indexes[start:end].to_list()
-        else:
-            indexes_between = [i for i in indexes if low <= i <= up]
-        return indexes_between
-
-    def _look_up_datacube(self, search_ranges, search_ranges_offset, indexes, axis, first_val):
-        idx_between = []
-        for i in range(len(search_ranges)):
-            r = search_ranges[i]
-            offset = search_ranges_offset[i]
-            low = r[0]
-            up = r[1]
-            if axis.name in self.transformation.keys():
-                axis_transforms = self.transformation[axis.name]
-                temp_indexes = deepcopy(indexes)
-                for transform in axis_transforms:
-                    (offset, temp_indexes) = transform._find_transformed_indices_between(
-                        axis, self, temp_indexes, low, up, first_val, offset
-                    )
-                indexes_between = temp_indexes
-            else:
-                indexes_between = self._find_indexes_between(axis, indexes, low, up)
-            # Now the indexes_between are values on the cyclic range so need to remap them to their original
-            # values before returning them
-            for j in range(len(indexes_between)):
-                if offset is None:
-                    indexes_between[j] = indexes_between[j]
-                else:
-                    indexes_between[j] = round(indexes_between[j] + offset, int(-math.log10(axis.tol)))
-                idx_between.append(indexes_between[j])
-        return idx_between
-
     def datacube_natural_indexes(self, axis, subarray):
         if axis.name in self.complete_axes:
             indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
@@ -223,95 +173,30 @@ class XArrayDatacube(Datacube):
             indexes = [subarray[axis.name].values]
         return indexes
 
-    def fit_path_to_datacube(self, axis_name, path, considered_axes=[], unmap_path={}):
-        # TODO: how to make this also work for the get method?
-        path = self.remap_path(path)
+    def fit_path(self, path):
+        # path = self.remap_path(path)
         for key in path.keys():
-            if self.dataarray[key].dims == ():
+            if key in self.non_complete_axes:
                 path.pop(key)
-        first_val = None
-        changed_type_path = {}
-        if axis_name in self.transformation.keys():
-            axis_transforms = self.transformation[axis_name]
-            first_val = None
-            for transform in axis_transforms:
-                (path, temp_first_val, considered_axes, unmap_path, changed_type_path) = transform._adjust_path(
-                    path, considered_axes, unmap_path, changed_type_path
-                )
-                if temp_first_val:
-                    first_val = temp_first_val
-        return (path, first_val, considered_axes, unmap_path, changed_type_path)
-
-    def fit_path_to_original_datacube(self, path):
-        path = self.remap_path(path)
-        first_val = None
-        unmap_path = {}
-        considered_axes = []
-        changed_type_path = {}
-        for axis_name in self.transformation.keys():
-            axis_transforms = self.transformation[axis_name]
-            for transform in axis_transforms:
-                (path, temp_first_val, considered_axes, unmap_path, changed_type_path) = transform._adjust_path(
-                    path, considered_axes, unmap_path, changed_type_path
-                )
-                if temp_first_val:
-                    first_val = temp_first_val
-        for key in path.keys():
-            if self.dataarray[key].dims == ():
-                path.pop(key)
-        return (path, first_val, considered_axes, unmap_path, changed_type_path)
-
-    # def get_indices(self, path: DatacubePath, axis, lower, upper):
-    #     (path, first_val, considered_axes, unmap_path, changed_type_path) = self.fit_path_to_original_datacube(path)
-
-    #     subarray = self.dataarray.sel(path, method="nearest")
-    #     subarray = subarray.sel(unmap_path)
-    #     subarray = subarray.sel(changed_type_path)
-    #     # Get the indexes of the axis we want to query
-    #     # XArray does not support branching, so no need to use label, we just take the next axis
-    #     if axis.name in self.transformation.keys():
-    #         axis_transforms = self.transformation[axis.name]
-    #         # This bool will help us decide for which axes we need to calculate the indexes again or not
-    #         # in case there are multiple relevant transformations for an axis
-    #         already_has_indexes = False
-    #         for transform in axis_transforms:
-    #             # TODO: here, instead of creating the indices, would be better to create the standard datacube axes and
-    #             # then succesively map them to what they should be
-    #             indexes = transform._find_transformed_axis_indices(self, axis, subarray, already_has_indexes)
-    #             already_has_indexes = True
-    #     else:
-    #         indexes = self.datacube_natural_indexes(axis, subarray)
-    #     # Here, we do a cyclic remapping so we look up on the right existing values in the cyclic range on the datacube
-    #     search_ranges = axis.remap([lower, upper])
-    #     original_search_ranges = axis.to_intervals([lower, upper])
-    #     # Find the offsets for each interval in the requested range, which we will need later
-    #     search_ranges_offset = []
-    #     for r in original_search_ranges:
-    #         offset = axis.offset(r)
-    #         search_ranges_offset.append(offset)
-    #     # Look up the values in the datacube for each cyclic interval range
-    #     idx_between = self._look_up_datacube(search_ranges, search_ranges_offset, indexes, axis, first_val)
-    #     # Remove duplicates even if difference of the order of the axis tolerance
-    #     if offset is not None:
-    #         # Note that we can only do unique if not dealing with time values
-    #         idx_between = unique(idx_between)
-    #     return idx_between
+        return path
 
     def has_index(self, path: DatacubePath, axis, index):
         # when we want to obtain the value of an unsliceable axis, need to check the values does exist in the datacube
-        path = self.fit_path_to_datacube(axis.name, path)[0]
+        # path = self.fit_path_to_datacube(axis.name, path)[0]
+        path = self.fit_path(path)
+        indexes = axis.find_indexes(path, self)
 
         # Open a view on the subset identified by the path
-        subarray = self.dataarray.sel(path, method="nearest")
-        if axis.name in self.transformation.keys():
-            axis_transforms = self.transformation[axis.name]
-            already_has_indexes = False
-            for transform in axis_transforms:
-                indexes = transform._find_transformed_axis_indices(self, axis, subarray, already_has_indexes)
-                already_has_indexes = True
-        # return index in subarray_vals
-        else:
-            indexes = self.datacube_natural_indexes(axis, subarray)
+        # subarray = self.dataarray.sel(path, method="nearest")
+        # if axis.name in self.transformation.keys():
+        #     axis_transforms = self.transformation[axis.name]
+        #     already_has_indexes = False
+        #     for transform in axis_transforms:
+        #         indexes = transform._find_transformed_axis_indices(self, axis, subarray, already_has_indexes)
+        #         already_has_indexes = True
+        # # return index in subarray_vals
+        # else:
+        #     indexes = self.datacube_natural_indexes(axis, subarray)
         return index in indexes
 
     @property

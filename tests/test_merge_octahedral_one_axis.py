@@ -33,5 +33,5 @@ class TestSlicing4DXarrayDatacube:
             Box(["latitude", "longitude"], [0, 359.8], [0.2, 361.2]),
         )
         result = self.API.retrieve(request)
-        # result.pprint()
+        result.pprint()
         assert result.leaves[0].flatten()["longitude"] == 0.0
