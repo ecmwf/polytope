@@ -4,6 +4,12 @@ from copy import deepcopy
 
 from ...utility.combinatorics import unique, validate_axes
 from .datacube import Datacube, DatacubePath, IndexTree, configure_datacube_axis
+import importlib
+from ..datacube_axis import DatacubeAxis
+from ..transformations.datacube_transformations import (
+    DatacubeAxisTransformation,
+    has_transform,
+)
 
 # TODO: probably need to do this more general...
 os.environ["DYLD_LIBRARY_PATH"] = "/Users/male/build/fdb-bundle/lib"
@@ -23,16 +29,58 @@ def update_fdb_dataarray(fdb_dataarray):
 
 
 class FDBDatacube(Datacube):
+
+    def _create_axes(self, name, values, transformation_type_key, transformation_options):
+        # first check what the final axes are for this axis name given transformations
+        final_axis_names = DatacubeAxisTransformation.get_final_axes(name, transformation_type_key,
+                                                                     transformation_options)
+        transformation = DatacubeAxisTransformation.create_transform(name, transformation_type_key,
+                                                                     transformation_options)
+        for blocked_axis in transformation.blocked_axes():
+            self.blocked_axes.append(blocked_axis)
+        for axis_name in final_axis_names:
+            # if axis does not yet exist, create it
+
+            # first need to change the values so that we have right type
+            values = transformation.change_val_type(axis_name, values)
+            if axis_name not in self._axes.keys():
+                DatacubeAxis.create_standard(axis_name, values, self)
+            # add transformation tag to axis, as well as transformation options for later
+            setattr(self._axes[axis_name], has_transform[transformation_type_key], True)  # where has_transform is a
+            # factory inside datacube_transformations to set the has_transform, is_cyclic etc axis properties
+            # add the specific transformation handled here to the relevant axes
+            # Modify the axis to update with the tag
+            decorator_module = importlib.import_module("polytope.datacube.datacube_axis")
+            decorator = getattr(decorator_module, transformation_type_key)
+            decorator(self._axes[axis_name])
+            if transformation not in self._axes[axis_name].transformations:  # Avoids duplicates being stored
+                self._axes[axis_name].transformations.append(transformation)
+
+    def _add_all_transformation_axes(self, options, name, values):
+        transformation_options = options["transformation"]
+        for transformation_type_key in transformation_options.keys():
+            self._create_axes(name, values, transformation_type_key, transformation_options)
+
+    def _check_and_add_axes(self, options, name, values):
+        if "transformation" in options:
+            self._add_all_transformation_axes(options, name, values)
+        else:
+            if name not in self.blocked_axes:
+                if name not in self._axes.keys():
+                    DatacubeAxis.create_standard(name, values, self)
+
     def __init__(self, config={}, axis_options={}):
-        # Need to get the cyclic options and grid options from somewhere
         self.axis_options = axis_options
         self.grid_mapper = None
         self.axis_counter = 0
         self._axes = {}
+        treated_axes = []
+        self.non_complete_axes = []
+        self.complete_axes = []
         self.blocked_axes = []
         self.transformation = {}
         self.fake_axes = []
-        self.complete_axes = []
+
         partial_request = config
         # Find values in the level 3 FDB datacube
         # Will be in the form of a dictionary? {axis_name:values_available, ...}
@@ -44,8 +92,16 @@ class FDBDatacube(Datacube):
         for name, values in dataarray.items():
             values.sort()
             options = axis_options.get(name, {})
-            configure_datacube_axis(options, name, values, self)
+            self._check_and_add_axes(options, name, values)
+            treated_axes.append(name)
             self.complete_axes.append(name)
+
+        # add other options to axis which were just created above like "lat" for the mapper transformations for eg
+        for name in self._axes:
+            if name not in treated_axes:
+                options = axis_options.get(name, {})
+                val = self._axes[name].type
+                self._check_and_add_axes(options, name, val)
 
     def get(self, requests: IndexTree):
         for r in requests.leaves:
@@ -159,12 +215,22 @@ class FDBDatacube(Datacube):
 
     def has_index(self, path: DatacubePath, axis, index):
         # when we want to obtain the value of an unsliceable axis, need to check the values does exist in the datacube
-        subarray_vals = self.dataarray[axis.name]
-        return index in subarray_vals
+        # subarray_vals = self.dataarray[axis.name]
+        path = self.fit_path(path)
+        indexes = axis.find_indexes(path, self)
+        # return index in subarray_vals
+        return index in indexes
 
     @property
     def axes(self):
         return self._axes
+
+    def fit_path(self, path):
+        # path = self.remap_path(path)
+        for key in path.keys():
+            if key not in self.complete_axes:
+                path.pop(key)
+        return path
 
     def validate(self, axes):
         return validate_axes(self.axes, axes)

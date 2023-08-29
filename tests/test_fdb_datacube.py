@@ -2,6 +2,7 @@ from polytope.datacube.backends.FDB_datacube import FDBDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
+import pandas as pd
 
 
 class TestSlicingFDBDatacube:
@@ -27,7 +28,7 @@ class TestSlicingFDBDatacube:
         request = Request(
             Select("step", [11]),
             Select("levtype", ["sfc"]),
-            Select("date", ["20230710T120000"]),
+            Select("date", [pd.Timestamp("20230710T120000")]),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
             Select("param", ["151130"]),

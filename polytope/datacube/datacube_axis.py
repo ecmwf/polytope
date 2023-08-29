@@ -11,9 +11,9 @@ import pandas as pd
 
 def cyclic(cls):
     if cls.is_cyclic:
+        from .transformations.datacube_cyclic import DatacubeAxisCyclic
 
         def update_range():
-            from .transformations.datacube_cyclic import DatacubeAxisCyclic
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisCyclic):
                     transformation = transform
@@ -84,7 +84,10 @@ def cyclic(cls):
             return_range = _remap_range_to_axis_range([value, value])
             return return_range[0]
 
+        old_remap = cls.remap
+
         def remap(range: List):
+            # range = old_remap(range)
             update_range()
             if cls.range[0] - cls.tol <= range[0] <= cls.range[1] + cls.tol:
                 if cls.range[0] - cls.tol <= range[1] <= cls.range[1] + cls.tol:
@@ -113,14 +116,34 @@ def cyclic(cls):
                         ranges.append([low - cls.tol, up + cls.tol])
             return ranges
 
+        old_find_indexes = cls.find_indexes
+
         def find_indexes(path, datacube):
-            unmapped_path = {}
-            (new_path, unmapped_path) = cls.unmap_to_datacube(path, unmapped_path)
-            subarray = datacube.dataarray.sel(new_path, method="nearest")
-            subarray = subarray.sel(unmapped_path)
-            # print(cls.name)
-            # print(datacube.datacube_natural_indexes(cls, subarray))
-            return datacube.datacube_natural_indexes(cls, subarray)
+            return old_find_indexes(path, datacube)
+
+        old_unmap_total_path_to_datacube = cls.unmap_total_path_to_datacube
+
+        def unmap_total_path_to_datacube(path, unmapped_path):
+            # (path, unmapped_path) = old_unmap_to_datacube(path, unmapped_path)
+            print(path)
+            print(unmapped_path)
+            print(cls.name)
+            for transform in cls.transformations:
+                if isinstance(transform, DatacubeAxisCyclic):
+                    transformation = transform
+                    if cls.name == transformation.name:
+                        old_val = path.get(cls.name, None)
+                        path.pop(cls.name, None)
+                        new_val = _remap_val_to_axis_range(old_val)
+                        path[cls.name] = new_val
+            (path, unmapped_path) = old_unmap_total_path_to_datacube(path, unmapped_path)
+            return (path, unmapped_path)
+        
+        old_unmap_to_datacube = cls.unmap_to_datacube
+
+        def unmap_to_datacube(path, unmapped_path):
+            (path, unmapped_path) = old_unmap_to_datacube(path, unmapped_path)
+            return (path, unmapped_path)
 
         def offset(range):
             # We first unpad the range by the axis tolerance to make sure that
@@ -135,6 +158,8 @@ def cyclic(cls):
         cls.remap = remap
         cls.offset = offset
         cls.find_indexes = find_indexes
+        cls.unmap_to_datacube = unmap_to_datacube
+        cls.unmap_total_path_to_datacube = unmap_total_path_to_datacube
 
     return cls
 
@@ -154,7 +179,40 @@ def mapper(cls):
                         first_val = path[transformation._mapped_axes()[0]]
                         return transformation.second_axis_vals(first_val)
 
+        old_unmap_to_datacube = cls.unmap_to_datacube
+
         def unmap_to_datacube(path, unmapped_path):
+            (path, unmapped_path) = old_unmap_to_datacube(path, unmapped_path)
+            for transform in cls.transformations:
+                if isinstance(transform, DatacubeMapper):
+                    transformation = transform
+                    if cls.name == transformation._mapped_axes()[0]:
+                        # if we are on the first axis, then need to add the first val to unmapped_path
+                        first_val = path.get(cls.name, None)
+                        path.pop(cls.name, None)
+                        if cls.name not in unmapped_path:
+                            # if for some reason, the unmapped_path already has the first axis val, then don't update
+                            unmapped_path[cls.name] = first_val
+                    if cls.name == transformation._mapped_axes()[1]:
+                        # if we are on the second axis, then the val of the first axis is stored
+                        # inside unmapped_path so can get it from there
+                        second_val = path.get(cls.name, None)
+                        path.pop(cls.name, None)
+                        first_val = unmapped_path.get(transformation._mapped_axes()[0], None)
+                        unmapped_path.pop(transformation._mapped_axes()[0], None)
+                        # if the first_val was not in the unmapped_path, then it's still in path
+                        if first_val is None:
+                            first_val = path.get(transformation._mapped_axes()[0], None)
+                            path.pop(transformation._mapped_axes()[0], None)
+                        if first_val is not None and second_val is not None:
+                            unmapped_idx = transformation.unmap(first_val, second_val)
+                            unmapped_path[transformation.old_axis] = unmapped_idx
+            return (path, unmapped_path)
+        
+        old_unmap_total_path_to_datacube = cls.unmap_total_path_to_datacube
+
+        def unmap_total_path_to_datacube(path, unmapped_path):
+            (path, unmapped_path) = old_unmap_total_path_to_datacube(path, unmapped_path)
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeMapper):
                     transformation = transform
@@ -191,24 +249,21 @@ def mapper(cls):
                     transformation = transform
                     if cls.name in transformation._mapped_axes():
                         for idxs in index_ranges:
-                            print(idxs)
                             indexes_between = [i for i in idxs if low <= i <= up]
-                            print(low)
-                            print(up)
-                            print(indexes_between[0] in idxs)
-                            print("HERE")
-                            print(indexes_between[0])
                             indexes_between_ranges.append(indexes_between)
             return indexes_between_ranges
 
+        old_remap = cls.remap
+
         def remap(range):
-            return [range]
+            return old_remap(range)
 
         cls.remap = remap
         cls.find_indexes = find_indexes
         cls.unmap_to_datacube = unmap_to_datacube
         cls.remap_to_requested = remap_to_requested
         cls.find_indices_between = find_indices_between
+        cls.unmap_total_path_to_datacube = unmap_total_path_to_datacube
 
     return cls
 
@@ -224,8 +279,24 @@ def merge(cls):
                     transformation = transform
                     if cls.name == transformation._first_axis:
                         return transformation.merged_values(datacube)
+                    
+        def unmap_total_path_to_datacube(path, unmapped_path):
+            for transform in cls.transformations:
+                if isinstance(transform, DatacubeAxisMerger):
+                    transformation = transform
+                    if cls.name == transformation._first_axis:
+                        old_val = path.get(cls.name, None)
+                        (first_val, second_val) = transformation.unmerge(old_val)
+                        path.pop(cls.name, None)
+                        path[transformation._first_axis] = first_val
+                        path[transformation._second_axis] = second_val
+            return (path, unmapped_path)
+
+        old_unmap_to_datacube = cls.unmap_to_datacube
 
         def unmap_to_datacube(path, unmapped_path):
+            print("UNMAP TO DATACUBE INSIDE MERGE")
+            (path, unmapped_path) = old_unmap_to_datacube(path, unmapped_path)
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisMerger):
                     transformation = transform
@@ -259,6 +330,7 @@ def merge(cls):
         cls.unmap_to_datacube = unmap_to_datacube
         cls.remap_to_requested = remap_to_requested
         cls.find_indices_between = find_indices_between
+        cls.unmap_total_path_to_datacube = unmap_total_path_to_datacube
 
     return cls
 
@@ -322,6 +394,18 @@ def type_change(cls):
                         subarray = subarray.sel(unmapped_path)
                         original_vals = datacube.datacube_natural_indexes(cls, subarray)
                         return transformation.change_val_type(cls.name, original_vals)
+                    
+        def unmap_total_path_to_datacube(path, unmapped_path):
+            for transform in cls.transformations:
+                if isinstance(transform, DatacubeAxisTypeChange):
+                    transformation = transform
+                    if cls.name == transformation.name:
+                        changed_val = path.get(cls.name, None)
+                        unchanged_val = transformation.make_str(changed_val)
+                        if cls.name in path:
+                            path.pop(cls.name, None)
+                            unmapped_path[cls.name] = unchanged_val
+            return (path, unmapped_path)
 
         def unmap_to_datacube(path, unmapped_path):
             for transform in cls.transformations:
@@ -357,6 +441,7 @@ def type_change(cls):
         cls.unmap_to_datacube = unmap_to_datacube
         cls.remap_to_requested = remap_to_requested
         cls.find_indices_between = find_indices_between
+        cls.unmap_total_path_to_datacube = unmap_total_path_to_datacube
 
     return cls
 
@@ -409,18 +494,38 @@ class DatacubeAxis(ABC):
     def remap(self, range: List) -> Any:
         return [range]
 
+    def unmap_to_datacube(self, path, unmapped_path):
+        return (path, unmapped_path)
+
     def find_indexes(self, path, datacube):
         # TODO: does this do what it should?
         unmapped_path = {}
-        (new_path, unmapped_path) = self.unmap_to_datacube(path, unmapped_path)
-        subarray = datacube.dataarray.sel(new_path, method="nearest")
+        # print("HERE")
+        # if self.name == "date":
+        #     print(self.transformations)
+        path_copy = deepcopy(path)
+        for key in path_copy:
+            axis = datacube._axes[key]
+            (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
+        # (new_path, unmapped_path) = self.unmap_to_datacube(path, unmapped_path)
+        # print(path)
+        # new_path_copy = deepcopy(new_path)
+        # for name in new_path_copy:
+        #     if name not in datacube.complete_axes:
+        #         print(datacube.complete_axes)
+        #         new_path.pop(name, None)
+        # subarray = datacube.dataarray.sel(new_path, method="nearest")
+        # subarray = datacube.dataarray.sel(path, method="nearest")
+        # if isinstance(datacube, XArrayDatacube):
+        subarray = datacube.dataarray.sel(path, method="nearest")
         subarray = subarray.sel(unmapped_path)
+        # subarray = datacube.dataarray
         return datacube.datacube_natural_indexes(self, subarray)
 
     def offset(self, value):
         return 0
 
-    def unmap_to_datacube(self, path, unmapped_path):
+    def unmap_total_path_to_datacube(self, path, unmapped_path):
         return (path, unmapped_path)
 
     def remap_to_requeest(path, unmapped_path):
@@ -496,6 +601,7 @@ class IntDatacubeAxis(DatacubeAxis):
     tol = 1e-12
     range = None
     transformations = []
+    type = 0
 
     def parse(self, value: Any) -> Any:
         return float(value)
@@ -519,6 +625,7 @@ class FloatDatacubeAxis(DatacubeAxis):
     tol = 1e-12
     range = None
     transformations = []
+    type = 0.
 
     def parse(self, value: Any) -> Any:
         return float(value)
@@ -539,6 +646,7 @@ class PandasTimestampDatacubeAxis(DatacubeAxis):
     tol = 1e-12
     range = None
     transformations = []
+    type = pd.Timestamp("2000-01-01T00:00:00")
 
     def parse(self, value: Any) -> Any:
         if isinstance(value, np.str_):
@@ -567,6 +675,7 @@ class PandasTimedeltaDatacubeAxis(DatacubeAxis):
     tol = 1e-12
     range = None
     transformations = []
+    type = np.timedelta64(0, "s")
 
     def parse(self, value: Any) -> Any:
         if isinstance(value, np.str_):

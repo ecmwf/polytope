@@ -90,12 +90,8 @@ class XArrayDatacube(Datacube):
         for name in self._axes:
             if name not in treated_axes:
                 options = axis_options.get(name, {})
-                val = dataarray[name].values[0]
+                val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
-        # if "latitude" in self._axes:
-        #     print(self._axes["latitude"].transformations)
-        #     print(self._axes["longitude"].has_mapper)
-        #     print(self._axes["longitude"].is_cyclic)
 
     def _look_up_datacube(self, search_ranges, search_ranges_offset, indexes, axis):
         idx_between = []
@@ -104,8 +100,6 @@ class XArrayDatacube(Datacube):
             offset = search_ranges_offset[i]
             low = r[0]
             up = r[1]
-            print("IN LOOK UP DATACUBE")
-            print([indexes])
             indexes_between = axis.find_indices_between([indexes], low, up, self)
             # Now the indexes_between are values on the cyclic range so need to remap them to their original
             # values before returning them
@@ -119,10 +113,8 @@ class XArrayDatacube(Datacube):
         return idx_between
 
     def get_indices(self, path: DatacubePath, axis, lower, upper):
-        print(path)
         path = self.fit_path(path)
         indexes = axis.find_indexes(path, self)
-        print(indexes[0:2])
         search_ranges = axis.remap([lower, upper])
         original_search_ranges = axis.to_intervals([lower, upper])
         # Find the offsets for each interval in the requested range, which we will need later
@@ -135,20 +127,19 @@ class XArrayDatacube(Datacube):
         if offset is not None:
             # Note that we can only do unique if not dealing with time values
             idx_between = unique(idx_between)
-        # if axis.name == "latitude":
-        #     print(idx_between)
         return idx_between
 
     def get(self, requests: IndexTree):
         for r in requests.leaves:
             path = r.flatten()
+            path = self.remap_path(path)
             if len(path.items()) == self.axis_counter:
                 # first, find the grid mapper transform
                 unmapped_path = {}
                 path_copy = deepcopy(path)
                 for key in path_copy:
                     axis = self._axes[key]
-                    (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
+                    (path, unmapped_path) = axis.unmap_total_path_to_datacube(path, unmapped_path)
                 path = self.fit_path(path)
                 subxarray = self.dataarray.sel(path, method="nearest")
                 subxarray = subxarray.sel(unmapped_path)
