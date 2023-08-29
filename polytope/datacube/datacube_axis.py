@@ -190,8 +190,14 @@ def mapper(cls):
                 if isinstance(transform, DatacubeMapper):
                     transformation = transform
                     if cls.name in transformation._mapped_axes():
-                        for indexes in index_ranges:
-                            indexes_between = [i for i in indexes if low <= i <= up]
+                        for idxs in index_ranges:
+                            print(idxs)
+                            indexes_between = [i for i in idxs if low <= i <= up]
+                            print(low)
+                            print(up)
+                            print(indexes_between[0] in idxs)
+                            print("HERE")
+                            print(indexes_between[0])
                             indexes_between_ranges.append(indexes_between)
             return indexes_between_ranges
 

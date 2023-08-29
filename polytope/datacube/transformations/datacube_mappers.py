@@ -2837,6 +2837,8 @@ class OctahedralGridMapper(DatacubeMapper):
         first_val = [val for val in first_axis_vals if first_val - tol < val < first_val + tol][0]
         first_idx = first_axis_vals.index(first_val) + 1
         second_axis_vals = self.second_axis_vals(first_val)
+        print(second_val)
+        print([val for val in second_axis_vals if second_val - tol < val < second_val + tol])
         second_val = [val for val in second_axis_vals if second_val - tol < val < second_val + tol][0]
         second_idx = second_axis_vals.index(second_val)
         octahedral_index = self.axes_idx_to_octahedral_idx(first_idx, second_idx)

@@ -104,6 +104,8 @@ class XArrayDatacube(Datacube):
             offset = search_ranges_offset[i]
             low = r[0]
             up = r[1]
+            print("IN LOOK UP DATACUBE")
+            print([indexes])
             indexes_between = axis.find_indices_between([indexes], low, up, self)
             # Now the indexes_between are values on the cyclic range so need to remap them to their original
             # values before returning them
@@ -117,9 +119,10 @@ class XArrayDatacube(Datacube):
         return idx_between
 
     def get_indices(self, path: DatacubePath, axis, lower, upper):
+        print(path)
         path = self.fit_path(path)
         indexes = axis.find_indexes(path, self)
-
+        print(indexes[0:2])
         search_ranges = axis.remap([lower, upper])
         original_search_ranges = axis.to_intervals([lower, upper])
         # Find the offsets for each interval in the requested range, which we will need later
@@ -127,12 +130,13 @@ class XArrayDatacube(Datacube):
         for r in original_search_ranges:
             offset = axis.offset(r)
             search_ranges_offset.append(offset)
-
         idx_between = self._look_up_datacube(search_ranges, search_ranges_offset, indexes, axis)
         # Remove duplicates even if difference of the order of the axis tolerance
         if offset is not None:
             # Note that we can only do unique if not dealing with time values
             idx_between = unique(idx_between)
+        # if axis.name == "latitude":
+        #     print(idx_between)
         return idx_between
 
     def get(self, requests: IndexTree):
