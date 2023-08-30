@@ -84,8 +84,6 @@ def cyclic(cls):
             return_range = _remap_range_to_axis_range([value, value])
             return return_range[0]
 
-        old_remap = cls.remap
-
         def remap(range: List):
             # range = old_remap(range)
             update_range()
@@ -124,10 +122,6 @@ def cyclic(cls):
         old_unmap_total_path_to_datacube = cls.unmap_total_path_to_datacube
 
         def unmap_total_path_to_datacube(path, unmapped_path):
-            # (path, unmapped_path) = old_unmap_to_datacube(path, unmapped_path)
-            print(path)
-            print(unmapped_path)
-            print(cls.name)
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisCyclic):
                     transformation = transform
@@ -208,7 +202,7 @@ def mapper(cls):
                             unmapped_idx = transformation.unmap(first_val, second_val)
                             unmapped_path[transformation.old_axis] = unmapped_idx
             return (path, unmapped_path)
-        
+
         old_unmap_total_path_to_datacube = cls.unmap_total_path_to_datacube
 
         def unmap_total_path_to_datacube(path, unmapped_path):
@@ -295,7 +289,6 @@ def merge(cls):
         old_unmap_to_datacube = cls.unmap_to_datacube
 
         def unmap_to_datacube(path, unmapped_path):
-            print("UNMAP TO DATACUBE INSIDE MERGE")
             (path, unmapped_path) = old_unmap_to_datacube(path, unmapped_path)
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisMerger):
@@ -500,26 +493,12 @@ class DatacubeAxis(ABC):
     def find_indexes(self, path, datacube):
         # TODO: does this do what it should?
         unmapped_path = {}
-        # print("HERE")
-        # if self.name == "date":
-        #     print(self.transformations)
         path_copy = deepcopy(path)
         for key in path_copy:
             axis = datacube._axes[key]
             (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
-        # (new_path, unmapped_path) = self.unmap_to_datacube(path, unmapped_path)
-        # print(path)
-        # new_path_copy = deepcopy(new_path)
-        # for name in new_path_copy:
-        #     if name not in datacube.complete_axes:
-        #         print(datacube.complete_axes)
-        #         new_path.pop(name, None)
-        # subarray = datacube.dataarray.sel(new_path, method="nearest")
-        # subarray = datacube.dataarray.sel(path, method="nearest")
-        # if isinstance(datacube, XArrayDatacube):
         subarray = datacube.dataarray.sel(path, method="nearest")
         subarray = subarray.sel(unmapped_path)
-        # subarray = datacube.dataarray
         return datacube.datacube_natural_indexes(self, subarray)
 
     def offset(self, value):
