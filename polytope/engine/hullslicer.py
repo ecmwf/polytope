@@ -46,7 +46,8 @@ class HullSlicer(Engine):
         lower = ax.from_float(lower - tol)
         upper = ax.from_float(upper + tol)
         flattened = node.flatten()
-        for value in datacube.get_indices(flattened, ax, lower, upper):
+        method = polytope.method
+        for value in datacube.get_indices(flattened, ax, lower, upper, method):
             # convert to float for slicing
             fvalue = ax.to_float(value)
             new_polytope = slice(polytope, ax.name, fvalue)

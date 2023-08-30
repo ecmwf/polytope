@@ -232,7 +232,8 @@ def mapper(cls):
         def remap_to_requested(path, unmapped_path):
             return (path, unmapped_path)
 
-        def find_indices_between(index_ranges, low, up, datacube):
+        def find_indices_between(index_ranges, low, up, datacube, method):
+            # TODO: add method for snappping
             indexes_between_ranges = []
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeMapper):
@@ -303,7 +304,8 @@ def merge(cls):
         def remap_to_requested(path, unmapped_path):
             return (path, unmapped_path)
 
-        def find_indices_between(index_ranges, low, up, datacube):
+        def find_indices_between(index_ranges, low, up, datacube, method):
+            # TODO: add method for snappping
             indexes_between_ranges = []
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisMerger):
@@ -347,7 +349,8 @@ def reverse(cls):
         def remap_to_requested(path, unmapped_path):
             return (path, unmapped_path)
 
-        def find_indices_between(index_ranges, low, up, datacube):
+        def find_indices_between(index_ranges, low, up, datacube, method):
+            # TODO: add method for snappping
             indexes_between_ranges = []
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisReverse):
@@ -415,7 +418,8 @@ def type_change(cls):
         def remap_to_requested(path, unmapped_path):
             return (path, unmapped_path)
 
-        def find_indices_between(index_ranges, low, up, datacube):
+        def find_indices_between(index_ranges, low, up, datacube, method):
+            # TODO: add method for snappping
             indexes_between_ranges = []
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisTypeChange):
@@ -508,20 +512,38 @@ class DatacubeAxis(ABC):
     def remap_to_requeest(path, unmapped_path):
         return (path, unmapped_path)
 
-    def find_indices_between(self, index_ranges, low, up, datacube):
+    def find_indices_between(self, index_ranges, low, up, datacube, method):
+        # TODO: add method for snappping
         indexes_between_ranges = []
         for indexes in index_ranges:
             if self.name in datacube.complete_axes:
                 # Find the range of indexes between lower and upper
                 # https://pandas.pydata.org/docs/reference/api/pandas.Index.searchsorted.html
                 # Assumes the indexes are already sorted (could sort to be sure) and monotonically increasing
-                start = indexes.searchsorted(low, "left")
-                end = indexes.searchsorted(up, "right")
-                indexes_between = indexes[start:end].to_list()
-                indexes_between_ranges.append(indexes_between)
+                if method == "snap":
+                    start = indexes.searchsorted(low, "left")
+                    end = indexes.searchsorted(up, "right")
+                    start = max(start-1, 0)
+                    end = min(end+1, len(indexes))
+                    indexes_between = indexes[start:end].to_list()
+                    indexes_between_ranges.append(indexes_between)
+                else:
+                    start = indexes.searchsorted(low, "left")
+                    end = indexes.searchsorted(up, "right")
+                    indexes_between = indexes[start:end].to_list()
+                    indexes_between_ranges.append(indexes_between)
             else:
-                indexes_between = [i for i in indexes if low <= i <= up]
-                indexes_between_ranges.append(indexes_between)
+                if method == "snap":
+                    start = indexes.index(low)
+                    end = indexes.index(up)
+                    start = max(start-1, 0)
+                    end = min(end+1, len(indexes))
+                    # indexes_between = [i for i in indexes if low <= i <= up]
+                    indexes_between = indexes[start:end]
+                    indexes_between_ranges.append(indexes_between)
+                else:
+                    indexes_between = [i for i in indexes if low <= i <= up]
+                    indexes_between_ranges.append(indexes_between)
         return indexes_between_ranges
 
     @staticmethod

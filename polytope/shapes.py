@@ -23,9 +23,11 @@ class Shape(ABC):
 
 
 class ConvexPolytope(Shape):
-    def __init__(self, axes, points):
+
+    def __init__(self, axes, points, method=None):
         self._axes = list(axes)
         self.points = points
+        self.method = method
 
     def extents(self, axis):
         slice_axis_idx = self.axes().index(axis)
@@ -48,15 +50,16 @@ class ConvexPolytope(Shape):
 class Select(Shape):
     """Matches several discrete value"""
 
-    def __init__(self, axis, values):
+    def __init__(self, axis, values, method=None):
         self.axis = axis
         self.values = values
+        self.method = method
 
     def axes(self):
         return [self.axis]
 
     def polytope(self):
-        return [ConvexPolytope([self.axis], [[v]]) for v in self.values]
+        return [ConvexPolytope([self.axis], [[v]], self.method) for v in self.values]
 
 
 class Span(Shape):
