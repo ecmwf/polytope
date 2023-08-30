@@ -2,9 +2,6 @@ import math
 from copy import deepcopy
 from importlib import import_module
 
-import numpy as np
-
-# from ..backends.datacube import configure_datacube_axis
 from .datacube_transformations import DatacubeAxisTransformation
 
 
@@ -27,24 +24,6 @@ class DatacubeMapper(DatacubeAxisTransformation):
 
     def blocked_axes(self):
         return []
-
-    # def apply_transformation(self, name, datacube, values):
-    #     # Create mapped axes here
-    #     transformation = self.generate_final_transformation()
-    #     for i in range(len(transformation._mapped_axes)):
-    #         axis_name = transformation._mapped_axes[i]
-    #         # axis_name = name
-    #         new_axis_options = datacube.axis_options.get(axis_name, {})
-    #         if i == 0:
-    #             from ..backends.datacube import configure_datacube_axis
-    #             values = np.array(transformation.first_axis_vals())
-    #             configure_datacube_axis(new_axis_options, axis_name, values, datacube)
-    #         if i == 1:
-    #             # the values[0] will be a value on the first axis
-    #             from ..backends.datacube import configure_datacube_axis
-    #             values = np.array(transformation.second_axis_vals(values[0]))
-    #             configure_datacube_axis(new_axis_options, axis_name, values, datacube)
-    #         datacube.fake_axes.append(axis_name)
 
     def transformation_axes_final(self):
         final_transformation = self.generate_final_transformation()
@@ -88,43 +67,6 @@ class DatacubeMapper(DatacubeAxisTransformation):
     def unmap(self, first_val, second_val):
         final_transformation = self.generate_final_transformation()
         return final_transformation.unmap(first_val, second_val)
-
-    def _find_transformed_indices_between(self, axis, datacube, indexes, low, up, first_val, offset):
-        first_axis = self._mapped_axes()[0]
-        second_axis = self._mapped_axes()[1]
-        if axis.name == first_axis:
-            indexes_between = self.map_first_axis(low, up)
-        elif axis.name == second_axis:
-            indexes_between = self.map_second_axis(first_val, low, up)
-        else:
-            indexes_between = datacube._find_indexes_between(axis, indexes, low, up)
-        return (None, indexes_between)
-
-    def _adjust_path(self, path, considered_axes=[], unmap_path={}, changed_type_path={}):
-        first_axis = self._mapped_axes()[0]
-        first_val = path.get(first_axis, None)
-        second_axis = self._mapped_axes()[1]
-        second_val = path.get(second_axis, None)
-        path.pop(first_axis, None)
-        path.pop(second_axis, None)
-        considered_axes.append(first_axis)
-        considered_axes.append(second_axis)
-        # need to remap the lat, lon in path to dataarray index
-        if first_val is not None and second_val is not None:
-            unmapped_idx = self.unmap(first_val, second_val)
-            unmap_path[self.old_axis] = unmapped_idx
-        return (path, first_val, considered_axes, unmap_path, changed_type_path)
-
-    def _find_transformed_axis_indices(self, datacube, axis, subarray, already_has_indexes):
-        first_axis = self._mapped_axes()[0]
-        second_axis = self._mapped_axes()[1]
-        if axis.name == first_axis:
-            indexes = []
-        elif axis.name == second_axis:
-            indexes = []
-        else:
-            indexes = datacube.datacube_natural_indexes(axis, subarray)
-        return indexes
 
 
 class OctahedralGridMapper(DatacubeMapper):

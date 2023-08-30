@@ -1,6 +1,6 @@
 import numpy as np
-import xarray as xr
 import pandas as pd
+import xarray as xr
 
 from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer

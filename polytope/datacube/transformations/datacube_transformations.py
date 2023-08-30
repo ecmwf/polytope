@@ -20,8 +20,6 @@ class DatacubeAxisTransformation(ABC):
 
     @staticmethod
     def get_final_axes(name, transformation_type_key, transformation_options):
-        # NOTE: THIS IS ONE OF THE REFACTORED FUNCTIONS
-        # TODO: refactor this because now it's creating whole transformations which we might not need yet?
         new_transformation = DatacubeAxisTransformation.create_transform(name, transformation_type_key,
                                                                          transformation_options)
         transformation_axis_names = new_transformation.transformation_axes_final()
@@ -79,32 +77,6 @@ class DatacubeAxisTransformation(ABC):
 
     @abstractmethod
     def transformation_axes_final(self):
-        pass
-
-    # @abstractmethod
-    # def apply_transformation(self, name, datacube, values):
-    #     pass
-
-    # Methods to deal with transformation in datacube backends
-    @abstractmethod
-    def _find_transformed_indices_between(self, axis, datacube, indexes, low, up, first_val, offset):
-        # Some of the axes in the datacube appear or disappear due to transformations
-        # When we look up the datacube, for those axes, we should take particular care to find the right
-        # values between low and up
-        pass
-
-    @abstractmethod
-    def _adjust_path(self, path, considered_axes=[], unmap_path={}, changed_type_path={}):
-        # Some of the axes in the datacube should appear or disappear due to transformations
-        # When we ask the datacube for a path, we should thus remove these axes from the path
-        # But we want to keep track of the removed axes to be able to request data on the datacube still in unmap_path
-        pass
-
-    @abstractmethod
-    def _find_transformed_axis_indices(self, datacube, axis, subarray, already_has_indexes):
-        # Some of the axes in the datacube appear or disappear due to transformations
-        # When we look up the datacube, for those axes, we should take particular care to find the right
-        # values which exist on those axes
         pass
 
     @abstractmethod

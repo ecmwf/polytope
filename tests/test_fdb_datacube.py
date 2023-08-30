@@ -1,8 +1,9 @@
+import pandas as pd
+
 from polytope.datacube.backends.FDB_datacube import FDBDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
-import pandas as pd
 
 
 class TestSlicingFDBDatacube:

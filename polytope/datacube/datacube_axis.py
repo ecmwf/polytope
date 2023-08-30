@@ -5,8 +5,6 @@ from typing import Any, List
 import numpy as np
 import pandas as pd
 
-# TODO: maybe create dico of which axes can be cyclic too
-
 
 def cyclic(cls):
     if cls.is_cyclic:
@@ -84,7 +82,6 @@ def cyclic(cls):
             return return_range[0]
 
         def remap(range: List):
-            # range = old_remap(range)
             update_range()
             if cls.range[0] - cls.tol <= range[0] <= cls.range[1] + cls.tol:
                 if cls.range[0] - cls.tol <= range[1] <= cls.range[1] + cls.tol:
@@ -131,7 +128,7 @@ def cyclic(cls):
                         path[cls.name] = new_val
             (path, unmapped_path) = old_unmap_total_path_to_datacube(path, unmapped_path)
             return (path, unmapped_path)
-        
+
         old_unmap_to_datacube = cls.unmap_to_datacube
 
         def unmap_to_datacube(path, unmapped_path):
@@ -272,7 +269,7 @@ def merge(cls):
                     transformation = transform
                     if cls.name == transformation._first_axis:
                         return transformation.merged_values(datacube)
-        
+
         old_unmap_total_path_to_datacube = cls.unmap_total_path_to_datacube
 
         def unmap_total_path_to_datacube(path, unmapped_path):
@@ -378,22 +375,16 @@ def type_change(cls):
 
     if cls.type_change:
 
-        old_find_indexes = cls.find_indexes 
+        old_find_indexes = cls.find_indexes
 
         def find_indexes(path, datacube):
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisTypeChange):
                     transformation = transform
                     if cls.name == transformation.name:
-
-                        # unmapped_path = {}
-                        # (new_path, unmapped_path) = cls.unmap_to_datacube(path, unmapped_path)
-                        # subarray = datacube.dataarray.sel(new_path, method="nearest")
-                        # subarray = subarray.sel(unmapped_path)
-                        # original_vals = datacube.datacube_natural_indexes(cls, subarray)
                         original_vals = old_find_indexes(path, datacube)
                         return transformation.change_val_type(cls.name, original_vals)
-                    
+
         old_unmap_total_path_to_datacube = cls.unmap_total_path_to_datacube
 
         def unmap_total_path_to_datacube(path, unmapped_path):
@@ -500,15 +491,12 @@ class DatacubeAxis(ABC):
         return (path, unmapped_path)
 
     def find_indexes(self, path, datacube):
-        # TODO: does this do what it should?
         unmapped_path = {}
         path_copy = deepcopy(path)
         for key in path_copy:
             axis = datacube._axes[key]
             (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
         subarray = datacube.select(path, unmapped_path)
-        # subarray = datacube.dataarray.sel(path, method="nearest")
-        # subarray = subarray.sel(unmapped_path)
         return datacube.datacube_natural_indexes(self, subarray)
 
     def offset(self, value):
@@ -521,7 +509,6 @@ class DatacubeAxis(ABC):
         return (path, unmapped_path)
 
     def find_indices_between(self, index_ranges, low, up, datacube):
-        # TODO: do we need this ?
         indexes_between_ranges = []
         for indexes in index_ranges:
             if self.name in datacube.complete_axes:
@@ -536,35 +523,6 @@ class DatacubeAxis(ABC):
                 indexes_between = [i for i in indexes if low <= i <= up]
                 indexes_between_ranges.append(indexes_between)
         return indexes_between_ranges
-
-    @staticmethod
-    def create_axis(name, values, datacube):
-        cyclic_transform = None
-        # First check if axis has any cyclicity transformation
-        if name in datacube.transformation.keys():
-            axis_transforms = datacube.transformation[name]
-            for transform in axis_transforms:
-                from .transformations.datacube_cyclic import DatacubeAxisCyclic
-
-                if isinstance(transform, DatacubeAxisCyclic):
-                    cyclic_transform = transform
-
-        if cyclic_transform is not None:
-            # the axis has a cyclic transformation
-            DatacubeAxis.create_cyclic(transform, name, values, datacube)
-        else:
-            DatacubeAxis.create_standard(name, values, datacube)
-
-    @staticmethod
-    def create_cyclic(cyclic_transform, name, values, datacube):
-        values = np.array(values)
-        DatacubeAxis.check_axis_type(name, values)
-        datacube._axes[name] = deepcopy(_type_to_axis_lookup[values.dtype.type])
-        datacube._axes[name].is_cyclic = True
-        datacube._axes[name].update_axis()
-        datacube._axes[name].name = name
-        datacube._axes[name].range = cyclic_transform.range
-        datacube.axis_counter += 1
 
     @staticmethod
     def create_standard(name, values, datacube):
