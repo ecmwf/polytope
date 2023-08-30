@@ -1,7 +1,7 @@
 from sortedcontainers import SortedList
 
-from polytope.datacube.datacube_axis import IntAxis
-from polytope.datacube.datacube_request_tree import IndexTree
+from polytope.datacube.datacube_axis import IntDatacubeAxis
+from polytope.datacube.index_tree import IndexTree
 
 
 class TestIndexTree:
@@ -9,9 +9,9 @@ class TestIndexTree:
         pass
 
     def test_init(self):
-        axis1 = IntAxis()
-        axis2 = IntAxis()
-        axis3 = IntAxis()
+        axis1 = IntDatacubeAxis()
+        axis2 = IntDatacubeAxis()
+        axis3 = IntDatacubeAxis()
         axis1.name = "grandchild1"
         axis2.name = "child1"
         axis3.name = "child2"
@@ -25,8 +25,8 @@ class TestIndexTree:
         assert child1.children == SortedList([grandchild1])
 
     def test_add_child(self):
-        axis1 = IntAxis()
-        axis2 = IntAxis()
+        axis1 = IntDatacubeAxis()
+        axis2 = IntDatacubeAxis()
         axis1.name = "grandchild"
         axis2.name = "child"
         root_node = IndexTree()
@@ -41,7 +41,7 @@ class TestIndexTree:
         assert SortedList([grandchild]) in [c.children for c in root_node.children]
 
     def test_get_parent(self):
-        axis1 = IntAxis()
+        axis1 = IntDatacubeAxis()
         axis1.name = "child"
         child = IndexTree(axis=axis1)
         root_node = IndexTree()
@@ -49,8 +49,8 @@ class TestIndexTree:
         assert child.parent == root_node
 
     def test_find_child(self):
-        axis1 = IntAxis()
-        axis2 = IntAxis()
+        axis1 = IntDatacubeAxis()
+        axis2 = IntDatacubeAxis()
         axis1.name = "child1"
         axis2.name = "child2"
         child1 = IndexTree(axis=axis1)
@@ -61,9 +61,9 @@ class TestIndexTree:
         assert child2 not in root_node.children
 
     def test_get_root(self):
-        axis1 = IntAxis()
-        axis2 = IntAxis()
-        axis3 = IntAxis()
+        axis1 = IntDatacubeAxis()
+        axis2 = IntDatacubeAxis()
+        axis3 = IntDatacubeAxis()
         axis1.name = "grandchild1"
         axis2.name = "child1"
         axis3.name = "child2"
@@ -78,12 +78,12 @@ class TestIndexTree:
         assert grandparent == root_node
 
     def test_merge(self):
-        axis1 = IntAxis()
-        axis2 = IntAxis()
-        axis3 = IntAxis()
-        axis4 = IntAxis()
-        axis5 = IntAxis()
-        axis6 = IntAxis()
+        axis1 = IntDatacubeAxis()
+        axis2 = IntDatacubeAxis()
+        axis3 = IntDatacubeAxis()
+        axis4 = IntDatacubeAxis()
+        axis5 = IntDatacubeAxis()
+        axis6 = IntDatacubeAxis()
         axis1.name = "grandchild1"
         axis2.name = "grandchild2"
         axis3.name = "grandchild3"
@@ -106,12 +106,12 @@ class TestIndexTree:
         root_node1.add_child(child2_1)
         root_node1.pprint()
 
-        axis1 = IntAxis()
-        axis2 = IntAxis()
-        axis3 = IntAxis()
-        axis4 = IntAxis()
-        axis5 = IntAxis()
-        axis6 = IntAxis()
+        axis1 = IntDatacubeAxis()
+        axis2 = IntDatacubeAxis()
+        axis3 = IntDatacubeAxis()
+        axis4 = IntDatacubeAxis()
+        axis5 = IntDatacubeAxis()
+        axis6 = IntDatacubeAxis()
         axis1.name = "grandchild1"
         axis2.name = "grandchild5"
         axis3.name = "grandchild6"
@@ -141,9 +141,9 @@ class TestIndexTree:
         assert set([len(child.children) for child in root_node1.children]) == {2, 2, 3}
 
     def test_pprint(self):
-        axis1 = IntAxis()
-        axis2 = IntAxis()
-        axis3 = IntAxis()
+        axis1 = IntDatacubeAxis()
+        axis2 = IntDatacubeAxis()
+        axis3 = IntDatacubeAxis()
         axis1.name = "grandchild1"
         axis2.name = "child1"
         axis3.name = "child2"
@@ -157,9 +157,9 @@ class TestIndexTree:
         root_node.pprint()
 
     def test_remove_branch(self):
-        axis1 = IntAxis()
-        axis2 = IntAxis()
-        axis3 = IntAxis()
+        axis1 = IntDatacubeAxis()
+        axis2 = IntDatacubeAxis()
+        axis3 = IntDatacubeAxis()
         axis1.name = "grandchild1"
         axis2.name = "child1"
         axis3.name = "child2"
@@ -178,12 +178,12 @@ class TestIndexTree:
         assert root_node.children == SortedList([child2])
 
     def test_intersect(self):
-        axis1 = IntAxis()
-        axis2 = IntAxis()
-        axis3 = IntAxis()
-        axis4 = IntAxis()
-        axis5 = IntAxis()
-        axis6 = IntAxis()
+        axis1 = IntDatacubeAxis()
+        axis2 = IntDatacubeAxis()
+        axis3 = IntDatacubeAxis()
+        axis4 = IntDatacubeAxis()
+        axis5 = IntDatacubeAxis()
+        axis6 = IntDatacubeAxis()
         axis1.name = "grandchild1"
         axis2.name = "grandchild2"
         axis3.name = "grandchild3"
@@ -204,12 +204,12 @@ class TestIndexTree:
         root_node1.add_child(child1_1)
         root_node1.add_child(child2_1)
 
-        axis1 = IntAxis()
-        axis2 = IntAxis()
-        axis3 = IntAxis()
-        axis4 = IntAxis()
-        axis5 = IntAxis()
-        axis6 = IntAxis()
+        axis1 = IntDatacubeAxis()
+        axis2 = IntDatacubeAxis()
+        axis3 = IntDatacubeAxis()
+        axis4 = IntDatacubeAxis()
+        axis5 = IntDatacubeAxis()
+        axis6 = IntDatacubeAxis()
         axis1.name = "grandchild1"
         axis2.name = "grandchild5"
         axis3.name = "grandchild6"
@@ -241,9 +241,9 @@ class TestIndexTree:
         assert list(list(root_node1.children)[0].children)[0].axis.name == "grandchild1"
 
     def test_flatten(self):
-        axis1 = IntAxis()
-        axis2 = IntAxis()
-        axis3 = IntAxis()
+        axis1 = IntDatacubeAxis()
+        axis2 = IntDatacubeAxis()
+        axis3 = IntDatacubeAxis()
         axis1.name = "grandchild1"
         axis2.name = "child1"
         axis3.name = "child2"
@@ -261,9 +261,9 @@ class TestIndexTree:
         assert path["grandchild1"] is None
 
     def test_get_ancestors(self):
-        axis1 = IntAxis()
-        axis2 = IntAxis()
-        axis3 = IntAxis()
+        axis1 = IntDatacubeAxis()
+        axis2 = IntDatacubeAxis()
+        axis3 = IntDatacubeAxis()
         axis1.name = "greatgrandchild1"
         axis2.name = "grandchild1"
         axis3.name = "child1"
@@ -277,9 +277,9 @@ class TestIndexTree:
         assert greatgrandchild1.get_ancestors() == SortedList([greatgrandchild1, grandchild1, child1])
 
     def test_add_or_get_child(self):
-        axis1 = IntAxis()
+        axis1 = IntDatacubeAxis()
         axis1.name = "child1"
-        axis2 = IntAxis()
+        axis2 = IntDatacubeAxis()
         axis2.name = "child2"
         child1 = IndexTree(axis=axis1)
         root_node = IndexTree()
@@ -288,10 +288,10 @@ class TestIndexTree:
         assert root_node.create_child(axis2, None).parent == root_node
 
     def test_to_dict(self):
-        axis1 = IntAxis()
-        axis2 = IntAxis()
-        axis3 = IntAxis()
-        axis4 = IntAxis()
+        axis1 = IntDatacubeAxis()
+        axis2 = IntDatacubeAxis()
+        axis3 = IntDatacubeAxis()
+        axis4 = IntDatacubeAxis()
         axis1.name = "greatgrandchild1"
         axis2.name = "grandchild1"
         axis3.name = "child1"

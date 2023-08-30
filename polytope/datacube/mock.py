@@ -3,7 +3,7 @@ from copy import deepcopy
 
 from ..utility.combinatorics import validate_axes
 from .datacube import Datacube, DatacubePath, IndexTree
-from .datacube_axis import IntAxis
+from .datacube_axis import IntDatacubeAxis
 
 
 class MockDatacube(Datacube):
@@ -14,7 +14,7 @@ class MockDatacube(Datacube):
 
         self.mappers = {}
         for name in self.dimensions:
-            self.mappers[name] = deepcopy(IntAxis())
+            self.mappers[name] = deepcopy(IntDatacubeAxis())
             self.mappers[name].name = name
 
         self.stride = {}

@@ -8,7 +8,7 @@ from earthkit import data
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Ellipsoid, Path
+from polytope.shapes import Ellipsoid, Path, Select
 
 
 class Test:
@@ -58,15 +58,15 @@ class Test:
         # Then somehow make this list of points into just a sequence of points
 
         ship_route_polytope = Path(["latitude", "longitude", "step"], initial_shape, *new_points)
-        request = Request(ship_route_polytope)
+        request = Request(
+            ship_route_polytope, Select("number", [0]), Select("surface", [0]), Select("time", ["2022-09-30T12:00:00"])
+        )
         result = self.API.retrieve(request)
 
         # Associate the results to the lat/long points in an array
         lats = []
         longs = []
         parameter_values = []
-        winds_u = []
-        winds_v = []
         for i in range(len(result.leaves)):
             cubepath = result.leaves[i].flatten()
             lat = cubepath["latitude"]
@@ -74,13 +74,9 @@ class Test:
             lats.append(lat)
             longs.append(long)
 
-            u10_idx = result.leaves[i].result["u10"]
+            u10_idx = result.leaves[i].result[1]
             wind_u = u10_idx
-            v10_idx = result.leaves[i].result["v10"]
-            wind_v = v10_idx
-            winds_u.append(wind_u)
-            winds_v.append(wind_v)
-            parameter_values.append(math.sqrt(wind_u**2 + wind_v**2))
+            parameter_values.append(wind_u)
 
         parameter_values = np.array(parameter_values)
         # Plot this last array according to different colors for the result on a world map
