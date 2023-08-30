@@ -1,4 +1,4 @@
-from polytope.datacube.mappers import OctahedralGridMap
+from polytope.datacube.datacube_mappers import OctahedralGridMapper
 
 
 class TestMapper:
@@ -6,7 +6,7 @@ class TestMapper:
         mapped_axes = ["lat", "lon"]
         base_axis = "base"
         resolution = 1280
-        octahedral_mapper = OctahedralGridMap(base_axis, mapped_axes, resolution)
+        octahedral_mapper = OctahedralGridMapper(base_axis, mapped_axes, resolution)
         assert octahedral_mapper._base_axis == base_axis
         assert octahedral_mapper._mapped_axes == mapped_axes
         assert octahedral_mapper._resolution == resolution
@@ -15,7 +15,7 @@ class TestMapper:
         mapped_axes = ["lat", "lon"]
         base_axis = "base"
         resolution = 1280
-        octahedral_mapper = OctahedralGridMap(base_axis, mapped_axes, resolution)
+        octahedral_mapper = OctahedralGridMapper(base_axis, mapped_axes, resolution)
         assert octahedral_mapper.first_axis_vals()[:5] == [
             89.94618771566562,
             89.87647835333229,
@@ -29,7 +29,7 @@ class TestMapper:
         mapped_axes = ["lat", "lon"]
         base_axis = "base"
         resolution = 640
-        octahedral_mapper = OctahedralGridMap(base_axis, mapped_axes, resolution)
+        octahedral_mapper = OctahedralGridMapper(base_axis, mapped_axes, resolution)
         assert octahedral_mapper.first_axis_vals()[:5] == [
             89.89239644559007,
             89.75300494317403,
@@ -43,7 +43,7 @@ class TestMapper:
         mapped_axes = ["lat", "lon"]
         base_axis = "base"
         resolution = 1280
-        octahedral_mapper = OctahedralGridMap(base_axis, mapped_axes, resolution)
+        octahedral_mapper = OctahedralGridMapper(base_axis, mapped_axes, resolution)
         assert octahedral_mapper.map_first_axis(89.7, 89.96) == [
             89.94618771566562,
             89.87647835333229,
@@ -55,7 +55,7 @@ class TestMapper:
         mapped_axes = ["lat", "lon"]
         base_axis = "base"
         resolution = 1280
-        octahedral_mapper = OctahedralGridMap(base_axis, mapped_axes, resolution)
+        octahedral_mapper = OctahedralGridMapper(base_axis, mapped_axes, resolution)
         assert octahedral_mapper.second_axis_vals(0.035149384215604956)[0] == 0
         assert octahedral_mapper.second_axis_vals(10.017574499477174)[0] == 0
         assert octahedral_mapper.second_axis_vals(89.94618771566562)[10] == 180
@@ -67,14 +67,14 @@ class TestMapper:
         mapped_axes = ["lat", "lon"]
         base_axis = "base"
         resolution = 1280
-        octahedral_mapper = OctahedralGridMap(base_axis, mapped_axes, resolution)
+        octahedral_mapper = OctahedralGridMapper(base_axis, mapped_axes, resolution)
         assert octahedral_mapper.map_second_axis(89.94618771566562, 0, 90) == [0, 18, 36, 54, 72, 90]
 
     def test_axes_idx_to_octahedral_idx(self):
         mapped_axes = ["lat", "lon"]
         base_axis = "base"
         resolution = 1280
-        octahedral_mapper = OctahedralGridMap(base_axis, mapped_axes, resolution)
+        octahedral_mapper = OctahedralGridMapper(base_axis, mapped_axes, resolution)
         assert octahedral_mapper.axes_idx_to_octahedral_idx(1, 0) == 0
         assert octahedral_mapper.axes_idx_to_octahedral_idx(1, 1) == 1
         assert octahedral_mapper.axes_idx_to_octahedral_idx(1, 16) == 16
@@ -99,7 +99,7 @@ class TestMapper:
         mapped_axes = ["lat", "lon"]
         base_axis = "base"
         resolution = 1280
-        octahedral_mapper = OctahedralGridMap(base_axis, mapped_axes, resolution)
+        octahedral_mapper = OctahedralGridMapper(base_axis, mapped_axes, resolution)
         assert octahedral_mapper.unmap(89.94618771566562, 0) == 0
         assert octahedral_mapper.unmap(0.035149384215604956, 0) == 3299840 - 5136
         assert octahedral_mapper.unmap(-0.035149384215604956, 0) == 3299840
