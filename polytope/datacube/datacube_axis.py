@@ -1,4 +1,3 @@
-# import sys
 from abc import ABC, abstractmethod, abstractproperty
 from copy import deepcopy
 from typing import Any, List
@@ -273,8 +272,11 @@ def merge(cls):
                     transformation = transform
                     if cls.name == transformation._first_axis:
                         return transformation.merged_values(datacube)
-                    
+        
+        old_unmap_total_path_to_datacube = cls.unmap_total_path_to_datacube
+
         def unmap_total_path_to_datacube(path, unmapped_path):
+            (path, unmapped_path) = old_unmap_total_path_to_datacube(path, unmapped_path)
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisMerger):
                     transformation = transform
@@ -376,19 +378,26 @@ def type_change(cls):
 
     if cls.type_change:
 
+        old_find_indexes = cls.find_indexes 
+
         def find_indexes(path, datacube):
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisTypeChange):
                     transformation = transform
                     if cls.name == transformation.name:
-                        unmapped_path = {}
-                        (new_path, unmapped_path) = cls.unmap_to_datacube(path, unmapped_path)
-                        subarray = datacube.dataarray.sel(new_path, method="nearest")
-                        subarray = subarray.sel(unmapped_path)
-                        original_vals = datacube.datacube_natural_indexes(cls, subarray)
+
+                        # unmapped_path = {}
+                        # (new_path, unmapped_path) = cls.unmap_to_datacube(path, unmapped_path)
+                        # subarray = datacube.dataarray.sel(new_path, method="nearest")
+                        # subarray = subarray.sel(unmapped_path)
+                        # original_vals = datacube.datacube_natural_indexes(cls, subarray)
+                        original_vals = old_find_indexes(path, datacube)
                         return transformation.change_val_type(cls.name, original_vals)
                     
+        old_unmap_total_path_to_datacube = cls.unmap_total_path_to_datacube
+
         def unmap_total_path_to_datacube(path, unmapped_path):
+            (path, unmapped_path) = old_unmap_total_path_to_datacube(path, unmapped_path)
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisTypeChange):
                     transformation = transform
@@ -497,8 +506,9 @@ class DatacubeAxis(ABC):
         for key in path_copy:
             axis = datacube._axes[key]
             (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
-        subarray = datacube.dataarray.sel(path, method="nearest")
-        subarray = subarray.sel(unmapped_path)
+        subarray = datacube.select(path, unmapped_path)
+        # subarray = datacube.dataarray.sel(path, method="nearest")
+        # subarray = subarray.sel(unmapped_path)
         return datacube.datacube_natural_indexes(self, subarray)
 
     def offset(self, value):

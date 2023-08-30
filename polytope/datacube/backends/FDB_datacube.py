@@ -39,6 +39,7 @@ class FDBDatacube(Datacube):
         for blocked_axis in transformation.blocked_axes():
             self.blocked_axes.append(blocked_axis)
         for axis_name in final_axis_names:
+            self.complete_axes.append(axis_name)
             # if axis does not yet exist, create it
 
             # first need to change the values so that we have right type
@@ -130,32 +131,24 @@ class FDBDatacube(Datacube):
             value = path[key]
             path[key] = self._axes[key].remap([value, value])[0][0]
         return path
-
-    def _look_up_datacube(self, search_ranges, search_ranges_offset, indexes, axis, first_val):
+    
+    def _look_up_datacube(self, search_ranges, search_ranges_offset, indexes, axis):
         idx_between = []
         for i in range(len(search_ranges)):
             r = search_ranges[i]
             offset = search_ranges_offset[i]
             low = r[0]
             up = r[1]
-            if axis.name in self.transformation.keys():
-                axis_transforms = self.transformation[axis.name]
-                temp_indexes = deepcopy(indexes)
-                for transform in axis_transforms:
-                    (offset, temp_indexes) = transform._find_transformed_indices_between(
-                        axis, self, temp_indexes, low, up, first_val, offset
-                    )
-                indexes_between = temp_indexes
-            else:
-                indexes_between = self._find_indexes_between(axis, indexes, low, up)
+            indexes_between = axis.find_indices_between([indexes], low, up, self)
             # Now the indexes_between are values on the cyclic range so need to remap them to their original
             # values before returning them
             for j in range(len(indexes_between)):
-                if offset is None:
-                    indexes_between[j] = indexes_between[j]
-                else:
-                    indexes_between[j] = round(indexes_between[j] + offset, int(-math.log10(axis.tol)))
-                idx_between.append(indexes_between[j])
+                for k in range(len(indexes_between[j])):
+                    if offset is None:
+                        indexes_between[j][k] = indexes_between[j][k]
+                    else:
+                        indexes_between[j][k] = round(indexes_between[j][k] + offset, int(-math.log10(axis.tol)))
+                    idx_between.append(indexes_between[j][k])
         return idx_between
 
     def fit_path_to_original_datacube(self, path):
@@ -173,27 +166,10 @@ class FDBDatacube(Datacube):
                 if temp_first_val:
                     first_val = temp_first_val
         return (path, first_val, considered_axes, unmap_path, changed_type_path)
-
+    
     def get_indices(self, path: DatacubePath, axis, lower, upper):
-        # NEW VERSION OF THIS METHOD
-        (path, first_val, considered_axes, unmap_path, changed_type_path) = self.fit_path_to_original_datacube(path)
-
-        subarray = self.dataarray
-        # Get the indexes of the axis we want to query
-        # XArray does not support branching, so no need to use label, we just take the next axis
-        if axis.name in self.transformation.keys():
-            axis_transforms = self.transformation[axis.name]
-            # This bool will help us decide for which axes we need to calculate the indexes again or not
-            # in case there are multiple relevant transformations for an axis
-            already_has_indexes = False
-            for transform in axis_transforms:
-                # TODO: here, instead of creating the indices, would be better to create the standard datacube axes and
-                # then succesively map them to what they should be
-                indexes = transform._find_transformed_axis_indices(self, axis, subarray, already_has_indexes)
-                already_has_indexes = True
-        else:
-            indexes = self.datacube_natural_indexes(axis, subarray)
-        # Here, we do a cyclic remapping so we look up on the right existing values in the cyclic range on the datacube
+        path = self.fit_path(path)
+        indexes = axis.find_indexes(path, self)
         search_ranges = axis.remap([lower, upper])
         original_search_ranges = axis.to_intervals([lower, upper])
         # Find the offsets for each interval in the requested range, which we will need later
@@ -201,8 +177,7 @@ class FDBDatacube(Datacube):
         for r in original_search_ranges:
             offset = axis.offset(r)
             search_ranges_offset.append(offset)
-        # Look up the values in the datacube for each cyclic interval range
-        idx_between = self._look_up_datacube(search_ranges, search_ranges_offset, indexes, axis, first_val)
+        idx_between = self._look_up_datacube(search_ranges, search_ranges_offset, indexes, axis)
         # Remove duplicates even if difference of the order of the axis tolerance
         if offset is not None:
             # Note that we can only do unique if not dealing with time values
@@ -212,6 +187,9 @@ class FDBDatacube(Datacube):
     def datacube_natural_indexes(self, axis, subarray):
         indexes = subarray[axis.name]
         return indexes
+
+    def select(self, path, unmapped_path):
+        return self.dataarray
 
     def has_index(self, path: DatacubePath, axis, index):
         # when we want to obtain the value of an unsliceable axis, need to check the values does exist in the datacube
@@ -226,7 +204,6 @@ class FDBDatacube(Datacube):
         return self._axes
 
     def fit_path(self, path):
-        # path = self.remap_path(path)
         for key in path.keys():
             if key not in self.complete_axes:
                 path.pop(key)
@@ -239,6 +216,3 @@ class FDBDatacube(Datacube):
         for _name, values in self.dataarray.items():
             if _name == name:
                 return values
-
-    def _find_indexes_between(self, axis, indexes, low, up):
-        return [i for i in indexes if low <= i <= up]

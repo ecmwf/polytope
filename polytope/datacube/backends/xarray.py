@@ -25,6 +25,7 @@ class XArrayDatacube(Datacube):
         for blocked_axis in transformation.blocked_axes():
             self.blocked_axes.append(blocked_axis)
         for axis_name in final_axis_names:
+            self.complete_axes.append(axis_name)
             # if axis does not yet exist, create it
 
             # first need to change the values so that we have right type
@@ -170,29 +171,20 @@ class XArrayDatacube(Datacube):
         return indexes
 
     def fit_path(self, path):
-        # path = self.remap_path(path)
         for key in path.keys():
-            if key in self.non_complete_axes:
+            if key not in self.complete_axes:
                 path.pop(key)
         return path
 
+    def select(self, path, unmapped_path):
+        subarray = self.dataarray.sel(path, method="nearest")
+        subarray = subarray.sel(unmapped_path)
+        return subarray
+
     def has_index(self, path: DatacubePath, axis, index):
         # when we want to obtain the value of an unsliceable axis, need to check the values does exist in the datacube
-        # path = self.fit_path_to_datacube(axis.name, path)[0]
         path = self.fit_path(path)
         indexes = axis.find_indexes(path, self)
-
-        # Open a view on the subset identified by the path
-        # subarray = self.dataarray.sel(path, method="nearest")
-        # if axis.name in self.transformation.keys():
-        #     axis_transforms = self.transformation[axis.name]
-        #     already_has_indexes = False
-        #     for transform in axis_transforms:
-        #         indexes = transform._find_transformed_axis_indices(self, axis, subarray, already_has_indexes)
-        #         already_has_indexes = True
-        # # return index in subarray_vals
-        # else:
-        #     indexes = self.datacube_natural_indexes(axis, subarray)
         return index in indexes
 
     @property
