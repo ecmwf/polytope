@@ -4,7 +4,7 @@ from typing import Any, List
 import xarray as xr
 
 from .datacube_axis import DatacubeAxis
-from .datacube_request_tree import DatacubePath, IndexTree
+from .index_tree import DatacubePath, IndexTree
 
 
 class Datacube(ABC):
@@ -47,3 +47,14 @@ class Datacube(ABC):
 
             xadatacube = XArrayDatacube(datacube, axis_options=axis_options)
             return xadatacube
+
+
+def configure_datacube_axis(options, name, values, datacube):
+    if options == {}:
+        DatacubeAxis.create_standard(name, values, datacube)
+    if "mapper" in options.keys():
+        from .datacube_mappers import DatacubeMapper
+
+        DatacubeMapper.create_mapper(options, name, datacube)
+    if "cyclic" in options.keys():
+        DatacubeAxis.create_cyclic(options, name, values, datacube)

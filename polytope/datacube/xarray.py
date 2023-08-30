@@ -1,35 +1,9 @@
 import math
-import sys
-from copy import deepcopy
-from importlib import import_module
 
-import numpy as np
-import pandas as pd
 import xarray as xr
 
 from ..utility.combinatorics import unique, validate_axes
-from .datacube import Datacube, DatacubePath, IndexTree
-from .datacube_axis import (
-    FloatAxis,
-    IntAxis,
-    PandasTimedeltaAxis,
-    PandasTimestampAxis,
-    UnsliceableaAxis,
-)
-
-_mappings = {
-    pd.Int64Dtype: IntAxis(),
-    pd.Timestamp: PandasTimestampAxis(),
-    np.int64: IntAxis(),
-    np.datetime64: PandasTimestampAxis(),
-    np.timedelta64: PandasTimedeltaAxis(),
-    np.float64: FloatAxis(),
-    np.str_: UnsliceableaAxis(),
-    str: UnsliceableaAxis(),
-    np.object_: UnsliceableaAxis(),
-}
-
-_grid_mappings = {"octahedral": "OctahedralGridMap"}
+from .datacube import Datacube, DatacubePath, IndexTree, configure_datacube_axis
 
 
 class XArrayDatacube(Datacube):
@@ -39,7 +13,7 @@ class XArrayDatacube(Datacube):
         self.axis_options = axis_options
         self.grid_mapper = None
         self.axis_counter = 0
-        self.mappers = {}
+        self._axes = {}
         self.dataarray = dataarray
         treated_axes = []
         self.complete_axes = []
@@ -47,68 +21,19 @@ class XArrayDatacube(Datacube):
             if name in dataarray.dims:
                 self.dataarray = self.dataarray.sortby(name)
                 options = axis_options.get(name, {})
-                self.create_axis(options, name, values)
+                configure_datacube_axis(options, name, values, self)
                 treated_axes.append(name)
                 self.complete_axes.append(name)
             else:
                 if self.dataarray[name].dims == ():
                     options = axis_options.get(name, {})
-                    self.create_axis(options, name, values)
+                    configure_datacube_axis(options, name, values, self)
                     treated_axes.append(name)
         for name in dataarray.dims:
             if name not in treated_axes:
                 options = axis_options.get(name, {})
                 val = dataarray[name].values[0]
-                self.create_axis(options, name, val)
-
-    def create_axis(self, options, name, values):
-        if options == {}:
-            self.create_standard(name, values)
-        if "mapper" in options.keys():
-            self.create_mapper(options, name)
-        if "Cyclic" in options.keys():
-            self.create_cyclic(options, name, values)
-
-    def create_cyclic(self, options, name, values):
-        value_type = values.dtype.type
-        axes_type_str = type(_mappings[value_type]).__name__
-        axes_type_str += "Cyclic"
-        cyclic_axis_type = deepcopy(getattr(sys.modules["polytope.datacube.datacube_axis"], axes_type_str)())
-        self.mappers[name] = cyclic_axis_type
-        self.mappers[name].name = name
-        self.mappers[name].range = options["Cyclic"]
-        self.axis_counter += 1
-
-    def create_mapper(self, options, name):
-        grid_mapping_options = options["mapper"]
-        grid_type = grid_mapping_options["type"]
-        grid_resolution = grid_mapping_options["resolution"]
-        grid_axes = grid_mapping_options["axes"]
-        map_type = _grid_mappings[grid_type]
-        module = import_module("polytope.datacube.mappers")
-        constructor = getattr(module, map_type)
-        self.grid_mapper = constructor(name, grid_axes, grid_resolution)
-        # Once we have created mapper, create axis for the mapped axes
-        for i in range(len(grid_axes)):
-            axis_name = grid_axes[i]
-            new_axis_options = self.axis_options.get(axis_name, {})
-            if i == 0:
-                values = np.array(self.grid_mapper.first_axis_vals())
-                self.create_axis(new_axis_options, axis_name, values)
-            if i == 1:
-                # the values[0] will be a value on the first axis
-                values = np.array(self.grid_mapper.second_axis_vals(values[0]))
-                self.create_axis(new_axis_options, axis_name, values)
-
-    def create_standard(self, name, values):
-        self.check_axis_type(name, values)
-        self.mappers[name] = deepcopy(_mappings[values.dtype.type])
-        self.mappers[name].name = name
-        self.axis_counter += 1
-
-    def check_axis_type(self, name, values):
-        if values.dtype.type not in _mappings:
-            raise ValueError(f"Could not create a mapper for index type {values.dtype.type} for axis {name}")
+                configure_datacube_axis(options, name, val, self)
 
     def get(self, requests: IndexTree):
         for r in requests.leaves:
@@ -142,12 +67,12 @@ class XArrayDatacube(Datacube):
                 r.remove_branch()
 
     def get_mapper(self, axis):
-        return self.mappers[axis]
+        return self._axes[axis]
 
     def remap_path(self, path: DatacubePath):
         for key in path:
             value = path[key]
-            path[key] = self.mappers[key].remap_val_to_axis_range(value)
+            path[key] = self._axes[key].remap_val_to_axis_range(value)
         return path
 
     def _look_up_datacube(self, search_ranges, search_ranges_offset, indexes, axis, first_val):
@@ -274,7 +199,7 @@ class XArrayDatacube(Datacube):
 
     @property
     def axes(self):
-        return self.mappers
+        return self._axes
 
     def validate(self, axes):
         return validate_axes(list(self.axes.keys()), axes)
