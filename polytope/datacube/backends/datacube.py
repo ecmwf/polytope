@@ -109,28 +109,35 @@ class Datacube(ABC):
             offset = search_ranges_offset[i]
             low = r[0]
             up = r[1]
-            indexes_between = axis.find_indices_between([indexes], low, up, self, method)
+            indexes_between = axis.find_indices_between([indexes], low, up, self, offset, method)
             # Now the indexes_between are values on the cyclic range so need to remap them to their original
             # values before returning them
             for j in range(len(indexes_between)):
                 # if we have a special indexes between range that needs additional offset, treat it here
-                if indexes_between[j][0] == "need_offset":
-                    new_offset = indexes_between[j][1]
-                    for k in range(2, len(indexes_between[j])):
-                        if offset is None:
-                            indexes_between[j][k] = indexes_between[j][k]
-                        else:
-                            offset = offset + new_offset
-                            indexes_between[j][k] = round(indexes_between[j][k] + offset, int(-math.log10(axis.tol)))
-                        idx_between.append(indexes_between[j][k])
+                if len(indexes_between[j]) == 0:
+                    idx_between = idx_between
                 else:
-                    # do normal offset if no new offset
-                    for k in range(len(indexes_between[j])):
-                        if offset is None:
-                            indexes_between[j][k] = indexes_between[j][k]
-                        else:
-                            indexes_between[j][k] = round(indexes_between[j][k] + offset, int(-math.log10(axis.tol)))
-                        idx_between.append(indexes_between[j][k])
+                    if indexes_between[j][0] == "need_offset":
+                        print(indexes_between[j])
+                        new_offset = indexes_between[j][1]
+                        for k in range(2, len(indexes_between[j])):
+                            if offset is None:
+                                indexes_between[j][k] = indexes_between[j][k]
+                            else:
+                                # offset = offset + new_offset
+                                offset = offset + new_offset
+                                indexes_between[j][k] = round(indexes_between[j][k] + offset, int(-math.log10(axis.tol)))
+                            idx_between.append(indexes_between[j][k])
+                    else:
+                        # do normal offset if no new offset
+                        for k in range(len(indexes_between[j])):
+                            print("HERE")
+                            print(offset)
+                            if offset is None:
+                                indexes_between[j][k] = indexes_between[j][k]
+                            else:
+                                indexes_between[j][k] = round(indexes_between[j][k] + offset, int(-math.log10(axis.tol)))
+                            idx_between.append(indexes_between[j][k])
         return idx_between
 
     def get_mapper(self, axis):
