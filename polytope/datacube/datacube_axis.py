@@ -135,6 +135,41 @@ def cyclic(cls):
             (path, unmapped_path) = old_unmap_to_datacube(path, unmapped_path)
             return (path, unmapped_path)
 
+        old_find_indices_between = cls.find_indices_between
+
+        def find_indices_between(index_ranges, low, up, datacube, method=None):
+            update_range()
+            range_length = cls.range[1] - cls.range[0]
+            indexes_between_ranges = []
+            if method == "surrounding":
+                for indexes in index_ranges:
+                    if cls.name in datacube.complete_axes:
+                        start = indexes.searchsorted(low, "left")
+                        end = indexes.searchsorted(up, "right")
+                    else:
+                        start = indexes.index(low)
+                        end = indexes.index(up)
+                    if start-1 < 0:
+                        start_offset_indicator = "need_offset"
+                        new_offset = - range_length  # TODO: not sure about this offset
+                        index_val_found = indexes[-1:][0]
+                        indexes_between_before = [start_offset_indicator, new_offset, index_val_found].to_list()
+                        indexes_between_ranges.append(indexes_between_before)
+                    if end+1 > len(indexes):
+                        start_offset_indicator = "need_offset"
+                        new_offset = range_length
+                        index_val_found = indexes[:1][0]
+                        indexes_between_after = [start_offset_indicator, new_offset, index_val_found].to_list()
+                        indexes_between_ranges.append(indexes_between_after)
+                    start = max(start-1, 0)
+                    end = min(end+1, len(indexes))
+                    # indexes_between = [i for i in indexes if low <= i <= up]
+                    indexes_between = indexes[start:end].to_list()
+                    indexes_between_ranges.append(indexes_between)
+                return indexes_between_ranges
+            else:
+                return old_find_indices_between(index_ranges, low, up, datacube, method)
+
         def offset(range):
             # We first unpad the range by the axis tolerance to make sure that
             # we find the wanted range of the cyclic axis since we padded by the axis tolerance before.
@@ -150,6 +185,7 @@ def cyclic(cls):
         cls.find_indexes = find_indexes
         cls.unmap_to_datacube = unmap_to_datacube
         cls.unmap_total_path_to_datacube = unmap_total_path_to_datacube
+        cls.find_indices_between = find_indices_between
 
     return cls
 
@@ -232,7 +268,7 @@ def mapper(cls):
         def remap_to_requested(path, unmapped_path):
             return (path, unmapped_path)
 
-        def find_indices_between(index_ranges, low, up, datacube, method):
+        def find_indices_between(index_ranges, low, up, datacube, method=None):
             # TODO: add method for snappping
             indexes_between_ranges = []
             for transform in cls.transformations:
@@ -240,8 +276,19 @@ def mapper(cls):
                     transformation = transform
                     if cls.name in transformation._mapped_axes():
                         for idxs in index_ranges:
-                            indexes_between = [i for i in idxs if low <= i <= up]
-                            indexes_between_ranges.append(indexes_between)
+                            if method == "surrounding":
+                                start = idxs.index(low)
+                                end = idxs.index(up)
+                                start = max(start-1, 0)
+                                end = min(end+1, len(idxs))
+                                # indexes_between = [i for i in indexes if low <= i <= up]
+                                indexes_between = idxs[start:end]
+                                indexes_between_ranges.append(indexes_between)
+                            else:
+                                indexes_between = [i for i in idxs if low <= i <= up]
+                                indexes_between_ranges.append(indexes_between)
+                            # indexes_between = [i for i in idxs if low <= i <= up]
+                            # indexes_between_ranges.append(indexes_between)
             return indexes_between_ranges
 
         old_remap = cls.remap
@@ -304,7 +351,7 @@ def merge(cls):
         def remap_to_requested(path, unmapped_path):
             return (path, unmapped_path)
 
-        def find_indices_between(index_ranges, low, up, datacube, method):
+        def find_indices_between(index_ranges, low, up, datacube, method=None):
             # TODO: add method for snappping
             indexes_between_ranges = []
             for transform in cls.transformations:
@@ -312,8 +359,19 @@ def merge(cls):
                     transformation = transform
                     if cls.name in transformation._mapped_axes():
                         for indexes in index_ranges:
-                            indexes_between = [i for i in indexes if low <= i <= up]
-                            indexes_between_ranges.append(indexes_between)
+                            if method == "surrounding":
+                                start = indexes.index(low)
+                                end = indexes.index(up)
+                                start = max(start-1, 0)
+                                end = min(end+1, len(indexes))
+                                # indexes_between = [i for i in indexes if low <= i <= up]
+                                indexes_between = indexes[start:end]
+                                indexes_between_ranges.append(indexes_between)
+                            else:
+                                indexes_between = [i for i in indexes if low <= i <= up]
+                                indexes_between_ranges.append(indexes_between)
+                            # indexes_between = [i for i in indexes if low <= i <= up]
+                            # indexes_between_ranges.append(indexes_between)
             return indexes_between_ranges
 
         def remap(range):
@@ -349,7 +407,7 @@ def reverse(cls):
         def remap_to_requested(path, unmapped_path):
             return (path, unmapped_path)
 
-        def find_indices_between(index_ranges, low, up, datacube, method):
+        def find_indices_between(index_ranges, low, up, datacube, method=None):
             # TODO: add method for snappping
             indexes_between_ranges = []
             for transform in cls.transformations:
@@ -357,8 +415,19 @@ def reverse(cls):
                     transformation = transform
                     if cls.name == transformation.name:
                         for indexes in index_ranges:
-                            indexes_between = [i for i in indexes if low <= i <= up]
-                            indexes_between_ranges.append(indexes_between)
+                            if method == "surrounding":
+                                start = indexes.index(low)
+                                end = indexes.index(up)
+                                start = max(start-1, 0)
+                                end = min(end+1, len(indexes))
+                                # indexes_between = [i for i in indexes if low <= i <= up]
+                                indexes_between = indexes[start:end]
+                                indexes_between_ranges.append(indexes_between)
+                            else:
+                                indexes_between = [i for i in indexes if low <= i <= up]
+                                indexes_between_ranges.append(indexes_between)
+                            # indexes_between = [i for i in indexes if low <= i <= up]
+                            # indexes_between_ranges.append(indexes_between)
             return indexes_between_ranges
 
         def remap(range):
@@ -418,7 +487,7 @@ def type_change(cls):
         def remap_to_requested(path, unmapped_path):
             return (path, unmapped_path)
 
-        def find_indices_between(index_ranges, low, up, datacube, method):
+        def find_indices_between(index_ranges, low, up, datacube, method=None):
             # TODO: add method for snappping
             indexes_between_ranges = []
             for transform in cls.transformations:
@@ -426,8 +495,19 @@ def type_change(cls):
                     transformation = transform
                     if cls.name == transformation.name:
                         for indexes in index_ranges:
-                            indexes_between = [i for i in indexes if low <= i <= up]
-                            indexes_between_ranges.append(indexes_between)
+                            if method == "surrounding":
+                                start = indexes.index(low)
+                                end = indexes.index(up)
+                                start = max(start-1, 0)
+                                end = min(end+1, len(indexes))
+                                # indexes_between = [i for i in indexes if low <= i <= up]
+                                indexes_between = indexes[start:end]
+                                indexes_between_ranges.append(indexes_between)
+                            else:
+                                indexes_between = [i for i in indexes if low <= i <= up]
+                                indexes_between_ranges.append(indexes_between)
+                            # indexes_between = [i for i in indexes if low <= i <= up]
+                            # indexes_between_ranges.append(indexes_between)
             return indexes_between_ranges
 
         def remap(range):
@@ -512,7 +592,7 @@ class DatacubeAxis(ABC):
     def remap_to_requeest(path, unmapped_path):
         return (path, unmapped_path)
 
-    def find_indices_between(self, index_ranges, low, up, datacube, method):
+    def find_indices_between(self, index_ranges, low, up, datacube, method=None):
         # TODO: add method for snappping
         indexes_between_ranges = []
         for indexes in index_ranges:
@@ -520,7 +600,7 @@ class DatacubeAxis(ABC):
                 # Find the range of indexes between lower and upper
                 # https://pandas.pydata.org/docs/reference/api/pandas.Index.searchsorted.html
                 # Assumes the indexes are already sorted (could sort to be sure) and monotonically increasing
-                if method == "snap":
+                if method == "surrounding":
                     start = indexes.searchsorted(low, "left")
                     end = indexes.searchsorted(up, "right")
                     start = max(start-1, 0)
@@ -533,7 +613,7 @@ class DatacubeAxis(ABC):
                     indexes_between = indexes[start:end].to_list()
                     indexes_between_ranges.append(indexes_between)
             else:
-                if method == "snap":
+                if method == "surrounding":
                     start = indexes.index(low)
                     end = indexes.index(up)
                     start = max(start-1, 0)

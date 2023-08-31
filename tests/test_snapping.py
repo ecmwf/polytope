@@ -25,7 +25,7 @@ class TestSlicing3DXarrayDatacube:
     # Testing different shapes
 
     def test_2D_point(self):
-        request = Request(Select("level", [2], method="snap"), Select("step", [4], method="snap"))
+        request = Request(Select("level", [2], method="surrounding"), Select("step", [4], method="surrounding"))
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 4
@@ -35,7 +35,7 @@ class TestSlicing3DXarrayDatacube:
             assert path["step"] in [3, 5]
 
     def test_2D_point_outside_datacube_left(self):
-        request = Request(Select("level", [2], method="snap"), Select("step", [0], method="snap"))
+        request = Request(Select("level", [2], method="surrounding"), Select("step", [0], method="surrounding"))
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 2
@@ -45,7 +45,7 @@ class TestSlicing3DXarrayDatacube:
             assert path["step"] == 1
 
     def test_2D_point_outside_datacube_right(self):
-        request = Request(Select("level", [2], method="snap"), Select("step", [6], method="snap"))
+        request = Request(Select("level", [2], method="surrounding"), Select("step", [6], method="surrounding"))
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 2
@@ -55,7 +55,7 @@ class TestSlicing3DXarrayDatacube:
             assert path["step"] == 5
 
     def test_1D_point_outside_datacube_right(self):
-        request = Request(Select("level", [1]), Select("step", [6], method="snap"))
+        request = Request(Select("level", [1]), Select("step", [6], method="surrounding"))
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 1
@@ -65,14 +65,14 @@ class TestSlicing3DXarrayDatacube:
             assert path["step"] == 5
 
     def test_1D_nonexisting_point(self):
-        request = Request(Select("level", [2]), Select("step", [6], method="snap"))
+        request = Request(Select("level", [2]), Select("step", [6], method="surrounding"))
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 1
         assert result.is_root()
 
     def test_1D_nonexisting_point_v2(self):
-        request = Request(Select("level", [2], method="snap"), Select("step", [6]))
+        request = Request(Select("level", [2], method="surrounding"), Select("step", [6]))
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 1
