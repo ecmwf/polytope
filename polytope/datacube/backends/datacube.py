@@ -118,25 +118,23 @@ class Datacube(ABC):
                     idx_between = idx_between
                 else:
                     if indexes_between[j][0] == "need_offset":
-                        print(indexes_between[j])
                         new_offset = indexes_between[j][1]
                         for k in range(2, len(indexes_between[j])):
                             if offset is None:
                                 indexes_between[j][k] = indexes_between[j][k]
                             else:
-                                # offset = offset + new_offset
                                 offset = offset + new_offset
-                                indexes_between[j][k] = round(indexes_between[j][k] + offset, int(-math.log10(axis.tol)))
+                                indexes_between[j][k] = round(indexes_between[j][k] + offset,
+                                                              int(-math.log10(axis.tol)))
                             idx_between.append(indexes_between[j][k])
                     else:
                         # do normal offset if no new offset
                         for k in range(len(indexes_between[j])):
-                            print("HERE")
-                            print(offset)
                             if offset is None:
                                 indexes_between[j][k] = indexes_between[j][k]
                             else:
-                                indexes_between[j][k] = round(indexes_between[j][k] + offset, int(-math.log10(axis.tol)))
+                                indexes_between[j][k] = round(indexes_between[j][k] + offset,
+                                                              int(-math.log10(axis.tol)))
                             idx_between.append(indexes_between[j][k])
         return idx_between
 

@@ -142,9 +142,11 @@ def cyclic(cls):
             range_length = cls.range[1] - cls.range[0]
             indexes_between_ranges = []
 
-            if offset < 0:
+            if offset != 0:
+                # NOTE that if the offset is not 0, then we need to recenter the low and up
+                # values to be within the datacube range
                 new_offset = 0
-                while low > cls.range[0]:
+                while low >= cls.range[0] - cls.tol:
                     low = low - range_length
                     new_offset -= range_length
                     up = up - range_length
@@ -153,11 +155,8 @@ def cyclic(cls):
                         if cls.name in datacube.complete_axes:
                             start = indexes.searchsorted(low, "left")
                             end = indexes.searchsorted(up, "right")
-                            # TODO: need to include the offset here to understand when start-1< 0 with the offset accounted for
                             if start-1 < 0:  # NOTE TODO: here the boundaries will not necessarily be 0 or len(indexes)
                                 start_offset_indicator = "need_offset"
-                                # new_offset = new_offset - range_length
-                                # new_offset = offset - range_length
                                 index_val_found = indexes[-1:][0]
                                 indexes_between_before = [start_offset_indicator, new_offset, index_val_found]
                                 indexes_between_ranges.append(indexes_between_before)
@@ -168,12 +167,9 @@ def cyclic(cls):
                                 indexes_between_ranges.append(indexes_between_after)
                             start = max(start-1, 0)
                             end = min(end+1, len(indexes))
-                            # indexes_between = [i for i in indexes if low <= i <= up]
                             indexes_between = indexes[start:end].to_list()
                             indexes_between = [i - new_offset for i in indexes_between]
                             indexes_between_ranges.append(indexes_between)
-                            print("IDXS")
-                            print(indexes_between_ranges)
                         else:
                             start = indexes.index(low)
                             end = indexes.index(up)
@@ -189,198 +185,56 @@ def cyclic(cls):
                                 indexes_between_ranges.append(indexes_between_after)
                             start = max(start-1, 0)
                             end = min(end+1, len(indexes))
-                            # indexes_between = [i for i in indexes if low <= i <= up]
                             indexes_between = indexes[start:end]
                             indexes_between_ranges.append(indexes_between)
                     return indexes_between_ranges
                 else:
                     return old_find_indices_between(index_ranges, low, up, datacube, method, offset)
 
-
-
-            # if offset > 0:
-            #     low = low - offset
-            #     up = up - offset
-            # else:
-            #     low = low + range_length + offset
-            #     up = up + range_length + offset
-            # if method == "surrounding":
-            #     for indexes in index_ranges:
-            #         if cls.name in datacube.complete_axes:
-            #             start = indexes.searchsorted(low, "left")
-            #             end = indexes.searchsorted(up, "right")
-            #             # TODO: need to include the offset here to understand when start-1< 0 with the offset accounted for
-            #             if start-1 < 0:  # NOTE TODO: here the boundaries will not necessarily be 0 or len(indexes)
-            #                 start_offset_indicator = "need_offset"
-            #                 # new_offset = - range_length  # TODO: not sure about this offset
-            #                 # new_offset = 0
-            #                 if offset == 0:
-            #                     new_offset = 0
-            #                 elif offset < 0:
-            #                     print(range_length)
-            #                     new_offset = range_length
-            #                 else:
-            #                     new_offset = - range_length
-            #                 # new_offset = - range_length
-            #                 index_val_found = indexes[-1:][0]
-            #                 indexes_between_before = [start_offset_indicator, new_offset, index_val_found]
-            #                 indexes_between_ranges.append(indexes_between_before)
-            #             if end+1 > len(indexes):
-            #                 start_offset_indicator = "need_offset"
-            #                 # new_offset = range_length
-            #                 # new_offset = 0
-            #                 if offset == 0:
-            #                     new_offset = 0
-            #                 elif offset < 0:
-            #                     new_offset = - range_length
-            #                 else:
-            #                     new_offset = range_length
-            #                 index_val_found = indexes[:1][0]
-            #                 indexes_between_after = [start_offset_indicator, new_offset, index_val_found]
-            #                 indexes_between_ranges.append(indexes_between_after)
-            #             start = max(start-1, 0)
-            #             end = min(end+1, len(indexes))
-            #             # indexes_between = [i for i in indexes if low <= i <= up]
-            #             indexes_between = indexes[start:end].to_list()
-            #             indexes_between_ranges.append(indexes_between)
-            #         else:
-            #             start = indexes.index(low)
-            #             end = indexes.index(up)
-            #             if start-1 < 0:
-            #                 start_offset_indicator = "need_offset"
-            #                 # new_offset = - range_length  # TODO: not sure about this offset
-            #                 # new_offset = 0
-            #                 if offset == 0:
-            #                     new_offset = 0
-            #                 elif offset < 0:
-            #                     new_offset = range_length
-            #                 else:
-            #                     new_offset = - range_length
-            #                 index_val_found = indexes[-1:][0]
-            #                 indexes_between_before = [start_offset_indicator, new_offset, index_val_found]
-            #                 indexes_between_ranges.append(indexes_between_before)
-            #             if end+1 > len(indexes):
-            #                 start_offset_indicator = "need_offset"
-            #                 # new_offset = range_length
-            #                 # new_offset = 0
-            #                 if offset == 0:
-            #                     new_offset = 0
-            #                 elif offset < 0:
-            #                     new_offset = - range_length
-            #                 else:
-            #                     new_offset = range_length
-            #                 index_val_found = indexes[:1][0]
-            #                 indexes_between_after = [start_offset_indicator, new_offset, index_val_found]
-            #                 indexes_between_ranges.append(indexes_between_after)
-            #             start = max(start-1, 0)
-            #             end = min(end+1, len(indexes))
-            #             # indexes_between = [i for i in indexes if low <= i <= up]
-            #             indexes_between = indexes[start:end]
-            #             indexes_between_ranges.append(indexes_between)
-            #     return indexes_between_ranges
-            # else:
-            #     return old_find_indices_between(index_ranges, low, up, datacube, method, offset)
-
-        # def find_indices_between(index_ranges, low, up, datacube, offset, method=None):
-        #     update_range()
-        #     range_length = cls.range[1] - cls.range[0]
-        #     indexes_between_ranges = []
-        #     if offset > 0:
-        #         low = low - offset
-        #         up = up - offset
-        #     else:
-        #         print("HERE")
-        #         print(low)
-        #         # low = low + offset
-        #         low = low + range_length + offset
-        #         print(low)
-        #         # up = up + offset
-        #         up = up + range_length + offset
-        #     if method == "surrounding":
-        #         for indexes in index_ranges:
-        #             # if offset > 0:
-        #             #     low = low - offset
-        #             #     up = up - offset
-        #             # else:
-        #             #     print("HERE")
-        #             #     print(low)
-        #             #     low = low + offset
-        #             #     print(low)
-        #             #     up = up + offset
-        #             if cls.name in datacube.complete_axes:
-        #                 start = indexes.searchsorted(low, "left")
-        #                 end = indexes.searchsorted(up, "right")
-        #                 # TODO: need to include the offset here to understand when start-1< 0 with the offset accounted for
-        #                 if start-1 < 0:  # NOTE TODO: here the boundaries will not necessarily be 0 or len(indexes)
-        #                     start_offset_indicator = "need_offset"
-        #                     # new_offset = - range_length  # TODO: not sure about this offset
-        #                     # new_offset = 0
-        #                     if offset == 0:
-        #                         new_offset = 0
-        #                     elif offset < 0:
-        #                         print(range_length)
-        #                         new_offset = range_length
-        #                     else:
-        #                         new_offset = - range_length
-        #                     # new_offset = - range_length
-        #                     index_val_found = indexes[-1:][0]
-        #                     indexes_between_before = [start_offset_indicator, new_offset, index_val_found]
-        #                     indexes_between_ranges.append(indexes_between_before)
-        #                 if end+1 > len(indexes):
-        #                     start_offset_indicator = "need_offset"
-        #                     # new_offset = range_length
-        #                     # new_offset = 0
-        #                     if offset == 0:
-        #                         new_offset = 0
-        #                     elif offset < 0:
-        #                         new_offset = - range_length
-        #                     else:
-        #                         new_offset = range_length
-        #                     index_val_found = indexes[:1][0]
-        #                     indexes_between_after = [start_offset_indicator, new_offset, index_val_found]
-        #                     indexes_between_ranges.append(indexes_between_after)
-        #                 start = max(start-1, 0)
-        #                 end = min(end+1, len(indexes))
-        #                 # indexes_between = [i for i in indexes if low <= i <= up]
-        #                 indexes_between = indexes[start:end].to_list()
-        #                 indexes_between_ranges.append(indexes_between)
-        #             else:
-        #                 start = indexes.index(low)
-        #                 end = indexes.index(up)
-        #                 if start-1 < 0:
-        #                     start_offset_indicator = "need_offset"
-        #                     # new_offset = - range_length  # TODO: not sure about this offset
-        #                     # new_offset = 0
-        #                     if offset == 0:
-        #                         new_offset = 0
-        #                     elif offset < 0:
-        #                         new_offset = range_length
-        #                     else:
-        #                         new_offset = - range_length
-        #                     index_val_found = indexes[-1:][0]
-        #                     indexes_between_before = [start_offset_indicator, new_offset, index_val_found]
-        #                     indexes_between_ranges.append(indexes_between_before)
-        #                 if end+1 > len(indexes):
-        #                     start_offset_indicator = "need_offset"
-        #                     # new_offset = range_length
-        #                     # new_offset = 0
-        #                     if offset == 0:
-        #                         new_offset = 0
-        #                     elif offset < 0:
-        #                         new_offset = - range_length
-        #                     else:
-        #                         new_offset = range_length
-        #                     index_val_found = indexes[:1][0]
-        #                     indexes_between_after = [start_offset_indicator, new_offset, index_val_found]
-        #                     indexes_between_ranges.append(indexes_between_after)
-        #                 start = max(start-1, 0)
-        #                 end = min(end+1, len(indexes))
-        #                 # indexes_between = [i for i in indexes if low <= i <= up]
-        #                 indexes_between = indexes[start:end]
-        #                 indexes_between_ranges.append(indexes_between)
-        #         return indexes_between_ranges
-        #     else:
-        #         return old_find_indices_between(index_ranges, low, up, datacube, method, offset)
+            else:
+                # If the offset is 0, then the first value found on the left has an offset of range_length
+                new_offset = 0
+                if method == "surrounding":
+                    for indexes in index_ranges:
+                        if cls.name in datacube.complete_axes:
+                            start = indexes.searchsorted(low, "left")
+                            end = indexes.searchsorted(up, "right")
+                            if start-1 < 0:  # NOTE TODO: here the boundaries will not necessarily be 0 or len(indexes)
+                                start_offset_indicator = "need_offset"
+                                index_val_found = indexes[-1:][0]
+                                new_offset = -range_length
+                                indexes_between_before = [start_offset_indicator, new_offset, index_val_found]
+                                indexes_between_ranges.append(indexes_between_before)
+                            if end+1 > len(indexes):
+                                start_offset_indicator = "need_offset"
+                                index_val_found = indexes[:1][0]
+                                indexes_between_after = [start_offset_indicator, new_offset, index_val_found]
+                                indexes_between_ranges.append(indexes_between_after)
+                            start = max(start-1, 0)
+                            end = min(end+1, len(indexes))
+                            indexes_between = indexes[start:end].to_list()
+                            indexes_between = [i - new_offset for i in indexes_between]
+                            indexes_between_ranges.append(indexes_between)
+                        else:
+                            start = indexes.index(low)
+                            end = indexes.index(up)
+                            if start-1 < 0:
+                                start_offset_indicator = "need_offset"
+                                index_val_found = indexes[-1:][0]
+                                indexes_between_before = [start_offset_indicator, new_offset, index_val_found]
+                                indexes_between_ranges.append(indexes_between_before)
+                            if end+1 > len(indexes):
+                                start_offset_indicator = "need_offset"
+                                index_val_found = indexes[:1][0]
+                                indexes_between_after = [start_offset_indicator, new_offset, index_val_found]
+                                indexes_between_ranges.append(indexes_between_after)
+                            start = max(start-1, 0)
+                            end = min(end+1, len(indexes))
+                            indexes_between = indexes[start:end]
+                            indexes_between_ranges.append(indexes_between)
+                    return indexes_between_ranges
+                else:
+                    return old_find_indices_between(index_ranges, low, up, datacube, method, offset)
 
         def offset(range):
             # We first unpad the range by the axis tolerance to make sure that
@@ -630,7 +484,8 @@ def reverse(cls):
                             if cls.name in datacube.complete_axes:
                                 # Find the range of indexes between lower and upper
                                 # https://pandas.pydata.org/docs/reference/api/pandas.Index.searchsorted.html
-                                # Assumes the indexes are already sorted (could sort to be sure) and monotonically increasing
+                                # Assumes the indexes are already sorted (could sort to be sure) and monotonically
+                                # increasing
                                 if method == "surrounding":
                                     start = indexes.searchsorted(low, "left")
                                     end = indexes.searchsorted(up, "right")

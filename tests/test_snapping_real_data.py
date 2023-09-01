@@ -21,7 +21,7 @@ class TestSlicingEra5Data:
 
     def test_surrounding_on_grid_point(self):
         requested_lat = 0
-        requested_lon = -720
+        requested_lon = 720
         request = Request(
             Box(["number", "isobaricInhPa"], [6, 500.0], [6, 850.0]),
             Select("time", ["2017-01-02T12:00:00"]),
