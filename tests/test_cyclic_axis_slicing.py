@@ -34,27 +34,28 @@ class TestSlicing3DXarrayDatacube:
         )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 20
+        result.pprint()
         assert [leaf.value for leaf in result.leaves] == [
+            0.1,
+            0.2,
+            0.3,
+            0.4,
+            0.5,
+            0.6,
+            0.7,
             0.8,
             0.9,
-            1.0,
-            1.1,
-            1.2,
-            1.3,
-            1.4,
-            1.5,
-            1.6,
-            1.7,
+            1.,
+            0.1,
+            0.2,
+            0.3,
+            0.4,
+            0.5,
+            0.6,
+            0.7,
             0.8,
             0.9,
-            1.0,
-            1.1,
-            1.2,
-            1.3,
-            1.4,
-            1.5,
-            1.6,
-            1.7,
+            1.,
         ]
 
     def test_cyclic_float_axis_across_seam_repeated(self):
@@ -94,8 +95,8 @@ class TestSlicing3DXarrayDatacube:
             Box(["step", "long"], [0, 0.0], [3, 2.0]), Select("date", ["2000-01-01"]), Select("level", [128])
         )
         result = self.API.retrieve(request)
-        # result.pprint()
-        assert len(result.leaves) == 22 * 2 - 2
+        result.pprint()
+        assert len(result.leaves) == 22
         assert [leaf.value for leaf in result.leaves] == [
             0.0,
             0.1,
@@ -108,16 +109,6 @@ class TestSlicing3DXarrayDatacube:
             0.8,
             0.9,
             1.0,
-            1.1,
-            1.2,
-            1.3,
-            1.4,
-            1.5,
-            1.6,
-            1.7,
-            1.8,
-            1.9,
-            2.0,
             0.0,
             0.1,
             0.2,
@@ -129,16 +120,6 @@ class TestSlicing3DXarrayDatacube:
             0.8,
             0.9,
             1.0,
-            1.1,
-            1.2,
-            1.3,
-            1.4,
-            1.5,
-            1.6,
-            1.7,
-            1.8,
-            1.9,
-            2.0,
         ]
 
     def test_cyclic_float_axis_inside_cyclic_range(self):
@@ -176,7 +157,7 @@ class TestSlicing3DXarrayDatacube:
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 10
-        assert [leaf.value for leaf in result.leaves] == [1.3, 1.4, 1.5, 1.6, 1.7, 1.3, 1.4, 1.5, 1.6, 1.7]
+        assert [leaf.value for leaf in result.leaves] == [0.3, 0.4, 0.5, 0.6, 0.7, 0.3, 0.4, 0.5, 0.6, 0.7]
 
     def test_cyclic_float_axis_two_range_loops(self):
         request = Request(
@@ -184,8 +165,11 @@ class TestSlicing3DXarrayDatacube:
         )
         result = self.API.retrieve(request)
         # result.pprint()
-        assert len(result.leaves) == 50
+        assert len(result.leaves) == 22
         assert [leaf.value for leaf in result.leaves] == [
+            0.0,
+            0.1,
+            0.2,
             0.3,
             0.4,
             0.5,
@@ -194,23 +178,9 @@ class TestSlicing3DXarrayDatacube:
             0.8,
             0.9,
             1.0,
-            1.1,
-            1.2,
-            1.3,
-            1.4,
-            1.5,
-            1.6,
-            1.7,
-            1.8,
-            1.9,
-            2.0,
-            2.1,
-            2.2,
-            2.3,
-            2.4,
-            2.5,
-            2.6,
-            2.7,
+            0.0,
+            0.1,
+            0.2,
             0.3,
             0.4,
             0.5,
@@ -219,23 +189,6 @@ class TestSlicing3DXarrayDatacube:
             0.8,
             0.9,
             1.0,
-            1.1,
-            1.2,
-            1.3,
-            1.4,
-            1.5,
-            1.6,
-            1.7,
-            1.8,
-            1.9,
-            2.0,
-            2.1,
-            2.2,
-            2.3,
-            2.4,
-            2.5,
-            2.6,
-            2.7,
         ]
 
     def test_cyclic_float_axis_below_axis_range(self):
@@ -245,7 +198,7 @@ class TestSlicing3DXarrayDatacube:
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 10
-        assert [leaf.value for leaf in result.leaves] == [-0.7, -0.6, -0.5, -0.4, -0.3, -0.7, -0.6, -0.5, -0.4, -0.3]
+        assert [leaf.value for leaf in result.leaves] == [0.3, 0.4, 0.5, 0.6, 0.7, 0.3, 0.4, 0.5, 0.6, 0.7]
 
     def test_cyclic_float_axis_below_axis_range_crossing_seam(self):
         request = Request(
@@ -253,30 +206,28 @@ class TestSlicing3DXarrayDatacube:
         )
         result = self.API.retrieve(request)
         # result.pprint()
-        assert len(result.leaves) == 22
+        assert len(result.leaves) == 20
         assert [leaf.value for leaf in result.leaves] == [
-            -0.7,
-            -0.6,
-            -0.5,
-            -0.4,
-            -0.3,
-            -0.2,
-            -0.1,
             0.0,
             0.1,
             0.2,
             0.3,
-            -0.7,
-            -0.6,
-            -0.5,
-            -0.4,
-            -0.3,
-            -0.2,
-            -0.1,
+            0.4,
+            0.5,
+            0.6,
+            0.7,
+            0.8,
+            0.9,
             0.0,
             0.1,
             0.2,
             0.3,
+            0.4,
+            0.5,
+            0.6,
+            0.7,
+            0.8,
+            0.9,
         ]
 
     def test_cyclic_float_axis_reversed(self):
@@ -286,34 +237,34 @@ class TestSlicing3DXarrayDatacube:
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 10
-        assert [leaf.value for leaf in result.leaves] == [1.3, 1.4, 1.5, 1.6, 1.7, 1.3, 1.4, 1.5, 1.6, 1.7]
+        assert [leaf.value for leaf in result.leaves] == [0.3, 0.4, 0.5, 0.6, 0.7, 0.3, 0.4, 0.5, 0.6, 0.7]
 
     def test_two_cyclic_axis_wrong_axis_order(self):
         request = Request(Box(["step", "long", "level"], [0, 1.3, 131], [3, 1.7, 132]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        # result.pprint()
+        result.pprint()
         assert len(result.leaves) == 20
         assert [leaf.value for leaf in result.leaves] == [
-            1.3,
-            1.4,
-            1.5,
-            1.6,
-            1.7,
-            1.3,
-            1.4,
-            1.5,
-            1.6,
-            1.7,
-            1.3,
-            1.4,
-            1.5,
-            1.6,
-            1.7,
-            1.3,
-            1.4,
-            1.5,
-            1.6,
-            1.7,
+            0.3,
+            0.4,
+            0.5,
+            0.6,
+            0.7,
+            0.3,
+            0.4,
+            0.5,
+            0.6,
+            0.7,
+            0.3,
+            0.4,
+            0.5,
+            0.6,
+            0.7,
+            0.3,
+            0.4,
+            0.5,
+            0.6,
+            0.7,
         ]
 
     def test_two_cyclic_axis(self):
@@ -322,26 +273,26 @@ class TestSlicing3DXarrayDatacube:
         # result.pprint()
         assert len(result.leaves) == 20
         assert [leaf.value for leaf in result.leaves] == [
-            1.3,
-            1.4,
-            1.5,
-            1.6,
-            1.7,
-            1.3,
-            1.4,
-            1.5,
-            1.6,
-            1.7,
-            1.3,
-            1.4,
-            1.5,
-            1.6,
-            1.7,
-            1.3,
-            1.4,
-            1.5,
-            1.6,
-            1.7,
+            0.3,
+            0.4,
+            0.5,
+            0.6,
+            0.7,
+            0.3,
+            0.4,
+            0.5,
+            0.6,
+            0.7,
+            0.3,
+            0.4,
+            0.5,
+            0.6,
+            0.7,
+            0.3,
+            0.4,
+            0.5,
+            0.6,
+            0.7,
         ]
 
     def test_select_cyclic_float_axis_edge(self):

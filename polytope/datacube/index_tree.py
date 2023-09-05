@@ -58,7 +58,18 @@ class IndexTree(object):
     def __eq__(self, other):
         if not isinstance(other, IndexTree):
             return False
-        return (self.axis.name, self.value) == (other.axis.name, other.value)
+        if self.axis.name != other.axis.name:
+            return False
+        else:
+            if other.value == self.value:
+                return True
+            if other.value - 2*other.axis.tol <= self.value <= other.value + 2*other.axis.tol:
+                return True
+            elif self.value - 2*self.axis.tol <= other.value <= self.value + 2*self.axis.tol:
+                return True
+            else:
+                return False
+        # return (self.axis.name, self.value) == (other.axis.name, other.value)
 
     def __lt__(self, other):
         return (self.axis.name, self.value) < (other.axis.name, other.value)
@@ -73,12 +84,12 @@ class IndexTree(object):
         self.children.add(node)
         node._parent = self
 
-    def create_child(self, axis, value):
+    def create_child_not_safe(self, axis, value):
         node = IndexTree(axis, value)
         self.add_child(node)
         return node
 
-    def create_child_safe(self, axis, value):
+    def create_child(self, axis, value):
         node = IndexTree(axis, value)
         existing = self.find_child(node)
         if not existing:
