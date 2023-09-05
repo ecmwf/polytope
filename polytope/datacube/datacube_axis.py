@@ -142,14 +142,18 @@ def cyclic(cls):
             range_length = cls.range[1] - cls.range[0]
             indexes_between_ranges = []
 
+            if method != "surrounding":
+                return old_find_indices_between(index_ranges, low, up, datacube, method, offset)
+
             if offset != 0:
                 # NOTE that if the offset is not 0, then we need to recenter the low and up
                 # values to be within the datacube range
                 new_offset = 0
-                while low >= cls.range[0] - cls.tol:
-                    low = low - range_length
-                    new_offset -= range_length
-                    up = up - range_length
+                if low <= cls.range[0] + cls.tol:
+                    while low >= cls.range[0] - cls.tol:
+                        low = low - range_length
+                        new_offset -= range_length
+                        up = up - range_length
                 if method == "surrounding":
                     for indexes in index_ranges:
                         if cls.name in datacube.complete_axes:

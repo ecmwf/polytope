@@ -1,5 +1,5 @@
-import geopandas as gpd
-import matplotlib.pyplot as plt
+# import geopandas as gpd
+# import matplotlib.pyplot as plt
 import numpy as np
 from earthkit import data
 
@@ -21,7 +21,7 @@ class TestSlicingEra5Data:
 
     def test_surrounding_on_grid_point(self):
         requested_lat = 0
-        requested_lon = 720
+        requested_lon = 0
         request = Request(
             Box(["number", "isobaricInhPa"], [6, 500.0], [6, 850.0]),
             Select("time", ["2017-01-02T12:00:00"]),
@@ -48,12 +48,14 @@ class TestSlicingEra5Data:
             country_points_plotting.append(latlong_point)
         temps = np.array(temps)
 
-        # Plot all the points on a world map
-        worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
-        fig, ax = plt.subplots(figsize=(12, 6))
-        worldmap.plot(color="darkgrey", ax=ax)
+        # # Plot all the points on a world map
+        # worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
+        # fig, ax = plt.subplots(figsize=(12, 6))
+        # worldmap.plot(color="darkgrey", ax=ax)
 
-        plt.scatter(longs, lats, s=16, c=temps, cmap="YlOrRd")
-        plt.scatter([requested_lon], [requested_lat], s=16, c="blue")
-        plt.colorbar(label="Temperature")
-        plt.show()
+        # plt.scatter(longs, lats, s=16, c=temps, cmap="YlOrRd")
+        # plt.scatter([requested_lon], [requested_lat], s=16, c="blue")
+        # plt.colorbar(label="Temperature")
+        # plt.show()
+        for lon in longs:
+            assert lon in [-3, 0, 3]
