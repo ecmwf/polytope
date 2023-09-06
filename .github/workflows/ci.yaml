@@ -118,6 +118,8 @@ jobs:
           git lfs pull
       - name: Install eccodes
         run: sudo apt-get install -y libeccodes-dev
+      - name: Install ecbuild
+        run: sudo apt-get install -y ecbuild
 
       - name: Install Dependencies
         id: install-dependencies
