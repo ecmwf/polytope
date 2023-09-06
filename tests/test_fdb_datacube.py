@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 
 from polytope.datacube.backends.FDB_datacube import FDBDatacube
 from polytope.engine.hullslicer import HullSlicer
@@ -24,7 +25,8 @@ class TestSlicingFDBDatacube:
         self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
 
     # Testing different shapes
-    def test_2D_box(self):
+    @pytest.mark.skip(reason="can't install fdb branch on CI")
+    def test_fdb_datacube(self):
         request = Request(
             Select("step", [11]),
             Select("levtype", ["sfc"]),
