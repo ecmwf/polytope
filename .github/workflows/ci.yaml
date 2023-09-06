@@ -150,6 +150,11 @@ jobs:
       #     dependencies: |
       #       ecmwf/fdb@refs/tags/5.10.2
       #     dependency_branch: feature/list-axes 
+      - name: General set up
+        run: |
+          mkdir -p $HOME/data/fdb
+          chmod -R o+rw $HOME/data
+          chmod -R o+rw .
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -173,6 +178,8 @@ jobs:
           LD_LIBRARY_PATH: ${{ steps.install-dependencies.outputs.lib_path }}
         shell: bash -eux {0}
         run: |
+          cwd=$(pwd)
+          export FDB5_CONFIG='{"type":"local","engine":"toc","schema":"'"$cwd"'/tests/default_fdb_schema","spaces":[{"handler":"Default","roots":[{"path":"'"$HOME"'/data/fdb"}]}]}'
           DYLD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }} python -m pytest tests --cov=./ --cov-report=xml
           python -m coverage report
 
