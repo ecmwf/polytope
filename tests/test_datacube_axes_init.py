@@ -27,7 +27,7 @@ class TestInitDatacubeAxes:
     def test_created_axes(self):
         assert self.datacube._axes["latitude"].has_mapper
         assert self.datacube._axes["longitude"].has_mapper
-        assert type(self.datacube._axes["longitude"]) is FloatDatacubeAxis
+        assert isinstance(self.datacube._axes["longitude"], FloatDatacubeAxis)
         assert not ("values" in self.datacube._axes.keys())
         assert self.datacube._axes["latitude"].find_indexes({}, self.datacube)[:5] == [
             89.94618771566562,
