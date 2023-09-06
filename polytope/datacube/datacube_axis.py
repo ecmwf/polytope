@@ -158,6 +158,7 @@ def mapper(cls):
     from .transformations.datacube_mappers import DatacubeMapper
 
     if cls.has_mapper:
+
         def find_indexes(path, datacube):
             # first, find the relevant transformation object that is a mapping in the cls.transformation dico
             for transform in cls.transformations:
@@ -264,6 +265,7 @@ def merge(cls):
     from .transformations.datacube_merger import DatacubeAxisMerger
 
     if cls.has_merger:
+
         def find_indexes(path, datacube):
             # first, find the relevant transformation object that is a mapping in the cls.transformation dico
             for transform in cls.transformations:
@@ -333,6 +335,7 @@ def reverse(cls):
     from .transformations.datacube_reverse import DatacubeAxisReverse
 
     if cls.reorder:
+
         def find_indexes(path, datacube):
             # first, find the relevant transformation object that is a mapping in the cls.transformation dico
             subarray = datacube.dataarray.sel(path, method="nearest")
@@ -376,7 +379,6 @@ def type_change(cls):
     from .transformations.datacube_type_change import DatacubeAxisTypeChange
 
     if cls.type_change:
-
         old_find_indexes = cls.find_indexes
 
         def find_indexes(path, datacube):
@@ -537,7 +539,6 @@ class DatacubeAxis(ABC):
 @mapper
 @type_change
 class IntDatacubeAxis(DatacubeAxis):
-
     def __init__(self):
         self.name = None
         self.tol = 1e-12
@@ -563,13 +564,12 @@ class IntDatacubeAxis(DatacubeAxis):
 @mapper
 @type_change
 class FloatDatacubeAxis(DatacubeAxis):
-
     def __init__(self):
         self.name = None
         self.tol = 1e-12
         self.range = None
         self.transformations = []
-        self.type = 0.
+        self.type = 0.0
 
     def parse(self, value: Any) -> Any:
         return float(value)
@@ -586,7 +586,6 @@ class FloatDatacubeAxis(DatacubeAxis):
 
 @merge
 class PandasTimestampDatacubeAxis(DatacubeAxis):
-
     def __init__(self):
         self.name = None
         self.tol = 1e-12
@@ -617,7 +616,6 @@ class PandasTimestampDatacubeAxis(DatacubeAxis):
 
 @merge
 class PandasTimedeltaDatacubeAxis(DatacubeAxis):
-
     def __init__(self):
         self.name = None
         self.tol = 1e-12
@@ -648,7 +646,6 @@ class PandasTimedeltaDatacubeAxis(DatacubeAxis):
 
 @type_change
 class UnsliceableDatacubeAxis(DatacubeAxis):
-
     def __init__(self):
         self.name = None
         self.tol = float("NaN")

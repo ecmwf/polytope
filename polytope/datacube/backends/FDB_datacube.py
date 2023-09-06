@@ -19,7 +19,6 @@ def update_fdb_dataarray(fdb_dataarray):
 
 
 class FDBDatacube(Datacube):
-
     def __init__(self, config={}, axis_options={}):
         self.axis_options = axis_options
         self.grid_mapper = None
