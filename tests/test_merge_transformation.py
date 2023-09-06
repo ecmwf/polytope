@@ -11,7 +11,7 @@ from polytope.shapes import Select
 class TestMergeTransformation:
     def setup_method(self, method):
         # Create a dataarray with 4 labelled axes using different index types
-        array = xr.DataArray(
+        self.array = xr.DataArray(
             np.random.randn(1, 1),
             dims=("date", "time"),
             coords={
@@ -19,10 +19,10 @@ class TestMergeTransformation:
                 "time": ["06:00"],
             },
         )
-        options = {"date": {"transformation": {"merge": {"with": "time", "linkers": [" ", ":00"]}}}}
-        self.xarraydatacube = XArrayDatacube(array)
+        self.options = {"date": {"transformation": {"merge": {"with": "time", "linkers": [" ", ":00"]}}}}
+        self.xarraydatacube = XArrayDatacube(self.array)
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
+        self.API = Polytope(datacube=self.array, engine=self.slicer, axis_options=self.options)
 
     def test_merge_axis(self):
         request = Request(Select("date", [pd.Timestamp("2000-01-01T06:00:00")]))

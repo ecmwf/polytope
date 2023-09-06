@@ -10,7 +10,7 @@ from polytope.shapes import Box, Select
 from polytope.utility.exceptions import UnsliceableShapeError
 
 
-class TestSlicing3DXarrayDatacube:
+class TestSlicingUnsliceableAxis:
     def setup_method(self, method):
         # create a dataarray with 3 labelled axes using different index types
         array = xr.DataArray(

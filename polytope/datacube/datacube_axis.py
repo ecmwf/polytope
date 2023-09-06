@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 from copy import deepcopy
 from typing import Any, List
 
@@ -210,7 +210,9 @@ def mapper(cls):
                         # if we are on the first axis, then need to add the first val to unmapped_path
                         first_val = path.get(cls.name, None)
                         path.pop(cls.name, None)
-                        if cls.name not in unmapped_path:
+                        if unmapped_path is None:
+                            unmapped_path[cls.name] = first_val
+                        elif cls.name not in unmapped_path:
                             # if for some reason, the unmapped_path already has the first axis val, then don't update
                             unmapped_path[cls.name] = first_val
                     if cls.name == transformation._mapped_axes()[1]:
@@ -451,18 +453,6 @@ class DatacubeAxis(ABC):
             self = cyclic(self)
         return self
 
-    @abstractproperty
-    def name(self) -> str:
-        pass
-
-    @abstractproperty
-    def tol(self) -> Any:
-        pass
-
-    @abstractproperty
-    def range(self) -> List[Any]:
-        pass
-
     # Convert from user-provided value to CONTINUOUS type (e.g. float, pd.timestamp)
     @abstractmethod
     def parse(self, value: Any) -> Any:
@@ -528,7 +518,10 @@ class DatacubeAxis(ABC):
     def create_standard(name, values, datacube):
         values = np.array(values)
         DatacubeAxis.check_axis_type(name, values)
-        datacube._axes[name] = deepcopy(_type_to_axis_lookup[values.dtype.type])
+        if datacube._axes is None:
+            datacube._axes = {name: deepcopy(_type_to_axis_lookup[values.dtype.type])}
+        else:
+            datacube._axes[name] = deepcopy(_type_to_axis_lookup[values.dtype.type])
         datacube._axes[name].name = name
         datacube.axis_counter += 1
 
@@ -544,11 +537,13 @@ class DatacubeAxis(ABC):
 @mapper
 @type_change
 class IntDatacubeAxis(DatacubeAxis):
-    name = None
-    tol = 1e-12
-    range = None
-    transformations = []
-    type = 0
+
+    def __init__(self):
+        self.name = None
+        self.tol = 1e-12
+        self.range = None
+        self.transformations = []
+        self.type = 0
 
     def parse(self, value: Any) -> Any:
         return float(value)
@@ -568,11 +563,13 @@ class IntDatacubeAxis(DatacubeAxis):
 @mapper
 @type_change
 class FloatDatacubeAxis(DatacubeAxis):
-    name = None
-    tol = 1e-12
-    range = None
-    transformations = []
-    type = 0.
+
+    def __init__(self):
+        self.name = None
+        self.tol = 1e-12
+        self.range = None
+        self.transformations = []
+        self.type = 0.
 
     def parse(self, value: Any) -> Any:
         return float(value)
@@ -589,11 +586,13 @@ class FloatDatacubeAxis(DatacubeAxis):
 
 @merge
 class PandasTimestampDatacubeAxis(DatacubeAxis):
-    name = None
-    tol = 1e-12
-    range = None
-    transformations = []
-    type = pd.Timestamp("2000-01-01T00:00:00")
+
+    def __init__(self):
+        self.name = None
+        self.tol = 1e-12
+        self.range = None
+        self.transformations = []
+        self.type = pd.Timestamp("2000-01-01T00:00:00")
 
     def parse(self, value: Any) -> Any:
         if isinstance(value, np.str_):
@@ -618,11 +617,13 @@ class PandasTimestampDatacubeAxis(DatacubeAxis):
 
 @merge
 class PandasTimedeltaDatacubeAxis(DatacubeAxis):
-    name = None
-    tol = 1e-12
-    range = None
-    transformations = []
-    type = np.timedelta64(0, "s")
+
+    def __init__(self):
+        self.name = None
+        self.tol = 1e-12
+        self.range = None
+        self.transformations = []
+        self.type = np.timedelta64(0, "s")
 
     def parse(self, value: Any) -> Any:
         if isinstance(value, np.str_):
@@ -647,10 +648,12 @@ class PandasTimedeltaDatacubeAxis(DatacubeAxis):
 
 @type_change
 class UnsliceableDatacubeAxis(DatacubeAxis):
-    name = None
-    tol = float("NaN")
-    range = None
-    transformations = []
+
+    def __init__(self):
+        self.name = None
+        self.tol = float("NaN")
+        self.range = None
+        self.transformations = []
 
     def parse(self, value: Any) -> Any:
         return value

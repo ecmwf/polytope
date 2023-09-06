@@ -41,7 +41,9 @@ class Datacube(ABC):
 
             # first need to change the values so that we have right type
             values = transformation.change_val_type(axis_name, values)
-            if axis_name not in self._axes.keys():
+            if self._axes is None:
+                DatacubeAxis.create_standard(axis_name, values, self)
+            elif axis_name not in self._axes.keys():
                 DatacubeAxis.create_standard(axis_name, values, self)
             # add transformation tag to axis, as well as transformation options for later
             setattr(self._axes[axis_name], has_transform[transformation_type_key], True)  # where has_transform is a
@@ -64,7 +66,9 @@ class Datacube(ABC):
             self._add_all_transformation_axes(options, name, values)
         else:
             if name not in self.blocked_axes:
-                if name not in self._axes.keys():
+                if self._axes is None:
+                    DatacubeAxis.create_standard(name, values, self)
+                elif name not in self._axes.keys():
                     DatacubeAxis.create_standard(name, values, self)
 
     def has_index(self, path: DatacubePath, axis, index):

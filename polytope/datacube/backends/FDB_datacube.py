@@ -24,12 +24,12 @@ class FDBDatacube(Datacube):
         self.axis_options = axis_options
         self.grid_mapper = None
         self.axis_counter = 0
-        self._axes = {}
+        self._axes = None
         treated_axes = []
         self.non_complete_axes = []
         self.complete_axes = []
         self.blocked_axes = []
-        self.transformation = {}
+        self.transformation = None
         self.fake_axes = []
 
         partial_request = config

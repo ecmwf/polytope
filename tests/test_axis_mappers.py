@@ -9,6 +9,9 @@ from polytope.datacube.datacube_axis import (
 
 
 class TestAxisMappers:
+    def setup_method(self, method):
+        pass
+
     def test_int_axis(self):
         axis = IntDatacubeAxis()
         assert axis.parse(2) == 2.0

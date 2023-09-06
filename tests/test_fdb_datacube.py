@@ -9,7 +9,7 @@ from polytope.shapes import Box, Select
 class TestSlicingFDBDatacube:
     def setup_method(self, method):
         # Create a dataarray with 3 labelled axes using different index types
-        grid_options = {
+        self.options = {
             "values": {
                 "transformation": {
                     "mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
@@ -18,13 +18,12 @@ class TestSlicingFDBDatacube:
             "date": {"transformation": {"merge": {"with": "time", "linkers": ["T", "00"]}}},
             "step": {"transformation": {"type_change": "int"}},
         }
-        config = {"class": "od", "expver": "0001", "levtype": "sfc", "step": 11}
-        self.xarraydatacube = FDBDatacube(config, axis_options=grid_options)
+        self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "step": 11}
+        self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.xarraydatacube, engine=self.slicer)
+        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
 
     # Testing different shapes
-
     def test_2D_box(self):
         request = Request(
             Select("step", [11]),
