@@ -136,12 +136,12 @@ jobs:
         with:
           self_build: false
           dependencies: |
-            ecmwf/ecbuild@refs/tags/2021.08.0
-            ecmwf/eccodes@refs/tags/2.24.2
-            ecmwf/eckit@refs/tags/1.18.7
-            ecmwf/metkit@refs/tags/1.8.10
-            ecmwf/fdb@refs/tags/5.10.2
-          dependency_branch: develop
+            ecmwf/ecbuild@develop
+            ecmwf/eccodes@develop
+            ecmwf/eckit@develop
+            ecmwf/metkit@develop
+            ecmwf/fdb@feature/list-axes
+          # dependency_branch: develop
       # - name: Install FDB
       #   id: install-fdb
       #   uses: ecmwf-actions/build-package@v2
