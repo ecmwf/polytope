@@ -120,6 +120,16 @@ jobs:
         run: sudo apt-get install -y libeccodes-dev
       - name: Install ecbuild
         run: sudo apt-get install -y ecbuild
+      - name: Install eckit
+        run: |
+          srcdir=$(pwd)
+          builddir=build
+          installdir=$HOME/local
+          mkdir $builddir
+          cd $builddir
+          ecbuild --prefix=$installdir -- $srcdir
+          make -j10
+          make install
 
       - name: Install Dependencies
         id: install-dependencies
