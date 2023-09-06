@@ -123,7 +123,7 @@ jobs:
         id: install-dependencies
         uses: ecmwf-actions/build-package@v2
         with:
-          self_build: false
+          self_build: true
           dependencies: |
             ecmwf/ecbuild@refs/tags/2021.08.0
             ecmwf/eccodes@refs/tags/2.24.2
