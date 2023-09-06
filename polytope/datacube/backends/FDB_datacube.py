@@ -1,12 +1,8 @@
-import os
 from copy import deepcopy
 
-from .datacube import Datacube, IndexTree
+import pyfdb
 
-# TODO: probably need to do this more general...
-os.environ["DYLD_LIBRARY_PATH"] = "/Users/male/build/fdb-bundle/lib"
-os.environ["FDB_HOME"] = "/Users/male/git/fdb-home"
-import pyfdb  # noqa: E402
+from .datacube import Datacube, IndexTree
 
 
 def glue(path, unmap_path):
