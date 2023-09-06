@@ -130,15 +130,14 @@ jobs:
             ecmwf/eckit@refs/tags/1.18.7
             ecmwf/metkit@refs/tags/1.8.10
           dependency_branch: develop
-
-      - name: Install FDB
-        id: install-dependencies
-        uses: ecmwf-actions/build-package@v2
-        with:
-          self_build: false
-          dependencies: |
-            ecmwf/fdb@refs/tags/5.10.2
-          dependency_branch: feature/list-axes 
+      # - name: Install FDB
+      #   id: install-dependencies
+      #   uses: ecmwf-actions/build-package@v2
+      #   with:
+      #     self_build: false
+      #     dependencies: |
+      #       ecmwf/fdb@refs/tags/5.10.2
+      #     dependency_branch: feature/list-axes 
 
       - name: Setup Python
         uses: actions/setup-python@v4
