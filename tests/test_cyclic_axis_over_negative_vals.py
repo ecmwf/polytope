@@ -8,7 +8,7 @@ from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
 
 
-class TestSlicing3DXarrayDatacube:
+class TestSlicingCyclicAxisNegVals:
     def setup_method(self, method):
         # Create a dataarray with 3 labelled axes using different index types
         array = xr.DataArray(
@@ -131,7 +131,6 @@ class TestSlicing3DXarrayDatacube:
             Box(["step", "long"], [0, -0.7], [3, -0.3]), Select("date", ["2000-01-01"]), Select("level", [128])
         )
         result = self.API.retrieve(request)
-        # result.pprint()
         assert len(result.leaves) == 10
         assert [leaf.value for leaf in result.leaves] == [-0.7, -0.6, -0.5, -0.4, -0.3, -0.7, -0.6, -0.5, -0.4, -0.3]
 

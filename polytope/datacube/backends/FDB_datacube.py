@@ -1,12 +1,8 @@
-import os
 from copy import deepcopy
 
-from .datacube import Datacube, IndexTree
+import pyfdb
 
-# TODO: probably need to do this more general...
-os.environ["DYLD_LIBRARY_PATH"] = "/Users/male/build/fdb-bundle/lib"
-os.environ["FDB_HOME"] = "/Users/male/git/fdb-home"
-import pyfdb  # noqa: E402
+from .datacube import Datacube, IndexTree
 
 
 def glue(path, unmap_path):
@@ -23,12 +19,12 @@ class FDBDatacube(Datacube):
         self.axis_options = axis_options
         self.grid_mapper = None
         self.axis_counter = 0
-        self._axes = {}
+        self._axes = None
         treated_axes = []
         self.non_complete_axes = []
         self.complete_axes = []
         self.blocked_axes = []
-        self.transformation = {}
+        self.transformation = None
         self.fake_axes = []
 
         partial_request = config

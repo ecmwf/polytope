@@ -6,13 +6,13 @@ from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
 
 
-class TestSlicing4DXarrayDatacube:
+class TestSlicingMultipleTransformationsOneAxis:
     def setup_method(self, method):
         ds = data.from_source("file", "./tests/data/foo.grib")
-        latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
-        latlon_array = latlon_array.t2m
-        self.xarraydatacube = XArrayDatacube(latlon_array)
-        grid_options = {
+        self.latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
+        self.latlon_array = self.latlon_array.t2m
+        self.xarraydatacube = XArrayDatacube(self.latlon_array)
+        self.options = {
             "values": {
                 "transformation": {
                     "mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
@@ -21,7 +21,7 @@ class TestSlicing4DXarrayDatacube:
             "longitude": {"transformation": {"cyclic": [0, 360.0]}},
         }
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=latlon_array, engine=self.slicer, axis_options=grid_options)
+        self.API = Polytope(datacube=self.latlon_array, engine=self.slicer, axis_options=self.options)
 
     def test_merge_axis(self):
         request = Request(

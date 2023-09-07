@@ -10,7 +10,7 @@ from polytope.shapes import Box
 
 class TestSlicerComponents:
     def setup_method(self, method):
-        array = xr.DataArray(
+        self.array = xr.DataArray(
             np.random.randn(4, 100),
             dims=("step", "level"),
             coords={
@@ -18,9 +18,9 @@ class TestSlicerComponents:
                 "level": np.arange(0, 100, 1),
             },
         )
-        self.xarraydatacube = XArrayDatacube(array)
+        self.xarraydatacube = XArrayDatacube(self.array)
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer)
+        self.API = Polytope(datacube=self.array, engine=self.slicer)
 
     def test_extract(self):
         box = Box(["step", "level"], [3.0, 1.0], [6.0, 3.0])

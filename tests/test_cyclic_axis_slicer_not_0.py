@@ -8,7 +8,7 @@ from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
 
 
-class TestSlicing3DXarrayDatacube:
+class TestSlicingCyclicAxisNotOverZero:
     def setup_method(self, method):
         # create a dataarray with 3 labelled axes using different index types
         array = xr.DataArray(
@@ -21,13 +21,13 @@ class TestSlicing3DXarrayDatacube:
                 "long": [-0.1, -0.2, -0.3, -0.4, -0.5, -0.6, -0.7, -0.8, -0.9, -1.0, -1.1][::-1],
             },
         )
-        options = {
+        self.options = {
             "long": {"transformation": {"cyclic": [-1.1, -0.1]}},
             "level": {"transformation": {"cyclic": [1, 129]}},
         }
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
+        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=self.options)
 
     # Testing different shapes
 
