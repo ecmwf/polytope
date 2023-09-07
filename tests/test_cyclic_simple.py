@@ -40,27 +40,27 @@ class TestSlicing3DXarrayDatacube:
     def test_cyclic_float_surrounding(self):
         request = Request(
             Select("step", [0]),
-            Select("long", [1.], method="surrounding"),
+            Select("long", [1.0], method="surrounding"),
             Select("date", ["2000-01-01"]),
-            Select("level", [128])
+            Select("level", [128]),
         )
         result = self.API.retrieve(request)
         result.pprint()
         for leaf in result.leaves:
             path = leaf.flatten()
             lon_val = path["long"]
-            assert lon_val in [0., 0.1, 0.9, 1.]
+            assert lon_val in [0.0, 0.1, 0.9, 1.0]
 
     def test_cyclic_float_surrounding_below_seam(self):
         request = Request(
             Select("step", [0]),
-            Select("long", [0.], method="surrounding"),
+            Select("long", [0.0], method="surrounding"),
             Select("date", ["2000-01-01"]),
-            Select("level", [128])
+            Select("level", [128]),
         )
         result = self.API.retrieve(request)
         result.pprint()
         for leaf in result.leaves:
             path = leaf.flatten()
             lon_val = path["long"]
-            assert lon_val in [0., 0.1, 0.9, 1.]
+            assert lon_val in [0.0, 0.1, 0.9, 1.0]

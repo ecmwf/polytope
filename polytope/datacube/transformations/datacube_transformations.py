@@ -4,7 +4,6 @@ from importlib import import_module
 
 
 class DatacubeAxisTransformation(ABC):
-
     @staticmethod
     def create_transform(name, transformation_type_key, transformation_options):
         transformation_type = _type_to_datacube_transformation_lookup[transformation_type_key]
@@ -20,8 +19,9 @@ class DatacubeAxisTransformation(ABC):
 
     @staticmethod
     def get_final_axes(name, transformation_type_key, transformation_options):
-        new_transformation = DatacubeAxisTransformation.create_transform(name, transformation_type_key,
-                                                                         transformation_options)
+        new_transformation = DatacubeAxisTransformation.create_transform(
+            name, transformation_type_key, transformation_options
+        )
         transformation_axis_names = new_transformation.transformation_axes_final()
         return transformation_axis_names
 
@@ -102,8 +102,8 @@ _type_to_transformation_file_lookup = {
 
 has_transform = {
     "mapper": "has_mapper",
-    "cyclic" : "is_cyclic",
-    "merge" : "has_merger",
+    "cyclic": "is_cyclic",
+    "merge": "has_merger",
     "reverse": "reorder",
-    "type_change": "type_change"
+    "type_change": "type_change",
 }

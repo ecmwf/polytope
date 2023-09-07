@@ -45,7 +45,7 @@ class TestSlicing3DXarrayDatacube:
             0.7,
             0.8,
             0.9,
-            1.,
+            1.0,
             0.1,
             0.2,
             0.3,
@@ -55,7 +55,7 @@ class TestSlicing3DXarrayDatacube:
             0.7,
             0.8,
             0.9,
-            1.,
+            1.0,
         ]
 
     def test_cyclic_float_axis_across_seam_repeated(self):

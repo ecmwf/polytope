@@ -58,7 +58,7 @@ class TestSlicing3DXarrayDatacube:
             -0.5,
             -0.4,
             -0.3,
-            -0.2
+            -0.2,
         ]
 
     def test_cyclic_float_axis_inside_cyclic_range(self):
@@ -94,8 +94,7 @@ class TestSlicing3DXarrayDatacube:
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 10
-        assert [leaf.value for leaf in result.leaves] == [-0.7, -0.6, -0.5, -0.4, -0.3,
-                                                          -0.7, -0.6, -0.5, -0.4, -0.3]
+        assert [leaf.value for leaf in result.leaves] == [-0.7, -0.6, -0.5, -0.4, -0.3, -0.7, -0.6, -0.5, -0.4, -0.3]
 
     def test_cyclic_float_axis_two_range_loops(self):
         request = Request(
@@ -124,7 +123,7 @@ class TestSlicing3DXarrayDatacube:
             -0.5,
             -0.4,
             -0.3,
-            -0.2
+            -0.2,
         ]
 
     def test_cyclic_float_axis_below_axis_range(self):

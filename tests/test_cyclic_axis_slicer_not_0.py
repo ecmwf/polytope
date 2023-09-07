@@ -92,17 +92,7 @@ class TestSlicing3DXarrayDatacube:
         )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 10
-        assert [leaf.value for leaf in result.leaves] == [
-            -0.7,
-            -0.6,
-            -0.5,
-            -0.4,
-            -0.3,
-            -0.7,
-            -0.6,
-            -0.5,
-            -0.4,
-            -0.3]
+        assert [leaf.value for leaf in result.leaves] == [-0.7, -0.6, -0.5, -0.4, -0.3, -0.7, -0.6, -0.5, -0.4, -0.3]
 
     def test_cyclic_float_axis_two_range_loops(self):
         request = Request(

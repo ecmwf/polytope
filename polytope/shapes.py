@@ -23,7 +23,6 @@ class Shape(ABC):
 
 
 class ConvexPolytope(Shape):
-
     def __init__(self, axes, points, method=None):
         self._axes = list(axes)
         self.points = points

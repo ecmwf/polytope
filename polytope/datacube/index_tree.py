@@ -63,9 +63,9 @@ class IndexTree(object):
         else:
             if other.value == self.value:
                 return True
-            if other.value - 2*other.axis.tol <= self.value <= other.value + 2*other.axis.tol:
+            if other.value - 2 * other.axis.tol <= self.value <= other.value + 2 * other.axis.tol:
                 return True
-            elif self.value - 2*self.axis.tol <= other.value <= self.value + 2*self.axis.tol:
+            elif self.value - 2 * self.axis.tol <= other.value <= self.value + 2 * self.axis.tol:
                 return True
             else:
                 return False

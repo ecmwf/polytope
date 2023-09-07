@@ -15,8 +15,10 @@ class TestSlicingEra5Data:
         array = ds.to_xarray().isel(step=0).t
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
-        options = {"latitude": {"transformation": {"reverse": {True}}},
-                   "longitude": {"transformation": {"cyclic": [0, 360.0]}}}
+        options = {
+            "latitude": {"transformation": {"reverse": {True}}},
+            "longitude": {"transformation": {"cyclic": [0, 360.0]}},
+        }
         self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
 
     def test_surrounding_on_grid_point(self):

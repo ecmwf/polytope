@@ -56,7 +56,7 @@ class HullSlicer(Engine):
             # remapped_val = (ax.remap([value, value])[0][0] + ax.remap([value, value])[0][1])/2
             remapped_val = value
             if ax.is_cyclic:
-                remapped_val = (ax.remap([value, value])[0][0] + ax.remap([value, value])[0][1])/2
+                remapped_val = (ax.remap([value, value])[0][0] + ax.remap([value, value])[0][1]) / 2
                 remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
             # child = node.create_child(ax, value)
             child = node.create_child(ax, remapped_val)

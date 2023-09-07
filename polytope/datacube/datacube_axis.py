@@ -151,14 +151,14 @@ def cyclic(cls):
                     else:
                         start = indexes.index(low)
                         end = indexes.index(up)
-                    if start-1 < 0:
+                    if start - 1 < 0:
                         index_val_found = indexes[-1:][0]
                         indexes_between_ranges.append([index_val_found])
-                    if end+1 > len(indexes):
+                    if end + 1 > len(indexes):
                         index_val_found = indexes[:2][0]
                         indexes_between_ranges.append([index_val_found])
-                    start = max(start-1, 0)
-                    end = min(end+1, len(indexes))
+                    start = max(start - 1, 0)
+                    end = min(end + 1, len(indexes))
                     if cls.name in datacube.complete_axes:
                         indexes_between = indexes[start:end].to_list()
                     else:
@@ -190,6 +190,7 @@ def mapper(cls):
     from .transformations.datacube_mappers import DatacubeMapper
 
     if cls.has_mapper:
+
         def find_indexes(path, datacube):
             # first, find the relevant transformation object that is a mapping in the cls.transformation dico
             for transform in cls.transformations:
@@ -275,8 +276,8 @@ def mapper(cls):
                             if method == "surrounding":
                                 start = idxs.index(low)
                                 end = idxs.index(up)
-                                start = max(start-1, 0)
-                                end = min(end+1, len(idxs))
+                                start = max(start - 1, 0)
+                                end = min(end + 1, len(idxs))
                                 # indexes_between = [i for i in indexes if low <= i <= up]
                                 indexes_between = idxs[start:end]
                                 indexes_between_ranges.append(indexes_between)
@@ -306,6 +307,7 @@ def merge(cls):
     from .transformations.datacube_merger import DatacubeAxisMerger
 
     if cls.has_merger:
+
         def find_indexes(path, datacube):
             # first, find the relevant transformation object that is a mapping in the cls.transformation dico
             for transform in cls.transformations:
@@ -358,8 +360,8 @@ def merge(cls):
                             if method == "surrounding":
                                 start = indexes.index(low)
                                 end = indexes.index(up)
-                                start = max(start-1, 0)
-                                end = min(end+1, len(indexes))
+                                start = max(start - 1, 0)
+                                end = min(end + 1, len(indexes))
                                 # indexes_between = [i for i in indexes if low <= i <= up]
                                 indexes_between = indexes[start:end]
                                 indexes_between_ranges.append(indexes_between)
@@ -387,6 +389,7 @@ def reverse(cls):
     from .transformations.datacube_reverse import DatacubeAxisReverse
 
     if cls.reorder:
+
         def find_indexes(path, datacube):
             # first, find the relevant transformation object that is a mapping in the cls.transformation dico
             subarray = datacube.dataarray.sel(path, method="nearest")
@@ -419,8 +422,8 @@ def reverse(cls):
                                 if method == "surrounding":
                                     start = indexes.searchsorted(low, "left")
                                     end = indexes.searchsorted(up, "right")
-                                    start = max(start-1, 0)
-                                    end = min(end+1, len(indexes))
+                                    start = max(start - 1, 0)
+                                    end = min(end + 1, len(indexes))
                                     indexes_between = indexes[start:end].to_list()
                                     indexes_between_ranges.append(indexes_between)
                                 else:
@@ -432,8 +435,8 @@ def reverse(cls):
                                 if method == "surrounding":
                                     start = indexes.index(low)
                                     end = indexes.index(up)
-                                    start = max(start-1, 0)
-                                    end = min(end+1, len(indexes))
+                                    start = max(start - 1, 0)
+                                    end = min(end + 1, len(indexes))
                                     # indexes_between = [i for i in indexes if low <= i <= up]
                                     indexes_between = indexes[start:end]
                                     indexes_between_ranges.append(indexes_between)
@@ -471,7 +474,6 @@ def type_change(cls):
     from .transformations.datacube_type_change import DatacubeAxisTypeChange
 
     if cls.type_change:
-
         old_find_indexes = cls.find_indexes
 
         def find_indexes(path, datacube):
@@ -523,8 +525,8 @@ def type_change(cls):
                             if method == "surrounding":
                                 start = indexes.index(low)
                                 end = indexes.index(up)
-                                start = max(start-1, 0)
-                                end = min(end+1, len(indexes))
+                                start = max(start - 1, 0)
+                                end = min(end + 1, len(indexes))
                                 # indexes_between = [i for i in indexes if low <= i <= up]
                                 indexes_between = indexes[start:end]
                                 indexes_between_ranges.append(indexes_between)
@@ -628,8 +630,8 @@ class DatacubeAxis(ABC):
                 if method == "surrounding":
                     start = indexes.searchsorted(low, "left")
                     end = indexes.searchsorted(up, "right")
-                    start = max(start-1, 0)
-                    end = min(end+1, len(indexes))
+                    start = max(start - 1, 0)
+                    end = min(end + 1, len(indexes))
                     indexes_between = indexes[start:end].to_list()
                     indexes_between_ranges.append(indexes_between)
                 else:
@@ -641,8 +643,8 @@ class DatacubeAxis(ABC):
                 if method == "surrounding":
                     start = indexes.index(low)
                     end = indexes.index(up)
-                    start = max(start-1, 0)
-                    end = min(end+1, len(indexes))
+                    start = max(start - 1, 0)
+                    end = min(end + 1, len(indexes))
                     # indexes_between = [i for i in indexes if low <= i <= up]
                     indexes_between = indexes[start:end]
                     indexes_between_ranges.append(indexes_between)
@@ -699,7 +701,7 @@ class FloatDatacubeAxis(DatacubeAxis):
     tol = 1e-12
     range = None
     transformations = []
-    type = 0.
+    type = 0.0
 
     def parse(self, value: Any) -> Any:
         return float(value)

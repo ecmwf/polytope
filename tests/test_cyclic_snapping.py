@@ -24,9 +24,7 @@ class TestSlicing3DXarrayDatacube:
     # Testing different shapes
 
     def test_cyclic_float_axis_across_seam(self):
-        request = Request(
-            Select("long", [-0.2], method="surrounding")
-            )
+        request = Request(Select("long", [-0.2], method="surrounding"))
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 2

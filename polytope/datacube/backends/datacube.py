@@ -29,10 +29,12 @@ class Datacube(ABC):
 
     def _create_axes(self, name, values, transformation_type_key, transformation_options):
         # first check what the final axes are for this axis name given transformations
-        final_axis_names = DatacubeAxisTransformation.get_final_axes(name, transformation_type_key,
-                                                                     transformation_options)
-        transformation = DatacubeAxisTransformation.create_transform(name, transformation_type_key,
-                                                                     transformation_options)
+        final_axis_names = DatacubeAxisTransformation.get_final_axes(
+            name, transformation_type_key, transformation_options
+        )
+        transformation = DatacubeAxisTransformation.create_transform(
+            name, transformation_type_key, transformation_options
+        )
         for blocked_axis in transformation.blocked_axes():
             self.blocked_axes.append(blocked_axis)
         for axis_name in final_axis_names:
