@@ -41,7 +41,7 @@ class MockDatacube(Datacube):
     def get_mapper(self, axis):
         return self.mappers[axis]
 
-    def get_indices(self, path: DatacubePath, axis, lower, upper):
+    def get_indices(self, path: DatacubePath, axis, lower, upper, method=None):
         if lower == upper == math.ceil(lower):
             if lower >= 0:
                 return [int(lower)]

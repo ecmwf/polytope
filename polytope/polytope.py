@@ -42,7 +42,7 @@ class Polytope:
         """Low-level API which takes a polytope geometry object and uses it to slice the datacube"""
         return self.engine.extract(self.datacube, polytopes)
 
-    def retrieve(self, request: Request):
+    def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
         request_tree = self.engine.extract(self.datacube, request.polytopes())
         self.datacube.get(request_tree)
