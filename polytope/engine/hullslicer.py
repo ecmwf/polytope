@@ -1,10 +1,11 @@
+import math
 from copy import copy
 from itertools import chain
 from typing import List
 
 import scipy.spatial
 
-from ..datacube.datacube import Datacube, IndexTree
+from ..datacube.backends.datacube import Datacube, IndexTree
 from ..datacube.datacube_axis import UnsliceableDatacubeAxis
 from ..shapes import ConvexPolytope
 from ..utility.combinatorics import argmax, argmin, group, product, unique
@@ -46,12 +47,19 @@ class HullSlicer(Engine):
         lower = ax.from_float(lower - tol)
         upper = ax.from_float(upper + tol)
         flattened = node.flatten()
-        for value in datacube.get_indices(flattened, ax, lower, upper):
+        method = polytope.method
+        for value in datacube.get_indices(flattened, ax, lower, upper, method):
             # convert to float for slicing
             fvalue = ax.to_float(value)
             new_polytope = slice(polytope, ax.name, fvalue)
             # store the native type
-            child = node.create_child(ax, value)
+            # remapped_val = (ax.remap([value, value])[0][0] + ax.remap([value, value])[0][1])/2
+            remapped_val = value
+            if ax.is_cyclic:
+                remapped_val = (ax.remap([value, value])[0][0] + ax.remap([value, value])[0][1]) / 2
+                remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
+            # child = node.create_child(ax, value)
+            child = node.create_child(ax, remapped_val)
             child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             child["unsliced_polytopes"].remove(polytope)
             if new_polytope is not None:

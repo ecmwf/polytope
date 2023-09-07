@@ -4,12 +4,12 @@ import pytest
 import xarray as xr
 
 from polytope.datacube import Datacube, DatacubePath
+from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.datacube.datacube_axis import (
     FloatDatacubeAxis,
     IntDatacubeAxis,
     PandasTimestampDatacubeAxis,
 )
-from polytope.datacube.xarray import XArrayDatacube
 from polytope.utility.exceptions import AxisNotFoundError, AxisOverdefinedError
 
 

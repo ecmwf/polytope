@@ -4,7 +4,7 @@ import pytest
 
 import polytope.engine.hullslicer
 from polytope import ConvexPolytope
-from polytope.datacube.mock import MockDatacube
+from polytope.datacube.backends.mock import MockDatacube
 from polytope.utility.profiling import benchmark
 
 
