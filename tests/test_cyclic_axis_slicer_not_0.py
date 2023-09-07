@@ -2,13 +2,13 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from polytope.datacube.xarray import XArrayDatacube
+from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
 
 
-class TestSlicing3DXarrayDatacube:
+class TestSlicingCyclicAxisNotOverZero:
     def setup_method(self, method):
         # create a dataarray with 3 labelled axes using different index types
         array = xr.DataArray(
@@ -18,13 +18,16 @@ class TestSlicing3DXarrayDatacube:
                 "date": pd.date_range("2000-01-01", "2000-01-03", 3),
                 "step": [0, 3, 6, 9, 12, 15],
                 "level": range(1, 130),
-                "long": [-0.1, -0.2, -0.3, -0.4, -0.5, -0.6, -0.7, -0.8, -0.9, -1.0, -1.1],
+                "long": [-0.1, -0.2, -0.3, -0.4, -0.5, -0.6, -0.7, -0.8, -0.9, -1.0, -1.1][::-1],
             },
         )
-        options = {"long": {"cyclic": [-1.1, -0.1]}, "level": {"cyclic": [1, 129]}}
+        self.options = {
+            "long": {"transformation": {"cyclic": [-1.1, -0.1]}},
+            "level": {"transformation": {"cyclic": [1, 129]}},
+        }
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
+        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=self.options)
 
     # Testing different shapes
 

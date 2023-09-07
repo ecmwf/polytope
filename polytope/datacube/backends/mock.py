@@ -1,9 +1,9 @@
 import math
 from copy import deepcopy
 
-from ..utility.combinatorics import validate_axes
+from ...utility.combinatorics import validate_axes
+from ..datacube_axis import IntDatacubeAxis
 from .datacube import Datacube, DatacubePath, IndexTree
-from .datacube_axis import IntDatacubeAxis
 
 
 class MockDatacube(Datacube):
@@ -60,3 +60,9 @@ class MockDatacube(Datacube):
 
     def validate(self, axes):
         return validate_axes(self.axes, axes)
+
+    def ax_vals(self, name):
+        return []
+
+    def _find_indexes_between(self, axis, indexes, low, up):
+        pass

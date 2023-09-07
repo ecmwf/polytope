@@ -1,7 +1,7 @@
 from earthkit import data
 from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
 
-from polytope.datacube.xarray import XArrayDatacube
+from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
@@ -10,14 +10,18 @@ from polytope.shapes import Box, Select
 class TestOctahedralGrid:
     def setup_method(self, method):
         ds = data.from_source("file", "./tests/data/foo.grib")
-        latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
-        latlon_array = latlon_array.t2m
-        self.xarraydatacube = XArrayDatacube(latlon_array)
-        grid_options = {
-            "values": {"mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}}
+        self.latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
+        self.latlon_array = self.latlon_array.t2m
+        self.xarraydatacube = XArrayDatacube(self.latlon_array)
+        self.options = {
+            "values": {
+                "transformation": {
+                    "mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                }
+            }
         }
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=latlon_array, engine=self.slicer, axis_options=grid_options)
+        self.API = Polytope(datacube=self.latlon_array, engine=self.slicer, axis_options=self.options)
 
     def find_nearest_latlon(self, grib_file, target_lat, target_lon):
         # Open the GRIB file

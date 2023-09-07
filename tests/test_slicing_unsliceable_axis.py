@@ -3,14 +3,14 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from polytope.datacube.xarray import XArrayDatacube
+from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
 from polytope.utility.exceptions import UnsliceableShapeError
 
 
-class TestSlicing3DXarrayDatacube:
+class TestSlicingUnsliceableAxis:
     def setup_method(self, method):
         # create a dataarray with 3 labelled axes using different index types
         array = xr.DataArray(

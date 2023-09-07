@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
+from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.datacube.index_tree import IndexTree
-from polytope.datacube.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import (

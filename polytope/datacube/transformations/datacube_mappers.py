@@ -1,15 +1,46 @@
 import math
-from abc import ABC, abstractmethod
+from copy import deepcopy
 from importlib import import_module
 
-import numpy as np
-
-from .datacube import configure_datacube_axis
+from .datacube_transformations import DatacubeAxisTransformation
 
 
-class DatacubeMapper(ABC):
+class DatacubeMapper(DatacubeAxisTransformation):
+    # Needs to implements DatacubeAxisTransformation methods
+
+    def __init__(self, name, mapper_options):
+        self.transformation_options = mapper_options
+        self.grid_type = mapper_options["type"]
+        self.grid_resolution = mapper_options["resolution"]
+        self.grid_axes = mapper_options["axes"]
+        self.old_axis = name
+
+    def generate_final_transformation(self):
+        map_type = _type_to_datacube_mapper_lookup[self.grid_type]
+        module = import_module("polytope.datacube.transformations.datacube_mappers")
+        constructor = getattr(module, map_type)
+        transformation = deepcopy(constructor(self.old_axis, self.grid_axes, self.grid_resolution))
+        return transformation
+
+    def blocked_axes(self):
+        return []
+
+    def transformation_axes_final(self):
+        final_transformation = self.generate_final_transformation()
+        final_axes = final_transformation._mapped_axes
+        return final_axes
+
+    # Needs to also implement its own methods
+
+    def change_val_type(self, axis_name, values):
+        # the new axis_vals created will be floats
+        return [0.0]
+
     def _mapped_axes(self):
-        pass
+        # NOTE: Each of the mapper method needs to call it's sub mapper method
+        final_transformation = self.generate_final_transformation()
+        final_axes = final_transformation._mapped_axes
+        return final_axes
 
     def _base_axis(self):
         pass
@@ -17,39 +48,25 @@ class DatacubeMapper(ABC):
     def _resolution(self):
         pass
 
-    @abstractmethod
+    def first_axis_vals(self):
+        final_transformation = self.generate_final_transformation()
+        return final_transformation.first_axis_vals()
+
+    def second_axis_vals(self, first_val):
+        final_transformation = self.generate_final_transformation()
+        return final_transformation.second_axis_vals(first_val)
+
     def map_first_axis(self, lower, upper):
-        pass
+        final_transformation = self.generate_final_transformation()
+        return final_transformation.map_first_axis(lower, upper)
 
-    @abstractmethod
     def map_second_axis(self, first_val, lower, upper):
-        pass
+        final_transformation = self.generate_final_transformation()
+        return final_transformation.map_second_axis(first_val, lower, upper)
 
-    @abstractmethod
-    def unmap(self):
-        pass
-
-    @staticmethod
-    def create_mapper(options, name, datacube):
-        grid_mapping_options = options["mapper"]
-        grid_type = grid_mapping_options["type"]
-        grid_resolution = grid_mapping_options["resolution"]
-        grid_axes = grid_mapping_options["axes"]
-        map_type = _type_to_datacube_mapper_lookup[grid_type]
-        module = import_module("polytope.datacube.datacube_mappers")
-        constructor = getattr(module, map_type)
-        datacube.grid_mapper = constructor(name, grid_axes, grid_resolution)
-        # Once we have created mapper, create axis for the mapped axes
-        for i in range(len(grid_axes)):
-            axis_name = grid_axes[i]
-            new_axis_options = datacube.axis_options.get(axis_name, {})
-            if i == 0:
-                values = np.array(datacube.grid_mapper.first_axis_vals())
-                configure_datacube_axis(new_axis_options, axis_name, values, datacube)
-            if i == 1:
-                # the values[0] will be a value on the first axis
-                values = np.array(datacube.grid_mapper.second_axis_vals(values[0]))
-                configure_datacube_axis(new_axis_options, axis_name, values, datacube)
+    def unmap(self, first_val, second_val):
+        final_transformation = self.generate_final_transformation()
+        return final_transformation.unmap(first_val, second_val)
 
 
 class OctahedralGridMapper(DatacubeMapper):
