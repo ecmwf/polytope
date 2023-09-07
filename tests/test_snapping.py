@@ -77,3 +77,13 @@ class TestSlicing3DXarrayDatacube:
         result.pprint()
         assert len(result.leaves) == 1
         assert result.is_root()
+
+    def test_1D_nonexisting_point_surrounding(self):
+        request = Request(Select("level", [0], method="surrounding"), Select("step", [6], method="surrounding"))
+        result = self.API.retrieve(request)
+        result.pprint()
+        assert len(result.leaves) == 1
+        for leaf in result.leaves:
+            path = leaf.flatten()
+            assert path["level"] == 1
+            assert path["step"] == 5

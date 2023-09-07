@@ -63,4 +63,4 @@ class TestSlicing3DXarrayDatacube:
         for leaf in result.leaves:
             path = leaf.flatten()
             lon_val = path["long"]
-            assert lon_val in [0., 0.1, 0.9]
+            assert lon_val in [0., 0.1, 0.9, 1.]

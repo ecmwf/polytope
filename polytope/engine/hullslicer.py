@@ -1,7 +1,7 @@
+import math
 from copy import copy
 from itertools import chain
 from typing import List
-import math
 
 import scipy.spatial
 
@@ -58,7 +58,6 @@ class HullSlicer(Engine):
             if ax.is_cyclic:
                 remapped_val = (ax.remap([value, value])[0][0] + ax.remap([value, value])[0][1])/2
                 remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
-            print(remapped_val)
             # child = node.create_child(ax, value)
             child = node.create_child(ax, remapped_val)
             child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])

@@ -146,6 +146,7 @@ def cyclic(cls):
                 return old_find_indices_between(index_ranges, low, up, datacube, method, offset)
 
             if offset != 0:
+                # print("HERE OFFSET NOT 0")
                 # NOTE that if the offset is not 0, then we need to recenter the low and up
                 # values to be within the datacube range
                 new_offset = 0
@@ -154,21 +155,17 @@ def cyclic(cls):
                 #         low = low - range_length
                 #         new_offset -= range_length
                 #         up = up - range_length
-                print("INSIDE THE DATACUBE AXIS DECORATOR")
-                print((low, up))
                 if method == "surrounding":
                     for indexes in index_ranges:
                         if cls.name in datacube.complete_axes:
                             start = indexes.searchsorted(low, "left")
                             end = indexes.searchsorted(up, "right")
-                            print(start, end)
                             if start-1 < 0:  # NOTE TODO: here the boundaries will not necessarily be 0 or len(indexes)
                                 start_offset_indicator = "need_offset"
-                                index_val_found = indexes[-2:][0]
+                                index_val_found = indexes[-1:][0]
                                 indexes_between_before = [start_offset_indicator, new_offset, index_val_found]
                                 indexes_between_ranges.append(indexes_between_before)
                             if end+1 > len(indexes):
-                                print("end exceeded indices length")
                                 start_offset_indicator = "need_offset"
                                 index_val_found = indexes[:2][1]
                                 indexes_between_after = [start_offset_indicator, new_offset, index_val_found]
@@ -200,20 +197,17 @@ def cyclic(cls):
                     return old_find_indices_between(index_ranges, low, up, datacube, method, offset)
 
             else:
+                # print("HERE OFFSET IS 0")
                 # If the offset is 0, then the first value found on the left has an offset of range_length
                 new_offset = 0
                 if method == "surrounding":
-                    print("no offset")
                     for indexes in index_ranges:
                         if cls.name in datacube.complete_axes:
                             start = indexes.searchsorted(low, "left")
                             end = indexes.searchsorted(up, "right")
-                            print((start, end))
                             if start-1 < 0:  # NOTE TODO: here the boundaries will not necessarily be 0 or len(indexes)
-                                print("low start")
                                 start_offset_indicator = "need_offset"
-                                index_val_found = indexes[-2:][0]
-                                print(index_val_found)
+                                index_val_found = indexes[-1:][0]
                                 new_offset = -range_length
                                 indexes_between_before = [start_offset_indicator, new_offset, index_val_found]
                                 indexes_between_ranges.append(indexes_between_before)

@@ -1,5 +1,4 @@
 import importlib
-import itertools
 import math
 from abc import ABC, abstractmethod
 from typing import Any
@@ -101,15 +100,10 @@ class Datacube(ABC):
         if offset is not None:
             # Note that we can only do unique if not dealing with time values
             idx_between = unique(idx_between)
-        print("inside get indices")
-        print(idx_between)
         return idx_between
 
     def _look_up_datacube(self, search_ranges, search_ranges_offset, indexes, axis, method):
-        print("inside look up datacube")
         idx_between = []
-        print(axis.name)
-        print(search_ranges)
         for i in range(len(search_ranges)):
             r = search_ranges[i]
             offset = search_ranges_offset[i]
@@ -142,8 +136,6 @@ class Datacube(ABC):
                                 indexes_between[j][k] = round(indexes_between[j][k] + offset,
                                                               int(-math.log10(axis.tol)))
                             idx_between.append(indexes_between[j][k])
-        print("indexes between")
-        print(idx_between)
         return idx_between
 
     def get_mapper(self, axis):
@@ -157,9 +149,6 @@ class Datacube(ABC):
             value = path[key]
             path[key] = self._axes[key].remap([value, value])[0][0]
         return path
-    
-    # def remap_tree(self, tree: IndexTree):
-    #     for 
 
     @staticmethod
     def create(datacube, axis_options: dict):
