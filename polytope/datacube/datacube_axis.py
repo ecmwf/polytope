@@ -137,14 +137,13 @@ def cyclic(cls):
 
         old_find_indices_between = cls.find_indices_between
 
-        def find_indices_between(index_ranges, low, up, datacube, offset, method=None):
+        def find_indices_between(index_ranges, low, up, datacube, method=None):
             update_range()
             indexes_between_ranges = []
 
             if method != "surrounding":
-                return old_find_indices_between(index_ranges, low, up, datacube, method, offset)
+                return old_find_indices_between(index_ranges, low, up, datacube, method)
             else:
-                new_offset = 0
                 for indexes in index_ranges:
                     if cls.name in datacube.complete_axes:
                         start = indexes.searchsorted(low, "left")
@@ -153,15 +152,11 @@ def cyclic(cls):
                         start = indexes.index(low)
                         end = indexes.index(up)
                     if start-1 < 0:
-                        start_offset_indicator = "need_offset"
                         index_val_found = indexes[-1:][0]
-                        indexes_between_before = [start_offset_indicator, new_offset, index_val_found]
-                        indexes_between_ranges.append(indexes_between_before)
+                        indexes_between_ranges.append([index_val_found])
                     if end+1 > len(indexes):
-                        start_offset_indicator = "need_offset"
                         index_val_found = indexes[:2][0]
-                        indexes_between_after = [start_offset_indicator, new_offset, index_val_found]
-                        indexes_between_ranges.append(indexes_between_after)
+                        indexes_between_ranges.append([index_val_found])
                     start = max(start-1, 0)
                     end = min(end+1, len(indexes))
                     if cls.name in datacube.complete_axes:
@@ -269,7 +264,7 @@ def mapper(cls):
         def remap_to_requested(path, unmapped_path):
             return (path, unmapped_path)
 
-        def find_indices_between(index_ranges, low, up, datacube, offset, method=None):
+        def find_indices_between(index_ranges, low, up, datacube, method=None):
             # TODO: add method for snappping
             indexes_between_ranges = []
             for transform in cls.transformations:
@@ -352,7 +347,7 @@ def merge(cls):
         def remap_to_requested(path, unmapped_path):
             return (path, unmapped_path)
 
-        def find_indices_between(index_ranges, low, up, datacube, offset, method=None):
+        def find_indices_between(index_ranges, low, up, datacube, method=None):
             # TODO: add method for snappping
             indexes_between_ranges = []
             for transform in cls.transformations:
@@ -408,7 +403,7 @@ def reverse(cls):
         def remap_to_requested(path, unmapped_path):
             return (path, unmapped_path)
 
-        def find_indices_between(index_ranges, low, up, datacube, offset, method=None):
+        def find_indices_between(index_ranges, low, up, datacube, method=None):
             # TODO: add method for snappping
             indexes_between_ranges = []
             for transform in cls.transformations:
@@ -517,7 +512,7 @@ def type_change(cls):
         def remap_to_requested(path, unmapped_path):
             return (path, unmapped_path)
 
-        def find_indices_between(index_ranges, low, up, datacube, offset, method=None):
+        def find_indices_between(index_ranges, low, up, datacube, method=None):
             # TODO: add method for snappping
             indexes_between_ranges = []
             for transform in cls.transformations:
@@ -622,7 +617,7 @@ class DatacubeAxis(ABC):
     def remap_to_requeest(path, unmapped_path):
         return (path, unmapped_path)
 
-    def find_indices_between(self, index_ranges, low, up, datacube, offset, method=None):
+    def find_indices_between(self, index_ranges, low, up, datacube, method=None):
         # TODO: add method for snappping
         indexes_between_ranges = []
         for indexes in index_ranges:
