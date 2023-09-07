@@ -143,49 +143,33 @@ def cyclic(cls):
 
             if method != "surrounding":
                 return old_find_indices_between(index_ranges, low, up, datacube, method, offset)
-
-            if True:
-                # NOTE that if the offset is not 0, then we need to recenter the low and up
-                # values to be within the datacube range
+            else:
                 new_offset = 0
-                if method == "surrounding":
-                    for indexes in index_ranges:
-                        if cls.name in datacube.complete_axes:
-                            start = indexes.searchsorted(low, "left")
-                            end = indexes.searchsorted(up, "right")
-                            if start-1 < 0:  # NOTE TODO: here the boundaries will not necessarily be 0 or len(indexes)
-                                start_offset_indicator = "need_offset"
-                                index_val_found = indexes[-1:][0]
-                                indexes_between_before = [start_offset_indicator, new_offset, index_val_found]
-                                indexes_between_ranges.append(indexes_between_before)
-                            if end+1 > len(indexes):
-                                start_offset_indicator = "need_offset"
-                                index_val_found = indexes[:2][1]
-                                indexes_between_after = [start_offset_indicator, new_offset, index_val_found]
-                                indexes_between_ranges.append(indexes_between_after)
-                            start = max(start-1, 0)
-                            end = min(end+1, len(indexes))
-                            indexes_between = indexes[start:end].to_list()
-                            indexes_between = [i - new_offset for i in indexes_between]
-                            indexes_between_ranges.append(indexes_between)
-                        else:
-                            start = indexes.index(low)
-                            end = indexes.index(up)
-                            if start-1 < 0:
-                                start_offset_indicator = "need_offset"
-                                index_val_found = indexes[-1:][0]
-                                indexes_between_before = [start_offset_indicator, new_offset, index_val_found]
-                                indexes_between_ranges.append(indexes_between_before)
-                            if end+1 > len(indexes):
-                                start_offset_indicator = "need_offset"
-                                index_val_found = indexes[:2][0]
-                                indexes_between_after = [start_offset_indicator, new_offset, index_val_found]
-                                indexes_between_ranges.append(indexes_between_after)
-                            start = max(start-1, 0)
-                            end = min(end+1, len(indexes))
-                            indexes_between = indexes[start:end]
-                            indexes_between_ranges.append(indexes_between)
-                    return indexes_between_ranges
+                for indexes in index_ranges:
+                    if cls.name in datacube.complete_axes:
+                        start = indexes.searchsorted(low, "left")
+                        end = indexes.searchsorted(up, "right")
+                    else:
+                        start = indexes.index(low)
+                        end = indexes.index(up)
+                    if start-1 < 0:
+                        start_offset_indicator = "need_offset"
+                        index_val_found = indexes[-1:][0]
+                        indexes_between_before = [start_offset_indicator, new_offset, index_val_found]
+                        indexes_between_ranges.append(indexes_between_before)
+                    if end+1 > len(indexes):
+                        start_offset_indicator = "need_offset"
+                        index_val_found = indexes[:2][0]
+                        indexes_between_after = [start_offset_indicator, new_offset, index_val_found]
+                        indexes_between_ranges.append(indexes_between_after)
+                    start = max(start-1, 0)
+                    end = min(end+1, len(indexes))
+                    if cls.name in datacube.complete_axes:
+                        indexes_between = indexes[start:end].to_list()
+                    else:
+                        indexes_between = indexes[start:end]
+                    indexes_between_ranges.append(indexes_between)
+                return indexes_between_ranges
 
         def offset(range):
             # We first unpad the range by the axis tolerance to make sure that
