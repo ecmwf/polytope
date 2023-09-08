@@ -119,6 +119,7 @@ jobs:
           self_build: false
           dependencies: |
             ecmwf/ecbuild@develop
+            MathisRosenhauer/libaec@master
             ecmwf/eccodes@develop
 
       - name: Setup Python
