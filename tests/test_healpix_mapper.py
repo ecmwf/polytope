@@ -10,14 +10,11 @@ from polytope.shapes import Box, Select
 class TestOctahedralGrid:
     def setup_method(self, method):
         ds = data.from_source("file", "./tests/data/healpix.grib")
-        self.latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
-        self.latlon_array = self.latlon_array.t2m
+        self.latlon_array = ds.to_xarray().isel(step=0).isel(time=0).isel(isobaricInhPa=0).z
         self.xarraydatacube = XArrayDatacube(self.latlon_array)
         self.options = {
             "values": {
-                "transformation": {
-                    "mapper": {"type": "octahedral", "resolution": 32, "axes": ["latitude", "longitude"]}
-                }
+                "transformation": {"mapper": {"type": "healpix", "resolution": 32, "axes": ["latitude", "longitude"]}}
             }
         }
         self.slicer = HullSlicer()
@@ -47,34 +44,33 @@ class TestOctahedralGrid:
         return nearest_points
 
     def test_octahedral_grid(self):
-        # request = Request(
-        #     Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
-        #     Select("number", [0]),
-        #     Select("time", ["2023-06-25T12:00:00"]),
-        #     Select("step", ["00:00:00"]),
-        #     Select("surface", [0]),
-        #     Select("valid_time", ["2023-06-25T12:00:00"]),
-        # )
-        # result = self.API.retrieve(request)
-        # assert len(result.leaves) == 9
+        request = Request(
+            Box(["latitude", "longitude"], [-2, -2], [5, 5]),
+            Select("time", ["2022-12-14T12:00:00"]),
+            Select("step", ["01:00:00"]),
+            Select("isobaricInhPa", [500]),
+            Select("valid_time", ["2022-12-14T13:00:00"]),
+        )
+        result = self.API.retrieve(request)
+        result.pprint()
+        assert len(result.leaves) == 9
 
-        # lats = []
-        # lons = []
-        # eccodes_lats = []
-        # tol = 1e-8
-        # for i in range(len(result.leaves)):
-        #     cubepath = result.leaves[i].flatten()
-        #     lat = cubepath["latitude"]
-        #     lon = cubepath["longitude"]
-        #     lats.append(lat)
-        #     lons.append(lon)
-        #     nearest_points = self.find_nearest_latlon("./tests/data/foo.grib", lat, lon)
-        #     eccodes_lat = nearest_points[0][0]["lat"]
-        #     eccodes_lon = nearest_points[0][0]["lon"]
-        #     eccodes_lats.append(eccodes_lat)
-        #     assert eccodes_lat - tol <= lat
-        #     assert lat <= eccodes_lat + tol
-        #     assert eccodes_lon - tol <= lon
-        #     assert lon <= eccodes_lon + tol
-        # assert len(eccodes_lats) == 9
-        pass
+        lats = []
+        lons = []
+        eccodes_lats = []
+        tol = 1e-8
+        for i in range(len(result.leaves)):
+            cubepath = result.leaves[i].flatten()
+            lat = cubepath["latitude"]
+            lon = cubepath["longitude"]
+            lats.append(lat)
+            lons.append(lon)
+            nearest_points = self.find_nearest_latlon("./tests/data/healpix.grib", lat, lon)
+            eccodes_lat = nearest_points[0][0]["lat"]
+            eccodes_lon = nearest_points[0][0]["lon"]
+            eccodes_lats.append(eccodes_lat)
+            assert eccodes_lat - tol <= lat
+            assert lat <= eccodes_lat + tol
+            assert eccodes_lon - tol <= lon
+            assert lon <= eccodes_lon + tol
+        assert len(eccodes_lats) == 9
