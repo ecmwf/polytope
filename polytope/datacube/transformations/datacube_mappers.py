@@ -76,19 +76,19 @@ class HealpixGridMapper(DatacubeMapper):
         self._resolution = resolution
 
     def first_axis_vals(self):
-        rad2deg = 180/math.pi
-        vals = [0] * (4*self._resolution - 1)
+        rad2deg = 180 / math.pi
+        vals = [0] * (4 * self._resolution - 1)
 
         # Polar caps
         for i in range(1, self._resolution):
-            val = 90 - (rad2deg * math.acos(1-(i*i/(3 * self._resolution * self._resolution))))
-            vals[i-1] = val
-            vals[4 * self._resolution - 1 - i] = - val
+            val = 90 - (rad2deg * math.acos(1 - (i * i / (3 * self._resolution * self._resolution))))
+            vals[i - 1] = val
+            vals[4 * self._resolution - 1 - i] = -val
         # Equatorial belts
-        for i in range(self._resolution , 2*self._resolution):
-            val = 90 - (rad2deg * math.acos((4*self._resolution - 2*i)/(3*self._resolution)))
-            vals[i-1] = val
-            vals[4 * self._resolution - 1 - i] = - val
+        for i in range(self._resolution, 2 * self._resolution):
+            val = 90 - (rad2deg * math.acos((4 * self._resolution - 2 * i) / (3 * self._resolution)))
+            vals[i - 1] = val
+            vals[4 * self._resolution - 1 - i] = -val
         # Equator
         vals[2 * self._resolution - 1] = 0
 
@@ -100,16 +100,18 @@ class HealpixGridMapper(DatacubeMapper):
         return return_vals
 
     def second_axis_vals(self, first_val):
+        tol = 1e-8
+        first_val = [i for i in self.first_axis_vals() if first_val - tol <= i <= first_val + tol][0]
         idx = self.first_axis_vals().index(first_val)
 
         # Polar caps
         if idx < self._resolution - 1 or 3 * self._resolution - 1 < idx <= 4 * self._resolution - 2:
-            start = 45 / (idx+1)
-            vals = [start + i * (360 / (4*(idx + 1))) for i in range(4 * (idx + 1))]
+            start = 45 / (idx + 1)
+            vals = [start + i * (360 / (4 * (idx + 1))) for i in range(4 * (idx + 1))]
             return vals
         # Equatorial belts
-        start = 45/self._resolution
-        if self._resolution - 1 <= idx < 2 * self._resolution - 1 or 2*self._resolution <= idx < 3 * self._resolution:
+        start = 45 / self._resolution
+        if self._resolution - 1 <= idx < 2 * self._resolution - 1 or 2 * self._resolution <= idx < 3 * self._resolution:
             r_start = start * (2 - (((idx + 1) - self._resolution + 1) % 2))
             vals = [r_start + i * (360 / (4 * self._resolution)) for i in range(4 * self._resolution)]
             return vals
@@ -145,10 +147,11 @@ class HealpixGridMapper(DatacubeMapper):
         return idx
 
     def unmap(self, first_val, second_val):
-        first_axis_vals = self.first_axis_vals()
-        first_idx = first_axis_vals.index(first_val)
-        second_axis_vals = self.second_axis_vals(first_val)
-        second_idx = second_axis_vals.index(second_val)
+        tol = 1e-8
+        first_val = [i for i in self.first_axis_vals() if first_val - tol <= i <= first_val + tol][0]
+        first_idx = self.first_axis_vals().index(first_val)
+        second_val = [i for i in self.second_axis_vals(first_val) if second_val - tol <= i <= second_val + tol][0]
+        second_idx = self.second_axis_vals(first_val).index(second_val)
         healpix_index = self.axes_idx_to_healpix_idx(first_idx, second_idx)
         return healpix_index
 
@@ -2869,5 +2872,4 @@ class OctahedralGridMapper(DatacubeMapper):
         return octahedral_index
 
 
-_type_to_datacube_mapper_lookup = {"octahedral": "OctahedralGridMapper",
-                                   "healpix": "HealpixGridMapper"}
+_type_to_datacube_mapper_lookup = {"octahedral": "OctahedralGridMapper", "healpix": "HealpixGridMapper"}
