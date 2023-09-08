@@ -1,3 +1,5 @@
+import geopandas as gpd
+import matplotlib.pyplot as plt
 from earthkit import data
 from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
 
@@ -45,7 +47,7 @@ class TestOctahedralGrid:
 
     def test_octahedral_grid(self):
         request = Request(
-            Box(["latitude", "longitude"], [-2, -2], [5, 5]),
+            Box(["latitude", "longitude"], [-2, -2], [10, 10]),
             Select("time", ["2022-12-14T12:00:00"]),
             Select("step", ["01:00:00"]),
             Select("isobaricInhPa", [500]),
@@ -53,11 +55,12 @@ class TestOctahedralGrid:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 9
+        assert len(result.leaves) == 35
 
         lats = []
         lons = []
         eccodes_lats = []
+        eccodes_lons = []
         tol = 1e-8
         for i in range(len(result.leaves)):
             cubepath = result.leaves[i].flatten()
@@ -69,8 +72,17 @@ class TestOctahedralGrid:
             eccodes_lat = nearest_points[0][0]["lat"]
             eccodes_lon = nearest_points[0][0]["lon"]
             eccodes_lats.append(eccodes_lat)
+            eccodes_lons.append(eccodes_lon)
             assert eccodes_lat - tol <= lat
             assert lat <= eccodes_lat + tol
             assert eccodes_lon - tol <= lon
             assert lon <= eccodes_lon + tol
-        assert len(eccodes_lats) == 9
+        assert len(eccodes_lats) == 35
+        worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
+        fig, ax = plt.subplots(figsize=(12, 6))
+        worldmap.plot(color="darkgrey", ax=ax)
+
+        plt.scatter(eccodes_lons, eccodes_lats, c="blue", marker="s", s=20)
+        plt.scatter(lons, lats, s=16, c="red", cmap="YlOrRd")
+        plt.colorbar(label="Temperature")
+        plt.show()
