@@ -54,7 +54,6 @@ class TestOctahedralGrid:
             Select("valid_time", ["2022-12-14T13:00:00"]),
         )
         result = self.API.retrieve(request)
-        result.pprint()
         assert len(result.leaves) == 35
 
         lats = []
