@@ -110,8 +110,16 @@ jobs:
       - name: Download Git LFS file
         run: |
           git lfs pull
-      - name: Install eccodes
-        run: sudo apt-get install -y libeccodes-dev
+      # - name: Install eccodes
+      #   run: sudo apt-get install -y libeccodes-dev
+      - name: Install eccodes and Dependencies
+        id: install-dependencies
+        uses: ecmwf-actions/build-package@v2
+        with:
+          self_build: false
+          dependencies: |
+            ecmwf/ecbuild@develop
+            ecmwf/eccodes@develop
 
       - name: Setup Python
         uses: actions/setup-python@v4
