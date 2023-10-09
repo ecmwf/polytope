@@ -1,3 +1,6 @@
+import os
+
+import requests
 from earthkit import data
 
 from polytope.datacube.backends.xarray import XArrayDatacube
@@ -9,7 +12,25 @@ from polytope.shapes import Box, Select
 
 class TestInitDatacubeAxes:
     def setup_method(self, method):
-        ds = data.from_source("file", "./tests/data/foo.grib")
+        nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/foo.grib"
+
+        local_directory = "./tests/data_tests"
+
+        if not os.path.exists(local_directory):
+            os.makedirs(local_directory)
+
+        # Construct the full path for the local file
+        local_file_path = os.path.join(local_directory, "foo.grib")
+
+        if not os.path.exists(local_file_path):
+            session = requests.Session()
+            response = session.get(nexus_url)
+            if response.status_code == 200:
+                # Save the downloaded data to the local file
+                with open(local_file_path, "wb") as f:
+                    f.write(response.content)
+
+        ds = data.from_source("file", "./tests/data_tests/foo.grib")
         latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
         latlon_array = latlon_array.t2m
         self.xarraydatacube = XArrayDatacube(latlon_array)
