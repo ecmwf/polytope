@@ -1,3 +1,6 @@
+import os
+
+import requests
 from earthkit import data
 from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
 
@@ -9,7 +12,26 @@ from polytope.shapes import Box, Select
 
 class TestOctahedralGrid:
     def setup_method(self, method):
-        ds = data.from_source("file", "./tests/data/healpix.grib")
+
+        nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/healpix.grib"
+
+        local_directory = "./tests/data_tests"
+
+        if not os.path.exists(local_directory):
+            os.makedirs(local_directory)
+
+        # Construct the full path for the local file
+        local_file_path = os.path.join(local_directory, "healpix.grib")
+
+        if not os.path.exists(local_file_path):
+            session = requests.Session()
+            response = session.get(nexus_url)
+            if response.status_code == 200:
+                # Save the downloaded data to the local file
+                with open(local_file_path, "wb") as f:
+                    f.write(response.content)
+
+        ds = data.from_source("file", "./tests/data_tests/healpix.grib")
         self.latlon_array = ds.to_xarray().isel(step=0).isel(time=0).isel(isobaricInhPa=0).z
         self.xarraydatacube = XArrayDatacube(self.latlon_array)
         self.options = {

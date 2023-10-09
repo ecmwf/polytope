@@ -1,4 +1,7 @@
+import os
+
 import numpy as np
+import requests
 from earthkit import data
 
 from polytope.datacube.backends.xarray import XArrayDatacube
@@ -9,7 +12,25 @@ from polytope.shapes import Box, Select
 
 class TestSlicingEra5Data:
     def setup_method(self, method):
-        ds = data.from_source("file", "./tests/data/era5-levels-members.grib")
+        nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/era5-levels-members.grib"
+
+        local_directory = "./tests/data_tests"
+
+        if not os.path.exists(local_directory):
+            os.makedirs(local_directory)
+
+        # Construct the full path for the local file
+        local_file_path = os.path.join(local_directory, "era5-levels-members.grib")
+
+        if not os.path.exists(local_file_path):
+            session = requests.Session()
+            response = session.get(nexus_url)
+            if response.status_code == 200:
+                # Save the downloaded data to the local file
+                with open(local_file_path, "wb") as f:
+                    f.write(response.content)
+
+        ds = data.from_source("file", "./tests/data_tests/era5-levels-members.grib")
         array = ds.to_xarray().isel(step=0).t
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
