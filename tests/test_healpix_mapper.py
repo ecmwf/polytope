@@ -12,7 +12,6 @@ from polytope.shapes import Box, Select
 
 class TestOctahedralGrid:
     def setup_method(self, method):
-
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/healpix.grib"
 
         local_directory = "./tests/data"
