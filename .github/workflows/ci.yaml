@@ -99,8 +99,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
-      - name: Change write permission
-        run: chmod -R 777 ./tests/data/
       - name: Install eccodes and Dependencies
         id: install-dependencies
         uses: ecmwf-actions/build-package@v2
