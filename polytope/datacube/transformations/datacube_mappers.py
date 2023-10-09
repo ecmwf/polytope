@@ -69,6 +69,93 @@ class DatacubeMapper(DatacubeAxisTransformation):
         return final_transformation.unmap(first_val, second_val)
 
 
+class HealpixGridMapper(DatacubeMapper):
+    def __init__(self, base_axis, mapped_axes, resolution):
+        self._mapped_axes = mapped_axes
+        self._base_axis = base_axis
+        self._resolution = resolution
+
+    def first_axis_vals(self):
+        rad2deg = 180 / math.pi
+        vals = [0] * (4 * self._resolution - 1)
+
+        # Polar caps
+        for i in range(1, self._resolution):
+            val = 90 - (rad2deg * math.acos(1 - (i * i / (3 * self._resolution * self._resolution))))
+            vals[i - 1] = val
+            vals[4 * self._resolution - 1 - i] = -val
+        # Equatorial belts
+        for i in range(self._resolution, 2 * self._resolution):
+            val = 90 - (rad2deg * math.acos((4 * self._resolution - 2 * i) / (3 * self._resolution)))
+            vals[i - 1] = val
+            vals[4 * self._resolution - 1 - i] = -val
+        # Equator
+        vals[2 * self._resolution - 1] = 0
+
+        return vals
+
+    def map_first_axis(self, lower, upper):
+        axis_lines = self.first_axis_vals()
+        return_vals = [val for val in axis_lines if lower <= val <= upper]
+        return return_vals
+
+    def second_axis_vals(self, first_val):
+        tol = 1e-8
+        first_val = [i for i in self.first_axis_vals() if first_val - tol <= i <= first_val + tol][0]
+        idx = self.first_axis_vals().index(first_val)
+
+        # Polar caps
+        if idx < self._resolution - 1 or 3 * self._resolution - 1 < idx <= 4 * self._resolution - 2:
+            start = 45 / (idx + 1)
+            vals = [start + i * (360 / (4 * (idx + 1))) for i in range(4 * (idx + 1))]
+            return vals
+        # Equatorial belts
+        start = 45 / self._resolution
+        if self._resolution - 1 <= idx < 2 * self._resolution - 1 or 2 * self._resolution <= idx < 3 * self._resolution:
+            r_start = start * (2 - (((idx + 1) - self._resolution + 1) % 2))
+            vals = [r_start + i * (360 / (4 * self._resolution)) for i in range(4 * self._resolution)]
+            return vals
+        # Equator
+        temp_val = 1 if self._resolution % 2 else 0
+        r_start = start * (1 - temp_val)
+        if idx == 2 * self._resolution - 1:
+            vals = [r_start + i * (360 / (4 * self._resolution)) for i in range(4 * self._resolution)]
+            return vals
+
+    def map_second_axis(self, first_val, lower, upper):
+        axis_lines = self.second_axis_vals(first_val)
+        return_vals = [val for val in axis_lines if lower <= val <= upper]
+        return return_vals
+
+    def axes_idx_to_healpix_idx(self, first_idx, second_idx):
+        idx = 0
+        for i in range(self._resolution - 1):
+            if i != first_idx:
+                idx += 4 * (i + 1)
+            else:
+                idx += second_idx
+        for i in range(self._resolution - 1, 3 * self._resolution):
+            if i != first_idx:
+                idx += 4 * self._resolution
+            else:
+                idx += second_idx
+        for i in range(3 * self._resolution, 4 * self._resolution - 1):
+            if i != first_idx:
+                idx += 4 * (4 * self._resolution - 1 - i + 1)
+            else:
+                idx += second_idx
+        return idx
+
+    def unmap(self, first_val, second_val):
+        tol = 1e-8
+        first_val = [i for i in self.first_axis_vals() if first_val - tol <= i <= first_val + tol][0]
+        first_idx = self.first_axis_vals().index(first_val)
+        second_val = [i for i in self.second_axis_vals(first_val) if second_val - tol <= i <= second_val + tol][0]
+        second_idx = self.second_axis_vals(first_val).index(second_val)
+        healpix_index = self.axes_idx_to_healpix_idx(first_idx, second_idx)
+        return healpix_index
+
+
 class OctahedralGridMapper(DatacubeMapper):
     def __init__(self, base_axis, mapped_axes, resolution):
         self._mapped_axes = mapped_axes
@@ -2785,4 +2872,4 @@ class OctahedralGridMapper(DatacubeMapper):
         return octahedral_index
 
 
-_type_to_datacube_mapper_lookup = {"octahedral": "OctahedralGridMapper"}
+_type_to_datacube_mapper_lookup = {"octahedral": "OctahedralGridMapper", "healpix": "HealpixGridMapper"}
