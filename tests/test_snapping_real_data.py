@@ -16,7 +16,7 @@ class TestSlicingEra5Data:
     def setup_method(self, method):
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/era5-levels-members.grib"
 
-        local_directory = "./tests/data_tests"
+        local_directory = "./tests/data"
 
         if not os.path.exists(local_directory):
             os.makedirs(local_directory)
@@ -32,7 +32,7 @@ class TestSlicingEra5Data:
                 with open(local_file_path, "wb") as f:
                     f.write(response.content)
 
-        ds = data.from_source("file", "./tests/data_tests/era5-levels-members.grib")
+        ds = data.from_source("file", "./tests/data/era5-levels-members.grib")
         array = ds.to_xarray().isel(step=0).t
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()

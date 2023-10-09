@@ -14,7 +14,7 @@ class TestOctahedralGrid:
     def setup_method(self, method):
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/foo.grib"
 
-        local_directory = "./tests/data_tests"
+        local_directory = "./tests/data"
 
         if not os.path.exists(local_directory):
             os.makedirs(local_directory)
@@ -30,7 +30,7 @@ class TestOctahedralGrid:
                 with open(local_file_path, "wb") as f:
                     f.write(response.content)
 
-        ds = data.from_source("file", "./tests/data_tests/foo.grib")
+        ds = data.from_source("file", "./tests/data/foo.grib")
         self.latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
         self.latlon_array = self.latlon_array.t2m
         self.xarraydatacube = XArrayDatacube(self.latlon_array)
