@@ -4,13 +4,12 @@
 import numpy as np
 import pytest
 from earthkit import data
+from helper_functions import download_test_data
 
 from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
-
-from .helper_functions import download_test_data
 
 
 class TestSlicingEra5Data:
