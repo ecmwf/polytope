@@ -10,6 +10,8 @@ from polytope.shapes import Box, Select
 
 
 class TestSlicingMultipleTransformationsOneAxis:
+    # This test requires an internet connection
+
     def setup_method(self, method):
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/foo.grib"
 
