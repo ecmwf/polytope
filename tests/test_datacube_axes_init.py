@@ -1,5 +1,6 @@
 import os
 
+import pytest
 import requests
 from earthkit import data
 
@@ -11,8 +12,6 @@ from polytope.shapes import Box, Select
 
 
 class TestInitDatacubeAxes:
-    # This test requires an internet connection
-
     def setup_method(self, method):
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/foo.grib"
 
@@ -47,6 +46,7 @@ class TestInitDatacubeAxes:
         self.API = Polytope(datacube=latlon_array, engine=self.slicer, axis_options=self.options)
         self.datacube = self.API.datacube
 
+    @pytest.mark.internet
     def test_created_axes(self):
         assert self.datacube._axes["latitude"].has_mapper
         assert self.datacube._axes["longitude"].has_mapper
@@ -101,6 +101,7 @@ class TestInitDatacubeAxes:
             [89.94618771566562, 89.87647835333229]
         ]
 
+    @pytest.mark.internet
     def test_mapper_transformation_request(self):
         request = Request(
             Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),

@@ -1,5 +1,6 @@
 import os
 
+import pytest
 import requests
 from earthkit import data
 from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
@@ -11,8 +12,6 @@ from polytope.shapes import Box, Select
 
 
 class TestOctahedralGrid:
-    # This test requires an internet connection
-
     def setup_method(self, method):
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/healpix.grib"
 
@@ -66,6 +65,7 @@ class TestOctahedralGrid:
 
         return nearest_points
 
+    @pytest.mark.internet
     def test_octahedral_grid(self):
         request = Request(
             Box(["latitude", "longitude"], [-2, -2], [10, 10]),

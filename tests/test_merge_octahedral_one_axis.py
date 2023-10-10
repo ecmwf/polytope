@@ -1,5 +1,6 @@
 import os
 
+import pytest
 import requests
 from earthkit import data
 
@@ -10,8 +11,6 @@ from polytope.shapes import Box, Select
 
 
 class TestSlicingMultipleTransformationsOneAxis:
-    # This test requires an internet connection
-
     def setup_method(self, method):
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/foo.grib"
 
@@ -46,6 +45,7 @@ class TestSlicingMultipleTransformationsOneAxis:
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.latlon_array, engine=self.slicer, axis_options=self.options)
 
+    @pytest.mark.internet
     def test_merge_axis(self):
         request = Request(
             Select("number", [0]),
