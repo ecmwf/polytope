@@ -3,6 +3,7 @@
 import os
 
 import numpy as np
+import pytest
 import requests
 from earthkit import data
 
@@ -13,8 +14,6 @@ from polytope.shapes import Box, Select
 
 
 class TestSlicingEra5Data:
-    # This test requires an internet connection
-
     def setup_method(self, method):
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/era5-levels-members.grib"
 
@@ -44,6 +43,7 @@ class TestSlicingEra5Data:
         }
         self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
 
+    @pytest.mark.internet
     def test_surrounding_on_grid_point(self):
         requested_lat = 0
         requested_lon = -720

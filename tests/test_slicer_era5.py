@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import pytest
 import requests
 from earthkit import data
 
@@ -11,8 +12,6 @@ from polytope.shapes import Box, Select
 
 
 class TestSlicingEra5Data:
-    # This test requires an internet connection
-
     def setup_method(self, method):
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/era5-levels-members.grib"
 
@@ -39,6 +38,7 @@ class TestSlicingEra5Data:
         options = {"lat": {"transformation": {"reverse": {True}}}}
         self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
 
+    @pytest.mark.internet
     def test_2D_box(self):
         request = Request(
             Box(["number", "isobaricInhPa"], [3, 0.0], [6, 1000.0]),
