@@ -1,4 +1,6 @@
+import pytest
 from earthkit import data
+from helper_functions import download_test_data
 
 from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.datacube.datacube_axis import FloatDatacubeAxis
@@ -9,6 +11,9 @@ from polytope.shapes import Box, Select
 
 class TestInitDatacubeAxes:
     def setup_method(self, method):
+        nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/foo.grib"
+        download_test_data(nexus_url, "foo.grib")
+
         ds = data.from_source("file", "./tests/data/foo.grib")
         latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
         latlon_array = latlon_array.t2m
@@ -24,6 +29,7 @@ class TestInitDatacubeAxes:
         self.API = Polytope(datacube=latlon_array, engine=self.slicer, axis_options=self.options)
         self.datacube = self.API.datacube
 
+    @pytest.mark.internet
     def test_created_axes(self):
         assert self.datacube._axes["latitude"].has_mapper
         assert self.datacube._axes["longitude"].has_mapper
@@ -78,6 +84,7 @@ class TestInitDatacubeAxes:
             [89.94618771566562, 89.87647835333229]
         ]
 
+    @pytest.mark.internet
     def test_mapper_transformation_request(self):
         request = Request(
             Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),

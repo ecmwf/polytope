@@ -1,5 +1,7 @@
+import pytest
 from earthkit import data
 from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
+from helper_functions import download_test_data
 
 from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
@@ -9,6 +11,9 @@ from polytope.shapes import Box, Select
 
 class TestOctahedralGrid:
     def setup_method(self, method):
+        nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/healpix.grib"
+        download_test_data(nexus_url, "healpix.grib")
+
         ds = data.from_source("file", "./tests/data/healpix.grib")
         self.latlon_array = ds.to_xarray().isel(step=0).isel(time=0).isel(isobaricInhPa=0).z
         self.xarraydatacube = XArrayDatacube(self.latlon_array)
@@ -43,6 +48,7 @@ class TestOctahedralGrid:
 
         return nearest_points
 
+    @pytest.mark.internet
     def test_octahedral_grid(self):
         request = Request(
             Box(["latitude", "longitude"], [-2, -2], [10, 10]),

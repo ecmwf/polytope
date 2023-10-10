@@ -1,5 +1,7 @@
 import numpy as np
+import pytest
 from earthkit import data
+from helper_functions import download_test_data
 
 from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
@@ -9,6 +11,9 @@ from polytope.shapes import Box, Select
 
 class TestSlicingEra5Data:
     def setup_method(self, method):
+        nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/era5-levels-members.grib"
+        download_test_data(nexus_url, "era5-levels-members.grib")
+
         ds = data.from_source("file", "./tests/data/era5-levels-members.grib")
         array = ds.to_xarray().isel(step=0).t
         self.xarraydatacube = XArrayDatacube(array)
@@ -16,6 +21,7 @@ class TestSlicingEra5Data:
         options = {"lat": {"transformation": {"reverse": {True}}}}
         self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
 
+    @pytest.mark.internet
     def test_2D_box(self):
         request = Request(
             Box(["number", "isobaricInhPa"], [3, 0.0], [6, 1000.0]),

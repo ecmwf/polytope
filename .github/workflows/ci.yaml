@@ -98,20 +98,7 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 3 # enable full clone to download Git LFS files
-      - name: Change write permission
-        run: chmod -R 777 ./tests/data/
-      - name: Install Git LFS
-        run: |
-          sudo apt-get install git-lfs
-          git lfs install
-      - name: Download Git LFS file
-        run: |
-          git lfs pull
-      # - name: Install eccodes
-      #   run: sudo apt-get install -y libeccodes-dev
+      - uses: actions/checkout@v4
       - name: Install eccodes and Dependencies
         id: install-dependencies
         uses: ecmwf-actions/build-package@v2

@@ -1,4 +1,6 @@
+import pytest
 from earthkit import data
+from helper_functions import download_test_data
 
 from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
@@ -8,6 +10,9 @@ from polytope.shapes import Box, Select
 
 class TestSlicingMultipleTransformationsOneAxis:
     def setup_method(self, method):
+        nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/foo.grib"
+        download_test_data(nexus_url, "foo.grib")
+
         ds = data.from_source("file", "./tests/data/foo.grib")
         self.latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
         self.latlon_array = self.latlon_array.t2m
@@ -23,6 +28,7 @@ class TestSlicingMultipleTransformationsOneAxis:
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.latlon_array, engine=self.slicer, axis_options=self.options)
 
+    @pytest.mark.internet
     def test_merge_axis(self):
         request = Request(
             Select("number", [0]),
