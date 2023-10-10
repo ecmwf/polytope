@@ -13,6 +13,8 @@ from polytope.shapes import Box, Select
 
 
 class TestSlicingEra5Data:
+    # This test requires an internet connection
+
     def setup_method(self, method):
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/era5-levels-members.grib"
 
