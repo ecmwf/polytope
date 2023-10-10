@@ -15,7 +15,7 @@ def download_test_data(nexus_url, filename):
     if not os.path.exists(local_file_path):
         session = requests.Session()
         response = session.get(nexus_url)
-        if response.status_code == 200:
-            # Save the downloaded data to the local file
-            with open(local_file_path, "wb") as f:
-                f.write(response.content)
+        response.raise_for_status()
+        # Save the downloaded data to the local file
+        with open(local_file_path, "wb") as f:
+            f.write(response.content)
