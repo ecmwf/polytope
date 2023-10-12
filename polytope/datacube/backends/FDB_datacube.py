@@ -1,12 +1,9 @@
+import math
 from copy import deepcopy
 
 import pyfdb
 
 from .datacube import Datacube, IndexTree
-
-
-def glue(path, unmap_path):
-    return {"t": 0}
 
 
 def update_fdb_dataarray(fdb_dataarray):
@@ -30,8 +27,8 @@ class FDBDatacube(Datacube):
         partial_request = config
         # Find values in the level 3 FDB datacube
         # Will be in the form of a dictionary? {axis_name:values_available, ...}
-        fdb = pyfdb.FDB()
-        fdb_dataarray = fdb.axes(partial_request).as_dict()
+        self.fdb = pyfdb.FDB()
+        fdb_dataarray = self.fdb.axes(partial_request).as_dict()
         dataarray = update_fdb_dataarray(fdb_dataarray)
         self.dataarray = dataarray
 
@@ -61,10 +58,28 @@ class FDBDatacube(Datacube):
                     axis = self._axes[key]
                     (path, unmapped_path) = axis.unmap_total_path_to_datacube(path, unmapped_path)
                 path = self.fit_path(path)
-                subxarray = glue(path, unmapped_path)
-                key = list(subxarray.keys())[0]
-                value = subxarray[key]
-                r.result = (key, value)
+                # merge path and unmapped path into a single path
+                path.update(unmapped_path)
+
+                # fit request into something for pyfdb
+                fdb_request_val = path["values"]
+                path.pop("values")
+                fdb_request_key = path
+
+                # TODO: should do this in the merge transformation, if it doesn't break xarray backend
+                fdb_request_key["date"] = fdb_request_key["date"].replace('-', '')
+                fdb_request_key["time"] = fdb_request_key["time"].replace(":", "")
+
+                fdb_requests = [(fdb_request_key, [(fdb_request_val, fdb_request_val+1)])]
+
+                # need to request data from the fdb
+
+                subxarray = self.fdb.extract(fdb_requests)
+                subxarray_output_tuple = subxarray[0][0]
+                output_value = subxarray_output_tuple[0][0][0]
+
+                if not math.isnan(output_value):
+                    r.result = output_value
             else:
                 r.remove_branch()
 
