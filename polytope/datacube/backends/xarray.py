@@ -76,6 +76,9 @@ class XArrayDatacube(Datacube):
         return indexes
 
     def select(self, path, unmapped_path):
+        print("now")
+        print(path)
+        print(self.dataarray)
         subarray = self.dataarray.sel(path, method="nearest")
         subarray = subarray.sel(unmapped_path)
         return subarray

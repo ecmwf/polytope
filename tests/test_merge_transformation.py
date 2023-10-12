@@ -15,11 +15,11 @@ class TestMergeTransformation:
             np.random.randn(1, 1),
             dims=("date", "time"),
             coords={
-                "date": ["2000-01-01"],
-                "time": ["06:00"],
+                "date": ["20000101"],
+                "time": ["0600"],
             },
         )
-        self.options = {"date": {"transformation": {"merge": {"with": "time", "linkers": [" ", ":00"]}}}}
+        self.options = {"date": {"transformation": {"merge": {"with": "time", "linkers": [" ", "00"]}}}}
         self.xarraydatacube = XArrayDatacube(self.array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.array, engine=self.slicer, axis_options=self.options)

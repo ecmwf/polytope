@@ -66,10 +66,6 @@ class FDBDatacube(Datacube):
                 path.pop("values")
                 fdb_request_key = path
 
-                # TODO: should do this in the merge transformation, if it doesn't break xarray backend
-                fdb_request_key["date"] = fdb_request_key["date"].replace('-', '')
-                fdb_request_key["time"] = fdb_request_key["time"].replace(":", "")
-
                 fdb_requests = [(fdb_request_key, [(fdb_request_val, fdb_request_val+1)])]
 
                 # need to request data from the fdb

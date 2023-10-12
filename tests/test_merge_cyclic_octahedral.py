@@ -15,14 +15,14 @@ class TestMultipleTransformations:
             np.random.randn(1, 1, 4289589, 3),
             dims=("date", "time", "values", "step"),
             coords={
-                "date": ["2000-01-01"],
-                "time": ["06:00"],
+                "date": ["20000101"],
+                "time": ["0600"],
                 "values": list(range(4289589)),
                 "step": [0, 1, 2],
             },
         )
         self.options = {
-            "date": {"transformation": {"merge": {"with": "time", "linkers": ["T", ":00"]}}},
+            "date": {"transformation": {"merge": {"with": "time", "linkers": ["T", "00"]}}},
             "values": {
                 "transformation": {
                     "mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
