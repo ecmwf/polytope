@@ -6,7 +6,10 @@ from helper_functions import download_test_data
 from polytope.datacube.backends.FDB_datacube import FDBDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select
+from polytope.shapes import Disk, Select
+
+# import geopandas as gpd
+# import matplotlib.pyplot as plt
 
 
 class TestRegularGrid:
@@ -51,6 +54,7 @@ class TestRegularGrid:
         return nearest_points
 
     @pytest.mark.internet
+    @pytest.mark.skip(reason="can't install fdb branch on CI")
     def test_regular_grid(self):
         request = Request(
             Select("step", [0]),
@@ -62,13 +66,13 @@ class TestRegularGrid:
             Select("class", ["ea"]),
             Select("stream", ["enda"]),
             Select("type", ["an"]),
-            Box(["latitude", "longitude"], [0, 0], [3, 3]),
+            Disk(["latitude", "longitude"], [0, 0], [15, 15]),
             Select("levelist", ["500"]),
-            Select("number", ["0"])
+            Select("number", ["0", "1"])
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 4
+        assert len(result.leaves) == 46*2
 
         lats = []
         lons = []
@@ -88,4 +92,13 @@ class TestRegularGrid:
             assert lat <= eccodes_lat + tol
             assert eccodes_lon - tol <= lon
             assert lon <= eccodes_lon + tol
-        assert len(eccodes_lats) == 4
+
+        # worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
+        # fig, ax = plt.subplots(figsize=(12, 6))
+        # worldmap.plot(color="darkgrey", ax=ax)
+
+        # plt.scatter(lons, lats, s=16, c="red", cmap="YlOrRd")
+        # plt.colorbar(label="Temperature")
+        # plt.show()
+
+        assert len(eccodes_lats) == 46*2

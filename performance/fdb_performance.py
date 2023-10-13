@@ -1,3 +1,5 @@
+import time
+
 import pandas as pd
 import pytest
 
@@ -5,9 +7,6 @@ from polytope.datacube.backends.FDB_datacube import FDBDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
-
-# import geopandas as gpd
-# import matplotlib.pyplot as plt
 
 
 class TestSlicingFDBDatacube:
@@ -40,26 +39,9 @@ class TestSlicingFDBDatacube:
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["an"]),
-            Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
+            Box(["latitude", "longitude"], [0, 0], [10, 10]),
         )
+        time1 = time.time()
         result = self.API.retrieve(request)
-        result.pprint()
-        assert len(result.leaves) == 9
-
-        # lats = []
-        # lons = []
-        # tol = 1e-8
-        # for i in range(len(result.leaves)):
-        #     cubepath = result.leaves[i].flatten()
-        #     lat = cubepath["latitude"]
-        #     lon = cubepath["longitude"]
-        #     lats.append(lat)
-        #     lons.append(lon)
-
-        # worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
-        # fig, ax = plt.subplots(figsize=(12, 6))
-        # worldmap.plot(color="darkgrey", ax=ax)
-
-        # plt.scatter(lons, lats, s=16, c="red", cmap="YlOrRd")
-        # plt.colorbar(label="Temperature")
-        # plt.show()
+        print(time.time() - time1)
+        assert len(result.leaves) == 19226
