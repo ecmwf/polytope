@@ -1,10 +1,9 @@
-import numpy as np
+import pandas as pd
 import pytest
-from earthkit import data
 from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
 from helper_functions import download_test_data
 
-from polytope.datacube.backends.xarray import XArrayDatacube
+from polytope.datacube.backends.FDB_datacube import FDBDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
@@ -12,23 +11,21 @@ from polytope.shapes import Box, Select
 
 class TestRegularGrid:
     def setup_method(self, method):
-        # TODO: for this test, need to fdb write era5 data and use fdb backend
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/era5-levels-members.grib"
         download_test_data(nexus_url, "era5-levels-members.grib")
-
-        ds = data.from_source("file", "./tests/data/era5-levels-members.grib")
-        self.latlon_array = ds.to_xarray().isel(step=0).t
-        self.xarraydatacube = XArrayDatacube(self.latlon_array)
         self.options = {
             "values": {
                 "transformation": {
-                    "mapper": {"type": "regular", "resolution": 640, "axes": ["latitude", "longitude"]}
+                    "mapper": {"type": "regular", "resolution": 30, "axes": ["latitude", "longitude"]}
                 }
             },
-            "isobaricInhPa": {"transformation": {"reverse": {True}}}
+            "date": {"transformation": {"merge": {"with": "time", "linkers": [" ", "00"]}}},
+            "step": {"transformation": {"type_change": "int"}},
         }
+        self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "step": 0}
+        self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.latlon_array, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
 
     def find_nearest_latlon(self, grib_file, target_lat, target_lon):
         # Open the GRIB file
@@ -56,31 +53,39 @@ class TestRegularGrid:
     @pytest.mark.internet
     def test_regular_grid(self):
         request = Request(
-            Box(["number", "isobaricInhPa"], [3, 0.0], [3, 500.0]),
-            Select("time", ["2017-01-02T12:00:00"]),
-            Box(["latitude", "longitude"], lower_corner=[0.0, 0.0], upper_corner=[3.0, 3.0]),
-            Select("step", [np.timedelta64(0, "s")]),
+            Select("step", [0]),
+            Select("levtype", ["pl"]),
+            Select("date", [pd.Timestamp("20170102T120000")]),
+            Select("domain", ["g"]),
+            Select("expver", ["0001"]),
+            Select("param", ["129"]),
+            Select("class", ["ea"]),
+            Select("stream", ["enda"]),
+            Select("type", ["an"]),
+            Box(["latitude", "longitude"], [0, 0], [3, 3]),
+            Select("levelist", ["500"]),
+            Select("number", ["0"])
         )
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 4
 
-        # lats = []
-        # lons = []
-        # eccodes_lats = []
-        # tol = 1e-8
-        # for i in range(len(result.leaves)):
-        #     cubepath = result.leaves[i].flatten()
-        #     lat = cubepath["latitude"]
-        #     lon = cubepath["longitude"]
-        #     lats.append(lat)
-        #     lons.append(lon)
-        #     nearest_points = self.find_nearest_latlon("./tests/data/foo.grib", lat, lon)
-        #     eccodes_lat = nearest_points[0][0]["lat"]
-        #     eccodes_lon = nearest_points[0][0]["lon"]
-        #     eccodes_lats.append(eccodes_lat)
-        #     assert eccodes_lat - tol <= lat
-        #     assert lat <= eccodes_lat + tol
-        #     assert eccodes_lon - tol <= lon
-        #     assert lon <= eccodes_lon + tol
-        # assert len(eccodes_lats) == 9
+        lats = []
+        lons = []
+        eccodes_lats = []
+        tol = 1e-8
+        for i in range(len(result.leaves)):
+            cubepath = result.leaves[i].flatten()
+            lat = cubepath["latitude"]
+            lon = cubepath["longitude"]
+            lats.append(lat)
+            lons.append(lon)
+            nearest_points = self.find_nearest_latlon("./tests/data/era5-levels-members.grib", lat, lon)
+            eccodes_lat = nearest_points[0][0]["lat"]
+            eccodes_lon = nearest_points[0][0]["lon"]
+            eccodes_lats.append(eccodes_lat)
+            assert eccodes_lat - tol <= lat
+            assert lat <= eccodes_lat + tol
+            assert eccodes_lon - tol <= lon
+            assert lon <= eccodes_lon + tol
+        assert len(eccodes_lats) == 4

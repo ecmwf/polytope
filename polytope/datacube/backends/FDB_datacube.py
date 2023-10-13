@@ -47,6 +47,7 @@ class FDBDatacube(Datacube):
                 self._check_and_add_axes(options, name, val)
 
     def get(self, requests: IndexTree):
+        requests.pprint()
         for r in requests.leaves:
             path = r.flatten()
             path = self.remap_path(path)
