@@ -69,6 +69,46 @@ class DatacubeMapper(DatacubeAxisTransformation):
         return final_transformation.unmap(first_val, second_val)
 
 
+class RegularGridMapper(DatacubeMapper):
+    def __init__(self, base_axis, mapped_axes, resolution):
+        self._mapped_axes = mapped_axes
+        self._base_axis = base_axis
+        self._resolution = resolution
+        self.deg_increment = 90/self._resolution
+
+    def first_axis_vals(self):
+        first_ax_vals = [-90 + i * self.deg_increment for i in range(2*self._resolution)]
+        return first_ax_vals
+
+    def map_first_axis(self, lower, upper):
+        axis_lines = self.first_axis_vals()
+        return_vals = [val for val in axis_lines if lower <= val <= upper]
+        return return_vals
+
+    def second_axis_vals(self, first_val):
+        second_ax_vals = [i * self.deg_increment for i in range(4*self._resolution)]
+        return second_ax_vals
+
+    def map_second_axis(self, first_val, lower, upper):
+        axis_lines = self.second_axis_vals(first_val)
+        return_vals = [val for val in axis_lines if lower <= val <= upper]
+        return return_vals
+
+    def axes_idx_to_regular_idx(self, first_idx, second_idx):
+        final_idx = first_idx * 4 * self._resolution + second_idx
+        return final_idx
+
+    def unmap(self, first_val, second_val):
+        print("used unmap for regular grid !!!!!")
+        tol = 1e-8
+        first_val = [i for i in self.first_axis_vals() if first_val - tol <= i <= first_val + tol][0]
+        first_idx = self.first_axis_vals().index(first_val)
+        second_val = [i for i in self.second_axis_vals(first_val) if second_val - tol <= i <= second_val + tol][0]
+        second_idx = self.second_axis_vals(first_val).index(second_val)
+        final_index = self.axes_idx_to_regular_idx(first_idx, second_idx)
+        return final_index
+
+
 class HealpixGridMapper(DatacubeMapper):
     def __init__(self, base_axis, mapped_axes, resolution):
         self._mapped_axes = mapped_axes
@@ -2872,4 +2912,6 @@ class OctahedralGridMapper(DatacubeMapper):
         return octahedral_index
 
 
-_type_to_datacube_mapper_lookup = {"octahedral": "OctahedralGridMapper", "healpix": "HealpixGridMapper"}
+_type_to_datacube_mapper_lookup = {"octahedral": "OctahedralGridMapper",
+                                   "healpix": "HealpixGridMapper",
+                                   "regular": "RegularGridMapper"}
