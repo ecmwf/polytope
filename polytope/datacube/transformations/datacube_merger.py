@@ -46,7 +46,7 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         second_val = merged_val[first_idx + first_linker_size : -second_linked_size]
 
         # TODO: maybe replacing like this is too specific to time/dates?
-        first_val = str(first_val).replace('-', '')
+        first_val = str(first_val).replace("-", "")
         second_val = second_val.replace(":", "")
         return (first_val, second_val)
 

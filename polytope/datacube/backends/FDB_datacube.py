@@ -1,4 +1,5 @@
 import math
+import time
 from copy import deepcopy
 
 import pyfdb
@@ -47,16 +48,22 @@ class FDBDatacube(Datacube):
                 self._check_and_add_axes(options, name, val)
 
     def get(self, requests: IndexTree):
+        time0 = time.time()
+        time_changing_path = 0
+        accumulated_fdb_time = 0
         for r in requests.leaves:
             path = r.flatten()
             path = self.remap_path(path)
             if len(path.items()) == self.axis_counter:
                 # first, find the grid mapper transform
+
                 unmapped_path = {}
                 path_copy = deepcopy(path)
+                time2 = time.time()
                 for key in path_copy:
                     axis = self._axes[key]
                     (path, unmapped_path) = axis.unmap_total_path_to_datacube(path, unmapped_path)
+                time_changing_path += time.time() - time2
                 path = self.fit_path(path)
                 # merge path and unmapped path into a single path
                 path.update(unmapped_path)
@@ -66,18 +73,23 @@ class FDBDatacube(Datacube):
                 path.pop("values")
                 fdb_request_key = path
 
-                fdb_requests = [(fdb_request_key, [(fdb_request_val, fdb_request_val+1)])]
-
+                fdb_requests = [(fdb_request_key, [(fdb_request_val, fdb_request_val + 1)])]
                 # need to request data from the fdb
-
+                time1 = time.time()
                 subxarray = self.fdb.extract(fdb_requests)
+                accumulated_fdb_time += time.time() - time1
                 subxarray_output_tuple = subxarray[0][0]
                 output_value = subxarray_output_tuple[0][0][0]
-
                 if not math.isnan(output_value):
                     r.result = output_value
             else:
                 r.remove_branch()
+        print("FDB TIME")
+        print(accumulated_fdb_time)
+        print("GET TIME")
+        print(time.time() - time0)
+        print("TIME CHANGING PATH")
+        print(time_changing_path)
 
     def datacube_natural_indexes(self, axis, subarray):
         indexes = subarray[axis.name]

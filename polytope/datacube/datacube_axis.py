@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from typing import Any, List
+import time
 
 import numpy as np
 import pandas as pd
@@ -118,6 +119,7 @@ def cyclic(cls):
         old_unmap_total_path_to_datacube = cls.unmap_total_path_to_datacube
 
         def unmap_total_path_to_datacube(path, unmapped_path):
+            time1 = time.time()
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisCyclic):
                     transformation = transform
@@ -127,6 +129,8 @@ def cyclic(cls):
                         new_val = _remap_val_to_axis_range(old_val)
                         path[cls.name] = new_val
             (path, unmapped_path) = old_unmap_total_path_to_datacube(path, unmapped_path)
+            print("CYCLIC UNMAP TIME")
+            print(time.time() - time1)
             return (path, unmapped_path)
 
         old_unmap_to_datacube = cls.unmap_to_datacube
@@ -235,11 +239,15 @@ def mapper(cls):
         old_unmap_total_path_to_datacube = cls.unmap_total_path_to_datacube
 
         def unmap_total_path_to_datacube(path, unmapped_path):
+            # TODO: to be faster, could just compute the first lat unmapped idx, and do +1 for each subsequent lat idx?
+            # time1 = time.time()
             (path, unmapped_path) = old_unmap_total_path_to_datacube(path, unmapped_path)
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeMapper):
+                    # time2 = time.time()
                     transformation = transform
                     if cls.name == transformation._mapped_axes()[0]:
+                        # axis = cls.name
                         # if we are on the first axis, then need to add the first val to unmapped_path
                         first_val = path.get(cls.name, None)
                         path.pop(cls.name, None)
@@ -251,6 +259,7 @@ def mapper(cls):
                     if cls.name == transformation._mapped_axes()[1]:
                         # if we are on the second axis, then the val of the first axis is stored
                         # inside unmapped_path so can get it from there
+                        # axis = cls.name
                         second_val = path.get(cls.name, None)
                         path.pop(cls.name, None)
                         first_val = unmapped_path.get(transformation._mapped_axes()[0], None)
@@ -259,9 +268,16 @@ def mapper(cls):
                         if first_val is None:
                             first_val = path.get(transformation._mapped_axes()[0], None)
                             path.pop(transformation._mapped_axes()[0], None)
-                        if first_val is not None and second_val is not None:
+                        if second_val is not None:
                             unmapped_idx = transformation.unmap(first_val, second_val)
                             unmapped_path[transformation.old_axis] = unmapped_idx
+            # time3 = time.time()
+            # print("MAPPER UNMAP TIME")
+            # print(time3 - time1)
+            # print("AXIS THIS IS FOR")
+            # print(axis)
+            # print("MAPPER TIME ONCE CHOSEN THE MAPPING")
+            # print(time3 - time2)
             return (path, unmapped_path)
 
         def remap_to_requested(path, unmapped_path):
