@@ -260,17 +260,31 @@ def mapper(cls):
                         # if we are on the second axis, then the val of the first axis is stored
                         # inside unmapped_path so can get it from there
                         # axis = cls.name
+                        # print("TIME time handling path")
+                        # time2 = time.time()
                         second_val = path.get(cls.name, None)
                         path.pop(cls.name, None)
                         first_val = unmapped_path.get(transformation._mapped_axes()[0], None)
+
                         unmapped_path.pop(transformation._mapped_axes()[0], None)
+                        # print(time.time() - time2)
+                        # NOTE: here we first calculate the starting idx of the first_val grid line
+                        # and then append the second_idx to get the final unmapped_idx
+                        # To do this, also need to find second_idx from second_val...
+                        # second_idx = transformation.find_second_idx(first_val, second_val)
+                        # first_line_idx = transformation.unmap_first_val_to_start_line_idx(first_val)
+
                         # if the first_val was not in the unmapped_path, then it's still in path
+                        # print("AAAAAND TIME TAKEN DOING UNMAP")
                         if first_val is None:
                             first_val = path.get(transformation._mapped_axes()[0], None)
                             path.pop(transformation._mapped_axes()[0], None)
                         if second_val is not None:
+                            # time4 = time.time()
+                            # unmapped_idx = first_line_idx + second_idx
                             unmapped_idx = transformation.unmap(first_val, second_val)
                             unmapped_path[transformation.old_axis] = unmapped_idx
+                            # print(time.time() - time4)
             # time3 = time.time()
             # print("MAPPER UNMAP TIME")
             # print(time3 - time1)
