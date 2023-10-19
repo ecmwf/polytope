@@ -8,7 +8,7 @@ from .datacube import Datacube, IndexTree
 
 
 def update_fdb_dataarray(fdb_dataarray):
-    fdb_dataarray["values"] = [0.0]
+    fdb_dataarray["values"] = []
     return fdb_dataarray
 
 
@@ -32,7 +32,6 @@ class FDBDatacube(Datacube):
         fdb_dataarray = self.fdb.axes(partial_request).as_dict()
         dataarray = update_fdb_dataarray(fdb_dataarray)
         self.dataarray = dataarray
-
         for name, values in dataarray.items():
             values.sort()
             options = axis_options.get(name, {})
@@ -48,11 +47,17 @@ class FDBDatacube(Datacube):
                 self._check_and_add_axes(options, name, val)
 
     def get(self, requests: IndexTree):
+        # NOTE: this will do all the transformation unmappings for all the points
+        # It doesn't use the tree structure of the result to do the unmapping transformations anymore
         time0 = time.time()
         time_changing_path = 0
         accumulated_fdb_time = 0
+        time_change_path = 0
         for r in requests.leaves:
+            time5 = time.time()
+            # NOTE: Accumulated time in flatten is 0.14s... could be better?
             path = r.flatten()
+            time_change_path += time.time() - time5
             path = self.remap_path(path)
             if len(path.items()) == self.axis_counter:
                 # first, find the grid mapper transform
@@ -88,6 +93,8 @@ class FDBDatacube(Datacube):
         print(accumulated_fdb_time)
         print("GET TIME")
         print(time.time() - time0)
+        print("TIME FLATTEN PATH AND CHANGE PATH")
+        print(time_change_path)
         print("TIME CHANGING PATH")
         print(time_changing_path)
 
@@ -99,6 +106,7 @@ class FDBDatacube(Datacube):
         return self.dataarray
 
     def ax_vals(self, name):
-        for _name, values in self.dataarray.items():
-            if _name == name:
-                return values
+        # for _name, values in self.dataarray.items():
+        #     if _name == name:
+        #         return values
+        return self.dataarray.get(name, None)

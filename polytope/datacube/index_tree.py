@@ -33,6 +33,7 @@ class IndexTree(object):
 
     @property
     def leaves(self):
+        # TODO: could store ancestors directly in leaves?
         leaves = []
         self._collect_leaf_nodes(leaves)
         return leaves
