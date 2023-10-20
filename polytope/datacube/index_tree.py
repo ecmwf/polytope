@@ -30,18 +30,38 @@ class IndexTree(object):
         self._parent = None
         self.result = None
         self.axis = axis
+        self.ancestors = []
 
     @property
     def leaves(self):
-        # TODO: could store ancestors directly in leaves?
         leaves = []
         self._collect_leaf_nodes(leaves)
         return leaves
 
-    def _collect_leaf_nodes(self, leaves):
+    @property
+    def leaves_with_ancestors(self):
+        # TODO: could store ancestors directly in leaves? Change here
+        leaves = []
+        self._collect_leaf_nodes(leaves)
+        return leaves
+
+    def _collect_leaf_nodes_old(self, leaves):
         if len(self.children) == 0:
             leaves.append(self)
         for n in self.children:
+            n._collect_leaf_nodes(leaves)
+
+    def _collect_leaf_nodes(self, leaves):
+        # NOTE: leaves_and_ancestors is going to be a list of tuples, where first entry is leaf and second entry is a
+        # list of its ancestors
+        if len(self.children) == 0:
+            leaves.append(self)
+            self.ancestors.append(self)
+        for n in self.children:
+            for ancestor in self.ancestors:
+                n.ancestors.append(ancestor)
+            if self.axis != IndexTree.root:
+                n.ancestors.append(self)
             n._collect_leaf_nodes(leaves)
 
     def __setitem__(self, key, value):
@@ -161,6 +181,13 @@ class IndexTree(object):
     def flatten(self):
         path = DatacubePath()
         ancestors = self.get_ancestors()
+        for ancestor in ancestors:
+            path[ancestor.axis.name] = ancestor.value
+        return path
+
+    def flatten_with_ancestors(self):
+        path = DatacubePath()
+        ancestors = self.ancestors
         for ancestor in ancestors:
             path[ancestor.axis.name] = ancestor.value
         return path

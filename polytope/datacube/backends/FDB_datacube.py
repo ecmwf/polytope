@@ -53,10 +53,11 @@ class FDBDatacube(Datacube):
         time_changing_path = 0
         accumulated_fdb_time = 0
         time_change_path = 0
-        for r in requests.leaves:
+        for r in requests.leaves_with_ancestors:
             time5 = time.time()
             # NOTE: Accumulated time in flatten is 0.14s... could be better?
-            path = r.flatten()
+            path = r.flatten_with_ancestors()
+            # path = r.flatten()
             time_change_path += time.time() - time5
             path = self.remap_path(path)
             if len(path.items()) == self.axis_counter:
