@@ -20,7 +20,7 @@ class HullSlicer(Engine):
         pass
 
     def _unique_continuous_points(self, p: ConvexPolytope, datacube: Datacube):
-        for i, ax in enumerate(p.axes()):
+        for i, ax in enumerate(p._axes):
             mapper = datacube.get_mapper(ax)
             if isinstance(mapper, UnsliceableDatacubeAxis):
                 break
@@ -31,7 +31,7 @@ class HullSlicer(Engine):
         unique(p.points)
 
     def _build_unsliceable_child(self, polytope, ax, node, datacube, lower, next_nodes):
-        if polytope.axes() != [ax.name]:
+        if polytope._axes != [ax.name]:
             raise UnsliceableShapeError(ax)
         path = node.flatten()
         if datacube.has_index(path, ax, lower):
@@ -56,7 +56,8 @@ class HullSlicer(Engine):
             # store the native type
             remapped_val = value
             if ax.is_cyclic:
-                remapped_val = (ax.remap([value, value])[0][0] + ax.remap([value, value])[0][1]) / 2
+                remapped_val_interm = ax.remap([value, value])[0]
+                remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
                 remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
             child = node.create_child(ax, remapped_val)
             child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
@@ -67,7 +68,7 @@ class HullSlicer(Engine):
 
     def _build_branch(self, ax, node, datacube, next_nodes):
         for polytope in node["unsliced_polytopes"]:
-            if ax.name in polytope.axes():
+            if ax.name in polytope._axes:
                 lower, upper = polytope.extents(ax.name)
                 # here, first check if the axis is an unsliceable axis and directly build node if it is
                 if isinstance(ax, UnsliceableDatacubeAxis):
