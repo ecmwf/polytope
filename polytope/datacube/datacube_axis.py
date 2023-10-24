@@ -559,6 +559,45 @@ def type_change(cls):
     return cls
 
 
+def null(cls):
+
+    if cls.type_change:
+        old_find_indexes = cls.find_indexes
+
+        def find_indexes(path, datacube):
+            return old_find_indexes(path, datacube)
+
+        old_unmap_total_path_to_datacube = cls.unmap_total_path_to_datacube
+
+        def unmap_total_path_to_datacube(path, unmapped_path):
+            return old_unmap_total_path_to_datacube(path, unmapped_path)
+
+        def unmap_to_datacube(path, unmapped_path):
+            return (path, unmapped_path)
+
+        def remap_to_requested(path, unmapped_path):
+            return (path, unmapped_path)
+
+        def find_indices_between(index_ranges, low, up, datacube, method=None):
+            indexes_between_ranges = []
+            for indexes in index_ranges:
+                indexes_between = [i for i in indexes if low <= i <= up]
+                indexes_between_ranges.append(indexes_between)
+            return indexes_between_ranges
+
+        def remap(range):
+            return [range]
+
+        cls.remap = remap
+        cls.find_indexes = find_indexes
+        cls.unmap_to_datacube = unmap_to_datacube
+        cls.remap_to_requested = remap_to_requested
+        cls.find_indices_between = find_indices_between
+        cls.unmap_total_path_to_datacube = unmap_total_path_to_datacube
+
+    return cls
+
+
 class DatacubeAxis(ABC):
     is_cyclic = False
     has_mapper = False
