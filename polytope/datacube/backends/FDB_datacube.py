@@ -53,6 +53,9 @@ class FDBDatacube(Datacube):
         time_changing_path = 0
         accumulated_fdb_time = 0
         time_change_path = 0
+        time_removing_branch = 0
+        time_is_nan = 0
+        interm_time = 0
         for r in requests.leaves_with_ancestors:
             time5 = time.time()
             # NOTE: Accumulated time in flatten is 0.14s... could be better?
@@ -70,6 +73,7 @@ class FDBDatacube(Datacube):
                     axis = self._axes[key]
                     (path, unmapped_path) = axis.unmap_total_path_to_datacube(path, unmapped_path)
                 time_changing_path += time.time() - time2
+                time8 = time.time()
                 path = self.fit_path(path)
                 # merge path and unmapped path into a single path
                 path.update(unmapped_path)
@@ -80,16 +84,21 @@ class FDBDatacube(Datacube):
                 fdb_request_key = path
 
                 fdb_requests = [(fdb_request_key, [(fdb_request_val, fdb_request_val + 1)])]
+                interm_time += time.time() - time8
                 # need to request data from the fdb
                 time1 = time.time()
                 subxarray = self.fdb.extract(fdb_requests)
                 accumulated_fdb_time += time.time() - time1
                 subxarray_output_tuple = subxarray[0][0]
                 output_value = subxarray_output_tuple[0][0][0]
+                time7 = time.time()
                 if not math.isnan(output_value):
                     r.result = output_value
+                time_is_nan += time.time() - time7
             else:
+                time6 = time.time()
                 r.remove_branch()
+                time_removing_branch += time.time() - time6
         print("FDB TIME")
         print(accumulated_fdb_time)
         print("GET TIME")
@@ -98,6 +107,12 @@ class FDBDatacube(Datacube):
         print(time_change_path)
         print("TIME CHANGING PATH")
         print(time_changing_path)
+        print("TIME REMOVING BRANCHES")
+        print(time_removing_branch)
+        print("TIME IS NAN")
+        print(time_is_nan)
+        print("INTERM TIME")
+        print(interm_time)
 
     def datacube_natural_indexes(self, axis, subarray):
         indexes = subarray[axis.name]

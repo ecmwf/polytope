@@ -18,7 +18,7 @@ def group(polytopes: List[ConvexPolytope]):
     return groups, concatenation
 
 
-def product(groups):
+def tensor_product(groups):
     # Compute the tensor product of polytope groups
     return list(itertools.product(*groups.values()))
 

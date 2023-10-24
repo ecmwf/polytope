@@ -1,6 +1,6 @@
 import math
 from copy import copy
-from itertools import chain
+from itertools import chain, product
 from typing import List
 import time
 
@@ -9,7 +9,7 @@ import scipy.spatial
 from ..datacube.backends.datacube import Datacube, IndexTree
 from ..datacube.datacube_axis import UnsliceableDatacubeAxis
 from ..shapes import ConvexPolytope
-from ..utility.combinatorics import argmax, argmin, group, product, unique
+from ..utility.combinatorics import argmax, argmin, group, tensor_product, unique
 from ..utility.exceptions import UnsliceableShapeError
 from ..utility.geometry import lerp
 from .engine import Engine
@@ -85,7 +85,7 @@ class HullSlicer(Engine):
         groups, input_axes = group(polytopes)
         datacube.validate(input_axes)
         request = IndexTree()
-        combinations = product(groups)
+        combinations = tensor_product(groups)
 
         for c in combinations:
             r = IndexTree()
@@ -103,6 +103,12 @@ class HullSlicer(Engine):
 def _find_intersects(polytope, slice_axis_idx, value):
     intersects = []
     # Find all points above and below slice axis
+    # above_slice, below_slice = [], []
+    # for p in polytope.points:
+    #     if p[slice_axis_idx] >= value:
+    #         above_slice.append(p)
+    #     if p[slice_axis_idx] <= value:
+    #         below_slice.append(p)
     above_slice = [p for p in polytope.points if p[slice_axis_idx] >= value]
     below_slice = [p for p in polytope.points if p[slice_axis_idx] <= value]
 
@@ -118,6 +124,16 @@ def _find_intersects(polytope, slice_axis_idx, value):
             interp_coeff = (value - b[slice_axis_idx]) / (a[slice_axis_idx] - b[slice_axis_idx])
             intersect = lerp(a, b, interp_coeff)
             intersects.append(intersect)
+    # for (a, b) in product(above_slice, below_slice):
+    #     # edge is incident with slice plane, don't need these points
+    #     if a[slice_axis_idx] == b[slice_axis_idx]:
+    #         intersects.append(b)
+    #         continue
+
+    #     # Linearly interpolate all coordinates of two points (a,b) of the polytope
+    #     interp_coeff = (value - b[slice_axis_idx]) / (a[slice_axis_idx] - b[slice_axis_idx])
+    #     intersect = lerp(a, b, interp_coeff)
+    #     intersects.append(intersect)
     return intersects
 
 
@@ -164,7 +180,8 @@ def slice(polytope: ConvexPolytope, axis, value, slice_axis_idx):
             vertices = hull.vertices
 
         except scipy.spatial.qhull.QhullError as e:
-            if "input is less than" or "simplex is flat" in str(e):
+            # if "input is less than" or "simplex is flat" in str(e):
+            if "less than" or "flat" in str(e):
                 return ConvexPolytope(axes, intersects)
     # Sliced result is simply the convex hull
     return ConvexPolytope(axes, [intersects[i] for i in vertices])
