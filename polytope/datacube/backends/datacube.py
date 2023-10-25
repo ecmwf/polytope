@@ -39,6 +39,7 @@ class Datacube(ABC):
             self.blocked_axes.append(blocked_axis)
         for axis_name in final_axis_names:
             self.complete_axes.append(axis_name)
+            self.fake_axes.append(axis_name)
             # if axis does not yet exist, create it
 
             # first need to change the values so that we have right type

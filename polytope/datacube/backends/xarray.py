@@ -66,6 +66,8 @@ class XArrayDatacube(Datacube):
                 r.remove_branch()
 
     def datacube_natural_indexes(self, axis, subarray):
+        # if axis.name in self.fake_axes:
+        #     indexes = subarray[axis.name].values
         if axis.name in self.complete_axes:
             indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
         else:

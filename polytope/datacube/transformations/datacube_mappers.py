@@ -3,10 +3,6 @@ from copy import deepcopy
 from importlib import import_module
 from ...utility.list_tools import bisect_left_cmp, bisect_right_cmp
 import bisect
-import time
-import array
-import numpy as np
-from sortedcontainers import SortedDict, SortedList
 
 from .datacube_transformations import DatacubeAxisTransformation
 
@@ -21,6 +17,7 @@ class DatacubeMapper(DatacubeAxisTransformation):
         self.grid_axes = mapper_options["axes"]
         self.old_axis = name
         self._final_transformation = self.generate_final_transformation()
+        self._final_mapped_axes = self._final_transformation._mapped_axes
 
     def generate_final_transformation(self):
         map_type = _type_to_datacube_mapper_lookup[self.grid_type]
@@ -34,7 +31,8 @@ class DatacubeMapper(DatacubeAxisTransformation):
 
     def transformation_axes_final(self):
         # final_transformation = self.generate_final_transformation()
-        final_axes = self._final_transformation._mapped_axes
+        # final_axes = self._final_transformation._mapped_axes
+        final_axes = self._final_mapped_axes
         return final_axes
 
     # Needs to also implement its own methods
@@ -46,7 +44,8 @@ class DatacubeMapper(DatacubeAxisTransformation):
     def _mapped_axes(self):
         # NOTE: Each of the mapper method needs to call it's sub mapper method
         # final_transformation = self.generate_final_transformation()
-        final_axes = self._final_transformation._mapped_axes
+        # final_axes = self._final_transformation._mapped_axes
+        final_axes = self._final_mapped_axes
         return final_axes
 
     def _base_axis(self):

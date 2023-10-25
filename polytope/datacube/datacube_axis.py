@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from typing import Any, List
 import time
+import bisect
 
 import numpy as np
 import pandas as pd
@@ -249,8 +250,14 @@ def mapper(cls):
                     if cls.name == transformation._mapped_axes()[0]:
                         # axis = cls.name
                         # if we are on the first axis, then need to add the first val to unmapped_path
-                        first_val = path.get(cls.name, None)
-                        path.pop(cls.name, None)
+                        # if cls.name in path:
+                            # first_val = path.get(cls.name, None)
+                            # path.pop(cls.name, None)
+                        first_val = path[cls.name]
+                        del path[cls.name]
+                        # else:
+                        #     first_val = None
+
                         if unmapped_path is None:
                             unmapped_path[cls.name] = first_val
                         elif cls.name not in unmapped_path:
@@ -262,11 +269,14 @@ def mapper(cls):
                         # axis = cls.name
                         # print("TIME time handling path")
                         # time2 = time.time()
-                        second_val = path.get(cls.name, None)
-                        path.pop(cls.name, None)
+                        # second_val = path.get(cls.name, None)
+                        # path.pop(cls.name, None)
+                        second_val = path[cls.name]
+                        del path[cls.name]
                         first_val = unmapped_path.get(transformation._mapped_axes()[0], None)
 
                         unmapped_path.pop(transformation._mapped_axes()[0], None)
+                        # del unmapped_path[transformation._mapped_axes()[0]]
                         # print(time.time() - time2)
                         # NOTE: here we first calculate the starting idx of the first_val grid line
                         # and then append the second_idx to get the final unmapped_idx
@@ -279,11 +289,11 @@ def mapper(cls):
                         if first_val is None:
                             first_val = path.get(transformation._mapped_axes()[0], None)
                             path.pop(transformation._mapped_axes()[0], None)
-                        if second_val is not None:
+                        # if second_val is not None:
                             # time4 = time.time()
                             # unmapped_idx = first_line_idx + second_idx
-                            unmapped_idx = transformation.unmap(first_val, second_val)
-                            unmapped_path[transformation.old_axis] = unmapped_idx
+                        unmapped_idx = transformation.unmap(first_val, second_val)
+                        unmapped_path[transformation.old_axis] = unmapped_idx
                             # print(time.time() - time4)
             # time3 = time.time()
             # print("MAPPER UNMAP TIME")
@@ -313,6 +323,10 @@ def mapper(cls):
                                 indexes_between = idxs[start:end]
                                 indexes_between_ranges.append(indexes_between)
                             else:
+                                # lower_idx = bisect.bisect_left(idxs, low)
+                                # upper_idx = bisect.bisect_right(idxs, up)
+                                # indexes_between = idxs[lower_idx: upper_idx]
+                                # print(indexes_between)
                                 indexes_between = [i for i in idxs if low <= i <= up]
                                 indexes_between_ranges.append(indexes_between)
             return indexes_between_ranges
@@ -337,12 +351,14 @@ def merge(cls):
 
     if cls.has_merger:
 
+        cls_name = cls.name
+
         def find_indexes(path, datacube):
             # first, find the relevant transformation object that is a mapping in the cls.transformation dico
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisMerger):
                     transformation = transform
-                    if cls.name == transformation._first_axis:
+                    if cls_name == transformation._first_axis:
                         return transformation.merged_values(datacube)
 
         old_unmap_total_path_to_datacube = cls.unmap_total_path_to_datacube
@@ -352,10 +368,11 @@ def merge(cls):
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisMerger):
                     transformation = transform
-                    if cls.name == transformation._first_axis:
-                        old_val = path.get(cls.name, None)
+                    if cls_name == transformation._first_axis:
+                        # old_val = path.get(cls.name, None)
+                        old_val = path[cls_name]
                         (first_val, second_val) = transformation.unmerge(old_val)
-                        path.pop(cls.name, None)
+                        # path.pop(cls.name, None)
                         path[transformation._first_axis] = first_val
                         path[transformation._second_axis] = second_val
             return (path, unmapped_path)
@@ -367,10 +384,10 @@ def merge(cls):
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisMerger):
                     transformation = transform
-                    if cls.name == transformation._first_axis:
-                        old_val = path.get(cls.name, None)
+                    if cls_name == transformation._first_axis:
+                        old_val = path.get(cls_name, None)
                         (first_val, second_val) = transformation.unmerge(old_val)
-                        path.pop(cls.name, None)
+                        path.pop(cls_name, None)
                         path[transformation._first_axis] = first_val
                         path[transformation._second_axis] = second_val
             return (path, unmapped_path)
@@ -384,7 +401,7 @@ def merge(cls):
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisMerger):
                     transformation = transform
-                    if cls.name in transformation._mapped_axes():
+                    if cls_name in transformation._mapped_axes():
                         for indexes in index_ranges:
                             if method == "surrounding":
                                 start = indexes.index(low)
@@ -394,7 +411,10 @@ def merge(cls):
                                 indexes_between = indexes[start:end]
                                 indexes_between_ranges.append(indexes_between)
                             else:
-                                indexes_between = [i for i in indexes if low <= i <= up]
+                                lower_idx = bisect.bisect_left(indexes, low)
+                                upper_idx = bisect.bisect_right(indexes, up)
+                                indexes_between = indexes[lower_idx: upper_idx]
+                                # indexes_between = [i for i in indexes if low <= i <= up]
                                 indexes_between_ranges.append(indexes_between)
             return indexes_between_ranges
 
@@ -466,7 +486,10 @@ def reverse(cls):
                                     indexes_between = indexes[start:end]
                                     indexes_between_ranges.append(indexes_between)
                                 else:
-                                    indexes_between = [i for i in indexes if low <= i <= up]
+                                    # indexes_between = [i for i in indexes if low <= i <= up]
+                                    lower_idx = bisect.bisect_left(indexes, low)
+                                    upper_idx = bisect.bisect_right(indexes, up)
+                                    indexes_between = indexes[lower_idx: upper_idx]
                                     indexes_between_ranges.append(indexes_between)
             return indexes_between_ranges
 
@@ -542,7 +565,10 @@ def type_change(cls):
                                 indexes_between = indexes[start:end]
                                 indexes_between_ranges.append(indexes_between)
                             else:
-                                indexes_between = [i for i in indexes if low <= i <= up]
+                                # indexes_between = [i for i in indexes if low <= i <= up]
+                                lower_idx = bisect.bisect_left(indexes, low)
+                                upper_idx = bisect.bisect_right(indexes, up)
+                                indexes_between = indexes[lower_idx: upper_idx]
                                 indexes_between_ranges.append(indexes_between)
             return indexes_between_ranges
 
