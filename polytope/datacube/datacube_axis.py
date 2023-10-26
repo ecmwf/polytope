@@ -3,6 +3,7 @@ from copy import deepcopy
 from typing import Any, List
 import time
 import bisect
+from ..utility.list_tools import bisect_left_cmp, bisect_right_cmp
 
 import numpy as np
 import pandas as pd
@@ -213,28 +214,27 @@ def mapper(cls):
             (path, unmapped_path) = old_unmap_to_datacube(path, unmapped_path)
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeMapper):
-                    transformation = transform
-                    if cls.name == transformation._mapped_axes()[0]:
+                    if cls.name == transform._mapped_axes()[0]:
                         # if we are on the first axis, then need to add the first val to unmapped_path
                         first_val = path.get(cls.name, None)
                         path.pop(cls.name, None)
                         if cls.name not in unmapped_path:
                             # if for some reason, the unmapped_path already has the first axis val, then don't update
                             unmapped_path[cls.name] = first_val
-                    if cls.name == transformation._mapped_axes()[1]:
+                    if cls.name == transform._mapped_axes()[1]:
                         # if we are on the second axis, then the val of the first axis is stored
                         # inside unmapped_path so can get it from there
                         second_val = path.get(cls.name, None)
                         path.pop(cls.name, None)
-                        first_val = unmapped_path.get(transformation._mapped_axes()[0], None)
-                        unmapped_path.pop(transformation._mapped_axes()[0], None)
+                        first_val = unmapped_path.get(transform._mapped_axes()[0], None)
+                        unmapped_path.pop(transform._mapped_axes()[0], None)
                         # if the first_val was not in the unmapped_path, then it's still in path
                         if first_val is None:
-                            first_val = path.get(transformation._mapped_axes()[0], None)
-                            path.pop(transformation._mapped_axes()[0], None)
+                            first_val = path.get(transform._mapped_axes()[0], None)
+                            path.pop(transform._mapped_axes()[0], None)
                         if first_val is not None and second_val is not None:
-                            unmapped_idx = transformation.unmap(first_val, second_val)
-                            unmapped_path[transformation.old_axis] = unmapped_idx
+                            unmapped_idx = transform.unmap(first_val, second_val)
+                            unmapped_path[transform.old_axis] = unmapped_idx
             return (path, unmapped_path)
 
         old_unmap_total_path_to_datacube = cls.unmap_total_path_to_datacube
@@ -246,13 +246,9 @@ def mapper(cls):
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeMapper):
                     # time2 = time.time()
-                    transformation = transform
-                    if cls.name == transformation._mapped_axes()[0]:
+                    if cls.name == transform._mapped_axes()[0]:
                         # axis = cls.name
                         # if we are on the first axis, then need to add the first val to unmapped_path
-                        # if cls.name in path:
-                            # first_val = path.get(cls.name, None)
-                            # path.pop(cls.name, None)
                         first_val = path[cls.name]
                         del path[cls.name]
                         # else:
@@ -263,7 +259,7 @@ def mapper(cls):
                         elif cls.name not in unmapped_path:
                             # if for some reason, the unmapped_path already has the first axis val, then don't update
                             unmapped_path[cls.name] = first_val
-                    if cls.name == transformation._mapped_axes()[1]:
+                    if cls.name == transform._mapped_axes()[1]:
                         # if we are on the second axis, then the val of the first axis is stored
                         # inside unmapped_path so can get it from there
                         # axis = cls.name
@@ -273,30 +269,25 @@ def mapper(cls):
                         # path.pop(cls.name, None)
                         second_val = path[cls.name]
                         del path[cls.name]
-                        first_val = unmapped_path.get(transformation._mapped_axes()[0], None)
+                        first_val = unmapped_path.get(transform._mapped_axes()[0], None)
 
-                        unmapped_path.pop(transformation._mapped_axes()[0], None)
+                        unmapped_path.pop(transform._mapped_axes()[0], None)
                         # del unmapped_path[transformation._mapped_axes()[0]]
                         # print(time.time() - time2)
                         # NOTE: here we first calculate the starting idx of the first_val grid line
                         # and then append the second_idx to get the final unmapped_idx
                         # To do this, also need to find second_idx from second_val...
-                        # second_idx = transformation.find_second_idx(first_val, second_val)
-                        # first_line_idx = transformation.unmap_first_val_to_start_line_idx(first_val)
 
                         # if the first_val was not in the unmapped_path, then it's still in path
                         # print("AAAAAND TIME TAKEN DOING UNMAP")
                         if first_val is None:
-                            first_val = path.get(transformation._mapped_axes()[0], None)
-                            path.pop(transformation._mapped_axes()[0], None)
-                        # if second_val is not None:
-                            # time4 = time.time()
-                            # unmapped_idx = first_line_idx + second_idx
-                        unmapped_idx = transformation.unmap(first_val, second_val)
-                        unmapped_path[transformation.old_axis] = unmapped_idx
-                            # print(time.time() - time4)
+                            first_val = path.get(transform._mapped_axes()[0], None)
+                            path.pop(transform._mapped_axes()[0], None)
+                        unmapped_idx = transform.unmap(first_val, second_val)
+                        unmapped_path[transform.old_axis] = unmapped_idx
             # time3 = time.time()
             # print("MAPPER UNMAP TIME")
+            # print(time.time() - time1)
             # print(time3 - time1)
             # print("AXIS THIS IS FOR")
             # print(axis)
@@ -323,11 +314,17 @@ def mapper(cls):
                                 indexes_between = idxs[start:end]
                                 indexes_between_ranges.append(indexes_between)
                             else:
-                                # lower_idx = bisect.bisect_left(idxs, low)
-                                # upper_idx = bisect.bisect_right(idxs, up)
-                                # indexes_between = idxs[lower_idx: upper_idx]
-                                # print(indexes_between)
-                                indexes_between = [i for i in idxs if low <= i <= up]
+                                axis_reversed = transform._axis_reversed[cls.name]
+                                if not axis_reversed:
+                                    lower_idx = bisect.bisect_left(idxs, low)
+                                    upper_idx = bisect.bisect_right(idxs, up)
+                                    indexes_between = idxs[lower_idx: upper_idx]
+                                else:
+                                    # TODO: do the custom bisect
+                                    end_idx = bisect_left_cmp(idxs, low, cmp=lambda x, y: x > y) + 1
+                                    start_idx = bisect_right_cmp(idxs, up, cmp=lambda x, y: x > y)
+                                    indexes_between = idxs[start_idx:end_idx]
+                                # indexes_between = [i for i in idxs if low <= i <= up]
                                 indexes_between_ranges.append(indexes_between)
             return indexes_between_ranges
 
@@ -351,30 +348,29 @@ def merge(cls):
 
     if cls.has_merger:
 
-        cls_name = cls.name
-
         def find_indexes(path, datacube):
             # first, find the relevant transformation object that is a mapping in the cls.transformation dico
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisMerger):
                     transformation = transform
-                    if cls_name == transformation._first_axis:
+                    if cls.name == transformation._first_axis:
                         return transformation.merged_values(datacube)
 
         old_unmap_total_path_to_datacube = cls.unmap_total_path_to_datacube
 
         def unmap_total_path_to_datacube(path, unmapped_path):
+            # time1 = time.time()
             (path, unmapped_path) = old_unmap_total_path_to_datacube(path, unmapped_path)
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisMerger):
                     transformation = transform
-                    if cls_name == transformation._first_axis:
-                        # old_val = path.get(cls.name, None)
-                        old_val = path[cls_name]
+                    if cls.name == transformation._first_axis:
+                        old_val = path[cls.name]
                         (first_val, second_val) = transformation.unmerge(old_val)
-                        # path.pop(cls.name, None)
                         path[transformation._first_axis] = first_val
                         path[transformation._second_axis] = second_val
+            # print("UNMAPPER TIME INSIDE MERGE")
+            # print(time.time() - time1)
             return (path, unmapped_path)
 
         old_unmap_to_datacube = cls.unmap_to_datacube
@@ -384,10 +380,10 @@ def merge(cls):
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisMerger):
                     transformation = transform
-                    if cls_name == transformation._first_axis:
-                        old_val = path.get(cls_name, None)
+                    if cls.name == transformation._first_axis:
+                        old_val = path.get(cls.name, None)
                         (first_val, second_val) = transformation.unmerge(old_val)
-                        path.pop(cls_name, None)
+                        path.pop(cls.name, None)
                         path[transformation._first_axis] = first_val
                         path[transformation._second_axis] = second_val
             return (path, unmapped_path)
@@ -401,7 +397,7 @@ def merge(cls):
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisMerger):
                     transformation = transform
-                    if cls_name in transformation._mapped_axes():
+                    if cls.name in transformation._mapped_axes():
                         for indexes in index_ranges:
                             if method == "surrounding":
                                 start = indexes.index(low)
@@ -522,6 +518,7 @@ def type_change(cls):
         old_unmap_total_path_to_datacube = cls.unmap_total_path_to_datacube
 
         def unmap_total_path_to_datacube(path, unmapped_path):
+            # time1 = time.time()
             (path, unmapped_path) = old_unmap_total_path_to_datacube(path, unmapped_path)
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisTypeChange):
@@ -532,6 +529,8 @@ def type_change(cls):
                         if cls.name in path:
                             path.pop(cls.name, None)
                             unmapped_path[cls.name] = unchanged_val
+            # print("UNMAPPER TIME INSIDE TYPE_CHANGE")
+            # print(time.time() - time1)
             return (path, unmapped_path)
 
         def unmap_to_datacube(path, unmapped_path):

@@ -49,20 +49,19 @@ class FDBDatacube(Datacube):
     def get(self, requests: IndexTree):
         # NOTE: this will do all the transformation unmappings for all the points
         # It doesn't use the tree structure of the result to do the unmapping transformations anymore
-        time0 = time.time()
         time_changing_path = 0
         accumulated_fdb_time = 0
         time_change_path = 0
-        time_removing_branch = 0
         time_is_nan = 0
         interm_time = 0
+        time0 = time.time()
         for r in requests.leaves_with_ancestors:
             time5 = time.time()
             # NOTE: Accumulated time in flatten is 0.14s... could be better?
             path = r.flatten_with_ancestors()
             # path = r.flatten()
             time_change_path += time.time() - time5
-            path = self.remap_path(path)
+            # path = self.remap_path(path)
             if len(path.items()) == self.axis_counter:
                 # first, find the grid mapper transform
 
@@ -96,9 +95,7 @@ class FDBDatacube(Datacube):
                     r.result = output_value
                 time_is_nan += time.time() - time7
             else:
-                time6 = time.time()
                 r.remove_branch()
-                time_removing_branch += time.time() - time6
         print("FDB TIME")
         print(accumulated_fdb_time)
         print("GET TIME")
@@ -107,8 +104,6 @@ class FDBDatacube(Datacube):
         print(time_change_path)
         print("TIME CHANGING PATH")
         print(time_changing_path)
-        print("TIME REMOVING BRANCHES")
-        print(time_removing_branch)
         print("TIME IS NAN")
         print(time_is_nan)
         print("INTERM TIME")

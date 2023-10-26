@@ -48,7 +48,7 @@ class XArrayDatacube(Datacube):
     def get(self, requests: IndexTree):
         for r in requests.leaves:
             path = r.flatten()
-            path = self.remap_path(path)
+            # path = self.remap_path(path)
             if len(path.items()) == self.axis_counter:
                 # first, find the grid mapper transform
                 unmapped_path = {}

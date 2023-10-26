@@ -18,6 +18,7 @@ class DatacubeMapper(DatacubeAxisTransformation):
         self.old_axis = name
         self._final_transformation = self.generate_final_transformation()
         self._final_mapped_axes = self._final_transformation._mapped_axes
+        self._axis_reversed = self._final_transformation._axis_reversed
 
     def generate_final_transformation(self):
         map_type = _type_to_datacube_mapper_lookup[self.grid_type]
@@ -87,6 +88,7 @@ class RegularGridMapper(DatacubeMapper):
         self._base_axis = base_axis
         self._resolution = resolution
         self.deg_increment = 90 / self._resolution
+        self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
 
     def first_axis_vals(self):
         first_ax_vals = [-90 + i * self.deg_increment for i in range(2 * self._resolution)]
@@ -137,6 +139,7 @@ class HealpixGridMapper(DatacubeMapper):
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
         self._resolution = resolution
+        self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
 
     def first_axis_vals(self):
         rad2deg = 180 / math.pi
@@ -255,8 +258,10 @@ class OctahedralGridMapper(DatacubeMapper):
         # self._inv_first_axis_vals = self._first_axis_vals[::-1]
         # self._inv_first_axis_vals = {v:k for k,v in self._first_axis_vals.items()}
         self._first_idx_map = self.create_first_idx_map()
-        self._second_axis_spacing = dict()
+        # self._second_axis_spacing = dict()
+        self._second_axis_spacing = {}
         # self.treated_first_vals = dict()
+        self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
 
     def gauss_first_guess(self):
         i = 0
