@@ -134,6 +134,18 @@ def cyclic(cls):
             print("CYCLIC UNMAP TIME")
             print(time.time() - time1)
             return (path, unmapped_path)
+        
+        old_unmap_path_key = cls.unmap_path_key
+
+        def unmap_path_key(key_value_path, leaf_path):
+            value = key_value_path[cls.name]
+            for transform in cls.transformations:
+                if isinstance(transform, DatacubeAxisCyclic):
+                    if cls.name == transform.name:
+                        new_val = _remap_val_to_axis_range(value)
+                        key_value_path[cls.name] = new_val
+            key_value_path, leaf_path = old_unmap_path_key(key_value_path, leaf_path)
+            return (key_value_path, leaf_path)
 
         old_unmap_to_datacube = cls.unmap_to_datacube
 
@@ -188,6 +200,7 @@ def cyclic(cls):
         cls.unmap_to_datacube = unmap_to_datacube
         cls.unmap_total_path_to_datacube = unmap_total_path_to_datacube
         cls.find_indices_between = find_indices_between
+        cls.unmap_path_key = unmap_path_key
 
     return cls
 
@@ -294,6 +307,25 @@ def mapper(cls):
             # print("MAPPER TIME ONCE CHOSEN THE MAPPING")
             # print(time3 - time2)
             return (path, unmapped_path)
+        
+        old_unmap_path_key = cls.unmap_path_key
+
+        def unmap_path_key(key_value_path, leaf_path):
+            key_value_path, leaf_path = old_unmap_path_key(key_value_path, leaf_path)
+            value = key_value_path[cls.name]
+            # print(cls.name)
+            # print(key_value_path)
+            for transform in cls.transformations:
+                if isinstance(transform, DatacubeMapper):
+                    # if cls.name == transform._mapped_axes()[0]:
+                    #     unmapping_path[cls.name] = value
+                    if cls.name == transform._mapped_axes()[1]:
+                        first_val = leaf_path[transform._mapped_axes()[0]]
+                        unmapped_idx = transform.unmap(first_val, value)
+                        # leaf_path.pop(transform._mapped_axes()[0])
+                        key_value_path.pop(cls.name)
+                        key_value_path[transform.old_axis] = unmapped_idx
+            return (key_value_path, leaf_path)
 
         def remap_to_requested(path, unmapped_path):
             return (path, unmapped_path)
@@ -339,6 +371,7 @@ def mapper(cls):
         cls.remap_to_requested = remap_to_requested
         cls.find_indices_between = find_indices_between
         cls.unmap_total_path_to_datacube = unmap_total_path_to_datacube
+        cls.unmap_path_key = unmap_path_key
 
     return cls
 
@@ -372,6 +405,20 @@ def merge(cls):
             # print("UNMAPPER TIME INSIDE MERGE")
             # print(time.time() - time1)
             return (path, unmapped_path)
+        
+        old_unmap_path_key = cls.unmap_path_key
+
+        def unmap_path_key(key_value_path, leaf_path):
+            key_value_path, leaf_path = old_unmap_path_key(key_value_path, leaf_path)
+            new_key_value_path = {}
+            value = key_value_path[cls.name]
+            for transform in cls.transformations:
+                if isinstance(transform, DatacubeAxisMerger):
+                    if cls.name == transform._first_axis:
+                        (first_val, second_val) = transform.unmerge(value)
+                        new_key_value_path[transform._first_axis] = first_val
+                        new_key_value_path[transform._second_axis] = second_val
+            return (new_key_value_path, leaf_path)
 
         old_unmap_to_datacube = cls.unmap_to_datacube
 
@@ -423,6 +470,7 @@ def merge(cls):
         cls.remap_to_requested = remap_to_requested
         cls.find_indices_between = find_indices_between
         cls.unmap_total_path_to_datacube = unmap_total_path_to_datacube
+        cls.unmap_path_key = unmap_path_key
 
     return cls
 
@@ -533,6 +581,18 @@ def type_change(cls):
             # print(time.time() - time1)
             return (path, unmapped_path)
 
+        old_unmap_path_key = cls.unmap_path_key
+
+        def unmap_path_key(key_value_path, leaf_path):
+            key_value_path, leaf_path = old_unmap_path_key(key_value_path, leaf_path)
+            value = key_value_path[cls.name]
+            for transform in cls.transformations:
+                if isinstance(transform, DatacubeAxisTypeChange):
+                    if cls.name == transform.name:
+                        unchanged_val = transform.make_str(value)
+                        key_value_path[cls.name] = unchanged_val
+            return (key_value_path, leaf_path)
+
         def unmap_to_datacube(path, unmapped_path):
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisTypeChange):
@@ -580,6 +640,7 @@ def type_change(cls):
         cls.remap_to_requested = remap_to_requested
         cls.find_indices_between = find_indices_between
         cls.unmap_total_path_to_datacube = unmap_total_path_to_datacube
+        cls.unmap_path_key = unmap_path_key
 
     return cls
 
@@ -676,6 +737,9 @@ class DatacubeAxis(ABC):
 
     def unmap_total_path_to_datacube(self, path, unmapped_path):
         return (path, unmapped_path)
+
+    def unmap_path_key(self, key_value_path, leaf_path):
+        return (key_value_path, leaf_path)
 
     def remap_to_requeest(path, unmapped_path):
         return (path, unmapped_path)

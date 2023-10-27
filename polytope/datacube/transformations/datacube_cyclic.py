@@ -20,3 +20,6 @@ class DatacubeAxisCyclic(DatacubeAxisTransformation):
 
     def blocked_axes(self):
         return []
+    
+    def unwanted_axes(self):
+        return []

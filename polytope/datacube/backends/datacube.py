@@ -38,6 +38,8 @@ class Datacube(ABC):
         )
         for blocked_axis in transformation.blocked_axes():
             self.blocked_axes.append(blocked_axis)
+        for unwanted_axis in transformation.unwanted_axes():
+            self.unwanted_axes.append(unwanted_axis)
         for axis_name in final_axis_names:
             self.complete_axes.append(axis_name)
             self.fake_axes.append(axis_name)

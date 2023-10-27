@@ -15,6 +15,9 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
 
     def blocked_axes(self):
         return [self._second_axis]
+    
+    def unwanted_axes(self):
+        return []
 
     def merged_values(self, datacube):
         # time1 = time.time()

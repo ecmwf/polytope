@@ -22,6 +22,7 @@ class FDBDatacube(Datacube):
         self.non_complete_axes = []
         self.complete_axes = []
         self.blocked_axes = []
+        self.unwanted_axes = []
         self.transformation = None
         self.fake_axes = []
 
@@ -46,7 +47,7 @@ class FDBDatacube(Datacube):
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
 
-    def get(self, requests: IndexTree):
+    def get_old(self, requests: IndexTree):
         # NOTE: this will do all the transformation unmappings for all the points
         # It doesn't use the tree structure of the result to do the unmapping transformations anymore
         time_changing_path = 0
@@ -108,6 +109,61 @@ class FDBDatacube(Datacube):
         print(time_is_nan)
         print("INTERM TIME")
         print(interm_time)
+
+    def remove_unwanted_axes(self, leaf_path):
+        for axis in self.unwanted_axes:
+            leaf_path.pop(axis)
+        return leaf_path
+
+    def get(self, requests: IndexTree, leaf_path={}):
+        # NOTE: this will do all the transformation unmappings for all the points
+        # It doesn't use the tree structure of the result to do the unmapping transformations anymore
+
+        # SECOND when request node is root, go to its children
+        # if requests.is_root():
+        if requests.axis.name == "root":
+            if len(requests.children) == 0:
+                pass
+            else:
+                for c in requests.children:
+                    self.get(c)
+
+        # FIRST if request node has no children, we have a leaf so need to assign fdb values to it
+        # of course, before assigning results, we need to remap this last key too
+        else:
+            if len(requests.children) == 0:
+                # remap this last key
+                key_value_path = {requests.axis.name: requests.value}
+                ax = self._axes[requests.axis.name]
+                (key_value_path, leaf_path) = ax.unmap_path_key(key_value_path, leaf_path)
+                leaf_path.update(key_value_path)
+                leaf_path_copy = deepcopy(leaf_path)
+                leaf_path_copy = self.remove_unwanted_axes(leaf_path_copy)
+                # print("FINAL LEAF PATH")
+                # print(leaf_path)
+                output_value = self.find_fdb_values(leaf_path_copy)
+                if not math.isnan(output_value):
+                    requests.result = output_value
+
+            # THIRD TODO: otherwise remap the path for this key and iterate again over children
+            # NOTE: how do we remap for keys that are inside a mapping for multiple axes?
+            else:
+                key_value_path = {requests.axis.name: requests.value}
+                ax = self._axes[requests.axis.name]
+                (key_value_path, leaf_path) = ax.unmap_path_key(key_value_path, leaf_path)
+                leaf_path.update(key_value_path)
+                for c in requests.children:
+                    self.get(c, leaf_path)
+
+    def find_fdb_values(self, path):
+        fdb_request_val = path["values"]
+        path.pop("values")
+        fdb_request_key = path
+        fdb_requests = [(fdb_request_key, [(fdb_request_val, fdb_request_val + 1)])]
+        subxarray = self.fdb.extract(fdb_requests)
+        subxarray_output_tuple = subxarray[0][0]
+        output_value = subxarray_output_tuple[0][0][0]
+        return output_value
 
     def datacube_natural_indexes(self, axis, subarray):
         indexes = subarray[axis.name]

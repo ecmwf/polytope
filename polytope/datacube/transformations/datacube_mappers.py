@@ -30,6 +30,9 @@ class DatacubeMapper(DatacubeAxisTransformation):
     def blocked_axes(self):
         return []
 
+    def unwanted_axes(self):
+        return [self._final_mapped_axes[0]]
+
     def transformation_axes_final(self):
         # final_transformation = self.generate_final_transformation()
         # final_axes = self._final_transformation._mapped_axes
