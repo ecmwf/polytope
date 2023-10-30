@@ -25,6 +25,7 @@ class FDBDatacube(Datacube):
         self.unwanted_axes = []
         self.transformation = None
         self.fake_axes = []
+        self.time_fdb = 0
 
         partial_request = config
         # Find values in the level 3 FDB datacube
@@ -141,7 +142,9 @@ class FDBDatacube(Datacube):
                 leaf_path_copy = self.remove_unwanted_axes(leaf_path_copy)
                 # print("FINAL LEAF PATH")
                 # print(leaf_path)
+                time0 = time.time()
                 output_value = self.find_fdb_values(leaf_path_copy)
+                self.time_fdb += time.time() - time0
                 if not math.isnan(output_value):
                     requests.result = output_value
 

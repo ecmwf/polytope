@@ -49,5 +49,10 @@ class Polytope:
         time0 = time.time()
         request_tree = self.engine.extract(self.datacube, request.polytopes())
         print(time.time() - time0)
+        print("TIME INSIDE OF GET")
+        time1 = time.time()
         self.datacube.get(request_tree)
+        print(time.time() - time1)
+        print("TIME INSIDE FDB")
+        print(self.datacube.time_fdb)
         return request_tree
