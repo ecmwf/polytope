@@ -55,4 +55,8 @@ class Polytope:
         print(time.time() - time1)
         print("TIME INSIDE FDB")
         print(self.datacube.time_fdb)
+        print("TIME UNMAP KEY")
+        print(self.datacube.time_unmap_key)
+        print("TIME SPENT REMOVE UNNECESSARY PATH KEYS")
+        print(self.datacube.other_time)
         return request_tree

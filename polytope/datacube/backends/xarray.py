@@ -20,6 +20,9 @@ class XArrayDatacube(Datacube):
         self.blocked_axes = []
         self.transformation = None
         self.fake_axes = []
+        self.time_fdb = 0
+        self.time_unmap_key = 0
+        self.unwanted_axes = []
         for name, values in dataarray.coords.variables.items():
             if name in dataarray.dims:
                 options = axis_options.get(name, {})
