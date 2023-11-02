@@ -3066,7 +3066,11 @@ class OctahedralGridMapper(DatacubeMapper):
         #     self._second_axis_spacing[first_val] = (second_axis_spacing, first_idx)
         # else:
         #     (second_axis_spacing, first_idx) = self._second_axis_spacing[first_val]
-        second_idx = int(second_val/second_axis_spacing)
+        tol = 1e-8
+        if second_val/second_axis_spacing > int(second_val/second_axis_spacing) + 1 - tol:
+            second_idx = int(second_val/second_axis_spacing) + 1
+        else:
+            second_idx = int(second_val/second_axis_spacing)
         return (first_idx, second_idx)
 
     def unmap(self, first_val, second_val):

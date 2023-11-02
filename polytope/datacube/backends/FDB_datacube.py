@@ -28,6 +28,10 @@ class FDBDatacube(Datacube):
         self.time_fdb = 0
         self.time_unmap_key = 0
         self.other_time = 0
+        self.final_path = {"class" : 0, "date": 0, "domain": 0, "expver": 0, "levtype": 0, "param": 0,
+                           "step" : 0, "stream": 0, "time": 0, "type": 0, "values": 0}
+        # self.unwanted_path = {"latitude": 0}
+        self.unwanted_path = {}
 
         partial_request = config
         # Find values in the level 3 FDB datacube
@@ -118,12 +122,8 @@ class FDBDatacube(Datacube):
             leaf_path.pop(axis)
         return leaf_path
 
-    def get(self, requests: IndexTree, leaf_path={}):
-        # NOTE: this will do all the transformation unmappings for all the points
-        # It doesn't use the tree structure of the result to do the unmapping transformations anymore
-
-        # SECOND when request node is root, go to its children
-        # if requests.is_root():
+    def older_get(self, requests: IndexTree, leaf_path={}):
+        # First when request node is root, go to its children
         if requests.axis.name == "root":
             if len(requests.children) == 0:
                 pass
@@ -131,55 +131,218 @@ class FDBDatacube(Datacube):
                 for c in requests.children:
                     self.get(c)
 
-        # FIRST if request node has no children, we have a leaf so need to assign fdb values to it
-        # of course, before assigning results, we need to remap this last key too
+        # Second if request node has no children, we have a leaf so need to assign fdb values to it
         else:
+            # time2 = time.time()
             key_value_path = {requests.axis.name: requests.value}
-            # ax = self._axes[requests.axis.name]
+            # self.other_time += time.time() - time2
             ax = requests.axis
             time1 = time.time()
-            (key_value_path, leaf_path) = ax.unmap_path_key(key_value_path, leaf_path)
+            # (key_value_path, leaf_path) = ax.unmap_path_key(key_value_path, leaf_path)
+            (key_value_path, leaf_path, self.unwanted_path) = ax.n_unmap_path_key(key_value_path, leaf_path, self.unwanted_path)
             self.time_unmap_key += time.time() - time1
-            leaf_path.update(key_value_path)
+            time2 = time.time()
+            leaf_path |= key_value_path
+            self.other_time += time.time() - time2
             if len(requests.children) == 0:
                 # remap this last key
-                # key_value_path = {requests.axis.name: requests.value}
-                # ax = self._axes[requests.axis.name]
-                # (key_value_path, leaf_path) = ax.unmap_path_key(key_value_path, leaf_path)
-                # leaf_path.update(key_value_path)
-                time2 = time.time()
-                leaf_path_copy = deepcopy(leaf_path)
-                self.other_time += time.time() - time2
-                leaf_path_copy = self.remove_unwanted_axes(leaf_path_copy)
-                # print("FINAL LEAF PATH")
-                # print(leaf_path)
-                # time0 = time.time()
-                output_value = self.find_fdb_values(leaf_path_copy)
-                # self.time_fdb += time.time() - time0
+                output_value = self.find_fdb_values(leaf_path)
                 if not math.isnan(output_value):
                     requests.result = output_value
 
-            # THIRD TODO: otherwise remap the path for this key and iterate again over children
-            # NOTE: how do we remap for keys that are inside a mapping for multiple axes?
+            # THIRD otherwise remap the path for this key and iterate again over children
             else:
-                # key_value_path = {requests.axis.name: requests.value}
-                # ax = self._axes[requests.axis.name]
-                # (key_value_path, leaf_path) = ax.unmap_path_key(key_value_path, leaf_path)
-                # leaf_path.update(key_value_path)
                 for c in requests.children:
                     self.get(c, leaf_path)
 
+    def get(self, requests: IndexTree, leaf_path={}):
+        # First when request node is root, go to its children
+        if requests.axis.name == "root":
+            if len(requests.children) == 0:
+                pass
+            else:
+                for c in requests.children:
+                    self.get(c)
+
+        # Second if request node has no children, we have a leaf so need to assign fdb values to it
+        else:
+            # time2 = time.time()
+            key_value_path = {requests.axis.name: requests.value}
+            # self.other_time += time.time() - time2
+            ax = requests.axis
+            time1 = time.time()
+            # (key_value_path, leaf_path) = ax.unmap_path_key(key_value_path, leaf_path)
+            (key_value_path, leaf_path, self.unwanted_path) = ax.n_unmap_path_key(key_value_path, leaf_path, self.unwanted_path)
+            self.time_unmap_key += time.time() - time1
+            time2 = time.time()
+            leaf_path |= key_value_path
+            self.other_time += time.time() - time2
+            if len(requests.children[0].children) == 0:
+                # remap this last key
+                self.get_last_layer_before_leaf(requests, leaf_path)
+
+            # THIRD otherwise remap the path for this key and iterate again over children
+            else:
+                for c in requests.children:
+                    self.get(c, leaf_path)
+
+    # def get_last_layer_before_leaf(self, requests, leaf_path={}):
+    #     range_length = 1
+    #     current_start_idx = None
+    #     fdb_range_nodes = [IndexTree.root] * 200
+    #     for c in requests.children:
+    #         # now c are the leaves of the initial tree
+    #         key_value_path = {c.axis.name: c.value}
+    #         print(key_value_path)
+    #         ax = c.axis
+    #         (key_value_path, leaf_path, self.unwanted_path) = ax.n_unmap_path_key(key_value_path, leaf_path, self.unwanted_path)
+    #         leaf_path |= key_value_path
+    #         last_idx = key_value_path["values"]
+    #         if current_start_idx is None:
+    #             current_start_idx = last_idx
+    #         else:
+    #             if last_idx == current_start_idx + 1:
+    #                 range_length += 1
+    #                 fdb_range_nodes[range_length-1] = c
+    #             else:
+    #                 # here, we jump to another range, so we first extract the old values from the fdb, and then we reset range_length etc...
+    #                 self.give_fdb_val_to_node(leaf_path, range_length, current_start_idx, fdb_range_nodes)
+    #                 key_value_path = {c.axis.name: c.value}
+    #                 ax = c.axis
+    #                 (key_value_path, leaf_path, self.unwanted_path) = ax.n_unmap_path_key(key_value_path, leaf_path, self.unwanted_path)
+    #                 leaf_path |= key_value_path
+    #                 current_start_idx = key_value_path["values"]
+    #                 range_length = 1
+    #                 fdb_range_nodes = [c] * 200
+    #     # need to extract the last ranges
+    #     self.give_fdb_val_to_node(leaf_path, range_length, current_start_idx, fdb_range_nodes)
+
+    def get_last_layer_before_leaf(self, requests, leaf_path={}):
+        range_length = 1
+        current_start_idx = None
+        fdb_range_nodes = [IndexTree.root] * 200
+        for c in requests.children:
+            # now c are the leaves of the initial tree
+            key_value_path = {c.axis.name: c.value}
+            # print(key_value_path)
+            ax = c.axis
+            (key_value_path, leaf_path, self.unwanted_path) = ax.n_unmap_path_key(key_value_path, leaf_path, self.unwanted_path)
+            leaf_path |= key_value_path
+            last_idx = key_value_path["values"]
+            if current_start_idx is None:
+                current_start_idx = last_idx
+                fdb_range_nodes[range_length-1] = c
+            else:
+                # if last_idx == current_start_idx + 1:
+                # print((last_idx, current_start_idx+range_length))
+                if last_idx == current_start_idx + range_length:
+                    range_length += 1
+                    fdb_range_nodes[range_length-1] = c
+                else:
+                    # here, we jump to another range, so we first extract the old values from the fdb, and then we reset range_length etc...
+                    # print(range_length)
+                    # print(current_start_idx)
+                    self.give_fdb_val_to_node(leaf_path, range_length, current_start_idx, fdb_range_nodes)
+                    key_value_path = {c.axis.name: c.value}
+                    ax = c.axis
+                    (key_value_path, leaf_path, self.unwanted_path) = ax.n_unmap_path_key(key_value_path, leaf_path, self.unwanted_path)
+                    leaf_path |= key_value_path
+                    current_start_idx = key_value_path["values"]
+                    range_length = 1
+                    fdb_range_nodes = [IndexTree.root] * 200
+        # need to extract the last ranges
+        self.give_fdb_val_to_node(leaf_path, range_length, current_start_idx, fdb_range_nodes)
+
+    def give_fdb_val_to_node(self, leaf_path, range_length, current_start_idx, fdb_range_nodes):
+        output_values = self.new_find_fdb_values(leaf_path, range_length, current_start_idx)
+        for i in range(len(fdb_range_nodes[:range_length])):
+            n = fdb_range_nodes[i]
+            n.result = output_values[i]
+
+    # def get_last_layer_before_leaf(self, requests, leaf_path={}):
+    #     range_lengths = [[1]*200]*200
+    #     current_start_idx = [[None]*200]*200
+    #     fdb_range_nodes = [[[IndexTree.root] * 200]*200]*200
+    #     requests_length = len(requests.children)
+    #     j=0
+    #     # for c in requests.children:
+    #     for i in range(len(requests.children)):
+    #         c = requests.children[i]
+    #         # now c are the leaves of the initial tree
+    #         key_value_path = {c.axis.name: c.value}
+    #         ax = c.axis
+    #         (key_value_path, leaf_path, self.unwanted_path) = ax.n_unmap_path_key(key_value_path, leaf_path, self.unwanted_path)
+    #         leaf_path |= key_value_path
+    #         last_idx = key_value_path["values"]
+    #         # print(last_idx)
+    #         if current_start_idx[i][j] is None:
+    #             current_start_idx[i][j] = last_idx
+    #             # print("HERE")
+    #         else:
+    #             if last_idx == current_start_idx[i][j] + 1:
+    #                 range_lengths[i][j] += 1
+    #                 fdb_range_nodes[i][j][range_lengths[i][j]-1] = c
+    #             else:
+    #                 # here, we jump to another range, so we first extract the old values from the fdb, and then we reset range_length etc...
+    #                 # self.give_fdb_val_to_node(leaf_path, range_lengths, current_start_idx, fdb_range_nodes, requests_length)
+    #                 key_value_path = {c.axis.name: c.value}
+    #                 ax = c.axis
+    #                 (key_value_path, leaf_path, self.unwanted_path) = ax.n_unmap_path_key(key_value_path, leaf_path, self.unwanted_path)
+    #                 j += 1
+    #                 leaf_path |= key_value_path
+    #                 current_start_idx[i][j] = key_value_path["values"]
+    #                 range_lengths[i][j] = 1
+    #                 fdb_range_nodes[i][j] = [c] * 200
+    #     # need to extract the last ranges
+    #     self.give_fdb_val_to_node(leaf_path, range_lengths, current_start_idx, fdb_range_nodes, requests_length)
+
+    # def give_fdb_val_to_node(self, leaf_path, range_lengths, current_start_idx, fdb_range_nodes, requests_length):
+    #     # print("RANGE LENGTHS")
+    #     # print(range_lengths)
+    #     # print("CURRENT START IDX")
+    #     # print(current_start_idx)
+    #     # TODO: change this to accommodate for several requests at once
+    #     output_values = self.new_find_fdb_values(leaf_path, range_lengths, current_start_idx, requests_length)
+    #     for j in range(requests_length):
+    #         for i in range(range_lengths[j]):
+    #             n = fdb_range_nodes[j][i]
+    #             n.result = output_values[j][i] # TODO: is this true??
+
     def find_fdb_values(self, path):
-        fdb_request_val = path["values"]
-        path.pop("values")
-        fdb_request_key = path
-        fdb_requests = [(fdb_request_key, [(fdb_request_val, fdb_request_val + 1)])]
+        fdb_request_val = path.pop("values")
+        fdb_requests = [(path, [(fdb_request_val, fdb_request_val + 1)])]
         time0 = time.time()
         subxarray = self.fdb.extract(fdb_requests)
         self.time_fdb += time.time() - time0
-        subxarray_output_tuple = subxarray[0][0]
-        output_value = subxarray_output_tuple[0][0][0]
+        output_value = subxarray[0][0][0][0][0]
         return output_value
+    
+    def new_find_fdb_values(self, path, range_length, current_start_idx):
+        fdb_request_val = path.pop("values")
+        # print((current_start_idx, current_start_idx + range_length + 1))
+        fdb_requests = [(path, [(current_start_idx, current_start_idx + range_length + 1)])]
+        # fdb_requests = [(path, new_reqs)]
+        time0 = time.time()
+        subxarray = self.fdb.extract(fdb_requests)
+        self.time_fdb += time.time() - time0
+        # output_value = subxarray[0][0][0][0][0]
+        output_values = subxarray[0][0][0][0]
+        return output_values
+
+    # def new_find_fdb_values(self, path, range_lengths, current_start_idx, requests_length):
+    #     fdb_request_val = path.pop("values")
+    #     fdb_requests = [(path, [])]
+    #     for j in range(requests_length):
+    #         current_request_ranges = (current_start_idx[j], current_start_idx[j] + range_lengths[j]+1)
+    #         # print(current_request_ranges)
+    #         # fdb_requests = [(path, [(current_start_idx, current_start_idx + range_length + 1)])]
+    #         fdb_requests[0][1].append(current_request_ranges)
+    #     time0 = time.time()
+    #     subxarray = self.fdb.extract(fdb_requests)
+    #     self.time_fdb += time.time() - time0
+    #     # output_value = subxarray[0][0][0][0][0]
+    #     output_values = subxarray[0][0][0]
+    #     return output_values
 
     def datacube_natural_indexes(self, axis, subarray):
         indexes = subarray[axis.name]
