@@ -155,7 +155,7 @@ class FDBDatacube(Datacube):
                 for c in requests.children:
                     self.get(c, leaf_path)
 
-    def get(self, requests: IndexTree, leaf_path={}):
+    def lon_get(self, requests: IndexTree, leaf_path={}):
         # First when request node is root, go to its children
         if requests.axis.name == "root":
             if len(requests.children) == 0:
@@ -180,6 +180,37 @@ class FDBDatacube(Datacube):
             if len(requests.children[0].children) == 0:
                 # remap this last key
                 self.get_last_layer_before_leaf(requests, leaf_path)
+
+            # THIRD otherwise remap the path for this key and iterate again over children
+            else:
+                for c in requests.children:
+                    self.get(c, leaf_path)
+
+    def get(self, requests: IndexTree, leaf_path={}):
+        # First when request node is root, go to its children
+        if requests.axis.name == "root":
+            if len(requests.children) == 0:
+                pass
+            else:
+                for c in requests.children:
+                    self.get(c)
+
+        # Second if request node has no children, we have a leaf so need to assign fdb values to it
+        else:
+            # time2 = time.time()
+            key_value_path = {requests.axis.name: requests.value}
+            # self.other_time += time.time() - time2
+            ax = requests.axis
+            time1 = time.time()
+            # (key_value_path, leaf_path) = ax.unmap_path_key(key_value_path, leaf_path)
+            (key_value_path, leaf_path, self.unwanted_path) = ax.n_unmap_path_key(key_value_path, leaf_path, self.unwanted_path)
+            self.time_unmap_key += time.time() - time1
+            time2 = time.time()
+            leaf_path |= key_value_path
+            self.other_time += time.time() - time2
+            if len(requests.children[0].children[0].children) == 0:
+                # remap this last key
+                self.handle_last_before_last_layer(requests, leaf_path)
 
             # THIRD otherwise remap the path for this key and iterate again over children
             else:
@@ -217,41 +248,86 @@ class FDBDatacube(Datacube):
     #     # need to extract the last ranges
     #     self.give_fdb_val_to_node(leaf_path, range_length, current_start_idx, fdb_range_nodes)
 
-    def get_last_layer_before_leaf(self, requests, leaf_path={}):
-        range_length = 1
-        current_start_idx = None
-        fdb_range_nodes = [IndexTree.root] * 200
+    def handle_last_before_last_layer(self, requests, leaf_path={}):
+        range_lengths = [[1]*200]*200
+        current_start_idxs = [[None]*200]*200
+        fdb_node_ranges = [[[IndexTree.root]*200]*200]*200
+        lat_length = len(requests.children)
+        # requests.pprint()
+        for i in range(len(requests.children)):
+            lat_child = requests.children[i]
+            range_length = deepcopy(range_lengths[i])
+            current_start_idx = deepcopy(current_start_idxs[i])
+            fdb_range_nodes = deepcopy(fdb_node_ranges[i])
+            key_value_path = {lat_child.axis.name: lat_child.value}
+            # print(key_value_path)
+            ax = lat_child.axis
+            (key_value_path, leaf_path, self.unwanted_path) = ax.n_unmap_path_key(key_value_path, leaf_path, self.unwanted_path)
+            leaf_path |= key_value_path
+            # leaf_path.pop("values", None)
+            (range_lengths[i],
+             current_start_idxs[i],
+             fdb_node_ranges[i]) = self.get_last_last_layer_before_leaf(lat_child,
+                                                                        leaf_path,
+                                                                        range_length,
+                                                                        current_start_idx,
+                                                                        fdb_range_nodes)
+            # print(current_start_idxs[i])
+            # print(lat_length)
+            # TODO: now call get_last_last_layer_before_layer on lat_child and add the range_lengths etc to the big array
+        # TODO: fetch data from fdb using big arrays
+        self.new_give_fdb_val_to_node(leaf_path, range_lengths, current_start_idxs, fdb_node_ranges, lat_length)
+
+    def get_last_last_layer_before_leaf(self, requests, leaf_path, range_l, current_idx, fdb_range_n):
+        i = 0
+        # range_length = range_l[i]
+        # current_start_idx = current_idx[i]
+        # fdb_range_nodes = fdb_range_n[i]
+        # TODO: need to build the range_lengths etc ranges...
         for c in requests.children:
             # now c are the leaves of the initial tree
             key_value_path = {c.axis.name: c.value}
             # print(key_value_path)
+            # print(key_value_path)
             ax = c.axis
             (key_value_path, leaf_path, self.unwanted_path) = ax.n_unmap_path_key(key_value_path, leaf_path, self.unwanted_path)
+            # print(key_value_path)
+            # print(current_idx[i])
             leaf_path |= key_value_path
+            # print("INSIDE SECOND FUNCTION")
+            # print(leaf_path)
             last_idx = key_value_path["values"]
-            if current_start_idx is None:
-                current_start_idx = last_idx
-                fdb_range_nodes[range_length-1] = c
+            if current_idx[i] is None:
+                current_idx[i] = last_idx
+                fdb_range_n[i][range_l[i]-1] = c
             else:
                 # if last_idx == current_start_idx + 1:
                 # print((last_idx, current_start_idx+range_length))
-                if last_idx == current_start_idx + range_length:
-                    range_length += 1
-                    fdb_range_nodes[range_length-1] = c
+                if last_idx == current_idx[i] + range_l[i]:
+                    range_l[i] += 1
+                    fdb_range_n[i][range_l[i]-1] = c
                 else:
+                    # print(key_value_path)
+                    # print(last_idx)
+                    # print(current_idx[i] + range_l[i])
                     # here, we jump to another range, so we first extract the old values from the fdb, and then we reset range_length etc...
                     # print(range_length)
                     # print(current_start_idx)
-                    self.give_fdb_val_to_node(leaf_path, range_length, current_start_idx, fdb_range_nodes)
+                    # self.give_fdb_val_to_node(leaf_path, range_l[i], current_idx[i], fdb_range_n[i])
                     key_value_path = {c.axis.name: c.value}
                     ax = c.axis
                     (key_value_path, leaf_path, self.unwanted_path) = ax.n_unmap_path_key(key_value_path, leaf_path, self.unwanted_path)
                     leaf_path |= key_value_path
+                    i += 1
                     current_start_idx = key_value_path["values"]
-                    range_length = 1
-                    fdb_range_nodes = [IndexTree.root] * 200
+                    current_idx[i] = current_start_idx
+                    # range_length = 1
+                    # fdb_range_nodes = [IndexTree.root] * 200
         # need to extract the last ranges
-        self.give_fdb_val_to_node(leaf_path, range_length, current_start_idx, fdb_range_nodes)
+        # print(range_l)
+        # print(current_idx)
+        return (range_l, current_idx, fdb_range_n)
+        # self.give_fdb_val_to_node(leaf_path, range_length, current_start_idx, fdb_range_nodes)
 
     def give_fdb_val_to_node(self, leaf_path, range_length, current_start_idx, fdb_range_nodes):
         output_values = self.new_find_fdb_values(leaf_path, range_length, current_start_idx)
@@ -308,6 +384,22 @@ class FDBDatacube(Datacube):
     #             n = fdb_range_nodes[j][i]
     #             n.result = output_values[j][i] # TODO: is this true??
 
+    def new_give_fdb_val_to_node(self, leaf_path, range_lengths, current_start_idx, fdb_range_nodes, lat_length):
+        # TODO: change this to accommodate for several requests at once
+        output_values = self.newest_find_fdb_values(leaf_path, range_lengths, current_start_idx, lat_length)
+        for j in range(lat_length - 1):
+            for i in range(len(range_lengths[j])):
+                if current_start_idx[j][i] is not None:
+                    for k in range(range_lengths[j][i]):
+                        # print(output_values)
+                        n = fdb_range_nodes[j][i][k]
+                        # print("NOW")
+                        # print(i)
+                        # print(j)
+                        # print(k)
+                        # print(output_values[j][0][0][i][k])
+                        n.result = output_values[j][0][0][i][k] # TODO: is this true??
+
     def find_fdb_values(self, path):
         fdb_request_val = path.pop("values")
         fdb_requests = [(path, [(fdb_request_val, fdb_request_val + 1)])]
@@ -343,6 +435,34 @@ class FDBDatacube(Datacube):
     #     # output_value = subxarray[0][0][0][0][0]
     #     output_values = subxarray[0][0][0]
     #     return output_values
+
+    def newest_find_fdb_values(self, path, range_lengths, current_start_idx, lat_length):
+        fdb_request_val = path.pop("values")
+        # fdb_requests = [(path, [])]
+        # fdb_requests = list(zip([path]*lat_length, [[]]*lat_length))
+        fdb_requests = []
+        # print(fdb_requests)
+        for i in range(lat_length):
+            # fdb_requests[i][1] = []
+            interm_request_ranges = []
+            for j in range(200):
+                if current_start_idx[i][j] is not None:
+                    current_request_ranges = (current_start_idx[i][j], current_start_idx[i][j] + range_lengths[i][j])
+                    # print(current_request_ranges)
+                    # fdb_requests = [(path, [(current_start_idx, current_start_idx + range_length + 1)])]
+                    # print(current_request_ranges)
+                    interm_request_ranges.append(current_request_ranges)
+            fdb_requests.append(tuple((path, interm_request_ranges)))
+        print(fdb_requests)
+        # print(fdb_requests)
+        # print("TIME EXTRACT")
+        time0 = time.time()
+        subxarray = self.fdb.extract(fdb_requests)
+        self.time_fdb += time.time() - time0
+        # output_value = subxarray[0][0][0][0][0]
+        # print(subxarray)
+        output_values = subxarray
+        return output_values
 
     def datacube_natural_indexes(self, axis, subarray):
         indexes = subarray[axis.name]

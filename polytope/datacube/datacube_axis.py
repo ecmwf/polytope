@@ -131,8 +131,8 @@ def cyclic(cls):
                         new_val = _remap_val_to_axis_range(old_val)
                         path[cls.name] = new_val
             (path, unmapped_path) = old_unmap_total_path_to_datacube(path, unmapped_path)
-            print("CYCLIC UNMAP TIME")
-            print(time.time() - time1)
+            # print("CYCLIC UNMAP TIME")
+            # print(time.time() - time1)
             return (path, unmapped_path)
         
         old_unmap_path_key = cls.unmap_path_key
