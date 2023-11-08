@@ -386,19 +386,33 @@ class FDBDatacube(Datacube):
 
     def new_give_fdb_val_to_node(self, leaf_path, range_lengths, current_start_idx, fdb_range_nodes, lat_length):
         # TODO: change this to accommodate for several requests at once
-        output_values = self.newest_find_fdb_values(leaf_path, range_lengths, current_start_idx, lat_length)
-        for j in range(lat_length - 1):
+        (output_values, original_indices) = self.newest_find_fdb_values(leaf_path, range_lengths, current_start_idx, lat_length)
+        new_fdb_range_nodes = []
+        new_range_lengths = []
+        for j in range(lat_length):
             for i in range(len(range_lengths[j])):
                 if current_start_idx[j][i] is not None:
-                    for k in range(range_lengths[j][i]):
-                        # print(output_values)
-                        n = fdb_range_nodes[j][i][k]
-                        # print("NOW")
-                        # print(i)
-                        # print(j)
-                        # print(k)
-                        # print(output_values[j][0][0][i][k])
-                        n.result = output_values[j][0][0][i][k] # TODO: is this true??
+                    new_fdb_range_nodes.append(fdb_range_nodes[j][i])
+                    new_range_lengths.append(range_lengths[j][i])
+        sorted_fdb_range_nodes = [new_fdb_range_nodes[i] for i in original_indices]
+        sorted_range_lengths = [new_range_lengths[i] for i in original_indices]
+        for i in range(len(sorted_fdb_range_nodes)):
+            for k in range(sorted_range_lengths[i]):
+                n = sorted_fdb_range_nodes[i][k]
+                n.result = output_values[0][0][0][i][k]
+        # for j in range(lat_length - 1):
+        #     for i in range(len(range_lengths[j])):
+        #         if current_start_idx[j][i] is not None:
+        #             # TODO: need to use original_indices to unmap j and i to the right idxs
+        #             for k in range(range_lengths[j][i]):
+        #                 # print(output_values)
+        #                 n = fdb_range_nodes[j][i][k]
+        #                 # print("NOW")
+        #                 # print(i)
+        #                 # print(j)
+        #                 # print(k)
+        #                 # print(output_values[j][0][0][i][k])
+        #                 n.result = output_values[j][0][0][i][k] # TODO: is this true??
 
     def find_fdb_values(self, path):
         fdb_request_val = path.pop("values")
@@ -438,13 +452,15 @@ class FDBDatacube(Datacube):
 
     def newest_find_fdb_values(self, path, range_lengths, current_start_idx, lat_length):
         fdb_request_val = path.pop("values")
+        # print("NOW INSIDE NEWEST FIND FDB VAL")
+        # print(path)
         # fdb_requests = [(path, [])]
         # fdb_requests = list(zip([path]*lat_length, [[]]*lat_length))
         fdb_requests = []
         # print(fdb_requests)
+        interm_request_ranges = []
         for i in range(lat_length):
             # fdb_requests[i][1] = []
-            interm_request_ranges = []
             for j in range(200):
                 if current_start_idx[i][j] is not None:
                     current_request_ranges = (current_start_idx[i][j], current_start_idx[i][j] + range_lengths[i][j])
@@ -452,17 +468,23 @@ class FDBDatacube(Datacube):
                     # fdb_requests = [(path, [(current_start_idx, current_start_idx + range_length + 1)])]
                     # print(current_request_ranges)
                     interm_request_ranges.append(current_request_ranges)
-            fdb_requests.append(tuple((path, interm_request_ranges)))
-        print(fdb_requests)
+        request_ranges_with_idx = list(enumerate(interm_request_ranges))
+        sorted_list = sorted(request_ranges_with_idx, key=lambda x: x[1][0])
+        sorted_request_ranges = [item[1] for item in sorted_list]
+        original_indices = [item[0] for item in sorted_list]
+        fdb_requests.append(tuple((path, sorted_request_ranges)))
+        # print(fdb_requests)
         # print(fdb_requests)
         # print("TIME EXTRACT")
+        # print(fdb_requests)
         time0 = time.time()
         subxarray = self.fdb.extract(fdb_requests)
         self.time_fdb += time.time() - time0
         # output_value = subxarray[0][0][0][0][0]
         # print(subxarray)
         output_values = subxarray
-        return output_values
+        # output_values = [[[[[0]*1000]*1000]*1000]]
+        return (output_values, original_indices)
 
     def datacube_natural_indexes(self, axis, subarray):
         indexes = subarray[axis.name]
