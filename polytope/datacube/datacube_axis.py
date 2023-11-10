@@ -322,7 +322,7 @@ def mapper(cls):
                                 if not axis_reversed:
                                     lower_idx = bisect.bisect_left(idxs, low)
                                     upper_idx = bisect.bisect_right(idxs, up)
-                                    indexes_between = idxs[lower_idx: upper_idx]
+                                    indexes_between = idxs[lower_idx:upper_idx]
                                 else:
                                     # TODO: do the custom bisect
                                     end_idx = bisect_left_cmp(idxs, low, cmp=lambda x, y: x > y) + 1
@@ -420,7 +420,7 @@ def merge(cls):
                             else:
                                 lower_idx = bisect.bisect_left(indexes, low)
                                 upper_idx = bisect.bisect_right(indexes, up)
-                                indexes_between = indexes[lower_idx: upper_idx]
+                                indexes_between = indexes[lower_idx:upper_idx]
                                 indexes_between_ranges.append(indexes_between)
             return indexes_between_ranges
 
@@ -491,7 +491,7 @@ def reverse(cls):
                                 else:
                                     lower_idx = bisect.bisect_left(indexes, low)
                                     upper_idx = bisect.bisect_right(indexes, up)
-                                    indexes_between = indexes[lower_idx: upper_idx]
+                                    indexes_between = indexes[lower_idx:upper_idx]
                                     indexes_between_ranges.append(indexes_between)
             return indexes_between_ranges
 
@@ -577,7 +577,7 @@ def type_change(cls):
                             else:
                                 lower_idx = bisect.bisect_left(indexes, low)
                                 upper_idx = bisect.bisect_right(indexes, up)
-                                indexes_between = indexes[lower_idx: upper_idx]
+                                indexes_between = indexes[lower_idx:upper_idx]
                                 indexes_between_ranges.append(indexes_between)
             return indexes_between_ranges
 
@@ -595,7 +595,6 @@ def type_change(cls):
 
 
 def null(cls):
-
     if cls.type_change:
         old_find_indexes = cls.find_indexes
 

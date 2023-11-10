@@ -2944,8 +2944,8 @@ class OctahedralGridMapper(DatacubeMapper):
 
     def map_second_axis(self, first_val, lower, upper):
         second_axis_spacing, first_idx = self.second_axis_spacing(first_val)
-        start_idx = int(lower/second_axis_spacing)
-        end_idx = int(upper/second_axis_spacing) + 1
+        start_idx = int(lower / second_axis_spacing)
+        end_idx = int(upper / second_axis_spacing) + 1
         return_vals = [i * second_axis_spacing for i in range(start_idx, end_idx)]
         return return_vals
 
@@ -2957,13 +2957,13 @@ class OctahedralGridMapper(DatacubeMapper):
 
         # NOTE: OR somehow cache this for a given first_idx and then only modify the axis idx for second_idx when the
         # first_idx changes
-        octa_idx = self._first_idx_map[first_idx-1] + second_idx
+        octa_idx = self._first_idx_map[first_idx - 1] + second_idx
         return octa_idx
 
     def create_first_idx_map(self):
         first_idx_list = {}
         idx = 0
-        for i in range(2*self._resolution):
+        for i in range(2 * self._resolution):
             first_idx_list[i] = idx
             if i <= self._resolution - 1:
                 idx += 20 + 4 * i
@@ -2979,10 +2979,10 @@ class OctahedralGridMapper(DatacubeMapper):
     def find_second_axis_idx(self, first_val, second_val):
         (second_axis_spacing, first_idx) = self.second_axis_spacing(first_val)
         tol = 1e-8
-        if second_val/second_axis_spacing > int(second_val/second_axis_spacing) + 1 - tol:
-            second_idx = int(second_val/second_axis_spacing) + 1
+        if second_val / second_axis_spacing > int(second_val / second_axis_spacing) + 1 - tol:
+            second_idx = int(second_val / second_axis_spacing) + 1
         else:
-            second_idx = int(second_val/second_axis_spacing)
+            second_idx = int(second_val / second_axis_spacing)
         return (first_idx, second_idx)
 
     def unmap(self, first_val, second_val):

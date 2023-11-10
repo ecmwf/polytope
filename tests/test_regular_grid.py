@@ -18,9 +18,7 @@ class TestRegularGrid:
         download_test_data(nexus_url, "era5-levels-members.grib")
         self.options = {
             "values": {
-                "transformation": {
-                    "mapper": {"type": "regular", "resolution": 30, "axes": ["latitude", "longitude"]}
-                }
+                "transformation": {"mapper": {"type": "regular", "resolution": 30, "axes": ["latitude", "longitude"]}}
             },
             "date": {"transformation": {"merge": {"with": "time", "linkers": [" ", "00"]}}},
             "step": {"transformation": {"type_change": "int"}},
@@ -68,11 +66,11 @@ class TestRegularGrid:
             Select("type", ["an"]),
             Disk(["latitude", "longitude"], [0, 0], [15, 15]),
             Select("levelist", ["500"]),
-            Select("number", ["0", "1"])
+            Select("number", ["0", "1"]),
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 46*2
+        assert len(result.leaves) == 46 * 2
 
         lats = []
         lons = []
@@ -101,4 +99,4 @@ class TestRegularGrid:
         # plt.colorbar(label="Temperature")
         # plt.show()
 
-        assert len(eccodes_lats) == 46*2
+        assert len(eccodes_lats) == 46 * 2

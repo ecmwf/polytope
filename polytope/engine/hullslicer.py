@@ -129,7 +129,6 @@ def _reduce_dimension(intersects, slice_axis_idx):
 
 
 def slice(polytope: ConvexPolytope, axis, value, slice_axis_idx):
-
     if len(polytope.points[0]) == 1:
         # Note that in this case, we do not need to do linear interpolation so we can save time
         if value in chain(*polytope.points):
