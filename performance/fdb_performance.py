@@ -1,7 +1,6 @@
 import time
 
 import pandas as pd
-import pytest
 
 from polytope.datacube.backends.FDB_datacube import FDBDatacube
 from polytope.engine.hullslicer import HullSlicer
@@ -20,11 +19,6 @@ class TestSlicingFDBDatacube:
             },
             "date": {"transformation": {"merge": {"with": "time", "linkers": [" ", "00"]}}},
             "step": {"transformation": {"type_change": "int"}},
-            # "latitude": {"transformation": {"null": []}},
-            # "longitude": {"transformation": {"null": []}},
-            # "class": {"transformation": {"null": []}},
-            # "param": {"transformation": {"null": []}},
-            # "stream": {"transformation": {"null": []}},
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "step": 0}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
@@ -45,7 +39,6 @@ class TestSlicingFDBDatacube:
             Select("stream", ["oper"]),
             Select("type", ["an"]),
             Box(["latitude", "longitude"], [0, 0], [10, 10]),
-            # Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
         )
         time1 = time.time()
         result = self.API.retrieve(request)
@@ -54,4 +47,3 @@ class TestSlicingFDBDatacube:
         print("FDB TIME")
         print(self.fdbdatacube.time_fdb)
         print(len(result.leaves))
-        # assert len(result.leaves) == 19226

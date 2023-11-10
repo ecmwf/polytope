@@ -1,7 +1,6 @@
 import time
 
 import pandas as pd
-import pytest
 
 from polytope.datacube.backends.FDB_datacube import FDBDatacube
 from polytope.engine.hullslicer import HullSlicer
@@ -24,7 +23,6 @@ class TestSlicingFDBDatacube:
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
-        # print(self.fdbdatacube)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
 
@@ -32,7 +30,6 @@ class TestSlicingFDBDatacube:
     # @pytest.mark.skip(reason="can't install fdb branch on CI")
     def test_fdb_datacube(self):
         request = Request(
-            # Select("step", [0]),
             Span("step", 1, 15),
             Select("levtype", ["sfc"]),
             Select("date", [pd.Timestamp("20231102T000000")]),
@@ -43,8 +40,6 @@ class TestSlicingFDBDatacube:
             Select("stream", ["oper"]),
             Select("type", ["fc"]),
             Box(["latitude", "longitude"], [0, 0], [3, 5]),
-            # Span("levelist", 1, 15)
-            # Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
         )
         time1 = time.time()
         result = self.API.retrieve(request)
@@ -53,4 +48,3 @@ class TestSlicingFDBDatacube:
         print("FDB TIME")
         print(self.fdbdatacube.time_fdb)
         print(len(result.leaves))
-        # assert len(result.leaves) == 19226
