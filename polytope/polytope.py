@@ -1,5 +1,4 @@
 from typing import List
-import time
 
 from .shapes import ConvexPolytope
 from .utility.exceptions import AxisOverdefinedError
@@ -45,18 +44,6 @@ class Polytope:
 
     def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
-        # print("TIME IN POLYTOPE EXTRACT")
-        # time0 = time.time()
         request_tree = self.engine.extract(self.datacube, request.polytopes())
-        # print(time.time() - time0)
-        # print("TIME INSIDE OF GET")
-        # time1 = time.time()
         self.datacube.get(request_tree)
-        # print(time.time() - time1)
-        # print("TIME INSIDE FDB")
-        # print(self.datacube.time_fdb)
-        # print("TIME UNMAP KEY")
-        # print(self.datacube.time_unmap_key)
-        # print("TIME SPENT REMOVE UNNECESSARY PATH KEYS")
-        # print(self.datacube.other_time)
         return request_tree

@@ -1,9 +1,9 @@
+import bisect
 import math
 from copy import deepcopy
 from importlib import import_module
-from ...utility.list_tools import bisect_left_cmp, bisect_right_cmp
-import bisect
 
+from ...utility.list_tools import bisect_left_cmp, bisect_right_cmp
 from .datacube_transformations import DatacubeAxisTransformation
 
 
@@ -34,8 +34,6 @@ class DatacubeMapper(DatacubeAxisTransformation):
         return [self._final_mapped_axes[0]]
 
     def transformation_axes_final(self):
-        # final_transformation = self.generate_final_transformation()
-        # final_axes = self._final_transformation._mapped_axes
         final_axes = self._final_mapped_axes
         return final_axes
 
@@ -47,8 +45,6 @@ class DatacubeMapper(DatacubeAxisTransformation):
 
     def _mapped_axes(self):
         # NOTE: Each of the mapper method needs to call it's sub mapper method
-        # final_transformation = self.generate_final_transformation()
-        # final_axes = self._final_transformation._mapped_axes
         final_axes = self._final_mapped_axes
         return final_axes
 
@@ -59,19 +55,15 @@ class DatacubeMapper(DatacubeAxisTransformation):
         pass
 
     def first_axis_vals(self):
-        # final_transformation = self.generate_final_transformation()
         return self._final_transformation.first_axis_vals()
 
     def second_axis_vals(self, first_val):
-        # final_transformation = self.generate_final_transformation()
         return self._final_transformation.second_axis_vals(first_val)
 
     def map_first_axis(self, lower, upper):
-        # final_transformation = self.generate_final_transformation()
         return self._final_transformation.map_first_axis(lower, upper)
 
     def map_second_axis(self, first_val, lower, upper):
-        # final_transformation = self.generate_final_transformation()
         return self._final_transformation.map_second_axis(first_val, lower, upper)
 
     def find_second_idx(self, first_val, second_val):
@@ -81,7 +73,6 @@ class DatacubeMapper(DatacubeAxisTransformation):
         return self._final_transformation.unmap_first_val_to_start_line_idx(first_val)
 
     def unmap(self, first_val, second_val):
-        # final_transformation = self.generate_final_transformation()
         return self._final_transformation.unmap(first_val, second_val)
 
 
@@ -258,12 +249,8 @@ class OctahedralGridMapper(DatacubeMapper):
         self._base_axis = base_axis
         self._resolution = resolution
         self._first_axis_vals = self.first_axis_vals()
-        # self._inv_first_axis_vals = self._first_axis_vals[::-1]
-        # self._inv_first_axis_vals = {v:k for k,v in self._first_axis_vals.items()}
         self._first_idx_map = self.create_first_idx_map()
-        # self._second_axis_spacing = dict()
         self._second_axis_spacing = {}
-        # self.treated_first_vals = dict()
         self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
 
     def gauss_first_guess(self):
@@ -2926,7 +2913,6 @@ class OctahedralGridMapper(DatacubeMapper):
 
     def map_first_axis(self, lower, upper):
         axis_lines = self._first_axis_vals
-        # return_vals = [val for val in axis_lines if lower <= val <= upper]
         end_idx = bisect_left_cmp(axis_lines, lower, cmp=lambda x, y: x > y) + 1
         start_idx = bisect_right_cmp(axis_lines, upper, cmp=lambda x, y: x > y)
         return_vals = axis_lines[start_idx:end_idx]
@@ -2935,8 +2921,6 @@ class OctahedralGridMapper(DatacubeMapper):
     def second_axis_vals(self, first_val):
         first_axis_vals = self._first_axis_vals
         tol = 1e-10
-        # first_val = [val for val in first_axis_vals if first_val - tol < val < first_val + tol][0]
-        # first_idx = first_axis_vals.index(first_val)
         first_idx = bisect_left_cmp(first_axis_vals, first_val - tol, cmp=lambda x, y: x > y)
         if first_idx >= self._resolution:
             first_idx = (2 * self._resolution) - 1 - first_idx
@@ -2949,8 +2933,6 @@ class OctahedralGridMapper(DatacubeMapper):
     def second_axis_spacing(self, first_val):
         first_axis_vals = self._first_axis_vals
         tol = 1e-10
-        # first_val = [val for val in first_axis_vals if first_val - tol < val < first_val + tol][0]
-        # first_idx = first_axis_vals.index(first_val)
         _first_idx = bisect_left_cmp(first_axis_vals, first_val - tol, cmp=lambda x, y: x > y)
         first_idx = _first_idx
         if first_idx >= self._resolution:
@@ -2962,24 +2944,9 @@ class OctahedralGridMapper(DatacubeMapper):
 
     def map_second_axis(self, first_val, lower, upper):
         second_axis_spacing, first_idx = self.second_axis_spacing(first_val)
-        # if first_val not in self._second_axis_spacing:
-        #     (second_axis_spacing, first_idx) = self.second_axis_spacing(first_val)
-        #     self._second_axis_spacing[first_val] = (second_axis_spacing, first_idx)
-        # else:
-        #     (second_axis_spacing, first_idx) = self._second_axis_spacing[first_val]
         start_idx = int(lower/second_axis_spacing)
         end_idx = int(upper/second_axis_spacing) + 1
         return_vals = [i * second_axis_spacing for i in range(start_idx, end_idx)]
-
-        # second_axis_vals = self.second_axis_vals(first_val)
-        # # NOTE: here this seems faster than the bisect.bisect?
-        # # return_vals = [val for val in second_axis_vals if lower <= val <= upper]
-        # start_idx = bisect_left_cmp(second_axis_vals, lower, cmp=lambda x, y: x < y) + 1
-        # end_idx = bisect_right_cmp(second_axis_vals, upper, cmp=lambda x, y: x < y) + 1
-        # return_vals = second_axis_vals[start_idx:end_idx]
-        # # start_idx = bisect.bisect_left(second_axis_vals, lower)
-        # # end_idx = bisect.bisect_right(second_axis_vals, upper)
-        # # return_vals = second_axis_vals[start_idx:end_idx]
         return return_vals
 
     def axes_idx_to_octahedral_idx(self, first_idx, second_idx):
@@ -2990,40 +2957,13 @@ class OctahedralGridMapper(DatacubeMapper):
 
         # NOTE: OR somehow cache this for a given first_idx and then only modify the axis idx for second_idx when the
         # first_idx changes
-        # time1 = time.time()
-        # octa_idx = self._first_idx_map[first_idx-1] + second_idx
         octa_idx = self._first_idx_map[first_idx-1] + second_idx
-        # octa_idx = 0
-        # if first_idx == 1:
-        #     octa_idx = second_idx
-        # else:
-        #     for i in range(first_idx - 1):
-        #         if i <= self._resolution - 1:
-        #             octa_idx += 20 + 4 * i
-        #         else:
-        #             i = i - self._resolution + 1
-        #             if i == 1:
-        #                 octa_idx += 16 + 4 * self._resolution
-        #             else:
-        #                 i = i - 1
-        #                 octa_idx += 16 + 4 * (self._resolution - i)
-        #     octa_idx += second_idx
-        # print("TIME UNMAPPING TO OCT IDX")
-        # print(time.time() - time1)
         return octa_idx
 
-    # def find_second_idx(self, first_val, second_val):
-    #     tol = 1e-10
-    #     second_axis_vals = self.second_axis_vals(first_val)
-    #     second_idx = bisect.bisect_left(second_axis_vals, second_val - tol)
-    #     return second_idx
-
     def create_first_idx_map(self):
-        # first_idx_list = [0] * (2*self._resolution)
         first_idx_list = {}
         idx = 0
         for i in range(2*self._resolution):
-            # first_idx_list[i] = idx
             first_idx_list[i] = idx
             if i <= self._resolution - 1:
                 idx += 20 + 4 * i
@@ -3036,36 +2976,8 @@ class OctahedralGridMapper(DatacubeMapper):
                     idx += 16 + 4 * (self._resolution - i)
         return first_idx_list
 
-    # def unmap_first_val_to_start_line_idx(self, first_val):
-    #     first_axis_vals = self._first_axis_vals
-    #     tol = 1e-10
-    #     # first_val = [val for val in first_axis_vals if first_val - tol < val < first_val + tol][0]
-    #     # first_idx = first_axis_vals.index(first_val) + 1
-    #     # first_idx = len(first_axis_vals) - bisect.bisect_left(first_axis_vals[::-1], first_val - tol)
-    #     first_idx = bisect_left_cmp(first_axis_vals, first_val - tol, cmp=lambda x, y: x > y) + 1
-    #     octa_idx = 0
-    #     if first_idx == 1:
-    #         return octa_idx
-    #     else:
-    #         for i in range(first_idx - 1):
-    #             if i <= self._resolution - 1:
-    #                 octa_idx += 20 + 4 * i
-    #             else:
-    #                 i = i - self._resolution + 1
-    #                 if i == 1:
-    #                     octa_idx += 16 + 4 * self._resolution
-    #                 else:
-    #                     i = i - 1
-    #                     octa_idx += 16 + 4 * (self._resolution - i)
-    #         return octa_idx
-
     def find_second_axis_idx(self, first_val, second_val):
         (second_axis_spacing, first_idx) = self.second_axis_spacing(first_val)
-        # if first_val not in self._second_axis_spacing:
-        #     (second_axis_spacing, first_idx) = self.second_axis_spacing(first_val)
-        #     self._second_axis_spacing[first_val] = (second_axis_spacing, first_idx)
-        # else:
-        #     (second_axis_spacing, first_idx) = self._second_axis_spacing[first_val]
         tol = 1e-8
         if second_val/second_axis_spacing > int(second_val/second_axis_spacing) + 1 - tol:
             second_idx = int(second_val/second_axis_spacing) + 1
@@ -3074,35 +2986,8 @@ class OctahedralGridMapper(DatacubeMapper):
         return (first_idx, second_idx)
 
     def unmap(self, first_val, second_val):
-        # time1 = time.time()
-        # first_axis_vals = self._first_axis_vals
-        # inv_first_axis_vals = self._inv_first_axis_vals
-        # tol = 1e-10
-        # # first_val = [val for val in first_axis_vals if first_val - tol < val < first_val + tol][0]
-        # # first_idx = first_axis_vals.index(first_val) + 1
-        # # first_idx = len(first_axis_vals) - bisect.bisect_left(first_axis_vals[::-1], first_val - tol)
-        # # first_idx = bisect_left_cmp(first_axis_vals, first_val - tol, cmp=lambda x, y: x > y) + 1
-        # first_idx = bisect.bisect_left(self._inv_first_axis_vals, - (first_val - tol))
-        # # print(inv_first_axis_vals)
-        # # print(first_val)
-        # # first_idx = inv_first_axis_vals[first_val]
-        # # first_idx = np.searchsorted(-first_axis_vals, - (first_val - tol), side="right")
-        # if first_val not in self.treated_first_vals:
-        #     second_axis_vals = self.second_axis_vals(first_val)
-        #     self.treated_first_vals[first_val] = second_axis_vals
-        # else:
-        #     second_axis_vals = self.treated_first_vals[first_val]
-        # # second_val = [val for val in second_axis_vals if second_val - tol < val < second_val + tol][0]
-        # # second_idx = second_axis_vals.index(second_val)
-        # second_idx = bisect.bisect_left(second_axis_vals, second_val - tol)
         (first_idx, second_idx) = self.find_second_axis_idx(first_val, second_val)
-        # second_idx = np.searchsorted(second_axis_vals, second_val - tol)
-        # print("TIME SPENT DOING VAL TO IDX")
-        # print(time.time() - time1)
         octahedral_index = self.axes_idx_to_octahedral_idx(first_idx, second_idx)
-        # octahedral_index = int(octahedral_index)
-        # print("OCTAHEDRAL UNMAP TIME ")
-        # print(time.time() - time1)
         return octahedral_index
 
 

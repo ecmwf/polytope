@@ -45,6 +45,4 @@ class TestSlicingFDBDatacube:
         result = self.API.retrieve(request)
         print("ENTIRE TIME")
         print(time.time() - time1)
-        print("FDB TIME")
-        print(self.fdbdatacube.time_fdb)
         print(len(result.leaves))
