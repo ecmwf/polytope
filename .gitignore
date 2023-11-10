@@ -6,3 +6,7 @@ polytope.egg-info
 .pytest_cache
 *.prof
 *.idx
+*.grib
+*.xml
+site
+.coverage

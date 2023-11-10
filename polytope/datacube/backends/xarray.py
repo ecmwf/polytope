@@ -49,14 +49,13 @@ class XArrayDatacube(Datacube):
     def get(self, requests: IndexTree):
         for r in requests.leaves:
             path = r.flatten()
-            # path = self.remap_path(path)
             if len(path.items()) == self.axis_counter:
                 # first, find the grid mapper transform
                 unmapped_path = {}
                 path_copy = deepcopy(path)
                 for key in path_copy:
                     axis = self._axes[key]
-                    (path, unmapped_path) = axis.unmap_total_path_to_datacube(path, unmapped_path)
+                    (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
                 path = self.fit_path(path)
                 subxarray = self.dataarray.sel(path, method="nearest")
                 subxarray = subxarray.sel(unmapped_path)
@@ -67,8 +66,6 @@ class XArrayDatacube(Datacube):
                 r.remove_branch()
 
     def datacube_natural_indexes(self, axis, subarray):
-        # if axis.name in self.fake_axes:
-        #     indexes = subarray[axis.name].values
         if axis.name in self.complete_axes:
             indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
         else:
