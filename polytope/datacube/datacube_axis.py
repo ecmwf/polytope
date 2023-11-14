@@ -279,12 +279,6 @@ def mapper(cls):
                                 indexes_between_ranges.append(indexes_between)
             return indexes_between_ranges
 
-        old_remap = cls.remap
-
-        def remap(range):
-            return old_remap(range)
-
-        cls.remap = remap
         cls.find_indexes = find_indexes
         cls.unmap_to_datacube = unmap_to_datacube
         cls.find_indices_between = find_indices_between
