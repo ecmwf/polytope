@@ -3,7 +3,7 @@ import pytest
 from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
 from helper_functions import download_test_data
 
-from polytope.datacube.backends.FDB_datacube import FDBDatacube
+from polytope.datacube.backends.fdb import FDBDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Disk, Select

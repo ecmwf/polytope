@@ -5,15 +5,9 @@ import pyfdb
 from .datacube import Datacube, IndexTree
 
 
-def update_fdb_dataarray(fdb_dataarray):
-    fdb_dataarray["values"] = []
-    return fdb_dataarray
-
-
 class FDBDatacube(Datacube):
     def __init__(self, config={}, axis_options={}):
         self.axis_options = axis_options
-        self.grid_mapper = None
         self.axis_counter = 0
         self._axes = None
         treated_axes = []
@@ -21,31 +15,16 @@ class FDBDatacube(Datacube):
         self.complete_axes = []
         self.blocked_axes = []
         self.unwanted_axes = []
-        self.transformation = None
         self.fake_axes = []
-        self.final_path = {
-            "class": 0,
-            "date": 0,
-            "domain": 0,
-            "expver": 0,
-            "levtype": 0,
-            "param": 0,
-            "step": 0,
-            "stream": 0,
-            "time": 0,
-            "type": 0,
-            "values": 0,
-        }
         self.unwanted_path = {}
 
         partial_request = config
         # Find values in the level 3 FDB datacube
         # Will be in the form of a dictionary? {axis_name:values_available, ...}
         self.fdb = pyfdb.FDB()
-        fdb_dataarray = self.fdb.axes(partial_request).as_dict()
-        dataarray = update_fdb_dataarray(fdb_dataarray)
-        self.dataarray = dataarray
-        for name, values in dataarray.items():
+        self.fdb_coordinates = self.fdb.axes(partial_request).as_dict()
+        self.fdb_coordinates["values"] = []
+        for name, values in self.fdb_coordinates.items():
             values.sort()
             options = axis_options.get(name, {})
             self._check_and_add_axes(options, name, values)
@@ -77,7 +56,7 @@ class FDBDatacube(Datacube):
         else:
             key_value_path = {requests.axis.name: requests.value}
             ax = requests.axis
-            (key_value_path, leaf_path, self.unwanted_path) = ax.n_unmap_path_key(
+            (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
             leaf_path |= key_value_path
@@ -91,18 +70,22 @@ class FDBDatacube(Datacube):
                     self.get(c, leaf_path)
 
     def handle_last_before_last_layer(self, requests, leaf_path={}):
-        range_lengths = [[1] * 200] * 200
-        current_start_idxs = [[None] * 200] * 200
-        fdb_node_ranges = [[[IndexTree.root] * 200] * 200] * 200
         lat_length = len(requests.children)
+        range_lengths = [False] * lat_length
+        current_start_idxs = [False] * lat_length
+        fdb_node_ranges = [False] * lat_length
         for i in range(len(requests.children)):
             lat_child = requests.children[i]
+            lon_length = len(lat_child.children)
+            range_lengths[i] = [1] * lon_length
+            current_start_idxs[i] = [None] * lon_length
+            fdb_node_ranges[i] = [[IndexTree.root] * lon_length] * lon_length
             range_length = deepcopy(range_lengths[i])
             current_start_idx = deepcopy(current_start_idxs[i])
             fdb_range_nodes = deepcopy(fdb_node_ranges[i])
             key_value_path = {lat_child.axis.name: lat_child.value}
             ax = lat_child.axis
-            (key_value_path, leaf_path, self.unwanted_path) = ax.n_unmap_path_key(
+            (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
             leaf_path |= key_value_path
@@ -117,7 +100,7 @@ class FDBDatacube(Datacube):
             # now c are the leaves of the initial tree
             key_value_path = {c.axis.name: c.value}
             ax = c.axis
-            (key_value_path, leaf_path, self.unwanted_path) = ax.n_unmap_path_key(
+            (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
             leaf_path |= key_value_path
@@ -132,7 +115,7 @@ class FDBDatacube(Datacube):
                 else:
                     key_value_path = {c.axis.name: c.value}
                     ax = c.axis
-                    (key_value_path, leaf_path, self.unwanted_path) = ax.n_unmap_path_key(
+                    (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                         key_value_path, leaf_path, self.unwanted_path
                     )
                     leaf_path |= key_value_path
@@ -164,7 +147,7 @@ class FDBDatacube(Datacube):
         fdb_requests = []
         interm_request_ranges = []
         for i in range(lat_length):
-            for j in range(200):
+            for j in range(len(range_lengths[i])):
                 if current_start_idx[i][j] is not None:
                     current_request_ranges = (current_start_idx[i][j], current_start_idx[i][j] + range_lengths[i][j])
                     interm_request_ranges.append(current_request_ranges)
@@ -182,7 +165,7 @@ class FDBDatacube(Datacube):
         return indexes
 
     def select(self, path, unmapped_path):
-        return self.dataarray
+        return self.fdb_coordinates
 
     def ax_vals(self, name):
-        return self.dataarray.get(name, None)
+        return self.fdb_coordinates.get(name, None)

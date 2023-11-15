@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from polytope.datacube.backends.FDB_datacube import FDBDatacube
+from polytope.datacube.backends.fdb import FDBDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select

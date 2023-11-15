@@ -10,7 +10,6 @@ class XArrayDatacube(Datacube):
 
     def __init__(self, dataarray: xr.DataArray, axis_options={}):
         self.axis_options = axis_options
-        self.grid_mapper = None
         self.axis_counter = 0
         self._axes = None
         self.dataarray = dataarray
@@ -18,7 +17,6 @@ class XArrayDatacube(Datacube):
         self.non_complete_axes = []
         self.complete_axes = []
         self.blocked_axes = []
-        self.transformation = None
         self.fake_axes = []
         self.unwanted_axes = []
         for name, values in dataarray.coords.variables.items():
