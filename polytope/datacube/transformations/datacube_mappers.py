@@ -19,6 +19,7 @@ class DatacubeMapper(DatacubeAxisTransformation):
         self._final_transformation = self.generate_final_transformation()
         self._final_mapped_axes = self._final_transformation._mapped_axes
         self._axis_reversed = self._final_transformation._axis_reversed
+        self._first_axis_vals = self._final_transformation._first_axis_vals
 
     def generate_final_transformation(self):
         map_type = _type_to_datacube_mapper_lookup[self.grid_type]
@@ -83,6 +84,7 @@ class RegularGridMapper(DatacubeMapper):
         self._resolution = resolution
         self.deg_increment = 90 / self._resolution
         self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
+        self._first_axis_vals = self.first_axis_vals()
 
     def first_axis_vals(self):
         first_ax_vals = [-90 + i * self.deg_increment for i in range(2 * self._resolution)]
@@ -134,6 +136,7 @@ class HealpixGridMapper(DatacubeMapper):
         self._base_axis = base_axis
         self._resolution = resolution
         self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
+        self._first_axis_vals = self.first_axis_vals()
 
     def first_axis_vals(self):
         rad2deg = 180 / math.pi
@@ -319,8 +322,6 @@ class OctahedralGridMapper(DatacubeMapper):
 
     def get_precomputed_values_N1280(self):
         lats = [0] * 2560
-        # lats = SortedList()
-        # lats = {}
         lats[0] = 89.946187715665616
         lats[1] = 89.876478353332288
         lats[2] = 89.806357319542244

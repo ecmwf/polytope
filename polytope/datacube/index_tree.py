@@ -45,12 +45,6 @@ class IndexTree(object):
         self._collect_leaf_nodes(leaves)
         return leaves
 
-    def _collect_leaf_nodes_old(self, leaves):
-        if len(self.children) == 0:
-            leaves.append(self)
-        for n in self.children:
-            n._collect_leaf_nodes(leaves)
-
     def _collect_leaf_nodes(self, leaves):
         # NOTE: leaves_and_ancestors is going to be a list of tuples, where first entry is leaf and second entry is a
         # list of its ancestors
@@ -84,13 +78,10 @@ class IndexTree(object):
         else:
             if other.value == self.value:
                 return True
-            if other.value - 2 * other.axis.tol <= self.value <= other.value + 2 * other.axis.tol:
-                return True
-            elif self.value - 2 * self.axis.tol <= other.value <= self.value + 2 * self.axis.tol:
+            if abs(other.value - self.value) <= 2 * other.axis.tol:
                 return True
             else:
                 return False
-        # return (self.axis.name, self.value) == (other.axis.name, other.value)
 
     def __lt__(self, other):
         return (self.axis.name, self.value) < (other.axis.name, other.value)
