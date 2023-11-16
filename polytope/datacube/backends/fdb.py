@@ -51,8 +51,7 @@ class FDBDatacube(Datacube):
             else:
                 for c in requests.children:
                     self.get(c)
-
-        # Second if request node has no children, we have a leaf so need to assign fdb values to it
+        # If request node has no children, we have a leaf so need to assign fdb values to it
         else:
             key_value_path = {requests.axis.name: requests.value}
             ax = requests.axis
@@ -62,14 +61,16 @@ class FDBDatacube(Datacube):
             leaf_path |= key_value_path
             if len(requests.children[0].children[0].children) == 0:
                 # remap this last key
-                self.handle_last_before_last_layer(requests, leaf_path)
+                self.get_2nd_last_values(requests, leaf_path)
 
-            # THIRD otherwise remap the path for this key and iterate again over children
+            # Otherwise remap the path for this key and iterate again over children
             else:
                 for c in requests.children:
                     self.get(c, leaf_path)
 
-    def handle_last_before_last_layer(self, requests, leaf_path={}):
+    def get_2nd_last_values(self, requests, leaf_path={}):
+        # In this function, we recursively loop over the last two layers of the tree and store the indices of the
+        # request ranges in those layers
         lat_length = len(requests.children)
         range_lengths = [False] * lat_length
         current_start_idxs = [False] * lat_length
