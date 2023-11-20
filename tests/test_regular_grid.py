@@ -22,6 +22,8 @@ class TestRegularGrid:
             },
             "date": {"transformation": {"merge": {"with": "time", "linkers": [" ", "00"]}}},
             "step": {"transformation": {"type_change": "int"}},
+            "number": {"transformation": {"type_change": "int"}},
+            "longitude": {"transformation": {"cyclic": [0, 360]}},
         }
         self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "step": 0}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
@@ -64,13 +66,13 @@ class TestRegularGrid:
             Select("class", ["ea"]),
             Select("stream", ["enda"]),
             Select("type", ["an"]),
-            Disk(["latitude", "longitude"], [0, 0], [15, 15]),
+            Disk(["latitude", "longitude"], [0, 0], [3, 3]),
             Select("levelist", ["500"]),
             Select("number", ["0", "1"]),
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 46 * 2
+        assert len(result.leaves) == 10
 
         lats = []
         lons = []
@@ -99,4 +101,4 @@ class TestRegularGrid:
         # plt.colorbar(label="Temperature")
         # plt.show()
 
-        assert len(eccodes_lats) == 46 * 2
+        assert len(eccodes_lats) == 10

@@ -110,7 +110,6 @@ class Box(Shape):
                 if i >> d & 1:
                     vertex[d] = upper_corner[d]
             self.vertices.append(vertex)
-
         assert lower_corner in self.vertices
         assert upper_corner in self.vertices
         assert len(self.vertices) == 2**dimension
