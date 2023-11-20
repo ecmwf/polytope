@@ -60,7 +60,7 @@ class TestOctahedralGrid:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 35
+        assert len(result.leaves) == 40
 
         lats = []
         lons = []
@@ -80,4 +80,4 @@ class TestOctahedralGrid:
             assert lat <= eccodes_lat + tol
             assert eccodes_lon - tol <= lon
             assert lon <= eccodes_lon + tol
-        assert len(eccodes_lats) == 35
+        assert len(eccodes_lats) == 40

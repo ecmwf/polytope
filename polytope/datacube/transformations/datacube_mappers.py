@@ -153,7 +153,6 @@ class HealpixGridMapper(DatacubeMapper):
             vals[4 * self._resolution - 1 - i] = -val
         # Equator
         vals[2 * self._resolution - 1] = 0
-
         return vals
 
     def map_first_axis(self, lower, upper):
@@ -176,6 +175,8 @@ class HealpixGridMapper(DatacubeMapper):
         if self._resolution - 1 <= idx < 2 * self._resolution - 1 or 2 * self._resolution <= idx < 3 * self._resolution:
             r_start = start * (2 - (((idx + 1) - self._resolution + 1) % 2))
             vals = [r_start + i * (360 / (4 * self._resolution)) for i in range(4 * self._resolution)]
+            if vals[-1] == 360:
+                vals[-1] = 0
             return vals
         # Equator
         temp_val = 1 if self._resolution % 2 else 0
@@ -196,17 +197,19 @@ class HealpixGridMapper(DatacubeMapper):
                 idx += 4 * (i + 1)
             else:
                 idx += second_idx
+                return idx
         for i in range(self._resolution - 1, 3 * self._resolution):
             if i != first_idx:
                 idx += 4 * self._resolution
             else:
                 idx += second_idx
+                return idx
         for i in range(3 * self._resolution, 4 * self._resolution - 1):
             if i != first_idx:
                 idx += 4 * (4 * self._resolution - 1 - i + 1)
             else:
                 idx += second_idx
-        return idx
+                return idx
 
     def find_second_idx(self, first_val, second_val):
         tol = 1e-10
@@ -239,8 +242,6 @@ class HealpixGridMapper(DatacubeMapper):
         tol = 1e-8
         first_val = [i for i in self._first_axis_vals if first_val - tol <= i <= first_val + tol][0]
         first_idx = self._first_axis_vals.index(first_val)
-        print(self.second_axis_vals(first_val))
-        print(second_val)
         second_val = [i for i in self.second_axis_vals(first_val) if second_val - tol <= i <= second_val + tol][0]
         second_idx = self.second_axis_vals(first_val).index(second_val)
         healpix_index = self.axes_idx_to_healpix_idx(first_idx, second_idx)
