@@ -21,7 +21,7 @@ class TestOctahedralGrid:
             "values": {
                 "transformation": {"mapper": {"type": "healpix", "resolution": 32, "axes": ["latitude", "longitude"]}}
             },
-            "longitude": {"transformation": {"cyclic": [0, 360]}}
+            "longitude": {"transformation": {"cyclic": [0, 360]}},
         }
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.latlon_array, engine=self.slicer, axis_options=self.options)
