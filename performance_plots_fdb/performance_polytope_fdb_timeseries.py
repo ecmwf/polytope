@@ -30,7 +30,7 @@ class TestSlicingFDBDatacube:
     # @pytest.mark.skip(reason="can't install fdb branch on CI")
     def test_fdb_datacube(self):
         request = Request(
-            Span("step", 0, 62),
+            Span("step", 0, 14),
             Select("levtype", ["sfc"]),
             Select("date", [pd.Timestamp("20231102T000000")]),
             Select("domain", ["g"]),

@@ -13,11 +13,11 @@ time_to_extract_pyfdb_eccodes = [ ,29.21822690963745 ,36.718732833862305]
 
 # start from new
 
-number_of_levels = [60 ,75 ,90]
+number_of_levels = [15, 30, 45, 60 ,75 ,90]
 
-time_to_extract_polytope = [0.36305999755859375 ,0.4230949878692627]
+time_to_extract_polytope = [0.10961413383483887 ,0.18768906593322754 ,0.26862525939941406 ,0.3558080196380615 ,0.4388298988342285 ,0.5346179008483887]
 
-time_to_extract_pyfdb = [0.7152671813964844 ,0.8634071350097656]
+time_to_extract_pyfdb = []
 
-time_to_extract_pyfdb_eccodes = [25.47635293006897 ,35.70311403274536]
+time_to_extract_pyfdb_eccodes = []
 
