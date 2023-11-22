@@ -38,6 +38,9 @@ class ConvexPolytope(Shape):
     def __str__(self):
         return f"Polytope in {self.axes} with points {self.points}"
 
+    def __repr__(self):
+        return f"Polytope in {self.axes} with points {self.points}"
+
     def axes(self):
         return self._axes
 
