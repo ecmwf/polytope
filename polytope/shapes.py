@@ -38,6 +38,9 @@ class ConvexPolytope(Shape):
     def __str__(self):
         return f"Polytope in {self.axes} with points {self.points}"
 
+    def __repr__(self):
+        return f"Polytope in {self.axes} with points {self.points}"
+
     def axes(self):
         return self._axes
 
@@ -60,6 +63,31 @@ class Select(Shape):
     def polytope(self):
         return [ConvexPolytope([self.axis], [[v]], self.method) for v in self.values]
 
+    def __repr__(self):
+        return f"Select in {self.axis} with points {self.values}"
+
+
+class Point(Shape):
+    """Matches several discrete value"""
+
+    def __init__(self, axes, values, method=None):
+        self._axes = axes
+        self.values = values
+        self.method = method
+        self.polytopes = []
+        for i in range(len(axes)):
+            polytope_points = [v[i] for v in self.values]
+            self.polytopes.append(ConvexPolytope([axes[i]], [polytope_points], method))
+
+    def axes(self):
+        return self._axes
+
+    def polytope(self):
+        return self.polytopes
+
+    def __repr__(self):
+        return f"Point in {self._axes} with points {self.values}"
+
 
 class Span(Shape):
     """1-D range along a single axis"""
@@ -77,6 +105,9 @@ class Span(Shape):
     def polytope(self):
         return [ConvexPolytope([self.axis], [[self.lower], [self.upper]])]
 
+    def __repr__(self):
+        return f"Span in {self.axis} with range from {self.lower} to {self.upper}"
+
 
 class All(Span):
     """Matches all indices in an axis"""
@@ -84,12 +115,17 @@ class All(Span):
     def __init__(self, axis):
         super().__init__(axis)
 
+    def __repr__(self):
+        return f"All in {self.axis}"
+
 
 class Box(Shape):
     """N-D axis-aligned bounding box (AABB), specified by two opposite corners"""
 
     def __init__(self, axes, lower_corner=None, upper_corner=None):
         dimension = len(axes)
+        self._lower_corner = lower_corner
+        self._upper_corner = upper_corner
         self._axes = axes
         assert len(lower_corner) == dimension
         assert len(upper_corner) == dimension
@@ -120,6 +156,9 @@ class Box(Shape):
 
     def polytope(self):
         return [ConvexPolytope(self.axes(), self.vertices)]
+
+    def __repr__(self):
+        return f"Box in {self._axes} with with lower corner {self._lower_corner} and upper corner{self._upper_corner}"
 
 
 class Disk(Shape):
@@ -158,6 +197,9 @@ class Disk(Shape):
 
     def polytope(self):
         return [ConvexPolytope(self.axes(), self.points)]
+
+    def __repr__(self):
+        return f"Disk in {self._axes} with centred at {self.centre} and with radius {self.radius}"
 
 
 class Ellipsoid(Shape):
@@ -211,12 +253,18 @@ class Ellipsoid(Shape):
     def polytope(self):
         return [ConvexPolytope(self.axes(), self.points)]
 
+    def __repr__(self):
+        return f"Ellipsoid in {self._axes} with centred at {self.centre} and with radius {self.radius}"
+
 
 class PathSegment(Shape):
     """N-D polytope defined by a shape which is swept along a straight line between two points"""
 
     def __init__(self, axes, shape: Shape, start: List, end: List):
         self._axes = axes
+        self._start = start
+        self._end = end
+        self._shape = shape
 
         assert shape.axes() == self.axes()
         assert len(start) == len(self.axes())
@@ -240,12 +288,18 @@ class PathSegment(Shape):
     def polytope(self):
         return self.polytopes
 
+    def __repr__(self):
+        return f"PathSegment in {self._axes} obtained by sweeping a {self._shape.__repr__()} \
+            between the points {self._start} and {self._end}"
+
 
 class Path(Shape):
     """N-D polytope defined by a shape which is swept along a polyline defined by multiple points"""
 
     def __init__(self, axes, shape, *points, closed=False):
         self._axes = axes
+        self._shape = shape
+        self._points = points
 
         assert shape.axes() == self.axes()
         for p in points:
@@ -267,6 +321,10 @@ class Path(Shape):
     def polytope(self):
         return self.union.polytope()
 
+    def __repr__(self):
+        return f"Path in {self._axes} obtained by sweeping a {self._shape.__repr__()} \
+            between the points {self._points}"
+
 
 class Union(Shape):
     """N-D union of two shapes with the same axes"""
@@ -277,6 +335,7 @@ class Union(Shape):
             assert s.axes() == self.axes()
 
         self.polytopes = []
+        self._shapes = shapes
 
         for s in shapes:
             self.polytopes.extend(s.polytope())
@@ -286,6 +345,9 @@ class Union(Shape):
 
     def polytope(self):
         return self.polytopes
+
+    def __repr__(self):
+        return f"Union in {self._axes} of the shapes {self._shapes}"
 
 
 class Polygon(Shape):
@@ -297,6 +359,7 @@ class Polygon(Shape):
         for p in points:
             assert len(p) == 2
 
+        self._points = points
         triangles = tripy.earclip(points)
         self.polytopes = []
 
@@ -313,3 +376,6 @@ class Polygon(Shape):
 
     def polytope(self):
         return self.polytopes
+
+    def __repr__(self):
+        return f"Polygon in {self._axes} with points {self._points}"
