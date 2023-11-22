@@ -29,6 +29,12 @@ class Request:
             polytopes.extend(shape.polytope())
         return polytopes
 
+    def __repr__(self):
+        return_str = ""
+        for shape in self.shapes:
+            return_str += shape.__repr__() + "\n"
+        return return_str
+
 
 class Polytope:
     def __init__(self, datacube, engine=None, axis_options={}):
