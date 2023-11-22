@@ -4,6 +4,8 @@ import pyfdb
 
 from .datacube import Datacube, IndexTree
 
+import time
+
 
 class FDBDatacube(Datacube):
     def __init__(self, config={}, axis_options={}):
@@ -44,13 +46,11 @@ class FDBDatacube(Datacube):
         return leaf_path
 
     def get(self, requests: IndexTree, leaf_path={}):
+        time1 = time.time()
         # First when request node is root, go to its children
         if requests.axis.name == "root":
-            if len(requests.children) == 0:
-                pass
-            else:
-                for c in requests.children:
-                    self.get(c)
+            for c in requests.children:
+                self.get(c)
         # If request node has no children, we have a leaf so need to assign fdb values to it
         else:
             key_value_path = {requests.axis.name: requests.value}
@@ -67,6 +67,8 @@ class FDBDatacube(Datacube):
             else:
                 for c in requests.children:
                     self.get(c, leaf_path)
+        print("TOTAL GET TIME")
+        print(time.time() - time1)
 
     def get_2nd_last_values(self, requests, leaf_path={}):
         # In this function, we recursively loop over the last two layers of the tree and store the indices of the
@@ -154,11 +156,9 @@ class FDBDatacube(Datacube):
                     interm_request_ranges.append(current_request_ranges)
         request_ranges_with_idx = list(enumerate(interm_request_ranges))
         sorted_list = sorted(request_ranges_with_idx, key=lambda x: x[1][0])
-        sorted_request_ranges = [item[1] for item in sorted_list]
-        original_indices = [item[0] for item in sorted_list]
+        original_indices, sorted_request_ranges = zip(*sorted_list)
         fdb_requests.append(tuple((path, sorted_request_ranges)))
-        subxarray = self.fdb.extract(fdb_requests)
-        output_values = subxarray
+        output_values = self.fdb.extract(fdb_requests)
         return (output_values, original_indices)
 
     def datacube_natural_indexes(self, axis, subarray):
