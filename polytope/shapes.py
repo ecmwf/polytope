@@ -89,7 +89,7 @@ class Point(Shape):
 class Span(Shape):
     """1-D range along a single axis"""
 
-    def __init__(self, axis, lower=None, upper=None):
+    def __init__(self, axis, lower=-math.inf, upper=math.inf):
         assert not isinstance(lower, list)
         assert not isinstance(upper, list)
         self.axis = axis

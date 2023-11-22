@@ -1,3 +1,4 @@
+import math
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from typing import Any, List
@@ -18,6 +19,10 @@ def cyclic(cls):
 
         def to_intervals(range):
             update_range()
+            if range[0] == -math.inf:
+                range[0] = cls.range[0]
+            if range[1] == math.inf:
+                range[1] = cls.range[1]
             axis_lower = cls.range[0]
             axis_upper = cls.range[1]
             axis_range = axis_upper - axis_lower
