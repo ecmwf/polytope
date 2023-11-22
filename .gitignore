@@ -6,3 +6,4 @@ polytope.egg-info
 .pytest_cache
 *.prof
 *.idx
+*.grib
