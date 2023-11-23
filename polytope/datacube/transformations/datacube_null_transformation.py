@@ -1,7 +1,7 @@
 from .datacube_transformations import DatacubeAxisTransformation
 
 
-class DatacubeAxisReverse(DatacubeAxisTransformation):
+class DatacubeNullTransformation(DatacubeAxisTransformation):
     def __init__(self, name, mapper_options):
         self.name = name
         self.transformation_options = mapper_options

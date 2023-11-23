@@ -11,6 +11,7 @@ class DatacubeAxisTypeChange(DatacubeAxisTransformation):
         self.name = name
         self.transformation_options = type_options
         self.new_type = type_options
+        self._final_transformation = self.generate_final_transformation()
 
     def generate_final_transformation(self):
         map_type = _type_to_datacube_type_change_lookup[self.new_type]
@@ -20,18 +21,20 @@ class DatacubeAxisTypeChange(DatacubeAxisTransformation):
         return transformation
 
     def transformation_axes_final(self):
-        final_transformation = self.generate_final_transformation()
-        return [final_transformation.axis_name]
+        return [self._final_transformation.axis_name]
 
     def change_val_type(self, axis_name, values):
-        transformation = self.generate_final_transformation()
-        return [transformation.transform_type(val) for val in values]
+        return_idx = [self._final_transformation.transform_type(val) for val in values]
+        return_idx.sort()
+        return return_idx
 
     def make_str(self, value):
-        transformation = self.generate_final_transformation()
-        return transformation.make_str(value)
+        return self._final_transformation.make_str(value)
 
     def blocked_axes(self):
+        return []
+
+    def unwanted_axes(self):
         return []
 
 

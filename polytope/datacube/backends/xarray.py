@@ -10,7 +10,6 @@ class XArrayDatacube(Datacube):
 
     def __init__(self, dataarray: xr.DataArray, axis_options={}):
         self.axis_options = axis_options
-        self.grid_mapper = None
         self.axis_counter = 0
         self._axes = None
         self.dataarray = dataarray
@@ -18,8 +17,8 @@ class XArrayDatacube(Datacube):
         self.non_complete_axes = []
         self.complete_axes = []
         self.blocked_axes = []
-        self.transformation = None
         self.fake_axes = []
+        self.unwanted_axes = []
         for name, values in dataarray.coords.variables.items():
             if name in dataarray.dims:
                 options = axis_options.get(name, {})
@@ -48,14 +47,13 @@ class XArrayDatacube(Datacube):
     def get(self, requests: IndexTree):
         for r in requests.leaves:
             path = r.flatten()
-            path = self.remap_path(path)
             if len(path.items()) == self.axis_counter:
                 # first, find the grid mapper transform
                 unmapped_path = {}
                 path_copy = deepcopy(path)
                 for key in path_copy:
                     axis = self._axes[key]
-                    (path, unmapped_path) = axis.unmap_total_path_to_datacube(path, unmapped_path)
+                    (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
                 path = self.fit_path(path)
                 subxarray = self.dataarray.sel(path, method="nearest")
                 subxarray = subxarray.sel(unmapped_path)

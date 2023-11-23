@@ -4,10 +4,7 @@ import pytest
 from polytope.datacube.backends.fdb import FDBDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select
-
-# import geopandas as gpd
-# import matplotlib.pyplot as plt
+from polytope.shapes import Box, Select, Span
 
 
 class TestSlicingFDBDatacube:
@@ -33,7 +30,7 @@ class TestSlicingFDBDatacube:
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
-            Select("date", [pd.Timestamp("20230625T120000")]),
+            Span("date", pd.Timestamp("20230625T120000"), pd.Timestamp("20230626T120000")),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
             Select("param", ["167"]),
@@ -45,21 +42,3 @@ class TestSlicingFDBDatacube:
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 9
-
-        # lats = []
-        # lons = []
-        # tol = 1e-8
-        # for i in range(len(result.leaves)):
-        #     cubepath = result.leaves[i].flatten()
-        #     lat = cubepath["latitude"]
-        #     lon = cubepath["longitude"]
-        #     lats.append(lat)
-        #     lons.append(lon)
-
-        # worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
-        # fig, ax = plt.subplots(figsize=(12, 6))
-        # worldmap.plot(color="darkgrey", ax=ax)
-
-        # plt.scatter(lons, lats, s=16, c="red", cmap="YlOrRd")
-        # plt.colorbar(label="Temperature")
-        # plt.show()

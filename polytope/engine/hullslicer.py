@@ -8,7 +8,7 @@ import scipy.spatial
 from ..datacube.backends.datacube import Datacube, IndexTree
 from ..datacube.datacube_axis import UnsliceableDatacubeAxis
 from ..shapes import ConvexPolytope
-from ..utility.combinatorics import argmax, argmin, group, product, unique
+from ..utility.combinatorics import argmax, argmin, group, tensor_product, unique
 from ..utility.exceptions import UnsliceableShapeError
 from ..utility.geometry import lerp
 from .engine import Engine
@@ -19,7 +19,7 @@ class HullSlicer(Engine):
         pass
 
     def _unique_continuous_points(self, p: ConvexPolytope, datacube: Datacube):
-        for i, ax in enumerate(p.axes()):
+        for i, ax in enumerate(p._axes):
             mapper = datacube.get_mapper(ax)
             if isinstance(mapper, UnsliceableDatacubeAxis):
                 break
@@ -29,8 +29,8 @@ class HullSlicer(Engine):
         # Remove duplicate points
         unique(p.points)
 
-    def _build_unsliceable_child(self, polytope, ax, node, datacube, lower, next_nodes):
-        if polytope.axes() != [ax.name]:
+    def _build_unsliceable_child(self, polytope, ax, node, datacube, lower, next_nodes, slice_axis_idx):
+        if polytope._axes != [ax.name]:
             raise UnsliceableShapeError(ax)
         path = node.flatten()
         if datacube.has_index(path, ax, lower):
@@ -42,20 +42,26 @@ class HullSlicer(Engine):
             # raise a value not found error
             raise ValueError()
 
-    def _build_sliceable_child(self, polytope, ax, node, datacube, lower, upper, next_nodes):
+    def _build_sliceable_child(self, polytope, ax, node, datacube, lower, upper, next_nodes, slice_axis_idx):
         tol = ax.tol
         lower = ax.from_float(lower - tol)
         upper = ax.from_float(upper + tol)
         flattened = node.flatten()
         method = polytope.method
-        for value in datacube.get_indices(flattened, ax, lower, upper, method):
+        values = datacube.get_indices(flattened, ax, lower, upper, method)
+
+        if len(values) == 0:
+            node.remove_branch()
+
+        for value in values:
             # convert to float for slicing
             fvalue = ax.to_float(value)
-            new_polytope = slice(polytope, ax.name, fvalue)
+            new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
             # store the native type
             remapped_val = value
             if ax.is_cyclic:
-                remapped_val = (ax.remap([value, value])[0][0] + ax.remap([value, value])[0][1]) / 2
+                remapped_val_interm = ax.remap([value, value])[0]
+                remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
                 remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
             child = node.create_child(ax, remapped_val)
             child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
@@ -66,13 +72,13 @@ class HullSlicer(Engine):
 
     def _build_branch(self, ax, node, datacube, next_nodes):
         for polytope in node["unsliced_polytopes"]:
-            if ax.name in polytope.axes():
-                lower, upper = polytope.extents(ax.name)
+            if ax.name in polytope._axes:
+                lower, upper, slice_axis_idx = polytope.extents(ax.name)
                 # here, first check if the axis is an unsliceable axis and directly build node if it is
                 if isinstance(ax, UnsliceableDatacubeAxis):
-                    self._build_unsliceable_child(polytope, ax, node, datacube, lower, next_nodes)
+                    self._build_unsliceable_child(polytope, ax, node, datacube, lower, next_nodes, slice_axis_idx)
                 else:
-                    self._build_sliceable_child(polytope, ax, node, datacube, lower, upper, next_nodes)
+                    self._build_sliceable_child(polytope, ax, node, datacube, lower, upper, next_nodes, slice_axis_idx)
         del node["unsliced_polytopes"]
 
     def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
@@ -83,7 +89,7 @@ class HullSlicer(Engine):
         groups, input_axes = group(polytopes)
         datacube.validate(input_axes)
         request = IndexTree()
-        combinations = product(groups)
+        combinations = tensor_product(groups)
 
         for c in combinations:
             r = IndexTree()
@@ -127,9 +133,7 @@ def _reduce_dimension(intersects, slice_axis_idx):
     return temp_intersects
 
 
-def slice(polytope: ConvexPolytope, axis, value):
-    slice_axis_idx = polytope._axes.index(axis)
-
+def slice(polytope: ConvexPolytope, axis, value, slice_axis_idx):
     if len(polytope.points[0]) == 1:
         # Note that in this case, we do not need to do linear interpolation so we can save time
         if value in chain(*polytope.points):
@@ -145,7 +149,7 @@ def slice(polytope: ConvexPolytope, axis, value):
     # Reduce dimension of intersection points, removing slice axis
     intersects = _reduce_dimension(intersects, slice_axis_idx)
 
-    axes = [ax for ax in polytope.axes() if ax != axis]
+    axes = [ax for ax in polytope._axes if ax != axis]
 
     if len(intersects) < len(intersects[0]) + 1:
         return ConvexPolytope(axes, intersects)
@@ -162,7 +166,7 @@ def slice(polytope: ConvexPolytope, axis, value):
             vertices = hull.vertices
 
         except scipy.spatial.qhull.QhullError as e:
-            if "input is less than" or "simplex is flat" in str(e):
+            if "less than" or "flat" in str(e):
                 return ConvexPolytope(axes, intersects)
     # Sliced result is simply the convex hull
     return ConvexPolytope(axes, [intersects[i] for i in vertices])

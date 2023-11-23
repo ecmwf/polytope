@@ -23,7 +23,8 @@ class TestInitDatacubeAxes:
                 "transformation": {
                     "mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
                 }
-            }
+            },
+            # "latitude": {"transformation": {"reverse": {True}}},
         }
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=latlon_array, engine=self.slicer, axis_options=self.options)
@@ -35,7 +36,7 @@ class TestInitDatacubeAxes:
         assert self.datacube._axes["longitude"].has_mapper
         assert isinstance(self.datacube._axes["longitude"], FloatDatacubeAxis)
         assert not ("values" in self.datacube._axes.keys())
-        assert self.datacube._axes["latitude"].find_indexes({}, self.datacube)[:5] == [
+        assert list(self.datacube._axes["latitude"].find_indexes({}, self.datacube)[:5]) == [
             89.94618771566562,
             89.87647835333229,
             89.80635731954224,

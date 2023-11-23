@@ -33,7 +33,7 @@ class ConvexPolytope(Shape):
         axis_values = [point[slice_axis_idx] for point in self.points]
         lower = min(axis_values)
         upper = max(axis_values)
-        return (lower, upper)
+        return (lower, upper, slice_axis_idx)
 
     def __str__(self):
         return f"Polytope in {self.axes} with points {self.points}"
@@ -143,7 +143,6 @@ class Box(Shape):
                 if i >> d & 1:
                     vertex[d] = upper_corner[d]
             self.vertices.append(vertex)
-
         assert lower_corner in self.vertices
         assert upper_corner in self.vertices
         assert len(self.vertices) == 2**dimension

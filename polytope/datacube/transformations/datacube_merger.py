@@ -15,16 +15,24 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
     def blocked_axes(self):
         return [self._second_axis]
 
+    def unwanted_axes(self):
+        return []
+
+    def _mapped_axes(self):
+        return self._first_axis
+
     def merged_values(self, datacube):
         first_ax_vals = datacube.ax_vals(self.name)
         second_ax_name = self._second_axis
         second_ax_vals = datacube.ax_vals(second_ax_name)
         linkers = self._linkers
         merged_values = []
-        for first_val in first_ax_vals:
-            for second_val in second_ax_vals:
+        for i in range(len(first_ax_vals)):
+            first_val = first_ax_vals[i]
+            for j in range(len(second_ax_vals)):
+                second_val = second_ax_vals[j]
                 # TODO: check that the first and second val are strings
-                val_to_add = pd.to_datetime(first_val + linkers[0] + second_val + linkers[1])
+                val_to_add = pd.to_datetime("".join([first_val, linkers[0], second_val, linkers[1]]))
                 val_to_add = val_to_add.to_numpy()
                 val_to_add = val_to_add.astype("datetime64[s]")
                 merged_values.append(val_to_add)
@@ -44,7 +52,12 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         first_linker_size = len(self._linkers[0])
         second_linked_size = len(self._linkers[1])
         second_val = merged_val[first_idx + first_linker_size : -second_linked_size]
+
+        # TODO: maybe replacing like this is too specific to time/dates?
+        first_val = str(first_val).replace("-", "")
+        second_val = second_val.replace(":", "")
         return (first_val, second_val)
 
     def change_val_type(self, axis_name, values):
-        return values
+        new_values = pd.to_datetime(values)
+        return new_values

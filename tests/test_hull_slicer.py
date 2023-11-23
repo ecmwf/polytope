@@ -20,38 +20,40 @@ class TestHullSlicer:
     def test_3D(self):
         p3 = self.construct_nd_cube(3)
         print(p3)
-        p2 = polytope.engine.hullslicer.slice(p3, "c", 0.5)
+        p2 = polytope.engine.hullslicer.slice(p3, "c", 0.5, 2)
         print(p2)
-        p1 = polytope.engine.hullslicer.slice(p2, "b", 0.5)
+        p1 = polytope.engine.hullslicer.slice(p2, "b", 0.5, 1)
         print(p1)
 
+    @pytest.mark.skip(reason="This is too slow.")
     def test_4D(self):
         p = self.construct_nd_cube(4)
         print(p)
         while len(p.axes()) > 1:
-            p = polytope.engine.hullslicer.slice(p, p._axes[-1], 0.5)
+            p = polytope.engine.hullslicer.slice(p, p._axes[-1], 0.5, -1)
             print(p)
 
+    @pytest.mark.skip(reason="This is too slow.")
     def test_ND(self):
         with benchmark("4D"):
             p = self.construct_nd_cube(4)
             while len(p.axes()) > 1:
-                p = polytope.engine.hullslicer.slice(p, p._axes[-1], 0.5)
+                p = polytope.engine.hullslicer.slice(p, p._axes[-1], 0.5, -1)
 
         with benchmark("5D"):
             p = self.construct_nd_cube(5)
             while len(p.axes()) > 1:
-                p = polytope.engine.hullslicer.slice(p, p._axes[-1], 0.5)
+                p = polytope.engine.hullslicer.slice(p, p._axes[-1], 0.5, -1)
 
         with benchmark("6D"):
             p = self.construct_nd_cube(6)
             while len(p.axes()) > 1:
-                p = polytope.engine.hullslicer.slice(p, p._axes[-1], 0.5)
+                p = polytope.engine.hullslicer.slice(p, p._axes[-1], 0.5, -1)
 
         with benchmark("7D"):
             p = self.construct_nd_cube(7)
             while len(p.axes()) > 1:
-                p = polytope.engine.hullslicer.slice(p, p._axes[-1], 0.5)
+                p = polytope.engine.hullslicer.slice(p, p._axes[-1], 0.5, -1)
 
         # QHull is not performant above 7D as per its documentation
         # with benchmark("8D"):

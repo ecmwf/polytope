@@ -15,14 +15,14 @@ class TestMultipleTransformations:
             np.random.randn(1, 1, 4289589, 3),
             dims=("date", "time", "values", "step"),
             coords={
-                "date": ["2000-01-01"],
-                "time": ["06:00"],
+                "date": ["20000101"],
+                "time": ["0600"],
                 "values": list(range(4289589)),
                 "step": [0, 1, 2],
             },
         )
         self.options = {
-            "date": {"transformation": {"merge": {"with": "time", "linkers": ["T", ":00"]}}},
+            "date": {"transformation": {"merge": {"with": "time", "linkers": ["T", "00"]}}},
             "values": {
                 "transformation": {
                     "mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
@@ -34,7 +34,6 @@ class TestMultipleTransformations:
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.array, engine=self.slicer, axis_options=self.options)
 
-    # @pytest.mark.skip(reason="Need date time to not be strings")
     def test_merge_axis(self):
         # NOTE: does not work because the date is a string in the merge option...
         date = np.datetime64("2000-01-01T06:00:00")

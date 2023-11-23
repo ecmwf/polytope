@@ -15,17 +15,16 @@ class TestMergeTransformation:
             np.random.randn(1, 1),
             dims=("date", "time"),
             coords={
-                "date": ["2000-01-01"],
-                "time": ["06:00"],
+                "date": ["20000101"],
+                "time": ["0600"],
             },
         )
-        self.options = {"date": {"transformation": {"merge": {"with": "time", "linkers": [" ", ":00"]}}}}
+        self.options = {"date": {"transformation": {"merge": {"with": "time", "linkers": ["T", "00"]}}}}
         self.xarraydatacube = XArrayDatacube(self.array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.array, engine=self.slicer, axis_options=self.options)
 
     def test_merge_axis(self):
-        request = Request(Select("date", [pd.Timestamp("2000-01-01T06:00:00")]))
+        request = Request(Select("date", [pd.Timestamp("20000101T060000")]))
         result = self.API.retrieve(request)
-        # assert result.leaves[0].flatten()["date"] == np.datetime64("2000-01-01T06:00:00")
         assert result.leaves[0].flatten()["date"] == pd.Timestamp("2000-01-01T06:00:00")

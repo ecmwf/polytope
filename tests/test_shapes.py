@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from polytope.datacube.backends.FDB_datacube import FDBDatacube
+from polytope.datacube.backends.fdb import FDBDatacube
 from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request

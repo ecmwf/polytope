@@ -1,3 +1,4 @@
+import bisect
 import math
 from abc import ABC, abstractmethod
 from copy import deepcopy
@@ -5,6 +6,8 @@ from typing import Any, List
 
 import numpy as np
 import pandas as pd
+
+from ..utility.list_tools import bisect_left_cmp, bisect_right_cmp
 
 
 def cyclic(cls):
@@ -120,19 +123,17 @@ def cyclic(cls):
         def find_indexes(path, datacube):
             return old_find_indexes(path, datacube)
 
-        old_unmap_total_path_to_datacube = cls.unmap_total_path_to_datacube
+        old_unmap_path_key = cls.unmap_path_key
 
-        def unmap_total_path_to_datacube(path, unmapped_path):
+        def unmap_path_key(key_value_path, leaf_path, unwanted_path):
+            value = key_value_path[cls.name]
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisCyclic):
-                    transformation = transform
-                    if cls.name == transformation.name:
-                        old_val = path.get(cls.name, None)
-                        path.pop(cls.name, None)
-                        new_val = _remap_val_to_axis_range(old_val)
-                        path[cls.name] = new_val
-            (path, unmapped_path) = old_unmap_total_path_to_datacube(path, unmapped_path)
-            return (path, unmapped_path)
+                    if cls.name == transform.name:
+                        new_val = _remap_val_to_axis_range(value)
+                        key_value_path[cls.name] = new_val
+            key_value_path, leaf_path, unwanted_path = old_unmap_path_key(key_value_path, leaf_path, unwanted_path)
+            return (key_value_path, leaf_path, unwanted_path)
 
         old_unmap_to_datacube = cls.unmap_to_datacube
 
@@ -185,8 +186,8 @@ def cyclic(cls):
         cls.offset = offset
         cls.find_indexes = find_indexes
         cls.unmap_to_datacube = unmap_to_datacube
-        cls.unmap_total_path_to_datacube = unmap_total_path_to_datacube
         cls.find_indices_between = find_indices_between
+        cls.unmap_path_key = unmap_path_key
 
     return cls
 
@@ -213,64 +214,46 @@ def mapper(cls):
             (path, unmapped_path) = old_unmap_to_datacube(path, unmapped_path)
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeMapper):
-                    transformation = transform
-                    if cls.name == transformation._mapped_axes()[0]:
+                    if cls.name == transform._mapped_axes()[0]:
                         # if we are on the first axis, then need to add the first val to unmapped_path
                         first_val = path.get(cls.name, None)
                         path.pop(cls.name, None)
                         if cls.name not in unmapped_path:
                             # if for some reason, the unmapped_path already has the first axis val, then don't update
                             unmapped_path[cls.name] = first_val
-                    if cls.name == transformation._mapped_axes()[1]:
+                    if cls.name == transform._mapped_axes()[1]:
                         # if we are on the second axis, then the val of the first axis is stored
                         # inside unmapped_path so can get it from there
                         second_val = path.get(cls.name, None)
                         path.pop(cls.name, None)
-                        first_val = unmapped_path.get(transformation._mapped_axes()[0], None)
-                        unmapped_path.pop(transformation._mapped_axes()[0], None)
+                        first_val = unmapped_path.get(transform._mapped_axes()[0], None)
+                        unmapped_path.pop(transform._mapped_axes()[0], None)
                         # if the first_val was not in the unmapped_path, then it's still in path
                         if first_val is None:
-                            first_val = path.get(transformation._mapped_axes()[0], None)
-                            path.pop(transformation._mapped_axes()[0], None)
+                            first_val = path.get(transform._mapped_axes()[0], None)
+                            path.pop(transform._mapped_axes()[0], None)
                         if first_val is not None and second_val is not None:
-                            unmapped_idx = transformation.unmap(first_val, second_val)
-                            unmapped_path[transformation.old_axis] = unmapped_idx
+                            unmapped_idx = transform.unmap(first_val, second_val)
+                            unmapped_path[transform.old_axis] = unmapped_idx
             return (path, unmapped_path)
 
-        old_unmap_total_path_to_datacube = cls.unmap_total_path_to_datacube
+        old_unmap_path_key = cls.unmap_path_key
 
-        def unmap_total_path_to_datacube(path, unmapped_path):
-            (path, unmapped_path) = old_unmap_total_path_to_datacube(path, unmapped_path)
+        def unmap_path_key(key_value_path, leaf_path, unwanted_path):
+            key_value_path, leaf_path, unwanted_path = old_unmap_path_key(key_value_path, leaf_path, unwanted_path)
+            value = key_value_path[cls.name]
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeMapper):
-                    transformation = transform
-                    if cls.name == transformation._mapped_axes()[0]:
-                        # if we are on the first axis, then need to add the first val to unmapped_path
-                        first_val = path.get(cls.name, None)
-                        path.pop(cls.name, None)
-                        if unmapped_path is None:
-                            unmapped_path[cls.name] = first_val
-                        elif cls.name not in unmapped_path:
-                            # if for some reason, the unmapped_path already has the first axis val, then don't update
-                            unmapped_path[cls.name] = first_val
-                    if cls.name == transformation._mapped_axes()[1]:
-                        # if we are on the second axis, then the val of the first axis is stored
-                        # inside unmapped_path so can get it from there
-                        second_val = path.get(cls.name, None)
-                        path.pop(cls.name, None)
-                        first_val = unmapped_path.get(transformation._mapped_axes()[0], None)
-                        unmapped_path.pop(transformation._mapped_axes()[0], None)
-                        # if the first_val was not in the unmapped_path, then it's still in path
-                        if first_val is None:
-                            first_val = path.get(transformation._mapped_axes()[0], None)
-                            path.pop(transformation._mapped_axes()[0], None)
-                        if first_val is not None and second_val is not None:
-                            unmapped_idx = transformation.unmap(first_val, second_val)
-                            unmapped_path[transformation.old_axis] = unmapped_idx
-            return (path, unmapped_path)
-
-        def remap_to_requested(path, unmapped_path):
-            return (path, unmapped_path)
+                    if cls.name == transform._mapped_axes()[0]:
+                        unwanted_val = key_value_path[transform._mapped_axes()[0]]
+                        unwanted_path[cls.name] = unwanted_val
+                    if cls.name == transform._mapped_axes()[1]:
+                        first_val = unwanted_path[transform._mapped_axes()[0]]
+                        unmapped_idx = transform.unmap(first_val, value)
+                        leaf_path.pop(transform._mapped_axes()[0], None)
+                        key_value_path.pop(cls.name)
+                        key_value_path[transform.old_axis] = unmapped_idx
+            return (key_value_path, leaf_path, unwanted_path)
 
         def find_indices_between(index_ranges, low, up, datacube, method=None):
             # TODO: add method for snappping
@@ -288,21 +271,23 @@ def mapper(cls):
                                 indexes_between = idxs[start:end]
                                 indexes_between_ranges.append(indexes_between)
                             else:
-                                indexes_between = [i for i in idxs if low <= i <= up]
+                                axis_reversed = transform._axis_reversed[cls.name]
+                                if not axis_reversed:
+                                    lower_idx = bisect.bisect_left(idxs, low)
+                                    upper_idx = bisect.bisect_right(idxs, up)
+                                    indexes_between = idxs[lower_idx:upper_idx]
+                                else:
+                                    # TODO: do the custom bisect
+                                    end_idx = bisect_left_cmp(idxs, low, cmp=lambda x, y: x > y) + 1
+                                    start_idx = bisect_right_cmp(idxs, up, cmp=lambda x, y: x > y)
+                                    indexes_between = idxs[start_idx:end_idx]
                                 indexes_between_ranges.append(indexes_between)
             return indexes_between_ranges
 
-        old_remap = cls.remap
-
-        def remap(range):
-            return old_remap(range)
-
-        cls.remap = remap
         cls.find_indexes = find_indexes
         cls.unmap_to_datacube = unmap_to_datacube
-        cls.remap_to_requested = remap_to_requested
         cls.find_indices_between = find_indices_between
-        cls.unmap_total_path_to_datacube = unmap_total_path_to_datacube
+        cls.unmap_path_key = unmap_path_key
 
     return cls
 
@@ -320,20 +305,19 @@ def merge(cls):
                     if cls.name == transformation._first_axis:
                         return transformation.merged_values(datacube)
 
-        old_unmap_total_path_to_datacube = cls.unmap_total_path_to_datacube
+        old_unmap_path_key = cls.unmap_path_key
 
-        def unmap_total_path_to_datacube(path, unmapped_path):
-            (path, unmapped_path) = old_unmap_total_path_to_datacube(path, unmapped_path)
+        def unmap_path_key(key_value_path, leaf_path, unwanted_path):
+            key_value_path, leaf_path, unwanted_path = old_unmap_path_key(key_value_path, leaf_path, unwanted_path)
+            new_key_value_path = {}
+            value = key_value_path[cls.name]
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisMerger):
-                    transformation = transform
-                    if cls.name == transformation._first_axis:
-                        old_val = path.get(cls.name, None)
-                        (first_val, second_val) = transformation.unmerge(old_val)
-                        path.pop(cls.name, None)
-                        path[transformation._first_axis] = first_val
-                        path[transformation._second_axis] = second_val
-            return (path, unmapped_path)
+                    if cls.name == transform._first_axis:
+                        (first_val, second_val) = transform.unmerge(value)
+                        new_key_value_path[transform._first_axis] = first_val
+                        new_key_value_path[transform._second_axis] = second_val
+            return (new_key_value_path, leaf_path, unwanted_path)
 
         old_unmap_to_datacube = cls.unmap_to_datacube
 
@@ -348,9 +332,6 @@ def merge(cls):
                         path.pop(cls.name, None)
                         path[transformation._first_axis] = first_val
                         path[transformation._second_axis] = second_val
-            return (path, unmapped_path)
-
-        def remap_to_requested(path, unmapped_path):
             return (path, unmapped_path)
 
         def find_indices_between(index_ranges, low, up, datacube, method=None):
@@ -369,7 +350,9 @@ def merge(cls):
                                 indexes_between = indexes[start:end]
                                 indexes_between_ranges.append(indexes_between)
                             else:
-                                indexes_between = [i for i in indexes if low <= i <= up]
+                                lower_idx = bisect.bisect_left(indexes, low)
+                                upper_idx = bisect.bisect_right(indexes, up)
+                                indexes_between = indexes[lower_idx:upper_idx]
                                 indexes_between_ranges.append(indexes_between)
             return indexes_between_ranges
 
@@ -379,9 +362,8 @@ def merge(cls):
         cls.remap = remap
         cls.find_indexes = find_indexes
         cls.unmap_to_datacube = unmap_to_datacube
-        cls.remap_to_requested = remap_to_requested
         cls.find_indices_between = find_indices_between
-        cls.unmap_total_path_to_datacube = unmap_total_path_to_datacube
+        cls.unmap_path_key = unmap_path_key
 
     return cls
 
@@ -400,12 +382,6 @@ def reverse(cls):
             else:
                 ordered_indices = unordered_indices
             return ordered_indices
-
-        def unmap_to_datacube(path, unmapped_path):
-            return (path, unmapped_path)
-
-        def remap_to_requested(path, unmapped_path):
-            return (path, unmapped_path)
 
         def find_indices_between(index_ranges, low, up, datacube, method=None):
             # TODO: add method for snappping
@@ -441,7 +417,9 @@ def reverse(cls):
                                     indexes_between = indexes[start:end]
                                     indexes_between_ranges.append(indexes_between)
                                 else:
-                                    indexes_between = [i for i in indexes if low <= i <= up]
+                                    lower_idx = bisect.bisect_left(indexes, low)
+                                    upper_idx = bisect.bisect_right(indexes, up)
+                                    indexes_between = indexes[lower_idx:upper_idx]
                                     indexes_between_ranges.append(indexes_between)
             return indexes_between_ranges
 
@@ -450,8 +428,6 @@ def reverse(cls):
 
         cls.remap = remap
         cls.find_indexes = find_indexes
-        cls.unmap_to_datacube = unmap_to_datacube
-        cls.remap_to_requested = remap_to_requested
         cls.find_indices_between = find_indices_between
 
     return cls
@@ -471,20 +447,17 @@ def type_change(cls):
                         original_vals = old_find_indexes(path, datacube)
                         return transformation.change_val_type(cls.name, original_vals)
 
-        old_unmap_total_path_to_datacube = cls.unmap_total_path_to_datacube
+        old_unmap_path_key = cls.unmap_path_key
 
-        def unmap_total_path_to_datacube(path, unmapped_path):
-            (path, unmapped_path) = old_unmap_total_path_to_datacube(path, unmapped_path)
+        def unmap_path_key(key_value_path, leaf_path, unwanted_path):
+            key_value_path, leaf_path, unwanted_path = old_unmap_path_key(key_value_path, leaf_path, unwanted_path)
+            value = key_value_path[cls.name]
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisTypeChange):
-                    transformation = transform
-                    if cls.name == transformation.name:
-                        changed_val = path.get(cls.name, None)
-                        unchanged_val = transformation.make_str(changed_val)
-                        if cls.name in path:
-                            path.pop(cls.name, None)
-                            unmapped_path[cls.name] = unchanged_val
-            return (path, unmapped_path)
+                    if cls.name == transform.name:
+                        unchanged_val = transform.make_str(value)
+                        key_value_path[cls.name] = unchanged_val
+            return (key_value_path, leaf_path, unwanted_path)
 
         def unmap_to_datacube(path, unmapped_path):
             for transform in cls.transformations:
@@ -496,9 +469,6 @@ def type_change(cls):
                         if cls.name in path:
                             path.pop(cls.name, None)
                             unmapped_path[cls.name] = unchanged_val
-            return (path, unmapped_path)
-
-        def remap_to_requested(path, unmapped_path):
             return (path, unmapped_path)
 
         def find_indices_between(index_ranges, low, up, datacube, method=None):
@@ -517,7 +487,9 @@ def type_change(cls):
                                 indexes_between = indexes[start:end]
                                 indexes_between_ranges.append(indexes_between)
                             else:
-                                indexes_between = [i for i in indexes if low <= i <= up]
+                                lower_idx = bisect.bisect_left(indexes, low)
+                                upper_idx = bisect.bisect_right(indexes, up)
+                                indexes_between = indexes[lower_idx:upper_idx]
                                 indexes_between_ranges.append(indexes_between)
             return indexes_between_ranges
 
@@ -527,9 +499,32 @@ def type_change(cls):
         cls.remap = remap
         cls.find_indexes = find_indexes
         cls.unmap_to_datacube = unmap_to_datacube
-        cls.remap_to_requested = remap_to_requested
         cls.find_indices_between = find_indices_between
-        cls.unmap_total_path_to_datacube = unmap_total_path_to_datacube
+        cls.unmap_path_key = unmap_path_key
+
+    return cls
+
+
+def null(cls):
+    if cls.type_change:
+        old_find_indexes = cls.find_indexes
+
+        def find_indexes(path, datacube):
+            return old_find_indexes(path, datacube)
+
+        def find_indices_between(index_ranges, low, up, datacube, method=None):
+            indexes_between_ranges = []
+            for indexes in index_ranges:
+                indexes_between = [i for i in indexes if low <= i <= up]
+                indexes_between_ranges.append(indexes_between)
+            return indexes_between_ranges
+
+        def remap(range):
+            return [range]
+
+        cls.remap = remap
+        cls.find_indexes = find_indexes
+        cls.find_indices_between = find_indices_between
 
     return cls
 
@@ -585,11 +580,8 @@ class DatacubeAxis(ABC):
     def offset(self, value):
         return 0
 
-    def unmap_total_path_to_datacube(self, path, unmapped_path):
-        return (path, unmapped_path)
-
-    def remap_to_requeest(path, unmapped_path):
-        return (path, unmapped_path)
+    def unmap_path_key(self, key_value_path, leaf_path, unwanted_path):
+        return (key_value_path, leaf_path, unwanted_path)
 
     def find_indices_between(self, index_ranges, low, up, datacube, method=None):
         # TODO: add method for snappping

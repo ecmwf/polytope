@@ -20,7 +20,8 @@ class TestOctahedralGrid:
         self.options = {
             "values": {
                 "transformation": {"mapper": {"type": "healpix", "resolution": 32, "axes": ["latitude", "longitude"]}}
-            }
+            },
+            "longitude": {"transformation": {"cyclic": [0, 360]}},
         }
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.latlon_array, engine=self.slicer, axis_options=self.options)
@@ -49,7 +50,7 @@ class TestOctahedralGrid:
         return nearest_points
 
     @pytest.mark.internet
-    def test_octahedral_grid(self):
+    def test_healpix_grid(self):
         request = Request(
             Box(["latitude", "longitude"], [-2, -2], [10, 10]),
             Select("time", ["2022-12-14T12:00:00"]),
@@ -58,7 +59,8 @@ class TestOctahedralGrid:
             Select("valid_time", ["2022-12-14T13:00:00"]),
         )
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 35
+        result.pprint()
+        assert len(result.leaves) == 40
 
         lats = []
         lons = []
@@ -78,4 +80,4 @@ class TestOctahedralGrid:
             assert lat <= eccodes_lat + tol
             assert eccodes_lon - tol <= lon
             assert lon <= eccodes_lon + tol
-        assert len(eccodes_lats) == 35
+        assert len(eccodes_lats) == 40

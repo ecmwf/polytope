@@ -7,3 +7,7 @@ polytope.egg-info
 *.prof
 *.idx
 *.grib
+*.xml
+site
+.coverage
+*.grib

@@ -1,13 +1,11 @@
+import time
+
 import pandas as pd
-import pytest
 
 from polytope.datacube.backends.fdb import FDBDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
-
-# import geopandas as gpd
-# import matplotlib.pyplot as plt
 
 
 class TestSlicingFDBDatacube:
@@ -19,7 +17,7 @@ class TestSlicingFDBDatacube:
                     "mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
                 }
             },
-            "date": {"transformation": {"merge": {"with": "time", "linkers": ["T", "00"]}}},
+            "date": {"transformation": {"merge": {"with": "time", "linkers": [" ", "00"]}}},
             "step": {"transformation": {"type_change": "int"}},
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "step": 0}
@@ -28,7 +26,7 @@ class TestSlicingFDBDatacube:
         self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
 
     # Testing different shapes
-    @pytest.mark.skip(reason="can't install fdb branch on CI")
+    # @pytest.mark.skip(reason="can't install fdb branch on CI")
     def test_fdb_datacube(self):
         request = Request(
             Select("step", [0]),
@@ -40,26 +38,10 @@ class TestSlicingFDBDatacube:
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["an"]),
-            Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
+            Box(["latitude", "longitude"], [0, 0], [10, 10]),
         )
+        time1 = time.time()
         result = self.API.retrieve(request)
-        result.pprint()
-        assert len(result.leaves) == 9
-
-        # lats = []
-        # lons = []
-        # tol = 1e-8
-        # for i in range(len(result.leaves)):
-        #     cubepath = result.leaves[i].flatten()
-        #     lat = cubepath["latitude"]
-        #     lon = cubepath["longitude"]
-        #     lats.append(lat)
-        #     lons.append(lon)
-
-        # worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
-        # fig, ax = plt.subplots(figsize=(12, 6))
-        # worldmap.plot(color="darkgrey", ax=ax)
-
-        # plt.scatter(lons, lats, s=16, c="red", cmap="YlOrRd")
-        # plt.colorbar(label="Temperature")
-        # plt.show()
+        print("ENTIRE TIME")
+        print(time.time() - time1)
+        print(len(result.leaves))

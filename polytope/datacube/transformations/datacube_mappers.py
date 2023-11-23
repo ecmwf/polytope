@@ -1,7 +1,9 @@
+import bisect
 import math
 from copy import deepcopy
 from importlib import import_module
 
+from ...utility.list_tools import bisect_left_cmp, bisect_right_cmp
 from .datacube_transformations import DatacubeAxisTransformation
 
 
@@ -14,6 +16,9 @@ class DatacubeMapper(DatacubeAxisTransformation):
         self.grid_resolution = mapper_options["resolution"]
         self.grid_axes = mapper_options["axes"]
         self.old_axis = name
+        self._final_transformation = self.generate_final_transformation()
+        self._final_mapped_axes = self._final_transformation._mapped_axes
+        self._axis_reversed = self._final_transformation._axis_reversed
 
     def generate_final_transformation(self):
         map_type = _type_to_datacube_mapper_lookup[self.grid_type]
@@ -25,9 +30,11 @@ class DatacubeMapper(DatacubeAxisTransformation):
     def blocked_axes(self):
         return []
 
+    def unwanted_axes(self):
+        return [self._final_mapped_axes[0]]
+
     def transformation_axes_final(self):
-        final_transformation = self.generate_final_transformation()
-        final_axes = final_transformation._mapped_axes
+        final_axes = self._final_mapped_axes
         return final_axes
 
     # Needs to also implement its own methods
@@ -38,8 +45,7 @@ class DatacubeMapper(DatacubeAxisTransformation):
 
     def _mapped_axes(self):
         # NOTE: Each of the mapper method needs to call it's sub mapper method
-        final_transformation = self.generate_final_transformation()
-        final_axes = final_transformation._mapped_axes
+        final_axes = self._final_mapped_axes
         return final_axes
 
     def _base_axis(self):
@@ -49,24 +55,78 @@ class DatacubeMapper(DatacubeAxisTransformation):
         pass
 
     def first_axis_vals(self):
-        final_transformation = self.generate_final_transformation()
-        return final_transformation.first_axis_vals()
+        return self._final_transformation.first_axis_vals()
 
     def second_axis_vals(self, first_val):
-        final_transformation = self.generate_final_transformation()
-        return final_transformation.second_axis_vals(first_val)
+        return self._final_transformation.second_axis_vals(first_val)
 
     def map_first_axis(self, lower, upper):
-        final_transformation = self.generate_final_transformation()
-        return final_transformation.map_first_axis(lower, upper)
+        return self._final_transformation.map_first_axis(lower, upper)
 
     def map_second_axis(self, first_val, lower, upper):
-        final_transformation = self.generate_final_transformation()
-        return final_transformation.map_second_axis(first_val, lower, upper)
+        return self._final_transformation.map_second_axis(first_val, lower, upper)
+
+    def find_second_idx(self, first_val, second_val):
+        return self._final_transformation.find_second_idx(first_val, second_val)
+
+    def unmap_first_val_to_start_line_idx(self, first_val):
+        return self._final_transformation.unmap_first_val_to_start_line_idx(first_val)
 
     def unmap(self, first_val, second_val):
-        final_transformation = self.generate_final_transformation()
-        return final_transformation.unmap(first_val, second_val)
+        return self._final_transformation.unmap(first_val, second_val)
+
+
+class RegularGridMapper(DatacubeMapper):
+    def __init__(self, base_axis, mapped_axes, resolution):
+        self._mapped_axes = mapped_axes
+        self._base_axis = base_axis
+        self._resolution = resolution
+        self.deg_increment = 90 / self._resolution
+        self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
+        self._first_axis_vals = self.first_axis_vals()
+
+    def first_axis_vals(self):
+        first_ax_vals = [90 - i * self.deg_increment for i in range(2 * self._resolution)]
+        return first_ax_vals
+
+    def map_first_axis(self, lower, upper):
+        axis_lines = self._first_axis_vals
+        return_vals = [val for val in axis_lines if lower <= val <= upper]
+        return return_vals
+
+    def second_axis_vals(self, first_val):
+        second_ax_vals = [i * self.deg_increment for i in range(4 * self._resolution)]
+        return second_ax_vals
+
+    def map_second_axis(self, first_val, lower, upper):
+        axis_lines = self.second_axis_vals(first_val)
+        return_vals = [val for val in axis_lines if lower <= val <= upper]
+        return return_vals
+
+    def axes_idx_to_regular_idx(self, first_idx, second_idx):
+        final_idx = first_idx * 4 * self._resolution + second_idx
+        return final_idx
+
+    def find_second_idx(self, first_val, second_val):
+        tol = 1e-10
+        second_axis_vals = self.second_axis_vals(first_val)
+        second_idx = bisect.bisect_left(second_axis_vals, second_val - tol)
+        return second_idx
+
+    def unmap_first_val_to_start_line_idx(self, first_val):
+        tol = 1e-8
+        first_val = [i for i in self._first_axis_vals if first_val - tol <= i <= first_val + tol][0]
+        first_idx = self._first_axis_vals.index(first_val)
+        return first_idx * 4 * self._resolution
+
+    def unmap(self, first_val, second_val):
+        tol = 1e-8
+        first_val = [i for i in self._first_axis_vals if first_val - tol <= i <= first_val + tol][0]
+        first_idx = self._first_axis_vals.index(first_val)
+        second_val = [i for i in self.second_axis_vals(first_val) if second_val - tol <= i <= second_val + tol][0]
+        second_idx = self.second_axis_vals(first_val).index(second_val)
+        final_index = self.axes_idx_to_regular_idx(first_idx, second_idx)
+        return final_index
 
 
 class HealpixGridMapper(DatacubeMapper):
@@ -74,6 +134,8 @@ class HealpixGridMapper(DatacubeMapper):
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
         self._resolution = resolution
+        self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
+        self._first_axis_vals = self.first_axis_vals()
 
     def first_axis_vals(self):
         rad2deg = 180 / math.pi
@@ -91,18 +153,17 @@ class HealpixGridMapper(DatacubeMapper):
             vals[4 * self._resolution - 1 - i] = -val
         # Equator
         vals[2 * self._resolution - 1] = 0
-
         return vals
 
     def map_first_axis(self, lower, upper):
-        axis_lines = self.first_axis_vals()
+        axis_lines = self._first_axis_vals
         return_vals = [val for val in axis_lines if lower <= val <= upper]
         return return_vals
 
     def second_axis_vals(self, first_val):
         tol = 1e-8
-        first_val = [i for i in self.first_axis_vals() if first_val - tol <= i <= first_val + tol][0]
-        idx = self.first_axis_vals().index(first_val)
+        first_val = [i for i in self._first_axis_vals if first_val - tol <= i <= first_val + tol][0]
+        idx = self._first_axis_vals.index(first_val)
 
         # Polar caps
         if idx < self._resolution - 1 or 3 * self._resolution - 1 < idx <= 4 * self._resolution - 2:
@@ -114,6 +175,8 @@ class HealpixGridMapper(DatacubeMapper):
         if self._resolution - 1 <= idx < 2 * self._resolution - 1 or 2 * self._resolution <= idx < 3 * self._resolution:
             r_start = start * (2 - (((idx + 1) - self._resolution + 1) % 2))
             vals = [r_start + i * (360 / (4 * self._resolution)) for i in range(4 * self._resolution)]
+            if vals[-1] == 360:
+                vals[-1] = 0
             return vals
         # Equator
         temp_val = 1 if self._resolution % 2 else 0
@@ -134,22 +197,51 @@ class HealpixGridMapper(DatacubeMapper):
                 idx += 4 * (i + 1)
             else:
                 idx += second_idx
+                return idx
         for i in range(self._resolution - 1, 3 * self._resolution):
             if i != first_idx:
                 idx += 4 * self._resolution
             else:
                 idx += second_idx
+                return idx
         for i in range(3 * self._resolution, 4 * self._resolution - 1):
             if i != first_idx:
                 idx += 4 * (4 * self._resolution - 1 - i + 1)
             else:
                 idx += second_idx
-        return idx
+                return idx
+
+    def find_second_idx(self, first_val, second_val):
+        tol = 1e-10
+        second_axis_vals = self.second_axis_vals(first_val)
+        second_idx = bisect.bisect_left(second_axis_vals, second_val - tol)
+        return second_idx
+
+    def unmap_first_val_to_start_line_idx(self, first_val):
+        tol = 1e-8
+        first_val = [i for i in self._first_axis_vals if first_val - tol <= i <= first_val + tol][0]
+        first_idx = self._first_axis_vals.index(first_val)
+        idx = 0
+        for i in range(self._resolution - 1):
+            if i != first_idx:
+                idx += 4 * (i + 1)
+            else:
+                return idx
+        for i in range(self._resolution - 1, 3 * self._resolution):
+            if i != first_idx:
+                idx += 4 * self._resolution
+            else:
+                return idx
+        for i in range(3 * self._resolution, 4 * self._resolution - 1):
+            if i != first_idx:
+                idx += 4 * (4 * self._resolution - 1 - i + 1)
+            else:
+                return idx
 
     def unmap(self, first_val, second_val):
         tol = 1e-8
-        first_val = [i for i in self.first_axis_vals() if first_val - tol <= i <= first_val + tol][0]
-        first_idx = self.first_axis_vals().index(first_val)
+        first_val = [i for i in self._first_axis_vals if first_val - tol <= i <= first_val + tol][0]
+        first_idx = self._first_axis_vals.index(first_val)
         second_val = [i for i in self.second_axis_vals(first_val) if second_val - tol <= i <= second_val + tol][0]
         second_idx = self.second_axis_vals(first_val).index(second_val)
         healpix_index = self.axes_idx_to_healpix_idx(first_idx, second_idx)
@@ -161,6 +253,10 @@ class OctahedralGridMapper(DatacubeMapper):
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
         self._resolution = resolution
+        self._first_axis_vals = self.first_axis_vals()
+        self._first_idx_map = self.create_first_idx_map()
+        self._second_axis_spacing = {}
+        self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
 
     def gauss_first_guess(self):
         i = 0
@@ -228,6 +324,8 @@ class OctahedralGridMapper(DatacubeMapper):
 
     def get_precomputed_values_N1280(self):
         lats = [0] * 2560
+        # lats = SortedList()
+        # lats = {}
         lats[0] = 89.946187715665616
         lats[1] = 89.876478353332288
         lats[2] = 89.806357319542244
@@ -2819,57 +2917,87 @@ class OctahedralGridMapper(DatacubeMapper):
             return new_vals
 
     def map_first_axis(self, lower, upper):
-        axis_lines = self.first_axis_vals()
-        return_vals = [val for val in axis_lines if lower <= val <= upper]
+        axis_lines = self._first_axis_vals
+        end_idx = bisect_left_cmp(axis_lines, lower, cmp=lambda x, y: x > y) + 1
+        start_idx = bisect_right_cmp(axis_lines, upper, cmp=lambda x, y: x > y)
+        return_vals = axis_lines[start_idx:end_idx]
         return return_vals
 
     def second_axis_vals(self, first_val):
-        first_axis_vals = self.first_axis_vals()
+        first_axis_vals = self._first_axis_vals
         tol = 1e-10
-        first_val = [val for val in first_axis_vals if first_val - tol < val < first_val + tol][0]
-        first_idx = first_axis_vals.index(first_val)
+        first_idx = bisect_left_cmp(first_axis_vals, first_val - tol, cmp=lambda x, y: x > y)
         if first_idx >= self._resolution:
             first_idx = (2 * self._resolution) - 1 - first_idx
         first_idx = first_idx + 1
         npoints = 4 * first_idx + 16
         second_axis_spacing = 360 / npoints
-        second_axis_start = 0
-        second_axis_vals = [second_axis_start + i * second_axis_spacing for i in range(int(npoints))]
+        second_axis_vals = [i * second_axis_spacing for i in range(npoints)]
         return second_axis_vals
 
+    def second_axis_spacing(self, first_val):
+        first_axis_vals = self._first_axis_vals
+        tol = 1e-10
+        _first_idx = bisect_left_cmp(first_axis_vals, first_val - tol, cmp=lambda x, y: x > y)
+        first_idx = _first_idx
+        if first_idx >= self._resolution:
+            first_idx = (2 * self._resolution) - 1 - first_idx
+        first_idx = first_idx + 1
+        npoints = 4 * first_idx + 16
+        second_axis_spacing = 360 / npoints
+        return (second_axis_spacing, _first_idx + 1)
+
     def map_second_axis(self, first_val, lower, upper):
-        second_axis_vals = self.second_axis_vals(first_val)
-        return_vals = [val for val in second_axis_vals if lower <= val <= upper]
+        second_axis_spacing, first_idx = self.second_axis_spacing(first_val)
+        start_idx = int(lower / second_axis_spacing)
+        end_idx = int(upper / second_axis_spacing) + 1
+        return_vals = [i * second_axis_spacing for i in range(start_idx, end_idx)]
         return return_vals
 
     def axes_idx_to_octahedral_idx(self, first_idx, second_idx):
-        octa_idx = 0
-        if first_idx == 1:
-            octa_idx = second_idx
-        else:
-            for i in range(first_idx - 1):
-                if i <= self._resolution - 1:
-                    octa_idx += 20 + 4 * i
-                else:
-                    i = i - self._resolution + 1
-                    if i == 1:
-                        octa_idx += 16 + 4 * self._resolution
-                    else:
-                        i = i - 1
-                        octa_idx += 16 + 4 * (self._resolution - i)
-            octa_idx += second_idx
+        # NOTE: for now this takes ~2e-4s per point, so taking significant time -> for 20k points, takes 4s
+        # Would it be better to store a dictionary of first_idx with cumulative number of points on that idx?
+        # Because this is what we are doing here, but we are calculating for each point...
+        # But then this would only work for special grid resolutions, so need to do like a O1280 version of this
+
+        # NOTE: OR somehow cache this for a given first_idx and then only modify the axis idx for second_idx when the
+        # first_idx changes
+        octa_idx = self._first_idx_map[first_idx - 1] + second_idx
         return octa_idx
 
+    def create_first_idx_map(self):
+        first_idx_list = {}
+        idx = 0
+        for i in range(2 * self._resolution):
+            first_idx_list[i] = idx
+            if i <= self._resolution - 1:
+                idx += 20 + 4 * i
+            else:
+                i = i - self._resolution + 1
+                if i == 1:
+                    idx += 16 + 4 * self._resolution
+                else:
+                    i = i - 1
+                    idx += 16 + 4 * (self._resolution - i)
+        return first_idx_list
+
+    def find_second_axis_idx(self, first_val, second_val):
+        (second_axis_spacing, first_idx) = self.second_axis_spacing(first_val)
+        tol = 1e-8
+        if second_val / second_axis_spacing > int(second_val / second_axis_spacing) + 1 - tol:
+            second_idx = int(second_val / second_axis_spacing) + 1
+        else:
+            second_idx = int(second_val / second_axis_spacing)
+        return (first_idx, second_idx)
+
     def unmap(self, first_val, second_val):
-        first_axis_vals = self.first_axis_vals()
-        tol = 1e-10
-        first_val = [val for val in first_axis_vals if first_val - tol < val < first_val + tol][0]
-        first_idx = first_axis_vals.index(first_val) + 1
-        second_axis_vals = self.second_axis_vals(first_val)
-        second_val = [val for val in second_axis_vals if second_val - tol < val < second_val + tol][0]
-        second_idx = second_axis_vals.index(second_val)
+        (first_idx, second_idx) = self.find_second_axis_idx(first_val, second_val)
         octahedral_index = self.axes_idx_to_octahedral_idx(first_idx, second_idx)
         return octahedral_index
 
 
-_type_to_datacube_mapper_lookup = {"octahedral": "OctahedralGridMapper", "healpix": "HealpixGridMapper"}
+_type_to_datacube_mapper_lookup = {
+    "octahedral": "OctahedralGridMapper",
+    "healpix": "HealpixGridMapper",
+    "regular": "RegularGridMapper",
+}
