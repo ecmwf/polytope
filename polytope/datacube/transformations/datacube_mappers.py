@@ -161,6 +161,9 @@ class OctahedralGridMapper(DatacubeMapper):
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
         self._resolution = resolution
+        self._first_axis_vals = self.first_axis_vals()
+        self._first_idx_map = self.create_first_idx_map()
+        self._second_axis_spacing = {}
 
     def gauss_first_guess(self):
         i = 0
@@ -2837,37 +2840,57 @@ class OctahedralGridMapper(DatacubeMapper):
         second_axis_vals = [second_axis_start + i * second_axis_spacing for i in range(int(npoints))]
         return second_axis_vals
 
+    def second_axis_spacing(self, first_val):
+        first_axis_vals = self._first_axis_vals
+        tol = 1e-10
+        first_val = [val for val in first_axis_vals if first_val - tol < val < first_val + tol][0]
+        _first_idx = first_axis_vals.index(first_val)
+        first_idx = _first_idx
+        if first_idx >= self._resolution:
+            first_idx = (2 * self._resolution) - 1 - first_idx
+        first_idx = first_idx + 1
+        npoints = 4 * first_idx + 16
+        second_axis_spacing = 360 / npoints
+        return (second_axis_spacing, _first_idx + 1)
+
     def map_second_axis(self, first_val, lower, upper):
-        second_axis_vals = self.second_axis_vals(first_val)
-        return_vals = [val for val in second_axis_vals if lower <= val <= upper]
+        second_axis_spacing, first_idx = self.second_axis_spacing(first_val)
+        start_idx = int(lower / second_axis_spacing)
+        end_idx = int(upper / second_axis_spacing) + 1
+        return_vals = [i * second_axis_spacing for i in range(start_idx, end_idx)]
         return return_vals
 
     def axes_idx_to_octahedral_idx(self, first_idx, second_idx):
-        octa_idx = 0
-        if first_idx == 1:
-            octa_idx = second_idx
-        else:
-            for i in range(first_idx - 1):
-                if i <= self._resolution - 1:
-                    octa_idx += 20 + 4 * i
-                else:
-                    i = i - self._resolution + 1
-                    if i == 1:
-                        octa_idx += 16 + 4 * self._resolution
-                    else:
-                        i = i - 1
-                        octa_idx += 16 + 4 * (self._resolution - i)
-            octa_idx += second_idx
+        octa_idx = self._first_idx_map[first_idx - 1] + second_idx
         return octa_idx
 
+    def create_first_idx_map(self):
+        first_idx_list = {}
+        idx = 0
+        for i in range(2 * self._resolution):
+            first_idx_list[i] = idx
+            if i <= self._resolution - 1:
+                idx += 20 + 4 * i
+            else:
+                i = i - self._resolution + 1
+                if i == 1:
+                    idx += 16 + 4 * self._resolution
+                else:
+                    i = i - 1
+                    idx += 16 + 4 * (self._resolution - i)
+        return first_idx_list
+
+    def find_second_axis_idx(self, first_val, second_val):
+        (second_axis_spacing, first_idx) = self.second_axis_spacing(first_val)
+        tol = 1e-8
+        if second_val / second_axis_spacing > int(second_val / second_axis_spacing) + 1 - tol:
+            second_idx = int(second_val / second_axis_spacing) + 1
+        else:
+            second_idx = int(second_val / second_axis_spacing)
+        return (first_idx, second_idx)
+
     def unmap(self, first_val, second_val):
-        first_axis_vals = self.first_axis_vals()
-        tol = 1e-10
-        first_val = [val for val in first_axis_vals if first_val - tol < val < first_val + tol][0]
-        first_idx = first_axis_vals.index(first_val) + 1
-        second_axis_vals = self.second_axis_vals(first_val)
-        second_val = [val for val in second_axis_vals if second_val - tol < val < second_val + tol][0]
-        second_idx = second_axis_vals.index(second_val)
+        (first_idx, second_idx) = self.find_second_axis_idx(first_val, second_val)
         octahedral_index = self.axes_idx_to_octahedral_idx(first_idx, second_idx)
         return octahedral_index
 
