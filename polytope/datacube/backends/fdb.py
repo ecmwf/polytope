@@ -4,8 +4,6 @@ import pyfdb
 
 from .datacube import Datacube, IndexTree
 
-import time
-
 
 class FDBDatacube(Datacube):
     def __init__(self, config={}, axis_options={}):
@@ -46,7 +44,6 @@ class FDBDatacube(Datacube):
         return leaf_path
 
     def get(self, requests: IndexTree, leaf_path={}):
-        time1 = time.time()
         # First when request node is root, go to its children
         if requests.axis.name == "root":
             for c in requests.children:
@@ -67,8 +64,6 @@ class FDBDatacube(Datacube):
             else:
                 for c in requests.children:
                     self.get(c, leaf_path)
-        print("TOTAL GET TIME")
-        print(time.time() - time1)
 
     def get_2nd_last_values(self, requests, leaf_path={}):
         # In this function, we recursively loop over the last two layers of the tree and store the indices of the
