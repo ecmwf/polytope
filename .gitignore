@@ -10,3 +10,4 @@ polytope.egg-info
 *.xml
 site
 .coverage
+*.grib
