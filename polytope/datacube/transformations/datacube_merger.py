@@ -18,6 +18,9 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
     def unwanted_axes(self):
         return []
 
+    def _mapped_axes(self):
+        return self._first_axis
+
     def merged_values(self, datacube):
         first_ax_vals = datacube.ax_vals(self.name)
         second_ax_name = self._second_axis
@@ -56,4 +59,5 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         return (first_val, second_val)
 
     def change_val_type(self, axis_name, values):
-        return values
+        new_values = pd.to_datetime(values)
+        return new_values

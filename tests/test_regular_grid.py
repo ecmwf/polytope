@@ -20,7 +20,7 @@ class TestRegularGrid:
             "values": {
                 "transformation": {"mapper": {"type": "regular", "resolution": 30, "axes": ["latitude", "longitude"]}}
             },
-            "date": {"transformation": {"merge": {"with": "time", "linkers": [" ", "00"]}}},
+            "date": {"transformation": {"merge": {"with": "time", "linkers": ["T", "00"]}}},
             "step": {"transformation": {"type_change": "int"}},
             "number": {"transformation": {"type_change": "int"}},
             "longitude": {"transformation": {"cyclic": [0, 360]}},
@@ -54,7 +54,7 @@ class TestRegularGrid:
         return nearest_points
 
     @pytest.mark.internet
-    # @pytest.mark.skip(reason="can't install fdb branch on CI")
+    @pytest.mark.skip(reason="can't install fdb branch on CI")
     def test_regular_grid(self):
         request = Request(
             Select("step", [0]),
