@@ -12,6 +12,12 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         self._second_axis = merge_options["with"]
         self._linkers = merge_options["linkers"]
 
+    def _mapped_axes(self):
+        return self._first_axis
+
+    def unwanted_axes(self):
+        return []
+
     def blocked_axes(self):
         return [self._second_axis]
 
@@ -44,7 +50,10 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         first_linker_size = len(self._linkers[0])
         second_linked_size = len(self._linkers[1])
         second_val = merged_val[first_idx + first_linker_size : -second_linked_size]
+        first_val = str(first_val).replace("-", "")
+        second_val = second_val.replace(":", "")
         return (first_val, second_val)
 
     def change_val_type(self, axis_name, values):
-        return values
+        new_values = pd.to_datetime(values)
+        return new_values

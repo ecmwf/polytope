@@ -396,9 +396,6 @@ def reverse(cls):
                 ordered_indices = unordered_indices
             return ordered_indices
 
-        def unmap_to_datacube(path, unmapped_path):
-            return (path, unmapped_path)
-
         def remap_to_requested(path, unmapped_path):
             return (path, unmapped_path)
 
@@ -445,7 +442,6 @@ def reverse(cls):
 
         cls.remap = remap
         cls.find_indexes = find_indexes
-        cls.unmap_to_datacube = unmap_to_datacube
         cls.remap_to_requested = remap_to_requested
         cls.find_indices_between = find_indices_between
 
