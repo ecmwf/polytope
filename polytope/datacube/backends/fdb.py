@@ -19,6 +19,11 @@ class FDBDatacube(Datacube):
         self.unwanted_axes = []
         self.fake_axes = []
         self.unwanted_path = {}
+        self.second_val_time = 0
+        self.first_val_time = 0
+        self.time_give_fdb_val_to_node = 0
+        self.time_find_fdb_values = 0
+        self.time_fdb_extract = 0
 
         partial_request = config
         # Find values in the level 3 FDB datacube
@@ -46,7 +51,6 @@ class FDBDatacube(Datacube):
         return leaf_path
 
     def get(self, requests: IndexTree, leaf_path={}):
-        time1 = time.time()
         # First when request node is root, go to its children
         if requests.axis.name == "root":
             for c in requests.children:
@@ -67,12 +71,11 @@ class FDBDatacube(Datacube):
             else:
                 for c in requests.children:
                     self.get(c, leaf_path)
-        print("TOTAL GET TIME")
-        print(time.time() - time1)
 
     def get_2nd_last_values(self, requests, leaf_path={}):
         # In this function, we recursively loop over the last two layers of the tree and store the indices of the
         # request ranges in those layers
+        time1 = time.time()
         lat_length = len(requests.children)
         range_lengths = [False] * lat_length
         current_start_idxs = [False] * lat_length
@@ -96,8 +99,10 @@ class FDBDatacube(Datacube):
                 lat_child, leaf_path, range_length, current_start_idx, fdb_range_nodes
             )
         self.give_fdb_val_to_node(leaf_path, range_lengths, current_start_idxs, fdb_node_ranges, lat_length)
+        self.second_val_time += time.time() - time1
 
     def get_last_layer_before_leaf(self, requests, leaf_path, range_l, current_idx, fdb_range_n):
+        time1 = time.time()
         i = 0
         for c in requests.children:
             # now c are the leaves of the initial tree
@@ -125,9 +130,11 @@ class FDBDatacube(Datacube):
                     i += 1
                     current_start_idx = key_value_path["values"]
                     current_idx[i] = current_start_idx
+        self.first_val_time += time.time() - time1
         return (range_l, current_idx, fdb_range_n)
 
     def give_fdb_val_to_node(self, leaf_path, range_lengths, current_start_idx, fdb_range_nodes, lat_length):
+        time1 = time.time()
         (output_values, original_indices) = self.find_fdb_values(
             leaf_path, range_lengths, current_start_idx, lat_length
         )
@@ -144,8 +151,10 @@ class FDBDatacube(Datacube):
             for k in range(sorted_range_lengths[i]):
                 n = sorted_fdb_range_nodes[i][k]
                 n.result = output_values[0][0][0][i][k]
+        self.time_give_fdb_val_to_node += time.time() - time1
 
     def find_fdb_values(self, path, range_lengths, current_start_idx, lat_length):
+        time1 = time.time()
         path.pop("values")
         fdb_requests = []
         interm_request_ranges = []
@@ -158,7 +167,10 @@ class FDBDatacube(Datacube):
         sorted_list = sorted(request_ranges_with_idx, key=lambda x: x[1][0])
         original_indices, sorted_request_ranges = zip(*sorted_list)
         fdb_requests.append(tuple((path, sorted_request_ranges)))
+        time2 = time.time()
         output_values = self.fdb.extract(fdb_requests)
+        self.time_fdb_extract += time.time() - time2
+        self.time_find_fdb_values += time.time() - time1
         return (output_values, original_indices)
 
     def datacube_natural_indexes(self, axis, subarray):
