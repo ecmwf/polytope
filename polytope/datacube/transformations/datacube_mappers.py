@@ -17,6 +17,7 @@ class DatacubeMapper(DatacubeAxisTransformation):
         self.grid_axes = mapper_options["axes"]
         self.old_axis = name
         self._final_transformation = self.generate_final_transformation()
+        self._first_axis_vals = self._final_transformation._first_axis_vals
         self._final_mapped_axes = self._final_transformation._mapped_axes
         self._axis_reversed = self._final_transformation._axis_reversed
 

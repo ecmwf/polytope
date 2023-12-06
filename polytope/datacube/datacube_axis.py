@@ -203,7 +203,7 @@ def mapper(cls):
                 if isinstance(transform, DatacubeMapper):
                     transformation = transform
                     if cls.name == transformation._mapped_axes()[0]:
-                        return transformation.first_axis_vals()
+                        return transformation._first_axis_vals
                     if cls.name == transformation._mapped_axes()[1]:
                         first_val = path[transformation._mapped_axes()[0]]
                         return transformation.second_axis_vals(first_val)

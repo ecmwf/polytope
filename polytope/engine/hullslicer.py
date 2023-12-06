@@ -16,6 +16,7 @@ from .engine import Engine
 
 class HullSlicer(Engine):
     def __init__(self):
+        self.datacube_has_index = {}
         pass
 
     def _unique_continuous_points(self, p: ConvexPolytope, datacube: Datacube):
@@ -33,7 +34,11 @@ class HullSlicer(Engine):
         if polytope._axes != [ax.name]:
             raise UnsliceableShapeError(ax)
         path = node.flatten()
-        if datacube.has_index(path, ax, lower):
+        if (ax, lower) not in self.datacube_has_index.keys():
+            self.datacube_has_index[(ax, lower)] = datacube.has_index(path, ax, lower)
+        datacube_has_index_bool = self.datacube_has_index[(ax, lower)]
+        # if datacube.has_index(path, ax, lower):
+        if datacube_has_index_bool:
             child = node.create_child(ax, lower)
             child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             child["unsliced_polytopes"].remove(polytope)
@@ -70,7 +75,7 @@ class HullSlicer(Engine):
                 child["unsliced_polytopes"].add(new_polytope)
             next_nodes.append(child)
 
-    def _build_branch(self, ax, node, datacube, next_nodes):
+    def _build_tree_layer(self, ax, node, datacube, next_nodes):
         for polytope in node["unsliced_polytopes"]:
             if ax.name in polytope._axes:
                 lower, upper, slice_axis_idx = polytope.extents(ax.name)
@@ -82,6 +87,33 @@ class HullSlicer(Engine):
         del node["unsliced_polytopes"]
 
     def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
+        # Convert the polytope points to float type to support triangulation and interpolation
+        for p in polytopes:
+            self._unique_continuous_points(p, datacube)
+
+        groups, input_axes = group(polytopes)
+        datacube.validate(input_axes)
+        request = IndexTree()
+        combinations = tensor_product(groups)
+
+        # TODO: when would combinations have more than one alternative in the list?
+        print(combinations)
+        for c in combinations:
+            r = IndexTree()
+            r["unsliced_polytopes"] = set(c)
+            current_nodes = [r]
+            for ax in datacube.axes.values():
+                next_nodes = []
+                for node in current_nodes:
+                    self._build_tree_layer(ax, node, datacube, next_nodes)
+                current_nodes = next_nodes
+            request.merge(r)
+        return request
+
+    def _build_branch(self, ax, node, datacube, next_nodes):
+        pass
+
+    def extract_new(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
         # Convert the polytope points to float type to support triangulation and interpolation
         for p in polytopes:
             self._unique_continuous_points(p, datacube)
