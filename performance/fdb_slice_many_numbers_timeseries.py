@@ -10,13 +10,11 @@ from polytope.shapes import All, Point, Select
 time1 = time.time()
 # Create a dataarray with 3 labelled axes using different index types
 options = {
-    "values": {
-        "transformation": {"mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}}
-    },
-    "date": {"transformation": {"merge": {"with": "time", "linkers": ["T", "00"]}}},
-    "step": {"transformation": {"type_change": "int"}},
-    "number": {"transformation": {"type_change": "int"}},
-    "longitude": {"transformation": {"cyclic": [0, 360]}},
+    "values": {"mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}},
+    "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
+    "step": {"type_change": "int"},
+    "number": {"type_change": "int"},
+    "longitude": {"cyclic": [0, 360]},
 }
 config = {"class": "od", "expver": "0001", "levtype": "sfc", "type": "pf"}
 fdbdatacube = FDBDatacube(config, axis_options=options)

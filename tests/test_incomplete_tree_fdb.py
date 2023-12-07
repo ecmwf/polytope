@@ -14,13 +14,11 @@ class TestRegularGrid:
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/era5-levels-members.grib"
         download_test_data(nexus_url, "era5-levels-members.grib")
         self.options = {
-            "values": {
-                "transformation": {"mapper": {"type": "regular", "resolution": 30, "axes": ["latitude", "longitude"]}}
-            },
-            "date": {"transformation": {"merge": {"with": "time", "linkers": [" ", "00"]}}},
-            "step": {"transformation": {"type_change": "int"}},
-            "number": {"transformation": {"type_change": "int"}},
-            "longitude": {"transformation": {"cyclic": [0, 360]}},
+            "values": {"mapper": {"type": "regular", "resolution": 30, "axes": ["latitude", "longitude"]}},
+            "date": {"merge": {"with": "time", "linkers": [" ", "00"]}},
+            "step": {"type_change": "int"},
+            "number": {"type_change": "int"},
+            "longitude": {"cyclic": [0, 360]},
         }
         self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "step": 0}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
@@ -51,7 +49,7 @@ class TestRegularGrid:
         return nearest_points
 
     @pytest.mark.internet
-    @pytest.mark.skip(reason="can't install fdb branch on CI")
+    # @pytest.mark.skip(reason="can't install fdb branch on CI")
     def test_incomplete_fdb_branch(self):
         request = Request(
             Select("step", [0]),
@@ -74,7 +72,7 @@ class TestRegularGrid:
         assert result.is_root()
 
     @pytest.mark.internet
-    @pytest.mark.skip(reason="can't install fdb branch on CI")
+    # @pytest.mark.skip(reason="can't install fdb branch on CI")
     def test_incomplete_fdb_branch_2(self):
         request = Request(
             Select("step", [0]),

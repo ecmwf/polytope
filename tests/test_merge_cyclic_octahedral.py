@@ -22,13 +22,9 @@ class TestMultipleTransformations:
             },
         )
         self.options = {
-            "date": {"transformation": {"merge": {"with": "time", "linkers": ["T", "00"]}}},
-            "values": {
-                "transformation": {
-                    "mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
-                }
-            },
-            "step": {"transformation": {"cyclic": [0, 2]}},
+            "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
+            "values": {"mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}},
+            "step": {"cyclic": [0, 2]},
         }
         self.xarraydatacube = XArrayDatacube(self.array)
         self.slicer = HullSlicer()
