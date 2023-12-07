@@ -18,12 +18,8 @@ class TestSlicingMultipleTransformationsOneAxis:
         self.latlon_array = self.latlon_array.t2m
         self.xarraydatacube = XArrayDatacube(self.latlon_array)
         self.options = {
-            "values": {
-                "transformation": {
-                    "mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
-                }
-            },
-            "longitude": {"transformation": {"cyclic": [0, 360.0]}},
+            "values": {"mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}},
+            "longitude": {"cyclic": [0, 360.0]},
         }
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.latlon_array, engine=self.slicer, axis_options=self.options)

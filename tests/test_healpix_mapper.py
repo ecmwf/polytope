@@ -18,10 +18,8 @@ class TestOctahedralGrid:
         self.latlon_array = ds.to_xarray().isel(step=0).isel(time=0).isel(isobaricInhPa=0).z
         self.xarraydatacube = XArrayDatacube(self.latlon_array)
         self.options = {
-            "values": {
-                "transformation": {"mapper": {"type": "healpix", "resolution": 32, "axes": ["latitude", "longitude"]}}
-            },
-            "longitude": {"transformation": {"cyclic": [0, 360]}},
+            "values": {"mapper": {"type": "healpix", "resolution": 32, "axes": ["latitude", "longitude"]}},
+            "longitude": {"cyclic": [0, 360]},
         }
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.latlon_array, engine=self.slicer, axis_options=self.options)

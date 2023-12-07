@@ -22,8 +22,8 @@ class TestSlicingEra5Data:
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         options = {
-            "latitude": {"transformation": {"reverse": {True}}},
-            "longitude": {"transformation": {"cyclic": [0, 360.0]}},
+            "latitude": {"reverse": {True}},
+            "longitude": {"cyclic": [0, 360.0]},
         }
         self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
 

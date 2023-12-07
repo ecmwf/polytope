@@ -18,7 +18,7 @@ class TestTypeChangeTransformation:
             },
         )
         self.array = array
-        options = {"step": {"transformation": {"type_change": "int"}}}
+        options = {"step": {"type_change": "int"}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
