@@ -16,7 +16,9 @@ from .engine import Engine
 
 class HullSlicer(Engine):
     def __init__(self):
-        self.datacube_has_index = {}
+        # self.datacube_has_index = {}
+        # self.datacube_indices = {}
+        # self.sliced_polytopes = {}
         pass
 
     def _unique_continuous_points(self, p: ConvexPolytope, datacube: Datacube):
@@ -34,11 +36,11 @@ class HullSlicer(Engine):
         if polytope._axes != [ax.name]:
             raise UnsliceableShapeError(ax)
         path = node.flatten()
-        if (ax, lower) not in self.datacube_has_index.keys():
-            self.datacube_has_index[(ax, lower)] = datacube.has_index(path, ax, lower)
-        datacube_has_index_bool = self.datacube_has_index[(ax, lower)]
-        # if datacube.has_index(path, ax, lower):
-        if datacube_has_index_bool:
+        # if (ax.name, lower) not in self.datacube_has_index.keys():
+        #     self.datacube_has_index[(ax.name, lower)] = datacube.has_index(path, ax, lower)
+        # datacube_has_index_bool = self.datacube_has_index[(ax.name, lower)]
+        if datacube.has_index(path, ax, lower):
+        # if datacube_has_index_bool:
             child = node.create_child(ax, lower)
             child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             child["unsliced_polytopes"].remove(polytope)
@@ -51,8 +53,12 @@ class HullSlicer(Engine):
         tol = ax.tol
         lower = ax.from_float(lower - tol)
         upper = ax.from_float(upper + tol)
+        # TODO: here we could maybe not flatten the node, since we only need it to find the longitude value in the mappings, instead could look if the node axis is the longitude through the axis mapping options and then only pass that in as a path
         flattened = node.flatten()
         method = polytope.method
+        # if (ax, lower, upper, method) not in self.datacube_indices.keys():
+        #     self.datacube_indices[(ax, lower, upper, method)] = datacube.get_indices(flattened, ax, lower, upper, method)
+        # values = self.datacube_indices[(ax, lower, upper, method)]
         values = datacube.get_indices(flattened, ax, lower, upper, method)
 
         if len(values) == 0:
@@ -61,6 +67,9 @@ class HullSlicer(Engine):
         for value in values:
             # convert to float for slicing
             fvalue = ax.to_float(value)
+            # if (polytope, ax.name, fvalue) not in self.sliced_polytopes:
+            #     self.sliced_polytopes[(polytope, ax.name, fvalue)] = slice(polytope, ax.name, fvalue, slice_axis_idx)
+            # new_polytope = self.sliced_polytopes[(polytope, ax.name, fvalue)]
             new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
             # store the native type
             remapped_val = value
@@ -97,7 +106,6 @@ class HullSlicer(Engine):
         combinations = tensor_product(groups)
 
         # TODO: when would combinations have more than one alternative in the list?
-        print(combinations)
         for c in combinations:
             r = IndexTree()
             r["unsliced_polytopes"] = set(c)
@@ -123,17 +131,54 @@ class HullSlicer(Engine):
         request = IndexTree()
         combinations = tensor_product(groups)
 
-        for c in combinations:
+        for polytope in combinations[0]:
             r = IndexTree()
-            r["unsliced_polytopes"] = set(c)
+            r["unsliced_polytopes"] = set([polytope])
             current_nodes = [r]
-            for ax in datacube.axes.values():
-                next_nodes = []
-                for node in current_nodes:
-                    self._build_branch(ax, node, datacube, next_nodes)
-                current_nodes = next_nodes
-            request.merge(r)
-        return request
+            r._build_polytope_branch(polytope, datacube, r)
+
+        # for c in combinations:
+        #     r = IndexTree()
+        #     r["unsliced_polytopes"] = set(c)
+        #     current_nodes = [r]
+        #     for ax in datacube.axes.values():
+        #         next_nodes = []
+        #         for node in current_nodes:
+        #             self._build_branch(ax, node, datacube, next_nodes)
+        #         current_nodes = next_nodes
+        #     request.merge(r)
+        # return request
+
+    def _build_polytope_branch(self, polytope, datacube, r):
+        for ax in polytope._axes:
+            lower, upper, slice_axis_idx = polytope.extents(ax)
+            axis = datacube.axes[ax]
+            if isinstance(ax, UnsliceableDatacubeAxis):
+                self._build_unsliceable_sub_child(polytope, axis, r, datacube, lower)
+            else:
+                self._build_sliceable_sub_branch()
+
+        # for polytope in node["unsliced_polytopes"]:
+        #     if ax.name in polytope._axes:
+        #         lower, upper, slice_axis_idx = polytope.extents(ax.name)
+        #         # here, first check if the axis is an unsliceable axis and directly build node if it is
+        #         if isinstance(ax, UnsliceableDatacubeAxis):
+        #             self._build_unsliceable_child(polytope, ax, node, datacube, lower, next_nodes, slice_axis_idx)
+        #         else:
+        #             self._build_sliceable_child(polytope, ax, node, datacube, lower, upper, next_nodes, slice_axis_idx)
+        # del node["unsliced_polytopes"]
+
+    def _build_unsliceable_sub_child(self, polytope, ax, node, datacube, lower):
+        if polytope._axes != [ax.name]:
+            raise UnsliceableShapeError(ax)
+        path = node.flatten()
+        if (ax.name, lower) not in self.datacube_has_index.keys():
+            self.datacube_has_index[(ax.name, lower)] = datacube.has_index(path, ax, lower)
+        datacube_has_index_bool = self.datacube_has_index[(ax.name, lower)]
+        if datacube_has_index_bool:
+            child = node.create_child(ax, lower)
+        else:
+            raise ValueError()
 
 
 def _find_intersects(polytope, slice_axis_idx, value):

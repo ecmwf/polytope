@@ -118,10 +118,10 @@ def cyclic(cls):
                         ranges.append([low - cls.tol, up + cls.tol])
             return ranges
 
-        old_find_indexes = cls.find_indexes
+        # old_find_indexes = cls.find_indexes
 
-        def find_indexes(path, datacube):
-            return old_find_indexes(path, datacube)
+        # def find_indexes(path, datacube):
+        #     return old_find_indexes(path, datacube)
 
         old_unmap_path_key = cls.unmap_path_key
 
@@ -151,12 +151,15 @@ def cyclic(cls):
                 return old_find_indices_between(index_ranges, low, up, datacube, method)
             else:
                 for indexes in index_ranges:
-                    if cls.name in datacube.complete_axes:
+                    # if cls.name in datacube.complete_axes and 
+                    if cls.name not in datacube.fake_axes:
                         start = indexes.searchsorted(low, "left")
                         end = indexes.searchsorted(up, "right")
                     else:
-                        start = indexes.index(low)
-                        end = indexes.index(up)
+                        # start = indexes.index(low)
+                        # end = indexes.index(up)
+                        start = bisect.bisect_left(indexes, low)
+                        end = bisect.bisect_right(indexes, up)
                     if start - 1 < 0:
                         index_val_found = indexes[-1:][0]
                         indexes_between_ranges.append([index_val_found])
@@ -166,6 +169,7 @@ def cyclic(cls):
                     start = max(start - 1, 0)
                     end = min(end + 1, len(indexes))
                     if cls.name in datacube.complete_axes:
+                    # if cls.name not in datacube.fake_axes:
                         indexes_between = indexes[start:end].to_list()
                     else:
                         indexes_between = indexes[start:end]
@@ -184,7 +188,7 @@ def cyclic(cls):
         cls.to_intervals = to_intervals
         cls.remap = remap
         cls.offset = offset
-        cls.find_indexes = find_indexes
+        # cls.find_indexes = find_indexes
         cls.unmap_to_datacube = unmap_to_datacube
         cls.find_indices_between = find_indices_between
         cls.unmap_path_key = unmap_path_key
@@ -264,8 +268,14 @@ def mapper(cls):
                     if cls.name in transformation._mapped_axes():
                         for idxs in index_ranges:
                             if method == "surrounding":
-                                start = idxs.index(low)
-                                end = idxs.index(up)
+                                axis_reversed = transform._axis_reversed[cls.name]
+                                if not axis_reversed:
+                                    start = bisect.bisect_left(idxs, low)
+                                    end = bisect.bisect_right(idxs, up)
+                                else:
+                                    # TODO: do the custom bisect
+                                    end = bisect_left_cmp(idxs, low, cmp=lambda x, y: x > y) + 1
+                                    start = bisect_right_cmp(idxs, up, cmp=lambda x, y: x > y)
                                 start = max(start - 1, 0)
                                 end = min(end + 1, len(idxs))
                                 indexes_between = idxs[start:end]
@@ -507,10 +517,6 @@ def type_change(cls):
 
 def null(cls):
     if cls.type_change:
-        old_find_indexes = cls.find_indexes
-
-        def find_indexes(path, datacube):
-            return old_find_indexes(path, datacube)
 
         def find_indices_between(index_ranges, low, up, datacube, method=None):
             indexes_between_ranges = []
@@ -523,7 +529,6 @@ def null(cls):
             return [range]
 
         cls.remap = remap
-        cls.find_indexes = find_indexes
         cls.find_indices_between = find_indices_between
 
     return cls
