@@ -21,7 +21,7 @@ class TestSlicingFDBDatacube:
             "date": {"transformation": {"merge": {"with": "time", "linkers": ["T", "00"]}}},
             "step": {"transformation": {"type_change": "int"}},
             "number": {"transformation": {"type_change": "int"}},
-            "longitude": {"transformation": {"cyclic": [0, 360]}}
+            "longitude": {"transformation": {"cyclic": [0, 360]}},
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "type": "pf"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
@@ -46,7 +46,7 @@ class TestSlicingFDBDatacube:
             # Select("latitude", [0.04], method="surrounding"),
             # Select("longitude", [0], method="surrounding"),
             Point(["latitude", "longitude"], [[0.04, 0]], method="surrounding"),
-            All("number")
+            All("number"),
         )
         time1 = time.time()
         result = self.API.retrieve(request)
