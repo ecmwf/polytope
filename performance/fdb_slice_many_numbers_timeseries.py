@@ -18,10 +18,12 @@ options = {
 }
 config = {"class": "od", "expver": "0001", "levtype": "sfc", "type": "pf"}
 fdbdatacube = FDBDatacube(config, axis_options=options)
-slicer = HullSlicer()
-self_API = Polytope(datacube=fdbdatacube, engine=slicer, axis_options=options)
+self_API = Polytope(datacube=fdbdatacube, axis_options=options)
+
+print(time.time() - time1)
 
 time2 = time.time()
+
 request = Request(
     All("step"),
     Select("levtype", ["sfc"]),
@@ -39,5 +41,5 @@ request = Request(
 result = self_API.retrieve(request)
 print(time.time() - time1)
 print(time.time() - time2)
-print(fdbdatacube.fdb_time)
+print(time.time()-time2 - fdbdatacube.fdb_time)
 print(len(result.leaves))

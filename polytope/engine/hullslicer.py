@@ -13,6 +13,8 @@ from ..utility.exceptions import UnsliceableShapeError
 from ..utility.geometry import lerp
 from .engine import Engine
 
+import time
+
 
 class HullSlicer(Engine):
     def __init__(self):
@@ -91,6 +93,7 @@ class HullSlicer(Engine):
         request = IndexTree()
         combinations = tensor_product(groups)
 
+        time0 = time.time()
         for c in combinations:
             r = IndexTree()
             r["unsliced_polytopes"] = set(c)
@@ -101,6 +104,8 @@ class HullSlicer(Engine):
                     self._build_branch(ax, node, datacube, next_nodes)
                 current_nodes = next_nodes
             request.merge(r)
+        print("time spent inside extract building tree")
+        print(time.time() - time0)
         return request
 
 
