@@ -39,4 +39,5 @@ request = Request(
 result = self_API.retrieve(request)
 print(time.time() - time1)
 print(time.time() - time2)
+print(fdbdatacube.fdb_time)
 print(len(result.leaves))
