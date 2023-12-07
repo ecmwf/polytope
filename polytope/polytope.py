@@ -3,6 +3,8 @@ from typing import List
 from .shapes import ConvexPolytope
 from .utility.exceptions import AxisOverdefinedError
 
+import time
+
 
 class Request:
     """Encapsulates a request for data"""
@@ -50,6 +52,12 @@ class Polytope:
 
     def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
+        time1 = time.time()
         request_tree = self.engine.extract(self.datacube, request.polytopes())
+        print("extract time")
+        print(time.time() - time1)
+        time0 = time.time()
         self.datacube.get(request_tree)
+        print("get time")
+        print(time.time() - time0 - self.datacube.fdb_time)
         return request_tree
