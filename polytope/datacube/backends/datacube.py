@@ -40,7 +40,6 @@ class Datacube(ABC):
         for unwanted_axis in transformation.unwanted_axes():
             self.unwanted_axes.append(unwanted_axis)
         for axis_name in final_axis_names:
-            self.complete_axes.append(axis_name)
             self.fake_axes.append(axis_name)
             # if axis does not yet exist, create it
 
@@ -84,7 +83,7 @@ class Datacube(ABC):
 
     def fit_path(self, path):
         for key in path.keys():
-            if key not in self.complete_axes:
+            if key not in self.complete_axes and key not in self.fake_axes:
                 path.pop(key)
         return path
 

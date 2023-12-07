@@ -74,7 +74,7 @@ class Point(Shape):
         self.polytopes = []
         for i in range(len(axes)):
             polytope_points = [v[i] for v in self.values]
-            self.polytopes.append(ConvexPolytope([axes[i]], [polytope_points], method))
+            self.polytopes.append(ConvexPolytope([axes[i]], [polytope_points], self.method))
 
     def axes(self):
         return self._axes

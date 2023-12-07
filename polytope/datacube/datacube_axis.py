@@ -155,8 +155,9 @@ def cyclic(cls):
                         start = indexes.searchsorted(low, "left")
                         end = indexes.searchsorted(up, "right")
                     else:
-                        start = indexes.index(low)
-                        end = indexes.index(up)
+                        start = bisect.bisect_left(indexes, low)
+                        end = bisect.bisect_right(indexes, up)
+
                     if start - 1 < 0:
                         index_val_found = indexes[-1:][0]
                         indexes_between_ranges.append([index_val_found])
@@ -264,8 +265,14 @@ def mapper(cls):
                     if cls.name in transformation._mapped_axes():
                         for idxs in index_ranges:
                             if method == "surrounding":
-                                start = idxs.index(low)
-                                end = idxs.index(up)
+                                axis_reversed = transform._axis_reversed[cls.name]
+                                if not axis_reversed:
+                                    start = bisect.bisect_left(idxs, low)
+                                    end = bisect.bisect_right(idxs, up)
+                                else:
+                                    # TODO: do the custom bisect
+                                    end = bisect_left_cmp(idxs, low, cmp=lambda x, y: x > y) + 1
+                                    start = bisect_right_cmp(idxs, up, cmp=lambda x, y: x > y)
                                 start = max(start - 1, 0)
                                 end = min(end + 1, len(idxs))
                                 indexes_between = idxs[start:end]
