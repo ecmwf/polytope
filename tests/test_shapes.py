@@ -39,7 +39,7 @@ class TestSlicing3DXarrayDatacube:
         # result.pprint()
         assert len(result.leaves) == 360
 
-    @pytest.mark.skip(reason="can't install fdb branch on CI")
+    @pytest.mark.fdb
     def test_all_mapper_cyclic(self):
         self.options = {
             "values": {"mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}},
