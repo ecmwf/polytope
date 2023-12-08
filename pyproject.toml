@@ -4,4 +4,5 @@ line-length = 120
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 [tool.pytest.ini_options]
-markers = ["internet: downloads test data from the internet (deselect with '-m \"not internet\"')",]
+markers = ["internet: downloads test data from the internet (deselect with '-m \"not internet\"')",
+           "fdb: test which uses fdb (deselect with '-m \"not fdb\"')",]
