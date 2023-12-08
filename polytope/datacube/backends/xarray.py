@@ -17,8 +17,6 @@ class XArrayDatacube(Datacube):
         self.complete_axes = []
         self.blocked_axes = []
         self.fake_axes = []
-        self.fdb_time = 0
-        self.coupled_axes = []
 
         for name, values in dataarray.coords.variables.items():
             if name in dataarray.dims:

@@ -13,8 +13,6 @@ from ..utility.exceptions import UnsliceableShapeError
 from ..utility.geometry import lerp
 from .engine import Engine
 
-import time
-
 
 class HullSlicer(Engine):
     def __init__(self):
@@ -26,11 +24,9 @@ class HullSlicer(Engine):
             mapper = datacube.get_mapper(ax)
             if self.ax_is_unsliceable.get(ax, None) is None:
                 self.ax_is_unsliceable[ax] = isinstance(mapper, UnsliceableDatacubeAxis)
-            # if isinstance(mapper, UnsliceableDatacubeAxis):
             if self.ax_is_unsliceable[ax]:
                 break
             for j, val in enumerate(p.points):
-                # p.points[j] = list(p.points[j])
                 p.points[j][i] = mapper.to_float(mapper.parse(p.points[j][i]))
         # Remove duplicate points
         unique(p.points)
@@ -57,22 +53,10 @@ class HullSlicer(Engine):
 
         # TODO: this hashing doesn't work because we need to know the latitude val for finding longitude values
         # TODO: Maybe create a coupled_axes list inside of datacube and add to it during axis formation, then here
-        # do something like if ax is in second place of coupled_axes, then take the flattened part of the array that corresponds
-        # to the first place of cooupled_axes in the hashing
+        # do something like if ax is in second place of coupled_axes, then take the flattened part of the array that
+        # corresponds to the first place of cooupled_axes in the hashing
         # Else, if we do not need the flattened bit in the hash, can just put an empty string instead?
 
-        # if len(datacube.coupled_axes) > 0:
-        #     if flattened.get(datacube.coupled_axes[0][0], None) is not None:
-        #         flattened = {datacube.coupled_axes[0][0] : flattened.get(datacube.coupled_axes[0][0], None)}
-        #     else:
-        #         flattened = {}
-
-        # print(datacube.coupled_axes)
-        # print(flattened.get("latitude"))
-        # flattened = interm_flattened
-        # if self.axis_values_between.get((ax.name, lower, upper, method), None) is None:
-        #     self.axis_values_between[(ax.name, lower, upper, method)] = datacube.get_indices(flattened, ax, lower, upper, method)
-        # values = self.axis_values_between[(ax.name, lower, upper, method)]
         values = datacube.get_indices(flattened, ax, lower, upper, method)
 
         if len(values) == 0:
@@ -100,11 +84,8 @@ class HullSlicer(Engine):
             if ax.name in polytope._axes:
                 lower, upper, slice_axis_idx = polytope.extents(ax.name)
                 # here, first check if the axis is an unsliceable axis and directly build node if it is
-                # if isinstance(ax, UnsliceableDatacubeAxis):
 
                 # NOTE: we should have already created the ax_is_unsliceable cache before
-                # if self.ax_is_unsliceable.get(ax.name, None) is None:
-                #     self.ax_is_unsliceable[ax.name] = isinstance(ax, UnsliceableDatacubeAxis)
                 if self.ax_is_unsliceable[ax.name]:
                     self._build_unsliceable_child(polytope, ax, node, datacube, lower, next_nodes, slice_axis_idx)
                 else:
@@ -125,7 +106,6 @@ class HullSlicer(Engine):
         # Then we do not need to create a new index tree and merge it to request, but can just
         # directly work on request and return it...
 
-        time0 = time.time()
         for c in combinations:
             r = IndexTree()
             r["unsliced_polytopes"] = set(c)
@@ -136,8 +116,6 @@ class HullSlicer(Engine):
                     self._build_branch(ax, node, datacube, next_nodes)
                 current_nodes = next_nodes
             request.merge(r)
-        print("time spent inside extract building tree")
-        print(time.time() - time0)
         return request
 
 
