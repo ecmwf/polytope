@@ -20,7 +20,6 @@ class TestInitDatacubeAxes:
         self.xarraydatacube = XArrayDatacube(latlon_array)
         self.options = {
             "values": {"mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}},
-            # "latitude": {"transformation": {"reverse": {True}}},
         }
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=latlon_array, engine=self.slicer, axis_options=self.options)

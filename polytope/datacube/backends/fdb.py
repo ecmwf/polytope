@@ -4,8 +4,6 @@ import pyfdb
 
 from .datacube import Datacube, IndexTree
 
-import time
-
 
 class FDBDatacube(Datacube):
     def __init__(self, config={}, axis_options={}):
@@ -17,8 +15,6 @@ class FDBDatacube(Datacube):
         self.blocked_axes = []
         self.fake_axes = []
         self.unwanted_path = {}
-        self.fdb_time = 0
-        self.coupled_axes = []
 
         partial_request = config
         # Find values in the level 3 FDB datacube
@@ -150,9 +146,7 @@ class FDBDatacube(Datacube):
         sorted_list = sorted(request_ranges_with_idx, key=lambda x: x[1][0])
         original_indices, sorted_request_ranges = zip(*sorted_list)
         fdb_requests.append(tuple((path, sorted_request_ranges)))
-        time1 = time.time()
         output_values = self.fdb.extract(fdb_requests)
-        self.fdb_time += time.time() - time1
         return (output_values, original_indices)
 
     def datacube_natural_indexes(self, axis, subarray):
