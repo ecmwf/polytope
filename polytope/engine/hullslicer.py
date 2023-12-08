@@ -18,21 +18,25 @@ import time
 
 class HullSlicer(Engine):
     def __init__(self):
-        pass
+        self.ax_is_unsliceable = {}
+        self.axis_values_between = {}
 
     def _unique_continuous_points(self, p: ConvexPolytope, datacube: Datacube):
         for i, ax in enumerate(p._axes):
             mapper = datacube.get_mapper(ax)
-            if isinstance(mapper, UnsliceableDatacubeAxis):
+            if self.ax_is_unsliceable.get(ax, None) is None:
+                self.ax_is_unsliceable[ax] = isinstance(mapper, UnsliceableDatacubeAxis)
+            # if isinstance(mapper, UnsliceableDatacubeAxis):
+            if self.ax_is_unsliceable[ax]:
                 break
             for j, val in enumerate(p.points):
-                p.points[j] = list(p.points[j])
+                # p.points[j] = list(p.points[j])
                 p.points[j][i] = mapper.to_float(mapper.parse(p.points[j][i]))
         # Remove duplicate points
         unique(p.points)
 
     def _build_unsliceable_child(self, polytope, ax, node, datacube, lower, next_nodes, slice_axis_idx):
-        if polytope._axes != [ax.name]:
+        if not polytope.is_flat:
             raise UnsliceableShapeError(ax)
         path = node.flatten()
         if datacube.has_index(path, ax, lower):
@@ -50,6 +54,25 @@ class HullSlicer(Engine):
         upper = ax.from_float(upper + tol)
         flattened = node.flatten()
         method = polytope.method
+
+        # TODO: this hashing doesn't work because we need to know the latitude val for finding longitude values
+        # TODO: Maybe create a coupled_axes list inside of datacube and add to it during axis formation, then here
+        # do something like if ax is in second place of coupled_axes, then take the flattened part of the array that corresponds
+        # to the first place of cooupled_axes in the hashing
+        # Else, if we do not need the flattened bit in the hash, can just put an empty string instead?
+
+        # if len(datacube.coupled_axes) > 0:
+        #     if flattened.get(datacube.coupled_axes[0][0], None) is not None:
+        #         flattened = {datacube.coupled_axes[0][0] : flattened.get(datacube.coupled_axes[0][0], None)}
+        #     else:
+        #         flattened = {}
+
+        # print(datacube.coupled_axes)
+        # print(flattened.get("latitude"))
+        # flattened = interm_flattened
+        # if self.axis_values_between.get((ax.name, lower, upper, method), None) is None:
+        #     self.axis_values_between[(ax.name, lower, upper, method)] = datacube.get_indices(flattened, ax, lower, upper, method)
+        # values = self.axis_values_between[(ax.name, lower, upper, method)]
         values = datacube.get_indices(flattened, ax, lower, upper, method)
 
         if len(values) == 0:
@@ -77,7 +100,12 @@ class HullSlicer(Engine):
             if ax.name in polytope._axes:
                 lower, upper, slice_axis_idx = polytope.extents(ax.name)
                 # here, first check if the axis is an unsliceable axis and directly build node if it is
-                if isinstance(ax, UnsliceableDatacubeAxis):
+                # if isinstance(ax, UnsliceableDatacubeAxis):
+
+                # NOTE: we should have already created the ax_is_unsliceable cache before
+                # if self.ax_is_unsliceable.get(ax.name, None) is None:
+                #     self.ax_is_unsliceable[ax.name] = isinstance(ax, UnsliceableDatacubeAxis)
+                if self.ax_is_unsliceable[ax.name]:
                     self._build_unsliceable_child(polytope, ax, node, datacube, lower, next_nodes, slice_axis_idx)
                 else:
                     self._build_sliceable_child(polytope, ax, node, datacube, lower, upper, next_nodes, slice_axis_idx)
@@ -92,6 +120,10 @@ class HullSlicer(Engine):
         datacube.validate(input_axes)
         request = IndexTree()
         combinations = tensor_product(groups)
+
+        # NOTE: could optimise here if we know combinations will always be for one request.
+        # Then we do not need to create a new index tree and merge it to request, but can just
+        # directly work on request and return it...
 
         time0 = time.time()
         for c in combinations:
@@ -139,8 +171,7 @@ def _reduce_dimension(intersects, slice_axis_idx):
 
 
 def slice(polytope: ConvexPolytope, axis, value, slice_axis_idx):
-    if len(polytope.points[0]) == 1:
-        # Note that in this case, we do not need to do linear interpolation so we can save time
+    if polytope.is_flat:
         if value in chain(*polytope.points):
             intersects = [[value]]
         else:
@@ -154,7 +185,8 @@ def slice(polytope: ConvexPolytope, axis, value, slice_axis_idx):
     # Reduce dimension of intersection points, removing slice axis
     intersects = _reduce_dimension(intersects, slice_axis_idx)
 
-    axes = [ax for ax in polytope._axes if ax != axis]
+    axes = copy(polytope._axes)
+    axes.remove(axis)
 
     if len(intersects) < len(intersects[0]) + 1:
         return ConvexPolytope(axes, intersects)

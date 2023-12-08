@@ -18,6 +18,7 @@ class FDBDatacube(Datacube):
         self.fake_axes = []
         self.unwanted_path = {}
         self.fdb_time = 0
+        self.coupled_axes = []
 
         partial_request = config
         # Find values in the level 3 FDB datacube

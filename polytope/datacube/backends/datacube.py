@@ -37,6 +37,8 @@ class Datacube(ABC):
         )
         for blocked_axis in transformation.blocked_axes():
             self.blocked_axes.append(blocked_axis)
+        if len(final_axis_names) > 1:
+            self.coupled_axes.append(final_axis_names)
         for axis_name in final_axis_names:
             self.fake_axes.append(axis_name)
             # if axis does not yet exist, create it
