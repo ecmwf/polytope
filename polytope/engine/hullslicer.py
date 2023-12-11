@@ -20,6 +20,7 @@ class HullSlicer(Engine):
     def __init__(self):
         self.ax_is_unsliceable = {}
         self.axis_values_between = {}
+        self.has_value = {}
 
     def _unique_continuous_points(self, p: ConvexPolytope, datacube: Datacube):
         for i, ax in enumerate(p._axes):
@@ -39,7 +40,21 @@ class HullSlicer(Engine):
         if not polytope.is_flat:
             raise UnsliceableShapeError(ax)
         path = node.flatten()
-        if datacube.has_index(path, ax, lower):
+
+        flattened_tuple = tuple()
+        if len(datacube.coupled_axes) > 0:
+            if path.get(datacube.coupled_axes[0][0], None) is not None:
+                flattened_tuple = (datacube.coupled_axes[0][0], path.get(datacube.coupled_axes[0][0], None))
+                path = {flattened_tuple[0]: flattened_tuple[1]}
+            else:
+                flattened_tuple = tuple()
+                path = {}
+
+        if self.axis_values_between.get((flattened_tuple, ax.name, lower), None) is None:
+            self.axis_values_between[(flattened_tuple, ax.name, lower)] = datacube.has_index(path, ax, lower)
+        datacube_has_index = self.axis_values_between[(flattened_tuple, ax.name, lower)]
+
+        if datacube_has_index:
             child = node.create_child(ax, lower)
             child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             child["unsliced_polytopes"].remove(polytope)
