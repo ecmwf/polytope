@@ -21,12 +21,11 @@ class TestSlicingFDBDatacube:
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "step": 0}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
-        print(self.fdbdatacube.fdb_coordinates)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
 
     # Testing different shapes
-    # @pytest.mark.skip(reason="can't install fdb branch on CI")
+    @pytest.mark.skip(reason="can't install fdb branch on CI")
     def test_fdb_datacube(self):
         request = Request(
             Select("step", [0]),

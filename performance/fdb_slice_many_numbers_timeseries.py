@@ -3,7 +3,6 @@ import time
 import pandas as pd
 
 from polytope.datacube.backends.fdb import FDBDatacube
-from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import All, Point, Select
 
@@ -41,5 +40,4 @@ request = Request(
 result = self_API.retrieve(request)
 print(time.time() - time1)
 print(time.time() - time2)
-print(time.time()-time2 - fdbdatacube.fdb_time)
 print(len(result.leaves))

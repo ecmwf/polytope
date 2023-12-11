@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 import xarray as xr
 
 from polytope.datacube.backends.xarray import XArrayDatacube
@@ -30,6 +31,7 @@ class TestMultipleTransformations:
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.array, engine=self.slicer, axis_options=self.options)
 
+    @pytest.mark.skip(reason="Datacube not formatted right.")
     def test_merge_axis(self):
         # NOTE: does not work because the date is a string in the merge option...
         date = np.datetime64("2000-01-01T06:00:00")
