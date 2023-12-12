@@ -3,8 +3,6 @@ from typing import List
 from .shapes import ConvexPolytope
 from .utility.exceptions import AxisOverdefinedError
 
-import time
-
 
 class Request:
     """Encapsulates a request for data"""
