@@ -1,6 +1,5 @@
 import pandas as pd
 import pytest
-from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
 from helper_functions import download_test_data
 
 from polytope.datacube.backends.fdb import FDBDatacube
@@ -25,31 +24,8 @@ class TestRegularGrid:
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
 
-    def find_nearest_latlon(self, grib_file, target_lat, target_lon):
-        # Open the GRIB file
-        f = open(grib_file)
-
-        # Load the GRIB messages from the file
-        messages = []
-        while True:
-            message = codes_grib_new_from_file(f)
-            if message is None:
-                break
-            messages.append(message)
-
-        # Find the nearest grid points
-        nearest_points = []
-        for message in messages:
-            nearest_index = codes_grib_find_nearest(message, target_lat, target_lon)
-            nearest_points.append(nearest_index)
-
-        # Close the GRIB file
-        f.close()
-
-        return nearest_points
-
     @pytest.mark.internet
-    # @pytest.mark.skip(reason="can't install fdb branch on CI")
+    @pytest.mark.skip(reason="can't install fdb branch on CI")
     def test_incomplete_fdb_branch(self):
         request = Request(
             Select("step", [0]),
@@ -72,7 +48,7 @@ class TestRegularGrid:
         assert result.is_root()
 
     @pytest.mark.internet
-    # @pytest.mark.skip(reason="can't install fdb branch on CI")
+    @pytest.mark.skip(reason="can't install fdb branch on CI")
     def test_incomplete_fdb_branch_2(self):
         request = Request(
             Select("step", [0]),
