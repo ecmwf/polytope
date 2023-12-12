@@ -13,14 +13,14 @@ from ..utility.exceptions import UnsliceableShapeError
 from ..utility.geometry import lerp
 from .engine import Engine
 
-import time
-
 
 class HullSlicer(Engine):
     def __init__(self):
         self.ax_is_unsliceable = {}
         self.axis_values_between = {}
         self.has_value = {}
+        self.sliced_polytopes = {}
+        self.remapped_vals = {}
 
     def _unique_continuous_points(self, p: ConvexPolytope, datacube: Datacube):
         for i, ax in enumerate(p._axes):
@@ -47,7 +47,7 @@ class HullSlicer(Engine):
                 flattened_tuple = (datacube.coupled_axes[0][0], path.get(datacube.coupled_axes[0][0], None))
                 path = {flattened_tuple[0]: flattened_tuple[1]}
             else:
-                flattened_tuple = tuple()
+                # flattened_tuple = tuple()
                 path = {}
 
         if self.axis_values_between.get((flattened_tuple, ax.name, lower), None) is None:
@@ -82,14 +82,16 @@ class HullSlicer(Engine):
                 flattened_tuple = (datacube.coupled_axes[0][0], flattened.get(datacube.coupled_axes[0][0], None))
                 flattened = {flattened_tuple[0]: flattened_tuple[1]}
             else:
-                flattened_tuple = tuple()
+                # flattened_tuple = tuple()
                 flattened = {}
         # print(datacube.coupled_axes)
         # print(flattened.get("latitude"))
         # flattened = interm_flattened
+        values = self.axis_values_between.get((flattened_tuple, ax.name, lower, upper, method), None)
         if self.axis_values_between.get((flattened_tuple, ax.name, lower, upper, method), None) is None:
-            self.axis_values_between[(flattened_tuple, ax.name, lower, upper, method)] = datacube.get_indices(flattened, ax, lower, upper, method)
-        values = self.axis_values_between[(flattened_tuple, ax.name, lower, upper, method)]
+            values = datacube.get_indices(flattened, ax, lower, upper, method)
+            self.axis_values_between[(flattened_tuple, ax.name, lower, upper, method)] = values
+        # values = self.axis_values_between[(flattened_tuple, ax.name, lower, upper, method)]
         # values = datacube.get_indices(flattened, ax, lower, upper, method)
 
         if len(values) == 0:
@@ -98,13 +100,28 @@ class HullSlicer(Engine):
         for value in values:
             # convert to float for slicing
             fvalue = ax.to_float(value)
-            new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
+            new_polytope = self.sliced_polytopes.get((polytope, ax.name, fvalue, slice_axis_idx), False)
+            if new_polytope is False:
+                new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
+                self.sliced_polytopes[(polytope, ax.name, fvalue, slice_axis_idx)] = new_polytope
+            # new_polytope = self.sliced_polytopes[(polytope, ax.name, fvalue, slice_axis_idx)]
+            # new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
             # store the native type
-            remapped_val = value
-            if ax.is_cyclic:
-                remapped_val_interm = ax.remap([value, value])[0]
-                remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
-                remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
+
+            remapped_val = self.remapped_vals.get((value, ax.name), None)
+            if remapped_val is None:
+                remapped_val = value
+                if ax.is_cyclic:
+                    remapped_val_interm = ax.remap([value, value])[0]
+                    remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
+                    remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
+                self.remapped_vals[(value, ax.name)] = remapped_val
+
+            # remapped_val = value
+            # if ax.is_cyclic:
+            #     remapped_val_interm = ax.remap([value, value])[0]
+            #     remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
+            #     remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
             child = node.create_child(ax, remapped_val)
             child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             child["unsliced_polytopes"].remove(polytope)
@@ -142,7 +159,6 @@ class HullSlicer(Engine):
         # Then we do not need to create a new index tree and merge it to request, but can just
         # directly work on request and return it...
 
-        time0 = time.time()
         for c in combinations:
             r = IndexTree()
             r["unsliced_polytopes"] = set(c)
@@ -153,8 +169,6 @@ class HullSlicer(Engine):
                     self._build_branch(ax, node, datacube, next_nodes)
                 current_nodes = next_nodes
             request.merge(r)
-        print("time spent inside extract building tree")
-        print(time.time() - time0)
         return request
 
 
