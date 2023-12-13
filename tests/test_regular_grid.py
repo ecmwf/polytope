@@ -54,7 +54,7 @@ class TestRegularGrid:
         return nearest_points
 
     @pytest.mark.internet
-    @pytest.mark.skip(reason="can't install fdb branch on CI")
+    # @pytest.mark.skip(reason="can't install fdb branch on CI")
     def test_regular_grid(self):
         request = Request(
             Select("step", [0]),

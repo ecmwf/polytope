@@ -21,6 +21,7 @@ class TestSlicingFDBDatacube:
             },
             "date": {"transformation": {"merge": {"with": "time", "linkers": ["T", "00"]}}},
             "step": {"transformation": {"type_change": "int"}},
+            "number": {"transformation": {"type_change": "int"}}
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "step": 0}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
@@ -28,7 +29,7 @@ class TestSlicingFDBDatacube:
         self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
 
     # Testing different shapes
-    @pytest.mark.skip(reason="can't install fdb branch on CI")
+    # @pytest.mark.skip(reason="can't install fdb branch on CI")
     def test_fdb_datacube(self):
         request = Request(
             Select("step", [0]),
@@ -40,6 +41,7 @@ class TestSlicingFDBDatacube:
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["an"]),
+            Select("number", [1]),
             Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
         )
         result = self.API.retrieve(request)

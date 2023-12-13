@@ -39,7 +39,7 @@ class TestSlicing3DXarrayDatacube:
         # result.pprint()
         assert len(result.leaves) == 360
 
-    @pytest.mark.skip(reason="can't install fdb branch on CI")
+    # @pytest.mark.skip(reason="can't install fdb branch on CI")
     def test_all_mapper_cyclic(self):
         self.options = {
             "values": {
@@ -50,6 +50,7 @@ class TestSlicing3DXarrayDatacube:
             "date": {"transformation": {"merge": {"with": "time", "linkers": ["T", "00"]}}},
             "step": {"transformation": {"type_change": "int"}},
             "longitude": {"transformation": {"cyclic": [0, 360]}},
+            "number": {"transformation": {"type_change": "int"}}
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "step": 11}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
@@ -66,6 +67,7 @@ class TestSlicing3DXarrayDatacube:
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["fc"]),
+            Select("number", [1]),
             Span("latitude", 89.9, 90),
             All("longitude"),
         )
