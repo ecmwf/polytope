@@ -51,7 +51,7 @@ class TestRegularGrid:
         return nearest_points
 
     @pytest.mark.internet
-    # @pytest.mark.skip(reason="can't install fdb branch on CI")
+    @pytest.mark.fdb
     def test_incomplete_fdb_branch(self):
         request = Request(
             Select("step", [0]),
@@ -74,7 +74,7 @@ class TestRegularGrid:
         assert result.is_root()
 
     @pytest.mark.internet
-    # @pytest.mark.skip(reason="can't install fdb branch on CI")
+    @pytest.mark.fdb
     def test_incomplete_fdb_branch_2(self):
         request = Request(
             Select("step", [0]),
