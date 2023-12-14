@@ -55,6 +55,7 @@ class TestRegularGrid:
 
     @pytest.mark.internet
     @pytest.mark.fdb
+    @pytest.mark.skip("Depends on GribJump")
     def test_regular_grid(self):
         request = Request(
             Select("step", [0]),
