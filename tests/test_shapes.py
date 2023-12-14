@@ -52,7 +52,7 @@ class TestSlicing3DXarrayDatacube:
             "longitude": {"transformation": {"cyclic": [0, 360]}},
             "number": {"transformation": {"type_change": "int"}},
         }
-        self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "step": 11}
+        self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "step": "11"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)

@@ -22,7 +22,7 @@ class TestRegularGrid:
             "number": {"transformation": {"type_change": "int"}},
             "longitude": {"transformation": {"cyclic": [0, 360]}},
         }
-        self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "step": 0}
+        self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "step": "0"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
