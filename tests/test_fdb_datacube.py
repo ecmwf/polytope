@@ -24,7 +24,6 @@ class TestSlicingFDBDatacube:
             "number": {"transformation": {"type_change": "int"}},
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc"}
-        # self.config = "class=od, expver=001, levtype=sfc, step=0"
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
