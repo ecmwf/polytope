@@ -6,7 +6,7 @@ from helper_functions import download_test_data
 from polytope.datacube.backends.fdb import FDBDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Disk, Select, Span
+from polytope.shapes import Disk, Select
 
 # import geopandas as gpd
 # import matplotlib.pyplot as plt
@@ -27,23 +27,8 @@ class TestRegularGrid:
         }
         self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "step": "0"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
-        print("NOW")
-        print(self.fdbdatacube.fdb_coordinates)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
-        # self.options = {
-        #     "values": {
-        #         "transformation": {"mapper": {"type": "regular", "resolution": 30, "axes": ["latitude", "longitude"]}}
-        #     },
-        #     "date": {"transformation": {"merge": {"with": "time", "linkers": [" ", "00"]}}},
-        #     "step": {"transformation": {"type_change": "int"}},
-        #     "number": {"transformation": {"type_change": "int"}},
-        #     "longitude": {"transformation": {"cyclic": [0, 360]}},
-        # }
-        # self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "step": "0"}
-        # self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
-        # self.slicer = HullSlicer()
-        # self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
 
     def find_nearest_latlon(self, grib_file, target_lat, target_lon):
         # Open the GRIB file
@@ -70,7 +55,6 @@ class TestRegularGrid:
 
     @pytest.mark.internet
     @pytest.mark.fdb
-    # @pytest.mark.skip("FDB issue")
     def test_regular_grid(self):
         request = Request(
             Select("step", [0]),
@@ -86,21 +70,6 @@ class TestRegularGrid:
             Select("levelist", ["500"]),
             Select("number", ["0", "1"]),
         )
-        # request = Request(
-        #     Select("step", [0]),
-        #     Select("levtype", ["pl"]),
-        #     Select("date", [pd.Timestamp("20170102T120000")]),
-        #     Select("domain", ["g"]),
-        #     Select("expver", ["0001"]),
-        #     Select("param", ["129"]),
-        #     Select("class", ["ea"]),
-        #     Select("stream", ["enda"]),
-        #     Select("type", ["an"]),
-        #     Select("latitude", [0]),
-        #     Select("longitude", [0]),
-        #     Select("levelist", ["500"]),
-        #     Select("number", ["0"]),
-        # )
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 10
