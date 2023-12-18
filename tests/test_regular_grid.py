@@ -12,7 +12,6 @@ from polytope.shapes import Disk, Select
 # import matplotlib.pyplot as plt
 
 
-@pytest.mark.fdb
 class TestRegularGrid:
     def setup_method(self, method):
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/era5-levels-members.grib"
@@ -54,6 +53,7 @@ class TestRegularGrid:
 
         return nearest_points
 
+    @pytest.mark.fdb
     @pytest.mark.internet
     def test_regular_grid(self):
         request = Request(
