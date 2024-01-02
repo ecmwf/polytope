@@ -25,6 +25,7 @@ class QuadNode:
 
 
 class QuadTree:
+    # TODO: do we need the max_depth?
     MAX = 4
     MAX_DEPTH = 20
 
@@ -138,6 +139,10 @@ class QuadTree:
     #     size += len(self.nodes)
     #     return size
 
+    def query_polygon(self, polygon):
+        # TODO: intersect quad tree with a 2D polygon
+        pass
+
 
 class QuadTreeSlicer(Engine):
     def __init__(self, points):
@@ -147,3 +152,16 @@ class QuadTreeSlicer(Engine):
         self.quad_tree = quad_tree
 
     # TODO: method to slice polygon against quadtree
+    def extract(self, datacube, polytopes):
+        # TODO: need to find the points to extract within the polytopes (polygons here in 2D)
+        for polytope in polytopes: 
+            assert len(polytope._axes) == 2
+            self.extract_single(datacube, polytope)
+
+    def extract_single(self, datacube, polytope):
+        # TODO: extract a single polygon
+
+        # TODO: need to find points of the datacube contained within the polytope
+        # We do this by intersecting the datacube point cloud quad tree with the polytope here
+        polygon_points = self.quad_tree.query_polygon(polytope)
+        return polygon_points
