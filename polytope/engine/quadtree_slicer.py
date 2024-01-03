@@ -23,6 +23,10 @@ class QuadNode:
         self.item = item
         self.rect = rect
 
+    def is_contained_in(self, polygon):
+        # TODO: implement method to check if the node point is inside the polygon
+        pass
+
 
 class QuadTree:
     # TODO: do we need the max_depth?
@@ -139,9 +143,36 @@ class QuadTree:
     #     size += len(self.nodes)
     #     return size
 
-    def query_polygon(self, polygon):
+    def query_polygon(self, polygon, results=None):
         # TODO: intersect quad tree with a 2D polygon
-        pass
+        if results is None:
+            results = set()
+
+        # intersect the children with the polygon
+        # TODO: here, we create None polygons... think about how to handle them
+
+        x_lower, x_upper = polygon.extents(polygon._axes[0])
+        y_lower, y_upper = polygon.extents(polygon._axes[1])
+        if len(self.children) > 0:
+            # TODO: do the intersection bit here
+            if x_upper <= self.center[0]:
+                # The vertical slicing line does not intersect the polygon, which is on the left of the line
+                # So we keep the same polygon for now since it is unsliced
+                left_polygon = polygon
+                right_polygon = None
+            if x_lower <= self.center[0] < x_upper:
+                # TODO: need to slice polygon into left and right part
+                pass
+            if self.center[0] < x_lower:
+                left_polygon = None
+                right_polygon = polygon
+            pass
+
+        for node in self.nodes:
+            if node.is_contained_in(polygon):
+                results.add(node)
+
+        return results
 
 
 class QuadTreeSlicer(Engine):
