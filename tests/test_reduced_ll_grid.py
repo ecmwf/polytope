@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
 from helper_functions import download_test_data
 
@@ -51,6 +52,8 @@ class TestReducedLatLonGrid:
 
         return nearest_points
 
+    @pytest.mark.internet
+    @pytest.mark.skip(reason="can't install fdb branch on CI")
     def test_reduced_ll_grid(self):
         request = Request(
             Select("step", [1]),
