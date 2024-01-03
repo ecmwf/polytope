@@ -134,7 +134,7 @@ class ReducedLatLonMapper(DatacubeMapper):
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
         self._resolution = resolution
-        self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
+        self._axis_reversed = {mapped_axes[0]: False, mapped_axes[1]: False}
         self._first_axis_vals = self.first_axis_vals()
 
     def first_axis_vals(self):
