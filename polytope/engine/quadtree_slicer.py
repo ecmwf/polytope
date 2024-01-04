@@ -1,4 +1,8 @@
 from .engine import Engine
+from ..shapes import ConvexPolytope
+from itertools import chain
+from .hullslicer import _find_intersects
+import scipy
 
 """
 
@@ -196,3 +200,99 @@ class QuadTreeSlicer(Engine):
         # We do this by intersecting the datacube point cloud quad tree with the polytope here
         polygon_points = self.quad_tree.query_polygon(polytope)
         return polygon_points
+
+
+def slice_in_two_vertically(polytope: ConvexPolytope, value):
+    if polytope is None:
+        pass
+    else:
+        assert len(polytope.points[0]) == 2
+
+        x_lower, x_upper = polytope.extents(polytope._axes[0])
+
+        slice_axis_idx = 0
+
+        intersects = _find_intersects(polytope, slice_axis_idx, value)
+
+        if len(intersects) == 0:
+            if x_upper <= value:
+                # The vertical slicing line does not intersect the polygon, which is on the left of the line
+                # So we keep the same polygon for now since it is unsliced
+                left_polygon = polytope
+                right_polygon = None
+            if value < x_lower:
+                left_polygon = None
+                right_polygon = polytope
+        else:
+            left_points = [p for p in polytope.points if p[0] <= value]
+            right_points = [p for p in polytope.points if p[0] >= value]
+            left_points.extend(intersects)
+            right_points.extend(intersects)
+            # find left polygon 
+            try:
+                hull = scipy.spatial.ConvexHull(left_points)
+                vertices = hull.vertices
+            except scipy.spatial.qhull.QhullError as e:
+                print(str(e))
+                pass
+
+            left_polygon = ConvexPolytope(polytope._axes, [left_points[i] for i in vertices])
+
+            try:
+                hull = scipy.spatial.ConvexHull(right_points)
+                vertices = hull.vertices
+            except scipy.spatial.qhull.QhullError as e:
+                print(str(e))
+                pass
+
+            right_polygon = ConvexPolytope(polytope._axes, [right_points[i] for i in vertices])
+
+        return (left_polygon, right_polygon)
+
+
+def slice_in_two_horizontally(polytope: ConvexPolytope, value):
+    if polytope is None:
+        pass
+    else:
+        assert len(polytope.points[0]) == 2
+
+        y_lower, y_upper = polytope.extents(polytope._axes[1])
+
+        slice_axis_idx = 1
+
+        intersects = _find_intersects(polytope, slice_axis_idx, value)
+
+        if len(intersects) == 0:
+            if y_upper <= value:
+                # The vertical slicing line does not intersect the polygon, which is on the left of the line
+                # So we keep the same polygon for now since it is unsliced
+                lower_polygon = polytope
+                upper_polygon = None
+            if value < y_lower:
+                lower_polygon = None
+                upper_polygon = polytope
+        else:
+            lower_points = [p for p in polytope.points if p[1] <= value]
+            upper_points = [p for p in polytope.points if p[1] >= value]
+            lower_points.extend(intersects)
+            upper_points.extend(intersects)
+            # find left polygon 
+            try:
+                hull = scipy.spatial.ConvexHull(lower_points)
+                vertices = hull.vertices
+            except scipy.spatial.qhull.QhullError as e:
+                print(str(e))
+                pass
+
+            lower_polygon = ConvexPolytope(polytope._axes, [lower_points[i] for i in vertices])
+
+            try:
+                hull = scipy.spatial.ConvexHull(upper_points)
+                vertices = hull.vertices
+            except scipy.spatial.qhull.QhullError as e:
+                print(str(e))
+                pass
+
+            upper_polygon = ConvexPolytope(polytope._axes, [upper_points[i] for i in vertices])
+
+        return (lower_polygon, upper_polygon)
