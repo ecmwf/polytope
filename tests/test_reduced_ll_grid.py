@@ -34,7 +34,6 @@ class TestReducedLatLonGrid:
     @pytest.mark.internet
     @pytest.mark.skip(reason="can't install fdb branch on CI")
     def test_reduced_ll_grid(self):
-
         request = Request(
             Select("step", [1]),
             Select("date", [pd.Timestamp("20231129T000000")]),

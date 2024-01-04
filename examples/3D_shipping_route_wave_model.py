@@ -45,7 +45,6 @@ class TestReducedLatLonGrid:
     @pytest.mark.internet
     @pytest.mark.skip(reason="can't install fdb branch on CI")
     def test_reduced_ll_grid(self):
-
         shapefile = gpd.read_file("./examples/data/Shipping-Lanes-v1.shp")
         geometry_multiline = shapefile.iloc[2]
         geometry_object = geometry_multiline["geometry"]
