@@ -39,7 +39,6 @@ from .datacube import Datacube
 
 
 class IrregularGridDatacube(Datacube):
-
     def __init__(self, points, config={}, axis_options={}):
         self.points = points
 

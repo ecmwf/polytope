@@ -1,7 +1,7 @@
 from .engine import Engine
 from ..shapes import ConvexPolytope
 from itertools import chain
-from .hullslicer import _find_intersects
+from .hullslicer import _find_intersects, slice
 import scipy
 
 """
@@ -29,7 +29,15 @@ class QuadNode:
 
     def is_contained_in(self, polygon):
         # TODO: implement method to check if the node point is inside the polygon
-        pass
+        node_x = self.rect[0]
+        node_y = self.rect[1]
+
+        sliced_vertical_polygon = slice(polygon, polygon._axes[0], node_x, 0)
+        if sliced_vertical_polygon:
+            lower_y, upper_y, idx = sliced_vertical_polygon.extents(polygon._axes[1])
+            if lower_y <= node_y <= upper_y:
+                return True
+        return False
 
 
 class QuadTree:
@@ -56,7 +64,17 @@ class QuadTree:
             for n in self.nodes:
                 print("\t" * (self.depth + 1) + "\u21b3" + str(n.rect[0]) + " , " + str(n.rect[1]))
         for child in self.children:
-            print("\t" * (self.depth + 1) + "\u21b3" + str(child.center[0]-child.size[0]) + " , " + str(child.center[1] - child.size[1]) + " , " + str(child.center[0]+child.size[0]) + " , " + str(child.center[1] + child.size[1]))
+            print(
+                "\t" * (self.depth + 1)
+                + "\u21b3"
+                + str(child.center[0] - child.size[0])
+                + " , "
+                + str(child.center[1] - child.size[1])
+                + " , "
+                + str(child.center[0] + child.size[0])
+                + " , "
+                + str(child.center[1] + child.size[1])
+            )
             child.pprint()
 
     def insert(self, item, rect):
@@ -73,15 +91,14 @@ class QuadTree:
             return self.insert_into_children(item, rect)
 
     def insert_into_children(self, item, rect):
-
         # if rect spans center then insert here
-        if ((rect[0] <= self.center[0] and rect[2] > self.center[0]) and
-                (rect[1] <= self.center[1] and rect[3] > self.center[1])):
+        if (rect[0] <= self.center[0] and rect[2] > self.center[0]) and (
+            rect[1] <= self.center[1] and rect[3] > self.center[1]
+        ):
             node = QuadNode(item, rect)
             self.nodes.append(node)
             return node
         else:
-
             # try to insert into children
             if rect[0] <= self.center[0]:
                 if rect[1] <= self.center[1]:
@@ -95,18 +112,32 @@ class QuadTree:
                     return self.children[3].insert(item, rect)
 
     def split(self):
-        self.children = [QuadTree(self.center[0] - self.size[0]/2,
-                                  self.center[1] - self.size[1]/2,
-                                  [s/2 for s in self.size], self.depth + 1),
-                         QuadTree(self.center[0] - self.size[0]/2,
-                                  self.center[1] + self.size[1]/2,
-                                  [s/2 for s in self.size], self.depth + 1),
-                         QuadTree(self.center[0] + self.size[0]/2,
-                                  self.center[1] - self.size[1]/2,
-                                  [s/2 for s in self.size], self.depth + 1),
-                         QuadTree(self.center[0] + self.size[0]/2,
-                                  self.center[1] + self.size[1]/2,
-                                  [s/2 for s in self.size], self.depth + 1)]
+        self.children = [
+            QuadTree(
+                self.center[0] - self.size[0] / 2,
+                self.center[1] - self.size[1] / 2,
+                [s / 2 for s in self.size],
+                self.depth + 1,
+            ),
+            QuadTree(
+                self.center[0] - self.size[0] / 2,
+                self.center[1] + self.size[1] / 2,
+                [s / 2 for s in self.size],
+                self.depth + 1,
+            ),
+            QuadTree(
+                self.center[0] + self.size[0] / 2,
+                self.center[1] - self.size[1] / 2,
+                [s / 2 for s in self.size],
+                self.depth + 1,
+            ),
+            QuadTree(
+                self.center[0] + self.size[0] / 2,
+                self.center[1] + self.size[1] / 2,
+                [s / 2 for s in self.size],
+                self.depth + 1,
+            ),
+        ]
 
         nodes = self.nodes
         self.nodes = []
@@ -154,29 +185,43 @@ class QuadTree:
 
         # intersect the children with the polygon
         # TODO: here, we create None polygons... think about how to handle them
-
-        x_lower, x_upper = polygon.extents(polygon._axes[0])
-        y_lower, y_upper = polygon.extents(polygon._axes[1])
-        if len(self.children) > 0:
-            # TODO: do the intersection bit here
-            if x_upper <= self.center[0]:
-                # The vertical slicing line does not intersect the polygon, which is on the left of the line
-                # So we keep the same polygon for now since it is unsliced
-                left_polygon = polygon
-                right_polygon = None
-            if x_lower <= self.center[0] < x_upper:
-                # TODO: need to slice polygon into left and right part
-                pass
-            if self.center[0] < x_lower:
-                left_polygon = None
-                right_polygon = polygon
+        if polygon is None:
             pass
+        else:
+            left_polygon, right_polygon = slice_in_two_vertically(polygon, self.center[0])
 
-        for node in self.nodes:
-            if node.is_contained_in(polygon):
-                results.add(node)
+            # TODO: now need to slice the left and right polygons each in two to have the 4 quadrant polygons
+            q1_polygon, q2_polygon = slice_in_two_horizontally(left_polygon, self.center[1])
+            q3_polygon, q4_polygon = slice_in_two_horizontally(right_polygon, self.center[1])
 
-        return results
+            # TODO: now query these 4 polygons further down the quadtree
+            self.children[0].query_polygon(q1_polygon, results)
+            self.children[1].query_polygon(q2_polygon, results)
+            self.children[2].query_polygon(q3_polygon, results)
+            self.children[3].query_polygon(q4_polygon, results)
+
+            # x_lower, x_upper = polygon.extents(polygon._axes[0])
+            # y_lower, y_upper = polygon.extents(polygon._axes[1])
+            # if len(self.children) > 0:
+            #     # TODO: do the intersection bit here
+            #     if x_upper <= self.center[0]:
+            #         # The vertical slicing line does not intersect the polygon, which is on the left of the line
+            #         # So we keep the same polygon for now since it is unsliced
+            #         left_polygon = polygon
+            #         right_polygon = None
+            #     if x_lower <= self.center[0] < x_upper:
+            #         # TODO: need to slice polygon into left and right part
+            #         pass
+            #     if self.center[0] < x_lower:
+            #         left_polygon = None
+            #         right_polygon = polygon
+            #     pass
+
+            for node in self.nodes:
+                if node.is_contained_in(polygon):
+                    results.add(node)
+
+            return results
 
 
 class QuadTreeSlicer(Engine):
@@ -189,7 +234,7 @@ class QuadTreeSlicer(Engine):
     # TODO: method to slice polygon against quadtree
     def extract(self, datacube, polytopes):
         # TODO: need to find the points to extract within the polytopes (polygons here in 2D)
-        for polytope in polytopes: 
+        for polytope in polytopes:
             assert len(polytope._axes) == 2
             self.extract_single(datacube, polytope)
 
@@ -208,7 +253,7 @@ def slice_in_two_vertically(polytope: ConvexPolytope, value):
     else:
         assert len(polytope.points[0]) == 2
 
-        x_lower, x_upper = polytope.extents(polytope._axes[0])
+        x_lower, x_upper, slice_axis_idx = polytope.extents(polytope._axes[0])
 
         slice_axis_idx = 0
 
@@ -228,7 +273,7 @@ def slice_in_two_vertically(polytope: ConvexPolytope, value):
             right_points = [p for p in polytope.points if p[0] >= value]
             left_points.extend(intersects)
             right_points.extend(intersects)
-            # find left polygon 
+            # find left polygon
             try:
                 hull = scipy.spatial.ConvexHull(left_points)
                 vertices = hull.vertices
@@ -256,7 +301,7 @@ def slice_in_two_horizontally(polytope: ConvexPolytope, value):
     else:
         assert len(polytope.points[0]) == 2
 
-        y_lower, y_upper = polytope.extents(polytope._axes[1])
+        y_lower, y_upper, slice_axis_idx = polytope.extents(polytope._axes[1])
 
         slice_axis_idx = 1
 
@@ -276,7 +321,7 @@ def slice_in_two_horizontally(polytope: ConvexPolytope, value):
             upper_points = [p for p in polytope.points if p[1] >= value]
             lower_points.extend(intersects)
             upper_points.extend(intersects)
-            # find left polygon 
+            # find left polygon
             try:
                 hull = scipy.spatial.ConvexHull(lower_points)
                 vertices = hull.vertices
