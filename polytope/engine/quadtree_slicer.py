@@ -28,7 +28,7 @@ class QuadNode:
         self.rect = rect
 
     def is_contained_in(self, polygon):
-        # TODO: implement method to check if the node point is inside the polygon
+        # implement method to check if the node point is inside the polygon
         node_x = self.rect[0]
         node_y = self.rect[1]
 
@@ -144,42 +144,8 @@ class QuadTree:
         for node in nodes:
             self.insert_into_children(node.item, node.rect)
 
-    # def query(self, rect, results=None):
-
-    #     if results is None:
-    #         rect = normalize_rect(rect)
-    #         results = set()
-
-    #     # search children
-    #     if len(self.children) > 0:
-    #         if rect[0] <= self.center[0]:
-    #             if rect[1] <= self.center[1]:
-    #                 self.children[0].query(rect, results)
-    #             if rect[3] > self.center[1]:
-    #                 self.children[1].query(rect, results)
-    #         if rect[2] > self.center[0]:
-    #             if rect[1] <= self.center[1]:
-    #                 self.children[2].query(rect, results)
-    #             if rect[3] > self.center[1]:
-    #                 self.children[3].query(rect, results)
-
-    #     # search node at this level
-    #     for node in self.nodes:
-    #         if (node.rect[2] > rect[0] and node.rect[0] <= rect[2] and
-    #                 node.rect[3] > rect[1] and node.rect[1] <= rect[3]):
-    #             results.add(node.item)
-
-    #     return results
-
-    # def get_size(self):
-    #     size = 0
-    #     for child in self.children:
-    #         size += child.get_size()
-    #     size += len(self.nodes)
-    #     return size
-
     def query_polygon(self, polygon, results=None):
-        # TODO: intersect quad tree with a 2D polygon
+        # intersect quad tree with a 2D polygon
         if results is None:
             results = set()
 
@@ -191,32 +157,15 @@ class QuadTree:
             if len(self.children) > 0:
                 left_polygon, right_polygon = slice_in_two_vertically(polygon, self.center[0])
 
-                # TODO: now need to slice the left and right polygons each in two to have the 4 quadrant polygons
+                # now need to slice the left and right polygons each in two to have the 4 quadrant polygons
                 q1_polygon, q2_polygon = slice_in_two_horizontally(left_polygon, self.center[1])
                 q3_polygon, q4_polygon = slice_in_two_horizontally(right_polygon, self.center[1])
 
-                # TODO: now query these 4 polygons further down the quadtree
+                # now query these 4 polygons further down the quadtree
                 self.children[0].query_polygon(q1_polygon, results)
                 self.children[1].query_polygon(q2_polygon, results)
                 self.children[2].query_polygon(q3_polygon, results)
                 self.children[3].query_polygon(q4_polygon, results)
-
-            # x_lower, x_upper = polygon.extents(polygon._axes[0])
-            # y_lower, y_upper = polygon.extents(polygon._axes[1])
-            # if len(self.children) > 0:
-            #     # TODO: do the intersection bit here
-            #     if x_upper <= self.center[0]:
-            #         # The vertical slicing line does not intersect the polygon, which is on the left of the line
-            #         # So we keep the same polygon for now since it is unsliced
-            #         left_polygon = polygon
-            #         right_polygon = None
-            #     if x_lower <= self.center[0] < x_upper:
-            #         # TODO: need to slice polygon into left and right part
-            #         pass
-            #     if self.center[0] < x_lower:
-            #         left_polygon = None
-            #         right_polygon = polygon
-            #     pass
 
             for node in self.nodes:
                 if node.is_contained_in(polygon):
@@ -227,22 +176,27 @@ class QuadTree:
 
 class QuadTreeSlicer(Engine):
     def __init__(self, points):
-        # TODO: here need to construct quadtree, which is specific to datacube
+        # here need to construct quadtree, which is specific to datacube
         quad_tree = QuadTree()
         quad_tree.build_point_tree(points)
         self.quad_tree = quad_tree
 
-    # TODO: method to slice polygon against quadtree
+    # method to slice polygon against quadtree
     def extract(self, datacube, polytopes):
-        # TODO: need to find the points to extract within the polytopes (polygons here in 2D)
+        # need to find the points to extract within the polytopes (polygons here in 2D)
+        extracted_points = []
         for polytope in polytopes:
             assert len(polytope._axes) == 2
-            self.extract_single(datacube, polytope)
+            extracted_points.extend(self.extract_single(datacube, polytope))
+
+        # TODO: what data format do we return extracted points as? Append those points to the index tree?
+        # NOTE: for now, this returns a list of QuadNodes
+        return extracted_points
 
     def extract_single(self, datacube, polytope):
-        # TODO: extract a single polygon
+        # extract a single polygon
 
-        # TODO: need to find points of the datacube contained within the polytope
+        # need to find points of the datacube contained within the polytope
         # We do this by intersecting the datacube point cloud quad tree with the polytope here
         polygon_points = self.quad_tree.query_polygon(polytope)
         return polygon_points
