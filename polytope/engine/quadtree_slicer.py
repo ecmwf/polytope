@@ -1,8 +1,8 @@
-from .engine import Engine
-from ..shapes import ConvexPolytope
-from itertools import chain
-from .hullslicer import _find_intersects, slice
 import scipy
+
+from ..shapes import ConvexPolytope
+from .engine import Engine
+from .hullslicer import _find_intersects, slice
 
 """
 
@@ -188,17 +188,18 @@ class QuadTree:
         if polygon is None:
             pass
         else:
-            left_polygon, right_polygon = slice_in_two_vertically(polygon, self.center[0])
+            if len(self.children) > 0:
+                left_polygon, right_polygon = slice_in_two_vertically(polygon, self.center[0])
 
-            # TODO: now need to slice the left and right polygons each in two to have the 4 quadrant polygons
-            q1_polygon, q2_polygon = slice_in_two_horizontally(left_polygon, self.center[1])
-            q3_polygon, q4_polygon = slice_in_two_horizontally(right_polygon, self.center[1])
+                # TODO: now need to slice the left and right polygons each in two to have the 4 quadrant polygons
+                q1_polygon, q2_polygon = slice_in_two_horizontally(left_polygon, self.center[1])
+                q3_polygon, q4_polygon = slice_in_two_horizontally(right_polygon, self.center[1])
 
-            # TODO: now query these 4 polygons further down the quadtree
-            self.children[0].query_polygon(q1_polygon, results)
-            self.children[1].query_polygon(q2_polygon, results)
-            self.children[2].query_polygon(q3_polygon, results)
-            self.children[3].query_polygon(q4_polygon, results)
+                # TODO: now query these 4 polygons further down the quadtree
+                self.children[0].query_polygon(q1_polygon, results)
+                self.children[1].query_polygon(q2_polygon, results)
+                self.children[2].query_polygon(q3_polygon, results)
+                self.children[3].query_polygon(q4_polygon, results)
 
             # x_lower, x_upper = polygon.extents(polygon._axes[0])
             # y_lower, y_upper = polygon.extents(polygon._axes[1])
@@ -249,7 +250,8 @@ class QuadTreeSlicer(Engine):
 
 def slice_in_two_vertically(polytope: ConvexPolytope, value):
     if polytope is None:
-        pass
+        return (None, None)
+        # pass
     else:
         assert len(polytope.points[0]) == 2
 
@@ -297,7 +299,8 @@ def slice_in_two_vertically(polytope: ConvexPolytope, value):
 
 def slice_in_two_horizontally(polytope: ConvexPolytope, value):
     if polytope is None:
-        pass
+        return (None, None)
+        # pass
     else:
         assert len(polytope.points[0]) == 2
 

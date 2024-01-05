@@ -17,6 +17,25 @@ class TestQuadTreeSlicer:
         slicer.quad_tree.pprint()
         pass
 
+    def test_quad_tree_query_polygon(self):
+        points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
+        slicer = QuadTreeSlicer(points)
+        polytope = Box(["lat", "lon"], [1, 1], [20, 30]).polytope()[0]
+        results = slicer.quad_tree.query_polygon(polytope)
+        assert len(results) == 3
+        assert (10, 10, 10, 10) in [node.rect for node in results]
+        assert (5, 10, 5, 10) in [node.rect for node in results]
+        assert (5, 20, 5, 20) in [node.rect for node in results]
+        points = [[10, 10], [80, 10], [-5, 5], [5, 50], [5, 10], [50, 10], [2, 10], [15, 15]]
+        slicer = QuadTreeSlicer(points)
+        polytope = ConvexPolytope(["lat", "lon"], [[-10, 1], [20, 1], [5, 20]])
+        results = slicer.quad_tree.query_polygon(polytope)
+        assert len(results) == 4
+        assert (-5, 5, -5, 5) in [node.rect for node in results]
+        assert (5, 10, 5, 10) in [node.rect for node in results]
+        assert (10, 10, 10, 10) in [node.rect for node in results]
+        assert (2, 10, 2, 10) in [node.rect for node in results]
+
     def test_slice_in_two_vertically(self):
         polytope = Box(["lat", "lon"], [0, 0], [2, 2]).polytope()[0]
         lower, upper = slice_in_two_vertically(polytope, 1)
