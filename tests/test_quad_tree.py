@@ -113,3 +113,5 @@ class TestQuadTreeSlicer:
         tree = slicer.extract(self.datacube, [polytope])
         print(time.time() - time1)  # = 5.919436931610107
         print(len(tree.leaves))  # = 55100
+        # NOTE: maybe for 2D qhull here, scipy is not the fastest
+        # but use shewchuk's triangle algo: https://www.cs.cmu.edu/~quake/triangle.html?
