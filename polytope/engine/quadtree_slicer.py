@@ -155,11 +155,15 @@ class QuadTree:
             pass
         else:
             if len(self.children) > 0:
-                left_polygon, right_polygon = slice_in_two_vertically(polygon, self.center[0])
 
-                # now need to slice the left and right polygons each in two to have the 4 quadrant polygons
-                q1_polygon, q2_polygon = slice_in_two_horizontally(left_polygon, self.center[1])
-                q3_polygon, q4_polygon = slice_in_two_horizontally(right_polygon, self.center[1])
+                # first slice vertically
+                left_polygon, right_polygon = slice_in_two(polygon, self.center[0], 0)
+
+                # then slice horizontally
+                # ie need to slice the left and right polygons each in two to have the 4 quadrant polygons
+
+                q1_polygon, q2_polygon = slice_in_two(left_polygon, self.center[1], 1)
+                q3_polygon, q4_polygon = slice_in_two(right_polygon, self.center[1], 1)
 
                 # now query these 4 polygons further down the quadtree
                 self.children[0].query_polygon(q1_polygon, results)
@@ -202,16 +206,13 @@ class QuadTreeSlicer(Engine):
         return polygon_points
 
 
-def slice_in_two_vertically(polytope: ConvexPolytope, value):
+def slice_in_two(polytope: ConvexPolytope, value, slice_axis_idx):
     if polytope is None:
         return (None, None)
-        # pass
     else:
         assert len(polytope.points[0]) == 2
 
-        x_lower, x_upper, slice_axis_idx = polytope.extents(polytope._axes[0])
-
-        slice_axis_idx = 0
+        x_lower, x_upper, _ = polytope.extents(polytope._axes[slice_axis_idx])
 
         intersects = _find_intersects(polytope, slice_axis_idx, value)
 
@@ -225,8 +226,8 @@ def slice_in_two_vertically(polytope: ConvexPolytope, value):
                 left_polygon = None
                 right_polygon = polytope
         else:
-            left_points = [p for p in polytope.points if p[0] <= value]
-            right_points = [p for p in polytope.points if p[0] >= value]
+            left_points = [p for p in polytope.points if p[slice_axis_idx] <= value]
+            right_points = [p for p in polytope.points if p[slice_axis_idx] >= value]
             left_points.extend(intersects)
             right_points.extend(intersects)
             # find left polygon
@@ -249,52 +250,3 @@ def slice_in_two_vertically(polytope: ConvexPolytope, value):
             right_polygon = ConvexPolytope(polytope._axes, [right_points[i] for i in vertices])
 
         return (left_polygon, right_polygon)
-
-
-def slice_in_two_horizontally(polytope: ConvexPolytope, value):
-    if polytope is None:
-        return (None, None)
-        # pass
-    else:
-        assert len(polytope.points[0]) == 2
-
-        y_lower, y_upper, slice_axis_idx = polytope.extents(polytope._axes[1])
-
-        slice_axis_idx = 1
-
-        intersects = _find_intersects(polytope, slice_axis_idx, value)
-
-        if len(intersects) == 0:
-            if y_upper <= value:
-                # The vertical slicing line does not intersect the polygon, which is on the left of the line
-                # So we keep the same polygon for now since it is unsliced
-                lower_polygon = polytope
-                upper_polygon = None
-            if value < y_lower:
-                lower_polygon = None
-                upper_polygon = polytope
-        else:
-            lower_points = [p for p in polytope.points if p[1] <= value]
-            upper_points = [p for p in polytope.points if p[1] >= value]
-            lower_points.extend(intersects)
-            upper_points.extend(intersects)
-            # find left polygon
-            try:
-                hull = scipy.spatial.ConvexHull(lower_points)
-                vertices = hull.vertices
-            except scipy.spatial.qhull.QhullError as e:
-                print(str(e))
-                pass
-
-            lower_polygon = ConvexPolytope(polytope._axes, [lower_points[i] for i in vertices])
-
-            try:
-                hull = scipy.spatial.ConvexHull(upper_points)
-                vertices = hull.vertices
-            except scipy.spatial.qhull.QhullError as e:
-                print(str(e))
-                pass
-
-            upper_polygon = ConvexPolytope(polytope._axes, [upper_points[i] for i in vertices])
-
-        return (lower_polygon, upper_polygon)
