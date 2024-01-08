@@ -1,3 +1,5 @@
+import pytest
+
 from polytope.datacube.backends.fdb import FDBDatacube
 from polytope.datacube.quad_tree import QuadNode
 from polytope.engine.quadtree_slicer import QuadTreeSlicer
@@ -91,3 +93,23 @@ class TestQuadTreeSlicer:
         tree = slicer.extract(self.datacube, [polytope])
         assert len(tree.leaves) == 4
         tree.pprint()
+
+    @pytest.mark.skip("performance test")
+    def test_large_scale_extraction(self):
+        import time
+
+        import numpy as np
+        x = np.linspace(0, 100, 1000)
+        y = np.linspace(0, 100, 1000)
+        # create the mesh based on these arrays
+        X, Y = np.meshgrid(x, y)
+        X = X.reshape((np.prod(X.shape),))
+        Y = Y.reshape((np.prod(Y.shape),))
+        coords = zip(X, Y)
+        points = [list(coord) for coord in coords]
+        slicer = QuadTreeSlicer(points)
+        polytope = Box(["latitude", "longitude"], [1, 1], [20, 30]).polytope()[0]
+        time1 = time.time()
+        tree = slicer.extract(self.datacube, [polytope])
+        print(time.time() - time1)  # = 5.919436931610107
+        print(len(tree.leaves))  # = 55100
