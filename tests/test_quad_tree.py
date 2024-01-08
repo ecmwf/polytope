@@ -1,10 +1,23 @@
-from polytope.engine.quadtree_slicer import QuadNode, QuadTreeSlicer, slice_in_two
+from polytope.datacube.backends.fdb import FDBDatacube
+from polytope.datacube.quad_tree import QuadNode
+from polytope.engine.quadtree_slicer import QuadTreeSlicer
+from polytope.engine.slicing_tools import slice_in_two
 from polytope.shapes import Box, ConvexPolytope
 
 
 class TestQuadTreeSlicer:
     def setup_method(self, method):
-        pass
+        self.options = {
+            "values": {
+                "transformation": {"mapper": {"type": "regular", "resolution": 30, "axes": ["latitude", "longitude"]}}
+            },
+            "date": {"transformation": {"merge": {"with": "time", "linkers": ["T", "00"]}}},
+            "step": {"transformation": {"type_change": "int"}},
+            "number": {"transformation": {"type_change": "int"}},
+            "longitude": {"transformation": {"cyclic": [0, 360]}},
+        }
+        self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "step": 0}
+        self.datacube = FDBDatacube(self.config, axis_options=self.options)
 
     def test_quad_tree_slicer(self):
         points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
@@ -64,3 +77,17 @@ class TestQuadTreeSlicer:
         assert third_node.is_contained_in(polytope)
         third_node = QuadNode(1, [0.1, 0.5, 0.1, 0.5])
         assert not third_node.is_contained_in(polytope)
+
+    def test_quad_tree_slicer_extract(self):
+        points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
+        slicer = QuadTreeSlicer(points)
+        polytope = Box(["latitude", "longitude"], [1, 1], [20, 30]).polytope()[0]
+        tree = slicer.extract(self.datacube, [polytope])
+        assert len(tree.leaves) == 3
+        tree.pprint()
+        points = [[10, 10], [80, 10], [-5, 5], [5, 50], [5, 10], [50, 10], [2, 10], [15, 15]]
+        slicer = QuadTreeSlicer(points)
+        polytope = ConvexPolytope(["latitude", "longitude"], [[-10, 1], [20, 1], [5, 20]])
+        tree = slicer.extract(self.datacube, [polytope])
+        assert len(tree.leaves) == 4
+        tree.pprint()
