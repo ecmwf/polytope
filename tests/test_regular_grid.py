@@ -18,13 +18,11 @@ class TestRegularGrid:
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/era5-levels-members.grib"
         download_test_data(nexus_url, "era5-levels-members.grib")
         self.options = {
-            "values": {
-                "transformation": {"mapper": {"type": "regular", "resolution": 30, "axes": ["latitude", "longitude"]}}
-            },
-            "date": {"transformation": {"merge": {"with": "time", "linkers": ["T", "00"]}}},
-            "step": {"transformation": {"type_change": "int"}},
-            "number": {"transformation": {"type_change": "int"}},
-            "longitude": {"transformation": {"cyclic": [0, 360]}},
+            "values": {"mapper": {"type": "regular", "resolution": 30, "axes": ["latitude", "longitude"]}},
+            "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
+            "step": {"type_change": "int"},
+            "number": {"type_change": "int"},
+            "longitude": {"cyclic": [0, 360]},
         }
         self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "step": "0"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
@@ -79,8 +77,9 @@ class TestRegularGrid:
         lons = []
         eccodes_lats = []
         tol = 1e-8
-        for i in range(len(result.leaves)):
-            cubepath = result.leaves[i].flatten()
+        leaves = result.leaves
+        for i in range(len(leaves)):
+            cubepath = leaves[i].flatten()
             lat = cubepath["latitude"]
             lon = cubepath["longitude"]
             lats.append(lat)

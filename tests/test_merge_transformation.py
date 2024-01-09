@@ -19,7 +19,7 @@ class TestMergeTransformation:
                 "time": ["0600"],
             },
         )
-        self.options = {"date": {"transformation": {"merge": {"with": "time", "linkers": ["T", "00"]}}}}
+        self.options = {"date": {"merge": {"with": "time", "linkers": ["T", "00"]}}}
         self.xarraydatacube = XArrayDatacube(self.array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.array, engine=self.slicer, axis_options=self.options)

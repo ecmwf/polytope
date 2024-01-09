@@ -22,8 +22,8 @@ class TestSlicingCyclicAxisNegVals:
             },
         )
         options = {
-            "long": {"transformation": {"cyclic": [-1.1, -0.1]}},
-            "level": {"transformation": {"cyclic": [1, 129]}},
+            "long": {"cyclic": [-1.1, -0.1]},
+            "level": {"cyclic": [1, 129]},
         }
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()

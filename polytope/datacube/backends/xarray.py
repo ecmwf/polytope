@@ -14,33 +14,31 @@ class XArrayDatacube(Datacube):
         self._axes = None
         self.dataarray = dataarray
         treated_axes = []
-        self.non_complete_axes = []
         self.complete_axes = []
         self.blocked_axes = []
         self.fake_axes = []
-        self.unwanted_axes = []
+
         for name, values in dataarray.coords.variables.items():
             if name in dataarray.dims:
-                options = axis_options.get(name, {})
+                options = axis_options.get(name, None)
                 self._check_and_add_axes(options, name, values)
                 treated_axes.append(name)
                 self.complete_axes.append(name)
             else:
                 if self.dataarray[name].dims == ():
-                    options = axis_options.get(name, {})
+                    options = axis_options.get(name, None)
                     self._check_and_add_axes(options, name, values)
                     treated_axes.append(name)
-                    self.non_complete_axes.append(name)
         for name in dataarray.dims:
             if name not in treated_axes:
-                options = axis_options.get(name, {})
+                options = axis_options.get(name, None)
                 val = dataarray[name].values[0]
                 self._check_and_add_axes(options, name, val)
                 treated_axes.append(name)
         # add other options to axis which were just created above like "lat" for the mapper transformations for eg
         for name in self._axes:
             if name not in treated_axes:
-                options = axis_options.get(name, {})
+                options = axis_options.get(name, None)
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
 

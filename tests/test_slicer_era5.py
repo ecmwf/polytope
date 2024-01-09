@@ -18,7 +18,7 @@ class TestSlicingEra5Data:
         array = ds.to_xarray().isel(step=0).t
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
-        options = {"lat": {"transformation": {"reverse": {True}}}}
+        options = {"lat": {"reverse": {True}}}
         self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
 
     @pytest.mark.internet
