@@ -3,7 +3,6 @@ import pytest
 from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
 from helper_functions import download_test_data
 
-from polytope.datacube.backends.fdb import FDBDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Select
@@ -11,6 +10,8 @@ from polytope.shapes import Select
 
 class TestRegularGrid:
     def setup_method(self, method):
+        from polytope.datacube.backends.fdb import FDBDatacube
+
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/era5-levels-members.grib"
         download_test_data(nexus_url, "era5-levels-members.grib")
         self.options = {
@@ -20,7 +21,7 @@ class TestRegularGrid:
             "number": {"type_change": "int"},
             "longitude": {"cyclic": [0, 360]},
         }
-        self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "step": 0}
+        self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "step": "0"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)

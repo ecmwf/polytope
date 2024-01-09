@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-import pyfdb
+import pygribjump as pygj
 
 from .datacube import Datacube, IndexTree
 
@@ -18,9 +18,9 @@ class FDBDatacube(Datacube):
 
         partial_request = config
         # Find values in the level 3 FDB datacube
-        # Will be in the form of a dictionary? {axis_name:values_available, ...}
-        self.fdb = pyfdb.FDB()
-        self.fdb_coordinates = self.fdb.axes(partial_request).as_dict()
+
+        self.fdb = pygj.GribJump()
+        self.fdb_coordinates = self.fdb.axes(partial_request)
         self.fdb_coordinates["values"] = []
         for name, values in self.fdb_coordinates.items():
             values.sort()
@@ -131,7 +131,7 @@ class FDBDatacube(Datacube):
         for i in range(len(sorted_fdb_range_nodes)):
             for k in range(sorted_range_lengths[i]):
                 n = sorted_fdb_range_nodes[i][k]
-                n.result = output_values[0][0][0][i][k]
+                n.result = output_values[0][0][i][0][k]
 
     def find_fdb_values(self, path, range_lengths, current_start_idx, lat_length):
         path.pop("values")
