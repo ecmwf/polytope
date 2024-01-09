@@ -1,7 +1,6 @@
 import pandas as pd
 import pytest
 
-from polytope.datacube.backends.fdb import FDBDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select, Span
@@ -9,6 +8,8 @@ from polytope.shapes import Box, Select, Span
 
 class TestSlicingFDBDatacube:
     def setup_method(self, method):
+        from polytope.datacube.backends.fdb import FDBDatacube
+
         # Create a dataarray with 3 labelled axes using different index types
         self.options = {
             "values": {

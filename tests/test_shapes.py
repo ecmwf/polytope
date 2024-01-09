@@ -3,7 +3,6 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from polytope.datacube.backends.fdb import FDBDatacube
 from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
@@ -41,6 +40,8 @@ class TestSlicing3DXarrayDatacube:
 
     @pytest.mark.fdb
     def test_all_mapper_cyclic(self):
+        from polytope.datacube.backends.fdb import FDBDatacube
+
         self.options = {
             "values": {
                 "transformation": {
