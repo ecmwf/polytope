@@ -24,7 +24,7 @@ class TestSlicing3DXarrayDatacube:
             },
         )
         self.xarraydatacube = XArrayDatacube(array)
-        self.options = {"longitude": {"transformation": {"cyclic": [0, 360]}}}
+        self.options = {"longitude": {"cyclic": [0, 360]}}
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer, axis_options=self.options)
 
@@ -42,15 +42,11 @@ class TestSlicing3DXarrayDatacube:
     @pytest.mark.fdb
     def test_all_mapper_cyclic(self):
         self.options = {
-            "values": {
-                "transformation": {
-                    "mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
-                }
-            },
-            "date": {"transformation": {"merge": {"with": "time", "linkers": ["T", "00"]}}},
-            "step": {"transformation": {"type_change": "int"}},
-            "longitude": {"transformation": {"cyclic": [0, 360]}},
-            "number": {"transformation": {"type_change": "int"}},
+            "values": {"mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}},
+            "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
+            "step": {"type_change": "int"},
+            "number": {"type_change": "int"},
+            "longitude": {"cyclic": [0, 360]},
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "step": 11}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
@@ -59,6 +55,7 @@ class TestSlicing3DXarrayDatacube:
 
         request = Request(
             Select("step", [11]),
+            Select("number", [1]),
             Select("levtype", ["sfc"]),
             Select("date", [pd.Timestamp("20230710T120000")]),
             Select("domain", ["g"]),
@@ -67,7 +64,6 @@ class TestSlicing3DXarrayDatacube:
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["fc"]),
-            Select("number", [1]),
             Span("latitude", 89.9, 90),
             All("longitude"),
         )

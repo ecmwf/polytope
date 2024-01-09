@@ -21,7 +21,7 @@ class TestSlicing3DXarrayDatacube:
                 "long": [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
             },
         )
-        options = {"long": {"transformation": {"cyclic": [0, 1.0]}}, "level": {"transformation": {"cyclic": [1, 129]}}}
+        options = {"long": {"cyclic": [0, 1.0]}, "level": {"cyclic": [1, 129]}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
