@@ -16,15 +16,11 @@ class TestReducedLatLonGrid:
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/wave.grib"
         download_test_data(nexus_url, "wave.grib")
         self.options = {
-            "values": {
-                "transformation": {
-                    "mapper": {"type": "reduced_ll", "resolution": 1441, "axes": ["latitude", "longitude"]}
-                }
-            },
-            "date": {"transformation": {"merge": {"with": "time", "linkers": ["T", "00"]}}},
-            "step": {"transformation": {"type_change": "int"}},
-            "number": {"transformation": {"type_change": "int"}},
-            "longitude": {"transformation": {"cyclic": [0, 360]}},
+            "values": {"mapper": {"type": "reduced_ll", "resolution": 1441, "axes": ["latitude", "longitude"]}},
+            "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
+            "step": {"type_change": "int"},
+            "number": {"type_change": "int"},
+            "longitude": {"cyclic": [0, 360]},
         }
         self.config = {"class": "od", "stream": "wave"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
@@ -32,7 +28,7 @@ class TestReducedLatLonGrid:
         self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
 
     @pytest.mark.internet
-    @pytest.mark.skip(reason="can't install fdb branch on CI")
+    @pytest.mark.fdb
     def test_reduced_ll_grid(self):
         request = Request(
             Select("step", [1]),

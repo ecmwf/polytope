@@ -26,7 +26,6 @@ class TestSlicingFDBDatacube:
     def test_fdb_datacube(self):
         request = Request(
             Select("step", [0]),
-            Select("number", [1]),
             Select("levtype", ["sfc"]),
             Span("date", pd.Timestamp("20230625T120000"), pd.Timestamp("20230626T120000")),
             Select("domain", ["g"]),
@@ -35,6 +34,7 @@ class TestSlicingFDBDatacube:
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["an"]),
+            Select("number", [1]),
             Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
         )
         result = self.API.retrieve(request)
