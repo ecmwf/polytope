@@ -41,7 +41,9 @@ class QuadNode:
 
 class QuadTree:
     # TODO: do we need the max_depth?
-    MAX = 4
+    # MAX = 10
+    MAX = 3
+    # MAX = 4
     MAX_DEPTH = 20
 
     def __init__(self, x=0, y=0, size=[360, 180], depth=0):
