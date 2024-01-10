@@ -1,5 +1,6 @@
 from ..datacube.index_tree import IndexTree
 from ..datacube.quad_tree import QuadTree
+from ..datacube.datacube_axis import IntDatacubeAxis
 from .engine import Engine
 
 
@@ -24,17 +25,30 @@ class QuadTreeSlicer(Engine):
 
         # what data format do we return extracted points as? Append those points to the index tree?
         time0 = time.time()
+
+        # NOTE: for now, we return the indices of the points in the point cloud, instead of lat/lon
         for point in extracted_points:
             # append each found leaf to the tree
-            lat = point.rect[0]
-            lon = point.rect[1]
+            idx = point.index
+            values_axis = IntDatacubeAxis()
+            values_axis.name = "values"
             result = point.item
             # TODO: make finding the axes objects nicer?
-            lat_axis = datacube.axes[polytope._axes[0]]
-            lat_child = request.create_child(lat_axis, lat)
-            lon_axis = datacube.axes[polytope._axes[1]]
-            lon_child = lat_child.create_child(lon_axis, lon)
-            lon_child.result = result
+            child = request.create_child(values_axis, idx)
+            child.result = result
+
+        # NOTE: code for getting lat/lon instead of point indices
+        # for point in extracted_points:
+        #     # append each found leaf to the tree
+        #     lat = point.rect[0]
+        #     lon = point.rect[1]
+        #     result = point.item
+        #     # TODO: make finding the axes objects nicer?
+        #     lat_axis = datacube.axes[polytope._axes[0]]
+        #     lat_child = request.create_child(lat_axis, lat)
+        #     lon_axis = datacube.axes[polytope._axes[1]]
+        #     lon_child = lat_child.create_child(lon_axis, lon)
+        #     lon_child.result = result
         print("time create 2D tree")
         print(time.time() - time0)
         return request

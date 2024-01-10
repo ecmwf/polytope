@@ -57,25 +57,25 @@ class TestQuadTreeSlicer:
         assert upper.points == [[2, 2], [0, 2], [0.0, 1.0], [2.0, 1.0]]
 
     def test_quad_node_is_contained_in_box(self):
-        node = QuadNode(1, [1, 1, 1, 1])
+        node = QuadNode(1, [1, 1, 1, 1], 0)
         polytope = Box(["lat", "lon"], [0, 0], [2, 2]).polytope()[0]
         assert node.is_contained_in(polytope)
-        second_node = QuadNode(1, [3, 3, 3, 3])
+        second_node = QuadNode(1, [3, 3, 3, 3], 0)
         assert not second_node.is_contained_in(polytope)
-        third_node = QuadNode(1, [1, 0, 1, 0])
+        third_node = QuadNode(1, [1, 0, 1, 0], 0)
         assert third_node.is_contained_in(polytope)
 
     def test_quad_node_is_contained_in_triangle(self):
-        node = QuadNode(1, [1, 1, 1, 1])
+        node = QuadNode(1, [1, 1, 1, 1], 0)
         polytope = ConvexPolytope(["lat", "lon"], [[0, 0], [1, 1], [2, 0]])
         assert node.is_contained_in(polytope)
-        node = QuadNode(1, [1, 0.5, 1, 0.5])
+        node = QuadNode(1, [1, 0.5, 1, 0.5], 0)
         assert node.is_contained_in(polytope)
-        second_node = QuadNode(1, [3, 3, 3, 3])
+        second_node = QuadNode(1, [3, 3, 3, 3], 0)
         assert not second_node.is_contained_in(polytope)
-        third_node = QuadNode(1, [1, 0, 1, 0])
+        third_node = QuadNode(1, [1, 0, 1, 0], 0)
         assert third_node.is_contained_in(polytope)
-        third_node = QuadNode(1, [0.1, 0.5, 0.1, 0.5])
+        third_node = QuadNode(1, [0.1, 0.5, 0.1, 0.5], 0)
         assert not third_node.is_contained_in(polytope)
 
     def test_quad_tree_slicer_extract(self):
