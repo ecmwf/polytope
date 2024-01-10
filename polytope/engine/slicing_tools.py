@@ -62,5 +62,7 @@ def slice_in_two(polytope: ConvexPolytope, value, slice_axis_idx):
         return (left_polygon, right_polygon)
 
 
-def visualise_slicing(quadtree):
+def visualise_slicing(polygon, slice_val, quadrant):
+    import matplotlib.pyplot as plt
+
     pass
