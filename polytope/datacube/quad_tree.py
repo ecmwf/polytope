@@ -54,10 +54,14 @@ class QuadTree:
         # self.parent = self
 
     def quadrant_rectangle_points(self):
-        return set([(self.center[0] + (self.size[0]), self.center[1] + (self.size[1])),
-                   (self.center[0] + (self.size[0]), self.center[1] - (self.size[1])),
-                   (self.center[0] - (self.size[0]), self.center[1] + (self.size[1])),
-                   (self.center[0] - (self.size[0]), self.center[1] - (self.size[1]))])
+        return set(
+            [
+                (self.center[0] + (self.size[0]), self.center[1] + (self.size[1])),
+                (self.center[0] + (self.size[0]), self.center[1] - (self.size[1])),
+                (self.center[0] - (self.size[0]), self.center[1] + (self.size[1])),
+                (self.center[0] - (self.size[0]), self.center[1] - (self.size[1])),
+            ]
+        )
 
     def build_point_tree(self, points):
         for index, p in enumerate(points):
@@ -204,7 +208,6 @@ class QuadTree:
                     results.add(node)
             else:
                 if len(self.children) > 0:
-
                     # first slice vertically
                     left_polygon, right_polygon = slice_in_two(polygon, self.center[0], 0)
 

@@ -1,6 +1,6 @@
+from ..datacube.datacube_axis import IntDatacubeAxis
 from ..datacube.index_tree import IndexTree
 from ..datacube.quad_tree import QuadTree
-from ..datacube.datacube_axis import IntDatacubeAxis
 from .engine import Engine
 
 

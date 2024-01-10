@@ -6,8 +6,7 @@ from polytope.shapes import Box
 class TestQuadTreeSlicer:
     def setup_method(self, method):
         self.options = {
-            "values": {
-                "mapper": {"type": "regular", "resolution": 30, "axes": ["latitude", "longitude"]}},
+            "values": {"mapper": {"type": "regular", "resolution": 30, "axes": ["latitude", "longitude"]}},
             "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
             "step": {"type_change": "int"},
             "number": {"type_change": "int"},

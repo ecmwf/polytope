@@ -97,6 +97,7 @@ class TestQuadTreeSlicer:
         import time
 
         import numpy as np
+
         x = np.linspace(0, 100, 1000)
         y = np.linspace(0, 100, 1000)
         # create the mesh based on these arrays
