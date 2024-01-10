@@ -22,9 +22,10 @@ def normalize_rect(rect):
 
 
 class QuadNode:
-    def __init__(self, item, rect):
+    def __init__(self, item, rect, index):
         self.item = item
         self.rect = rect
+        self.index = index
 
     def is_contained_in(self, polygon):
         # implement method to check if the node point is inside the polygon
@@ -83,41 +84,41 @@ class QuadTree:
             )
             child.pprint()
 
-    def insert(self, item, rect):
+    def insert(self, item, rect, index):
         rect = normalize_rect(rect)
 
         if len(self.children) == 0:
-            node = QuadNode(item, rect)
+            node = QuadNode(item, rect, index)
             self.nodes.append(node)
 
             if len(self.nodes) > self.MAX and self.depth < self.MAX_DEPTH:
                 self.split()
                 return node
         else:
-            return self.insert_into_children(item, rect)
+            return self.insert_into_children(item, rect, index)
 
-    def insert_into_children(self, item, rect):
+    def insert_into_children(self, item, rect, index):
         # if rect spans center then insert here
         # NOTE: probably do not need this since rect[0] = rect[2] and rect[1] = rect[3] when we work with points only
         # so these conditions will never be true
         if (rect[0] <= self.center[0] and rect[2] > self.center[0]) and (
             rect[1] <= self.center[1] and rect[3] > self.center[1]
         ):
-            node = QuadNode(item, rect)
+            node = QuadNode(item, rect, index)
             self.nodes.append(node)
             return node
         else:
             # try to insert into children
             if rect[0] <= self.center[0]:
                 if rect[1] <= self.center[1]:
-                    return self.children[0].insert(item, rect)
+                    return self.children[0].insert(item, rect, index)
                 if rect[3] > self.center[1]:
-                    return self.children[1].insert(item, rect)
+                    return self.children[1].insert(item, rect, index)
             if rect[2] > self.center[0]:
                 if rect[1] <= self.center[1]:
-                    return self.children[2].insert(item, rect)
+                    return self.children[2].insert(item, rect, index)
                 if rect[3] > self.center[1]:
-                    return self.children[3].insert(item, rect)
+                    return self.children[3].insert(item, rect, index)
 
     def split(self):
         self.children = [
@@ -150,7 +151,7 @@ class QuadTree:
         nodes = self.nodes
         self.nodes = []
         for node in nodes:
-            self.insert_into_children(node.item, node.rect)
+            self.insert_into_children(node.item, node.rect, node.index)
 
     # def query_polygon(self, polygon, results=None):
     #     # intersect quad tree with a 2D polygon
