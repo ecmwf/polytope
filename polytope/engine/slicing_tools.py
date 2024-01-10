@@ -28,23 +28,36 @@ def slice_in_two(polytope: ConvexPolytope, value, slice_axis_idx):
             right_points = [p for p in polytope.points if p[slice_axis_idx] >= value]
             left_points.extend(intersects)
             right_points.extend(intersects)
+            # print(left_points)
             # find left polygon
             try:
                 hull = scipy.spatial.ConvexHull(left_points)
                 vertices = hull.vertices
             except scipy.spatial.qhull.QhullError as e:
-                print(str(e))
-                pass
+                # print(str(e))
+                if "less than" or "is flat" in str(e):
+                    vertices = None
 
-            left_polygon = ConvexPolytope(polytope._axes, [left_points[i] for i in vertices])
+            if vertices is not None:
+                left_polygon = ConvexPolytope(polytope._axes, [left_points[i] for i in vertices])
+            else:
+                left_polygon = None
+                # print(str(e))
+                # pass
 
             try:
                 hull = scipy.spatial.ConvexHull(right_points)
                 vertices = hull.vertices
             except scipy.spatial.qhull.QhullError as e:
-                print(str(e))
-                pass
+                # print(str(e))
+                # pass
+                # print(str(e))
+                if "less than" or "is flat" in str(e):
+                    vertices = None
 
-            right_polygon = ConvexPolytope(polytope._axes, [right_points[i] for i in vertices])
+            if vertices is not None:
+                right_polygon = ConvexPolytope(polytope._axes, [right_points[i] for i in vertices])
+            else:
+                right_polygon = None
 
         return (left_polygon, right_polygon)
