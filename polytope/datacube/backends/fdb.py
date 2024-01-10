@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-import pyfdb
+import pygribjump as pygj
 
 from .datacube import Datacube, IndexTree
 
@@ -11,22 +11,20 @@ class FDBDatacube(Datacube):
         self.axis_counter = 0
         self._axes = None
         treated_axes = []
-        self.non_complete_axes = []
         self.complete_axes = []
         self.blocked_axes = []
-        self.unwanted_axes = []
         self.fake_axes = []
         self.unwanted_path = {}
 
         partial_request = config
         # Find values in the level 3 FDB datacube
-        # Will be in the form of a dictionary? {axis_name:values_available, ...}
-        self.fdb = pyfdb.FDB()
-        self.fdb_coordinates = self.fdb.axes(partial_request).as_dict()
+
+        self.fdb = pygj.GribJump()
+        self.fdb_coordinates = self.fdb.axes(partial_request)
         self.fdb_coordinates["values"] = []
         for name, values in self.fdb_coordinates.items():
             values.sort()
-            options = axis_options.get(name, {})
+            options = axis_options.get(name, None)
             self._check_and_add_axes(options, name, values)
             treated_axes.append(name)
             self.complete_axes.append(name)
@@ -34,14 +32,9 @@ class FDBDatacube(Datacube):
         # add other options to axis which were just created above like "lat" for the mapper transformations for eg
         for name in self._axes:
             if name not in treated_axes:
-                options = axis_options.get(name, {})
+                options = axis_options.get(name, None)
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
-
-    def remove_unwanted_axes(self, leaf_path):
-        for axis in self.unwanted_axes:
-            leaf_path.pop(axis)
-        return leaf_path
 
     def get(self, requests: IndexTree, leaf_path={}):
         # First when request node is root, go to its children
@@ -138,7 +131,7 @@ class FDBDatacube(Datacube):
         for i in range(len(sorted_fdb_range_nodes)):
             for k in range(sorted_range_lengths[i]):
                 n = sorted_fdb_range_nodes[i][k]
-                n.result = output_values[0][0][0][i][k]
+                n.result = output_values[0][0][i][0][k]
 
     def find_fdb_values(self, path, range_lengths, current_start_idx, lat_length):
         path.pop("values")

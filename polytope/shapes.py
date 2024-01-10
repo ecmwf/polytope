@@ -25,14 +25,22 @@ class Shape(ABC):
 class ConvexPolytope(Shape):
     def __init__(self, axes, points, method=None):
         self._axes = list(axes)
+        self.is_flat = False
+        if len(self._axes) == 1:
+            self.is_flat = True
         self.points = points
         self.method = method
 
     def extents(self, axis):
-        slice_axis_idx = self.axes().index(axis)
-        axis_values = [point[slice_axis_idx] for point in self.points]
-        lower = min(axis_values)
-        upper = max(axis_values)
+        if self.is_flat:
+            slice_axis_idx = 1
+            lower = min(self.points)[0]
+            upper = max(self.points)[0]
+        else:
+            slice_axis_idx = self.axes().index(axis)
+            axis_values = [point[slice_axis_idx] for point in self.points]
+            lower = min(axis_values)
+            upper = max(axis_values)
         return (lower, upper, slice_axis_idx)
 
     def __str__(self):
@@ -74,7 +82,7 @@ class Point(Shape):
         self.polytopes = []
         for i in range(len(axes)):
             polytope_points = [v[i] for v in self.values]
-            self.polytopes.append(ConvexPolytope([axes[i]], [polytope_points], method))
+            self.polytopes.append(ConvexPolytope([axes[i]], [polytope_points], self.method))
 
     def axes(self):
         return self._axes

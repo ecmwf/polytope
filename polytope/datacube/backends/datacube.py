@@ -37,10 +37,7 @@ class Datacube(ABC):
         )
         for blocked_axis in transformation.blocked_axes():
             self.blocked_axes.append(blocked_axis)
-        for unwanted_axis in transformation.unwanted_axes():
-            self.unwanted_axes.append(unwanted_axis)
         for axis_name in final_axis_names:
-            self.complete_axes.append(axis_name)
             self.fake_axes.append(axis_name)
             # if axis does not yet exist, create it
 
@@ -62,12 +59,11 @@ class Datacube(ABC):
                 self._axes[axis_name].transformations.append(transformation)
 
     def _add_all_transformation_axes(self, options, name, values):
-        transformation_options = options["transformation"]
-        for transformation_type_key in transformation_options.keys():
-            self._create_axes(name, values, transformation_type_key, transformation_options)
+        for transformation_type_key in options.keys():
+            self._create_axes(name, values, transformation_type_key, options)
 
     def _check_and_add_axes(self, options, name, values):
-        if "transformation" in options:
+        if options is not None:
             self._add_all_transformation_axes(options, name, values)
         else:
             if name not in self.blocked_axes:
@@ -84,7 +80,7 @@ class Datacube(ABC):
 
     def fit_path(self, path):
         for key in path.keys():
-            if key not in self.complete_axes:
+            if key not in self.complete_axes and key not in self.fake_axes:
                 path.pop(key)
         return path
 
