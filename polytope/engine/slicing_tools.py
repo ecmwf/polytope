@@ -60,3 +60,7 @@ def slice_in_two(polytope: ConvexPolytope, value, slice_axis_idx):
                 right_polygon = None
 
         return (left_polygon, right_polygon)
+
+
+def visualise_slicing(quadtree):
+    pass
