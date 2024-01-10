@@ -60,9 +60,9 @@ class QuadTree:
                    (self.center[0] - (self.size[0]), self.center[1] - (self.size[1]))])
 
     def build_point_tree(self, points):
-        for p in points:
+        for index, p in enumerate(points):
             p_rect = (p[0], p[1], p[0], p[1])
-            self.insert(p, p_rect)
+            self.insert(p, p_rect, index)
 
     def pprint(self):
         if self.depth == 0:
