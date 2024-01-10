@@ -28,30 +28,29 @@ def slice_in_two(polytope: ConvexPolytope, value, slice_axis_idx):
             right_points = [p for p in polytope.points if p[slice_axis_idx] >= value]
             left_points.extend(intersects)
             right_points.extend(intersects)
-            # print(left_points)
             # find left polygon
             try:
                 hull = scipy.spatial.ConvexHull(left_points)
                 vertices = hull.vertices
             except scipy.spatial.qhull.QhullError as e:
-                # print(str(e))
                 if "less than" or "is flat" in str(e):
+                    # NOTE: this happens when we slice a polygon that has a border which coincides with the quadrant
+                    # line and we slice this additional border with the quadrant line again.
+                    # This is not actually a polygon we want to consider so we ignore it
                     vertices = None
 
             if vertices is not None:
                 left_polygon = ConvexPolytope(polytope._axes, [left_points[i] for i in vertices])
             else:
                 left_polygon = None
-                # print(str(e))
-                # pass
 
             try:
                 hull = scipy.spatial.ConvexHull(right_points)
                 vertices = hull.vertices
             except scipy.spatial.qhull.QhullError as e:
-                # print(str(e))
-                # pass
-                # print(str(e))
+                # NOTE: this happens when we slice a polygon that has a border which coincides with the quadrant
+                # line and we slice this additional border with the quadrant line again.
+                # This is not actually a polygon we want to consider so we ignore it
                 if "less than" or "is flat" in str(e):
                     vertices = None
 

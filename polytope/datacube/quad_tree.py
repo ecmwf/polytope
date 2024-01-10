@@ -196,8 +196,6 @@ class QuadTree:
             pass
         else:
             polygon_points = set([tuple(point) for point in polygon.points])
-            # print(polygon_points)
-            # print(self.quadrant_rectangle_points())
             # TODO: are these the right points which we are comparing, ie the points on the polygon
             # and the points on the rectangle quadrant?
             if polygon_points == self.quadrant_rectangle_points():
@@ -215,10 +213,6 @@ class QuadTree:
                     q1_polygon, q2_polygon = slice_in_two(left_polygon, self.center[1], 1)
                     q3_polygon, q4_polygon = slice_in_two(right_polygon, self.center[1], 1)
 
-                    # self.children[0].parent = self
-                    # self.children[1].parent = self
-                    # self.children[2].parent = self
-                    # self.children[3].parent = self
                     # now query these 4 polygons further down the quadtree
                     self.children[0].query_polygon(q1_polygon, results)
                     self.children[1].query_polygon(q2_polygon, results)

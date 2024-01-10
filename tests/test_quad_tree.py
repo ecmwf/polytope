@@ -94,7 +94,7 @@ class TestQuadTreeSlicer:
         assert len(tree.leaves) == 4
         tree.pprint()
 
-    # @pytest.mark.skip("performance test")
+    @pytest.mark.skip("performance test")
     def test_large_scale_extraction(self):
         import time
 
