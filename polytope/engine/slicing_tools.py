@@ -62,7 +62,69 @@ def slice_in_two(polytope: ConvexPolytope, value, slice_axis_idx):
         return (left_polygon, right_polygon)
 
 
-def visualise_slicing(polygon, slice_val, quadrant):
+def visualise_slicing(polygon, slice_val, slice_axis_idx):
     import matplotlib.pyplot as plt
+    from celluloid import Camera
+    from matplotlib.patches import Polygon, Rectangle
+    from IPython.display import Video
+    from matplotlib.colors import to_rgba
 
-    pass
+    fig, ax = plt.subplots(figsize=(4, 4))
+
+    camera = Camera(fig)
+
+    # NOTE: first picture
+    # draw backdrop quadrant in all plots
+    ax.add_patch(Rectangle((-180, -90), 360, 180, fc=to_rgba('blue', 0.2)))
+    ax.set_xlim(-200, 200)
+    ax.set_ylim(-100, 100)
+
+    # draw initial polygon
+    p_points = polygon.points
+    poly = Polygon(p_points, facecolor='b')
+    ax.add_patch(poly)
+    camera.snap()
+
+    # NOTE: second picture
+    ax.add_patch(Rectangle((-180, -90), 360, 180, fc=to_rgba('blue', 0.2)))
+    ax.set_xlim(-200, 200)
+    ax.set_ylim(-100, 100)
+    p_points = polygon.points
+    poly = Polygon(p_points, facecolor='b')
+    ax.add_patch(poly)
+    # draw slicing line
+    if slice_axis_idx == 0:
+        # this means we slice vertically
+        ax.axvline(slice_val, color='r')
+        camera.snap()
+    if slice_axis_idx == 1:
+        # this means we slice horizontally
+        ax.axhline(slice_val, color='r')
+        camera.snap()
+
+    # NOTE: third picture
+    ax.add_patch(Rectangle((-180, -90), 360, 180, fc=to_rgba('blue', 0.2)))
+    ax.set_xlim(-200, 200)
+    ax.set_ylim(-100, 100)
+    p_points = polygon.points
+    poly = Polygon(p_points, facecolor='b')
+    ax.add_patch(poly)
+    # draw slicing line
+    if slice_axis_idx == 0:
+        # this means we slice vertically
+        ax.axvline(slice_val, color='r')
+    if slice_axis_idx == 1:
+        # this means we slice horizontally
+        ax.axhline(slice_val, color='r')
+    (left_polygon, right_polygon) = slice_in_two(polygon, slice_val, slice_axis_idx)
+    if left_polygon is not None:
+        left_poly = Polygon(left_polygon.points, facecolor="c")
+        ax.add_patch(left_poly)
+    if right_polygon is not None:
+        right_poly = Polygon(right_polygon.points, facecolor="m")
+        ax.add_patch(right_poly)
+    camera.snap()
+    animation = camera.animate()
+    plt.close()
+    animation.save('slice_animation.gif', fps=1)  # Save the animation-- notes below
+    Video("slice_animation.gif")  # Show the video you've just saved
