@@ -2,6 +2,7 @@ from polytope.datacube.backends.fdb import FDBDatacube
 from polytope.engine.quadtree_slicer import QuadTreeSlicer
 from polytope.engine.slicing_tools import visualise_slicing
 from polytope.shapes import Box, ConvexPolytope
+from polytope.datacube.quad_tree import QuadTree
 
 
 class TestQuadTreeSlicer:
@@ -21,4 +22,5 @@ class TestQuadTreeSlicer:
         slicer = QuadTreeSlicer(points)
         # polytope = Box(["lat", "lon"], [1, 1], [20, 30]).polytope()[0]
         polytope = ConvexPolytope(["lat", "lon"], [[1, 1], [1, 30], [20, 30], [20, 1]])
-        visualise_slicing(polytope, 10, 0)
+        slicer.quad_tree.query_polygon_visualised(polytope, points=points)
+        # visualise_slicing(polytope, 10, 0)

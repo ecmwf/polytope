@@ -145,87 +145,105 @@ def finish_visualisation(camera, ax):
     from IPython.display import Video
     animation = camera.animate()
     plt.close()
-    animation.save('slice_animation.gif', fps=1)  # Save the animation-- notes below
-    Video("slice_animation.gif")
+    animation.save('slice_animation_whole.gif', fps=1)  # Save the animation-- notes below
+    Video("slice_animation_whole.gif")
 
 
-def add_visualisation_bits(polygon, slice_val, slice_axis_idx, camera, ax):
+def add_visualisation_bits(polygon, slice_val, slice_axis_idx, camera, ax, points):
     # NOTE: first picture
     # draw backdrop quadrant in all plots
-    (camera, ax) = plot_first_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax)
+    (camera, ax) = plot_first_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, points)
 
     # NOTE: second picture
-    (camera, ax) = plot_second_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax)
+    (camera, ax) = plot_second_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, points)
 
     # NOTE: third picture
-    (camera, ax) = plot_third_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax)
+    (camera, ax) = plot_third_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, points)
     return (camera, ax)
 
 
-def plot_first_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax):
+def plot_first_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, points):
     from matplotlib.patches import Polygon, Rectangle
     from matplotlib.colors import to_rgba
 
     # NOTE: first picture
     # draw backdrop quadrant in all plots
-    ax.add_patch(Rectangle((-180, -90), 360, 180, fc=to_rgba('blue', 0.2)))
+    ax.add_patch(Rectangle((-180, -90), 360, 180, fc=to_rgba('blue', 0.1)))
     ax.set_xlim(-200, 200)
     ax.set_ylim(-100, 100)
 
     # draw initial polygon
-    p_points = polygon.points
-    poly = Polygon(p_points, facecolor='b')
-    ax.add_patch(poly)
-    camera.snap()
-    return (camera, ax)
-
-
-def plot_second_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax):
-    from matplotlib.patches import Polygon, Rectangle
-    from matplotlib.colors import to_rgba
-
-    ax.add_patch(Rectangle((-180, -90), 360, 180, fc=to_rgba('blue', 0.2)))
-    ax.set_xlim(-200, 200)
-    ax.set_ylim(-100, 100)
-    p_points = polygon.points
-    poly = Polygon(p_points, facecolor='b')
-    ax.add_patch(poly)
-    # draw slicing line
-    if slice_axis_idx == 0:
-        # this means we slice vertically
-        ax.axvline(slice_val, color='r')
-        camera.snap()
-    if slice_axis_idx == 1:
-        # this means we slice horizontally
-        ax.axhline(slice_val, color='r')
+    if polygon is not None:
+        p_points = polygon.points
+        poly = Polygon(p_points, facecolor='b')
+        ax.add_patch(poly)
+        # TODO: add the points on the quadtree
+        points_x = [p[0] for p in points]
+        points_y = [p[1] for p in points]
+        ax.scatter(points_x, points_y, color="grey")
         camera.snap()
     return (camera, ax)
 
 
-def plot_third_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax):
+def plot_second_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, points):
     from matplotlib.patches import Polygon, Rectangle
     from matplotlib.colors import to_rgba
 
-    ax.add_patch(Rectangle((-180, -90), 360, 180, fc=to_rgba('blue', 0.2)))
+    ax.add_patch(Rectangle((-180, -90), 360, 180, fc=to_rgba('blue', 0.1)))
     ax.set_xlim(-200, 200)
     ax.set_ylim(-100, 100)
-    p_points = polygon.points
-    poly = Polygon(p_points, facecolor='b')
-    ax.add_patch(poly)
-    # draw slicing line
-    if slice_axis_idx == 0:
-        # this means we slice vertically
-        ax.axvline(slice_val, color='r')
-    if slice_axis_idx == 1:
-        # this means we slice horizontally
-        ax.axhline(slice_val, color='r')
-    (left_polygon, right_polygon) = slice_in_two(polygon, slice_val, slice_axis_idx)
-    if left_polygon is not None:
-        left_poly = Polygon(left_polygon.points, facecolor="c")
-        ax.add_patch(left_poly)
-    if right_polygon is not None:
-        right_poly = Polygon(right_polygon.points, facecolor="m")
-        ax.add_patch(right_poly)
-    camera.snap()
+    if polygon is not None:
+        p_points = polygon.points
+        poly = Polygon(p_points, facecolor='b')
+        ax.add_patch(poly)
+        # draw slicing line
+        if slice_axis_idx == 0:
+            # this means we slice vertically
+            ax.axvline(slice_val, color='r')
+            # TODO: add points on the quadtree
+            points_x = [p[0] for p in points]
+            points_y = [p[1] for p in points]
+            ax.scatter(points_x, points_y, color="grey")
+            camera.snap()
+        if slice_axis_idx == 1:
+            # this means we slice horizontally
+            ax.axhline(slice_val, color='r')
+            # TODO: add points on the quadtree
+            points_x = [p[0] for p in points]
+            points_y = [p[1] for p in points]
+            ax.scatter(points_x, points_y, color="grey")
+            camera.snap()
+    return (camera, ax)
+
+
+def plot_third_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, points):
+    from matplotlib.patches import Polygon, Rectangle
+    from matplotlib.colors import to_rgba
+    ax.add_patch(Rectangle((-180, -90), 360, 180, fc=to_rgba('blue', 0.1)))
+    ax.set_xlim(-200, 200)
+    ax.set_ylim(-100, 100)
+    if polygon is not None:
+        p_points = polygon.points
+        poly = Polygon(p_points, facecolor='b')
+        ax.add_patch(poly)
+        # draw slicing line
+        if slice_axis_idx == 0:
+            # this means we slice vertically
+            ax.axvline(slice_val, color='r')
+        if slice_axis_idx == 1:
+            # this means we slice horizontally
+            ax.axhline(slice_val, color='r')
+        (left_polygon, right_polygon) = slice_in_two(polygon, slice_val, slice_axis_idx)
+        if left_polygon is not None:
+            left_poly = Polygon(left_polygon.points, facecolor="c")
+            ax.add_patch(left_poly)
+        if right_polygon is not None:
+            right_poly = Polygon(right_polygon.points, facecolor="m")
+            ax.add_patch(right_poly)
+        # TODO: add points on the quadtree
+        points_x = [p[0] for p in points]
+        points_y = [p[1] for p in points]
+        ax.scatter(points_x, points_y, color="grey")
+        camera.snap()
 
     return (camera, ax)

@@ -225,7 +225,7 @@ class QuadTree:
 
             return results
 
-    def query_polygon_visualised(self, polygon, results=None):
+    def query_polygon_visualised(self, polygon, results=None, camera=None, ax=None, points=None):
         # intersect quad tree with a 2D polygon
         if results is None:
             camera, ax = start_visualisation()
@@ -247,23 +247,26 @@ class QuadTree:
 
                     # first slice vertically
                     left_polygon, right_polygon = slice_in_two(polygon, self.center[0], 0)
-                    (camera, ax) = add_visualisation_bits(polygon, self.center[0], 0, camera, ax)
+                    (camera, ax) = add_visualisation_bits(polygon, self.center[0], 0, camera, ax, points)
                     # TODO: how to ensure only one "branch" of the slicing quadtree is animated, otherwise with loads of parallels, it might become confusing?
 
                     # then slice horizontally
                     # ie need to slice the left and right polygons each in two to have the 4 quadrant polygons
 
                     q1_polygon, q2_polygon = slice_in_two(left_polygon, self.center[1], 1)
+                    (camera, ax) = add_visualisation_bits(left_polygon, self.center[1], 1, camera, ax, points)
                     q3_polygon, q4_polygon = slice_in_two(right_polygon, self.center[1], 1)
 
                     # now query these 4 polygons further down the quadtree
-                    self.children[0].query_polygon(q1_polygon, results)
-                    self.children[1].query_polygon(q2_polygon, results)
-                    self.children[2].query_polygon(q3_polygon, results)
-                    self.children[3].query_polygon(q4_polygon, results)
+                    self.children[0].query_polygon_visualised(q1_polygon, results, camera, ax, points)
+                    self.children[1].query_polygon_visualised(q2_polygon, results, camera, ax, points)
+                    self.children[2].query_polygon_visualised(q3_polygon, results, camera, ax, points)
+                    self.children[3].query_polygon_visualised(q4_polygon, results, camera, ax, points)
 
                 for node in self.nodes:
+                    # finish_visualisation(camera, ax)
                     if node.is_contained_in(polygon):
+                        finish_visualisation(camera, ax)
                         results.add(node)
 
             return results
