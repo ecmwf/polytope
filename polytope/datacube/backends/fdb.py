@@ -48,7 +48,7 @@ class FDBDatacube(Datacube):
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
-            leaf_path |= key_value_path
+            leaf_path.update(key_value_path)
             if len(requests.children[0].children[0].children) == 0:
                 # remap this last key
                 self.get_2nd_last_values(requests, leaf_path)
@@ -79,7 +79,7 @@ class FDBDatacube(Datacube):
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
-            leaf_path |= key_value_path
+            leaf_path.update(key_value_path)
             (range_lengths[i], current_start_idxs[i], fdb_node_ranges[i]) = self.get_last_layer_before_leaf(
                 lat_child, leaf_path, range_length, current_start_idx, fdb_range_nodes
             )
@@ -94,7 +94,7 @@ class FDBDatacube(Datacube):
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
-            leaf_path |= key_value_path
+            leaf_path.update(key_value_path)
             last_idx = key_value_path["values"]
             if current_idx[i] is None:
                 current_idx[i] = last_idx
@@ -109,7 +109,7 @@ class FDBDatacube(Datacube):
                     (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                         key_value_path, leaf_path, self.unwanted_path
                     )
-                    leaf_path |= key_value_path
+                    leaf_path.update(key_value_path)
                     i += 1
                     current_start_idx = key_value_path["values"]
                     current_idx[i] = current_start_idx
