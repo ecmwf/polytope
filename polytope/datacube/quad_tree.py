@@ -1,5 +1,5 @@
 from ..engine.hullslicer import slice
-from ..engine.slicing_tools import slice_in_two
+from ..engine.slicing_tools import slice_in_two, start_visualisation, add_visualisation_bits, finish_visualisation
 
 """
 
@@ -206,6 +206,49 @@ class QuadTree:
 
                     # first slice vertically
                     left_polygon, right_polygon = slice_in_two(polygon, self.center[0], 0)
+
+                    # then slice horizontally
+                    # ie need to slice the left and right polygons each in two to have the 4 quadrant polygons
+
+                    q1_polygon, q2_polygon = slice_in_two(left_polygon, self.center[1], 1)
+                    q3_polygon, q4_polygon = slice_in_two(right_polygon, self.center[1], 1)
+
+                    # now query these 4 polygons further down the quadtree
+                    self.children[0].query_polygon(q1_polygon, results)
+                    self.children[1].query_polygon(q2_polygon, results)
+                    self.children[2].query_polygon(q3_polygon, results)
+                    self.children[3].query_polygon(q4_polygon, results)
+
+                for node in self.nodes:
+                    if node.is_contained_in(polygon):
+                        results.add(node)
+
+            return results
+
+    def query_polygon_visualised(self, polygon, results=None):
+        # intersect quad tree with a 2D polygon
+        if results is None:
+            camera, ax = start_visualisation()
+            results = set()
+
+        # intersect the children with the polygon
+        # TODO: here, we create None polygons... think about how to handle them
+        if polygon is None:
+            pass
+        else:
+            polygon_points = set([tuple(point) for point in polygon.points])
+            # TODO: are these the right points which we are comparing, ie the points on the polygon
+            # and the points on the rectangle quadrant?
+            if polygon_points == self.quadrant_rectangle_points():
+                for node in self.find_nodes_in():
+                    results.add(node)
+            else:
+                if len(self.children) > 0:
+
+                    # first slice vertically
+                    left_polygon, right_polygon = slice_in_two(polygon, self.center[0], 0)
+                    (camera, ax) = add_visualisation_bits(polygon, self.center[0], 0, camera, ax)
+                    # TODO: how to ensure only one "branch" of the slicing quadtree is animated, otherwise with loads of parallels, it might become confusing?
 
                     # then slice horizontally
                     # ie need to slice the left and right polygons each in two to have the 4 quadrant polygons
