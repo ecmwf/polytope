@@ -146,7 +146,7 @@ class FDBDatacube(Datacube):
         sorted_list = sorted(request_ranges_with_idx, key=lambda x: x[1][0])
         original_indices, sorted_request_ranges = zip(*sorted_list)
         fdb_requests.append(tuple((path, sorted_request_ranges)))
-        output_values = self.fdb.extract(fdb_requests)
+        output_values = self.gj.extract(fdb_requests)
         return (output_values, original_indices)
 
     def datacube_natural_indexes(self, axis, subarray):
