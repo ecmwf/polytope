@@ -3,7 +3,7 @@ import pytest
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select, Union
+from polytope.shapes import Box, Point, Select
 
 
 class TestSlicingFDBDatacube:
@@ -43,14 +43,7 @@ class TestSlicingFDBDatacube:
     @pytest.mark.fdb
     def test_fdb_datacube_point(self):
         request = Request(
-            # Select("step", [0, 1]),
-            Union(
-                ["latitude", "longitude", "step"],
-                *[
-                    Box(["latitude", "longitude", "step"], lower_corner=[p[0], p[1], 0], upper_corner=[p[0], p[1], 2])
-                    for p in [[0.035149384216, 0.0]]
-                ]
-            ),
+            Select("step", [0, 1]),
             Select("levtype", ["sfc"]),
             Select("date", [pd.Timestamp("20240103T0000")]),
             Select("domain", ["g"]),
@@ -59,8 +52,8 @@ class TestSlicingFDBDatacube:
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["fc"]),
-            # Point(["latitude", "longitude"], [[0.035149384216, 0.0]]),
+            Point(["latitude", "longitude"], [[0.035149384216, 0.0]], method="surrounding"),
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 3
+        assert len(result.leaves) == 12
