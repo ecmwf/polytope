@@ -1,3 +1,4 @@
+import logging
 import math
 from copy import copy
 from itertools import chain
@@ -72,6 +73,9 @@ class HullSlicer(Engine):
                 remapped_val_interm = ax.remap([value, value])[0]
                 remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
                 remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
+
+            logging.info(f"Added index {remapped_val} on axis {ax.name} to the tree")
+
             child = node.create_child(ax, remapped_val)
             child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             child["unsliced_polytopes"].remove(polytope)
