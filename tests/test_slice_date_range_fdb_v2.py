@@ -16,7 +16,7 @@ class TestSlicingFDBDatacube:
             "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
             "step": {"type_change": "int"},
         }
-        self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "step": 0}
+        self.config = {"class": "ea", "expver": "0001", "levtype": "pl"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
