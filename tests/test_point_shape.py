@@ -34,3 +34,8 @@ class TestSlicing3DXarrayDatacube:
         request = Request(Point(["step", "level"], [[2, 10]], method="surrounding"), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
         assert len(result.leaves) == 6
+
+    def test_point_surrounding_exact_step(self):
+        request = Request(Point(["step", "level"], [[3, 10]], method="surrounding"), Select("date", ["2000-01-01"]))
+        result = self.API.retrieve(request)
+        assert len(result.leaves) == 9
