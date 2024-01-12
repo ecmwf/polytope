@@ -1,4 +1,5 @@
 import bisect
+import logging
 import math
 from copy import deepcopy
 from importlib import import_module
@@ -126,6 +127,12 @@ class RegularGridMapper(DatacubeMapper):
         second_val = [i for i in self.second_axis_vals(first_val) if second_val - tol <= i <= second_val + tol][0]
         second_idx = self.second_axis_vals(first_val).index(second_val)
         final_index = self.axes_idx_to_regular_idx(first_idx, second_idx)
+
+        logging.info(
+            f"Mapped the values {first_val} on axis {self._mapped_axes[0]} \
+                and {second_val} on axis {self._mapped_axes[1]} to value {final_index} on axis {self._base_axis}"
+        )
+
         return final_index
 
 
@@ -1627,6 +1634,12 @@ class ReducedLatLonMapper(DatacubeMapper):
         second_val = [i for i in self.second_axis_vals(first_val) if second_val - tol <= i <= second_val + tol][0]
         second_idx = self.second_axis_vals(first_val).index(second_val)
         reduced_ll_index = self.axes_idx_to_reduced_ll_idx(first_idx, second_idx)
+
+        logging.info(
+            f"Mapped the values {first_val} on axis {self._mapped_axes[0]} \
+                and {second_val} on axis {self._mapped_axes[1]} to value {reduced_ll_index} on axis {self._base_axis}"
+        )
+
         return reduced_ll_index
 
 
@@ -4494,6 +4507,12 @@ class OctahedralGridMapper(DatacubeMapper):
     def unmap(self, first_val, second_val):
         (first_idx, second_idx) = self.find_second_axis_idx(first_val, second_val)
         octahedral_index = self.axes_idx_to_octahedral_idx(first_idx, second_idx)
+
+        logging.info(
+            f"Mapped the values {first_val} on axis {self._mapped_axes[0]} \
+                and {second_val} on axis {self._mapped_axes[1]} to value {octahedral_index} on axis {self._base_axis}"
+        )
+
         return octahedral_index
 
 

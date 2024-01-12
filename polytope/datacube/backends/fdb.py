@@ -50,13 +50,11 @@ class FDBDatacube(Datacube):
         logging.info("Polytope created axes for: " + str(self._axes.keys()))
 
     def get(self, requests: IndexTree, leaf_path=None):
-
         if leaf_path is None:
             leaf_path = {}
 
         # First when request node is root, go to its children
         if requests.axis.name == "root":
-
             logging.info("Looking for data for the tree: " + str([leaf.flatten() for leaf in requests.leaves]))
 
             for c in requests.children:
