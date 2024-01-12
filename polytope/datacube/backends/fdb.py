@@ -6,7 +6,11 @@ from .datacube import Datacube, IndexTree
 
 
 class FDBDatacube(Datacube):
-    def __init__(self, config={}, axis_options={}):
+    def __init__(self, config=None, axis_options=None):
+        if config is None:
+            config = {}
+        if axis_options is None:
+            axis_options = {}
         self.axis_options = axis_options
         self.axis_counter = 0
         self._axes = None
@@ -36,7 +40,9 @@ class FDBDatacube(Datacube):
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
 
-    def get(self, requests: IndexTree, leaf_path={}):
+    def get(self, requests: IndexTree, leaf_path=None):
+        if leaf_path is None:
+            leaf_path = {}
         # First when request node is root, go to its children
         if requests.axis.name == "root":
             for c in requests.children:
@@ -58,7 +64,9 @@ class FDBDatacube(Datacube):
                 for c in requests.children:
                     self.get(c, leaf_path)
 
-    def get_2nd_last_values(self, requests, leaf_path={}):
+    def get_2nd_last_values(self, requests, leaf_path=None):
+        if leaf_path is None:
+            leaf_path = {}
         # In this function, we recursively loop over the last two layers of the tree and store the indices of the
         # request ranges in those layers
         lat_length = len(requests.children)
