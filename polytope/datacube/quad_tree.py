@@ -1,5 +1,10 @@
 from ..engine.hullslicer import slice
-from ..engine.slicing_tools import slice_in_two, start_visualisation, add_visualisation_bits, finish_visualisation
+from ..engine.slicing_tools import (
+    add_visualisation_bits,
+    finish_visualisation,
+    slice_in_two,
+    start_visualisation,
+)
 
 """
 
@@ -248,7 +253,8 @@ class QuadTree:
                     # first slice vertically
                     left_polygon, right_polygon = slice_in_two(polygon, self.center[0], 0)
                     (camera, ax) = add_visualisation_bits(polygon, self.center[0], 0, camera, ax, points)
-                    # TODO: how to ensure only one "branch" of the slicing quadtree is animated, otherwise with loads of parallels, it might become confusing?
+                    # TODO: how to ensure only one "branch" of the slicing quadtree is animated, otherwise with loads
+                    # of parallels, it might become confusing?
 
                     # then slice horizontally
                     # ie need to slice the left and right polygons each in two to have the 4 quadrant polygons

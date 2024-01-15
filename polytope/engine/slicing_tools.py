@@ -65,9 +65,9 @@ def slice_in_two(polytope: ConvexPolytope, value, slice_axis_idx):
 def visualise_slicing(polygon, slice_val, slice_axis_idx, camera, ax):
     import matplotlib.pyplot as plt
     from celluloid import Camera
-    from matplotlib.patches import Polygon, Rectangle
     from IPython.display import Video
     from matplotlib.colors import to_rgba
+    from matplotlib.patches import Polygon, Rectangle
 
     fig, ax = plt.subplots(figsize=(4, 4))
 
@@ -163,8 +163,8 @@ def add_visualisation_bits(polygon, slice_val, slice_axis_idx, camera, ax, point
 
 
 def plot_first_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, points):
-    from matplotlib.patches import Polygon, Rectangle
     from matplotlib.colors import to_rgba
+    from matplotlib.patches import Polygon, Rectangle
 
     # NOTE: first picture
     # draw backdrop quadrant in all plots
@@ -186,8 +186,8 @@ def plot_first_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, point
 
 
 def plot_second_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, points):
-    from matplotlib.patches import Polygon, Rectangle
     from matplotlib.colors import to_rgba
+    from matplotlib.patches import Polygon, Rectangle
 
     ax.add_patch(Rectangle((-180, -90), 360, 180, fc=to_rgba('blue', 0.1)))
     ax.set_xlim(-200, 200)
@@ -217,8 +217,8 @@ def plot_second_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, poin
 
 
 def plot_third_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, points):
-    from matplotlib.patches import Polygon, Rectangle
     from matplotlib.colors import to_rgba
+    from matplotlib.patches import Polygon, Rectangle
     ax.add_patch(Rectangle((-180, -90), 360, 180, fc=to_rgba('blue', 0.1)))
     ax.set_xlim(-200, 200)
     ax.set_ylim(-100, 100)
@@ -234,9 +234,9 @@ def plot_third_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, point
             # this means we slice horizontally
             ax.axhline(slice_val, color='r')
         (left_polygon, right_polygon) = slice_in_two(polygon, slice_val, slice_axis_idx)
-        if left_polygon is not None:
-            left_poly = Polygon(left_polygon.points, facecolor="c")
-            ax.add_patch(left_poly)
+        # if left_polygon is not None:
+        #     left_poly = Polygon(left_polygon.points, facecolor="c")
+        #     ax.add_patch(left_poly)
         if right_polygon is not None:
             right_poly = Polygon(right_polygon.points, facecolor="m")
             ax.add_patch(right_poly)
@@ -247,3 +247,7 @@ def plot_third_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, point
         camera.snap()
 
     return (camera, ax)
+
+
+def plot_fourth_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, points):
+    pass
