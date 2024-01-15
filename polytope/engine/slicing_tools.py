@@ -246,8 +246,19 @@ def plot_third_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, point
         ax.scatter(points_x, points_y, color="grey")
         camera.snap()
 
+        if right_polygon is not None and left_polygon is not None:
+            camera, ax = plot_fourth_slice_frame(right_polygon, slice_val, slice_axis_idx, camera, ax, points)
+
     return (camera, ax)
 
 
 def plot_fourth_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, points):
-    pass
+    from matplotlib.patches import Polygon
+    p_points = polygon.points
+    poly = Polygon(p_points, facecolor="b")
+    ax.add_patch(poly)
+    points_x = [p[0] for p in points]
+    points_y = [p[1] for p in points]
+    ax.scatter(points_x, points_y, color="grey")
+    camera.snap()
+    return (camera, ax)
