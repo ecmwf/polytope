@@ -2,6 +2,7 @@ from typing import List
 
 from .shapes import ConvexPolytope
 from .utility.exceptions import AxisOverdefinedError
+from .utility.engine_tools import find_polytope_combinations
 
 
 class Request:
@@ -45,7 +46,21 @@ class Polytope:
         self.engine = engine if engine is not None else Engine.default()
 
     def slice(self, polytopes: List[ConvexPolytope]):
+        # TODO: In this function, create final index tree
         """Low-level API which takes a polytope geometry object and uses it to slice the datacube"""
+
+        # TODO: find the possible polytope combinations
+        combinations = find_polytope_combinations(self.datacube, polytopes)
+
+        # TODO: start building tree
+
+        # TODO: iterate over the combinations and then the axes in the datacube
+
+        # TODO: determine the slicer for each axis
+
+        # TODO: build node in tree for the sliced values and update next_nodes
+
+        # TODO: return tree
         return self.engine.extract(self.datacube, polytopes)
 
     def retrieve(self, request: Request, method="standard"):
