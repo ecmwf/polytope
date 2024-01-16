@@ -158,3 +158,6 @@ class FDBDatacube(Datacube):
 
     def ax_vals(self, name):
         return self.fdb_coordinates.get(name, None)
+
+    def find_point_cloud(self):
+        pass

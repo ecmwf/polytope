@@ -41,7 +41,7 @@ class Request:
 
 
 class Polytope:
-    def __init__(self, datacube, engine=None, axis_options=None, engine_options=None):
+    def __init__(self, datacube, engine=None, axis_options=None, engine_options=None, point_cloud_options=None):
         from .datacube import Datacube
         from .engine import Engine
 
@@ -50,7 +50,7 @@ class Polytope:
         if engine_options is None:
             engine_options = {}
 
-        self.datacube = Datacube.create(datacube, axis_options)
+        self.datacube = Datacube.create(datacube, axis_options, point_cloud_options)
         self.engine = engine if engine is not None else Engine.default()
         if engine_options == {}:
             for ax_name in self.datacube._axes.keys():
@@ -64,33 +64,26 @@ class Polytope:
         if "quadtree" in engine_types:
             quadtree_axes = [key for key in self.engine_options.keys() if self.engine_options[key] == "quadtree"]
             # TODO: need to get the corresponding point cloud from the datacube
-            # quadtree_points = self.datacube.find_point_cloud()
-            quadtree_points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
+            quadtree_points = self.datacube.find_point_cloud()
             engines["quadtree"] = QuadTreeSlicer(quadtree_points)
         if "hullslicer" in engine_types:
             engines["hullslicer"] = HullSlicer()
         return engines
 
     def slice(self, polytopes: List[ConvexPolytope]):
-        # TODO: In this function, create final index tree
         """Low-level API which takes a polytope geometry object and uses it to slice the datacube"""
 
-        # TODO: find the possible polytope combinations
         combinations = find_polytope_combinations(self.datacube, polytopes)
 
-        # TODO: start building tree
         request = IndexTree()
 
-        # TODO: iterate over the combinations and then the axes in the datacube
         for c in combinations:
             r = IndexTree()
             r["unsliced_polytopes"] = set(c)
             current_nodes = [r]
             for ax in self.datacube.axes.values():
-                # TODO: determine the slicer for each axis
+                # determine the slicer for each axis
                 engine = self.find_engine(ax)
-
-                # TODO: build node in tree for the sliced values and update next_nodes
 
                 # TODO: what happens when we have a quadtree engine and we handle two axes at once??
                 # Need to build the two axes nodes as just one node within the slicer engine...
@@ -117,8 +110,6 @@ class Polytope:
 
     def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
-        # request_tree = self.engine.extract(self.datacube, request.polytopes())
-        # self.datacube.get(request_tree)
         request_tree = self.slice(request.polytopes())
         self.datacube.get(request_tree)
         return request_tree

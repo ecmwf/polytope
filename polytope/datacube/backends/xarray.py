@@ -8,7 +8,7 @@ from .datacube import Datacube, IndexTree
 class XArrayDatacube(Datacube):
     """Xarray arrays are labelled, axes can be defined as strings or integers (e.g. "time" or 0)."""
 
-    def __init__(self, dataarray: xr.DataArray, axis_options={}):
+    def __init__(self, dataarray: xr.DataArray, axis_options={}, point_cloud_options=None):
         self.axis_options = axis_options
         self.axis_counter = 0
         self._axes = None
@@ -17,6 +17,7 @@ class XArrayDatacube(Datacube):
         self.complete_axes = []
         self.blocked_axes = []
         self.fake_axes = []
+        self.has_point_cloud = point_cloud_options
 
         for name, values in dataarray.coords.variables.items():
             if name in dataarray.dims:
@@ -41,6 +42,11 @@ class XArrayDatacube(Datacube):
                 options = axis_options.get(name, None)
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
+
+    def find_point_cloud(self):
+        # TODO: somehow, find the point cloud of irregular grid if it exists
+        if self.has_point_cloud:
+            return self.has_point_cloud
 
     def get(self, requests: IndexTree):
         for r in requests.leaves:

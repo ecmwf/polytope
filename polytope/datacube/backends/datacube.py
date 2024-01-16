@@ -143,11 +143,15 @@ class Datacube(ABC):
         return path
 
     @staticmethod
-    def create(datacube, axis_options: dict):
+    def create(datacube, axis_options: dict, point_cloud_options=None):
         if isinstance(datacube, (xr.core.dataarray.DataArray, xr.core.dataset.Dataset)):
             from .xarray import XArrayDatacube
 
-            xadatacube = XArrayDatacube(datacube, axis_options=axis_options)
+            xadatacube = XArrayDatacube(datacube, axis_options=axis_options, point_cloud_options=point_cloud_options)
             return xadatacube
         else:
             return datacube
+
+    @abstractmethod
+    def find_point_cloud(self):
+        pass

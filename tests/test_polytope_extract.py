@@ -1,26 +1,13 @@
-from polytope.polytope import Polytope
-
 import numpy as np
-import pandas as pd
 import xarray as xr
 
 from polytope.datacube.backends.xarray import XArrayDatacube
-from polytope.datacube.index_tree import IndexTree
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import (
-    Box,
-    ConvexPolytope,
-    Disk,
-    PathSegment,
-    Polygon,
-    Select,
-    Span,
-    Union,
-)
+from polytope.shapes import Box
 
 
-class TestSlicing3DXarrayDatacube:
+class TestPolytopeExtract:
     def setup_method(self, method):
         # Create a dataarray with 3 labelled axes using different index types
         array = xr.DataArray(
@@ -30,16 +17,16 @@ class TestSlicing3DXarrayDatacube:
                 "step": [0, 3, 6, 9, 12, 15],
                 "level": range(1, 130),
                 "lat": range(0, 100),
-                'lon': range(0, 100),
+                "lon": range(0, 100),
             },
         )
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
-        self.engine_options = {"step": "hullslicer",
-                               "level": "hullslicer",
-                               "lat": "quadtree",
-                               "lon": "quadtree"}
-        self.API = Polytope(datacube=array, engine=self.slicer, engine_options=self.engine_options)
+        self.engine_options = {"step": "hullslicer", "level": "hullslicer", "lat": "quadtree", "lon": "quadtree"}
+        quadtree_points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
+        self.API = Polytope(
+            datacube=array, engine=self.slicer, engine_options=self.engine_options, point_cloud_options=quadtree_points
+        )
 
     # Testing different shapes
 

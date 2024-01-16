@@ -66,3 +66,6 @@ class MockDatacube(Datacube):
 
     def _find_indexes_between(self, axis, indexes, low, up):
         pass
+
+    def find_point_cloud(self):
+        pass
