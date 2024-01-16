@@ -3,6 +3,11 @@ import scipy
 from ..shapes import ConvexPolytope
 from .hullslicer import _find_intersects
 
+from matplotlib.colors import to_rgba
+from matplotlib.patches import Polygon, Rectangle
+from shapely.geometry import Polygon as Poly
+from shapely.geometry import Point as Pt
+
 
 def slice_in_two(polytope: ConvexPolytope, value, slice_axis_idx):
     if polytope is None:
@@ -66,8 +71,6 @@ def visualise_slicing(polygon, slice_val, slice_axis_idx, camera, ax):
     import matplotlib.pyplot as plt
     from celluloid import Camera
     from IPython.display import Video
-    from matplotlib.colors import to_rgba
-    from matplotlib.patches import Polygon, Rectangle
 
     fig, ax = plt.subplots(figsize=(4, 4))
 
@@ -130,14 +133,15 @@ def visualise_slicing(polygon, slice_val, slice_axis_idx, camera, ax):
     Video("slice_animation.gif")  # Show the video you've just saved
 
 
-def start_visualisation():
+def start_visualisation(polygon, points):
     import matplotlib.pyplot as plt
     from celluloid import Camera
 
     fig, ax = plt.subplots(figsize=(4, 4))
 
     camera = Camera(fig)
-    return (camera, ax)
+    (camera, ax, wanted_point) = base_frame(polygon, points, camera, ax)
+    return (camera, ax, wanted_point)
 
 
 def finish_visualisation(camera, ax):
@@ -145,8 +149,145 @@ def finish_visualisation(camera, ax):
     from IPython.display import Video
     animation = camera.animate()
     plt.close()
-    animation.save('slice_animation_whole.gif', fps=1)  # Save the animation-- notes below
-    Video("slice_animation_whole.gif")
+    animation.save('slice_animation_whole_v2.gif', fps=1)  # Save the animation-- notes below
+    Video("slice_animation_whole_v2.gif")
+
+
+def base_frame(polygon, points, camera, ax):
+    from matplotlib.patches import Polygon
+    # base region
+    ax.add_patch(Rectangle((-180, -90), 360, 180, fc=to_rgba('blue', 0.1)))
+    ax.set_xlim(-200, 200)
+    ax.set_ylim(-100, 100)
+
+    # base polygon and point cloud
+    if polygon is not None:
+        p_points = polygon.points
+        poly = Polygon(p_points, facecolor='b')
+        ax.add_patch(poly)
+        points_x = [p[0] for p in points]
+        points_y = [p[1] for p in points]
+        ax.scatter(points_x, points_y, color="grey")
+        camera.snap()
+
+        # find the point in point cloud that is within the polygon here
+        poly_contains_point = False
+        idx = 0
+        wanted_point = []
+        while not poly_contains_point:
+            print("here")
+            print(points)
+            point = Pt(points[idx])
+            print(point)
+            # poly_contains_point = poly.contains_point(point)
+            polygon_ = Poly(p_points)
+            poly_contains_point = polygon_.contains(point)
+            print(poly_contains_point)
+            if poly_contains_point:
+                wanted_point = point
+            idx += 1
+    return (camera, ax, wanted_point)
+
+
+def find_point_in_point_cloud_within_polygon(points, polygon):
+
+    if polygon is not None:
+        p_points = polygon.points
+        poly = Polygon(p_points, facecolor='b')
+
+        # find the point in point cloud that is within the polygon here
+        poly_contains_point = False
+        idx = 0
+        wanted_point = []
+        while not poly_contains_point:
+            point = points[idx]
+            poly_contains_point = poly.contains_point(point)
+            if poly_contains_point:
+                wanted_point = point
+            idx += 1
+        return wanted_point
+
+
+def first_frame(polygon, points, slice_val_vert, slice_val_hor, camera, ax):
+    # draw the two horizontal and vertical slicing lines on top of the polygon
+
+    ax.add_patch(Rectangle((-180, -90), 360, 180, fc=to_rgba('blue', 0.1)))
+    ax.set_xlim(-200, 200)
+    ax.set_ylim(-100, 100)
+
+    # base polygon and point cloud
+    if polygon is not None:
+        p_points = polygon.points
+        poly = Polygon(p_points, facecolor='b')
+        ax.add_patch(poly)
+        points_x = [p[0] for p in points]
+        points_y = [p[1] for p in points]
+        ax.scatter(points_x, points_y, color="grey")
+
+        # draw the horizontal and vertical slicing lines
+        ax.axvline(slice_val_vert, color='r')
+        ax.axhline(slice_val_hor, color="r")
+        camera.snap()
+
+    return (camera, ax)
+
+
+def second_frame(q1_polygon, q2_polygon, q3_polygon, q4_polygon, wanted_point, points, camera, ax):
+    polygon = find_right_sub_polygon(q1_polygon, q2_polygon, q3_polygon, q4_polygon, wanted_point)
+
+    ax.add_patch(Rectangle((-180, -90), 360, 180, fc=to_rgba('blue', 0.1)))
+    ax.set_xlim(-200, 200)
+    ax.set_ylim(-100, 100)
+
+    # base polygon and point cloud
+    if polygon is not None:
+        # p_points = polygon.points
+        # poly = Polygon(p_points, facecolor='b')
+        ax.add_patch(polygon)
+        points_x = [p[0] for p in points]
+        points_y = [p[1] for p in points]
+        ax.scatter(points_x, points_y, color="grey")
+        camera.snap()
+
+    return (camera, ax)
+
+
+def add_visualisation_one_slice(polygon, q1_polygon, q2_polygon, q3_polygon, q4_polygon, wanted_point, points, slice_val_vert, slice_val_hor, camera, ax):
+    (camera, ax) = first_frame(polygon, points, slice_val_vert, slice_val_hor, camera, ax)
+    (camera, ax) = second_frame(q1_polygon, q2_polygon, q3_polygon, q4_polygon, wanted_point, points, camera, ax)
+    return camera, ax
+
+
+def find_right_sub_polygon(q1_polygon, q2_polygon, q3_polygon, q4_polygon, wanted_point):
+    wanted_pt_ = Pt(wanted_point)
+    right_poly = None
+    if q1_polygon is not None:
+        q1_p_points = q1_polygon.points
+
+        q1_polygon_ = Poly(q1_p_points)
+
+        q1_poly = Polygon(q1_p_points, facecolor="b")
+        if q1_polygon_.contains(wanted_pt_):
+            right_poly = q1_poly
+    if q2_polygon is not None:
+        q2_p_points = q2_polygon.points
+        q2_polygon_ = Poly(q2_p_points)
+        q2_poly = Polygon(q2_p_points, facecolor="b")
+        if q2_polygon_.contains(wanted_pt_):
+            right_poly = q2_poly
+    if q3_polygon is not None:
+        q3_p_points = q3_polygon.points
+        q3_polygon_ = Poly(q3_p_points)
+        q3_poly = Polygon(q3_p_points, facecolor="b")
+        if q3_polygon_.contains(wanted_pt_):
+            right_poly = q3_poly
+    if q4_polygon is not None:
+        q4_p_points = q4_polygon.points
+        q4_polygon_ = Poly(q4_p_points)
+        q4_poly = Polygon(q4_p_points, facecolor="b")
+        if q4_polygon_.contains(wanted_pt_):
+            right_poly = q4_poly
+    return right_poly
 
 
 def add_visualisation_bits(polygon, slice_val, slice_axis_idx, camera, ax, points):
@@ -163,8 +304,6 @@ def add_visualisation_bits(polygon, slice_val, slice_axis_idx, camera, ax, point
 
 
 def plot_first_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, points):
-    from matplotlib.colors import to_rgba
-    from matplotlib.patches import Polygon, Rectangle
 
     # NOTE: first picture
     # draw backdrop quadrant in all plots
@@ -177,7 +316,6 @@ def plot_first_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, point
         p_points = polygon.points
         poly = Polygon(p_points, facecolor='b')
         ax.add_patch(poly)
-        # TODO: add the points on the quadtree
         points_x = [p[0] for p in points]
         points_y = [p[1] for p in points]
         ax.scatter(points_x, points_y, color="grey")
@@ -186,8 +324,6 @@ def plot_first_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, point
 
 
 def plot_second_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, points):
-    from matplotlib.colors import to_rgba
-    from matplotlib.patches import Polygon, Rectangle
 
     ax.add_patch(Rectangle((-180, -90), 360, 180, fc=to_rgba('blue', 0.1)))
     ax.set_xlim(-200, 200)
@@ -200,7 +336,6 @@ def plot_second_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, poin
         if slice_axis_idx == 0:
             # this means we slice vertically
             ax.axvline(slice_val, color='r')
-            # TODO: add points on the quadtree
             points_x = [p[0] for p in points]
             points_y = [p[1] for p in points]
             ax.scatter(points_x, points_y, color="grey")
@@ -208,7 +343,6 @@ def plot_second_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, poin
         if slice_axis_idx == 1:
             # this means we slice horizontally
             ax.axhline(slice_val, color='r')
-            # TODO: add points on the quadtree
             points_x = [p[0] for p in points]
             points_y = [p[1] for p in points]
             ax.scatter(points_x, points_y, color="grey")
@@ -217,8 +351,7 @@ def plot_second_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, poin
 
 
 def plot_third_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, points):
-    from matplotlib.colors import to_rgba
-    from matplotlib.patches import Polygon, Rectangle
+
     ax.add_patch(Rectangle((-180, -90), 360, 180, fc=to_rgba('blue', 0.1)))
     ax.set_xlim(-200, 200)
     ax.set_ylim(-100, 100)
@@ -240,7 +373,6 @@ def plot_third_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, point
         if right_polygon is not None:
             right_poly = Polygon(right_polygon.points, facecolor="m")
             ax.add_patch(right_poly)
-        # TODO: add points on the quadtree
         points_x = [p[0] for p in points]
         points_y = [p[1] for p in points]
         ax.scatter(points_x, points_y, color="grey")
@@ -253,7 +385,7 @@ def plot_third_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, point
 
 
 def plot_fourth_slice_frame(polygon, slice_val, slice_axis_idx, camera, ax, points):
-    from matplotlib.patches import Polygon
+
     p_points = polygon.points
     poly = Polygon(p_points, facecolor="b")
     ax.add_patch(poly)

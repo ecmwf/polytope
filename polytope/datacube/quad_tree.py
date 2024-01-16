@@ -4,6 +4,7 @@ from ..engine.slicing_tools import (
     finish_visualisation,
     slice_in_two,
     start_visualisation,
+    add_visualisation_one_slice
 )
 
 """
@@ -45,8 +46,8 @@ class QuadNode:
 
 
 class QuadTree:
-    # TODO: do we need the max_depth?
-    MAX = 3
+    # NOTE: do we need the max_depth?
+    MAX = 1
     MAX_DEPTH = 20
 
     def __init__(self, x=0, y=0, size=[180, 90], depth=0):
@@ -163,7 +164,6 @@ class QuadTree:
     #         results = set()
 
     #     # intersect the children with the polygon
-    #     # TODO: here, we create None polygons... think about how to handle them
     #     if polygon is None:
     #         pass
     #     else:
@@ -196,13 +196,11 @@ class QuadTree:
             results = set()
 
         # intersect the children with the polygon
-        # TODO: here, we create None polygons... think about how to handle them
         if polygon is None:
             pass
         else:
             polygon_points = set([tuple(point) for point in polygon.points])
-            # TODO: are these the right points which we are comparing, ie the points on the polygon
-            # and the points on the rectangle quadrant?
+
             if polygon_points == self.quadrant_rectangle_points():
                 for node in self.find_nodes_in():
                     results.add(node)
@@ -237,13 +235,12 @@ class QuadTree:
             results = set()
 
         # intersect the children with the polygon
-        # TODO: here, we create None polygons... think about how to handle them
+
         if polygon is None:
             pass
         else:
             polygon_points = set([tuple(point) for point in polygon.points])
-            # TODO: are these the right points which we are comparing, ie the points on the polygon
-            # and the points on the rectangle quadrant?
+
             if polygon_points == self.quadrant_rectangle_points():
                 for node in self.find_nodes_in():
                     results.add(node)
@@ -253,8 +250,6 @@ class QuadTree:
                     # first slice vertically
                     left_polygon, right_polygon = slice_in_two(polygon, self.center[0], 0)
                     (camera, ax) = add_visualisation_bits(polygon, self.center[0], 0, camera, ax, points)
-                    # TODO: how to ensure only one "branch" of the slicing quadtree is animated, otherwise with loads
-                    # of parallels, it might become confusing?
 
                     # then slice horizontally
                     # ie need to slice the left and right polygons each in two to have the 4 quadrant polygons
@@ -277,8 +272,54 @@ class QuadTree:
 
             return results
 
+    def query_polygon_visualised_v2(self, polygon, results=None, camera=None, ax=None, points=None, wanted_point=None):
+        # intersect quad tree with a 2D polygon
+        if results is None:
+            # TODO: adapt here with new visualisation tools
+            camera, ax, wanted_point = start_visualisation(polygon, points)
+            results = set()
+
+        # intersect the children with the polygon
+
+        if polygon is None:
+            pass
+        else:
+            polygon_points = set([tuple(point) for point in polygon.points])
+
+            if polygon_points == self.quadrant_rectangle_points():
+                for node in self.find_nodes_in():
+                    results.add(node)
+            else:
+                if len(self.children) > 0:
+
+                    # first slice vertically
+                    left_polygon, right_polygon = slice_in_two(polygon, self.center[0], 0)
+
+                    # then slice horizontally
+                    # ie need to slice the left and right polygons each in two to have the 4 quadrant polygons
+
+                    q1_polygon, q2_polygon = slice_in_two(left_polygon, self.center[1], 1)
+                    q3_polygon, q4_polygon = slice_in_two(right_polygon, self.center[1], 1)
+
+                    (camera, ax) = add_visualisation_one_slice(polygon, q1_polygon, q2_polygon, q3_polygon, q4_polygon, wanted_point, points, self.center[0], self.center[1], camera, ax)
+
+                    # now query these 4 polygons further down the quadtree
+                    self.children[0].query_polygon_visualised_v2(q1_polygon, results, camera, ax, points, wanted_point)
+                    self.children[1].query_polygon_visualised_v2(q2_polygon, results, camera, ax, points, wanted_point)
+                    self.children[2].query_polygon_visualised_v2(q3_polygon, results, camera, ax, points, wanted_point)
+                    self.children[3].query_polygon_visualised_v2(q4_polygon, results, camera, ax, points, wanted_point)
+
+                for node in self.nodes:
+                    print(self.nodes)
+                    # finish_visualisation(camera, ax)
+                    if node.is_contained_in(polygon):
+                        finish_visualisation(camera, ax)
+                        results.add(node)
+
+            return results
+
     def find_nodes_in(self, results=None):
-        # TODO: find the nodes that are in this subtree
+        # find the nodes that are in this subtree
         if results is None:
             results = set()
         if len(self.children) > 0:

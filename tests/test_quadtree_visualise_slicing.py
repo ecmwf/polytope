@@ -18,9 +18,9 @@ class TestQuadTreeSlicer:
         self.datacube = FDBDatacube(self.config, axis_options=self.options)
 
     def test_quad_tree_query_polygon(self):
-        points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
+        points = [[10, 10], [80, 10], [-5, 5], [5, 20], [50, 10]]
         slicer = QuadTreeSlicer(points)
         # polytope = Box(["lat", "lon"], [1, 1], [20, 30]).polytope()[0]
         polytope = ConvexPolytope(["lat", "lon"], [[1, 1], [1, 30], [20, 30], [20, 1]])
-        slicer.quad_tree.query_polygon_visualised(polytope, points=points)
+        slicer.quad_tree.query_polygon_visualised_v2(polytope, points=points)
         # visualise_slicing(polytope, 10, 0)
