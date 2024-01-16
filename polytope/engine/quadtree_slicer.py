@@ -3,6 +3,8 @@ from ..datacube.index_tree import IndexTree
 from ..datacube.quad_tree import QuadTree
 from .engine import Engine
 
+from copy import copy
+
 
 class QuadTreeSlicer(Engine):
     def __init__(self, points):
@@ -60,3 +62,35 @@ class QuadTreeSlicer(Engine):
         # We do this by intersecting the datacube point cloud quad tree with the polytope here
         polygon_points = self.quad_tree.query_polygon(polytope)
         return polygon_points
+
+    def _build_branch(self, ax, node, datacube, next_nodes):
+        for polytope in node["unsliced_polytopes"]:
+            if ax.name in polytope._axes:
+                # here, first check if the axis is an unsliceable axis and directly build node if it is
+
+                # NOTE: here, we only have sliceable children, since the unsliceable children are handled by the
+                # hullslicer engine? IS THIS TRUE?
+                self._build_sliceable_child(polytope, ax, node, datacube, next_nodes)
+                # TODO: what does this function actually return and what should it return?
+                # It just modifies the next_nodes?
+        del node["unsliced_polytopes"]
+
+    def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes):
+        extracted_points = self.extract_single(datacube, polytope)
+        # TODO: add the sliced points as node to the tree and update the next_nodes
+        if len(extracted_points) == 0:
+            node.remove_branch()
+
+        for point in extracted_points:
+            # convert to float for slicing
+            value = point.index
+            values_axis = IntDatacubeAxis()
+            values_axis.name = "pt_cloud_idx"
+
+            # store the native type
+            # child = node.create_child(ax, value)
+            child = node.create_child(values_axis, value)
+            child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
+            child["unsliced_polytopes"].remove(polytope)
+            next_nodes.append(child)
+        # TODO: but now what happens to the second axis in the point cloud?? Do we create a second node for it??

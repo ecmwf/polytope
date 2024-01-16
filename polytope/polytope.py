@@ -1,11 +1,11 @@
 from typing import List
 
 from .datacube.index_tree import IndexTree
+from .engine.hullslicer import HullSlicer
+from .engine.quadtree_slicer import QuadTreeSlicer
 from .shapes import ConvexPolytope
 from .utility.engine_tools import find_polytope_combinations
 from .utility.exceptions import AxisOverdefinedError
-from .engine.quadtree_slicer import QuadTreeSlicer
-from .engine.hullslicer import HullSlicer
 
 
 class Request:
@@ -41,12 +41,20 @@ class Request:
 
 
 class Polytope:
-    def __init__(self, datacube, engine=None, axis_options={}, engine_options={}):
+    def __init__(self, datacube, engine=None, axis_options=None, engine_options=None):
         from .datacube import Datacube
         from .engine import Engine
 
+        if axis_options is None:
+            axis_options = {}
+        if engine_options is None:
+            engine_options = {}
+
         self.datacube = Datacube.create(datacube, axis_options)
         self.engine = engine if engine is not None else Engine.default()
+        if engine_options == {}:
+            for ax_name in self.datacube._axes.keys():
+                engine_options[ax_name] = "hullslicer"
         self.engine_options = engine_options
         self.engines = self.create_engines()
 
@@ -56,7 +64,8 @@ class Polytope:
         if "quadtree" in engine_types:
             quadtree_axes = [key for key in self.engine_options.keys() if self.engine_options[key] == "quadtree"]
             # TODO: need to get the corresponding point cloud from the datacube
-            quadtree_points = self.datacube.find_point_cloud()
+            # quadtree_points = self.datacube.find_point_cloud()
+            quadtree_points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
             engines["quadtree"] = QuadTreeSlicer(quadtree_points)
         if "hullslicer" in engine_types:
             engines["hullslicer"] = HullSlicer()
@@ -88,7 +97,7 @@ class Polytope:
 
                 next_nodes = []
                 for node in current_nodes:
-                    self._build_branch(ax, node, self.datacube, next_nodes)
+                    engine._build_branch(ax, node, self.datacube, next_nodes)
                 current_nodes = next_nodes
             request.merge(r)
 
@@ -100,8 +109,16 @@ class Polytope:
         slicer_type = self.engine_options[ax.name]
         return self.engines[slicer_type]
 
-    def retrieve(self, request: Request, method="standard"):
+    def old_retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
         request_tree = self.engine.extract(self.datacube, request.polytopes())
+        self.datacube.get(request_tree)
+        return request_tree
+
+    def retrieve(self, request: Request, method="standard"):
+        """Higher-level API which takes a request and uses it to slice the datacube"""
+        # request_tree = self.engine.extract(self.datacube, request.polytopes())
+        # self.datacube.get(request_tree)
+        request_tree = self.slice(request.polytopes())
         self.datacube.get(request_tree)
         return request_tree

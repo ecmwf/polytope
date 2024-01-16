@@ -25,7 +25,7 @@ def find_polytope_combinations(datacube: Datacube, polytopes: List[ConvexPolytop
     for p in polytopes:
         unique_continuous_points_in_polytope(p, datacube)
 
-        groups, input_axes = group(polytopes)
-        datacube.validate(input_axes)
-        combinations = tensor_product(groups)
-        return combinations
+    groups, input_axes = group(polytopes)
+    datacube.validate(input_axes)
+    combinations = tensor_product(groups)
+    return combinations
