@@ -1,4 +1,4 @@
-from polytope.datacube.transformations.datacube_mappers import OctahedralGridMapper
+from polytope.datacube.transformations.mappers.octahedral import OctahedralGridMapper
 
 
 class TestMapper:

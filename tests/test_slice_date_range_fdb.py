@@ -17,7 +17,7 @@ class TestSlicingFDBDatacube:
             "step": {"type_change": "int"},
             "number": {"type_change": "int"},
         }
-        self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "step": "0"}
+        self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
@@ -27,7 +27,6 @@ class TestSlicingFDBDatacube:
     def test_fdb_datacube(self):
         request = Request(
             Select("step", [0]),
-            Select("number", [1]),
             Select("levtype", ["sfc"]),
             Span("date", pd.Timestamp("20230625T120000"), pd.Timestamp("20230626T120000")),
             Select("domain", ["g"]),
@@ -36,7 +35,6 @@ class TestSlicingFDBDatacube:
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["an"]),
-            Select("number", [1]),
             Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
         )
         result = self.API.retrieve(request)
