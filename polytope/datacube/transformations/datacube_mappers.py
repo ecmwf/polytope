@@ -69,8 +69,8 @@ class DatacubeMapper(DatacubeAxisTransformation):
     def unmap_first_val_to_start_line_idx(self, first_val):
         return self._final_transformation.unmap_first_val_to_start_line_idx(first_val)
 
-    def unmap(self, first_val, second_val):
-        return self._final_transformation.unmap(first_val, second_val)
+    def unmap(self, first_val, second_val, unmapped_idx=None):
+        return self._final_transformation.unmap(first_val, second_val, unmapped_idx)
 
 
 _type_to_datacube_mapper_lookup = {

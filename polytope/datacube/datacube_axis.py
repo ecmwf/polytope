@@ -234,7 +234,8 @@ def mapper(cls):
                             first_val = path.get(transform._mapped_axes()[0], None)
                             path.pop(transform._mapped_axes()[0], None)
                         if first_val is not None and second_val is not None:
-                            unmapped_idx = transform.unmap(first_val, second_val)
+                            unmapped_idx = path.get("result", None)
+                            unmapped_idx = transform.unmap(first_val, second_val, unmapped_idx)
                             unmapped_path[transform.old_axis] = unmapped_idx
             return (path, unmapped_path)
 

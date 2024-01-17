@@ -1494,7 +1494,7 @@ class ReducedLatLonMapper(DatacubeMapper):
         second_idx = bisect.bisect_left(second_axis_vals, second_val - tol)
         return second_idx
 
-    def unmap(self, first_val, second_val):
+    def unmap(self, first_val, second_val, unmapped_idx=None):
         tol = 1e-8
         first_val = [i for i in self._first_axis_vals if first_val - tol <= i <= first_val + tol][0]
         first_idx = self._first_axis_vals.index(first_val)

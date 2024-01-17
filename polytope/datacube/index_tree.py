@@ -183,6 +183,20 @@ class IndexTree(object):
         ancestors = self.get_ancestors()
         for ancestor in ancestors:
             path[ancestor.axis.name] = ancestor.value
+        # add the result to the path
+        # NOTE: this is useful for the quadtree engine when we stash the point idx in the result
+        # if len(ancestors) != 0:
+        #     if ancestors[len(ancestors)-1].result is not None:
+        #         path["result"] = ancestors[len(ancestors)-1].result
+        return path
+
+    def flatten_with_result(self):
+        path = DatacubePath()
+        ancestors = self.get_ancestors()
+        for ancestor in ancestors:
+            path[ancestor.axis.name] = ancestor.value
+        if len(ancestors) != 0:
+            path["result"] = ancestors[-1].result
         return path
 
     def flatten_with_ancestors(self):

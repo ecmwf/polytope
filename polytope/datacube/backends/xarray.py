@@ -69,20 +69,23 @@ class XArrayDatacube(Datacube):
 
     def get(self, requests: IndexTree):
         # TODO: change to work with the irregular grid
-        if self.has_point_cloud:
-            axis_counter = self.axis_counter - 1
-        else:
-            axis_counter = self.axis_counter
+        axis_counter = self.axis_counter + 1
+        # if self.has_point_cloud:
+        #     axis_counter = self.axis_counter - 1
+        # else:
+        #     axis_counter = self.axis_counter
 
         for r in requests.leaves:
-            path = r.flatten()
+            # path = r.flatten()
+            path = r.flatten_with_result()
             if len(path.items()) == axis_counter:
                 # first, find the grid mapper transform
                 unmapped_path = {}
                 path_copy = deepcopy(path)
                 for key in path_copy:
-                    axis = self._axes[key]
-                    (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
+                    if key != "result":
+                        axis = self._axes[key]
+                        (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
                 path = self.fit_path(path)
                 subxarray = self.dataarray.sel(path, method="nearest")
                 subxarray = subxarray.sel(unmapped_path)
