@@ -80,9 +80,15 @@ class Point(Shape):
         self.values = values
         self.method = method
         self.polytopes = []
-        for i in range(len(axes)):
-            polytope_points = [v[i] for v in self.values]
-            self.polytopes.append(ConvexPolytope([axes[i]], [polytope_points], self.method))
+        # if method != "nearest":
+        if True:
+            # if the method is surrounding, need to treat as 1D polytopes
+            for i in range(len(axes)):
+                polytope_points = [v[i] for v in self.values]
+                # TODO: IS THIS RIGHT? FOR MULTIPLE POINTS, DOES IT CREATE A LINE SEGMENT INSTEAD?
+                self.polytopes.extend([ConvexPolytope([axes[i]], [[point]], self.method) for point in polytope_points])
+        # if method == "nearest":
+        #     self.polytopes.extend([ConvexPolytope(axes, [v], self.method) for v in self.values])
 
     def axes(self):
         return self._axes

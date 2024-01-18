@@ -2,6 +2,7 @@ from copy import deepcopy
 
 import pygribjump as pygj
 
+from ...utility.geometry import nearest_pt
 from .datacube import Datacube, IndexTree
 
 
@@ -15,6 +16,7 @@ class FDBDatacube(Datacube):
         self.blocked_axes = []
         self.fake_axes = []
         self.unwanted_path = {}
+        self.nearest_search = {}
 
         partial_request = config
         # Find values in the level 3 FDB datacube
@@ -61,6 +63,38 @@ class FDBDatacube(Datacube):
     def get_2nd_last_values(self, requests, leaf_path={}):
         # In this function, we recursively loop over the last two layers of the tree and store the indices of the
         # request ranges in those layers
+        first_ax_name = requests.children[0].axis.name
+        second_ax_name = requests.children[0].children[0].axis.name
+        nearest_pts = [
+            [lat_val, lon_val]
+            for (lat_val, lon_val) in zip(self.nearest_search[first_ax_name][0], self.nearest_search[second_ax_name][0])
+        ]
+        # TODO: here find nearest point first before retrieving etc
+        if len(self.nearest_search) != 0:
+            # first collect the lat lon points found
+            found_latlon_pts = []
+            for lat_child in requests.children:
+                for lon_child in lat_child.children:
+                    found_latlon_pts.append([lat_child.value, lon_child.value])
+            # now find the nearest lat lon to the points requested
+            nearest_latlons = []
+            for pt in nearest_pts:
+                nearest_latlon = nearest_pt(found_latlon_pts, pt)
+                nearest_latlons.append(nearest_latlon)
+            # TODO: now combine with the rest of the function....
+            # TODO: need to remove the branches that do not fit
+            copy_requests = deepcopy(requests)
+            for i in range(len(copy_requests.children)):
+                lat_child = copy_requests.children[i]
+                lat_child = [child for child in requests.children if child.value == lat_child.value][0]
+                if lat_child.value not in [latlon[0] for latlon in nearest_latlons]:
+                    lat_child.remove_branch()
+                else:
+                    possible_lons = [latlon[1] for latlon in nearest_latlons if latlon[0] == lat_child.value]
+                    for lon_child in lat_child.children:
+                        if lon_child.value not in possible_lons:
+                            lon_child.remove_branch()
+
         lat_length = len(requests.children)
         range_lengths = [False] * lat_length
         current_start_idxs = [False] * lat_length
