@@ -63,14 +63,16 @@ class FDBDatacube(Datacube):
     def get_2nd_last_values(self, requests, leaf_path={}):
         # In this function, we recursively loop over the last two layers of the tree and store the indices of the
         # request ranges in those layers
-        first_ax_name = requests.children[0].axis.name
-        second_ax_name = requests.children[0].children[0].axis.name
-        nearest_pts = [
-            [lat_val, lon_val]
-            for (lat_val, lon_val) in zip(self.nearest_search[first_ax_name][0], self.nearest_search[second_ax_name][0])
-        ]
         # TODO: here find nearest point first before retrieving etc
         if len(self.nearest_search) != 0:
+            first_ax_name = requests.children[0].axis.name
+            second_ax_name = requests.children[0].children[0].axis.name
+            nearest_pts = [
+                [lat_val, lon_val]
+                for (lat_val, lon_val) in zip(
+                    self.nearest_search[first_ax_name][0], self.nearest_search[second_ax_name][0]
+                )
+            ]
             # first collect the lat lon points found
             found_latlon_pts = []
             for lat_child in requests.children:
