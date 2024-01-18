@@ -85,10 +85,10 @@ class FDBDatacube(Datacube):
                 nearest_latlons.append(nearest_latlon)
             # TODO: now combine with the rest of the function....
             # TODO: need to remove the branches that do not fit
-            copy_requests = deepcopy(requests)
-            for i in range(len(copy_requests.children)):
-                lat_child = copy_requests.children[i]
-                lat_child = [child for child in requests.children if child.value == lat_child.value][0]
+            lat_children_values = [child.value for child in requests.children]
+            for i in range(len(lat_children_values)):
+                lat_child_val = lat_children_values[i]
+                lat_child = [child for child in requests.children if child.value == lat_child_val][0]
                 if lat_child.value not in [latlon[0] for latlon in nearest_latlons]:
                     lat_child.remove_branch()
                 else:
@@ -182,7 +182,10 @@ class FDBDatacube(Datacube):
         sorted_list = sorted(request_ranges_with_idx, key=lambda x: x[1][0])
         original_indices, sorted_request_ranges = zip(*sorted_list)
         fdb_requests.append(tuple((path, sorted_request_ranges)))
+        print("REQUEST TO FDB")
+        print(fdb_requests)
         output_values = self.fdb.extract(fdb_requests)
+        print(output_values)
         return (output_values, original_indices)
 
     def datacube_natural_indexes(self, axis, subarray):
