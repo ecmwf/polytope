@@ -3,7 +3,7 @@ from typing import OrderedDict
 
 from sortedcontainers import SortedList
 
-from .datacube_axis import IntDatacubeAxis
+from .datacube_axis import IntDatacubeAxis, UnsliceableDatacubeAxis
 
 
 class DatacubePath(OrderedDict):
@@ -85,7 +85,7 @@ class IndexTree(object):
             if other.value == self.value:
                 return True
             else:
-                if isinstance(self.value, str):
+                if isinstance(self.axis, UnsliceableDatacubeAxis):
                     return False
                 else:
                     if other.value - 2 * other.axis.tol <= self.value <= other.value + 2 * other.axis.tol:
