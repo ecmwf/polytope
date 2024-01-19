@@ -251,6 +251,7 @@ def mapper(cls):
                         unwanted_path[cls.name] = unwanted_val
                     if cls.name == transform._mapped_axes()[1]:
                         first_val = unwanted_path[transform._mapped_axes()[0]]
+                        # TODO: pass in the unmapped_idx to unmap
                         unmapped_idx = transform.unmap(first_val, value)
                         leaf_path.pop(transform._mapped_axes()[0], None)
                         key_value_path.pop(cls.name)

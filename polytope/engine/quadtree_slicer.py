@@ -1,9 +1,9 @@
+from copy import copy
+
 from ..datacube.datacube_axis import IntDatacubeAxis
 from ..datacube.index_tree import IndexTree
 from ..datacube.quad_tree import QuadTree
 from .engine import Engine
-
-from copy import copy
 
 
 class QuadTreeSlicer(Engine):
