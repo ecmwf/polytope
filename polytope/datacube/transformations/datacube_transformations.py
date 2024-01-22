@@ -54,8 +54,8 @@ _type_to_datacube_transformation_lookup = {
 }
 
 _type_to_transformation_file_lookup = {
-    "mapper": "mappers",
-    "cyclic": "cyclic",
+    "mapper": "mappers.datacube_mappers",
+    "cyclic": "cyclic.datacube_cyclic",
     "merge": "merger",
     "reverse": "reverse",
     "type_change": "type_change",
