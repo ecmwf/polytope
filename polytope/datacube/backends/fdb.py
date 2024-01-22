@@ -93,7 +93,10 @@ class FDBDatacube(Datacube):
                     lat_child.remove_branch()
                 else:
                     possible_lons = [latlon[1] for latlon in nearest_latlons if latlon[0] == lat_child.value]
-                    for lon_child in lat_child.children:
+                    lon_children_values = [child.value for child in lat_child.children]
+                    for j in range(len(lon_children_values)):
+                        lon_child_val = lon_children_values[j]
+                        lon_child = [child for child in lat_child.children if child.value == lon_child_val][0]
                         if lon_child.value not in possible_lons:
                             lon_child.remove_branch()
 
@@ -182,10 +185,7 @@ class FDBDatacube(Datacube):
         sorted_list = sorted(request_ranges_with_idx, key=lambda x: x[1][0])
         original_indices, sorted_request_ranges = zip(*sorted_list)
         fdb_requests.append(tuple((path, sorted_request_ranges)))
-        print("REQUEST TO FDB")
-        print(fdb_requests)
         output_values = self.fdb.extract(fdb_requests)
-        print(output_values)
         return (output_values, original_indices)
 
     def datacube_natural_indexes(self, axis, subarray):
