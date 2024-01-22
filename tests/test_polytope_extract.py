@@ -9,6 +9,7 @@ from polytope.shapes import Box
 
 class TestPolytopeExtract:
     def setup_method(self, method):
+        # TODO: this doesn't create an irregular grid mapper??
         # Create a dataarray with 3 labelled axes using different index types
         array = xr.DataArray(
             np.random.randn(6, 129, 100, 100),

@@ -251,8 +251,14 @@ def mapper(cls):
                         unwanted_path[cls.name] = unwanted_val
                     if cls.name == transform._mapped_axes()[1]:
                         first_val = unwanted_path[transform._mapped_axes()[0]]
-                        # TODO: pass in the unmapped_idx to unmap
-                        unmapped_idx = transform.unmap(first_val, value)
+                        # TODO: the unmapped idx is stashed in the result of a node, not in the leaf path??
+                        unmapped_idx = leaf_path.get("result", None)
+                        print("inside unmap path key")
+                        print(unmapped_idx)
+                        print(first_val)
+                        print(value)
+                        unmapped_idx = transform.unmap(first_val, value, unmapped_idx)
+                        print(unmapped_idx)
                         leaf_path.pop(transform._mapped_axes()[0], None)
                         key_value_path.pop(cls.name)
                         key_value_path[transform.old_axis] = unmapped_idx

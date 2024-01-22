@@ -78,4 +78,5 @@ _type_to_datacube_mapper_lookup = {
     "healpix": "HealpixGridMapper",
     "regular": "RegularGridMapper",
     "reduced_ll": "ReducedLatLonMapper",
+    "irregular": "IrregularGridMapper",
 }

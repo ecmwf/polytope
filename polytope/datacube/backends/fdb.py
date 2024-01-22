@@ -6,7 +6,7 @@ from .datacube import Datacube, IndexTree
 
 
 class FDBDatacube(Datacube):
-    def __init__(self, config={}, axis_options={}):
+    def __init__(self, config={}, axis_options={}, point_cloud_options=None):
         self.axis_options = axis_options
         self.axis_counter = 0
         self._axes = None
@@ -15,6 +15,7 @@ class FDBDatacube(Datacube):
         self.blocked_axes = []
         self.fake_axes = []
         self.unwanted_path = {}
+        self.has_point_cloud = point_cloud_options  # NOTE: here, will be True/False
 
         partial_request = config
         # Find values in the level 3 FDB datacube
@@ -35,6 +36,11 @@ class FDBDatacube(Datacube):
                 options = axis_options.get(name, None)
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
+
+    def find_point_cloud(self):
+        # TODO: somehow, find the point cloud of irregular grid if it exists
+        if self.has_point_cloud:
+            return self.has_point_cloud
 
     def get(self, requests: IndexTree, leaf_path={}):
         # First when request node is root, go to its children
@@ -83,6 +89,7 @@ class FDBDatacube(Datacube):
             (range_lengths[i], current_start_idxs[i], fdb_node_ranges[i]) = self.get_last_layer_before_leaf(
                 lat_child, leaf_path, range_length, current_start_idx, fdb_range_nodes
             )
+            leaf_path.pop("result", None)
         self.give_fdb_val_to_node(leaf_path, range_lengths, current_start_idxs, fdb_node_ranges, lat_length)
 
     def get_last_layer_before_leaf(self, requests, leaf_path, range_l, current_idx, fdb_range_n):
@@ -90,6 +97,7 @@ class FDBDatacube(Datacube):
         for c in requests.children:
             # now c are the leaves of the initial tree
             key_value_path = {c.axis.name: c.value}
+            leaf_path["result"] = c.result
             ax = c.axis
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
@@ -158,6 +166,3 @@ class FDBDatacube(Datacube):
 
     def ax_vals(self, name):
         return self.fdb_coordinates.get(name, None)
-
-    def find_point_cloud(self):
-        pass
