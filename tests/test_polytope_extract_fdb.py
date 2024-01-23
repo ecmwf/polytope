@@ -43,7 +43,6 @@ class TestPolytopeExtract:
     # Testing different shapes
 
     def test_2D_box(self):
-        # request = Request(Box(["step", "level"], [3, 10], [6, 11]), Box(["latitude", "longitude"], [0, 0], [20, 20]))
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
