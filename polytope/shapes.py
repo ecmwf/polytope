@@ -80,9 +80,11 @@ class Point(Shape):
         self.values = values
         self.method = method
         self.polytopes = []
+        if method == "nearest":
+            assert len(self.values) == 1
         for i in range(len(axes)):
             polytope_points = [v[i] for v in self.values]
-            self.polytopes.append(ConvexPolytope([axes[i]], [polytope_points], self.method))
+            self.polytopes.extend([ConvexPolytope([axes[i]], [[point]], self.method) for point in polytope_points])
 
     def axes(self):
         return self._axes
