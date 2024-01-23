@@ -16,4 +16,4 @@ site
 .mypy_cache
 example_eo
 example_mri
-polytope_python.egg_info
+polytope_python.egg-info
