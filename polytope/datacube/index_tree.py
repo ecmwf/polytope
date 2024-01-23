@@ -84,12 +84,16 @@ class IndexTree(object):
         else:
             if other.value == self.value:
                 return True
-            if other.value - 2 * other.axis.tol <= self.value <= other.value + 2 * other.axis.tol:
-                return True
-            elif self.value - 2 * self.axis.tol <= other.value <= self.value + 2 * self.axis.tol:
-                return True
             else:
-                return False
+                if isinstance(self.value, str):
+                    return False
+                else:
+                    if other.value - 2 * other.axis.tol <= self.value <= other.value + 2 * other.axis.tol:
+                        return True
+                    elif self.value - 2 * self.axis.tol <= other.value <= self.value + 2 * self.axis.tol:
+                        return True
+                    else:
+                        return False
         # return (self.axis.name, self.value) == (other.axis.name, other.value)
 
     def __lt__(self, other):
