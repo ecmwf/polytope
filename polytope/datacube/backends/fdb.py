@@ -17,6 +17,7 @@ class FDBDatacube(Datacube):
         self.fake_axes = []
         self.unwanted_path = {}
         self.nearest_search = {}
+        self.nearest_search = {}
 
         partial_request = config
         # Find values in the level 3 FDB datacube
@@ -50,7 +51,7 @@ class FDBDatacube(Datacube):
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
-            leaf_path |= key_value_path
+            leaf_path.update(key_value_path)
             if len(requests.children[0].children[0].children) == 0:
                 # remap this last key
                 self.get_2nd_last_values(requests, leaf_path)
@@ -118,7 +119,7 @@ class FDBDatacube(Datacube):
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
-            leaf_path |= key_value_path
+            leaf_path.update(key_value_path)
             (range_lengths[i], current_start_idxs[i], fdb_node_ranges[i]) = self.get_last_layer_before_leaf(
                 lat_child, leaf_path, range_length, current_start_idx, fdb_range_nodes
             )
@@ -133,7 +134,7 @@ class FDBDatacube(Datacube):
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
-            leaf_path |= key_value_path
+            leaf_path.update(key_value_path)
             last_idx = key_value_path["values"]
             if current_idx[i] is None:
                 current_idx[i] = last_idx
@@ -148,7 +149,7 @@ class FDBDatacube(Datacube):
                     (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                         key_value_path, leaf_path, self.unwanted_path
                     )
-                    leaf_path |= key_value_path
+                    leaf_path.update(key_value_path)
                     i += 1
                     current_start_idx = key_value_path["values"]
                     current_idx[i] = current_start_idx
@@ -185,7 +186,10 @@ class FDBDatacube(Datacube):
         sorted_list = sorted(request_ranges_with_idx, key=lambda x: x[1][0])
         original_indices, sorted_request_ranges = zip(*sorted_list)
         fdb_requests.append(tuple((path, sorted_request_ranges)))
+        print("REQUEST TO FDB")
+        print(fdb_requests)
         output_values = self.fdb.extract(fdb_requests)
+        print(output_values)
         return (output_values, original_indices)
 
     def datacube_natural_indexes(self, axis, subarray):
