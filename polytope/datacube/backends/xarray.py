@@ -19,6 +19,7 @@ class XArrayDatacube(Datacube):
         self.complete_axes = []
         self.blocked_axes = []
         self.fake_axes = []
+        self.nearest_search = None
 
         for name, values in dataarray.coords.variables.items():
             if name in dataarray.dims:
@@ -54,6 +55,7 @@ class XArrayDatacube(Datacube):
                 for key in path_copy:
                     axis = self._axes[key]
                     (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
+                # TODO: here do nearest point search
                 path = self.fit_path(path)
                 subxarray = self.dataarray.sel(path, method="nearest")
                 subxarray = subxarray.sel(unmapped_path)
