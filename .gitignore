@@ -11,3 +11,8 @@ polytope.egg-info
 site
 .coverage
 *.grib
+*.gif
+*.html
+example_eo
+example_mri
+.mypy_cache
