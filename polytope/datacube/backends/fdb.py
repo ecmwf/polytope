@@ -5,9 +5,11 @@ import pygribjump as pygj
 from ...utility.geometry import nearest_pt
 from .datacube import Datacube, IndexTree
 
+import logging
+import copy
 
 class FDBDatacube(Datacube):
-    def __init__(self, config={}, axis_options={}):
+    def __init__(self, config=None, axis_options=None):
         self.axis_options = axis_options
         self.axis_counter = 0
         self._axes = None
@@ -19,11 +21,21 @@ class FDBDatacube(Datacube):
         self.nearest_search = {}
         self.nearest_search = {}
 
+        if config is None:
+            config = {}
+
+        if axis_options is None:
+            axis_options = {}
+
         partial_request = config
         # Find values in the level 3 FDB datacube
 
         self.fdb = pygj.GribJump()
+        logging.info(f"Partial Request: {partial_request}")
         self.fdb_coordinates = self.fdb.axes(partial_request)
+        logging.info(f"Axes from FDB: {self.fdb_coordinates}")
+        for name, values in self.fdb_coordinates.items():
+            logging.info(f"Axis {name} has {values} values")
         self.fdb_coordinates["values"] = []
         for name, values in self.fdb_coordinates.items():
             values.sort()
@@ -40,8 +52,15 @@ class FDBDatacube(Datacube):
                 self._check_and_add_axes(options, name, val)
 
     def get(self, requests: IndexTree, leaf_path={}):
+
+
         # First when request node is root, go to its children
         if requests.axis.name == "root":
+
+            self.gj_request_idx = 0
+            self.fdb_requests = []
+            self.callback = []
+            
             for c in requests.children:
                 self.get(c)
         # If request node has no children, we have a leaf so need to assign fdb values to it
@@ -54,14 +73,34 @@ class FDBDatacube(Datacube):
             leaf_path.update(key_value_path)
             if len(requests.children[0].children[0].children) == 0:
                 # remap this last key
-                self.get_2nd_last_values(requests, leaf_path)
+                idx, args = self.get_2nd_last_values(self.gj_request_idx, requests, leaf_path)
+                self.callback.append(args)
+                self.gj_request_idx += 1
+
 
             # Otherwise remap the path for this key and iterate again over children
             else:
                 for c in requests.children:
                     self.get(c, leaf_path)
 
-    def get_2nd_last_values(self, requests, leaf_path={}):
+
+        # Call once at the end
+        if requests.axis.name == "root":
+            # logging.info("REQUESTS TO FDB:")
+            # for f in self.fdb_requests:
+            #     logging.info(f)
+
+            data = self.fdb.extract(self.fdb_requests)
+
+            # logging.info("DATA FROM FDB:")
+            # for d in data:
+            #     logging.info(d)
+
+            for i in range(len(self.callback)):
+                logging.debug(f"STEP {self.fdb_requests[i][0]['step']}, PARAM {self.fdb_requests[i][0]['param']}, NUM {self.fdb_requests[i][0]['number']} -> DATA {data[i][0][0]}")
+                self.give_fdb_val_to_node_part_2(data, i, *self.callback[i])
+
+    def get_2nd_last_values(self, gj_request_idx, requests, leaf_path={}):
         # In this function, we recursively loop over the last two layers of the tree and store the indices of the
         # request ranges in those layers
         # TODO: here find nearest point first before retrieving etc
@@ -123,7 +162,7 @@ class FDBDatacube(Datacube):
             (range_lengths[i], current_start_idxs[i], fdb_node_ranges[i]) = self.get_last_layer_before_leaf(
                 lat_child, leaf_path, range_length, current_start_idx, fdb_range_nodes
             )
-        self.give_fdb_val_to_node(leaf_path, range_lengths, current_start_idxs, fdb_node_ranges, lat_length)
+        return self.give_fdb_val_to_node_part_1(gj_request_idx, leaf_path, range_lengths, current_start_idxs, fdb_node_ranges, lat_length)
 
     def get_last_layer_before_leaf(self, requests, leaf_path, range_l, current_idx, fdb_range_n):
         i = 0
@@ -155,10 +194,19 @@ class FDBDatacube(Datacube):
                     current_idx[i] = current_start_idx
         return (range_l, current_idx, fdb_range_n)
 
-    def give_fdb_val_to_node(self, leaf_path, range_lengths, current_start_idx, fdb_range_nodes, lat_length):
+    def give_fdb_val_to_node_part_1(self, gj_request_idx, leaf_path, range_lengths, current_start_idx, fdb_range_nodes, lat_length):
+        
+        # PART 1
         (output_values, original_indices) = self.find_fdb_values(
-            leaf_path, range_lengths, current_start_idx, lat_length
+            gj_request_idx, leaf_path, range_lengths, current_start_idx, lat_length
         )
+
+        return gj_request_idx, [original_indices, leaf_path, range_lengths, current_start_idx, fdb_range_nodes, lat_length]
+    
+    def give_fdb_val_to_node_part_2(self, data, gj_request_idx, original_indices, leaf_path, range_lengths, current_start_idx, fdb_range_nodes, lat_length):
+        output_values = data[gj_request_idx]
+
+        # PART 2
         new_fdb_range_nodes = []
         new_range_lengths = []
         for j in range(lat_length):
@@ -171,11 +219,11 @@ class FDBDatacube(Datacube):
         for i in range(len(sorted_fdb_range_nodes)):
             for k in range(sorted_range_lengths[i]):
                 n = sorted_fdb_range_nodes[i][k]
-                n.result = output_values[0][0][i][0][k]
+                n.result = output_values[0][i][0][k]
 
-    def find_fdb_values(self, path, range_lengths, current_start_idx, lat_length):
+    def find_fdb_values(self, gj_request_idx, path, range_lengths, current_start_idx, lat_length):
         path.pop("values")
-        fdb_requests = []
+        # fdb_requests = []
         interm_request_ranges = []
         for i in range(lat_length):
             for j in range(len(range_lengths[i])):
@@ -185,12 +233,15 @@ class FDBDatacube(Datacube):
         request_ranges_with_idx = list(enumerate(interm_request_ranges))
         sorted_list = sorted(request_ranges_with_idx, key=lambda x: x[1][0])
         original_indices, sorted_request_ranges = zip(*sorted_list)
-        fdb_requests.append(tuple((path, sorted_request_ranges)))
-        print("REQUEST TO FDB")
-        print(fdb_requests)
-        output_values = self.fdb.extract(fdb_requests)
-        print(output_values)
-        return (output_values, original_indices)
+        # logging.info("Path is {}".format(path))
+        self.fdb_requests.append(tuple((copy.deepcopy(path), copy.deepcopy(sorted_request_ranges))))
+        assert len(self.fdb_requests) == gj_request_idx + 1
+        # logging.info("REQUEST TO FDB")
+
+        # DONT CALL YET
+        # output_values = self.fdb.extract(fdb_requests)
+        # logging.debug(output_values)
+        return (None, original_indices)
 
     def datacube_natural_indexes(self, axis, subarray):
         indexes = subarray[axis.name]
