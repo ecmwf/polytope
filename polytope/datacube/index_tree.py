@@ -1,5 +1,6 @@
 import json
 from typing import OrderedDict
+import logging
 
 from sortedcontainers import SortedList
 
@@ -168,10 +169,12 @@ class IndexTree(object):
 
     def pprint(self, level=0):
         if self.axis.name == "root":
-            print("\n")
-        print("\t" * level + "\u21b3" + str(self))
+            logging.debug("\n")
+        logging.debug("\t" * level + "\u21b3" + str(self))
         for child in self.children:
             child.pprint(level + 1)
+        if len(self.children) == 0:
+            logging.debug("\t" * (level + 1) + "\u21b3" + str(self.result))
 
     def remove_branch(self):
         if not self.is_root():
