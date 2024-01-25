@@ -19,7 +19,7 @@ class FDBDatacube(Datacube):
         self.fake_axes = []
         self.unwanted_path = {}
         self.nearest_search = {}
-        self.nearest_search = {}
+        self.coupled_axes = []
 
         if config is None:
             config = {}
