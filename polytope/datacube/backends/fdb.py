@@ -31,11 +31,11 @@ class FDBDatacube(Datacube):
         # Find values in the level 3 FDB datacube
 
         self.fdb = pygj.GribJump()
-        logging.info(f"Partial Request: {partial_request}")
+        # logging.info(f"Partial Request: {partial_request}")
         self.fdb_coordinates = self.fdb.axes(partial_request)
-        logging.info(f"Axes from FDB: {self.fdb_coordinates}")
-        for name, values in self.fdb_coordinates.items():
-            logging.info(f"Axis {name} has {values} values")
+        # logging.info(f"Axes from FDB: {self.fdb_coordinates}")
+        # for name, values in self.fdb_coordinates.items():
+            # logging.info(f"Axis {name} has {values} values")
         self.fdb_coordinates["values"] = []
         for name, values in self.fdb_coordinates.items():
             values.sort()
@@ -90,14 +90,16 @@ class FDBDatacube(Datacube):
             # for f in self.fdb_requests:
             #     logging.info(f)
 
+            logging.info(f"Requesting {len(self.fdb_requests)} requests from FDB")
             data = self.fdb.extract(self.fdb_requests)
+            logging.info(f"FDB request complete.")
 
             # logging.info("DATA FROM FDB:")
             # for d in data:
             #     logging.info(d)
 
             for i in range(len(self.callback)):
-                logging.debug(f"STEP {self.fdb_requests[i][0]['step']}, PARAM {self.fdb_requests[i][0]['param']}, NUM {self.fdb_requests[i][0]['number']} -> DATA {data[i][0][0]}")
+                # logging.debug(f"STEP {self.fdb_requests[i][0]['step']}, PARAM {self.fdb_requests[i][0]['param']}, NUM {self.fdb_requests[i][0]['number']} -> DATA {data[i][0][0]}")
                 self.give_fdb_val_to_node_part_2(data, i, *self.callback[i])
 
     def get_2nd_last_values(self, gj_request_idx, requests, leaf_path={}):
