@@ -35,10 +35,9 @@ class TestSlicing3DXarrayDatacube:
     def test_all_cyclic(self):
         request = Request(Select("step", [3]), Select("date", ["2000-01-01"]), Select("level", [1]), All("longitude"))
         result = self.API.retrieve(request)
-        # result.pprint()
         assert len(result.leaves) == 360
 
-    @pytest.mark.fdb
+    @pytest.mark.skip(reason="can't install fdb branch on CI")
     def test_all_mapper_cyclic(self):
         from polytope.datacube.backends.fdb import FDBDatacube
 

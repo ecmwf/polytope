@@ -59,7 +59,19 @@ class HullSlicer(Engine):
         # corresponds to the first place of cooupled_axes in the hashing
         # Else, if we do not need the flattened bit in the hash, can just put an empty string instead?
 
-        values = datacube.get_indices(flattened, ax, lower, upper, method)
+        flattened_tuple = tuple()
+        if len(datacube.coupled_axes) > 0:
+            if flattened.get(datacube.coupled_axes[0][0], None) is not None:
+                flattened_tuple = (datacube.coupled_axes[0][0], flattened.get(datacube.coupled_axes[0][0], None))
+                flattened = {flattened_tuple[0]: flattened_tuple[1]}
+            else:
+                flattened_tuple = tuple()
+                flattened = {}
+        if self.axis_values_between.get((flattened_tuple, ax.name, lower, upper, method), None) is None:
+            self.axis_values_between[(flattened_tuple, ax.name, lower, upper, method)] = datacube.get_indices(
+                flattened, ax, lower, upper, method
+            )
+        values = self.axis_values_between[(flattened_tuple, ax.name, lower, upper, method)]
 
         if len(values) == 0:
             node.remove_branch()

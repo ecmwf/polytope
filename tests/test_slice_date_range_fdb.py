@@ -22,8 +22,7 @@ class TestSlicingFDBDatacube:
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
 
-    # Testing different shapes
-    @pytest.mark.fdb
+    @pytest.mark.skip(reason="can't install fdb branch on CI")
     def test_fdb_datacube(self):
         request = Request(
             Select("step", [0]),

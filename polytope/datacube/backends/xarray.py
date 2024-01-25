@@ -18,6 +18,7 @@ class XArrayDatacube(Datacube):
         self.blocked_axes = []
         self.fake_axes = []
         self.nearest_search = None
+        self.coupled_axes = []
 
         for name, values in dataarray.coords.variables.items():
             if name in dataarray.dims:
