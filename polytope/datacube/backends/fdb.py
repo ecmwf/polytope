@@ -30,10 +30,21 @@ class FDBDatacube(Datacube):
         partial_request = config
         # Find values in the level 3 FDB datacube
 
+        axis_order = { "domain": None, "class": None, "expver": None, "stream": None, "date": None, "time": None, "type": None, "levtype": None, "number": None, "step": None, "param": None }
+
         self.fdb = pygj.GribJump()
         logging.info(f"Partial Request: {partial_request}")
         self.fdb_coordinates = self.fdb.axes(partial_request)
         logging.info(f"Axes from FDB: {self.fdb_coordinates}")
+
+        # re-order using the fact that python dictionary keys preserve insertion order
+        ordered_axes = {}
+        for ax, _ in axis_order.items():
+            if ax in self.fdb_coordinates:
+                ordered_axes[ax] = self.fdb_coordinates[ax]
+
+        self.fdb_coordinates = ordered_axes
+
         for name, values in self.fdb_coordinates.items():
             logging.info(f"Axis {name} has {values} values")
         self.fdb_coordinates["values"] = []
@@ -86,18 +97,37 @@ class FDBDatacube(Datacube):
 
         # Call once at the end
         if requests.axis.name == "root":
-            # logging.info("REQUESTS TO FDB:")
-            # for f in self.fdb_requests:
-            #     logging.info(f)
+            logging.info("REQUESTS TO FDB:")
+            for f in self.fdb_requests:
+                logging.info(f)
 
-            data = self.fdb.extract(self.fdb_requests)
+            ### TEMPORARY BATCHING WHEN ALL RANGES ARE EQUAL ###
+            
+            axes = ['number', 'param', 'step']
+            indexes = {}
+            req = copy.deepcopy(self.fdb_requests[0])
+            for axis in axes:
+                indexes[axis] = {}
+
+                for req in self.fdb_requests:
+                    indexes[axis][req[0][axis]] = 0
+
+            for axis in axes:
+                indexes[axis] = list(indexes[axis].keys())
+                req[0][axis] = '/'.join(indexes[axis])
+
+            print("Send to FDB:")
+
+            ###
+
+            data = self.fdb.extract([req])
 
             # logging.info("DATA FROM FDB:")
             # for d in data:
             #     logging.info(d)
 
             for i in range(len(self.callback)):
-                logging.debug(f"STEP {self.fdb_requests[i][0]['step']}, PARAM {self.fdb_requests[i][0]['param']}, NUM {self.fdb_requests[i][0]['number']} -> DATA {data[i][0][0]}")
+                logging.debug(f"STEP {self.fdb_requests[i][0]['step']}, PARAM {self.fdb_requests[i][0]['param']}, NUM {self.fdb_requests[i][0]['number']} -> DATA {data[0][i][0]}")
                 self.give_fdb_val_to_node_part_2(data, i, *self.callback[i])
 
     def get_2nd_last_values(self, gj_request_idx, requests, leaf_path={}):
@@ -204,7 +234,7 @@ class FDBDatacube(Datacube):
         return gj_request_idx, [original_indices, leaf_path, range_lengths, current_start_idx, fdb_range_nodes, lat_length]
     
     def give_fdb_val_to_node_part_2(self, data, gj_request_idx, original_indices, leaf_path, range_lengths, current_start_idx, fdb_range_nodes, lat_length):
-        output_values = data[gj_request_idx]
+        output_values = data[0][gj_request_idx] ### MODIFIED FOR TEMPORARY BATCHING FIX
 
         # PART 2
         new_fdb_range_nodes = []
@@ -219,7 +249,7 @@ class FDBDatacube(Datacube):
         for i in range(len(sorted_fdb_range_nodes)):
             for k in range(sorted_range_lengths[i]):
                 n = sorted_fdb_range_nodes[i][k]
-                n.result = output_values[0][i][0][k]
+                n.result = output_values[i][0][k] ### MODIFIED FOR TEMPORARY BATCHING FIX
 
     def find_fdb_values(self, gj_request_idx, path, range_lengths, current_start_idx, lat_length):
         path.pop("values")
