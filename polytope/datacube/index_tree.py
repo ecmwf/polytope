@@ -1,6 +1,6 @@
 import json
-from typing import OrderedDict
 import logging
+from typing import OrderedDict
 
 from sortedcontainers import SortedList
 
