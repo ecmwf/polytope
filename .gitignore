@@ -11,3 +11,5 @@ polytope.egg-info
 site
 .coverage
 *.grib
+build
+polytope_python.egg-info/*

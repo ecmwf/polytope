@@ -2,6 +2,8 @@ from typing import List
 
 from .shapes import ConvexPolytope
 from .utility.exceptions import AxisOverdefinedError
+import time
+import logging
 
 
 class Request:
@@ -50,6 +52,10 @@ class Polytope:
 
     def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
+        start = time.time()
         request_tree = self.engine.extract(self.datacube, request.polytopes())
+        logging.info(f"=== Extract took {time.time() - start} seconds")
+        start = time.time()
         self.datacube.get(request_tree)
+        logging.info(f"=== Get took {time.time() - start} seconds")
         return request_tree

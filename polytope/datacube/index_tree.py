@@ -1,6 +1,7 @@
 import json
 from typing import OrderedDict
 import logging
+import copy
 
 from sortedcontainers import SortedList
 
@@ -64,6 +65,13 @@ class IndexTree(object):
             if self.axis != IndexTree.root:
                 n.ancestors.append(self)
             n._collect_leaf_nodes(leaves)
+
+    def copy_children_from_other(self, other):
+        for o in other.children:
+            c = IndexTree(o.axis, copy.copy(o.value))
+            self.add_child(c)
+            c.copy_children_from_other(o)
+        return 
 
     def __setitem__(self, key, value):
         setattr(self, key, value)
@@ -169,12 +177,12 @@ class IndexTree(object):
 
     def pprint(self, level=0):
         if self.axis.name == "root":
-            logging.debug("\n")
-        logging.debug("\t" * level + "\u21b3" + str(self))
+            logging.info("\n")
+        logging.info("  " * level + "\u21b3" + str(self) + " " + str(hex(id(self))))
         for child in self.children:
             child.pprint(level + 1)
         if len(self.children) == 0:
-            logging.debug("\t" * (level + 1) + "\u21b3" + str(self.result))
+            logging.info("  " * (level + 1) + "\u21b3" + str(self.result))
 
     def remove_branch(self):
         if not self.is_root():

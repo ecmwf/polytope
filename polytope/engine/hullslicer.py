@@ -1,5 +1,5 @@
 import math
-from copy import copy
+from copy import copy, deepcopy
 from itertools import chain
 from typing import List
 
@@ -12,7 +12,7 @@ from ..utility.combinatorics import argmax, argmin, group, tensor_product, uniqu
 from ..utility.exceptions import UnsliceableShapeError
 from ..utility.geometry import lerp
 from .engine import Engine
-
+import logging
 
 class HullSlicer(Engine):
     def __init__(self):
@@ -120,16 +120,49 @@ class HullSlicer(Engine):
         # Then we do not need to create a new index tree and merge it to request, but can just
         # directly work on request and return it...
 
+
         for c in combinations:
+
+            # cache of number node
+            number_cached_node = None
+            repeated_numbers = []
+            
             r = IndexTree()
             r["unsliced_polytopes"] = set(c)
             current_nodes = [r]
             for ax in datacube.axes.values():
                 next_nodes = []
                 for node in current_nodes:
+
+                    # detect if node is for number == 1
+                    # store a reference to that node
+                    # skip processing the other 49 numbers
+                    # at the end, copy that initial reference 49 times and add to request with correct number
+                    if node.axis.name == "number" and node.value == 1:
+                        number_cached_node = node
+                        # logging.info("Caching number 1")
+                    elif node.axis.name == "number" and node.value != 1:
+                        repeated_numbers.append(node)
+                        del node["unsliced_polytopes"]
+                        # logging.info(f"Skipping number {node.value}")
+                        continue
+
                     self._build_branch(ax, node, datacube, next_nodes)
                 current_nodes = next_nodes
+            
+            # logging.info("=== BEFORE COPYING ===")
+            # request.pprint()
+
+            for n in repeated_numbers:
+                # logging.info(f"Copying children for number {n.value}")
+                n.copy_children_from_other(number_cached_node)
+
+            # logging.info("=== AFTER COPYING ===")
+            # request.pprint()
+
             request.merge(r)
+
+
         return request
 
 

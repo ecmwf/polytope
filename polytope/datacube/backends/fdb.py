@@ -31,9 +31,9 @@ class FDBDatacube(Datacube):
         # Find values in the level 3 FDB datacube
 
         self.fdb = pygj.GribJump()
-        # logging.info(f"Partial Request: {partial_request}")
+        logging.info(f"Partial Request: {partial_request}")
         self.fdb_coordinates = self.fdb.axes(partial_request)
-        # logging.info(f"Axes from FDB: {self.fdb_coordinates}")
+        logging.info(f"Axes from FDB: {self.fdb_coordinates}")
         # for name, values in self.fdb_coordinates.items():
             # logging.info(f"Axis {name} has {values} values")
         self.fdb_coordinates["values"] = []
