@@ -3,7 +3,6 @@ import pytest
 from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
 from helper_functions import download_test_data
 
-from polytope.datacube.backends.fdb import FDBDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Disk, Select
@@ -14,6 +13,8 @@ from polytope.shapes import Disk, Select
 
 class TestRegularGrid:
     def setup_method(self, method):
+        from polytope.datacube.backends.fdb import FDBDatacube
+
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/era5-levels-members.grib"
         download_test_data(nexus_url, "era5-levels-members.grib")
         self.options = {
@@ -23,7 +24,7 @@ class TestRegularGrid:
             "number": {"type_change": "int"},
             "longitude": {"cyclic": [0, 360]},
         }
-        self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "step": 0}
+        self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "step": "0"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
@@ -51,8 +52,8 @@ class TestRegularGrid:
 
         return nearest_points
 
+    @pytest.mark.fdb
     @pytest.mark.internet
-    @pytest.mark.skip(reason="can't install fdb branch on CI")
     def test_regular_grid(self):
         request = Request(
             Select("step", [0]),
@@ -76,8 +77,9 @@ class TestRegularGrid:
         lons = []
         eccodes_lats = []
         tol = 1e-8
-        for i in range(len(result.leaves)):
-            cubepath = result.leaves[i].flatten()
+        leaves = result.leaves
+        for i in range(len(leaves)):
+            cubepath = leaves[i].flatten()
             lat = cubepath["latitude"]
             lon = cubepath["longitude"]
             lats.append(lat)

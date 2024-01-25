@@ -131,7 +131,7 @@ jobs:
           LD_LIBRARY_PATH: ${{ steps.install-dependencies.outputs.lib_path }}
         shell: bash -eux {0}
         run: |
-          DYLD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }} python -m pytest tests --cov=./ --cov-report=xml
+          DYLD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }} python -m pytest -m "not fdb" tests --cov=./ --cov-report=xml
           python -m coverage report
 
       - name: Upload coverage to Codecov
