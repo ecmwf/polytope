@@ -41,11 +41,9 @@ class FDBDatacube(Datacube):
                 self._check_and_add_axes(options, name, val)
 
     def get(self, requests: IndexTree):
-        requests.pprint_2()
         fdb_requests = []
         fdb_requests_decoding_info = []
         self.get_fdb_requests(requests, fdb_requests, fdb_requests_decoding_info)
-        print(fdb_requests)
         output_values = self.fdb.extract(fdb_requests)
         self.assign_fdb_output_to_nodes(output_values, fdb_requests_decoding_info)
 
