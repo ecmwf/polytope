@@ -17,6 +17,7 @@ class XArrayDatacube(Datacube):
         self.complete_axes = []
         self.blocked_axes = []
         self.fake_axes = []
+        self.nearest_search = None
         self.has_point_cloud = point_cloud_options
 
         for name, values in dataarray.coords.variables.items():

@@ -147,7 +147,7 @@ def cyclic(cls):
             update_range()
             indexes_between_ranges = []
 
-            if method != "surrounding":
+            if method != "surrounding" and method != "nearest":
                 return old_find_indices_between(index_ranges, low, up, datacube, method)
             else:
                 for indexes in index_ranges:
@@ -253,12 +253,7 @@ def mapper(cls):
                         first_val = unwanted_path[transform._mapped_axes()[0]]
                         # TODO: the unmapped idx is stashed in the result of a node, not in the leaf path??
                         unmapped_idx = leaf_path.get("result", None)
-                        print("inside unmap path key")
-                        print(unmapped_idx)
-                        print(first_val)
-                        print(value)
                         unmapped_idx = transform.unmap(first_val, value, unmapped_idx)
-                        print(unmapped_idx)
                         leaf_path.pop(transform._mapped_axes()[0], None)
                         key_value_path.pop(cls.name)
                         key_value_path[transform.old_axis] = unmapped_idx
@@ -272,7 +267,7 @@ def mapper(cls):
                     transformation = transform
                     if cls.name in transformation._mapped_axes():
                         for idxs in index_ranges:
-                            if method == "surrounding":
+                            if method == "surrounding" or method == "nearest":
                                 axis_reversed = transform._axis_reversed[cls.name]
                                 if not axis_reversed:
                                     start = bisect.bisect_left(idxs, low)
@@ -357,7 +352,7 @@ def merge(cls):
                     transformation = transform
                     if cls.name in transformation._mapped_axes():
                         for indexes in index_ranges:
-                            if method == "surrounding":
+                            if method == "surrounding" or method == "nearest":
                                 start = indexes.index(low)
                                 end = indexes.index(up)
                                 start = max(start - 1, 0)
@@ -411,7 +406,7 @@ def reverse(cls):
                                 # https://pandas.pydata.org/docs/reference/api/pandas.Index.searchsorted.html
                                 # Assumes the indexes are already sorted (could sort to be sure) and monotonically
                                 # increasing
-                                if method == "surrounding":
+                                if method == "surrounding" or method == "nearest":
                                     start = indexes.searchsorted(low, "left")
                                     end = indexes.searchsorted(up, "right")
                                     start = max(start - 1, 0)
@@ -424,7 +419,7 @@ def reverse(cls):
                                     indexes_between = indexes[start:end].to_list()
                                     indexes_between_ranges.append(indexes_between)
                             else:
-                                if method == "surrounding":
+                                if method == "surrounding" or method == "nearest":
                                     start = indexes.index(low)
                                     end = indexes.index(up)
                                     start = max(start - 1, 0)
@@ -494,7 +489,7 @@ def type_change(cls):
                     transformation = transform
                     if cls.name == transformation.name:
                         for indexes in index_ranges:
-                            if method == "surrounding":
+                            if method == "surrounding" or method == "nearest":
                                 start = indexes.index(low)
                                 end = indexes.index(up)
                                 start = max(start - 1, 0)
@@ -606,7 +601,7 @@ class DatacubeAxis(ABC):
                 # Find the range of indexes between lower and upper
                 # https://pandas.pydata.org/docs/reference/api/pandas.Index.searchsorted.html
                 # Assumes the indexes are already sorted (could sort to be sure) and monotonically increasing
-                if method == "surrounding":
+                if method == "surrounding" or method == "nearest":
                     start = indexes.searchsorted(low, "left")
                     end = indexes.searchsorted(up, "right")
                     start = max(start - 1, 0)
@@ -619,7 +614,7 @@ class DatacubeAxis(ABC):
                     indexes_between = indexes[start:end].to_list()
                     indexes_between_ranges.append(indexes_between)
             else:
-                if method == "surrounding":
+                if method == "surrounding" or method == "nearest":
                     start = indexes.index(low)
                     end = indexes.index(up)
                     start = max(start - 1, 0)
