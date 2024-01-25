@@ -1,27 +1,3 @@
-from .datacube_transformations import DatacubeAxisTransformation
-
-
-class DatacubeNullTransformation(DatacubeAxisTransformation):
-    def __init__(self, name, mapper_options):
-        self.name = name
-        self.transformation_options = mapper_options
-
-    def generate_final_transformation(self):
-        return self
-
-    def transformation_axes_final(self):
-        return [self.name]
-
-    def change_val_type(self, axis_name, values):
-        return values
-
-    def blocked_axes(self):
-        return []
-
-    def unwanted_axes(self):
-        return []
-
-
 def null(cls):
     if cls.type_change:
         old_find_indexes = cls.find_indexes

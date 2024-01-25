@@ -7,9 +7,9 @@ import pandas as pd
 
 from .transformations.datacube_cyclic.cyclic_axis_decorator import cyclic
 from .transformations.datacube_mappers.mapper_axis_decorator import mapper
-from .transformations.datacube_merger import merge
-from .transformations.datacube_reverse import reverse
-from .transformations.datacube_type_change import type_change
+from .transformations.datacube_merger.merger_axis_decorator import merge
+from .transformations.datacube_reverse.reverse_axis_decorator import reverse
+from .transformations.datacube_type_change.type_change_axis_decorator import type_change
 
 
 class DatacubeAxis(ABC):

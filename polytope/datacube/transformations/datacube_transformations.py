@@ -8,8 +8,8 @@ class DatacubeAxisTransformation(ABC):
     def create_transform(name, transformation_type_key, transformation_options):
         transformation_type = _type_to_datacube_transformation_lookup[transformation_type_key]
         transformation_file_name = _type_to_transformation_file_lookup[transformation_type_key]
-
-        module = import_module("polytope.datacube.transformations.datacube_" + transformation_file_name)
+        file_name = ".datacube_" + transformation_file_name
+        module = import_module("polytope.datacube.transformations" + file_name + file_name)
         constructor = getattr(module, transformation_type)
         transformation_type_option = transformation_options[transformation_type_key]
         new_transformation = deepcopy(constructor(name, transformation_type_option))
@@ -54,8 +54,8 @@ _type_to_datacube_transformation_lookup = {
 }
 
 _type_to_transformation_file_lookup = {
-    "mapper": "mappers.datacube_mappers",
-    "cyclic": "cyclic.datacube_cyclic",
+    "mapper": "mappers",
+    "cyclic": "cyclic",
     "merge": "merger",
     "reverse": "reverse",
     "type_change": "type_change",
