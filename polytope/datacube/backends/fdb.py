@@ -3,11 +3,12 @@ from copy import deepcopy
 import pygribjump as pygj
 
 from ...utility.geometry import nearest_pt
+from ..transformations.datacube_cyclic import DatacubeAxisCyclic
 from .datacube import Datacube, IndexTree
 
 
 class FDBDatacube(Datacube):
-    def __init__(self, config={}, axis_options={}):
+    def __init__(self, config={}, axis_options={}, datacube_options={}):
         self.axis_options = axis_options
         self.axis_counter = 0
         self._axes = None
@@ -19,6 +20,7 @@ class FDBDatacube(Datacube):
         self.nearest_search = {}
         self.nearest_search = {}
         self.coupled_axes = []
+        self.axis_with_identical_structure_after = datacube_options.get("identical structure after")
 
         partial_request = config
         # Find values in the level 3 FDB datacube
@@ -88,17 +90,30 @@ class FDBDatacube(Datacube):
             first_ax_name = requests.children[0].axis.name
             second_ax_name = requests.children[0].children[0].axis.name
             # TODO: throw error if first_ax_name or second_ax_name not in self.nearest_search.keys()
+            second_ax = requests.children[0].children[0].axis
+            print("other nearest point")
+            print(
+                [
+                    [lat_val, lon_val]
+                    for (lat_val, lon_val) in zip(
+                        self.nearest_search[first_ax_name][0], self.nearest_search[second_ax_name][0]
+                    )
+                ]
+            )
             nearest_pts = [
-                [lat_val, lon_val]
+                [lat_val, second_ax._remap_val_to_axis_range(lon_val)]
                 for (lat_val, lon_val) in zip(
                     self.nearest_search[first_ax_name][0], self.nearest_search[second_ax_name][0]
                 )
             ]
-            # first collect the lat lon points found
+            print("nearest point")
+            print(nearest_pts)
             found_latlon_pts = []
             for lat_child in requests.children:
                 for lon_child in lat_child.children:
                     found_latlon_pts.append([lat_child.value, lon_child.value])
+            print("found lat lons")
+            print(found_latlon_pts)
             # now find the nearest lat lon to the points requested
             nearest_latlons = []
             for pt in nearest_pts:

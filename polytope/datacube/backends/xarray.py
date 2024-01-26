@@ -8,7 +8,7 @@ from .datacube import Datacube, IndexTree
 class XArrayDatacube(Datacube):
     """Xarray arrays are labelled, axes can be defined as strings or integers (e.g. "time" or 0)."""
 
-    def __init__(self, dataarray: xr.DataArray, axis_options={}):
+    def __init__(self, dataarray: xr.DataArray, axis_options={}, datacube_options={}):
         self.axis_options = axis_options
         self.axis_counter = 0
         self._axes = None
@@ -19,6 +19,7 @@ class XArrayDatacube(Datacube):
         self.fake_axes = []
         self.nearest_search = None
         self.coupled_axes = []
+        self.axis_with_identical_structure_after = datacube_options.get("identical structure after")
 
         for name, values in dataarray.coords.variables.items():
             if name in dataarray.dims:

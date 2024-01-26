@@ -145,11 +145,11 @@ class Datacube(ABC):
         return path
 
     @staticmethod
-    def create(datacube, axis_options: dict):
+    def create(datacube, axis_options: dict, datacube_options={}):
         if isinstance(datacube, (xr.core.dataarray.DataArray, xr.core.dataset.Dataset)):
             from .xarray import XArrayDatacube
 
-            xadatacube = XArrayDatacube(datacube, axis_options=axis_options)
+            xadatacube = XArrayDatacube(datacube, axis_options, datacube_options)
             return xadatacube
         else:
             return datacube

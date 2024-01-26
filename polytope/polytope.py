@@ -37,11 +37,11 @@ class Request:
 
 
 class Polytope:
-    def __init__(self, datacube, engine=None, axis_options={}):
+    def __init__(self, datacube, engine=None, axis_options={}, datacube_options={}):
         from .datacube import Datacube
         from .engine import Engine
 
-        self.datacube = Datacube.create(datacube, axis_options)
+        self.datacube = Datacube.create(datacube, axis_options, datacube_options)
         self.engine = engine if engine is not None else Engine.default()
 
     def slice(self, polytopes: List[ConvexPolytope]):

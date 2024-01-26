@@ -122,14 +122,43 @@ class HullSlicer(Engine):
         # directly work on request and return it...
 
         for c in combinations:
+            cached_node = None
+            repeated_sub_nodes = []
+
             r = IndexTree()
             r["unsliced_polytopes"] = set(c)
             current_nodes = [r]
             for ax in datacube.axes.values():
                 next_nodes = []
                 for node in current_nodes:
+                    # detect if node is for number == 1
+                    # store a reference to that node
+                    # skip processing the other 49 numbers
+                    # at the end, copy that initial reference 49 times and add to request with correct number
+
+                    stored_val = None
+                    if node.axis.name == datacube.axis_with_identical_structure_after:
+                        stored_val = node.value
+                        cached_node = node
+                        # logging.info("Caching number 1")
+                    elif node.axis.name == datacube.axis_with_identical_structure_after and node.value != stored_val:
+                        repeated_sub_nodes.append(node)
+                        del node["unsliced_polytopes"]
+                        # logging.info(f"Skipping number {node.value}")
+                        continue
+
                     self._build_branch(ax, node, datacube, next_nodes)
                 current_nodes = next_nodes
+
+            # logging.info("=== BEFORE COPYING ===")
+
+            for n in repeated_sub_nodes:
+                # logging.info(f"Copying children for number {n.value}")
+                n.copy_children_from_other(cached_node)
+
+            # logging.info("=== AFTER COPYING ===")
+            # request.pprint()
+
             request.merge(r)
         return request
 
