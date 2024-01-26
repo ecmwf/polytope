@@ -3,7 +3,6 @@ from copy import deepcopy
 import pygribjump as pygj
 
 from ...utility.geometry import nearest_pt
-from ..transformations.datacube_cyclic import DatacubeAxisCyclic
 from .datacube import Datacube, IndexTree
 
 
