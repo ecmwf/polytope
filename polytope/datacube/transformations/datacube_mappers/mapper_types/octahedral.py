@@ -5,7 +5,8 @@ from ..datacube_mappers import DatacubeMapper
 
 
 class OctahedralGridMapper(DatacubeMapper):
-    def __init__(self, base_axis, mapped_axes, resolution):
+    def __init__(self, base_axis, mapped_axes, resolution, local_area=[]):
+        # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
         self._resolution = resolution
