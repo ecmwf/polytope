@@ -47,7 +47,7 @@ def type_change(cls):
                     transformation = transform
                     if cls.name == transformation.name:
                         for indexes in index_ranges:
-                            if method == "surrounding":
+                            if method == "surrounding" or method == "nearest":
                                 start = indexes.index(low)
                                 end = indexes.index(up)
                                 start = max(start - 1, 0)
