@@ -50,6 +50,8 @@ class HullSlicer(Engine):
         upper = ax.from_float(upper + tol)
         flattened = node.flatten()
         method = polytope.method
+        if method == "nearest":
+            datacube.nearest_search[ax.name] = polytope.points
 
         # TODO: this hashing doesn't work because we need to know the latitude val for finding longitude values
         # TODO: Maybe create a coupled_axes list inside of datacube and add to it during axis formation, then here
