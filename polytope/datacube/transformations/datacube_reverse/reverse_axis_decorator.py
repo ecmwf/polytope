@@ -29,7 +29,7 @@ def reverse(cls):
                                 # https://pandas.pydata.org/docs/reference/api/pandas.Index.searchsorted.html
                                 # Assumes the indexes are already sorted (could sort to be sure) and monotonically
                                 # increasing
-                                if method == "surrounding":
+                                if method == "surrounding" or method == "nearest":
                                     start = indexes.searchsorted(low, "left")
                                     end = indexes.searchsorted(up, "right")
                                     start = max(start - 1, 0)
@@ -42,7 +42,7 @@ def reverse(cls):
                                     indexes_between = indexes[start:end].to_list()
                                     indexes_between_ranges.append(indexes_between)
                             else:
-                                if method == "surrounding":
+                                if method == "surrounding" or method == "nearest":
                                     start = indexes.index(low)
                                     end = indexes.index(up)
                                     start = max(start - 1, 0)

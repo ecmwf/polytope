@@ -142,7 +142,7 @@ def cyclic(cls):
             update_range()
             indexes_between_ranges = []
 
-            if method != "surrounding":
+            if method != "surrounding" or method != "nearest":
                 return old_find_indices_between(index_ranges, low, up, datacube, method)
             else:
                 for indexes in index_ranges:

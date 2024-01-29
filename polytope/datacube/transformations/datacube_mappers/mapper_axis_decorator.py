@@ -73,7 +73,7 @@ def mapper(cls):
                     transformation = transform
                     if cls.name in transformation._mapped_axes():
                         for idxs in index_ranges:
-                            if method == "surrounding":
+                            if method == "surrounding" or method == "nearest":
                                 axis_reversed = transform._axis_reversed[cls.name]
                                 if not axis_reversed:
                                     start = bisect.bisect_left(idxs, low)
