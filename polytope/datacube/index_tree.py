@@ -46,6 +46,13 @@ class IndexTree(object):
         self._collect_leaf_nodes(leaves)
         return leaves
 
+    def pprint_2(self, level=0):
+        if self.axis.name == "root":
+            print("\n")
+        print("\t" * level + "\u21b3" + str(self))
+        for child in self.children:
+            child.pprint_2(level + 1)
+
     def _collect_leaf_nodes_old(self, leaves):
         if len(self.children) == 0:
             leaves.append(self)
