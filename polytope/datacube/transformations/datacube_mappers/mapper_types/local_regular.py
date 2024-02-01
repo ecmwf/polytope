@@ -24,7 +24,7 @@ class LocalRegularGridMapper(DatacubeMapper):
         self._first_axis_vals = self.first_axis_vals()
 
     def first_axis_vals(self):
-        first_ax_vals = [self._first_axis_max - i * self._first_deg_increment for i in range(self.first_resolution)]
+        first_ax_vals = [self._first_axis_max - i * self._first_deg_increment for i in range(self.first_resolution + 1)]
         return first_ax_vals
 
     def map_first_axis(self, lower, upper):
@@ -34,7 +34,7 @@ class LocalRegularGridMapper(DatacubeMapper):
 
     def second_axis_vals(self, first_val):
         second_ax_vals = [
-            self._second_axis_min + i * self._second_deg_increment for i in range(4 * self.second_resolution)
+            self._second_axis_min + i * self._second_deg_increment for i in range(self.second_resolution + 1)
         ]
         return second_ax_vals
 
@@ -44,7 +44,7 @@ class LocalRegularGridMapper(DatacubeMapper):
         return return_vals
 
     def axes_idx_to_regular_idx(self, first_idx, second_idx):
-        final_idx = first_idx * self.second_resolution + second_idx
+        final_idx = first_idx * (self.second_resolution + 1) + second_idx
         return final_idx
 
     def find_second_idx(self, first_val, second_val):

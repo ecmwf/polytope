@@ -1,0 +1,48 @@
+import pandas as pd
+import pytest
+from earthkit import data
+
+from polytope.engine.hullslicer import HullSlicer
+from polytope.polytope import Polytope, Request
+from polytope.shapes import Point, Select
+
+
+class TestSlicingFDBDatacube:
+    def setup_method(self, method):
+        from polytope.datacube.backends.fdb import FDBDatacube
+
+        ds = data.from_source("file", "./local.grib")
+        self.latlon_array = ds.to_xarray().t2m
+        print(self.latlon_array)
+
+        # Create a dataarray with 3 labelled axes using different index types
+        self.options = {
+            "values": {"mapper": {"type": "local_regular", "resolution": [80, 80], "axes": ["latitude", "longitude"], "local": [-40, 40, -20, 60]}},
+            "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
+            "step": {"type_change": "int"},
+            "number": {"type_change": "int"},
+            "longitude": {"cyclic": [0, 360]},
+        }
+        self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
+        self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
+        self.slicer = HullSlicer()
+        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
+
+    # Testing different shapes
+    @pytest.mark.fdb
+    def test_fdb_datacube(self):
+        request = Request(
+            Select("step", [0]),
+            Select("levtype", ["sfc"]),
+            Select("date", [pd.Timestamp("20240129T000000")]),
+            Select("domain", ["g"]),
+            Select("expver", ["0001"]),
+            Select("param", ["167"]),
+            Select("class", ["od"]),
+            Select("stream", ["oper"]),
+            Select("type", ["an"]),
+            Point(["latitude", "longitude"], [[0.16, 0.176]], method="nearest"),
+        )
+        result = self.API.retrieve(request)
+        result.pprint_2()
+        assert len(result.leaves) == 1
