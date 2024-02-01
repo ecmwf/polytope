@@ -1,6 +1,5 @@
 import pandas as pd
 import pytest
-from earthkit import data
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
@@ -11,13 +10,16 @@ class TestSlicingFDBDatacube:
     def setup_method(self, method):
         from polytope.datacube.backends.fdb import FDBDatacube
 
-        ds = data.from_source("file", "./local.grib")
-        self.latlon_array = ds.to_xarray().t2m
-        print(self.latlon_array)
-
         # Create a dataarray with 3 labelled axes using different index types
         self.options = {
-            "values": {"mapper": {"type": "local_regular", "resolution": [80, 80], "axes": ["latitude", "longitude"], "local": [-40, 40, -20, 60]}},
+            "values": {
+                "mapper": {
+                    "type": "local_regular",
+                    "resolution": [80, 80],
+                    "axes": ["latitude", "longitude"],
+                    "local": [-40, 40, -20, 60],
+                }
+            },
             "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
             "step": {"type_change": "int"},
             "number": {"type_change": "int"},
@@ -40,9 +42,11 @@ class TestSlicingFDBDatacube:
             Select("param", ["167"]),
             Select("class", ["od"]),
             Select("stream", ["oper"]),
-            Select("type", ["an"]),
+            Select("type", ["fc"]),
             Point(["latitude", "longitude"], [[0.16, 0.176]], method="nearest"),
         )
         result = self.API.retrieve(request)
         result.pprint_2()
         assert len(result.leaves) == 1
+        assert result.leaves[0].flatten()["latitude"] == 0
+        assert result.leaves[0].flatten()["longitude"] == 0
