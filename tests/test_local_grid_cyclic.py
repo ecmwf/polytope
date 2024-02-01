@@ -51,6 +51,7 @@ class TestSlicingFDBDatacube:
         assert result.leaves[0].flatten()["latitude"] == -20
         assert result.leaves[0].flatten()["longitude"] == -20
 
+    @pytest.mark.fdb
     def test_fdb_datacube_2(self):
         request = Request(
             Select("step", [0]),
