@@ -23,7 +23,7 @@ class TestSlicingFDBDatacube:
             "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
             "step": {"type_change": "int"},
             "number": {"type_change": "int"},
-            "longitude": {"cyclic": [-180, 180]}
+            "longitude": {"cyclic": [-180, 180]},
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
@@ -62,7 +62,7 @@ class TestSlicingFDBDatacube:
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["fc"]),
-            Point(["latitude", "longitude"], [[-20, 50+360]]),
+            Point(["latitude", "longitude"], [[-20, 50 + 360]]),
         )
         result = self.API.retrieve(request)
         result.pprint_2()
