@@ -16,6 +16,7 @@ class TestSlicingFDBDatacube:
             "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
             "step": {"type_change": "int"},
             "number": {"type_change": "int"},
+            "longitude": {"cyclic": [0, 360]},
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
@@ -76,3 +77,43 @@ class TestSlicingFDBDatacube:
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 3
+
+    @pytest.mark.fdb
+    def test_fdb_datacube_true_point_3(self):
+        request = Request(
+            Select("step", [21]),
+            Select("levtype", ["sfc"]),
+            Select("date", [pd.Timestamp("20231102T000000")]),
+            Select("domain", ["g"]),
+            Select("expver", ["0001"]),
+            Select("param", ["167"]),
+            Select("class", ["od"]),
+            Select("stream", ["oper"]),
+            Select("type", ["fc"]),
+            Point(["latitude", "longitude"], [[0.035149384216, -0.01]], method="nearest"),
+        )
+        result = self.API.retrieve(request)
+        result.pprint()
+        assert len(result.leaves) == 1
+        assert result.leaves[0].value == 359.929906542056
+        assert result.leaves[0].axis.name == "longitude"
+
+    @pytest.mark.fdb
+    def test_fdb_datacube_true_point_4(self):
+        request = Request(
+            Select("step", [21]),
+            Select("levtype", ["sfc"]),
+            Select("date", [pd.Timestamp("20231102T000000")]),
+            Select("domain", ["g"]),
+            Select("expver", ["0001"]),
+            Select("param", ["167"]),
+            Select("class", ["od"]),
+            Select("stream", ["oper"]),
+            Select("type", ["fc"]),
+            Point(["latitude", "longitude"], [[0.035149384216, 359.97]], method="nearest"),
+        )
+        result = self.API.retrieve(request)
+        result.pprint()
+        assert len(result.leaves) == 1
+        assert result.leaves[0].value == 359.929906542056
+        assert result.leaves[0].axis.name == "longitude"
