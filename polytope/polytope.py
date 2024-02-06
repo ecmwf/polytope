@@ -37,12 +37,14 @@ class Request:
 
 
 class Polytope:
-    def __init__(self, datacube, engine=None, axis_options=None):
+    def __init__(self, datacube, engine=None, axis_options=None, datacube_options=None):
         from .datacube import Datacube
         from .engine import Engine
 
         if axis_options is None:
             axis_options = {}
+        if datacube_options is None:
+            datacube_options = {}
 
         self.datacube = Datacube.create(datacube, axis_options)
         self.engine = engine if engine is not None else Engine.default()

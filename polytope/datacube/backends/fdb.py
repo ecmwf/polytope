@@ -8,11 +8,13 @@ from .datacube import Datacube, IndexTree
 
 
 class FDBDatacube(Datacube):
-    def __init__(self, config=None, axis_options=None):
+    def __init__(self, config=None, axis_options=None, datacube_options=None):
         if config is None:
             config = {}
         if axis_options is None:
             axis_options = {}
+        if datacube_options is None:
+            datacube_options = {}
 
         logging.info("Created an FDB datacube with options: " + str(axis_options))
 
@@ -25,7 +27,8 @@ class FDBDatacube(Datacube):
         self.fake_axes = []
         self.unwanted_path = {}
         self.nearest_search = {}
-        self.nearest_search = {}
+        self.coupled_axes = []
+        self.axis_with_identical_structure_after = datacube_options.get("identical structure after")
 
         partial_request = config
         # Find values in the level 3 FDB datacube
@@ -78,8 +81,7 @@ class FDBDatacube(Datacube):
             )
             leaf_path.update(key_value_path)
             if len(requests.children[0].children[0].children) == 0:
-                # remap this last key
-                # TODO: here, find the fdb_requests and associated nodes to which to add results
+                # find the fdb_requests and associated nodes to which to add results
 
                 (path, range_lengths, current_start_idxs, fdb_node_ranges, lat_length) = self.get_2nd_last_values(
                     requests, leaf_path
@@ -102,29 +104,35 @@ class FDBDatacube(Datacube):
             leaf_path = {}
         # In this function, we recursively loop over the last two layers of the tree and store the indices of the
         # request ranges in those layers
-        # TODO: here find nearest point first before retrieving etc
+
+        # Find nearest point first before retrieving
         if len(self.nearest_search) != 0:
             first_ax_name = requests.children[0].axis.name
             second_ax_name = requests.children[0].children[0].axis.name
             # TODO: throw error if first_ax_name or second_ax_name not in self.nearest_search.keys()
+            second_ax = requests.children[0].children[0].axis
+
+            # TODO: actually, here we should not remap the nearest_pts, we should instead unmap the
+            # found_latlon_pts and then remap them later once we have compared found_latlon_pts and nearest_pts
             nearest_pts = [
-                [lat_val, lon_val]
+                [lat_val, second_ax._remap_val_to_axis_range(lon_val)]
                 for (lat_val, lon_val) in zip(
                     self.nearest_search[first_ax_name][0], self.nearest_search[second_ax_name][0]
                 )
             ]
-            # first collect the lat lon points found
+
             found_latlon_pts = []
             for lat_child in requests.children:
                 for lon_child in lat_child.children:
                     found_latlon_pts.append([lat_child.value, lon_child.value])
+
             # now find the nearest lat lon to the points requested
             nearest_latlons = []
             for pt in nearest_pts:
                 nearest_latlon = nearest_pt(found_latlon_pts, pt)
                 nearest_latlons.append(nearest_latlon)
-            # TODO: now combine with the rest of the function....
-            # TODO: need to remove the branches that do not fit
+
+            # need to remove the branches that do not fit
             lat_children_values = [child.value for child in requests.children]
             for i in range(len(lat_children_values)):
                 lat_child_val = lat_children_values[i]
@@ -162,7 +170,7 @@ class FDBDatacube(Datacube):
             (range_lengths[i], current_start_idxs[i], fdb_node_ranges[i]) = self.get_last_layer_before_leaf(
                 lat_child, leaf_path, range_length, current_start_idx, fdb_range_nodes
             )
-        # TODO: do we need to return all of this?
+
         leaf_path_copy = deepcopy(leaf_path)
         leaf_path_copy.pop("values")
         return (leaf_path_copy, range_lengths, current_start_idxs, fdb_node_ranges, lat_length)

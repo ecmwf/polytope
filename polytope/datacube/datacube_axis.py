@@ -66,6 +66,9 @@ class DatacubeAxis(ABC):
     def unmap_path_key(self, key_value_path, leaf_path, unwanted_path):
         return (key_value_path, leaf_path, unwanted_path)
 
+    def _remap_val_to_axis_range(self, value):
+        return value
+
     def find_indices_between(self, index_ranges, low, up, datacube, method=None):
         # TODO: add method for snappping
         indexes_between_ranges = []
