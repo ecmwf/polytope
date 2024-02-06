@@ -1,3 +1,4 @@
+import logging
 from copy import deepcopy
 
 import pygribjump as pygj
@@ -7,7 +8,14 @@ from .datacube import Datacube, IndexTree
 
 
 class FDBDatacube(Datacube):
-    def __init__(self, config={}, axis_options={}):
+    def __init__(self, config=None, axis_options=None):
+        if config is None:
+            config = {}
+        if axis_options is None:
+            axis_options = {}
+
+        logging.info("Created an FDB datacube with options: " + str(axis_options))
+
         self.axis_options = axis_options
         self.axis_counter = 0
         self._axes = None
@@ -24,6 +32,9 @@ class FDBDatacube(Datacube):
 
         self.gj = pygj.GribJump()
         self.fdb_coordinates = self.gj.axes(partial_request)
+
+        logging.info("Axes returned from GribJump are: " + str(self.fdb_coordinates))
+
         self.fdb_coordinates["values"] = []
         for name, values in self.fdb_coordinates.items():
             values.sort()
@@ -39,6 +50,8 @@ class FDBDatacube(Datacube):
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
 
+        logging.info("Polytope created axes for: " + str(self._axes.keys()))
+
     def get(self, requests: IndexTree):
         fdb_requests = []
         fdb_requests_decoding_info = []
@@ -46,9 +59,14 @@ class FDBDatacube(Datacube):
         output_values = self.gj.extract(fdb_requests)
         self.assign_fdb_output_to_nodes(output_values, fdb_requests_decoding_info)
 
-    def get_fdb_requests(self, requests: IndexTree, fdb_requests=[], fdb_requests_decoding_info=[], leaf_path={}):
+    def get_fdb_requests(self, requests: IndexTree, fdb_requests=[], fdb_requests_decoding_info=[], leaf_path=None):
+        if leaf_path is None:
+            leaf_path = {}
+
         # First when request node is root, go to its children
         if requests.axis.name == "root":
+            logging.info("Looking for data for the tree: " + str([leaf.flatten() for leaf in requests.leaves]))
+
             for c in requests.children:
                 self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info)
         # If request node has no children, we have a leaf so need to assign fdb values to it
@@ -79,7 +97,9 @@ class FDBDatacube(Datacube):
                 for c in requests.children:
                     self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path)
 
-    def get_2nd_last_values(self, requests, leaf_path={}):
+    def get_2nd_last_values(self, requests, leaf_path=None):
+        if leaf_path is None:
+            leaf_path = {}
         # In this function, we recursively loop over the last two layers of the tree and store the indices of the
         # request ranges in those layers
         # TODO: here find nearest point first before retrieving etc
