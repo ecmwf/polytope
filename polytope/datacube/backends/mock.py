@@ -7,7 +7,7 @@ from .datacube import Datacube, DatacubePath, IndexTree
 
 
 class MockDatacube(Datacube):
-    def __init__(self, dimensions):
+    def __init__(self, dimensions, datacube_options={}):
         assert isinstance(dimensions, dict)
 
         self.dimensions = dimensions
@@ -23,6 +23,7 @@ class MockDatacube(Datacube):
             self.stride[k] = stride_cumulative
             stride_cumulative *= self.dimensions[k]
         self.coupled_axes = []
+        self.axis_with_identical_structure_after = ""
 
     def get(self, requests: IndexTree):
         # Takes in a datacube and verifies the leaves of the tree are complete

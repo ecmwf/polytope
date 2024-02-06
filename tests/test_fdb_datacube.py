@@ -1,7 +1,6 @@
 import pandas as pd
 import pytest
 
-from polytope.datacube.backends.fdb import FDBDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
@@ -12,6 +11,8 @@ from polytope.shapes import Box, Select
 
 class TestSlicingFDBDatacube:
     def setup_method(self, method):
+        from polytope.datacube.backends.fdb import FDBDatacube
+
         # Create a dataarray with 3 labelled axes using different index types
         self.options = {
             "values": {"mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}},
@@ -19,14 +20,13 @@ class TestSlicingFDBDatacube:
             "step": {"type_change": "int"},
             "number": {"type_change": "int"},
         }
-        self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "step": 0}
+        self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
-        print(self.fdbdatacube.fdb_coordinates)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
 
     # Testing different shapes
-    @pytest.mark.skip(reason="can't install fdb branch on CI")
+    @pytest.mark.fdb
     def test_fdb_datacube(self):
         request = Request(
             Select("step", [0]),
@@ -38,7 +38,6 @@ class TestSlicingFDBDatacube:
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["an"]),
-            Select("number", [1]),
             Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
         )
         result = self.API.retrieve(request)

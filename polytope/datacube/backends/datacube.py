@@ -1,4 +1,5 @@
 import importlib
+import logging
 import math
 from abc import ABC, abstractmethod
 from typing import Any
@@ -107,6 +108,9 @@ class Datacube(ABC):
         if offset is not None:
             # Note that we can only do unique if not dealing with time values
             idx_between = unique(idx_between)
+
+        logging.info(f"For axis {axis.name} between {lower} and {upper}, found indices {idx_between}")
+
         return idx_between
 
     def _look_up_datacube(self, search_ranges, search_ranges_offset, indexes, axis, method):
@@ -145,11 +149,11 @@ class Datacube(ABC):
         return path
 
     @staticmethod
-    def create(datacube, axis_options: dict):
+    def create(datacube, axis_options: dict, datacube_options={}):
         if isinstance(datacube, (xr.core.dataarray.DataArray, xr.core.dataset.Dataset)):
             from .xarray import XArrayDatacube
 
-            xadatacube = XArrayDatacube(datacube, axis_options=axis_options)
+            xadatacube = XArrayDatacube(datacube, axis_options, datacube_options)
             return xadatacube
         else:
             return datacube

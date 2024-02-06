@@ -66,8 +66,11 @@ class HullSlicer(Engine):
         upper = ax.from_float(upper + tol)
         flattened = node.flatten()
         method = polytope.method
+        if method == "nearest":
+            datacube.nearest_search[ax.name] = polytope.points
 
-        # NOTE: Here we create a coupled_axes list inside of datacube and add to it during axis formation, then here
+        # TODO: this hashing doesn't work because we need to know the latitude val for finding longitude values
+        # TODO: Maybe create a coupled_axes list inside of datacube and add to it during axis formation, then here
         # do something like if ax is in second place of coupled_axes, then take the flattened part of the array that
         # corresponds to the first place of cooupled_axes in the hashing
         # Else, if we do not need the flattened bit in the hash, can just put an empty string instead?
@@ -120,6 +123,7 @@ class HullSlicer(Engine):
                 # here, first check if the axis is an unsliceable axis and directly build node if it is
 
                 # NOTE: we should have already created the ax_is_unsliceable cache before
+
                 if self.ax_is_unsliceable[ax.name]:
                     self._build_unsliceable_child(polytope, ax, node, datacube, lower, next_nodes, slice_axis_idx)
                 else:
@@ -141,14 +145,43 @@ class HullSlicer(Engine):
         # directly work on request and return it...
 
         for c in combinations:
+            cached_node = None
+            repeated_sub_nodes = []
+
             r = IndexTree()
             r["unsliced_polytopes"] = set(c)
             current_nodes = [r]
             for ax in datacube.axes.values():
                 next_nodes = []
                 for node in current_nodes:
+                    # detect if node is for number == 1
+                    # store a reference to that node
+                    # skip processing the other 49 numbers
+                    # at the end, copy that initial reference 49 times and add to request with correct number
+
+                    stored_val = None
+                    if node.axis.name == datacube.axis_with_identical_structure_after:
+                        stored_val = node.value
+                        cached_node = node
+                        # logging.info("Caching number 1")
+                    elif node.axis.name == datacube.axis_with_identical_structure_after and node.value != stored_val:
+                        repeated_sub_nodes.append(node)
+                        del node["unsliced_polytopes"]
+                        # logging.info(f"Skipping number {node.value}")
+                        continue
+
                     self._build_branch(ax, node, datacube, next_nodes)
                 current_nodes = next_nodes
+
+            # logging.info("=== BEFORE COPYING ===")
+
+            for n in repeated_sub_nodes:
+                # logging.info(f"Copying children for number {n.value}")
+                n.copy_children_from_other(cached_node)
+
+            # logging.info("=== AFTER COPYING ===")
+            # request.pprint()
+
             request.merge(r)
         return request
 
