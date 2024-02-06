@@ -1,6 +1,5 @@
 import pandas as pd
 import pytest
-from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
 from helper_functions import download_test_data
 
 from polytope.engine.hullslicer import HullSlicer
@@ -25,29 +24,6 @@ class TestRegularGrid:
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
-
-    def find_nearest_latlon(self, grib_file, target_lat, target_lon):
-        # Open the GRIB file
-        f = open(grib_file)
-
-        # Load the GRIB messages from the file
-        messages = []
-        while True:
-            message = codes_grib_new_from_file(f)
-            if message is None:
-                break
-            messages.append(message)
-
-        # Find the nearest grid points
-        nearest_points = []
-        for message in messages:
-            nearest_index = codes_grib_find_nearest(message, target_lat, target_lon)
-            nearest_points.append(nearest_index)
-
-        # Close the GRIB file
-        f.close()
-
-        return nearest_points
 
     @pytest.mark.internet
     @pytest.mark.fdb

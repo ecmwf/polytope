@@ -21,7 +21,9 @@ self_API = Polytope(datacube=fdbdatacube, axis_options=options)
 
 print(time.time() - time1)
 
-time2 = time.time()
+total_polytope_time = 0
+for i in range(10):
+    time2 = time.time()
 
 request = Request(
     All("step"),

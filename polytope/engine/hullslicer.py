@@ -1,4 +1,3 @@
-import logging
 import math
 from copy import copy
 from itertools import chain
@@ -19,6 +18,9 @@ class HullSlicer(Engine):
     def __init__(self):
         self.ax_is_unsliceable = {}
         self.axis_values_between = {}
+        self.has_value = {}
+        self.sliced_polytopes = {}
+        self.remapped_vals = {}
 
     def _unique_continuous_points(self, p: ConvexPolytope, datacube: Datacube):
         for i, ax in enumerate(p._axes):
@@ -36,7 +38,20 @@ class HullSlicer(Engine):
         if not polytope.is_flat:
             raise UnsliceableShapeError(ax)
         path = node.flatten()
-        if datacube.has_index(path, ax, lower):
+
+        flattened_tuple = tuple()
+        if len(datacube.coupled_axes) > 0:
+            if path.get(datacube.coupled_axes[0][0], None) is not None:
+                flattened_tuple = (datacube.coupled_axes[0][0], path.get(datacube.coupled_axes[0][0], None))
+                path = {flattened_tuple[0]: flattened_tuple[1]}
+            else:
+                path = {}
+
+        if self.axis_values_between.get((flattened_tuple, ax.name, lower), None) is None:
+            self.axis_values_between[(flattened_tuple, ax.name, lower)] = datacube.has_index(path, ax, lower)
+        datacube_has_index = self.axis_values_between[(flattened_tuple, ax.name, lower)]
+
+        if datacube_has_index:
             child = node.create_child(ax, lower)
             child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             child["unsliced_polytopes"].remove(polytope)
@@ -66,13 +81,12 @@ class HullSlicer(Engine):
                 flattened_tuple = (datacube.coupled_axes[0][0], flattened.get(datacube.coupled_axes[0][0], None))
                 flattened = {flattened_tuple[0]: flattened_tuple[1]}
             else:
-                flattened_tuple = tuple()
                 flattened = {}
+
+        values = self.axis_values_between.get((flattened_tuple, ax.name, lower, upper, method), None)
         if self.axis_values_between.get((flattened_tuple, ax.name, lower, upper, method), None) is None:
-            self.axis_values_between[(flattened_tuple, ax.name, lower, upper, method)] = datacube.get_indices(
-                flattened, ax, lower, upper, method
-            )
-        values = self.axis_values_between[(flattened_tuple, ax.name, lower, upper, method)]
+            values = datacube.get_indices(flattened, ax, lower, upper, method)
+            self.axis_values_between[(flattened_tuple, ax.name, lower, upper, method)] = values
 
         if len(values) == 0:
             node.remove_branch()
@@ -80,15 +94,20 @@ class HullSlicer(Engine):
         for value in values:
             # convert to float for slicing
             fvalue = ax.to_float(value)
-            new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
-            # store the native type
-            remapped_val = value
-            if ax.is_cyclic:
-                remapped_val_interm = ax.remap([value, value])[0]
-                remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
-                remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
+            new_polytope = self.sliced_polytopes.get((polytope, ax.name, fvalue, slice_axis_idx), False)
+            if new_polytope is False:
+                new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
+                self.sliced_polytopes[(polytope, ax.name, fvalue, slice_axis_idx)] = new_polytope
 
-            logging.info(f"Added index {remapped_val} on axis {ax.name} to the tree")
+            # store the native type
+            remapped_val = self.remapped_vals.get((value, ax.name), None)
+            if remapped_val is None:
+                remapped_val = value
+                if ax.is_cyclic:
+                    remapped_val_interm = ax.remap([value, value])[0]
+                    remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
+                    remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
+                self.remapped_vals[(value, ax.name)] = remapped_val
 
             child = node.create_child(ax, remapped_val)
             child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
