@@ -1,3 +1,4 @@
+import logging
 from copy import deepcopy
 
 import pygribjump as pygj
@@ -7,7 +8,16 @@ from .datacube import Datacube, IndexTree
 
 
 class FDBDatacube(Datacube):
-    def __init__(self, config={}, axis_options={}):
+    def __init__(self, config=None, axis_options=None, datacube_options=None):
+        if config is None:
+            config = {}
+        if axis_options is None:
+            axis_options = {}
+        if datacube_options is None:
+            datacube_options = {}
+
+        logging.info("Created an FDB datacube with options: " + str(axis_options))
+
         self.axis_options = axis_options
         self.axis_counter = 0
         self._axes = None
@@ -17,13 +27,17 @@ class FDBDatacube(Datacube):
         self.fake_axes = []
         self.unwanted_path = {}
         self.nearest_search = {}
-        self.nearest_search = {}
+        self.coupled_axes = []
+        self.axis_with_identical_structure_after = datacube_options.get("identical structure after")
 
         partial_request = config
         # Find values in the level 3 FDB datacube
 
-        self.fdb = pygj.GribJump()
-        self.fdb_coordinates = self.fdb.axes(partial_request)
+        self.gj = pygj.GribJump()
+        self.fdb_coordinates = self.gj.axes(partial_request)
+
+        logging.info("Axes returned from GribJump are: " + str(self.fdb_coordinates))
+
         self.fdb_coordinates["values"] = []
         for name, values in self.fdb_coordinates.items():
             values.sort()
@@ -39,16 +53,23 @@ class FDBDatacube(Datacube):
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
 
+        logging.info("Polytope created axes for: " + str(self._axes.keys()))
+
     def get(self, requests: IndexTree):
         fdb_requests = []
         fdb_requests_decoding_info = []
         self.get_fdb_requests(requests, fdb_requests, fdb_requests_decoding_info)
-        output_values = self.fdb.extract(fdb_requests)
+        output_values = self.gj.extract(fdb_requests)
         self.assign_fdb_output_to_nodes(output_values, fdb_requests_decoding_info)
 
-    def get_fdb_requests(self, requests: IndexTree, fdb_requests=[], fdb_requests_decoding_info=[], leaf_path={}):
+    def get_fdb_requests(self, requests: IndexTree, fdb_requests=[], fdb_requests_decoding_info=[], leaf_path=None):
+        if leaf_path is None:
+            leaf_path = {}
+
         # First when request node is root, go to its children
         if requests.axis.name == "root":
+            logging.info("Looking for data for the tree: " + str([leaf.flatten() for leaf in requests.leaves]))
+
             for c in requests.children:
                 self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info)
         # If request node has no children, we have a leaf so need to assign fdb values to it
@@ -60,8 +81,7 @@ class FDBDatacube(Datacube):
             )
             leaf_path.update(key_value_path)
             if len(requests.children[0].children[0].children) == 0:
-                # remap this last key
-                # TODO: here, find the fdb_requests and associated nodes to which to add results
+                # find the fdb_requests and associated nodes to which to add results
 
                 (path, range_lengths, current_start_idxs, fdb_node_ranges, lat_length) = self.get_2nd_last_values(
                     requests, leaf_path
@@ -79,33 +99,40 @@ class FDBDatacube(Datacube):
                 for c in requests.children:
                     self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path)
 
-    def get_2nd_last_values(self, requests, leaf_path={}):
+    def get_2nd_last_values(self, requests, leaf_path=None):
+        if leaf_path is None:
+            leaf_path = {}
         # In this function, we recursively loop over the last two layers of the tree and store the indices of the
         # request ranges in those layers
 
-        # TODO: here find nearest point first before retrieving etc
+        # Find nearest point first before retrieving
         if len(self.nearest_search) != 0:
             first_ax_name = requests.children[0].axis.name
             second_ax_name = requests.children[0].children[0].axis.name
             # TODO: throw error if first_ax_name or second_ax_name not in self.nearest_search.keys()
+            second_ax = requests.children[0].children[0].axis
+
+            # TODO: actually, here we should not remap the nearest_pts, we should instead unmap the
+            # found_latlon_pts and then remap them later once we have compared found_latlon_pts and nearest_pts
             nearest_pts = [
-                [lat_val, lon_val]
+                [lat_val, second_ax._remap_val_to_axis_range(lon_val)]
                 for (lat_val, lon_val) in zip(
                     self.nearest_search[first_ax_name][0], self.nearest_search[second_ax_name][0]
                 )
             ]
-            # first collect the lat lon points found
+
             found_latlon_pts = []
             for lat_child in requests.children:
                 for lon_child in lat_child.children:
                     found_latlon_pts.append([lat_child.value, lon_child.value])
+
             # now find the nearest lat lon to the points requested
             nearest_latlons = []
             for pt in nearest_pts:
                 nearest_latlon = nearest_pt(found_latlon_pts, pt)
                 nearest_latlons.append(nearest_latlon)
-            # TODO: now combine with the rest of the function....
-            # TODO: need to remove the branches that do not fit
+
+            # need to remove the branches that do not fit
             lat_children_values = [child.value for child in requests.children]
             for i in range(len(lat_children_values)):
                 lat_child_val = lat_children_values[i]
@@ -143,7 +170,7 @@ class FDBDatacube(Datacube):
             (range_lengths[i], current_start_idxs[i], fdb_node_ranges[i]) = self.get_last_layer_before_leaf(
                 lat_child, leaf_path, range_length, current_start_idx, fdb_range_nodes
             )
-        # TODO: do we need to return all of this?
+
         leaf_path_copy = deepcopy(leaf_path)
         leaf_path_copy.pop("values")
         return (leaf_path_copy, range_lengths, current_start_idxs, fdb_node_ranges, lat_length)

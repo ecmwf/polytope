@@ -12,6 +12,9 @@ class DatacubeMapper(DatacubeAxisTransformation):
         self.grid_type = mapper_options["type"]
         self.grid_resolution = mapper_options["resolution"]
         self.grid_axes = mapper_options["axes"]
+        self.local_area = []
+        if "local" in mapper_options.keys():
+            self.local_area = mapper_options["local"]
         self.old_axis = name
         self._final_transformation = self.generate_final_transformation()
         self._final_mapped_axes = self._final_transformation._mapped_axes
@@ -21,7 +24,7 @@ class DatacubeMapper(DatacubeAxisTransformation):
         map_type = _type_to_datacube_mapper_lookup[self.grid_type]
         module = import_module("polytope.datacube.transformations.datacube_mappers.mapper_types." + self.grid_type)
         constructor = getattr(module, map_type)
-        transformation = deepcopy(constructor(self.old_axis, self.grid_axes, self.grid_resolution))
+        transformation = deepcopy(constructor(self.old_axis, self.grid_axes, self.grid_resolution, self.local_area))
         return transformation
 
     def blocked_axes(self):
@@ -78,4 +81,5 @@ _type_to_datacube_mapper_lookup = {
     "healpix": "HealpixGridMapper",
     "regular": "RegularGridMapper",
     "reduced_ll": "ReducedLatLonMapper",
+    "local_regular": "LocalRegularGridMapper",
 }
