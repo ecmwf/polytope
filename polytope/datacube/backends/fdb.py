@@ -22,8 +22,8 @@ class FDBDatacube(Datacube):
         partial_request = config
         # Find values in the level 3 FDB datacube
 
-        self.fdb = pygj.GribJump()
-        self.fdb_coordinates = self.fdb.axes(partial_request)
+        self.gj = pygj.GribJump()
+        self.fdb_coordinates = self.gj.axes(partial_request)
         self.fdb_coordinates["values"] = []
         for name, values in self.fdb_coordinates.items():
             values.sort()
@@ -43,7 +43,7 @@ class FDBDatacube(Datacube):
         fdb_requests = []
         fdb_requests_decoding_info = []
         self.get_fdb_requests(requests, fdb_requests, fdb_requests_decoding_info)
-        output_values = self.fdb.extract(fdb_requests)
+        output_values = self.gj.extract(fdb_requests)
         self.assign_fdb_output_to_nodes(output_values, fdb_requests_decoding_info)
 
     def get_fdb_requests(self, requests: IndexTree, fdb_requests=[], fdb_requests_decoding_info=[], leaf_path={}):
