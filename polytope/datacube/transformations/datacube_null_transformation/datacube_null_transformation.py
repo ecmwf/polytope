@@ -1,4 +1,4 @@
-from .datacube_transformations import DatacubeAxisTransformation
+from ..datacube_transformations import DatacubeAxisTransformation
 
 
 class DatacubeNullTransformation(DatacubeAxisTransformation):

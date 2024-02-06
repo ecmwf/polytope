@@ -8,7 +8,11 @@ from .datacube import Datacube, IndexTree
 class XArrayDatacube(Datacube):
     """Xarray arrays are labelled, axes can be defined as strings or integers (e.g. "time" or 0)."""
 
-    def __init__(self, dataarray: xr.DataArray, axis_options={}, datacube_options={}):
+    def __init__(self, dataarray: xr.DataArray, axis_options=None, datacube_options=None):
+        if axis_options is None:
+            axis_options = {}
+        if datacube_options is None:
+            datacube_options = {}
         self.axis_options = axis_options
         self.axis_counter = 0
         self._axes = None
