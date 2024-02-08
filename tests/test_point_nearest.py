@@ -110,7 +110,7 @@ class TestSlicingFDBDatacube:
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["fc"]),
-            Point(["latitude", "longitude"], [[0.035149384216, 360-0.01]], method="nearest"),
+            Point(["latitude", "longitude"], [[0.035149384216, 360 - 0.01]], method="nearest"),
         )
         result = self.API.retrieve(request)
         result.pprint()
