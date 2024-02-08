@@ -184,5 +184,6 @@ def cyclic(cls):
         cls.unmap_to_datacube = unmap_to_datacube
         cls.find_indices_between = find_indices_between
         cls.unmap_path_key = unmap_path_key
+        cls._remap_val_to_axis_range = _remap_val_to_axis_range
 
     return cls
