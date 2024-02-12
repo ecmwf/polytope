@@ -113,11 +113,6 @@ def cyclic(cls):
                         ranges.append([low - cls.tol, up + cls.tol])
             return ranges
 
-        old_find_indexes = cls.find_indexes
-
-        def find_indexes(path, datacube):
-            return old_find_indexes(path, datacube)
-
         old_unmap_path_key = cls.unmap_path_key
 
         def unmap_path_key(key_value_path, leaf_path, unwanted_path):
@@ -180,7 +175,6 @@ def cyclic(cls):
         cls.to_intervals = to_intervals
         cls.remap = remap
         cls.offset = offset
-        cls.find_indexes = find_indexes
         cls.unmap_to_datacube = unmap_to_datacube
         cls.find_indices_between = find_indices_between
         cls.unmap_path_key = unmap_path_key

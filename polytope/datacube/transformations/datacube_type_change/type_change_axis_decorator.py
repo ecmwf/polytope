@@ -40,7 +40,6 @@ def type_change(cls):
             return (path, unmapped_path)
 
         def find_indices_between(index_ranges, low, up, datacube, method=None):
-            # TODO: add method for snappping
             indexes_between_ranges = []
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisTypeChange):

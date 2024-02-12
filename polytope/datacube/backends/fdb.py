@@ -29,6 +29,7 @@ class FDBDatacube(Datacube):
         self.nearest_search = {}
         self.coupled_axes = []
         self.axis_with_identical_structure_after = datacube_options.get("identical structure after")
+        # self.is_xarray = False
 
         partial_request = config
         # Find values in the level 3 FDB datacube
