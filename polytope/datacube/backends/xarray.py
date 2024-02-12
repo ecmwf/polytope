@@ -24,6 +24,7 @@ class XArrayDatacube(Datacube):
         self.nearest_search = None
         self.coupled_axes = []
         self.axis_with_identical_structure_after = datacube_options.get("identical structure after")
+        self.transformed_axes = []
         # self.is_xarray = True
 
         for name, values in dataarray.coords.variables.items():

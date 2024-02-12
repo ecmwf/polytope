@@ -67,6 +67,7 @@ class Datacube(ABC):
 
     def _add_all_transformation_axes(self, options, name, values):
         for transformation_type_key in options.keys():
+            self.transformed_axes.append(name)
             self._create_axes(name, values, transformation_type_key, options)
 
     def _check_and_add_axes(self, options, name, values):

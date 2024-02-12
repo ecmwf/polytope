@@ -1,3 +1,4 @@
+import bisect
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from typing import Any, List
@@ -70,7 +71,6 @@ class DatacubeAxis(ABC):
         return value
 
     def find_indices_between(self, index_ranges, low, up, datacube, method=None):
-        # TODO: add method for snappping
         indexes_between_ranges = []
         for indexes in index_ranges:
             if self.name in datacube.complete_axes:
@@ -98,7 +98,9 @@ class DatacubeAxis(ABC):
                     indexes_between = indexes[start:end]
                     indexes_between_ranges.append(indexes_between)
                 else:
-                    indexes_between = [i for i in indexes if low <= i <= up]
+                    lower_idx = bisect.bisect_left(indexes, low)
+                    upper_idx = bisect.bisect_right(indexes, up)
+                    indexes_between = indexes[lower_idx:upper_idx]
                     indexes_between_ranges.append(indexes_between)
         return indexes_between_ranges
 

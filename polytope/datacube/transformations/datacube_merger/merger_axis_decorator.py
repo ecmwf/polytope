@@ -46,23 +46,19 @@ def merge(cls):
         def find_indices_between(index_ranges, low, up, datacube, method=None):
             # TODO: add method for snappping
             indexes_between_ranges = []
-            for transform in cls.transformations:
-                if isinstance(transform, DatacubeAxisMerger):
-                    transformation = transform
-                    if cls.name in transformation._mapped_axes():
-                        for indexes in index_ranges:
-                            if method == "surrounding" or method == "nearest":
-                                start = indexes.index(low)
-                                end = indexes.index(up)
-                                start = max(start - 1, 0)
-                                end = min(end + 1, len(indexes))
-                                indexes_between = indexes[start:end]
-                                indexes_between_ranges.append(indexes_between)
-                            else:
-                                lower_idx = bisect.bisect_left(indexes, low)
-                                upper_idx = bisect.bisect_right(indexes, up)
-                                indexes_between = indexes[lower_idx:upper_idx]
-                                indexes_between_ranges.append(indexes_between)
+            for indexes in index_ranges:
+                if method == "surrounding" or method == "nearest":
+                    start = indexes.index(low)
+                    end = indexes.index(up)
+                    start = max(start - 1, 0)
+                    end = min(end + 1, len(indexes))
+                    indexes_between = indexes[start:end]
+                    indexes_between_ranges.append(indexes_between)
+                else:
+                    lower_idx = bisect.bisect_left(indexes, low)
+                    upper_idx = bisect.bisect_right(indexes, up)
+                    indexes_between = indexes[lower_idx:upper_idx]
+                    indexes_between_ranges.append(indexes_between)
             return indexes_between_ranges
 
         def remap(range):
