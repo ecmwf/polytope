@@ -112,18 +112,6 @@ def cyclic(cls):
                         ranges.append([low - cls.tol, up + cls.tol])
             return ranges
 
-        old_unmap_path_key = cls.unmap_path_key
-
-        def unmap_path_key(key_value_path, leaf_path, unwanted_path):
-            value = key_value_path[cls.name]
-            for transform in cls.transformations:
-                if isinstance(transform, DatacubeAxisCyclic):
-                    if cls.name == transform.name:
-                        new_val = _remap_val_to_axis_range(value)
-                        key_value_path[cls.name] = new_val
-            key_value_path, leaf_path, unwanted_path = old_unmap_path_key(key_value_path, leaf_path, unwanted_path)
-            return (key_value_path, leaf_path, unwanted_path)
-
         def offset(range):
             # We first unpad the range by the axis tolerance to make sure that
             # we find the wanted range of the cyclic axis since we padded by the axis tolerance before.
@@ -136,7 +124,6 @@ def cyclic(cls):
         cls.to_intervals = to_intervals
         cls.remap = remap
         cls.offset = offset
-        cls.unmap_path_key = unmap_path_key
         cls._remap_val_to_axis_range = _remap_val_to_axis_range
 
     return cls
