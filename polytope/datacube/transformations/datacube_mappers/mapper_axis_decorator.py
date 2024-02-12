@@ -66,7 +66,7 @@ def mapper(cls):
             return (key_value_path, leaf_path, unwanted_path)
 
         def find_indices_between(index_ranges, low, up, datacube, method=None):
-            # TODO: add method for snappping
+            # TODO: untangle the reverse transformation from here...
             indexes_between_ranges = []
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeMapper):
