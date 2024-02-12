@@ -1,5 +1,3 @@
-import bisect
-
 from .datacube_type_change import DatacubeAxisTypeChange
 
 
@@ -39,31 +37,12 @@ def type_change(cls):
                             unmapped_path[cls.name] = unchanged_val
             return (path, unmapped_path)
 
-        def find_indices_between(index_ranges, low, up, datacube, method=None):
-            # TODO: make all the find_indices_between functions the same
-            indexes_between_ranges = []
-            for indexes in index_ranges:
-                if method == "surrounding" or method == "nearest":
-                    start = indexes.index(low)
-                    end = indexes.index(up)
-                    start = max(start - 1, 0)
-                    end = min(end + 1, len(indexes))
-                    indexes_between = indexes[start:end]
-                    indexes_between_ranges.append(indexes_between)
-                else:
-                    lower_idx = bisect.bisect_left(indexes, low)
-                    upper_idx = bisect.bisect_right(indexes, up)
-                    indexes_between = indexes[lower_idx:upper_idx]
-                    indexes_between_ranges.append(indexes_between)
-            return indexes_between_ranges
-
         def remap(range):
             return [range]
 
         cls.remap = remap
         cls.find_indexes = find_indexes
         cls.unmap_to_datacube = unmap_to_datacube
-        cls.find_indices_between = find_indices_between
         cls.unmap_path_key = unmap_path_key
 
     return cls

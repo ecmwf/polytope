@@ -73,7 +73,7 @@ class DatacubeAxis(ABC):
     def find_indices_between(self, index_ranges, low, up, datacube, method=None):
         indexes_between_ranges = []
         for indexes in index_ranges:
-            if self.name in datacube.complete_axes:
+            if self.name in datacube.complete_axes and self.name not in datacube.transformed_axes:
                 # Find the range of indexes between lower and upper
                 # https://pandas.pydata.org/docs/reference/api/pandas.Index.searchsorted.html
                 # Assumes the indexes are already sorted (could sort to be sure) and monotonically increasing
