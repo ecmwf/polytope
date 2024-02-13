@@ -1,6 +1,7 @@
 import os
 
 import requests
+from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
 
 
 class HTTPError(Exception):
@@ -27,3 +28,27 @@ def download_test_data(nexus_url, filename):
         # Save the downloaded data to the local file
         with open(local_file_path, "wb") as f:
             f.write(response.content)
+
+
+def find_nearest_latlon(grib_file, target_lat, target_lon):
+    # Open the GRIB file
+    f = open(grib_file)
+
+    # Load the GRIB messages from the file
+    messages = []
+    while True:
+        message = codes_grib_new_from_file(f)
+        if message is None:
+            break
+        messages.append(message)
+
+    # Find the nearest grid points
+    nearest_points = []
+    for message in messages:
+        nearest_index = codes_grib_find_nearest(message, target_lat, target_lon)
+        nearest_points.append(nearest_index)
+
+    # Close the GRIB file
+    f.close()
+
+    return nearest_points

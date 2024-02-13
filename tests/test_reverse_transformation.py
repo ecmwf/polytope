@@ -17,7 +17,7 @@ class TestSlicingReverseTransformation:
                 "lat": [4, 3, 2, 1],
             },
         )
-        options = {"lat": {"transformation": {"reverse": {True}}}}
+        options = {"lat": {"reverse": {True}}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)

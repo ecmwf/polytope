@@ -8,41 +8,44 @@ from .datacube import Datacube, IndexTree
 class XArrayDatacube(Datacube):
     """Xarray arrays are labelled, axes can be defined as strings or integers (e.g. "time" or 0)."""
 
-    def __init__(self, dataarray: xr.DataArray, axis_options={}):
+    def __init__(self, dataarray: xr.DataArray, axis_options=None, datacube_options=None):
+        if axis_options is None:
+            axis_options = {}
+        if datacube_options is None:
+            datacube_options = {}
         self.axis_options = axis_options
-        self.grid_mapper = None
         self.axis_counter = 0
         self._axes = None
         self.dataarray = dataarray
         treated_axes = []
-        self.non_complete_axes = []
         self.complete_axes = []
         self.blocked_axes = []
-        self.transformation = None
         self.fake_axes = []
-        self.unwanted_axes = []
+        self.nearest_search = None
+        self.coupled_axes = []
+        self.axis_with_identical_structure_after = datacube_options.get("identical structure after")
+
         for name, values in dataarray.coords.variables.items():
             if name in dataarray.dims:
-                options = axis_options.get(name, {})
+                options = axis_options.get(name, None)
                 self._check_and_add_axes(options, name, values)
                 treated_axes.append(name)
                 self.complete_axes.append(name)
             else:
                 if self.dataarray[name].dims == ():
-                    options = axis_options.get(name, {})
+                    options = axis_options.get(name, None)
                     self._check_and_add_axes(options, name, values)
                     treated_axes.append(name)
-                    self.non_complete_axes.append(name)
         for name in dataarray.dims:
             if name not in treated_axes:
-                options = axis_options.get(name, {})
+                options = axis_options.get(name, None)
                 val = dataarray[name].values[0]
                 self._check_and_add_axes(options, name, val)
                 treated_axes.append(name)
         # add other options to axis which were just created above like "lat" for the mapper transformations for eg
         for name in self._axes:
             if name not in treated_axes:
-                options = axis_options.get(name, {})
+                options = axis_options.get(name, None)
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
 
@@ -56,6 +59,7 @@ class XArrayDatacube(Datacube):
                 for key in path_copy:
                     axis = self._axes[key]
                     (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
+                # TODO: here do nearest point search
                 path = self.fit_path(path)
                 subxarray = self.dataarray.sel(path, method="nearest")
                 subxarray = subxarray.sel(unmapped_path)

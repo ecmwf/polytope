@@ -1,9 +1,11 @@
+import copy
 import json
+import logging
 from typing import OrderedDict
 
 from sortedcontainers import SortedList
 
-from .datacube_axis import IntDatacubeAxis
+from .datacube_axis import IntDatacubeAxis, UnsliceableDatacubeAxis
 
 
 class DatacubePath(OrderedDict):
@@ -45,6 +47,26 @@ class IndexTree(object):
         self._collect_leaf_nodes(leaves)
         return leaves
 
+    def copy_children_from_other(self, other):
+        for o in other.children:
+            c = IndexTree(o.axis, copy.copy(o.value))
+            self.add_child(c)
+            c.copy_children_from_other(o)
+        return
+
+    def pprint_2(self, level=0):
+        if self.axis.name == "root":
+            print("\n")
+        print("\t" * level + "\u21b3" + str(self))
+        for child in self.children:
+            child.pprint_2(level + 1)
+
+    def _collect_leaf_nodes_old(self, leaves):
+        if len(self.children) == 0:
+            leaves.append(self)
+        for n in self.children:
+            n._collect_leaf_nodes(leaves)
+
     def _collect_leaf_nodes(self, leaves):
         # NOTE: leaves_and_ancestors is going to be a list of tuples, where first entry is leaf and second entry is a
         # list of its ancestors
@@ -78,10 +100,16 @@ class IndexTree(object):
         else:
             if other.value == self.value:
                 return True
-            if abs(other.value - self.value) <= 2 * other.axis.tol:
-                return True
             else:
-                return False
+                if isinstance(self.axis, UnsliceableDatacubeAxis):
+                    return False
+                else:
+                    if other.value - 2 * other.axis.tol <= self.value <= other.value + 2 * other.axis.tol:
+                        return True
+                    elif self.value - 2 * self.axis.tol <= other.value <= self.value + 2 * self.axis.tol:
+                        return True
+                    else:
+                        return False
 
     def __lt__(self, other):
         return (self.axis.name, self.value) < (other.axis.name, other.value)
@@ -156,10 +184,12 @@ class IndexTree(object):
 
     def pprint(self, level=0):
         if self.axis.name == "root":
-            print("\n")
-        print("\t" * level + "\u21b3" + str(self))
+            logging.debug("\n")
+        logging.debug("\t" * level + "\u21b3" + str(self))
         for child in self.children:
             child.pprint(level + 1)
+        if len(self.children) == 0:
+            logging.debug("\t" * (level + 1) + "\u21b3" + str(self.result))
 
     def remove_branch(self):
         if not self.is_root():

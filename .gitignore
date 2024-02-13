@@ -10,3 +10,10 @@ polytope.egg-info
 *.xml
 site
 .coverage
+*.grib
+*.gif
+*.html
+example_eo
+example_mri
+.mypy_cache
+*.req
