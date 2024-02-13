@@ -1,15 +1,14 @@
-import bisect
-
+from ....utility.list_tools import bisect_left_cmp, bisect_right_cmp
 from .datacube_reverse import DatacubeAxisReverse
 
 
 def reverse(cls):
     if cls.reorder:
+        old_find_indexes = cls.find_indexes
 
         def find_indexes(path, datacube):
             # first, find the relevant transformation object that is a mapping in the cls.transformation dico
-            subarray = datacube.dataarray.sel(path, method="nearest")
-            unordered_indices = datacube.datacube_natural_indexes(cls, subarray)
+            unordered_indices = old_find_indexes(path, datacube)
             if cls.name in datacube.complete_axes:
                 ordered_indices = unordered_indices.sort_values()
             else:
@@ -43,16 +42,16 @@ def reverse(cls):
                                     indexes_between_ranges.append(indexes_between)
                             else:
                                 if method == "surrounding" or method == "nearest":
-                                    start = indexes.index(low)
-                                    end = indexes.index(up)
-                                    start = max(start - 1, 0)
-                                    end = min(end + 1, len(indexes))
+                                    end_idx = bisect_left_cmp(indexes, low, cmp=lambda x, y: x > y) + 1
+                                    start_idx = bisect_right_cmp(indexes, up, cmp=lambda x, y: x > y)
+                                    start = max(start_idx - 1, 0)
+                                    end = min(end_idx + 1, len(indexes))
                                     indexes_between = indexes[start:end]
                                     indexes_between_ranges.append(indexes_between)
                                 else:
-                                    lower_idx = bisect.bisect_left(indexes, low)
-                                    upper_idx = bisect.bisect_right(indexes, up)
-                                    indexes_between = indexes[lower_idx:upper_idx]
+                                    end_idx = bisect_left_cmp(indexes, low, cmp=lambda x, y: x > y) + 1
+                                    start_idx = bisect_right_cmp(indexes, up, cmp=lambda x, y: x > y)
+                                    indexes_between = indexes[start_idx:end_idx]
                                     indexes_between_ranges.append(indexes_between)
             return indexes_between_ranges
 

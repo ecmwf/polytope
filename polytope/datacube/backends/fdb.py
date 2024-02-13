@@ -31,6 +31,7 @@ class FDBDatacube(Datacube):
         self.axis_with_identical_structure_after = datacube_options.get("identical structure after")
         # self.is_xarray = False
         self.transformed_axes = []
+        self.dataarray = []
 
         partial_request = config
         # Find values in the level 3 FDB datacube

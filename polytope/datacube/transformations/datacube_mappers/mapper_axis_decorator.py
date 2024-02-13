@@ -1,6 +1,3 @@
-import bisect
-
-from ....utility.list_tools import bisect_left_cmp, bisect_right_cmp
 from .datacube_mappers import DatacubeMapper
 
 
@@ -65,44 +62,8 @@ def mapper(cls):
                         key_value_path[transform.old_axis] = unmapped_idx
             return (key_value_path, leaf_path, unwanted_path)
 
-        def find_indices_between(index_ranges, low, up, datacube, method=None):
-            # TODO: untangle the reverse transformation from here...
-            indexes_between_ranges = []
-            for transform in cls.transformations:
-                if isinstance(transform, DatacubeMapper):
-                    transformation = transform
-                    if cls.name in transformation._mapped_axes():
-                        for idxs in index_ranges:
-                            if method == "surrounding" or method == "nearest":
-                                axis_reversed = transform._axis_reversed[cls.name]
-                                if not axis_reversed:
-                                    start = bisect.bisect_left(idxs, low)
-                                    end = bisect.bisect_right(idxs, up)
-                                else:
-                                    # TODO: do the custom bisect
-                                    end = bisect_left_cmp(idxs, low, cmp=lambda x, y: x > y) + 1
-                                    start = bisect_right_cmp(idxs, up, cmp=lambda x, y: x > y)
-                                start = max(start - 1, 0)
-                                end = min(end + 1, len(idxs))
-                                indexes_between = idxs[start:end]
-                                indexes_between_ranges.append(indexes_between)
-                            else:
-                                axis_reversed = transform._axis_reversed[cls.name]
-                                if not axis_reversed:
-                                    lower_idx = bisect.bisect_left(idxs, low)
-                                    upper_idx = bisect.bisect_right(idxs, up)
-                                    indexes_between = idxs[lower_idx:upper_idx]
-                                else:
-                                    # TODO: do the custom bisect
-                                    end_idx = bisect_left_cmp(idxs, low, cmp=lambda x, y: x > y) + 1
-                                    start_idx = bisect_right_cmp(idxs, up, cmp=lambda x, y: x > y)
-                                    indexes_between = idxs[start_idx:end_idx]
-                                indexes_between_ranges.append(indexes_between)
-            return indexes_between_ranges
-
         cls.find_indexes = find_indexes
         cls.unmap_to_datacube = unmap_to_datacube
-        cls.find_indices_between = find_indices_between
         cls.unmap_path_key = unmap_path_key
 
     return cls

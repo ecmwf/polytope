@@ -17,6 +17,7 @@ class TestSlicingFDBDatacube:
             "step": {"type_change": "int"},
             "number": {"type_change": "int"},
             "longitude": {"cyclic": [0, 360]},
+            "latitude": {"reverse": {True}},
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
@@ -39,7 +40,6 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[0.16, 0.176]], method="nearest"),
         )
         result = self.API.retrieve(request)
-        # result.pprint()
         assert len(result.leaves) == 1
 
     @pytest.mark.fdb
@@ -113,7 +113,7 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[0.035149384216, 359.97]], method="nearest"),
         )
         result = self.API.retrieve(request)
-        result.pprint()
+        # result.pprint_2()
         assert len(result.leaves) == 1
         assert result.leaves[0].value == 359.929906542056
         assert result.leaves[0].axis.name == "longitude"
