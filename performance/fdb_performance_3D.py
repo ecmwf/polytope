@@ -20,7 +20,7 @@ class TestSlicingFDBDatacube:
             "date": {"transformation": {"merge": {"with": "time", "linkers": [" ", "00"]}}},
             "step": {"transformation": {"type_change": "int"}},
             "levelist": {"transformation": {"type_change": "int"}},
-            "longitude": {"transformation": {"cyclic": [0, 360]}}
+            "longitude": {"transformation": {"cyclic": [0, 360]}},
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
