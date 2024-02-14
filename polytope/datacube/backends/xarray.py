@@ -26,7 +26,6 @@ class XArrayDatacube(Datacube):
         self.coupled_axes = []
         self.axis_with_identical_structure_after = datacube_options.get("identical structure after")
         self.transformed_axes = []
-        # self.is_xarray = True
 
         for name, values in dataarray.coords.variables.items():
             if name in dataarray.dims:
@@ -63,9 +62,7 @@ class XArrayDatacube(Datacube):
                     axis = self._axes[key]
                     key_value_path = {key: path_copy[key]}
                     # (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
-                    (key_value_path, path, unmapped_path) = axis.unmap_path_key(
-                            key_value_path, path, unmapped_path
-                            )
+                    (key_value_path, path, unmapped_path) = axis.unmap_path_key(key_value_path, path, unmapped_path)
                 path.update(key_value_path)
                 path.update(unmapped_path)
 

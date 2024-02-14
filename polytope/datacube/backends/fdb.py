@@ -29,7 +29,6 @@ class FDBDatacube(Datacube):
         self.nearest_search = {}
         self.coupled_axes = []
         self.axis_with_identical_structure_after = datacube_options.get("identical structure after")
-        # self.is_xarray = False
         self.transformed_axes = []
         self.dataarray = []
 

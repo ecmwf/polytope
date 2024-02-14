@@ -16,9 +16,6 @@ from ..transformations.datacube_transformations import (
 
 
 class Datacube(ABC):
-    # def __init__(self):
-    #     self.is_xarray = False
-
     @abstractmethod
     def get(self, requests: IndexTree) -> Any:
         """Return data given a set of request trees"""
