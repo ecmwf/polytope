@@ -91,8 +91,6 @@ class DatacubeAxis(ABC):
                     indexes_between_ranges.append(indexes_between)
             else:
                 if method == "surrounding" or method == "nearest":
-                    # start = indexes.index(low)
-                    # end = indexes.index(up)
                     start = bisect.bisect_left(indexes, low)
                     end = bisect.bisect_right(indexes, up)
                     start = max(start - 1, 0)

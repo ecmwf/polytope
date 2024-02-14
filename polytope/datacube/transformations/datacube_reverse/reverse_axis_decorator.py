@@ -16,7 +16,6 @@ def reverse(cls):
             return ordered_indices
 
         def find_indices_between(index_ranges, low, up, datacube, method=None):
-            # TODO: add method for snappping
             indexes_between_ranges = []
             for transform in cls.transformations:
                 if isinstance(transform, DatacubeAxisReverse):
@@ -55,10 +54,7 @@ def reverse(cls):
                                     indexes_between_ranges.append(indexes_between)
             return indexes_between_ranges
 
-        def remap(range):
-            return [range]
-
-        cls.remap = remap
+        # TODO: maybe don't need find_indexes?
         cls.find_indexes = find_indexes
         cls.find_indices_between = find_indices_between
 

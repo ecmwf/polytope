@@ -25,24 +25,7 @@ def type_change(cls):
                         key_value_path[cls.name] = unchanged_val
             return (key_value_path, leaf_path, unwanted_path)
 
-        def unmap_to_datacube(path, unmapped_path):
-            for transform in cls.transformations:
-                if isinstance(transform, DatacubeAxisTypeChange):
-                    transformation = transform
-                    if cls.name == transformation.name:
-                        changed_val = path.get(cls.name, None)
-                        unchanged_val = transformation.make_str(changed_val)
-                        if cls.name in path:
-                            path.pop(cls.name, None)
-                            unmapped_path[cls.name] = unchanged_val
-            return (path, unmapped_path)
-
-        def remap(range):
-            return [range]
-
-        cls.remap = remap
         cls.find_indexes = find_indexes
-        cls.unmap_to_datacube = unmap_to_datacube
         cls.unmap_path_key = unmap_path_key
 
     return cls

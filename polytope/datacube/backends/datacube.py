@@ -101,6 +101,7 @@ class Datacube(ABC):
         """
         path = self.fit_path(path)
         indexes = axis.find_indexes(path, self)
+        # TODO: this could also be handled by axis/transformations?
         search_ranges = axis.remap([lower, upper])
         original_search_ranges = axis.to_intervals([lower, upper])
         # Find the offsets for each interval in the requested range, which we will need later
@@ -120,6 +121,7 @@ class Datacube(ABC):
 
     def _look_up_datacube(self, search_ranges, search_ranges_offset, indexes, axis, method):
         idx_between = []
+        # TODO: maybe this can all go inside find_indices_between for the different cyclic and other transformations
         for i in range(len(search_ranges)):
             r = search_ranges[i]
             offset = search_ranges_offset[i]
