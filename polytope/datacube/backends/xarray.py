@@ -50,6 +50,7 @@ class XArrayDatacube(Datacube):
                 self._check_and_add_axes(options, name, val)
 
     def get(self, requests: IndexTree):
+        # requests.pprint_2()
         for r in requests.leaves:
             path = r.flatten()
             if len(path.items()) == self.axis_counter:
@@ -80,6 +81,12 @@ class XArrayDatacube(Datacube):
         return indexes
 
     def select(self, path, unmapped_path):
+        for key in path:
+            key_value = path[key][0]
+            path[key] = key_value
+        for key in unmapped_path:
+            key_value = unmapped_path[key][0]
+            unmapped_path[key] = key_value
         subarray = self.dataarray.sel(path, method="nearest")
         subarray = subarray.sel(unmapped_path)
         return subarray

@@ -74,7 +74,7 @@ class FDBDatacube(Datacube):
                 self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info)
         # If request node has no children, we have a leaf so need to assign fdb values to it
         else:
-            key_value_path = {requests.axis.name: requests.value}
+            key_value_path = {requests.axis.name: requests.values}
             ax = requests.axis
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
@@ -124,7 +124,7 @@ class FDBDatacube(Datacube):
             found_latlon_pts = []
             for lat_child in requests.children:
                 for lon_child in lat_child.children:
-                    found_latlon_pts.append([lat_child.value, lon_child.value])
+                    found_latlon_pts.append([lat_child.values, lon_child.values])
 
             # now find the nearest lat lon to the points requested
             nearest_latlons = []
@@ -133,19 +133,19 @@ class FDBDatacube(Datacube):
                 nearest_latlons.append(nearest_latlon)
 
             # need to remove the branches that do not fit
-            lat_children_values = [child.value for child in requests.children]
+            lat_children_values = [child.values for child in requests.children]
             for i in range(len(lat_children_values)):
                 lat_child_val = lat_children_values[i]
-                lat_child = [child for child in requests.children if child.value == lat_child_val][0]
-                if lat_child.value not in [latlon[0] for latlon in nearest_latlons]:
+                lat_child = [child for child in requests.children if child.values == lat_child_val][0]
+                if lat_child.values not in [latlon[0] for latlon in nearest_latlons]:
                     lat_child.remove_branch()
                 else:
-                    possible_lons = [latlon[1] for latlon in nearest_latlons if latlon[0] == lat_child.value]
-                    lon_children_values = [child.value for child in lat_child.children]
+                    possible_lons = [latlon[1] for latlon in nearest_latlons if latlon[0] == lat_child.values]
+                    lon_children_values = [child.values for child in lat_child.children]
                     for j in range(len(lon_children_values)):
                         lon_child_val = lon_children_values[j]
-                        lon_child = [child for child in lat_child.children if child.value == lon_child_val][0]
-                        if lon_child.value not in possible_lons:
+                        lon_child = [child for child in lat_child.children if child.values == lon_child_val][0]
+                        if lon_child.values not in possible_lons:
                             lon_child.remove_branch()
 
         lat_length = len(requests.children)
@@ -161,7 +161,7 @@ class FDBDatacube(Datacube):
             range_length = deepcopy(range_lengths[i])
             current_start_idx = deepcopy(current_start_idxs[i])
             fdb_range_nodes = deepcopy(fdb_node_ranges[i])
-            key_value_path = {lat_child.axis.name: lat_child.value}
+            key_value_path = {lat_child.axis.name: lat_child.values}
             ax = lat_child.axis
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
@@ -179,7 +179,7 @@ class FDBDatacube(Datacube):
         i = 0
         for c in requests.children:
             # now c are the leaves of the initial tree
-            key_value_path = {c.axis.name: c.value}
+            key_value_path = {c.axis.name: c.values}
             ax = c.axis
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
@@ -194,7 +194,7 @@ class FDBDatacube(Datacube):
                     range_l[i] += 1
                     fdb_range_n[i][range_l[i] - 1] = c
                 else:
-                    key_value_path = {c.axis.name: c.value}
+                    key_value_path = {c.axis.name: c.values}
                     ax = c.axis
                     (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                         key_value_path, leaf_path, self.unwanted_path

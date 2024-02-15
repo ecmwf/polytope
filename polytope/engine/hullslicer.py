@@ -6,6 +6,7 @@ from typing import List
 import scipy.spatial
 
 from ..datacube.backends.datacube import Datacube, IndexTree
+from ..datacube.tensor_index_tree import TensorIndexTree
 from ..datacube.datacube_axis import UnsliceableDatacubeAxis
 from ..shapes import ConvexPolytope
 from ..utility.combinatorics import argmax, argmin, group, tensor_product, unique
@@ -52,7 +53,7 @@ class HullSlicer(Engine):
         datacube_has_index = self.axis_values_between[(flattened_tuple, ax.name, lower)]
 
         if datacube_has_index:
-            child = node.create_child(ax, lower)
+            child = node.create_child(ax, tuple([lower]))
             child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             child["unsliced_polytopes"].remove(polytope)
             next_nodes.append(child)
@@ -91,30 +92,47 @@ class HullSlicer(Engine):
         if len(values) == 0:
             node.remove_branch()
 
-        for value in values:
-            # convert to float for slicing
-            fvalue = ax.to_float(value)
-            new_polytope = self.sliced_polytopes.get((polytope, ax.name, fvalue, slice_axis_idx), False)
-            if new_polytope is False:
-                new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
-                self.sliced_polytopes[(polytope, ax.name, fvalue, slice_axis_idx)] = new_polytope
-
-            # store the native type
-            remapped_val = self.remapped_vals.get((value, ax.name), None)
-            if remapped_val is None:
-                remapped_val = value
-                if ax.is_cyclic:
-                    remapped_val_interm = ax.remap([value, value])[0]
-                    remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
-                    remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
-                self.remapped_vals[(value, ax.name)] = remapped_val
-
-            child = node.create_child(ax, remapped_val)
+        if polytope.is_natively_1D:
+            all_remapped_vals = []
+            for value in values:
+                fvalue = ax.to_float(value)
+                remapped_val = self.remapped_vals.get((value, ax.name), None)
+                if remapped_val is None:
+                    remapped_val = value
+                    if ax.is_cyclic:
+                        remapped_val_interm = ax.remap([value, value])[0]
+                        remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
+                        remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
+                    self.remapped_vals[(value, ax.name)] = remapped_val
+                all_remapped_vals.append(remapped_val)
+            child = node.create_child(ax, tuple(all_remapped_vals))
             child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             child["unsliced_polytopes"].remove(polytope)
-            if new_polytope is not None:
-                child["unsliced_polytopes"].add(new_polytope)
             next_nodes.append(child)
+        else:
+            for value in values:
+                # convert to float for slicing
+                fvalue = ax.to_float(value)
+                new_polytope = self.sliced_polytopes.get((polytope, ax.name, fvalue, slice_axis_idx), False)
+                if new_polytope is False:
+                    new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
+                    self.sliced_polytopes[(polytope, ax.name, fvalue, slice_axis_idx)] = new_polytope
+
+                # store the native type
+                remapped_val = self.remapped_vals.get((value, ax.name), None)
+                if remapped_val is None:
+                    remapped_val = value
+                    if ax.is_cyclic:
+                        remapped_val_interm = ax.remap([value, value])[0]
+                        remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
+                        remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
+                    self.remapped_vals[(value, ax.name)] = remapped_val
+                child = node.create_child(ax, tuple([remapped_val]))
+                child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
+                child["unsliced_polytopes"].remove(polytope)
+                if new_polytope is not None:
+                    child["unsliced_polytopes"].add(new_polytope)
+                next_nodes.append(child)
 
     def _build_branch(self, ax, node, datacube, next_nodes):
         for polytope in node["unsliced_polytopes"]:
@@ -137,7 +155,7 @@ class HullSlicer(Engine):
 
         groups, input_axes = group(polytopes)
         datacube.validate(input_axes)
-        request = IndexTree()
+        request = TensorIndexTree()
         combinations = tensor_product(groups)
 
         # NOTE: could optimise here if we know combinations will always be for one request.
@@ -145,10 +163,10 @@ class HullSlicer(Engine):
         # directly work on request and return it...
 
         for c in combinations:
-            cached_node = None
-            repeated_sub_nodes = []
+            # cached_node = None
+            # repeated_sub_nodes = []
 
-            r = IndexTree()
+            r = TensorIndexTree()
             r["unsliced_polytopes"] = set(c)
             current_nodes = [r]
             for ax in datacube.axes.values():
@@ -159,25 +177,25 @@ class HullSlicer(Engine):
                     # skip processing the other 49 numbers
                     # at the end, copy that initial reference 49 times and add to request with correct number
 
-                    stored_val = None
-                    if node.axis.name == datacube.axis_with_identical_structure_after:
-                        stored_val = node.value
-                        cached_node = node
-                        # logging.info("Caching number 1")
-                    elif node.axis.name == datacube.axis_with_identical_structure_after and node.value != stored_val:
-                        repeated_sub_nodes.append(node)
-                        del node["unsliced_polytopes"]
-                        # logging.info(f"Skipping number {node.value}")
-                        continue
+                    # stored_val = None
+                    # if node.axis.name == datacube.axis_with_identical_structure_after:
+                    #     stored_val = node.value
+                    #     cached_node = node
+                    #     # logging.info("Caching number 1")
+                    # elif node.axis.name == datacube.axis_with_identical_structure_after and node.value != stored_val:
+                    #     repeated_sub_nodes.append(node)
+                    #     del node["unsliced_polytopes"]
+                    #     # logging.info(f"Skipping number {node.value}")
+                    #     continue
 
                     self._build_branch(ax, node, datacube, next_nodes)
                 current_nodes = next_nodes
 
             # logging.info("=== BEFORE COPYING ===")
 
-            for n in repeated_sub_nodes:
-                # logging.info(f"Copying children for number {n.value}")
-                n.copy_children_from_other(cached_node)
+            # for n in repeated_sub_nodes:
+            #     # logging.info(f"Copying children for number {n.value}")
+            #     n.copy_children_from_other(cached_node)
 
             # logging.info("=== AFTER COPYING ===")
             # request.pprint()

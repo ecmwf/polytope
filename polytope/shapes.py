@@ -23,13 +23,14 @@ class Shape(ABC):
 
 
 class ConvexPolytope(Shape):
-    def __init__(self, axes, points, method=None):
+    def __init__(self, axes, points, method=None, is_1D=False):
         self._axes = list(axes)
         self.is_flat = False
         if len(self._axes) == 1:
             self.is_flat = True
         self.points = points
         self.method = method
+        self.is_natively_1D = is_1D
 
     def extents(self, axis):
         if self.is_flat:
@@ -66,7 +67,7 @@ class Select(Shape):
         return [self.axis]
 
     def polytope(self):
-        return [ConvexPolytope([self.axis], [[v]], self.method) for v in self.values]
+        return [ConvexPolytope([self.axis], [[v]], self.method, is_1D=True) for v in self.values]
 
     def __repr__(self):
         return f"Select in {self.axis} with points {self.values}"
@@ -110,7 +111,7 @@ class Span(Shape):
         return [self.axis]
 
     def polytope(self):
-        return [ConvexPolytope([self.axis], [[self.lower], [self.upper]])]
+        return [ConvexPolytope([self.axis], [[self.lower], [self.upper]], is_1D=True)]
 
     def __repr__(self):
         return f"Span in {self.axis} with range from {self.lower} to {self.upper}"
