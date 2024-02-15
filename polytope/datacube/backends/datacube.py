@@ -1,4 +1,3 @@
-import importlib
 import logging
 import math
 from abc import ABC, abstractmethod
@@ -53,9 +52,7 @@ class Datacube(ABC):
             # factory inside datacube_transformations to set the has_transform, is_cyclic etc axis properties
             # add the specific transformation handled here to the relevant axes
             # Modify the axis to update with the tag
-            decorator_module = importlib.import_module("polytope.datacube.datacube_axis")
-            decorator = getattr(decorator_module, transformation_type_key)
-            decorator(self._axes[axis_name])
+
             if transformation not in self._axes[axis_name].transformations:  # Avoids duplicates being stored
                 self._axes[axis_name].transformations.append(transformation)
 

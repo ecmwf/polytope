@@ -6,18 +6,13 @@ from typing import Any, List
 import numpy as np
 import pandas as pd
 
-from .transformations.datacube_cyclic.cyclic_axis_decorator import cyclic
 from .transformations.datacube_cyclic.datacube_cyclic import DatacubeAxisCyclic
 from .transformations.datacube_mappers.datacube_mappers import DatacubeMapper
-from .transformations.datacube_mappers.mapper_axis_decorator import mapper
 from .transformations.datacube_merger.datacube_merger import DatacubeAxisMerger
-from .transformations.datacube_merger.merger_axis_decorator import merge
 from .transformations.datacube_reverse.datacube_reverse import DatacubeAxisReverse
-from .transformations.datacube_reverse.reverse_axis_decorator import reverse
 from .transformations.datacube_type_change.datacube_type_change import (
     DatacubeAxisTypeChange,
 )
-from .transformations.datacube_type_change.type_change_axis_decorator import type_change
 
 
 class DatacubeAxis(ABC):
@@ -32,12 +27,7 @@ class DatacubeAxis(ABC):
 
     def give_transformations_parents(self):
         for i, transform in enumerate(self.transformations[1:]):
-            transform.parent = self.transformations[i-1]
-
-    def update_axis(self):
-        if self.is_cyclic:
-            self = cyclic(self)
-        return self
+            transform.parent = self.transformations[i - 1]
 
     # Convert from user-provided value to CONTINUOUS type (e.g. float, pd.timestamp)
     @abstractmethod
@@ -95,7 +85,9 @@ class DatacubeAxis(ABC):
 
     def unmap_path_key(self, key_value_path, leaf_path, unwanted_path):
         for transformation in self.transformations[::-1]:
-            (key_value_path, leaf_path, unwanted_path) = transformation.unmap_path_key(key_value_path, leaf_path, unwanted_path, self)
+            (key_value_path, leaf_path, unwanted_path) = transformation.unmap_path_key(
+                key_value_path, leaf_path, unwanted_path, self
+            )
         return (key_value_path, leaf_path, unwanted_path)
 
     def _remap_val_to_axis_range(self, value):
@@ -140,7 +132,9 @@ class DatacubeAxis(ABC):
     def find_indices_between(self, indexes_ranges, low, up, datacube, method=None):
         indexes_between_ranges = self.find_standard_indices_between(indexes_ranges, low, up, datacube, method)
         for transformation in self.transformations[::-1]:
-            indexes_between_ranges = transformation.find_indices_between(indexes_ranges, low, up, datacube, method, indexes_between_ranges, self)
+            indexes_between_ranges = transformation.find_indices_between(
+                indexes_ranges, low, up, datacube, method, indexes_between_ranges, self
+            )
         return indexes_between_ranges
 
     @staticmethod
@@ -161,7 +155,13 @@ class DatacubeAxis(ABC):
             raise ValueError(f"Could not create a mapper for index type {values.dtype.type} for axis {name}")
 
 
-transformations_order = [DatacubeAxisMerger, DatacubeAxisReverse, DatacubeAxisCyclic, DatacubeMapper, DatacubeAxisTypeChange]
+transformations_order = [
+    DatacubeAxisMerger,
+    DatacubeAxisReverse,
+    DatacubeAxisCyclic,
+    DatacubeMapper,
+    DatacubeAxisTypeChange,
+]
 transformations_order = {key: i for i, key in enumerate(transformations_order)}
 
 
