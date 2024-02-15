@@ -4,7 +4,6 @@ from importlib import import_module
 
 
 class DatacubeAxisTransformation(ABC):
-
     def __init__(self):
         self.parent = None
 
