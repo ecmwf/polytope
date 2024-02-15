@@ -75,3 +75,27 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
     def find_modified_indexes(self, indexes, path, datacube, axis):
         if axis.name == self._first_axis:
             return self.merged_values(datacube)
+
+    def unmap_path_key(self, key_value_path, leaf_path, unwanted_path, axis):
+        new_key_value_path = {}
+        value = key_value_path[axis.name]
+        if axis.name == self._first_axis:
+            (first_val, second_val) = self.unmerge(value)
+            new_key_value_path[self._first_axis] = first_val
+            new_key_value_path[self._second_axis] = second_val
+        return (new_key_value_path, leaf_path, unwanted_path)
+
+    def find_indices_between(self, indexes_ranges, low, up, datacube, method, indexes_between_ranges, axis):
+        return indexes_between_ranges
+
+    def _remap_val_to_axis_range(self, value, axis):
+        return value
+
+    def offset(self, range, axis, offset):
+        return offset
+
+    def remap(self, range, ranges, axis):
+        return ranges
+
+    def to_intervals(self, range, intervals, axis):
+        return intervals
