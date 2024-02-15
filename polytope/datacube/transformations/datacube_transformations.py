@@ -4,6 +4,10 @@ from importlib import import_module
 
 
 class DatacubeAxisTransformation(ABC):
+
+    def __init__(self):
+        self.parent = None
+
     @staticmethod
     def create_transform(name, transformation_type_key, transformation_options):
         transformation_type = _type_to_datacube_transformation_lookup[transformation_type_key]
@@ -41,6 +45,10 @@ class DatacubeAxisTransformation(ABC):
 
     @abstractmethod
     def change_val_type(self, axis_name, values):
+        pass
+
+    @abstractmethod
+    def find_modified_indexes(self, indexes, path, datacube, axis):
         pass
 
 

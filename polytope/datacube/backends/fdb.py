@@ -244,7 +244,7 @@ class FDBDatacube(Datacube):
         return (original_indices, sorted_request_ranges)
 
     def datacube_natural_indexes(self, axis, subarray):
-        indexes = subarray[axis.name]
+        indexes = subarray.get(axis.name, None)
         return indexes
 
     def select(self, path, unmapped_path):

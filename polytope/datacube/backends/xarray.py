@@ -67,17 +67,7 @@ class XArrayDatacube(Datacube):
                 path.update(unmapped_path)
 
                 unmapped_path = {}
-                for key in path.keys():
-                    if key not in self.dataarray.dims:
-                        path.pop(key)
-                    if key not in self.dataarray.coords.dtypes:
-                        unmapped_path.update({key: path[key]})
-                        path.pop(key)
-                    for key in self.dataarray.coords.dtypes:
-                        key_dtype = self.dataarray.coords.dtypes[key]
-                        if key_dtype.type is np.str_ and key in path.keys():
-                            unmapped_path.update({key: path[key]})
-                            path.pop(key)
+                self.refit_path(path, unmapped_path, path)
 
                 subxarray = self.dataarray.sel(path, method="nearest")
                 subxarray = subxarray.sel(unmapped_path)
@@ -97,8 +87,23 @@ class XArrayDatacube(Datacube):
                 indexes = subarray[axis.name].values
         return indexes
 
+    def refit_path(self, path_copy, unmapped_path, path):
+        for key in path.keys():
+            if key not in self.dataarray.dims:
+                path_copy.pop(key)
+            if key not in self.dataarray.coords.dtypes:
+                unmapped_path.update({key: path[key]})
+                path_copy.pop(key)
+            for key in self.dataarray.coords.dtypes:
+                key_dtype = self.dataarray.coords.dtypes[key]
+                if key_dtype.type is np.str_ and key in path.keys():
+                    unmapped_path.update({key: path[key]})
+                    path_copy.pop(key, None)
+
     def select(self, path, unmapped_path):
-        subarray = self.dataarray.sel(path, method="nearest")
+        path_copy = deepcopy(path)
+        self.refit_path(path_copy, unmapped_path, path)
+        subarray = self.dataarray.sel(path_copy, method="nearest")
         subarray = subarray.sel(unmapped_path)
         return subarray
 

@@ -55,7 +55,7 @@ def reverse(cls):
             return indexes_between_ranges
 
         # TODO: maybe don't need find_indexes?
-        cls.find_indexes = find_indexes
+        # cls.find_indexes = find_indexes
         cls.find_indices_between = find_indices_between
 
     return cls
