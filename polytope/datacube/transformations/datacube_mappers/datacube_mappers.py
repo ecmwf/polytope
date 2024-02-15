@@ -75,6 +75,13 @@ class DatacubeMapper(DatacubeAxisTransformation):
     def unmap(self, first_val, second_val):
         return self._final_transformation.unmap(first_val, second_val)
 
+    def find_modified_indexes(self, indexes, path, datacube, axis):
+        if axis.name == self._mapped_axes()[0]:
+            return self.first_axis_vals()
+        if axis.name == self._mapped_axes()[1]:
+            first_val = path[self._mapped_axes()[0]]
+            return self.second_axis_vals(first_val)
+
 
 _type_to_datacube_mapper_lookup = {
     "octahedral": "OctahedralGridMapper",

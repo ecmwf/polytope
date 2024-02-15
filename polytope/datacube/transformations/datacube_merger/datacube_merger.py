@@ -71,3 +71,7 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
     def change_val_type(self, axis_name, values):
         new_values = pd.to_datetime(values)
         return new_values
+
+    def find_modified_indexes(self, indexes, path, datacube, axis):
+        if axis.name == self._first_axis:
+            return self.merged_values(datacube)

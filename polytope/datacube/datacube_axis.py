@@ -12,6 +12,12 @@ from .transformations.datacube_merger.merger_axis_decorator import merge
 from .transformations.datacube_reverse.reverse_axis_decorator import reverse
 from .transformations.datacube_type_change.type_change_axis_decorator import type_change
 
+from .transformations.datacube_cyclic.datacube_cyclic import DatacubeAxisCyclic
+from .transformations.datacube_mappers.datacube_mappers import DatacubeMapper
+from .transformations.datacube_merger.datacube_merger import DatacubeAxisMerger
+from .transformations.datacube_reverse.datacube_reverse import DatacubeAxisReverse
+from .transformations.datacube_type_change.datacube_type_change import DatacubeAxisTypeChange
+
 
 class DatacubeAxis(ABC):
     is_cyclic = False
@@ -19,6 +25,13 @@ class DatacubeAxis(ABC):
     has_merger = False
     reorder = False
     type_change = False
+
+    def order_tranformations(self):
+        self.transformations = sorted(self.transformations, key=lambda x: transformations_order[type(x)])
+
+    def give_transformations_parents(self):
+        for i, transform in enumerate(self.transformations[1:]):
+            transform.parent = self.transformations[i-1]
 
     def update_axis(self):
         if self.is_cyclic:
@@ -52,7 +65,7 @@ class DatacubeAxis(ABC):
     def unmap_to_datacube(self, path, unmapped_path):
         return (path, unmapped_path)
 
-    def find_indexes(self, path, datacube):
+    def find_standard_indexes(self, path, datacube):
         unmapped_path = {}
         path_copy = deepcopy(path)
         for key in path_copy:
@@ -60,6 +73,14 @@ class DatacubeAxis(ABC):
             (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
         subarray = datacube.select(path, unmapped_path)
         return datacube.datacube_natural_indexes(self, subarray)
+
+    def find_indexes(self, path, datacube):
+        indexes = self.find_standard_indexes(path, datacube)
+        # transform = self.transformations[-1]
+        # TODO
+        for transformation in self.transformations[::-1]:
+            indexes = transformation.find_modified_indexes(indexes, path, datacube, self)
+        return indexes
 
     def offset(self, value):
         return 0
@@ -120,6 +141,10 @@ class DatacubeAxis(ABC):
         # NOTE: The values here need to be a numpy array which has a dtype attribute
         if values.dtype.type not in _type_to_axis_lookup:
             raise ValueError(f"Could not create a mapper for index type {values.dtype.type} for axis {name}")
+
+
+transformations_order = [DatacubeAxisMerger, DatacubeAxisReverse, DatacubeAxisCyclic, DatacubeMapper, DatacubeAxisTypeChange]
+transformations_order = {key: i for i, key in enumerate(transformations_order)}
 
 
 @reverse

@@ -33,7 +33,7 @@ def mapper(cls):
                         key_value_path[transform.old_axis] = unmapped_idx
             return (key_value_path, leaf_path, unwanted_path)
 
-        cls.find_indexes = find_indexes
+        # cls.find_indexes = find_indexes
         cls.unmap_path_key = unmap_path_key
 
     return cls

@@ -23,3 +23,6 @@ class DatacubeAxisCyclic(DatacubeAxisTransformation):
 
     def unwanted_axes(self):
         return []
+
+    def find_modified_indexes(self, indexes, path, datacube, axis):
+        return indexes

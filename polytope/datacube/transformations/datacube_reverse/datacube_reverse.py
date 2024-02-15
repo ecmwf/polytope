@@ -20,3 +20,10 @@ class DatacubeAxisReverse(DatacubeAxisTransformation):
 
     def unwanted_axes(self):
         return []
+
+    def find_modified_indexes(self, indexes, path, datacube, axis):
+        if axis.name in datacube.complete_axes:
+            ordered_indices = indexes.sort_values()
+        else:
+            ordered_indices = indexes
+        return ordered_indices
