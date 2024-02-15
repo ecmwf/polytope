@@ -7,16 +7,17 @@ import numpy as np
 import pandas as pd
 
 from .transformations.datacube_cyclic.cyclic_axis_decorator import cyclic
-from .transformations.datacube_mappers.mapper_axis_decorator import mapper
-from .transformations.datacube_merger.merger_axis_decorator import merge
-from .transformations.datacube_reverse.reverse_axis_decorator import reverse
-from .transformations.datacube_type_change.type_change_axis_decorator import type_change
-
 from .transformations.datacube_cyclic.datacube_cyclic import DatacubeAxisCyclic
 from .transformations.datacube_mappers.datacube_mappers import DatacubeMapper
+from .transformations.datacube_mappers.mapper_axis_decorator import mapper
 from .transformations.datacube_merger.datacube_merger import DatacubeAxisMerger
+from .transformations.datacube_merger.merger_axis_decorator import merge
 from .transformations.datacube_reverse.datacube_reverse import DatacubeAxisReverse
-from .transformations.datacube_type_change.datacube_type_change import DatacubeAxisTypeChange
+from .transformations.datacube_reverse.reverse_axis_decorator import reverse
+from .transformations.datacube_type_change.datacube_type_change import (
+    DatacubeAxisTypeChange,
+)
+from .transformations.datacube_type_change.type_change_axis_decorator import type_change
 
 
 class DatacubeAxis(ABC):
@@ -57,10 +58,16 @@ class DatacubeAxis(ABC):
         pass
 
     def to_intervals(self, range):
-        return [range]
+        intervals = [range]
+        for transformation in self.transformations[::-1]:
+            intervals = transformation.to_intervals(range, intervals, self)
+        return intervals
 
     def remap(self, range: List) -> Any:
-        return [range]
+        ranges = [range]
+        for transformation in self.transformations[::-1]:
+            ranges = transformation.remap(range, ranges, self)
+        return ranges
 
     def unmap_to_datacube(self, path, unmapped_path):
         return (path, unmapped_path)
@@ -76,22 +83,27 @@ class DatacubeAxis(ABC):
 
     def find_indexes(self, path, datacube):
         indexes = self.find_standard_indexes(path, datacube)
-        # transform = self.transformations[-1]
-        # TODO
         for transformation in self.transformations[::-1]:
             indexes = transformation.find_modified_indexes(indexes, path, datacube, self)
         return indexes
 
     def offset(self, value):
-        return 0
+        offset = 0
+        for transformation in self.transformations[::-1]:
+            offset = transformation.offset(value, self, offset)
+        return offset
 
     def unmap_path_key(self, key_value_path, leaf_path, unwanted_path):
+        for transformation in self.transformations[::-1]:
+            (key_value_path, leaf_path, unwanted_path) = transformation.unmap_path_key(key_value_path, leaf_path, unwanted_path, self)
         return (key_value_path, leaf_path, unwanted_path)
 
     def _remap_val_to_axis_range(self, value):
+        for transformation in self.transformations[::-1]:
+            value = transformation._remap_val_to_axis_range(value, self)
         return value
 
-    def find_indices_between(self, index_ranges, low, up, datacube, method=None):
+    def find_standard_indices_between(self, index_ranges, low, up, datacube, method=None):
         indexes_between_ranges = []
         for indexes in index_ranges:
             if self.name in datacube.complete_axes and self.name not in datacube.transformed_axes:
@@ -125,6 +137,12 @@ class DatacubeAxis(ABC):
                     indexes_between_ranges.append(indexes_between)
         return indexes_between_ranges
 
+    def find_indices_between(self, indexes_ranges, low, up, datacube, method=None):
+        indexes_between_ranges = self.find_standard_indices_between(indexes_ranges, low, up, datacube, method)
+        for transformation in self.transformations[::-1]:
+            indexes_between_ranges = transformation.find_indices_between(indexes_ranges, low, up, datacube, method, indexes_between_ranges, self)
+        return indexes_between_ranges
+
     @staticmethod
     def create_standard(name, values, datacube):
         values = np.array(values)
@@ -147,10 +165,6 @@ transformations_order = [DatacubeAxisMerger, DatacubeAxisReverse, DatacubeAxisCy
 transformations_order = {key: i for i, key in enumerate(transformations_order)}
 
 
-@reverse
-@cyclic
-@mapper
-@type_change
 class IntDatacubeAxis(DatacubeAxis):
     def __init__(self):
         self.name = None
@@ -172,10 +186,6 @@ class IntDatacubeAxis(DatacubeAxis):
         return value
 
 
-@reverse
-@cyclic
-@mapper
-@type_change
 class FloatDatacubeAxis(DatacubeAxis):
     def __init__(self):
         self.name = None
@@ -197,7 +207,6 @@ class FloatDatacubeAxis(DatacubeAxis):
         return value
 
 
-@merge
 class PandasTimestampDatacubeAxis(DatacubeAxis):
     def __init__(self):
         self.name = None
@@ -227,7 +236,6 @@ class PandasTimestampDatacubeAxis(DatacubeAxis):
         return None
 
 
-@merge
 class PandasTimedeltaDatacubeAxis(DatacubeAxis):
     def __init__(self):
         self.name = None
@@ -257,7 +265,6 @@ class PandasTimedeltaDatacubeAxis(DatacubeAxis):
         return None
 
 
-@type_change
 class UnsliceableDatacubeAxis(DatacubeAxis):
     def __init__(self):
         self.name = None
