@@ -81,7 +81,6 @@ _type_to_datacube_transformation_lookup = {
     "merge": "DatacubeAxisMerger",
     "reverse": "DatacubeAxisReverse",
     "type_change": "DatacubeAxisTypeChange",
-    "null": "DatacubeNullTransformation",
 }
 
 _type_to_transformation_file_lookup = {
@@ -90,7 +89,6 @@ _type_to_transformation_file_lookup = {
     "merge": "merger",
     "reverse": "reverse",
     "type_change": "type_change",
-    "null": "null_transformation",
 }
 
 has_transform = {
@@ -99,5 +97,4 @@ has_transform = {
     "merge": "has_merger",
     "reverse": "reorder",
     "type_change": "type_change",
-    "null": "null",
 }
