@@ -95,21 +95,6 @@ class DatacubeMapper(DatacubeAxisTransformation):
             key_value_path[self.old_axis] = unmapped_idx
         return (key_value_path, leaf_path, unwanted_path)
 
-    def find_indices_between(self, indexes_ranges, low, up, datacube, method, indexes_between_ranges, axis):
-        return indexes_between_ranges
-
-    def _remap_val_to_axis_range(self, value, axis):
-        return value
-
-    def offset(self, range, axis, offset):
-        return offset
-
-    def remap(self, range, ranges, axis):
-        return ranges
-
-    def to_intervals(self, range, intervals, axis):
-        return intervals
-
 
 _type_to_datacube_mapper_lookup = {
     "octahedral": "OctahedralGridMapper",
