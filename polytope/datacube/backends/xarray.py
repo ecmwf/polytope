@@ -92,7 +92,13 @@ class XArrayDatacube(Datacube):
             indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
         else:
             if subarray[axis.name].values.ndim == 0:
-                indexes = [subarray[axis.name].values]
+                # NOTE how we handle the two special datetime and timedelta cases to conform with numpy arrays
+                if np.issubdtype(subarray[axis.name].values.dtype, np.datetime64):
+                    indexes = [subarray[axis.name].astype("datetime64[us]").values]
+                elif np.issubdtype(subarray[axis.name].values.dtype, np.timedelta64):
+                    indexes = [subarray[axis.name].astype("timedelta64[us]").values]
+                else:
+                    indexes = [subarray[axis.name].values.tolist()]
             else:
                 indexes = subarray[axis.name].values
         return indexes

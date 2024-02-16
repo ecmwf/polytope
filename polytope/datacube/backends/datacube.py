@@ -1,12 +1,11 @@
 import importlib
 import logging
-import math
 from abc import ABC, abstractmethod
 from typing import Any
 
 import xarray as xr
 
-from ...utility.combinatorics import unique, validate_axes
+from ...utility.combinatorics import validate_axes
 from ..datacube_axis import DatacubeAxis
 from ..index_tree import DatacubePath, IndexTree
 from ..transformations.datacube_transformations import (
@@ -94,46 +93,10 @@ class Datacube(ABC):
         """
         path = self.fit_path(path)
         indexes = axis.find_indexes(path, self)
-        # TODO: this could also be handled by axis/transformations?
-        search_ranges = axis.remap([lower, upper])
-        original_search_ranges = axis.to_intervals([lower, upper])
-        # Find the offsets for each interval in the requested range, which we will need later
-        search_ranges_offset = []
-        for r in original_search_ranges:
-            offset = axis.offset(r)
-            search_ranges_offset.append(offset)
-        idx_between = self._look_up_datacube(search_ranges, search_ranges_offset, indexes, axis, method)
-        # Remove duplicates even if difference of the order of the axis tolerance
-        if offset is not None:
-            # Note that we can only do unique if not dealing with time values
-            idx_between = unique(idx_between)
+        idx_between = axis.find_indices_between(indexes, lower, upper, self, method)
 
         logging.info(f"For axis {axis.name} between {lower} and {upper}, found indices {idx_between}")
 
-        return idx_between
-
-    def _look_up_datacube(self, search_ranges, search_ranges_offset, indexes, axis, method):
-        idx_between = []
-        # TODO: maybe this can all go inside find_indices_between for the different cyclic and other transformations
-        for i in range(len(search_ranges)):
-            r = search_ranges[i]
-            offset = search_ranges_offset[i]
-            low = r[0]
-            up = r[1]
-            indexes_between = axis.find_indices_between([indexes], low, up, self, method)
-            # Now the indexes_between are values on the cyclic range so need to remap them to their original
-            # values before returning them
-            for j in range(len(indexes_between)):
-                # if we have a special indexes between range that needs additional offset, treat it here
-                if len(indexes_between[j]) == 0:
-                    idx_between = idx_between
-                else:
-                    for k in range(len(indexes_between[j])):
-                        if offset is None:
-                            indexes_between[j][k] = indexes_between[j][k]
-                        else:
-                            indexes_between[j][k] = round(indexes_between[j][k] + offset, int(-math.log10(axis.tol)))
-                        idx_between.append(indexes_between[j][k])
         return idx_between
 
     def get_mapper(self, axis):

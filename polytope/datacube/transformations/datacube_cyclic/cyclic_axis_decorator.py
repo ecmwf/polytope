@@ -2,6 +2,7 @@ import math
 from copy import deepcopy
 from typing import List
 
+from ....utility.combinatorics import unique
 from .datacube_cyclic import DatacubeAxisCyclic
 
 
@@ -121,9 +122,44 @@ def cyclic(cls):
             offset = unpadded_range[0] - cyclic_range[0]
             return offset
 
+        old_find_indices_between = cls.find_indices_between
+
+        def find_indices_between(indexes, low, up, datacube, method=None):
+            search_ranges = remap([low, up])
+            original_search_ranges = to_intervals([low, up])
+            # Find the offsets for each interval in the requested range, which we will need later
+            search_ranges_offset = []
+            for r in original_search_ranges:
+                offset = cls.offset(r)
+                search_ranges_offset.append(offset)
+            idx_between = []
+            for i in range(len(search_ranges)):
+                r = search_ranges[i]
+                offset = search_ranges_offset[i]
+                low = r[0]
+                up = r[1]
+                indexes_between = old_find_indices_between(indexes, low, up, datacube, method)
+                # Now the indexes_between are values on the cyclic range so need to remap them to their original
+                # values before returning them
+                # if we have a special indexes between range that needs additional offset, treat it here
+                if len(indexes_between) == 0:
+                    idx_between = idx_between
+                else:
+                    for k in range(len(indexes_between)):
+                        if offset is None:
+                            indexes_between[k] = indexes_between[k]
+                        else:
+                            indexes_between[k] = round(indexes_between[k] + offset, int(-math.log10(cls.tol)))
+                        idx_between.append(indexes_between[k])
+            if offset is not None:
+                # Note that we can only do unique if not dealing with time values
+                idx_between = unique(idx_between)
+            return idx_between
+
         cls.to_intervals = to_intervals
         cls.remap = remap
         cls.offset = offset
         cls._remap_val_to_axis_range = _remap_val_to_axis_range
+        cls.find_indices_between = find_indices_between
 
     return cls
