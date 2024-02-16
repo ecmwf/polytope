@@ -30,12 +30,16 @@ class TestSlicing3DXarrayDatacube:
     def test_all(self):
         request = Request(Select("step", [3]), Select("date", ["2000-01-01"]), All("level"), Select("longitude", [1]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 129
+        assert len(result.leaves) == 1
+        path = result.leaves[0].flatten()
+        assert path["level"] == tuple(range(1, 130))
 
     def test_all_cyclic(self):
         request = Request(Select("step", [3]), Select("date", ["2000-01-01"]), Select("level", [1]), All("longitude"))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 360
+        assert len(result.leaves) == 1
+        path = result.leaves[0].flatten()
+        assert path["longitude"] == tuple(range(0, 360))
 
     @pytest.mark.fdb
     def test_all_mapper_cyclic(self):

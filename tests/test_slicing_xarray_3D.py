@@ -232,4 +232,4 @@ class TestSlicing3DXarrayDatacube:
         request = Request(Disk(["level", "step"], [0, 0], [r1, r2]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
         paths = [r.flatten().values() for r in result.leaves]
-        assert ((pd.Timestamp('2000-01-01 00:00:00'),), (3,), (1,)) in paths
+        assert ((pd.Timestamp("2000-01-01 00:00:00"),), (3,), (1,)) in paths
