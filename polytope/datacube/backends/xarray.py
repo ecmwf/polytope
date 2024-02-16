@@ -50,7 +50,6 @@ class XArrayDatacube(Datacube):
                 self._check_and_add_axes(options, name, val)
 
     def get(self, requests: IndexTree):
-        # requests.pprint_2()
         for r in requests.leaves:
             path = r.flatten()
             if len(path.items()) == self.axis_counter:
@@ -62,9 +61,13 @@ class XArrayDatacube(Datacube):
                     (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
                 # TODO: here do nearest point search
                 path = self.fit_path(path)
+                for key in path:
+                    if path[key] == tuple():
+                        r.remove_branch()
+                    path[key] = list(path[key])
                 subxarray = self.dataarray.sel(path, method="nearest")
                 subxarray = subxarray.sel(unmapped_path)
-                value = subxarray.item()
+                value = subxarray.values
                 key = subxarray.name
                 r.result = (key, value)
             else:

@@ -66,7 +66,9 @@ class TestSlicing3DXarrayDatacube:
     def test_segment(self):
         request = Request(Span("level", 10, 11), Select("date", ["2000-01-01"]), Select("step", [9]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 2
+        assert len(result.leaves) == 1
+        path = result.leaves[0].flatten()
+        assert path["level"] == (10, 11)
 
     def test_union_line_point(self):
         seg1 = Span("step", 4.3, 6.2)
@@ -230,4 +232,4 @@ class TestSlicing3DXarrayDatacube:
         request = Request(Disk(["level", "step"], [0, 0], [r1, r2]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
         paths = [r.flatten().values() for r in result.leaves]
-        assert (pd.Timestamp("2000-01-01 00:00:00"), 3.0, 1.0) in paths
+        assert ((pd.Timestamp('2000-01-01 00:00:00'),), (3,), (1,)) in paths

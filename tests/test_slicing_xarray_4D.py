@@ -187,7 +187,9 @@ class TestSlicing4DXarrayDatacube:
             Span("level", 100, 98), Select("step", [3]), Select("lat", [5.5]), Select("date", ["2000-01-01"])
         )
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 3
+        assert len(result.leaves) == 1
+        path = result.leaves[0].flatten()
+        assert path["level"] == (98, 99, 100)
 
     # Testing edge cases
 
