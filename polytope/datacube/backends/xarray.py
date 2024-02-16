@@ -63,8 +63,8 @@ class XArrayDatacube(Datacube):
                 path = self.fit_path(path)
                 for key in path:
                     path[key] = list(path[key])
-                print("HERE")
-                print(path)
+                for key in unmapped_path:
+                    unmapped_path[key] = list(unmapped_path[key])
                 subxarray = self.dataarray.sel(path, method="nearest")
                 subxarray = subxarray.sel(unmapped_path)
                 value = subxarray.values

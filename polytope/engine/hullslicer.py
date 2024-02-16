@@ -92,7 +92,8 @@ class HullSlicer(Engine):
         if len(values) == 0:
             node.remove_branch()
 
-        if polytope.is_natively_1D:
+        # check whether polytope is 1D and that the axis is not a coupled axis
+        if polytope.is_natively_1D and not any(ax.name in sublist for sublist in datacube.coupled_axes):
             all_remapped_vals = []
             for value in values:
                 fvalue = ax.to_float(value)

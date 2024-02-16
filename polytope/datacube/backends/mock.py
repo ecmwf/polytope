@@ -32,7 +32,7 @@ class MockDatacube(Datacube):
         for r in requests.leaves:
             path = r.flatten()
             if len(path.items()) == len(self.dimensions.items()):
-                result = 0
+                result = (0,)
                 for k, v in path.items():
                     result += v * self.stride[k]
 
