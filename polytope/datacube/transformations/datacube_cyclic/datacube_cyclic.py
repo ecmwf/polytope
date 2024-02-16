@@ -27,15 +27,6 @@ class DatacubeAxisCyclic(DatacubeAxisTransformation):
     def unwanted_axes(self):
         return []
 
-    def find_modified_indexes(self, indexes, path, datacube, axis):
-        return indexes
-
-    def unmap_path_key(self, key_value_path, leaf_path, unwanted_path, axis):
-        return (key_value_path, leaf_path, unwanted_path)
-
-    def find_indices_between(self, indexes_ranges, low, up, datacube, method, indexes_between_ranges, axis):
-        return indexes_between_ranges
-
     def update_range(self, axis):
         axis.range = self.range
 

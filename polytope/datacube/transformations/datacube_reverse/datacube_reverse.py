@@ -29,9 +29,6 @@ class DatacubeAxisReverse(DatacubeAxisTransformation):
             ordered_indices = indexes
         return ordered_indices
 
-    def unmap_path_key(self, key_value_path, leaf_path, unwanted_path, axis):
-        return (key_value_path, leaf_path, unwanted_path)
-
     def find_indices_between(self, indexes_ranges, low, up, datacube, method, indexes_between_ranges, axis):
         indexes_between_ranges = []
         if axis.name == self.name:
@@ -67,15 +64,3 @@ class DatacubeAxisReverse(DatacubeAxisTransformation):
                         indexes_between = indexes[start_idx:end_idx]
                         indexes_between_ranges.append(indexes_between)
         return indexes_between_ranges
-
-    def _remap_val_to_axis_range(self, value, axis):
-        return value
-
-    def offset(self, range, axis, offset):
-        return offset
-
-    def remap(self, range, ranges, axis):
-        return ranges
-
-    def to_intervals(self, range, intervals, axis):
-        return intervals

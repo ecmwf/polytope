@@ -46,33 +46,26 @@ class DatacubeAxisTransformation(ABC):
     def change_val_type(self, axis_name, values):
         pass
 
-    @abstractmethod
     def find_modified_indexes(self, indexes, path, datacube, axis):
-        pass
+        return indexes
 
-    @abstractmethod
     def unmap_path_key(self, key_value_path, leaf_path, unwanted_path, axis):
-        pass
+        return (key_value_path, leaf_path, unwanted_path)
 
-    @abstractmethod
     def find_indices_between(self, indexes_ranges, low, up, datacube, method, indexes_between_ranges, axis):
-        pass
+        return indexes_between_ranges
 
-    @abstractmethod
     def _remap_val_to_axis_range(self, value, axis):
-        pass
+        return value
 
-    @abstractmethod
     def offset(self, range, axis, offset):
-        pass
+        return offset
 
-    @abstractmethod
     def remap(self, range, ranges, axis):
-        pass
+        return ranges
 
-    @abstractmethod
     def to_intervals(self, range, intervals, axis):
-        pass
+        return intervals
 
 
 _type_to_datacube_transformation_lookup = {
