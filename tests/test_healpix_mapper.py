@@ -42,8 +42,8 @@ class TestOctahedralGrid:
         tol = 1e-8
         for i in range(len(result.leaves)):
             cubepath = result.leaves[i].flatten()
-            lat = cubepath["latitude"]
-            lon = cubepath["longitude"]
+            lat = cubepath["latitude"][0]
+            lon = cubepath["longitude"][0]
             lats.append(lat)
             lons.append(lon)
             nearest_points = find_nearest_latlon("./tests/data/healpix.grib", lat, lon)

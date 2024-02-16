@@ -81,8 +81,6 @@ class OctahedralGridMapper(DatacubeMapper):
 
     def get_precomputed_values_N1280(self):
         lats = [0] * 2560
-        # lats = SortedList()
-        # lats = {}
         lats[0] = 89.946187715665616
         lats[1] = 89.876478353332288
         lats[2] = 89.806357319542244
@@ -2683,7 +2681,7 @@ class OctahedralGridMapper(DatacubeMapper):
     def second_axis_vals(self, first_val):
         first_axis_vals = self._first_axis_vals
         tol = 1e-10
-        first_idx = bisect_left_cmp(first_axis_vals, first_val - tol, cmp=lambda x, y: x > y)
+        first_idx = bisect_left_cmp(first_axis_vals, first_val[0] - tol, cmp=lambda x, y: x > y)
         if first_idx >= self._resolution:
             first_idx = (2 * self._resolution) - 1 - first_idx
         first_idx = first_idx + 1
@@ -2695,7 +2693,7 @@ class OctahedralGridMapper(DatacubeMapper):
     def second_axis_spacing(self, first_val):
         first_axis_vals = self._first_axis_vals
         tol = 1e-10
-        _first_idx = bisect_left_cmp(first_axis_vals, first_val - tol, cmp=lambda x, y: x > y)
+        _first_idx = bisect_left_cmp(first_axis_vals, first_val[0] - tol, cmp=lambda x, y: x > y)
         first_idx = _first_idx
         if first_idx >= self._resolution:
             first_idx = (2 * self._resolution) - 1 - first_idx
@@ -2741,10 +2739,10 @@ class OctahedralGridMapper(DatacubeMapper):
     def find_second_axis_idx(self, first_val, second_val):
         (second_axis_spacing, first_idx) = self.second_axis_spacing(first_val)
         tol = 1e-8
-        if second_val / second_axis_spacing > int(second_val / second_axis_spacing) + 1 - tol:
-            second_idx = int(second_val / second_axis_spacing) + 1
+        if second_val[0] / second_axis_spacing > int(second_val[0] / second_axis_spacing) + 1 - tol:
+            second_idx = int(second_val[0] / second_axis_spacing) + 1
         else:
-            second_idx = int(second_val / second_axis_spacing)
+            second_idx = int(second_val[0] / second_axis_spacing)
         return (first_idx, second_idx)
 
     def unmap(self, first_val, second_val):

@@ -8,6 +8,10 @@ def reverse(cls):
 
         def find_indexes(path, datacube):
             # first, find the relevant transformation object that is a mapping in the cls.transformation dico
+            # NOTE here that we assume the subsequent axis indices will all be the same for the multiple values in the
+            # previous node tuples
+            for key in path:
+                path[key] = path[key][0]
             subarray = datacube.dataarray.sel(path, method="nearest")
             unordered_indices = datacube.datacube_natural_indexes(cls, subarray)
             if cls.name in datacube.complete_axes:
