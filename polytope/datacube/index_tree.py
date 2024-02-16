@@ -9,6 +9,7 @@ from .datacube_axis import IntDatacubeAxis, UnsliceableDatacubeAxis
 
 
 class DatacubePath(OrderedDict):
+
     def values(self):
         return tuple(super().values())
 

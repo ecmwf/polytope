@@ -43,6 +43,8 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
             f"Merged values {first_ax_vals} on axis {self.name} and \
                      values {second_ax_vals} on axis {second_ax_name} to values {merged_values}"
         )
+        print("MERGED VALS ARE")
+        print(merged_values)
         return merged_values
 
     def transformation_axes_final(self):
@@ -52,21 +54,26 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         return self
 
     def unmerge(self, merged_val):
-        merged_val = str(merged_val)
-        first_idx = merged_val.find(self._linkers[0])
-        first_val = merged_val[:first_idx]
-        first_linker_size = len(self._linkers[0])
-        second_linked_size = len(self._linkers[1])
-        second_val = merged_val[first_idx + first_linker_size : -second_linked_size]
+        first_values = []
+        second_values = []
+        for merged_value in merged_val:
+            merged_val = str(merged_value)
+            first_idx = merged_val.find(self._linkers[0])
+            first_val = merged_val[:first_idx]
+            first_linker_size = len(self._linkers[0])
+            second_linked_size = len(self._linkers[1])
+            second_val = merged_val[first_idx + first_linker_size : -second_linked_size]
 
-        # TODO: maybe replacing like this is too specific to time/dates?
-        first_val = str(first_val).replace("-", "")
-        second_val = second_val.replace(":", "")
-        logging.info(
-            f"Unmerged value {merged_val} to values {first_val} on axis {self.name} \
-                     and {second_val} on axis {self._second_axis}"
-        )
-        return (first_val, second_val)
+            # TODO: maybe replacing like this is too specific to time/dates?
+            first_val = str(first_val).replace("-", "")
+            second_val = second_val.replace(":", "")
+            logging.info(
+                f"Unmerged value {merged_val} to values {first_val} on axis {self.name} \
+                        and {second_val} on axis {self._second_axis}"
+            )
+            first_values.append(first_val)
+            second_values.append(second_val)
+        return (tuple(first_values), tuple(second_values))
 
     def change_val_type(self, axis_name, values):
         new_values = pd.to_datetime(values)

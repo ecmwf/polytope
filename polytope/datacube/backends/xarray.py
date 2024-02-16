@@ -62,9 +62,9 @@ class XArrayDatacube(Datacube):
                 # TODO: here do nearest point search
                 path = self.fit_path(path)
                 for key in path:
-                    if path[key] == tuple():
-                        r.remove_branch()
                     path[key] = list(path[key])
+                print("HERE")
+                print(path)
                 subxarray = self.dataarray.sel(path, method="nearest")
                 subxarray = subxarray.sel(unmapped_path)
                 value = subxarray.values

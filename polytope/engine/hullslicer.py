@@ -105,10 +105,14 @@ class HullSlicer(Engine):
                         remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
                     self.remapped_vals[(value, ax.name)] = remapped_val
                 all_remapped_vals.append(remapped_val)
-            child = node.create_child(ax, tuple(all_remapped_vals))
-            child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
-            child["unsliced_polytopes"].remove(polytope)
-            next_nodes.append(child)
+            # NOTE we remove unnecessary empty branches here too
+            if len(tuple(all_remapped_vals)) == 0:
+                node.remove_branch()
+            else:
+                child = node.create_child(ax, tuple(all_remapped_vals))
+                child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
+                child["unsliced_polytopes"].remove(polytope)
+                next_nodes.append(child)
         else:
             for value in values:
                 # convert to float for slicing
@@ -127,12 +131,16 @@ class HullSlicer(Engine):
                         remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
                         remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
                     self.remapped_vals[(value, ax.name)] = remapped_val
-                child = node.create_child(ax, tuple([remapped_val]))
-                child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
-                child["unsliced_polytopes"].remove(polytope)
-                if new_polytope is not None:
-                    child["unsliced_polytopes"].add(new_polytope)
-                next_nodes.append(child)
+                # NOTE we remove unnecessary empty branches here too
+                if len(tuple([remapped_val])) == 0:
+                    node.remove_branch()
+                else:
+                    child = node.create_child(ax, tuple([remapped_val]))
+                    child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
+                    child["unsliced_polytopes"].remove(polytope)
+                    if new_polytope is not None:
+                        child["unsliced_polytopes"].add(new_polytope)
+                    next_nodes.append(child)
 
     def _build_branch(self, ax, node, datacube, next_nodes):
         for polytope in node["unsliced_polytopes"]:
