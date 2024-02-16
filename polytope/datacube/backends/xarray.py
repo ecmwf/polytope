@@ -54,7 +54,7 @@ class XArrayDatacube(Datacube):
         for r in requests.leaves:
             path = r.flatten()
             if len(path.items()) == self.axis_counter:
-                # first, find the grid mapper transform
+                # TODO: need to undo the tuples in the path into actual paths with a single value that xarray can read
                 unmapped_path = {}
                 path_copy = deepcopy(path)
                 for key in path_copy:
