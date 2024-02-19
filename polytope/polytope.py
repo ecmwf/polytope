@@ -1,7 +1,11 @@
-from typing import List
+from typing import Dict, List
+
+from conflator import ConfigModel, Conflator
 
 from .shapes import ConvexPolytope
 from .utility.exceptions import AxisOverdefinedError
+import yaml
+import argparse
 
 
 class Request:
@@ -46,7 +50,12 @@ class Polytope:
         if datacube_options is None:
             datacube_options = {}
 
-        self.datacube = Datacube.create(datacube, axis_options)
+        # TODO: not sure this is what we want?
+        conflator = Conflator(app_name="polytope", model=DatacubeConfig)
+        self.datacube_config = conflator.load()
+        self.datacube_config.axis_config = axis_options
+
+        self.datacube = Datacube.create(datacube, self.datacube_config.axis_config)
         self.engine = engine if engine is not None else Engine.default()
 
     def slice(self, polytopes: List[ConvexPolytope]):
@@ -58,3 +67,7 @@ class Polytope:
         request_tree = self.engine.extract(self.datacube, request.polytopes())
         self.datacube.get(request_tree)
         return request_tree
+
+
+class DatacubeConfig(ConfigModel):
+    axis_config: Dict = {}
