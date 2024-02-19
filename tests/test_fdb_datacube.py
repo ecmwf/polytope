@@ -41,8 +41,11 @@ class TestSlicingFDBDatacube:
             Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
         )
         result = self.API.retrieve(request)
-        result.pprint()
+        result.pprint_2()
         assert len(result.leaves) == 9
+        assert result.leaves[1].flatten()["longitude"] == (0.070093457944,)
+        assert result.leaves[4].flatten()["longitude"] == (0.070148090413,)
+        assert result.leaves[7].flatten()["longitude"] == (0.070202808112,)
 
         # lats = []
         # lons = []
