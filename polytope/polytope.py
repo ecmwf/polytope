@@ -4,8 +4,6 @@ from conflator import ConfigModel, Conflator
 
 from .shapes import ConvexPolytope
 from .utility.exceptions import AxisOverdefinedError
-import yaml
-import argparse
 
 
 class Request:
