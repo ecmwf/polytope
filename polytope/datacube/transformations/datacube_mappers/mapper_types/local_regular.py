@@ -61,9 +61,9 @@ class LocalRegularGridMapper(DatacubeMapper):
 
     def unmap(self, first_val, second_val):
         tol = 1e-8
-        first_val = [i for i in self._first_axis_vals if first_val - tol <= i <= first_val + tol][0]
+        first_val = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
         first_idx = self._first_axis_vals.index(first_val)
-        second_val = [i for i in self.second_axis_vals(first_val) if second_val - tol <= i <= second_val + tol][0]
+        second_val = [i for i in self.second_axis_vals(first_val) if second_val[0] - tol <= i <= second_val[0] + tol][0]
         second_idx = self.second_axis_vals(first_val).index(second_val)
         final_index = self.axes_idx_to_regular_idx(first_idx, second_idx)
         return final_index

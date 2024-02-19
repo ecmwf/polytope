@@ -19,4 +19,7 @@ def nearest_pt(pts_list, pt):
 
 
 def l2_norm(pt1, pt2):
+    # compare the first values in the point tuple
+    for i in range(len(pt1)):
+        pt1[i] = pt1[i][0]
     return math.sqrt((pt1[0] - pt2[0]) * (pt1[0] - pt2[0]) + (pt1[1] - pt2[1]) * (pt1[1] - pt2[1]))

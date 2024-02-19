@@ -59,6 +59,10 @@ class FDBDatacube(Datacube):
         fdb_requests = []
         fdb_requests_decoding_info = []
         self.get_fdb_requests(requests, fdb_requests, fdb_requests_decoding_info)
+        for request in fdb_requests:
+            for key in request[0].keys():
+                # remove the tuple of the request when we ask the fdb
+                request[0][key] = request[0][key][0]
         output_values = self.gj.extract(fdb_requests)
         self.assign_fdb_output_to_nodes(output_values, fdb_requests_decoding_info)
 
@@ -137,10 +141,10 @@ class FDBDatacube(Datacube):
             for i in range(len(lat_children_values)):
                 lat_child_val = lat_children_values[i]
                 lat_child = [child for child in requests.children if child.values == lat_child_val][0]
-                if lat_child.values not in [latlon[0] for latlon in nearest_latlons]:
+                if lat_child.values not in [(latlon[0],) for latlon in nearest_latlons]:
                     lat_child.remove_branch()
                 else:
-                    possible_lons = [latlon[1] for latlon in nearest_latlons if latlon[0] == lat_child.values]
+                    possible_lons = [(latlon[1],) for latlon in nearest_latlons if (latlon[0],) == lat_child.values]
                     lon_children_values = [child.values for child in lat_child.children]
                     for j in range(len(lon_children_values)):
                         lon_child_val = lon_children_values[j]
@@ -172,7 +176,7 @@ class FDBDatacube(Datacube):
             )
 
         leaf_path_copy = deepcopy(leaf_path)
-        leaf_path_copy.pop("values")
+        leaf_path_copy.pop("values", None)
         return (leaf_path_copy, range_lengths, current_start_idxs, fdb_node_ranges, lat_length)
 
     def get_last_layer_before_leaf(self, requests, leaf_path, range_l, current_idx, fdb_range_n):

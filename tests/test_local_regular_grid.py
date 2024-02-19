@@ -47,8 +47,8 @@ class TestSlicingFDBDatacube:
         result = self.API.retrieve(request)
         result.pprint_2()
         assert len(result.leaves) == 1
-        assert result.leaves[0].flatten()["latitude"] == 0
-        assert result.leaves[0].flatten()["longitude"] == 0
+        assert result.leaves[0].flatten()["latitude"] == (0,)
+        assert result.leaves[0].flatten()["longitude"] == (0,)
 
     @pytest.mark.fdb
     def test_point_outside_local_region(self):
@@ -67,8 +67,8 @@ class TestSlicingFDBDatacube:
         result = self.API.retrieve(request)
         result.pprint_2()
         assert len(result.leaves) == 1
-        assert result.leaves[0].flatten()["latitude"] == 0
-        assert result.leaves[0].flatten()["longitude"] == 60
+        assert result.leaves[0].flatten()["latitude"] == (0,)
+        assert result.leaves[0].flatten()["longitude"] == (60,)
 
     @pytest.mark.fdb
     def test_point_outside_local_region_2(self):
@@ -87,8 +87,8 @@ class TestSlicingFDBDatacube:
         result = self.API.retrieve(request)
         result.pprint_2()
         assert len(result.leaves) == 1
-        assert result.leaves[0].flatten()["latitude"] == 40
-        assert result.leaves[0].flatten()["longitude"] == 1
+        assert result.leaves[0].flatten()["latitude"] == (40,)
+        assert result.leaves[0].flatten()["longitude"] == (1,)
 
     @pytest.mark.fdb
     def test_point_outside_local_region_3(self):
@@ -183,8 +183,8 @@ class TestSlicingFDBDatacube:
         result = self.API.retrieve(request)
         result.pprint_2()
         assert len(result.leaves) == 1
-        assert result.leaves[0].flatten()["latitude"] == -40
-        assert result.leaves[0].flatten()["longitude"] == 1
+        assert result.leaves[0].flatten()["latitude"] == (-40,)
+        assert result.leaves[0].flatten()["longitude"] == (1,)
 
     @pytest.mark.fdb
     def test_point_outside_local_region_8(self):
@@ -203,8 +203,8 @@ class TestSlicingFDBDatacube:
         result = self.API.retrieve(request)
         result.pprint_2()
         assert len(result.leaves) == 1
-        assert result.leaves[0].flatten()["latitude"] == -30
-        assert result.leaves[0].flatten()["longitude"] == -20
+        assert result.leaves[0].flatten()["latitude"] == (-30,)
+        assert result.leaves[0].flatten()["longitude"] == (-20,)
 
     @pytest.mark.fdb
     def test_point_outside_local_region_9(self):
@@ -223,5 +223,5 @@ class TestSlicingFDBDatacube:
         result = self.API.retrieve(request)
         result.pprint_2()
         assert len(result.leaves) == 3
-        assert result.leaves[0].flatten()["latitude"] == -31
-        assert result.leaves[0].flatten()["longitude"] == -20
+        assert result.leaves[0].flatten()["latitude"] == (-31,)
+        assert result.leaves[0].flatten()["longitude"] == (-20,)
