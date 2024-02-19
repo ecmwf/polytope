@@ -16,6 +16,24 @@ from ..transformations.datacube_transformations import (
 
 
 class Datacube(ABC):
+
+    def __init__(self, axis_options=None, datacube_options=None):
+        if axis_options is None:
+            self.axis_options = {}
+        else:
+            self.axis_options = axis_options
+        if datacube_options is None:
+            datacube_options = {}
+        self.axis_with_identical_structure_after = datacube_options.get("identical structure after")
+        self.coupled_axes = []
+        self.axis_counter = 0
+        self.complete_axes = []
+        self.blocked_axes = []
+        self.fake_axes = []
+        self.treated_axes = []
+        self.nearest_search = {}
+        self._axes = None
+
     @abstractmethod
     def get(self, requests: IndexTree) -> Any:
         """Return data given a set of request trees"""

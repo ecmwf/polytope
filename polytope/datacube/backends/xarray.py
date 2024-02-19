@@ -9,43 +9,30 @@ class XArrayDatacube(Datacube):
     """Xarray arrays are labelled, axes can be defined as strings or integers (e.g. "time" or 0)."""
 
     def __init__(self, dataarray: xr.DataArray, axis_options=None, datacube_options=None):
-        if axis_options is None:
-            axis_options = {}
-        if datacube_options is None:
-            datacube_options = {}
-        self.axis_options = axis_options
-        self.axis_counter = 0
-        self._axes = None
+        super().__init__(axis_options, datacube_options)
         self.dataarray = dataarray
-        treated_axes = []
-        self.complete_axes = []
-        self.blocked_axes = []
-        self.fake_axes = []
-        self.nearest_search = None
-        self.coupled_axes = []
-        self.axis_with_identical_structure_after = datacube_options.get("identical structure after")
 
         for name, values in dataarray.coords.variables.items():
             if name in dataarray.dims:
-                options = axis_options.get(name, None)
+                options = self.axis_options.get(name, None)
                 self._check_and_add_axes(options, name, values)
-                treated_axes.append(name)
+                self.treated_axes.append(name)
                 self.complete_axes.append(name)
             else:
                 if self.dataarray[name].dims == ():
-                    options = axis_options.get(name, None)
+                    options = self.axis_options.get(name, None)
                     self._check_and_add_axes(options, name, values)
-                    treated_axes.append(name)
+                    self.treated_axes.append(name)
         for name in dataarray.dims:
-            if name not in treated_axes:
-                options = axis_options.get(name, None)
+            if name not in self.treated_axes:
+                options = self.axis_options.get(name, None)
                 val = dataarray[name].values[0]
                 self._check_and_add_axes(options, name, val)
-                treated_axes.append(name)
+                self.treated_axes.append(name)
         # add other options to axis which were just created above like "lat" for the mapper transformations for eg
         for name in self._axes:
-            if name not in treated_axes:
-                options = axis_options.get(name, None)
+            if name not in self.treated_axes:
+                options = self.axis_options.get(name, None)
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
 
