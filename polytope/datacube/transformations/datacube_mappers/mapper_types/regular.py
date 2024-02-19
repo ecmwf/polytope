@@ -12,6 +12,7 @@ class RegularGridMapper(DatacubeMapper):
         self.deg_increment = 90 / self._resolution
         self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
         self._first_axis_vals = self.first_axis_vals()
+        self.compressed_grid_axes = self._mapped_axes
 
     def first_axis_vals(self):
         first_ax_vals = [90 - i * self.deg_increment for i in range(2 * self._resolution)]

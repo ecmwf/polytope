@@ -73,4 +73,26 @@ class TestSlicing3DXarrayDatacube:
         )
         result = self.API.retrieve(request)
         # result.pprint()
-        assert len(result.leaves) == 20
+        assert len(result.leaves) == 1
+        assert result.leaves[0].flatten()["longitude"] == (
+            0.0,
+            18.0,
+            36.0,
+            54.0,
+            72.0,
+            90.0,
+            108.0,
+            126.0,
+            144.0,
+            162.0,
+            180.0,
+            198.0,
+            216.0,
+            234.0,
+            252.0,
+            270.0,
+            288.0,
+            306.0,
+            324.0,
+            342.0,
+        )

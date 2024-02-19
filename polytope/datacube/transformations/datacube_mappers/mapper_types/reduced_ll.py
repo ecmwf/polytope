@@ -11,6 +11,7 @@ class ReducedLatLonMapper(DatacubeMapper):
         self._resolution = resolution
         self._axis_reversed = {mapped_axes[0]: False, mapped_axes[1]: False}
         self._first_axis_vals = self.first_axis_vals()
+        self.compressed_grid_axes = [self._mapped_axes[1]]
 
     def first_axis_vals(self):
         resolution = 180 / (self._resolution - 1)

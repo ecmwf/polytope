@@ -24,6 +24,7 @@ class MockDatacube(Datacube):
             stride_cumulative *= self.dimensions[k]
         self.coupled_axes = []
         self.axis_with_identical_structure_after = ""
+        self.compressed_grid_axes = []
 
     def get(self, requests: IndexTree):
         # Takes in a datacube and verifies the leaves of the tree are complete

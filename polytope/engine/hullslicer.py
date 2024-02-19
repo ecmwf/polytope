@@ -94,9 +94,8 @@ class HullSlicer(Engine):
             node.remove_branch()
 
         # check whether polytope is 1D and that the axis is not a coupled axis
-        # TODO: make this more generic than just compressing the longitude for the grids, but read this from the
-        # transformation instead...
-        if ax.name != "longitude":
+        # read from the datacube which grid axes can be compressed...
+        if ax.name not in datacube.compressed_grid_axes:
             ax_in_forbidden_axes = not any(ax.name in sublist for sublist in datacube.coupled_axes)
         else:
             ax_in_forbidden_axes = True
