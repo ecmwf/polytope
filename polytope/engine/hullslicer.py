@@ -40,6 +40,7 @@ class HullSlicer(Engine):
             raise UnsliceableShapeError(ax)
         path = node.flatten()
 
+        # all unsliceable children are natively 1D so can group them together in a tuple...
         flattened_tuple = tuple()
         if len(datacube.coupled_axes) > 0:
             if path.get(datacube.coupled_axes[0][0], None) is not None:
@@ -93,7 +94,13 @@ class HullSlicer(Engine):
             node.remove_branch()
 
         # check whether polytope is 1D and that the axis is not a coupled axis
-        if polytope.is_natively_1D and not any(ax.name in sublist for sublist in datacube.coupled_axes):
+        # TODO: make this more generic than just compressing the longitude for the grids, but read this from the
+        # transformation instead...
+        if ax.name != "longitude":
+            ax_in_forbidden_axes = not any(ax.name in sublist for sublist in datacube.coupled_axes)
+        else:
+            ax_in_forbidden_axes = True
+        if polytope.is_natively_1D and ax_in_forbidden_axes:
             all_remapped_vals = []
             for value in values:
                 fvalue = ax.to_float(value)

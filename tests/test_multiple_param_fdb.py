@@ -37,5 +37,5 @@ class TestSlicingFDBDatacube:
             Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
         )
         result = self.API.retrieve(request)
-        result.pprint()
+        result.pprint_2()
         assert len(result.leaves) == 18
