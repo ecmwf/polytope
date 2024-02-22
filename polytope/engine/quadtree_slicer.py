@@ -60,6 +60,8 @@ class QuadTreeSlicer(Engine):
 
         # need to find points of the datacube contained within the polytope
         # We do this by intersecting the datacube point cloud quad tree with the polytope here
+        print("THE QUADTREE IS")
+        self.quad_tree.pprint()
         polygon_points = self.quad_tree.query_polygon(polytope)
         return polygon_points
 

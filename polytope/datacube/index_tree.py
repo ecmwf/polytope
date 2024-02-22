@@ -176,6 +176,13 @@ class IndexTree(object):
         if len(self.children) == 0:
             logging.debug("\t" * (level + 1) + "\u21b3" + str(self.result))
 
+    def pprint_2(self, level=0):
+        if self.axis.name == "root":
+            print("\n")
+        print("\t" * level + "\u21b3" + str(self))
+        for child in self.children:
+            child.pprint_2(level + 1)
+
     def remove_branch(self):
         if not self.is_root():
             old_parent = self._parent

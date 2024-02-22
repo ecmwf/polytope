@@ -93,7 +93,8 @@ class QuadTree:
 
         if len(self.children) == 0:
             node = QuadNode(item, rect, index)
-            self.nodes.append(node)
+            if item not in [node.item for node in self.nodes]:
+                self.nodes.append(node)
 
             if len(self.nodes) > self.MAX and self.depth < self.MAX_DEPTH:
                 self.split()
@@ -112,17 +113,28 @@ class QuadTree:
             self.nodes.append(node)
             return node
         else:
+            return_nodes = []
             # try to insert into children
             if rect[0] <= self.center[0]:
                 if rect[1] <= self.center[1]:
-                    return self.children[0].insert(item, rect, index)
-                if rect[3] > self.center[1]:
-                    return self.children[1].insert(item, rect, index)
-            if rect[2] > self.center[0]:
+                    # return self.children[0].insert(item, rect, index)
+                    self.children[0].insert(item, rect, index)
+                    # new_nodes = self.children[0].insert(item, rect, index)
+                    # return_nodes.extend(new_nodes)
+                if rect[3] >= self.center[1]:
+                    # return self.children[1].insert(item, rect, index)
+                    self.children[1].insert(item, rect, index)
+                    # new_nodes = self.children[1].insert(item, rect, index)
+                    # return_nodes.extend(new_nodes)
+            if rect[2] >= self.center[0]:
                 if rect[1] <= self.center[1]:
-                    return self.children[2].insert(item, rect, index)
-                if rect[3] > self.center[1]:
-                    return self.children[3].insert(item, rect, index)
+                    # return self.children[2].insert(item, rect, index)
+                    self.children[2].insert(item, rect, index)
+                    # new_nodes = self.children[2].insert(item, rect, index)
+                    # return_nodes.extend(new_nodes)
+                if rect[3] >= self.center[1]:
+                    self.children[3].insert(item, rect, index)
+            return return_nodes
 
     def split(self):
         self.children = [
@@ -155,6 +167,8 @@ class QuadTree:
         nodes = self.nodes
         self.nodes = []
         for node in nodes:
+            print(node.item)
+            print("were here?")
             self.insert_into_children(node.item, node.rect, node.index)
 
     # def query_polygon(self, polygon, results=None):
@@ -210,6 +224,11 @@ class QuadTree:
                 if len(self.children) > 0:
                     # first slice vertically
                     left_polygon, right_polygon = slice_in_two(polygon, self.center[0], 0)
+                    # print("the slice lines in query polygons are")
+                    # print("lat")
+                    # print(self.center[0])
+                    # print("lon")
+                    # print(self.center[1])
 
                     # then slice horizontally
                     # ie need to slice the left and right polygons each in two to have the 4 quadrant polygons
