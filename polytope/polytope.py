@@ -1,9 +1,11 @@
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from conflator import ConfigModel, Conflator
 
 from .shapes import ConvexPolytope
 from .utility.exceptions import AxisOverdefinedError
+
+from pydantic import validator
 
 
 class Request:
@@ -51,9 +53,9 @@ class Polytope:
         # TODO: not sure this is what we want?
         conflator = Conflator(app_name="polytope", model=DatacubeConfig)
         self.datacube_config = conflator.load()
-        self.datacube_config.axis_config = axis_options
+        self.datacube_config.config = axis_options
 
-        self.datacube = Datacube.create(datacube, self.datacube_config.axis_config)
+        self.datacube = Datacube.create(datacube, self.datacube_config.config)
         self.engine = engine if engine is not None else Engine.default()
 
     def slice(self, polytopes: List[ConvexPolytope]):
@@ -67,5 +69,43 @@ class Polytope:
         return request_tree
 
 
+class SubDatacubeConfig(ConfigModel):
+    # TODO: need to change this to make it fit the actual options with the different transformations
+    # TODO: could validate the subtypes options with the name stored in the dictionary??
+    axis_config: Dict[str, Union[Dict, str]] = {"": {}}
+
+
 class DatacubeConfig(ConfigModel):
-    axis_config: Dict = {}
+    # config: Dict[str, SubDatacubeConfig] = {"", SubDatacubeConfig()}
+    config: Dict[str, SubDatacubeConfig] = {"", SubDatacubeConfig()}
+
+    @validator("config")
+    def check_size(cls, v):
+        assert len(v) == 1
+        return v
+
+
+class TypeChangeOptions(ConfigModel):
+    type: str = ""
+
+
+class CyclicOptions(ConfigModel):
+    range: List = []
+
+
+class MapperOptions(ConfigModel):
+    # TODO: Think about this? How can we assign the sub-dictionary items to the mapper options??
+    options: Dict
+    pass
+
+
+class SubMapperOptions(ConfigModel):
+    pass
+
+
+class MergerOptions(ConfigModel):
+    pass
+
+
+class ReverseOptions(ConfigModel):
+    pass
