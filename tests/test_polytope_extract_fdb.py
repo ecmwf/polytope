@@ -53,10 +53,14 @@ class TestPolytopeExtract:
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["an"]),
-            # TODO: why if we set the min_longitude= -0.1 does this not give back the points at lon=0?
-            Box(["latitude", "longitude"], [0, -0.001], [10, 10]),
+            Box(["latitude", "longitude"], [0, -0.1], [10, 10]),
         )
         result = self.API.retrieve(request)
 
-        result.pprint()
         assert len(result.leaves) == 3
+        assert result.leaves[0].flatten()["longitude"] == 0
+        assert result.leaves[0].flatten()["latitude"] == 0.035149384216
+        assert result.leaves[1].flatten()["longitude"] == 10
+        assert result.leaves[1].flatten()["latitude"] == 5
+        assert result.leaves[2].flatten()["longitude"] == 10
+        assert result.leaves[2].flatten()["latitude"] == 10
