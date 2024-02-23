@@ -41,7 +41,15 @@ class Request:
 
 
 class Polytope:
-    def __init__(self, datacube, engine=None, axis_options=None, datacube_options=None, engine_options=None, point_cloud_options=None):
+    def __init__(
+        self,
+        datacube,
+        engine=None,
+        axis_options=None,
+        datacube_options=None,
+        engine_options=None,
+        point_cloud_options=None,
+    ):
         from .datacube import Datacube
         from .engine import Engine
 
@@ -64,7 +72,7 @@ class Polytope:
         engines = {}
         engine_types = set(self.engine_options.values())
         if "quadtree" in engine_types:
-            quadtree_axes = [key for key in self.engine_options.keys() if self.engine_options[key] == "quadtree"]
+            # quadtree_axes = [key for key in self.engine_options.keys() if self.engine_options[key] == "quadtree"]
             # TODO: need to get the corresponding point cloud from the datacube
             quadtree_points = self.datacube.find_point_cloud()
             engines["quadtree"] = QuadTreeSlicer(quadtree_points)
@@ -113,7 +121,5 @@ class Polytope:
     def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
         request_tree = self.slice(request.polytopes())
-        # print("LOOK NOW AT WHOLE TREE")
-        # request_tree.pprint_2()
         self.datacube.get(request_tree)
         return request_tree

@@ -94,7 +94,6 @@ class Datacube(ABC):
         If lower and upper are equal, returns the index which exactly matches that value (if it exists)
         e.g. returns integer discrete points between two floats
         """
-        print(path)
         path = self.fit_path(path)
         indexes = axis.find_indexes(path, self)
         search_ranges = axis.remap([lower, upper])
@@ -104,8 +103,6 @@ class Datacube(ABC):
         for r in original_search_ranges:
             offset = axis.offset(r)
             search_ranges_offset.append(offset)
-        print("niside get indices in datacube")
-        print(path)
         idx_between = self._look_up_datacube(search_ranges, search_ranges_offset, indexes, axis, method)
         # Remove duplicates even if difference of the order of the axis tolerance
         if offset is not None:
@@ -156,7 +153,9 @@ class Datacube(ABC):
         if isinstance(datacube, (xr.core.dataarray.DataArray, xr.core.dataset.Dataset)):
             from .xarray import XArrayDatacube
 
-            xadatacube = XArrayDatacube(datacube, axis_options, datacube_options, point_cloud_options=point_cloud_options)
+            xadatacube = XArrayDatacube(
+                datacube, axis_options, datacube_options, point_cloud_options=point_cloud_options
+            )
             return xadatacube
         else:
             return datacube

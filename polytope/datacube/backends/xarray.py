@@ -89,17 +89,12 @@ class XArrayDatacube(Datacube):
                 # first, find the grid mapper transform
                 unmapped_path = {}
                 path_copy = deepcopy(path)
-                print("LOOK AT PATH COPY NOW")
-                print(path_copy)
                 for key in path_copy:
                     if key != "result":
                         axis = self._axes[key]
                         (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
                 path = self.fit_path(path)
                 subxarray = self.dataarray.sel(path, method="nearest")
-                print("INSIDE OF GET")
-                print(unmapped_path)
-                print(path)
                 subxarray = subxarray.sel(unmapped_path)
                 value = subxarray.item()
                 key = subxarray.name

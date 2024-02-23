@@ -53,8 +53,6 @@ class HullSlicer(Engine):
         lower = ax.from_float(lower - tol)
         upper = ax.from_float(upper + tol)
         flattened = node.flatten()
-        print("here in build sliceable child")
-        print(flattened)
         method = polytope.method
         if method == "nearest":
             datacube.nearest_search[ax.name] = polytope.points
@@ -169,9 +167,6 @@ class HullSlicer(Engine):
             for n in repeated_sub_nodes:
                 # logging.info(f"Copying children for number {n.value}")
                 n.copy_children_from_other(cached_node)
-
-            # logging.info("=== AFTER COPYING ===")
-            # request.pprint()
 
             request.merge(r)
         return request

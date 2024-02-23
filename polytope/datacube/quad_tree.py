@@ -167,8 +167,6 @@ class QuadTree:
         nodes = self.nodes
         self.nodes = []
         for node in nodes:
-            print(node.item)
-            print("were here?")
             self.insert_into_children(node.item, node.rect, node.index)
 
     # def query_polygon(self, polygon, results=None):
@@ -224,11 +222,6 @@ class QuadTree:
                 if len(self.children) > 0:
                     # first slice vertically
                     left_polygon, right_polygon = slice_in_two(polygon, self.center[0], 0)
-                    # print("the slice lines in query polygons are")
-                    # print("lat")
-                    # print(self.center[0])
-                    # print("lon")
-                    # print(self.center[1])
 
                     # then slice horizontally
                     # ie need to slice the left and right polygons each in two to have the 4 quadrant polygons

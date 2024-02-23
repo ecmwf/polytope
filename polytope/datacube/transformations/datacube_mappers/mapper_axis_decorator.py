@@ -31,8 +31,6 @@ def mapper(cls):
                         if cls.name not in unmapped_path:
                             # if for some reason, the unmapped_path already has the first axis val, then don't update
                             unmapped_path[cls.name] = first_val
-                            print("INSIDE MAPPER")
-                            print(unmapped_path)
                     if cls.name == transform._mapped_axes()[1]:
                         # if we are on the second axis, then the val of the first axis is stored
                         # inside unmapped_path so can get it from there
@@ -48,8 +46,6 @@ def mapper(cls):
                             unmapped_idx = path.get("result", None)
                             unmapped_idx = transform.unmap(first_val, second_val, unmapped_idx)
                             unmapped_path[transform.old_axis] = unmapped_idx
-                            print(transform)
-                            print(unmapped_path)
             return (path, unmapped_path)
 
         old_unmap_path_key = cls.unmap_path_key

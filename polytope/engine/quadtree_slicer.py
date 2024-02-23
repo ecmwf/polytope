@@ -16,8 +16,6 @@ class QuadTreeSlicer(Engine):
 
     # method to slice polygon against quadtree
     def extract(self, datacube, polytopes):
-        import time
-
         # need to find the points to extract within the polytopes (polygons here in 2D)
         request = IndexTree()
         extracted_points = []
@@ -26,7 +24,6 @@ class QuadTreeSlicer(Engine):
             extracted_points.extend(self.extract_single(datacube, polytope))
 
         # what data format do we return extracted points as? Append those points to the index tree?
-        time0 = time.time()
 
         # NOTE: for now, we return the indices of the points in the point cloud, instead of lat/lon
         for point in extracted_points:
@@ -51,8 +48,6 @@ class QuadTreeSlicer(Engine):
         #     lon_axis = datacube.axes[polytope._axes[1]]
         #     lon_child = lat_child.create_child(lon_axis, lon)
         #     lon_child.result = result
-        print("time create 2D tree")
-        print(time.time() - time0)
         return request
 
     def extract_single(self, datacube, polytope):
@@ -60,8 +55,6 @@ class QuadTreeSlicer(Engine):
 
         # need to find points of the datacube contained within the polytope
         # We do this by intersecting the datacube point cloud quad tree with the polytope here
-        print("THE QUADTREE IS")
-        self.quad_tree.pprint()
         polygon_points = self.quad_tree.query_polygon(polytope)
         return polygon_points
 

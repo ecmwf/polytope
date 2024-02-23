@@ -1,6 +1,6 @@
 from polytope.datacube.backends.fdb import FDBDatacube
 from polytope.engine.quadtree_slicer import QuadTreeSlicer
-from polytope.shapes import Box, ConvexPolytope
+from polytope.shapes import Box
 
 
 class TestQuadTreeSlicer:
