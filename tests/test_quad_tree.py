@@ -1,6 +1,5 @@
 import pytest
 
-from polytope.datacube.backends.fdb import FDBDatacube
 from polytope.datacube.quad_tree import QuadNode
 from polytope.engine.quadtree_slicer import QuadTreeSlicer
 from polytope.engine.slicing_tools import slice_in_two
@@ -9,6 +8,8 @@ from polytope.shapes import Box, ConvexPolytope
 
 class TestQuadTreeSlicer:
     def setup_method(self, method):
+        from polytope.datacube.backends.fdb import FDBDatacube
+
         self.options = {
             "values": {"mapper": {"type": "regular", "resolution": 30, "axes": ["latitude", "longitude"]}},
             "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
@@ -78,6 +79,7 @@ class TestQuadTreeSlicer:
         third_node = QuadNode(1, [0.1, 0.5, 0.1, 0.5], 0)
         assert not third_node.is_contained_in(polytope)
 
+    @pytest.mark.fdb
     def test_quad_tree_slicer_extract(self):
         points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
         slicer = QuadTreeSlicer(points)

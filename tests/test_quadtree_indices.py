@@ -1,12 +1,13 @@
 import pytest
 
-from polytope.datacube.backends.fdb import FDBDatacube
 from polytope.engine.quadtree_slicer import QuadTreeSlicer
 from polytope.shapes import Box, ConvexPolytope
 
 
 class TestQuadTreeSlicer:
     def setup_method(self, method):
+        from polytope.datacube.backends.fdb import FDBDatacube
+
         self.options = {
             "values": {"mapper": {"type": "regular", "resolution": 30, "axes": ["latitude", "longitude"]}},
             "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
