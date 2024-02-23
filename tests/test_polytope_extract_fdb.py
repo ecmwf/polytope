@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 
 from polytope.datacube.backends.fdb import FDBDatacube
 from polytope.engine.hullslicer import HullSlicer
@@ -41,7 +42,7 @@ class TestPolytopeExtract:
         )
 
     # Testing different shapes
-
+    @pytest.mark.fdb
     def test_2D_box(self):
         request = Request(
             Select("step", [0]),

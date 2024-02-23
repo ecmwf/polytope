@@ -1,3 +1,5 @@
+import pytest
+
 from polytope.datacube.backends.fdb import FDBDatacube
 from polytope.engine.quadtree_slicer import QuadTreeSlicer
 from polytope.shapes import Box
@@ -15,12 +17,14 @@ class TestQuadTreeSlicer:
         self.config = {"class": "ea", "expver": "0001", "levtype": "pl"}
         self.datacube = FDBDatacube(self.config, axis_options=self.options)
 
+    @pytest.mark.fdb
     def test_quad_tree_slicer(self):
         points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
         slicer = QuadTreeSlicer(points)
         slicer.quad_tree.pprint()
         pass
 
+    @pytest.mark.fdb
     def test_quad_tree_query_polygon(self):
         points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
         slicer = QuadTreeSlicer(points)
