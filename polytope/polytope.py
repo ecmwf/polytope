@@ -41,16 +41,18 @@ class Request:
 
 
 class Polytope:
-    def __init__(self, datacube, engine=None, axis_options=None, engine_options=None, point_cloud_options=None):
+    def __init__(self, datacube, engine=None, axis_options=None, datacube_options=None, engine_options=None, point_cloud_options=None):
         from .datacube import Datacube
         from .engine import Engine
 
         if axis_options is None:
             axis_options = {}
+        if datacube_options is None:
+            datacube_options = {}
         if engine_options is None:
             engine_options = {}
 
-        self.datacube = Datacube.create(datacube, axis_options, point_cloud_options)
+        self.datacube = Datacube.create(datacube, axis_options, point_cloud_options=point_cloud_options)
         self.engine = engine if engine is not None else Engine.default()
         if engine_options == {}:
             for ax_name in self.datacube._axes.keys():
@@ -111,5 +113,7 @@ class Polytope:
     def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
         request_tree = self.slice(request.polytopes())
+        # print("LOOK NOW AT WHOLE TREE")
+        # request_tree.pprint_2()
         self.datacube.get(request_tree)
         return request_tree

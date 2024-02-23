@@ -1,3 +1,4 @@
+import copy
 import json
 import logging
 from typing import OrderedDict
@@ -45,6 +46,20 @@ class IndexTree(object):
         leaves = []
         self._collect_leaf_nodes(leaves)
         return leaves
+
+    def copy_children_from_other(self, other):
+        for o in other.children:
+            c = IndexTree(o.axis, copy.copy(o.value))
+            self.add_child(c)
+            c.copy_children_from_other(o)
+        return
+
+    def pprint_2(self, level=0):
+        if self.axis.name == "root":
+            print("\n")
+        print("\t" * level + "\u21b3" + str(self))
+        for child in self.children:
+            child.pprint_2(level + 1)
 
     def _collect_leaf_nodes_old(self, leaves):
         if len(self.children) == 0:

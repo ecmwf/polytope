@@ -8,7 +8,11 @@ from .datacube import Datacube, IndexTree
 class XArrayDatacube(Datacube):
     """Xarray arrays are labelled, axes can be defined as strings or integers (e.g. "time" or 0)."""
 
-    def __init__(self, dataarray: xr.DataArray, axis_options={}, point_cloud_options=None):
+    def __init__(self, dataarray: xr.DataArray, axis_options=None, datacube_options=None, point_cloud_options=None):
+        if axis_options is None:
+            axis_options = {}
+        if datacube_options is None:
+            datacube_options = {}
         self.axis_options = axis_options
         self.axis_counter = 0
         self._axes = None
@@ -18,6 +22,8 @@ class XArrayDatacube(Datacube):
         self.blocked_axes = []
         self.fake_axes = []
         self.nearest_search = None
+        self.coupled_axes = []
+        self.axis_with_identical_structure_after = datacube_options.get("identical structure after")
         self.has_point_cloud = point_cloud_options
 
         for name, values in dataarray.coords.variables.items():
@@ -83,12 +89,17 @@ class XArrayDatacube(Datacube):
                 # first, find the grid mapper transform
                 unmapped_path = {}
                 path_copy = deepcopy(path)
+                print("LOOK AT PATH COPY NOW")
+                print(path_copy)
                 for key in path_copy:
                     if key != "result":
                         axis = self._axes[key]
                         (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
                 path = self.fit_path(path)
                 subxarray = self.dataarray.sel(path, method="nearest")
+                print("INSIDE OF GET")
+                print(unmapped_path)
+                print(path)
                 subxarray = subxarray.sel(unmapped_path)
                 value = subxarray.item()
                 key = subxarray.name

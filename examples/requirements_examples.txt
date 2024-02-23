@@ -10,3 +10,4 @@ Fiona==1.8.22
 geopandas==0.12.2
 plotly==5.11.0
 pyshp==2.3.1
+cfgrib==0.9.10.3
