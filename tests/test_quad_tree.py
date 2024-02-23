@@ -20,12 +20,14 @@ class TestQuadTreeSlicer:
         self.config = {"class": "ea", "expver": "0001", "levtype": "pl"}
         self.datacube = FDBDatacube(self.config, axis_options=self.options)
 
+    @pytest.mark.fdb
     def test_quad_tree_slicer(self):
         points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
         slicer = QuadTreeSlicer(points)
         slicer.quad_tree.pprint()
         pass
 
+    @pytest.mark.fdb
     def test_quad_tree_query_polygon(self):
         points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
         slicer = QuadTreeSlicer(points)
@@ -45,18 +47,21 @@ class TestQuadTreeSlicer:
         assert (10, 10, 10, 10) in [node.rect for node in results]
         assert (2, 10, 2, 10) in [node.rect for node in results]
 
+    @pytest.mark.fdb
     def test_slice_in_two_vertically(self):
         polytope = Box(["lat", "lon"], [0, 0], [2, 2]).polytope()[0]
         lower, upper = slice_in_two(polytope, 1, 0)
         assert lower.points == [[0, 0], [1.0, 0.0], [1.0, 2.0], [0, 2]]
         assert upper.points == [[1.0, 0.0], [2, 0], [2, 2], [1.0, 2.0]]
 
+    @pytest.mark.fdb
     def test_slice_in_two_horizontally(self):
         polytope = Box(["lat", "lon"], [0, 0], [2, 2]).polytope()[0]
         lower, upper = slice_in_two(polytope, 1, 1)
         assert lower.points == [[0, 0], [2, 0], [2.0, 1.0], [0.0, 1.0]]
         assert upper.points == [[2, 2], [0, 2], [0.0, 1.0], [2.0, 1.0]]
 
+    @pytest.mark.fdb
     def test_quad_node_is_contained_in_box(self):
         node = QuadNode(1, [1, 1, 1, 1], 0)
         polytope = Box(["lat", "lon"], [0, 0], [2, 2]).polytope()[0]
@@ -66,6 +71,7 @@ class TestQuadTreeSlicer:
         third_node = QuadNode(1, [1, 0, 1, 0], 0)
         assert third_node.is_contained_in(polytope)
 
+    @pytest.mark.fdb
     def test_quad_node_is_contained_in_triangle(self):
         node = QuadNode(1, [1, 1, 1, 1], 0)
         polytope = ConvexPolytope(["lat", "lon"], [[0, 0], [1, 1], [2, 0]])
@@ -95,6 +101,7 @@ class TestQuadTreeSlicer:
         tree.pprint()
 
     @pytest.mark.skip("performance test")
+    @pytest.mark.fdb
     def test_large_scale_extraction(self):
         import time
 
