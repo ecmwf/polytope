@@ -1,5 +1,5 @@
 -r ../requirements.txt
-pytest==7.2.0 
+pytest==8.0.0 
 cffi==1.15.1
 eccodes==1.5.2
 h5netcdf==1.1.0
