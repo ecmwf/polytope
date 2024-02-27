@@ -5,6 +5,7 @@ from helper_functions import download_test_data
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Select
+import yaml
 
 
 class TestRegularGrid:
@@ -13,13 +14,34 @@ class TestRegularGrid:
 
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/era5-levels-members.grib"
         download_test_data(nexus_url, "era5-levels-members.grib")
-        self.options = {
-            "values": {"mapper": {"type": "regular", "resolution": 30, "axes": ["latitude", "longitude"]}},
-            "date": {"merge": {"with": "time", "linkers": [" ", "00"]}},
-            "step": {"type_change": "int"},
-            "number": {"type_change": "int"},
-            "longitude": {"cyclic": [0, 360]},
-        }
+        self.options = yaml.safe_load(
+                                    """
+                            config:
+                                - axis_name: values
+                                  transformations:
+                                    - name: "mapper"
+                                      type: "regular"
+                                      resolution: 30
+                                      axes: ["latitude", "longitude"]
+                                - axis_name: date
+                                  transformations:
+                                    - name: "merge"
+                                      other_axis: "time"
+                                      linkers: [" ", "00"]
+                                - axis_name: step
+                                  transformations:
+                                    - name: "type_change"
+                                      type: "int"
+                                - axis_name: number
+                                  transformations:
+                                    - name: "type_change"
+                                      type: "int"
+                                - axis_name: longitude
+                                  transformations:
+                                    - name: "cyclic"
+                                      range: [0, 360]
+                            """
+        )
         self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "step": "0"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
         self.slicer = HullSlicer()

@@ -13,7 +13,8 @@ class XArrayDatacube(Datacube):
             axis_options = {}
         if datacube_options is None:
             datacube_options = {}
-        self.axis_options = axis_options
+        # self.axis_options = axis_options
+        self.axis_options = Datacube.create_axes_config(axis_options).config
         self.axis_counter = 0
         self._axes = None
         self.dataarray = dataarray

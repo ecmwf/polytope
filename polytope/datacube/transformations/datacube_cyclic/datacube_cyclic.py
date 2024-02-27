@@ -7,7 +7,7 @@ class DatacubeAxisCyclic(DatacubeAxisTransformation):
     def __init__(self, name, cyclic_options):
         self.name = name
         self.transformation_options = cyclic_options
-        self.range = cyclic_options
+        self.range = cyclic_options.range
 
     def generate_final_transformation(self):
         return self

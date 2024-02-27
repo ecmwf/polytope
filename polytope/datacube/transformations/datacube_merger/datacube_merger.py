@@ -11,8 +11,8 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         self.transformation_options = merge_options
         self.name = name
         self._first_axis = name
-        self._second_axis = merge_options["with"]
-        self._linkers = merge_options["linkers"]
+        self._second_axis = merge_options.other_axis
+        self._linkers = merge_options.linkers
 
     def blocked_axes(self):
         return [self._second_axis]

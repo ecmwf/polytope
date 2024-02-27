@@ -14,6 +14,17 @@ from ..transformations.datacube_transformations import (
     has_transform,
 )
 
+from pydantic import validator
+
+from typing import Literal, Union, List, Optional
+
+import pytest
+import yaml
+from pydantic import validator
+from pydantic import ConfigDict
+
+from conflator import ConfigModel, Conflator
+
 
 class Datacube(ABC):
     @abstractmethod
@@ -30,11 +41,12 @@ class Datacube(ABC):
 
     def _create_axes(self, name, values, transformation_type_key, transformation_options):
         # first check what the final axes are for this axis name given transformations
+        transformation_options = transformation_type_key
         final_axis_names = DatacubeAxisTransformation.get_final_axes(
-            name, transformation_type_key, transformation_options
+            name, transformation_type_key.name, transformation_options
         )
         transformation = DatacubeAxisTransformation.create_transform(
-            name, transformation_type_key, transformation_options
+            name, transformation_type_key.name, transformation_options
         )
         for blocked_axis in transformation.blocked_axes():
             self.blocked_axes.append(blocked_axis)
@@ -51,18 +63,22 @@ class Datacube(ABC):
             elif axis_name not in self._axes.keys():
                 DatacubeAxis.create_standard(axis_name, values, self)
             # add transformation tag to axis, as well as transformation options for later
-            setattr(self._axes[axis_name], has_transform[transformation_type_key], True)  # where has_transform is a
+            setattr(self._axes[axis_name], has_transform[transformation_type_key.name], True)  # where has_transform is a
             # factory inside datacube_transformations to set the has_transform, is_cyclic etc axis properties
             # add the specific transformation handled here to the relevant axes
             # Modify the axis to update with the tag
             decorator_module = importlib.import_module("polytope.datacube.datacube_axis")
-            decorator = getattr(decorator_module, transformation_type_key)
+            decorator = getattr(decorator_module, transformation_type_key.name)
             decorator(self._axes[axis_name])
             if transformation not in self._axes[axis_name].transformations:  # Avoids duplicates being stored
                 self._axes[axis_name].transformations.append(transformation)
 
     def _add_all_transformation_axes(self, options, name, values):
-        for transformation_type_key in options.keys():
+        # for transformation_type_key in options.keys():
+        for transformation_type_key in options.transformations:
+            # print("LOOK NOW")
+            # print(transformation_type_key)
+            # print(options)
             self._create_axes(name, values, transformation_type_key, options)
 
     def _check_and_add_axes(self, options, name, values):
@@ -149,11 +165,66 @@ class Datacube(ABC):
         return path
 
     @staticmethod
+    def create_axes_config(axis_options):
+        class TransformationConfig(ConfigModel):
+            model_config = ConfigDict(extra="forbid")
+            name: str = ""
+
+        class CyclicConfig(TransformationConfig):
+            name: Literal["cyclic"]
+            range: List[int] = [0]
+
+        class MapperConfig(TransformationConfig):
+            name: Literal["mapper"]
+            type: str = ""
+            resolution: int = 0
+            axes: List[str] = [""]
+            local: Optional[List[float]] = None
+
+        class ReverseConfig(TransformationConfig):
+            name: Literal["reverse"]
+            is_reverse: bool = False
+
+        class TypeChangeConfig(TransformationConfig):
+            name: Literal["type_change"]
+            type: str = "int"
+
+        class MergeConfig(TransformationConfig):
+            name: Literal["merge"]
+            other_axis: str = ""
+            linkers: List[str] = [""]
+
+        action_subclasses_union = Union[CyclicConfig, MapperConfig, ReverseConfig, TypeChangeConfig, MergeConfig]
+
+        class AxisConfig(ConfigModel):
+            axis_name: str = ""
+            transformations: list[action_subclasses_union]
+
+            # @validator("axis_name")
+            # def check_size(cls, v):
+            #     assert v in self.datacube._axes.keys()
+            #     return v
+
+        class Config(ConfigModel):
+            config: list[AxisConfig]
+
+        axis_config = Conflator(app_name="polytope", model=Config, cli=False, **axis_options).load()
+
+        return axis_config
+
+    @staticmethod
     def create(datacube, axis_options: dict, datacube_options={}):
+        # axis_config = Datacube.create_axes_config(axis_options).config
         if isinstance(datacube, (xr.core.dataarray.DataArray, xr.core.dataset.Dataset)):
             from .xarray import XArrayDatacube
-
             xadatacube = XArrayDatacube(datacube, axis_options, datacube_options)
             return xadatacube
         else:
+            # NOTE: here it's too late to change the config, because we have already created all the axes for the fdb backend etc
+            # datacube.axis_options = axis_config
+            print("here in datacube create")
+            print(datacube.axis_options)
+            print("now")
+            for subconfig in datacube.axis_options:
+                print(subconfig.axis_name)
             return datacube

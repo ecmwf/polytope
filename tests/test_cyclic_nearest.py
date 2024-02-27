@@ -2,6 +2,7 @@ import pandas as pd
 import pytest
 from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
 from helper_functions import download_test_data
+import yaml
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
@@ -17,13 +18,34 @@ class TestRegularGrid:
 
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/era5-levels-members.grib"
         download_test_data(nexus_url, "era5-levels-members.grib")
-        self.options = {
-            "values": {"mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}},
-            "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
-            "step": {"type_change": "int"},
-            "number": {"type_change": "int"},
-            "longitude": {"cyclic": [0, 360]},
-        }
+        self.options = yaml.safe_load(
+                                    """
+                            config:
+                                - axis_name: values
+                                  transformations:
+                                    - name: "mapper"
+                                      type: "octahedral"
+                                      resolution: 1280
+                                      axes: ["latitude", "longitude"]
+                                - axis_name: date
+                                  transformations:
+                                    - name: "merge"
+                                      other_axis: "time"
+                                      linkers: ["T", "00"]
+                                - axis_name: step
+                                  transformations:
+                                    - name: "type_change"
+                                      type: "int"
+                                - axis_name: number
+                                  transformations:
+                                    - name: "type_change"
+                                      type: "int"
+                                - axis_name: longitude
+                                  transformations:
+                                    - name: "cyclic"
+                                      range: [0, 360]
+                            """
+                            )
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper", "type": "fc"}
         self.datacube_options = {"identical structure after": "number"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options, datacube_options=self.datacube_options)
