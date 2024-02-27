@@ -23,7 +23,7 @@ class TestSlicing3DXarrayDatacube:
             },
         )
         options = yaml.safe_load(
-                                    """
+            """
                             config:
                                 - axis_name: long
                                   transformations:
@@ -34,7 +34,7 @@ class TestSlicing3DXarrayDatacube:
                                     - name: "cyclic"
                                       range: [1, 129]
                             """
-                            )
+        )
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)

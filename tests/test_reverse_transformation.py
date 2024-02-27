@@ -19,7 +19,7 @@ class TestSlicingReverseTransformation:
             },
         )
         options = yaml.safe_load(
-                                    """
+            """
                             config:
                                 - axis_name: lat
                                   transformations:

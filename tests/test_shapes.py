@@ -25,7 +25,7 @@ class TestSlicing3DXarrayDatacube:
         )
         self.xarraydatacube = XArrayDatacube(array)
         self.options = yaml.safe_load(
-                                    """
+            """
                             config:
                                 - axis_name: longitude
                                   transformations:
@@ -51,7 +51,7 @@ class TestSlicing3DXarrayDatacube:
         from polytope.datacube.backends.fdb import FDBDatacube
 
         self.options = yaml.safe_load(
-                                    """
+            """
                             config:
                                 - axis_name: values
                                   transformations:

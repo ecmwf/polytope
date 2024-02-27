@@ -22,7 +22,7 @@ class TestSlicingCyclicAxisNotOverZero:
             },
         )
         self.options = yaml.safe_load(
-                                    """
+            """
                             config:
                                 - axis_name: long
                                   transformations:
@@ -33,7 +33,7 @@ class TestSlicingCyclicAxisNotOverZero:
                                     - name: "cyclic"
                                       range: [1, 129]
                             """
-                            )
+        )
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer, axis_options=self.options)
 

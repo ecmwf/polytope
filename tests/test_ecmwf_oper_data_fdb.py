@@ -18,7 +18,7 @@ class TestSlicingFDBDatacube:
             "step": {"type_change": "int"},
         }
         self.options = yaml.safe_load(
-                                    """
+            """
                             config:
                                 - axis_name: values
                                   transformations:
@@ -36,7 +36,7 @@ class TestSlicingFDBDatacube:
                                     - name: "type_change"
                                       type: "int"
                             """
-                        )
+        )
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "type": "fc", "stream": "oper"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
         self.slicer = HullSlicer()

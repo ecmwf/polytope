@@ -18,7 +18,7 @@ class TestOctahedralGrid:
         self.latlon_array = ds.to_xarray().isel(step=0).isel(time=0).isel(isobaricInhPa=0).z
         self.xarraydatacube = XArrayDatacube(self.latlon_array)
         self.options = yaml.safe_load(
-                                    """
+            """
                             config:
                                 - axis_name: values
                                   transformations:

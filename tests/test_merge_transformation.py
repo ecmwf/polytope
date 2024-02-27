@@ -21,7 +21,7 @@ class TestMergeTransformation:
             },
         )
         self.options = yaml.safe_load(
-                                    """
+            """
                             config:
                                 - axis_name: date
                                   transformations:

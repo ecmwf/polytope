@@ -23,7 +23,7 @@ class TestSlicingEra5Data:
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         options = yaml.safe_load(
-                                    """
+            """
                             config:
                                 - axis_name: latitude
                                   transformations:

@@ -19,7 +19,7 @@ class TestOctahedralGrid:
         self.latlon_array = self.latlon_array.t2m
         self.xarraydatacube = XArrayDatacube(self.latlon_array)
         self.options = yaml.safe_load(
-                                    """
+            """
                             config:
                                 - axis_name: values
                                   transformations:

@@ -20,7 +20,7 @@ class TestTypeChangeTransformation:
         )
         self.array = array
         options = yaml.safe_load(
-                                    """
+            """
                             config:
                                 - axis_name: step
                                   transformations:

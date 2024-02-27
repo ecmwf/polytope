@@ -20,7 +20,7 @@ class TestInitDatacubeAxes:
         latlon_array = latlon_array.t2m
         self.xarraydatacube = XArrayDatacube(latlon_array)
         self.options = yaml.safe_load(
-                                    """
+            """
                             config:
                                 - axis_name: values
                                   transformations:

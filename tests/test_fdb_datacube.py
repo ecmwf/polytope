@@ -16,7 +16,7 @@ class TestSlicingFDBDatacube:
 
         # Create a dataarray with 3 labelled axes using different index types
         self.options = yaml.safe_load(
-                                    """
+            """
                             config:
                                 - axis_name: values
                                   transformations:
