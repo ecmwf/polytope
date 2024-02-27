@@ -4,3 +4,4 @@ scipy==1.9.3
 sortedcontainers==2.4.0
 tripy==1.0.0
 xarray==2022.12.0
+conflator @ git+https://github.com/ecmwf/conflator.git@feature/testing
