@@ -18,7 +18,8 @@ class FDBDatacube(Datacube):
 
         logging.info("Created an FDB datacube with options: " + str(axis_options))
 
-        self.axis_options = axis_options
+        # self.axis_options = axis_options
+        self.axis_options = Datacube.create_axes_config(axis_options).config
         self.axis_counter = 0
         self._axes = None
         treated_axes = []
@@ -41,7 +42,11 @@ class FDBDatacube(Datacube):
         self.fdb_coordinates["values"] = []
         for name, values in self.fdb_coordinates.items():
             values.sort()
-            options = axis_options.get(name, None)
+            options = None
+            for opt in self.axis_options:
+                if opt.axis_name == name:
+                    options = opt
+            # options = axis_options.get(name, None)
             self._check_and_add_axes(options, name, values)
             treated_axes.append(name)
             self.complete_axes.append(name)
@@ -49,7 +54,11 @@ class FDBDatacube(Datacube):
         # add other options to axis which were just created above like "lat" for the mapper transformations for eg
         for name in self._axes:
             if name not in treated_axes:
-                options = axis_options.get(name, None)
+                options = None
+                for opt in self.axis_options:
+                    if opt.axis_name == name:
+                        options = opt
+                # options = axis_options.get(name, None)
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
 
