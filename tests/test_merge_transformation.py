@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import xarray as xr
+import yaml
 
 from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
@@ -19,7 +20,16 @@ class TestMergeTransformation:
                 "time": ["0600"],
             },
         )
-        self.options = {"date": {"merge": {"with": "time", "linkers": ["T", "00"]}}}
+        self.options = yaml.safe_load(
+                                    """
+                            config:
+                                - axis_name: date
+                                  transformations:
+                                    - name: "merge"
+                                      other_axis: "time"
+                                      linkers: ["T", "00"]
+                            """
+        )
         self.xarraydatacube = XArrayDatacube(self.array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.array, engine=self.slicer, axis_options=self.options)

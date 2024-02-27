@@ -1,8 +1,8 @@
 import pandas as pd
 import pytest
+import yaml
 from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
 from helper_functions import download_test_data
-import yaml
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request

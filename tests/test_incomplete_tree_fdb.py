@@ -1,11 +1,11 @@
 import pandas as pd
 import pytest
+import yaml
 from helper_functions import download_test_data
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Select
-import yaml
 
 
 class TestRegularGrid:

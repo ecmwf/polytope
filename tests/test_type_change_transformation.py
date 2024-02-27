@@ -1,5 +1,6 @@
 import numpy as np
 import xarray as xr
+import yaml
 
 from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
@@ -18,7 +19,15 @@ class TestTypeChangeTransformation:
             },
         )
         self.array = array
-        options = {"step": {"type_change": "int"}}
+        options = yaml.safe_load(
+                                    """
+                            config:
+                                - axis_name: step
+                                  transformations:
+                                    - name: "type_change"
+                                      type: "int"
+                            """
+        )
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)

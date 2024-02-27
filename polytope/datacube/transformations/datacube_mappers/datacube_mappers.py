@@ -14,7 +14,6 @@ class DatacubeMapper(DatacubeAxisTransformation):
         self.grid_axes = mapper_options.axes
         self.local_area = []
         if mapper_options.local is not None:
-            # "local" in mapper_options.keys():
             self.local_area = mapper_options.local
         self.old_axis = name
         self._final_transformation = self.generate_final_transformation()

@@ -1,4 +1,5 @@
 import pytest
+import yaml
 from earthkit import data
 from helper_functions import download_test_data, find_nearest_latlon
 
@@ -16,10 +17,21 @@ class TestOctahedralGrid:
         ds = data.from_source("file", "./tests/data/healpix.grib")
         self.latlon_array = ds.to_xarray().isel(step=0).isel(time=0).isel(isobaricInhPa=0).z
         self.xarraydatacube = XArrayDatacube(self.latlon_array)
-        self.options = {
-            "values": {"mapper": {"type": "healpix", "resolution": 32, "axes": ["latitude", "longitude"]}},
-            "longitude": {"cyclic": [0, 360]},
-        }
+        self.options = yaml.safe_load(
+                                    """
+                            config:
+                                - axis_name: values
+                                  transformations:
+                                    - name: "mapper"
+                                      type: "healpix"
+                                      resolution: 32
+                                      axes: ["latitude", "longitude"]
+                                - axis_name: longitude
+                                  transformations:
+                                    - name: "cyclic"
+                                      range: [0, 360]
+                            """
+        )
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.latlon_array, engine=self.slicer, axis_options=self.options)
 

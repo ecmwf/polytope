@@ -33,7 +33,6 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
             first_val = first_ax_vals[i]
             for j in range(len(second_ax_vals)):
                 second_val = second_ax_vals[j]
-                # TODO: check that the first and second val are strings
                 val_to_add = pd.to_datetime("".join([first_val, linkers[0], second_val, linkers[1]]))
                 val_to_add = val_to_add.to_numpy()
                 val_to_add = val_to_add.astype("datetime64[s]")

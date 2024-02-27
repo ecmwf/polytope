@@ -1,10 +1,10 @@
 import pandas as pd
 import pytest
+import yaml
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
-import yaml
 
 # import geopandas as gpd
 # import matplotlib.pyplot as plt

@@ -1,20 +1,7 @@
-from typing import Dict, List, Union
-
-from conflator import ConfigModel, Conflator
+from typing import List
 
 from .shapes import ConvexPolytope
 from .utility.exceptions import AxisOverdefinedError
-
-from pydantic import validator
-
-from typing import Literal, Union, List
-
-import pytest
-import yaml
-from pydantic import validator
-from pydantic import ConfigDict
-
-from conflator import ConfigModel, Conflator
 
 
 class Request:
@@ -59,54 +46,6 @@ class Polytope:
         if datacube_options is None:
             datacube_options = {}
 
-        # # TODO: not sure this is what we want?
-        # conflator = Conflator(app_name="polytope", model=DatacubeConfig)
-        # self.datacube_config = conflator.load()
-        # self.datacube_config.config = axis_options
-
-        # class TransformationConfig(ConfigModel):
-        #     model_config = ConfigDict(extra="forbid")
-        #     name: str = ""
-
-        # class CyclicConfig(TransformationConfig):
-        #     name: Literal["cyclic"]
-        #     range: List[int] = [0]
-
-        # class MapperConfig(TransformationConfig):
-        #     name: Literal["mapper"]
-        #     type: str = ""
-        #     resolution: int = 0
-        #     axes: List[str] = [""]
-
-        # class ReverseConfig(TransformationConfig):
-        #     name: Literal["reverse"]
-        #     is_reverse: bool = False
-
-        # class TypeChangeConfig(TransformationConfig):
-        #     name: Literal["type_change"]
-        #     type: str = "int"
-
-        # class MergeConfig(TransformationConfig):
-        #     name: Literal["merge"]
-        #     other_axis: str = ""
-        #     linkers: List[str] = [""]
-
-        # action_subclasses_union = Union[CyclicConfig, MapperConfig, ReverseConfig, TypeChangeConfig, MergeConfig]
-
-        # class AxisConfig(ConfigModel):
-        #     axis_name: str = ""
-        #     transformations: list[action_subclasses_union]
-
-        #     # @validator("axis_name")
-        #     # def check_size(cls, v):
-        #     #     assert v in self.datacube._axes.keys()
-        #     #     return v
-
-        # class Config(ConfigModel):
-        #     config: list[AxisConfig]
-
-        # axis_config = Conflator(app_name="polytope", model=Config, cli=False, **axis_options).load()
-
         self.datacube = Datacube.create(datacube, axis_options)
         self.engine = engine if engine is not None else Engine.default()
 
@@ -119,106 +58,3 @@ class Polytope:
         request_tree = self.engine.extract(self.datacube, request.polytopes())
         self.datacube.get(request_tree)
         return request_tree
-
-    # class TransformationConfig(ConfigModel):
-    #     model_config = ConfigDict(extra="forbid")
-    #     name: str = ""
-
-    # class CyclicConfig(TransformationConfig):
-    #     name: Literal["cyclic"]
-    #     range: List[int] = [0]
-
-    # class MapperConfig(TransformationConfig):
-    #     name: Literal["mapper"]
-    #     type: str = ""
-    #     resolution: int = 0
-    #     axes: List[str] = [""]
-
-    # class ReverseConfig(TransformationConfig):
-    #     name: Literal["reverse"]
-    #     is_reverse: bool = False
-
-    # class TypeChangeConfig(TransformationConfig):
-    #     name: Literal["type_change"]
-    #     type: str = "int"
-
-    # class MergeConfig(TransformationConfig):
-    #     name: Literal["merge"]
-    #     other_axis: str = ""
-    #     linkers: List[str] = [""]
-
-    # action_subclasses_union = Union[CyclicConfig, MapperConfig, ReverseConfig, TypeChangeConfig, MergeConfig]
-
-    # def get_datacube_axes(self):
-    #     return self.datacube._axes.keys()
-
-    # class AxisConfig(ConfigModel):
-    #     axis_name: str = ""
-    #     transformations: list["Polytope.action_subclasses_union"]
-
-    #     @validator("axis_name")
-    #     def check_size(cls, v):
-    #         assert v in self.datacube._axes.keys()
-    #         return v
-
-    # class Config(ConfigModel):
-    #     config: list["Polytope.AxisConfig"]
-
-
-# class TransformConfig(ConfigModel):
-#     name: str = ""
-
-# class TypeChangeTransformation(TransformConfig):
-#     name: str = "type_change"
-#     type: str = "int"
-
-# class AxisConfig(ConfigModel):
-#     transform_name: str = ""
-#     axis_name: str = ""
-#     transform_config: TransformConfig = TransformConfig()
-
-
-# # class SubDatacubeConfig(ConfigModel):
-# #     # TODO: need to change this to make it fit the actual options with the different transformations
-# #     # TODO: could validate the subtypes options with the name stored in the dictionary??
-# #     axis_config: Dict[str, Union[Dict, str]] = {"": {}}
-
-
-# # class DatacubeConfig(ConfigModel):
-# #     # config: Dict[str, SubDatacubeConfig] = {"", SubDatacubeConfig()}
-# #     config: Dict[str, Union(TypeChangeOptions, CyclicOptions, MapperOptions, MergerOptions, ReverseOptions)] = {"", SubDatacubeConfig()}
-
-# #     @validator("config")
-# #     def check_size(cls, v):
-# #         assert len(v) == 1
-# #         return v
-    
-# #     # TODO: validate the keys of the config with the datacube...
-
-
-# # class TypeChangeOptions(ConfigModel):
-# #     name: str = "type_change"
-# #     type: str = ""
-
-
-# # class CyclicOptions(ConfigModel):
-# #     name: str = "cyclic"
-# #     range: List = []
-
-
-# # class MapperOptions(ConfigModel):
-# #     # TODO: Think about this? How can we assign the sub-dictionary items to the mapper options??
-# #     options: Dict
-# #     pass
-
-
-# # class SubMapperOptions(ConfigModel):
-# #     pass
-
-
-# # class MergerOptions(ConfigModel):
-# #     pass
-
-
-# # class ReverseOptions(ConfigModel):
-# #     pass

@@ -1,0 +1,19 @@
+Metadata-Version: 2.1
+Name: polytope-python
+Version: 1.0.2
+Summary: Polytope datacube feature extraction library
+Home-page: https://github.com/ecmwf/polytope
+Author: ECMWF
+Author-email: James.Hawkes@ecmwf.int, Mathilde.Leuridan@ecmwf.int
+License-File: LICENSE
+Requires-Dist: numpy==1.23.5
+Requires-Dist: pandas==1.5.2
+Requires-Dist: scipy==1.9.3
+Requires-Dist: sortedcontainers==2.4.0
+Requires-Dist: tripy==1.0.0
+Requires-Dist: xarray==2022.12.0
+
+Polytope is a library for extracting complex data from datacubes. It provides an API for
+                        non-orthogonal access to data, where the stencil used to extract data from the datacube can be
+                        any arbitrary n-dimensional polygon (called a polytope). This can be used to efficiently
+                        extract complex features from a datacube, such as polygon regions or spatio-temporal paths.
