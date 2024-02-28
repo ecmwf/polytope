@@ -28,7 +28,7 @@ Polytope is designed to extend different datacube backends:
 * XArray dataarrays
 * FDB object stores (through the GribJump software)
 
-Polytope supports datacubes which have branching, non-uniform indexing, and even cyclic axes. If the datacube backend supports byte-addressability and efficient random access (either in-memory or direct from storage), **polytope** can be used to dramatically decrease overall I/O load.
+Polytope supports datacubes which have branching, non-uniform indexing, and even cyclic axes. If the datacube backend supports byte-addressability and efficient random access (either in-memory or direct from storage), **Polytope** can be used to dramatically decrease overall I/O load.
 
 > [!WARNING]
 > This project is BETA and will be experimental for the forseable future. Interfaces and functionality are likely to change, and the project itself may be scrapped. DO NOT use this software in any project/software that is operational.
