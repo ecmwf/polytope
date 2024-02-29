@@ -178,7 +178,6 @@ class HullSlicer(Engine):
         # directly work on request and return it...
 
         for c in combinations:
-
             r = TensorIndexTree()
             r["unsliced_polytopes"] = set(c)
             current_nodes = [r]

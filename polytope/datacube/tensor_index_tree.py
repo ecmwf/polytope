@@ -28,7 +28,6 @@ class TensorIndexTree(object):
 
     @property
     def leaves_with_ancestors(self):
-        # TODO: could store ancestors directly in leaves? Change here
         leaves = []
         self._collect_leaf_nodes(leaves)
         return leaves
@@ -84,8 +83,6 @@ class TensorIndexTree(object):
                 if isinstance(self.axis, UnsliceableDatacubeAxis):
                     return False
                 else:
-                    # Here, need to compare the values in the values tuple 1 by 1
-                    # TODO
                     if len(other.values) != len(self.values):
                         return False
                     for i in range(len(other.values)):
@@ -94,12 +91,6 @@ class TensorIndexTree(object):
                         if abs(other_val - self_val) > 2 * max(other.axis.tol, self.axis.tol):
                             return False
                     return True
-                    # if other.value - 2 * other.axis.tol <= self.value <= other.value + 2 * other.axis.tol:
-                    #     return True
-                    # elif self.value - 2 * self.axis.tol <= other.value <= self.value + 2 * self.axis.tol:
-                    #     return True
-                    # else:
-                    #     return False
 
     def __lt__(self, other):
         return (self.axis.name, self.values) < (other.axis.name, other.values)
@@ -153,7 +144,6 @@ class TensorIndexTree(object):
         return child
 
     def merge(self, other):
-        # TODO: this might be more complicated now? Should be fine
         for other_child in other.children:
             my_child = self.find_child(other_child)
             if not my_child:
