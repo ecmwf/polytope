@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from polytope import ConvexPolytope
-from polytope.utility.combinatorics import group, product, validate_axes
+from polytope.utility.combinatorics import group, tensor_product, validate_axes
 from polytope.utility.exceptions import (
     AxisNotFoundError,
     AxisOverdefinedError,
@@ -28,7 +28,7 @@ class TestCombinatorics:
         assert len(groups[("a", "b")]) == 4
         assert len(all_axes) == 4
 
-        combinations = product(groups)
+        combinations = tensor_product(groups)
 
         assert len(combinations) == 4
         for c in combinations:

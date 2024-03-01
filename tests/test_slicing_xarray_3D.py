@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from polytope.datacube.datacube_request_tree import IndexTree
-from polytope.datacube.xarray import XArrayDatacube
+from polytope.datacube.backends.xarray import XArrayDatacube
+from polytope.datacube.index_tree import IndexTree
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import (
@@ -24,9 +24,9 @@ from polytope.shapes import (
 class TestSlicing3DXarrayDatacube:
     def setup_method(self, method):
         # Create a dataarray with 3 labelled axes using different index types
-        dims = np.random.randn(3, 6, 129)
-        array = xr.Dataset(
-            data_vars=dict(param=(["date", "step", "level"], dims)),
+        array = xr.DataArray(
+            np.random.randn(3, 6, 129),
+            dims=("date", "step", "level"),
             coords={
                 "date": pd.date_range("2000-01-01", "2000-01-03", 3),
                 "step": [0, 3, 6, 9, 12, 15],

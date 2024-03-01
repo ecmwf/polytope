@@ -4,21 +4,21 @@ import numpy as np
 from earthkit import data
 from shapely.geometry import shape
 
-from polytope.datacube.xarray import XArrayDatacube
+from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Polygon, Union
+from polytope.shapes import Polygon, Select, Union
 
 
 class Test:
     def setup_method(self, method):
         ds = data.from_source("file", "./examples/data/output8.grib")
         array = ds.to_xarray()
-        array = array.isel(surface=0).isel(step=0).isel(number=0).isel(time=0)
-        options = {"longitude": {"Cyclic": [0, 360.0]}}
+        array = array.isel(surface=0).isel(step=0).isel(number=0).isel(time=0).t2m
+        axis_options = {"longitude": {"cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
+        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=axis_options)
 
     def test_slice_country(self):
         # Read a shapefile for a given country and extract the geometry polygons
@@ -68,7 +68,14 @@ class Test:
 
             for obj in poly:
                 request_obj = Union(["longitude", "latitude"], request_obj, obj)
-            request = Request(request_obj)
+            request = Request(
+                request_obj,
+                Select("number", [0]),
+                Select("time", ["2022-02-06T12:00:00"]),
+                Select("step", ["00:00:00"]),
+                Select("surface", [0]),
+                Select("valid_time", ["2022-02-06T12:00:00"]),
+            )
 
             # Extract the values of the long and lat from the tree
             result = self.API.retrieve(request)
@@ -114,7 +121,14 @@ class Test:
             for obj in poly:
                 request_obj = Union(["longitude", "latitude"], request_obj, obj)
 
-            request = Request(request_obj)
+            request = Request(
+                request_obj,
+                Select("number", [0]),
+                Select("time", ["2022-02-06T12:00:00"]),
+                Select("step", ["00:00:00"]),
+                Select("surface", [0]),
+                Select("valid_time", ["2022-02-06T12:00:00"]),
+            )
 
             # Extract the values of the long and lat from the tree
             result = self.API.retrieve(request)
@@ -127,7 +141,7 @@ class Test:
                 latlong_point = [lat, long]
                 countries_lats.append(lat)
                 countries_longs.append(long)
-                t_idx = result.leaves[i].result["t2m"]
+                t_idx = result.leaves[i].result[1]
                 t = t_idx
                 countries_temps.append(t)
                 country_points_plotting.append(latlong_point)

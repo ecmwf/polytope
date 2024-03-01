@@ -1,25 +1,19 @@
 name: ci
-
 on:
   # Trigger the workflow on push to master or develop, except tag creation
   push:
     branches:
       - 'main'
       - 'develop'
-
   # Trigger the workflow on pull request
   pull_request: ~
-
   # Trigger the workflow manually
   workflow_dispatch: ~
-
   # Trigger after public PR approved for CI
   pull_request_target:
     types: [labeled]
-
   release:
     types: [created]
-
 jobs:
   qa:
     name: qa
@@ -48,7 +42,6 @@ jobs:
 
       - name: Check flake8
         run: flake8 .
-
   setup:
     name: setup
     runs-on: ubuntu-20.04
@@ -95,7 +88,6 @@ jobs:
         run: |
           echo inputs=$(echo "${{ inputs.build_package_inputs || '{}' }}" | yq eval '.' --output-format json --indent 0 -) >> $GITHUB_OUTPUT
           echo inputs-for-ubuntu=$(echo "${{ inputs.build_package_inputs || '{}' }}" | yq eval '. * {"os":"ubuntu-20.04","compiler":"gnu-10","compiler_cc":"gcc-10","compiler_cxx":"g++-10","compiler_fc":"gfortran-10"}' --output-format json --indent 0 -) >> $GITHUB_OUTPUT
-
   test:
     name: test
     needs:
@@ -106,20 +98,16 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - name: Install eccodes and Dependencies
+        id: install-dependencies
+        uses: ecmwf-actions/build-package@v2
         with:
-          fetch-depth: 3 # enable full clone to download Git LFS files
-      - name: Change write permission
-        run: chmod -R 777 ./tests/data/
-      - name: Install Git LFS
-        run: |
-          sudo apt-get install git-lfs
-          git lfs install
-      - name: Download Git LFS file
-        run: |
-          git lfs pull
-      - name: Install eccodes
-        run: sudo apt-get install -y libeccodes-dev
+          self_build: false
+          dependencies: |
+            ecmwf/ecbuild@develop
+            MathisRosenhauer/libaec@master
+            ecmwf/eccodes@develop
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -143,23 +131,18 @@ jobs:
           LD_LIBRARY_PATH: ${{ steps.install-dependencies.outputs.lib_path }}
         shell: bash -eux {0}
         run: |
-          DYLD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }} python -m pytest tests --cov=./ --cov-report=xml
+          DYLD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }} python -m pytest -m "not fdb" tests --cov=./ --cov-report=xml
           python -m coverage report
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
           files: coverage.xml
-
   deploy:
     needs: test
-
     if: ${{ github.event_name == 'release' }}
-
     name: Upload to Pypi
-
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
@@ -172,8 +155,8 @@ jobs:
           pip install setuptools wheel twine
       - name: Build and publish
         env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+          TWINE_USERNAME: "__token__"
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: |
           python setup.py sdist
           twine upload dist/*

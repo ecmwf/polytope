@@ -1,17 +1,19 @@
 import pandas as pd
 
 from polytope.datacube.datacube_axis import (
-    FloatAxis,
-    FloatAxisCyclic,
-    IntAxis,
-    PandasTimedeltaAxis,
-    PandasTimestampAxis,
+    FloatDatacubeAxis,
+    IntDatacubeAxis,
+    PandasTimedeltaDatacubeAxis,
+    PandasTimestampDatacubeAxis,
 )
 
 
 class TestAxisMappers:
+    def setup_method(self, method):
+        pass
+
     def test_int_axis(self):
-        axis = IntAxis()
+        axis = IntDatacubeAxis()
         assert axis.parse(2) == 2.0
         assert axis.to_float(2) == 2.0
         assert axis.from_float(2) == 2.0
@@ -19,7 +21,7 @@ class TestAxisMappers:
         assert axis.remap([2, 3]) == [[2, 3]]
 
     def test_float_axis(self):
-        axis = FloatAxis()
+        axis = FloatDatacubeAxis()
         assert axis.parse(2) == 2.0
         assert axis.to_float(2) == 2.0
         assert axis.from_float(2) == 2.0
@@ -27,7 +29,9 @@ class TestAxisMappers:
         assert axis.remap([2, 3]) == [[2, 3]]
 
     def test_float_axis_cyclic(self):
-        axis = FloatAxisCyclic()
+        axis = FloatDatacubeAxis()
+        axis.is_cyclic = True
+        axis = axis.update_axis()
         assert axis.parse(2) == 2.0
         assert axis.to_float(2) == 2.0
         assert axis.from_float(2) == 2.0
@@ -76,7 +80,7 @@ class TestAxisMappers:
         assert axis.offset([5.05, 5.1]) == 4
 
     def test_timedelta_axis(self):
-        axis = PandasTimedeltaAxis()
+        axis = PandasTimedeltaDatacubeAxis()
         time1 = pd.Timedelta("1 days")
         time2 = pd.Timedelta("1 days 2 hours")
         assert axis.parse(time1) == pd.Timedelta("1 days 00:00:00")
@@ -86,7 +90,7 @@ class TestAxisMappers:
         assert axis.remap([time1, time2]) == [[pd.Timedelta("1 days 00:00:00"), pd.Timedelta("1 days 02:00:00")]]
 
     def test_timestamp_axis(self):
-        axis = PandasTimestampAxis()
+        axis = PandasTimestampDatacubeAxis()
         time1 = pd.Timestamp("2017-01-01 11:00:00")
         time2 = pd.Timestamp("2017-01-01 12:00:00")
         assert axis.parse(time1) == pd.Timestamp("2017-01-01 11:00:00")

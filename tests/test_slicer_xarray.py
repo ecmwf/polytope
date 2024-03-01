@@ -10,16 +10,15 @@ from polytope.shapes import Box, Select, Span
 class TestXarraySlicing:
     def setup_method(self, method):
         # Create a dataarray with 3 labelled axes using different index types
-        dims = np.random.randn(3, 6, 129)
-        array = xr.Dataset(
-            data_vars=dict(param=(["date", "step", "level"], dims)),
+        array = xr.DataArray(
+            np.random.randn(3, 6, 129),
+            dims=("date", "step", "level"),
             coords={
                 "date": pd.date_range("2000-01-01", "2000-01-03", 3),
                 "step": [0, 3, 6, 9, 12, 15],
                 "level": range(1, 130),
             },
         )
-
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)
 
@@ -38,7 +37,7 @@ class TestXarraySlicing:
 
     def test_3D_box_with_date(self):
         request = Request(
-            Box(["step", "level", "date"], [3, 10, pd.Timestamp("2000-01-01")], [6, 11, pd.Timestamp("2000-01-01")]),
+            Box(["step", "level", "date"], [3, 10, pd.Timestamp("2000-01-01")], [6, 11, pd.Timestamp("2000-01-01")])
         )
         result = self.API.retrieve(request)
         result.pprint()

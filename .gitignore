@@ -6,3 +6,14 @@ polytope.egg-info
 .pytest_cache
 *.prof
 *.idx
+*.grib
+*.xml
+site
+.coverage
+*.grib
+*.gif
+*.html
+example_eo
+example_mri
+.mypy_cache
+*.req

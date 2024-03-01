@@ -29,20 +29,31 @@ class Request:
             polytopes.extend(shape.polytope())
         return polytopes
 
+    def __repr__(self):
+        return_str = ""
+        for shape in self.shapes:
+            return_str += shape.__repr__() + "\n"
+        return return_str
+
 
 class Polytope:
-    def __init__(self, datacube, engine=None, options={}):
+    def __init__(self, datacube, engine=None, axis_options=None, datacube_options=None):
         from .datacube import Datacube
         from .engine import Engine
 
-        self.datacube = Datacube.create(datacube, options)
+        if axis_options is None:
+            axis_options = {}
+        if datacube_options is None:
+            datacube_options = {}
+
+        self.datacube = Datacube.create(datacube, axis_options)
         self.engine = engine if engine is not None else Engine.default()
 
     def slice(self, polytopes: List[ConvexPolytope]):
         """Low-level API which takes a polytope geometry object and uses it to slice the datacube"""
         return self.engine.extract(self.datacube, polytopes)
 
-    def retrieve(self, request: Request):
+    def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
         request_tree = self.engine.extract(self.datacube, request.polytopes())
         self.datacube.get(request_tree)

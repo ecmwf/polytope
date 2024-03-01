@@ -3,7 +3,7 @@ import time
 import numpy as np
 import xarray as xr
 
-from polytope.datacube.xarray import XArrayDatacube
+from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Disk, Ellipsoid, Select
@@ -11,7 +11,7 @@ from polytope.shapes import Box, Disk, Ellipsoid, Select
 
 class Test:
     def setup_method(self):
-        array = xr.open_dataset("../examples/data/temp_model_levels.grib", engine="cfgrib")
+        array = xr.open_dataset("../examples/data/temp_model_levels.grib", engine="cfgrib").t
         options = {"longitude": {"Cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         for dim in array.dims:
