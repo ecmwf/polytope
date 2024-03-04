@@ -99,28 +99,42 @@ class HullSlicer(Engine):
             ax_in_forbidden_axes = not any(ax.name in sublist for sublist in datacube.coupled_axes)
         else:
             ax_in_forbidden_axes = True
-        if polytope.is_natively_1D and ax_in_forbidden_axes:
-            all_remapped_vals = []
-            for value in values:
-                fvalue = ax.to_float(value)
-                remapped_val = self.remapped_vals.get((value, ax.name), None)
-                if remapped_val is None:
-                    remapped_val = value
-                    if ax.is_cyclic:
-                        remapped_val_interm = ax.remap([value, value])[0]
-                        remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
-                        remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
-                    self.remapped_vals[(value, ax.name)] = remapped_val
-                all_remapped_vals.append(remapped_val)
-            # NOTE we remove unnecessary empty branches here too
-            if len(tuple(all_remapped_vals)) == 0:
-                node.remove_branch()
-            else:
-                child = node.create_child(ax, tuple(all_remapped_vals))
-                child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
-                child["unsliced_polytopes"].remove(polytope)
-                next_nodes.append(child)
-        else:
+
+        # TODO: find which axes can be compressed here...
+
+        # if polytope.is_natively_1D and ax_in_forbidden_axes:
+        #     # TODO: instead of checking here whether an axis/indices can be compressed and doing a for loop, 
+        #     # do this logic of recursively adding children to the tensor index tree, so do this inside of create_child
+        #     all_remapped_vals = []
+        #     for value in values:
+        #         fvalue = ax.to_float(value)
+        #         remapped_val = self.remapped_vals.get((value, ax.name), None)
+        #         if remapped_val is None:
+        #             remapped_val = value
+        #             if ax.is_cyclic:
+        #                 remapped_val_interm = ax.remap([value, value])[0]
+        #                 remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
+        #                 remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
+        #             self.remapped_vals[(value, ax.name)] = remapped_val
+        #         all_remapped_vals.append(remapped_val)
+        #     # NOTE we remove unnecessary empty branches here too
+        #     if len(tuple(all_remapped_vals)) == 0:
+        #         node.remove_branch()
+        #     else:
+        #         child = node.create_child(ax, tuple(all_remapped_vals))
+        #         # TODO: here, we will now recursively add values to the tuple inside the created child, and we will only need to assign the unsliced polytopes of the child at the end?
+        #         child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
+        #         child["unsliced_polytopes"].remove(polytope)
+        #         next_nodes.append(child)
+        # else:
+
+        # TODO: here add the children that are required now to the tree
+        for value in values:
+            pass
+
+
+        
+        if True:
             for value in values:
                 # convert to float for slicing
                 fvalue = ax.to_float(value)

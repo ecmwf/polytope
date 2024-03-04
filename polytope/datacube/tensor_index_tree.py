@@ -98,14 +98,45 @@ class TensorIndexTree(object):
         self.children.add(node)
         node._parent = self
 
-    def create_child(self, axis, value):
-        assert isinstance(value, tuple)
-        node = TensorIndexTree(axis, value)
-        existing = self.find_child(node)
-        if not existing:
+    def find_compressed_child(self, axis):
+        for c in self.children:
+            if c.axis == axis:
+                return c
+        return None
+
+    def create_child(self, axis, value, compressed_axes):
+        # TODO: if the axis should not be compressed, just create a child with a tuple value with a single value
+        # TODO: if the axis should be compressed, check if we already have a child with the axis name. 
+        # TODO: Then: if we have such a child, add to its tuple value the new value.
+        # TODO: Else, just create a child with a tuple value with a single value
+
+        if axis.name not in compressed_axes:
+            # In this case, the child should not already exist? But you never know if the slicer hasn't found the same value twice? It shouldn't though?
+            # Can safely add the child here though to self
+            node = TensorIndexTree(axis, (value,))
             self.add_child(node)
             return node
-        return existing
+        else:
+            # TODO: find the compressed child
+            existing_compressed_child = self.find_compressed_child(axis)
+            if existing_compressed_child:
+                # NOTE: do we even need to hash the values anymore if we implement logic to only compare children when
+                # we have the right compressed children? Then could have a list here for the values which is easier to
+                # manipulate...
+                new_value = list[existing_compressed_child.value].append(value)
+                existing_compressed_child.value = tuple(new_value)
+                return existing_compressed_child
+            else:
+                node = TensorIndexTree(axis, (value,))
+                self.add_child(node)
+                return node
+
+        # node = TensorIndexTree(axis, value)
+        # existing = self.find_child(node)
+        # if not existing:
+        #     self.add_child(node)
+        #     return node
+        # return existing
 
     @property
     def parent(self):
