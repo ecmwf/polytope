@@ -1,7 +1,6 @@
 import numpy as np
 import xarray as xr
 
-from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Select
@@ -18,7 +17,6 @@ class TestSlicing3DXarrayDatacube:
                 "step": [1, 3, 5],
             },
         )
-        self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)
 

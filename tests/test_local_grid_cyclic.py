@@ -24,6 +24,7 @@ class TestSlicingFDBDatacube:
             "step": {"type_change": "int"},
             "number": {"type_change": "int"},
             "longitude": {"cyclic": [-180, 180]},
+            "latitude": {"reverse": {True}},
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
