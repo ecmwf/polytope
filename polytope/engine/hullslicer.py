@@ -58,7 +58,11 @@ class HullSlicer(Engine):
             next_nodes.append(child)
         else:
             # raise a value not found error
-            raise ValueError()
+            errmsg = (
+                f"Datacube does not have expected index {lower} of type {type(lower)}"
+                f"on {ax.name} along the path {path}"
+            )
+            raise ValueError(errmsg)
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, lower, upper, next_nodes, slice_axis_idx):
         tol = ax.tol
