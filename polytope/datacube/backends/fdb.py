@@ -11,26 +11,12 @@ class FDBDatacube(Datacube):
     def __init__(self, config=None, axis_options=None, datacube_options=None):
         if config is None:
             config = {}
-        if axis_options is None:
-            axis_options = {}
-        if datacube_options is None:
-            datacube_options = {}
+
+        super().__init__(axis_options, datacube_options)
 
         logging.info("Created an FDB datacube with options: " + str(axis_options))
 
-        self.axis_options = axis_options
-        self.axis_counter = 0
-        self._axes = None
-        treated_axes = []
-        self.complete_axes = []
-        self.blocked_axes = []
-        self.fake_axes = []
         self.unwanted_path = {}
-        self.nearest_search = {}
-        self.coupled_axes = []
-        self.axis_with_identical_structure_after = datacube_options.get("identical structure after")
-        self.transformed_axes = []
-        self.dataarray = []
 
         partial_request = config
         # Find values in the level 3 FDB datacube
@@ -45,12 +31,12 @@ class FDBDatacube(Datacube):
             values.sort()
             options = axis_options.get(name, None)
             self._check_and_add_axes(options, name, values)
-            treated_axes.append(name)
+            self.treated_axes.append(name)
             self.complete_axes.append(name)
 
         # add other options to axis which were just created above like "lat" for the mapper transformations for eg
         for name in self._axes:
-            if name not in treated_axes:
+            if name not in self.treated_axes:
                 options = axis_options.get(name, None)
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
