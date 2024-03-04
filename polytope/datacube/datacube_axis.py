@@ -170,6 +170,7 @@ class IntDatacubeAxis(DatacubeAxis):
         self.name = None
         self.tol = 1e-12
         self.range = None
+        # TODO: Maybe here, store transformations as a dico instead
         self.transformations = []
         self.type = 0
 
