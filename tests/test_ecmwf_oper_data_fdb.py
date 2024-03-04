@@ -15,6 +15,7 @@ class TestSlicingFDBDatacube:
             "values": {"mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}},
             "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
             "step": {"type_change": "int"},
+            "latitude": {"reverse": {True}},
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "type": "fc", "stream": "oper"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
