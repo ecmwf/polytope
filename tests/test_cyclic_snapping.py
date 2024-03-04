@@ -1,6 +1,5 @@
 import xarray as xr
 
-from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Select
@@ -17,7 +16,6 @@ class TestSlicing3DXarrayDatacube:
             },
         )
         options = {"long": {"cyclic": [0, 1.0]}}
-        self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
 

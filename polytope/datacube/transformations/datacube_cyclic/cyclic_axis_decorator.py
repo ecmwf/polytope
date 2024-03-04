@@ -1,4 +1,3 @@
-import bisect
 import math
 from copy import deepcopy
 from typing import List
@@ -113,61 +112,6 @@ def cyclic(cls):
                         ranges.append([low - cls.tol, up + cls.tol])
             return ranges
 
-        old_find_indexes = cls.find_indexes
-
-        def find_indexes(path, datacube):
-            return old_find_indexes(path, datacube)
-
-        old_unmap_path_key = cls.unmap_path_key
-
-        def unmap_path_key(key_value_path, leaf_path, unwanted_path):
-            value = key_value_path[cls.name]
-            for transform in cls.transformations:
-                if isinstance(transform, DatacubeAxisCyclic):
-                    if cls.name == transform.name:
-                        new_val = _remap_val_to_axis_range(value)
-                        key_value_path[cls.name] = new_val
-            key_value_path, leaf_path, unwanted_path = old_unmap_path_key(key_value_path, leaf_path, unwanted_path)
-            return (key_value_path, leaf_path, unwanted_path)
-
-        old_unmap_to_datacube = cls.unmap_to_datacube
-
-        def unmap_to_datacube(path, unmapped_path):
-            (path, unmapped_path) = old_unmap_to_datacube(path, unmapped_path)
-            return (path, unmapped_path)
-
-        old_find_indices_between = cls.find_indices_between
-
-        def find_indices_between(index_ranges, low, up, datacube, method=None):
-            update_range()
-            indexes_between_ranges = []
-
-            if method != "surrounding" or method != "nearest":
-                return old_find_indices_between(index_ranges, low, up, datacube, method)
-            else:
-                for indexes in index_ranges:
-                    if cls.name in datacube.complete_axes:
-                        start = indexes.searchsorted(low, "left")
-                        end = indexes.searchsorted(up, "right")
-                    else:
-                        start = bisect.bisect_left(indexes, low)
-                        end = bisect.bisect_right(indexes, up)
-
-                    if start - 1 < 0:
-                        index_val_found = indexes[-1:][0]
-                        indexes_between_ranges.append([index_val_found])
-                    if end + 1 > len(indexes):
-                        index_val_found = indexes[:2][0]
-                        indexes_between_ranges.append([index_val_found])
-                    start = max(start - 1, 0)
-                    end = min(end + 1, len(indexes))
-                    if cls.name in datacube.complete_axes:
-                        indexes_between = indexes[start:end].to_list()
-                    else:
-                        indexes_between = indexes[start:end]
-                    indexes_between_ranges.append(indexes_between)
-                return indexes_between_ranges
-
         def offset(range):
             # We first unpad the range by the axis tolerance to make sure that
             # we find the wanted range of the cyclic axis since we padded by the axis tolerance before.
@@ -180,10 +124,6 @@ def cyclic(cls):
         cls.to_intervals = to_intervals
         cls.remap = remap
         cls.offset = offset
-        cls.find_indexes = find_indexes
-        cls.unmap_to_datacube = unmap_to_datacube
-        cls.find_indices_between = find_indices_between
-        cls.unmap_path_key = unmap_path_key
         cls._remap_val_to_axis_range = _remap_val_to_axis_range
 
     return cls

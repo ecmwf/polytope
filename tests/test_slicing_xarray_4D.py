@@ -3,7 +3,6 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.datacube.index_tree import IndexTree
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
@@ -34,7 +33,6 @@ class TestSlicing4DXarrayDatacube:
                 "lat": np.around(np.arange(0.0, 10.0, 0.1), 15),
             },
         )
-        self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)
 
