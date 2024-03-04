@@ -1,5 +1,6 @@
 from copy import deepcopy
 
+import numpy as np
 import xarray as xr
 
 from .datacube import Datacube, IndexTree
@@ -24,6 +25,7 @@ class XArrayDatacube(Datacube):
         self.nearest_search = None
         self.coupled_axes = []
         self.axis_with_identical_structure_after = datacube_options.get("identical structure after")
+        self.transformed_axes = []
 
         for name, values in dataarray.coords.variables.items():
             if name in dataarray.dims:
@@ -58,9 +60,25 @@ class XArrayDatacube(Datacube):
                 path_copy = deepcopy(path)
                 for key in path_copy:
                     axis = self._axes[key]
-                    (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
-                # TODO: here do nearest point search
-                path = self.fit_path(path)
+                    key_value_path = {key: path_copy[key]}
+                    # (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
+                    (key_value_path, path, unmapped_path) = axis.unmap_path_key(key_value_path, path, unmapped_path)
+                path.update(key_value_path)
+                path.update(unmapped_path)
+
+                unmapped_path = {}
+                for key in path.keys():
+                    if key not in self.dataarray.dims:
+                        path.pop(key)
+                    if key not in self.dataarray.coords.dtypes:
+                        unmapped_path.update({key: path[key]})
+                        path.pop(key)
+                    for key in self.dataarray.coords.dtypes:
+                        key_dtype = self.dataarray.coords.dtypes[key]
+                        if key_dtype.type is np.str_ and key in path.keys():
+                            unmapped_path.update({key: path[key]})
+                            path.pop(key)
+
                 subxarray = self.dataarray.sel(path, method="nearest")
                 subxarray = subxarray.sel(unmapped_path)
                 value = subxarray.item()

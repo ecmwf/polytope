@@ -23,6 +23,7 @@ class TestRegularGrid:
             "step": {"type_change": "int"},
             "number": {"type_change": "int"},
             "longitude": {"cyclic": [0, 360]},
+            "latitude": {"reverse": {True}},
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper", "type": "fc"}
         self.datacube_options = {"identical structure after": "number"}

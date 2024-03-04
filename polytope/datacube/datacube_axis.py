@@ -1,3 +1,4 @@
+import bisect
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from typing import Any, List
@@ -70,10 +71,9 @@ class DatacubeAxis(ABC):
         return value
 
     def find_indices_between(self, index_ranges, low, up, datacube, method=None):
-        # TODO: add method for snappping
         indexes_between_ranges = []
         for indexes in index_ranges:
-            if self.name in datacube.complete_axes:
+            if self.name in datacube.complete_axes and self.name not in datacube.transformed_axes:
                 # Find the range of indexes between lower and upper
                 # https://pandas.pydata.org/docs/reference/api/pandas.Index.searchsorted.html
                 # Assumes the indexes are already sorted (could sort to be sure) and monotonically increasing
@@ -91,14 +91,16 @@ class DatacubeAxis(ABC):
                     indexes_between_ranges.append(indexes_between)
             else:
                 if method == "surrounding" or method == "nearest":
-                    start = indexes.index(low)
-                    end = indexes.index(up)
+                    start = bisect.bisect_left(indexes, low)
+                    end = bisect.bisect_right(indexes, up)
                     start = max(start - 1, 0)
                     end = min(end + 1, len(indexes))
                     indexes_between = indexes[start:end]
                     indexes_between_ranges.append(indexes_between)
                 else:
-                    indexes_between = [i for i in indexes if low <= i <= up]
+                    lower_idx = bisect.bisect_left(indexes, low)
+                    upper_idx = bisect.bisect_right(indexes, up)
+                    indexes_between = indexes[lower_idx:upper_idx]
                     indexes_between_ranges.append(indexes_between)
         return indexes_between_ranges
 
@@ -129,6 +131,7 @@ class IntDatacubeAxis(DatacubeAxis):
         self.name = None
         self.tol = 1e-12
         self.range = None
+        # TODO: Maybe here, store transformations as a dico instead
         self.transformations = []
         self.type = 0
 
