@@ -39,13 +39,6 @@ class TensorIndexTree(object):
             c.copy_children_from_other(o)
         return
 
-    def pprint_2(self, level=0):
-        if self.axis.name == "root":
-            print("\n")
-        print("\t" * level + "\u21b3" + str(self))
-        for child in self.children:
-            child.pprint_2(level + 1)
-
     def _collect_leaf_nodes(self, leaves):
         # NOTE: leaves_and_ancestors is going to be a list of tuples, where first entry is leaf and second entry is a
         # list of its ancestors
