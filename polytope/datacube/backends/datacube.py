@@ -1,4 +1,3 @@
-import importlib
 import logging
 from abc import ABC, abstractmethod
 from typing import Any
@@ -15,6 +14,24 @@ from ..transformations.datacube_transformations import (
 
 
 class Datacube(ABC):
+    def __init__(self, axis_options=None, datacube_options=None):
+        if axis_options is None:
+            self.axis_options = {}
+        else:
+            self.axis_options = axis_options
+        if datacube_options is None:
+            datacube_options = {}
+        self.axis_with_identical_structure_after = datacube_options.get("identical structure after")
+        self.coupled_axes = []
+        self.axis_counter = 0
+        self.complete_axes = []
+        self.blocked_axes = []
+        self.fake_axes = []
+        self.treated_axes = []
+        self.nearest_search = {}
+        self._axes = None
+        self.transformed_axes = []
+
     @abstractmethod
     def get(self, requests: IndexTree) -> Any:
         """Return data given a set of request trees"""
@@ -52,9 +69,7 @@ class Datacube(ABC):
             # factory inside datacube_transformations to set the has_transform, is_cyclic etc axis properties
             # add the specific transformation handled here to the relevant axes
             # Modify the axis to update with the tag
-            decorator_module = importlib.import_module("polytope.datacube.datacube_axis")
-            decorator = getattr(decorator_module, transformation_type_key)
-            decorator(self._axes[axis_name])
+
             if transformation not in self._axes[axis_name].transformations:  # Avoids duplicates being stored
                 self._axes[axis_name].transformations.append(transformation)
 
