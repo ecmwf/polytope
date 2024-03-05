@@ -75,8 +75,9 @@ class TestInitDatacubeAxes:
         assert path == {}
         assert unmapped_path == {"latitude": 89.94618771566562}
         assert path_key == {"values": 0}
-        assert lat_ax.find_indices_between([[89.94618771566562, 89.87647835333229]], 89.87, 90, self.datacube, 0) == [
-            [89.94618771566562, 89.87647835333229]
+        assert lat_ax.find_indices_between([89.94618771566562, 89.87647835333229], 89.87, 90, self.datacube, 0) == [
+            89.94618771566562,
+            89.87647835333229,
         ]
 
     @pytest.mark.internet
