@@ -33,7 +33,7 @@ class TestXarraySlicing:
             Span("date", lower=pd.Timestamp("2000-01-01"), upper=pd.Timestamp("2000-01-05")),
         )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
 
     def test_3D_box_with_date(self):
         request = Request(

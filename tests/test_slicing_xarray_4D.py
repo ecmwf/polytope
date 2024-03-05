@@ -34,7 +34,6 @@ class TestSlicing4DXarrayDatacube:
                 "lat": np.around(np.arange(0.0, 10.0, 0.1), 15),
             },
         )
-        self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer)
 

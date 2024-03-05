@@ -2,7 +2,6 @@ import pytest
 from earthkit import data
 from helper_functions import download_test_data
 
-from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.datacube.datacube_axis import FloatDatacubeAxis
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
@@ -17,9 +16,9 @@ class TestInitDatacubeAxes:
         ds = data.from_source("file", "./tests/data/foo.grib")
         latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
         latlon_array = latlon_array.t2m
-        self.xarraydatacube = XArrayDatacube(latlon_array)
         self.options = {
             "values": {"mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}},
+            "latitude": {"reverse": {True}},
         }
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=latlon_array, engine=self.slicer, axis_options=self.options)
@@ -73,15 +72,16 @@ class TestInitDatacubeAxes:
         )
         lon_ax = self.datacube._axes["longitude"]
         lat_ax = self.datacube._axes["latitude"]
-        (path, unmapped_path) = lat_ax.unmap_to_datacube({"latitude": (89.94618771566562,)}, {})
+        (path_key, path, unmapped_path) = lat_ax.unmap_path_key({"latitude": 89.94618771566562}, {}, {})
         assert path == {}
-        assert unmapped_path == {"latitude": (89.94618771566562,)}
-        assert unmapped_path == {"latitude": (89.94618771566562,)}
-        (path, unmapped_path) = lon_ax.unmap_to_datacube({"longitude": (0.0,)}, {"latitude": (89.94618771566562,)})
+        assert unmapped_path == {"latitude": 89.94618771566562}
+        (path_key, path, unmapped_path) = lon_ax.unmap_path_key({"longitude": 0.0}, {}, {"latitude": 89.94618771566562})
         assert path == {}
-        assert unmapped_path == {"values": (0,)}
-        assert lat_ax.find_indices_between([[89.94618771566562, 89.87647835333229]], 89.87, 90, self.datacube, 0) == [
-            [89.94618771566562, 89.87647835333229]
+        assert unmapped_path == {"latitude": 89.94618771566562}
+        assert path_key == {"values": 0}
+        assert lat_ax.find_indices_between([89.94618771566562, 89.87647835333229], 89.87, 90, self.datacube, 0) == [
+            89.94618771566562,
+            89.87647835333229,
         ]
 
     @pytest.mark.internet

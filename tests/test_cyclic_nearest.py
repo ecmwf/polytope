@@ -23,6 +23,7 @@ class TestRegularGrid:
             "step": {"type_change": "int"},
             "number": {"type_change": "int"},
             "longitude": {"cyclic": [0, 360]},
+            "latitude": {"reverse": {True}},
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper", "type": "fc"}
         self.datacube_options = {"identical structure after": "number"}
@@ -75,7 +76,7 @@ class TestRegularGrid:
         )
         result = self.API.retrieve(request)
         longitude_val_1 = result.leaves[0].flatten()["longitude"]
-        result.pprint_2()
+        result.pprint()
         assert longitude_val_1 == (283.561643835616,)
 
         request = Request(
@@ -92,5 +93,5 @@ class TestRegularGrid:
         )
         result = self.API.retrieve(request)
         longitude_val_1 = result.leaves[0].flatten()["longitude"]
-        result.pprint_2()
+        result.pprint()
         assert longitude_val_1 == (283.561643835616,)

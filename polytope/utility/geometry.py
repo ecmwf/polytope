@@ -2,8 +2,7 @@ import math
 
 
 def lerp(a, b, value):
-    direction = [a - b for a, b in zip(a, b)]
-    intersect = [b + value * d for b, d in zip(b, direction)]
+    intersect = [b + (a - b) * value for a, b in zip(a, b)]
     return intersect
 
 

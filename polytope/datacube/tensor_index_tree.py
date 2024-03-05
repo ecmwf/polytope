@@ -123,8 +123,9 @@ class TensorIndexTree(object):
                 # NOTE: do we even need to hash the values anymore if we implement logic to only compare children when
                 # we have the right compressed children? Then could have a list here for the values which is easier to
                 # manipulate...
-                new_value = list[existing_compressed_child.value].append(value)
-                existing_compressed_child.value = tuple(new_value)
+                new_value = list(existing_compressed_child.values)
+                new_value.append(value)
+                existing_compressed_child.values = tuple(new_value)
                 return existing_compressed_child
             else:
                 node = TensorIndexTree(axis, (value,))

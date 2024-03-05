@@ -37,6 +37,17 @@ class DatacubeAxisTypeChange(DatacubeAxisTransformation):
     def unwanted_axes(self):
         return []
 
+    def find_modified_indexes(self, indexes, path, datacube, axis):
+        if axis.name == self.name:
+            return self.change_val_type(axis.name, indexes)
+
+    def unmap_path_key(self, key_value_path, leaf_path, unwanted_path, axis):
+        value = key_value_path[axis.name]
+        if axis.name == self.name:
+            unchanged_val = self.make_str(value)
+            key_value_path[axis.name] = unchanged_val
+        return (key_value_path, leaf_path, unwanted_path)
+
 
 class TypeChangeStrToInt(DatacubeAxisTypeChange):
     def __init__(self, axis_name, new_type):

@@ -16,6 +16,7 @@ class TestSlicingFDBDatacube:
             "values": {"mapper": {"type": "regular", "resolution": 30, "axes": ["latitude", "longitude"]}},
             "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
             "step": {"type_change": "int"},
+            "latitude": {"reverse": {True}},
         }
         self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "stream": "enda"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
@@ -41,7 +42,7 @@ class TestSlicingFDBDatacube:
             Select("number", ["0"]),
         )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 2
         path1 = result.leaves[0].flatten()
         assert path1["date"] == (

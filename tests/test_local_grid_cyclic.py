@@ -24,6 +24,7 @@ class TestSlicingFDBDatacube:
             "step": {"type_change": "int"},
             "number": {"type_change": "int"},
             "longitude": {"cyclic": [-180, 180]},
+            "latitude": {"reverse": {True}},
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
@@ -46,7 +47,7 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[-20, -20]]),
         )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 1
         assert result.leaves[0].flatten()["latitude"] == (-20,)
         assert result.leaves[0].flatten()["longitude"] == (-20,)
@@ -66,7 +67,7 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[-20, 50 + 360]]),
         )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 1
         assert result.leaves[0].flatten()["latitude"] == (-20,)
         assert result.leaves[0].flatten()["longitude"] == (50,)

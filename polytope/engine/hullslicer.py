@@ -54,13 +54,17 @@ class HullSlicer(Engine):
         datacube_has_index = self.axis_values_between[(flattened_tuple, ax.name, lower)]
 
         if datacube_has_index:
-            child = node.create_child(ax, tuple([lower]))
+            child = node.create_child(ax, lower, datacube.compressed_grid_axes)
             child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             child["unsliced_polytopes"].remove(polytope)
             next_nodes.append(child)
         else:
             # raise a value not found error
-            raise ValueError()
+            errmsg = (
+                f"Datacube does not have expected index {lower} of type {type(lower)}"
+                f"on {ax.name} along the path {path}"
+            )
+            raise ValueError(errmsg)
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, lower, upper, next_nodes, slice_axis_idx):
         tol = ax.tol
@@ -101,6 +105,9 @@ class HullSlicer(Engine):
             ax_in_forbidden_axes = True
 
         # TODO: find which axes can be compressed here...
+        compressed_axes = datacube.compressed_grid_axes
+        if polytope.is_natively_1D:
+            compressed_axes.extend(polytope.axes())
 
         # if polytope.is_natively_1D and ax_in_forbidden_axes:
         #     # TODO: instead of checking here whether an axis/indices can be compressed and doing a for loop, 
@@ -130,6 +137,8 @@ class HullSlicer(Engine):
 
         # TODO: here add the children that are required now to the tree
         for value in values:
+            # fvalue = ax.to_float(value)
+            # new_polytope = self
             pass
 
 
@@ -156,7 +165,7 @@ class HullSlicer(Engine):
                 if len(tuple([remapped_val])) == 0:
                     node.remove_branch()
                 else:
-                    child = node.create_child(ax, tuple([remapped_val]))
+                    child = node.create_child(ax, remapped_val, compressed_axes)
                     child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
                     child["unsliced_polytopes"].remove(polytope)
                     if new_polytope is not None:
@@ -164,6 +173,11 @@ class HullSlicer(Engine):
                     next_nodes.append(child)
 
     def _build_branch(self, ax, node, datacube, next_nodes):
+        print("HERE IN BUILD BRANCH")
+        print(node.axis.name)
+        print(node.values)
+        print("now")
+        node.pprint()
         for polytope in node["unsliced_polytopes"]:
             if ax.name in polytope._axes:
                 lower, upper, slice_axis_idx = polytope.extents(ax.name)

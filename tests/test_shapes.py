@@ -51,6 +51,7 @@ class TestSlicing3DXarrayDatacube:
             "step": {"type_change": "int"},
             "number": {"type_change": "int"},
             "longitude": {"cyclic": [0, 360]},
+            "latitude": {"reverse": {True}},
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "step": "11"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)

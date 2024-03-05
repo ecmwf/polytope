@@ -23,6 +23,7 @@ class TestSlicingFDBDatacube:
             "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
             "step": {"type_change": "int"},
             "number": {"type_change": "int"},
+            "latitude": {"reverse": {True}},
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
@@ -45,7 +46,7 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[0.16, 0.176]], method="nearest"),
         )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 1
         assert result.leaves[0].flatten()["latitude"] == (0,)
         assert result.leaves[0].flatten()["longitude"] == (0,)
@@ -65,7 +66,7 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[0.16, 61]], method="nearest"),
         )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 1
         assert result.leaves[0].flatten()["latitude"] == (0,)
         assert result.leaves[0].flatten()["longitude"] == (60,)
@@ -85,7 +86,7 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[41, 1]], method="nearest"),
         )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 1
         assert result.leaves[0].flatten()["latitude"] == (40,)
         assert result.leaves[0].flatten()["longitude"] == (1,)
@@ -105,7 +106,7 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[1, 61]]),
         )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 1
         assert result.is_root()
 
@@ -124,7 +125,7 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[41, 1]]),
         )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 1
         assert result.is_root()
 
@@ -143,7 +144,7 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[-41, 1]]),
         )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 1
         assert result.is_root()
 
@@ -162,7 +163,7 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[-30, -21]]),
         )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 1
         assert result.is_root()
 
@@ -181,7 +182,7 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[-41, 1]], method="nearest"),
         )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 1
         assert result.leaves[0].flatten()["latitude"] == (-40,)
         assert result.leaves[0].flatten()["longitude"] == (1,)
@@ -201,7 +202,7 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[-30, -21]], method="nearest"),
         )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 1
         assert result.leaves[0].flatten()["latitude"] == (-30,)
         assert result.leaves[0].flatten()["longitude"] == (-20,)
@@ -221,7 +222,7 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[-30, -21]], method="surrounding"),
         )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 3
         assert result.leaves[0].flatten()["latitude"] == (-31,)
         assert result.leaves[0].flatten()["longitude"] == (-20,)

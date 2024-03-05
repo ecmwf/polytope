@@ -19,6 +19,7 @@ class TestSlicingFDBDatacube:
             "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
             "step": {"type_change": "int"},
             "number": {"type_change": "int"},
+            "latitude": {"reverse": {True}},
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
@@ -41,7 +42,7 @@ class TestSlicingFDBDatacube:
             Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
         )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 9
         assert result.leaves[1].flatten()["longitude"] == (0.070093457944,)
         assert result.leaves[4].flatten()["longitude"] == (0.070148090413,)
@@ -81,6 +82,6 @@ class TestSlicingFDBDatacube:
             Span("longitude", 0, 0.070093457944),
         )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 1
-        assert result.leaves[0].flatten()["longitude"] == (0.0, 0.070093457944)
+        assert result.leaves[0].flatten()["longitude"] == (0.0, 0.07009345794392523)

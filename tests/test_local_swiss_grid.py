@@ -3,58 +3,59 @@
 import pandas as pd
 import pytest
 from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
-from helper_functions import download_test_data
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
 
 
-class TestReducedLatLonGrid:
+class TestSlicingFDBDatacube:
     def setup_method(self, method):
         from polytope.datacube.backends.fdb import FDBDatacube
 
-        nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/wave.grib"
-        download_test_data(nexus_url, "wave.grib")
+        # Create a dataarray with 3 labelled axes using different index types
         self.options = {
-            "values": {"mapper": {"type": "reduced_ll", "resolution": 1441, "axes": ["latitude", "longitude"]}},
+            "values": {
+                "mapper": {
+                    "type": "local_regular",
+                    "resolution": [193, 417],
+                    "axes": ["latitude", "longitude"],
+                    "local": [45.485, 48.1, 5.28985, 10.9087],
+                }
+            },
             "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
             "step": {"type_change": "int"},
             "number": {"type_change": "int"},
-            "longitude": {"cyclic": [0, 360]},
+            "levelist": {"type_change": "int"},
         }
-        self.config = {"class": "od", "stream": "wave"}
+
+        self.config = {"param": "3008"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
 
-    @pytest.mark.internet
+    # Testing different shapes
     @pytest.mark.fdb
-    def test_reduced_ll_grid(self):
+    @pytest.mark.skip("Non-accessible data")
+    def test_fdb_datacube(self):
         request = Request(
-            Select("step", [1]),
-            Select("date", [pd.Timestamp("20231129T000000")]),
-            Select("domain", ["g"]),
-            Select("expver", ["0001"]),
-            Select("param", ["140251"]),
-            Select("direction", ["1"]),
-            Select("frequency", ["1"]),
-            Select("class", ["od"]),
-            Select("stream", ["wave"]),
-            Select("levtype", ["sfc"]),
-            Select("type", ["fc"]),
-            Box(["latitude", "longitude"], [0, 0], [1.2, 1.5]),
+            Select("step", [0]),
+            Select("levtype", ["unknown"]),
+            Select("date", [pd.Timestamp("20211102T120000")]),
+            Select("param", ["3008"]),
+            Select("levelist", [1]),
+            Box(["latitude", "longitude"], [47.38, 7], [47.5, 7.14]),
         )
         result = self.API.retrieve(request)
-        result.pprint()
-        assert len(result.leaves) == 10
+        # result.pprint_2()
+        assert len(result.leaves) == 99
 
         lats = []
         lons = []
         eccodes_lats = []
         eccodes_lons = []
-        tol = 1e-8
-        f = open("./tests/data/wave.grib", "rb")
+        tol = 1e-4
+        f = open("./tests/data/hhl_geo.grib", "rb")
         messages = []
         message = codes_grib_new_from_file(f)
         messages.append(message)
@@ -62,8 +63,8 @@ class TestReducedLatLonGrid:
         leaves = result.leaves
         for i in range(len(leaves)):
             cubepath = leaves[i].flatten()
-            lat = cubepath["latitude"][0]
-            lon = cubepath["longitude"][0]
+            lat = cubepath["latitude"]
+            lon = cubepath["longitude"]
             del cubepath
             lats.append(lat)
             lons.append(lon)
