@@ -46,13 +46,17 @@ class XArrayDatacube(Datacube):
                 path_copy = deepcopy(path)
                 for key in path_copy:
                     axis = self._axes[key]
-                    (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
-                # TODO: here do nearest point search
-                path = self.fit_path(path)
+                    key_value_path = {key: path_copy[key]}
+                    (key_value_path, path, unmapped_path) = axis.unmap_path_key(key_value_path, path, unmapped_path)
+                path.update(key_value_path)
+
+                unmapped_path = {}
+                self.refit_path(path, unmapped_path, path)
                 for key in path:
                     path[key] = list(path[key])
                 for key in unmapped_path:
                     unmapped_path[key] = list(unmapped_path[key])
+
                 subxarray = self.dataarray.sel(path, method="nearest")
                 subxarray = subxarray.sel(unmapped_path)
                 value = subxarray.values
