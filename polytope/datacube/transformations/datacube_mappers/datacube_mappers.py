@@ -81,6 +81,8 @@ class DatacubeMapper(DatacubeAxisTransformation):
             return self.first_axis_vals()
         if axis.name == self._mapped_axes()[1]:
             first_val = path[self._mapped_axes()[0]]
+            if not isinstance(first_val, tuple):
+                first_val = (first_val,)
             return self.second_axis_vals(first_val)
 
     def unmap_path_key(self, key_value_path, leaf_path, unwanted_path, axis):

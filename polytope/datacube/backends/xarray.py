@@ -55,7 +55,8 @@ class XArrayDatacube(Datacube):
                 for key in path:
                     path[key] = list(path[key])
                 for key in unmapped_path:
-                    unmapped_path[key] = list(unmapped_path[key])
+                    if isinstance(unmapped_path[key], tuple):
+                        unmapped_path[key] = list(unmapped_path[key])
 
                 subxarray = self.dataarray.sel(path, method="nearest")
                 subxarray = subxarray.sel(unmapped_path)
