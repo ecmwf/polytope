@@ -104,7 +104,7 @@ class TensorIndexTree(object):
                 return c
         return None
 
-    def create_child(self, axis, value, compressed_axes):
+    def create_child(self, axis, value, compressed_axes, next_nodes):
         # TODO: if the axis should not be compressed, just create a child with a tuple value with a single value
         # TODO: if the axis should be compressed, check if we already have a child with the axis name. 
         # TODO: Then: if we have such a child, add to its tuple value the new value.
@@ -114,8 +114,12 @@ class TensorIndexTree(object):
             # In this case, the child should not already exist? But you never know if the slicer hasn't found the same value twice? It shouldn't though?
             # Can safely add the child here though to self
             node = TensorIndexTree(axis, (value,))
-            self.add_child(node)
-            return node
+            existing_child = self.find_child(node)
+            if not existing_child:
+                self.add_child(node)
+                return (node, next_nodes)
+            # next_nodes.remove(existing_child)
+            return (existing_child, next_nodes)
         else:
             # TODO: find the compressed child
             existing_compressed_child = self.find_compressed_child(axis)
@@ -126,11 +130,12 @@ class TensorIndexTree(object):
                 new_value = list(existing_compressed_child.values)
                 new_value.append(value)
                 existing_compressed_child.values = tuple(new_value)
-                return existing_compressed_child
+                next_nodes.remove(existing_compressed_child)
+                return (existing_compressed_child, next_nodes)
             else:
                 node = TensorIndexTree(axis, (value,))
                 self.add_child(node)
-                return node
+                return (node, next_nodes)
 
         # node = TensorIndexTree(axis, value)
         # existing = self.find_child(node)
@@ -192,6 +197,13 @@ class TensorIndexTree(object):
             self._parent = None
             if len(old_parent.children) == 0:
                 old_parent.remove_branch()
+
+    def remove_compressed_branch(self, value):
+        if value in self.values:
+            if len(self.values) == 1:
+                self.remove_branch()
+            else:
+                self.values = tuple(val for val in self.values if val != value)
 
     def flatten(self):
         path = DatacubePath()

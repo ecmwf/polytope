@@ -43,10 +43,11 @@ class TestSlicingFDBDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 9
-        assert result.leaves[1].flatten()["longitude"] == (0.070093457944,)
-        assert result.leaves[4].flatten()["longitude"] == (0.070148090413,)
-        assert result.leaves[7].flatten()["longitude"] == (0.070202808112,)
+        assert len(result.leaves) == 3
+        assert result.leaves[0].flatten()["longitude"][1] == 0.070093457944
+        assert result.leaves[1].flatten()["longitude"][1] == 0.070148090413
+        assert result.leaves[2].flatten()["longitude"][1] == 0.070202808112
+        assert len(result.leaves[0].result) == 3
 
         # lats = []
         # lons = []
@@ -84,4 +85,4 @@ class TestSlicingFDBDatacube:
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 1
-        assert result.leaves[0].flatten()["longitude"] == (0.0, 0.07009345794392523)
+        assert result.leaves[0].flatten()["longitude"] == (0.0, 0.070093457944)

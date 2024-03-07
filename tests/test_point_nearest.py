@@ -115,7 +115,7 @@ class TestSlicingFDBDatacube:
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 1
-        assert result.leaves[0].values == 359.929906542056
+        assert result.leaves[0].values == (359.929906542056,)
         assert result.leaves[0].axis.name == "longitude"
 
     @pytest.mark.fdb

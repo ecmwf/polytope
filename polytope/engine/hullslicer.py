@@ -54,7 +54,7 @@ class HullSlicer(Engine):
         datacube_has_index = self.axis_values_between[(flattened_tuple, ax.name, lower)]
 
         if datacube_has_index:
-            child = node.create_child(ax, lower, datacube.compressed_grid_axes)
+            (child, next_nodes) = node.create_child(ax, lower, datacube.compressed_grid_axes, next_nodes)
             child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             child["unsliced_polytopes"].remove(polytope)
             next_nodes.append(child)
@@ -159,13 +159,14 @@ class HullSlicer(Engine):
                     if ax.is_cyclic:
                         remapped_val_interm = ax.remap([value, value])[0]
                         remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
+                    if ax.can_round:
                         remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
                     self.remapped_vals[(value, ax.name)] = remapped_val
                 # NOTE we remove unnecessary empty branches here too
                 if len(tuple([remapped_val])) == 0:
                     node.remove_branch()
                 else:
-                    child = node.create_child(ax, remapped_val, compressed_axes)
+                    (child, next_nodes) = node.create_child(ax, remapped_val, compressed_axes, next_nodes)
                     child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
                     child["unsliced_polytopes"].remove(polytope)
                     if new_polytope is not None:
@@ -173,11 +174,11 @@ class HullSlicer(Engine):
                     next_nodes.append(child)
 
     def _build_branch(self, ax, node, datacube, next_nodes):
-        print("HERE IN BUILD BRANCH")
-        print(node.axis.name)
-        print(node.values)
-        print("now")
-        node.pprint()
+        # print("HERE IN BUILD BRANCH")
+        # print(node.axis.name)
+        # print(node.values)
+        # print("now")
+        # node.pprint()
         for polytope in node["unsliced_polytopes"]:
             if ax.name in polytope._axes:
                 lower, upper, slice_axis_idx = polytope.extents(ax.name)

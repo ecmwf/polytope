@@ -92,6 +92,8 @@ class FDBDatacube(Datacube):
                     self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path)
 
     def get_2nd_last_values(self, requests, leaf_path=None):
+        print("HERE FIRST")
+        requests.pprint()
         if leaf_path is None:
             leaf_path = {}
         # In this function, we recursively loop over the last two layers of the tree and store the indices of the
@@ -119,10 +121,12 @@ class FDBDatacube(Datacube):
                     found_latlon_pts.append([lat_child.values, lon_child.values])
 
             # now find the nearest lat lon to the points requested
+            print(found_latlon_pts)
             nearest_latlons = []
             for pt in nearest_pts:
                 nearest_latlon = nearest_pt(found_latlon_pts, pt)
                 nearest_latlons.append(nearest_latlon)
+            print(nearest_latlons)
 
             # need to remove the branches that do not fit
             lat_children_values = [child.values for child in requests.children]
@@ -132,13 +136,14 @@ class FDBDatacube(Datacube):
                 if lat_child.values not in [(latlon[0],) for latlon in nearest_latlons]:
                     lat_child.remove_branch()
                 else:
-                    possible_lons = [(latlon[1],) for latlon in nearest_latlons if (latlon[0],) == lat_child.values]
+                    possible_lons = [latlon[1] for latlon in nearest_latlons if (latlon[0],) == lat_child.values]
                     lon_children_values = [child.values for child in lat_child.children]
                     for j in range(len(lon_children_values)):
                         lon_child_val = lon_children_values[j]
                         lon_child = [child for child in lat_child.children if child.values == lon_child_val][0]
-                        if lon_child.values not in possible_lons:
-                            lon_child.remove_branch()
+                        for value in lon_child.values:
+                            if value not in possible_lons:
+                                lon_child.remove_compressed_branch(value)
 
         lat_length = len(requests.children)
         range_lengths = [False] * lat_length
@@ -165,6 +170,8 @@ class FDBDatacube(Datacube):
 
         leaf_path_copy = deepcopy(leaf_path)
         leaf_path_copy.pop("values", None)
+        print("HERE ACTUALLY")
+        print(fdb_node_ranges)
         return (leaf_path_copy, range_lengths, current_start_idxs, fdb_node_ranges, lat_length)
 
     def get_last_layer_before_leaf(self, requests, leaf_path, range_l, current_idx, fdb_range_n):

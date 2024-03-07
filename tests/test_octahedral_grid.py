@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 from earthkit import data
 from helper_functions import download_test_data, find_nearest_latlon
@@ -33,7 +34,9 @@ class TestOctahedralGrid:
             Select("valid_time", ["2023-06-25T12:00:00"]),
         )
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 9
+        result.pprint()
+        assert len(result.leaves) == 3
+        assert np.size(result.leaves[0].result[1]) == 3
 
         lats = []
         lons = []
@@ -53,4 +56,4 @@ class TestOctahedralGrid:
             assert lat[0] <= eccodes_lat + tol
             assert eccodes_lon - tol <= lon[0]
             assert lon[0] <= eccodes_lon + tol
-        assert len(eccodes_lats) == 9
+        assert len(eccodes_lats) == 3

@@ -101,7 +101,9 @@ class XArrayDatacube(Datacube):
         for key in unmapped_path:
             key_value = unmapped_path[key][0]
             unmapped_path[key] = key_value
-        subarray = self.dataarray.sel(path, method="nearest")
+        path_copy = deepcopy(path)
+        self.refit_path(path_copy, unmapped_path, path)
+        subarray = self.dataarray.sel(path_copy, method="nearest")
         subarray = subarray.sel(unmapped_path)
         return subarray
 

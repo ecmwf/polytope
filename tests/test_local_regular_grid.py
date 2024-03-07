@@ -224,5 +224,5 @@ class TestSlicingFDBDatacube:
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 3
-        assert result.leaves[0].flatten()["latitude"] == (-31,)
+        assert result.leaves[0].flatten()["latitude"] == (-31.0,)
         assert result.leaves[0].flatten()["longitude"] == (-20,)
