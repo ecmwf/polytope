@@ -40,4 +40,4 @@ class TestSlicingFDBDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 3
+        assert len(result.leaves) == 9

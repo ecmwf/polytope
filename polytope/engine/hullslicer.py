@@ -105,7 +105,8 @@ class HullSlicer(Engine):
             ax_in_forbidden_axes = True
 
         # TODO: find which axes can be compressed here...
-        compressed_axes = datacube.compressed_grid_axes
+        # compressed_axes = datacube.compressed_grid_axes
+        compressed_axes = []
         if polytope.is_natively_1D:
             compressed_axes.extend(polytope.axes())
 

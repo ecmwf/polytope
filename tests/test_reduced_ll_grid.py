@@ -47,7 +47,7 @@ class TestReducedLatLonGrid:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 10
+        assert len(result.leaves) == 130
 
         lats = []
         lons = []
