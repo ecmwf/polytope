@@ -111,7 +111,8 @@ class TensorIndexTree(object):
         # TODO: Else, just create a child with a tuple value with a single value
 
         if axis.name not in compressed_axes:
-            # In this case, the child should not already exist? But you never know if the slicer hasn't found the same value twice? It shouldn't though?
+            # In this case, the child should not already exist? But you never know if the slicer hasn't found the same
+            # value twice? It shouldn't though?
             # Can safely add the child here though to self
             node = TensorIndexTree(axis, (value,))
             existing_child = self.find_child(node)

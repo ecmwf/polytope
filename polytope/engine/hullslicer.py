@@ -97,12 +97,12 @@ class HullSlicer(Engine):
         if len(values) == 0:
             node.remove_branch()
 
-        # check whether polytope is 1D and that the axis is not a coupled axis
-        # read from the datacube which grid axes can be compressed...
-        if ax.name not in datacube.compressed_grid_axes:
-            ax_in_forbidden_axes = not any(ax.name in sublist for sublist in datacube.coupled_axes)
-        else:
-            ax_in_forbidden_axes = True
+        # # check whether polytope is 1D and that the axis is not a coupled axis
+        # # read from the datacube which grid axes can be compressed...
+        # if ax.name not in datacube.compressed_grid_axes:
+        #     ax_in_forbidden_axes = not any(ax.name in sublist for sublist in datacube.coupled_axes)
+        # else:
+        #     ax_in_forbidden_axes = True
 
         # TODO: find which axes can be compressed here...
         # compressed_axes = datacube.compressed_grid_axes
@@ -132,7 +132,8 @@ class HullSlicer(Engine):
         #         node.remove_branch()
         #     else:
         #         child = node.create_child(ax, tuple(all_remapped_vals))
-        #         # TODO: here, we will now recursively add values to the tuple inside the created child, and we will only need to assign the unsliced polytopes of the child at the end?
+        #         # TODO: here, we will now recursively add values to the tuple inside the created child, and we will
+        #           only need to assign the unsliced polytopes of the child at the end?
         #         child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
         #         child["unsliced_polytopes"].remove(polytope)
         #         next_nodes.append(child)
