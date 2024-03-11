@@ -75,7 +75,9 @@ class TestInitDatacubeAxes:
         (path_key, path, unmapped_path) = lat_ax.unmap_path_key({"latitude": 89.94618771566562}, {}, {})
         assert path == {}
         assert unmapped_path == {"latitude": 89.94618771566562}
-        (path_key, path, unmapped_path) = lon_ax.unmap_path_key({"longitude": (0.0,)}, {}, {"latitude": (89.94618771566562,)})
+        (path_key, path, unmapped_path) = lon_ax.unmap_path_key(
+            {"longitude": (0.0,)}, {}, {"latitude": (89.94618771566562,)}
+        )
         assert path == {}
         assert unmapped_path == {"latitude": (89.94618771566562,)}
         assert path_key == {"values": 0}
