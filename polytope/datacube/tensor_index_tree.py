@@ -106,10 +106,11 @@ class TensorIndexTree(object):
 
     def create_child(self, axis, value, compressed_axes, next_nodes):
         # TODO: if the axis should not be compressed, just create a child with a tuple value with a single value
-        # TODO: if the axis should be compressed, check if we already have a child with the axis name. 
+        # TODO: if the axis should be compressed, check if we already have a child with the axis name.
         # TODO: Then: if we have such a child, add to its tuple value the new value.
         # TODO: Else, just create a child with a tuple value with a single value
-
+        # logging.debug("inside create child")
+        # logging.debug(value)
         if axis.name not in compressed_axes:
             # In this case, the child should not already exist? But you never know if the slicer hasn't found the same value twice? It shouldn't though?
             # Can safely add the child here though to self
@@ -123,6 +124,9 @@ class TensorIndexTree(object):
         else:
             # TODO: find the compressed child
             existing_compressed_child = self.find_compressed_child(axis)
+            # logging.debug("HERE?")
+            # logging.debug(existing_compressed_child)
+            # logging.debug(next_nodes)
             if existing_compressed_child:
                 # NOTE: do we even need to hash the values anymore if we implement logic to only compare children when
                 # we have the right compressed children? Then could have a list here for the values which is easier to
@@ -131,6 +135,9 @@ class TensorIndexTree(object):
                 new_value.append(value)
                 existing_compressed_child.values = tuple(new_value)
                 next_nodes.remove(existing_compressed_child)
+                # logging.debug("HERE?")
+                # logging.debug(existing_compressed_child)
+                # logging.debug(next_nodes)
                 return (existing_compressed_child, next_nodes)
             else:
                 node = TensorIndexTree(axis, (value,))

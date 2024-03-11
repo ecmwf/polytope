@@ -2,6 +2,7 @@ import math
 from copy import copy
 from itertools import chain
 from typing import List
+import logging
 
 import scipy.spatial
 
@@ -109,6 +110,8 @@ class HullSlicer(Engine):
         compressed_axes = []
         if polytope.is_natively_1D:
             compressed_axes.extend(polytope.axes())
+        # if polytope.method is not None:
+        #     compressed_axes.extend(polytope.axes())
 
         # if polytope.is_natively_1D and ax_in_forbidden_axes:
         #     # TODO: instead of checking here whether an axis/indices can be compressed and doing a for loop, 
@@ -142,17 +145,22 @@ class HullSlicer(Engine):
             # new_polytope = self
             pass
 
-
+        print(compressed_axes)
         
         if True:
             for value in values:
                 # convert to float for slicing
                 fvalue = ax.to_float(value)
                 new_polytope = self.sliced_polytopes.get((polytope, ax.name, fvalue, slice_axis_idx), False)
+                logging.debug("LOOK NOW AT THE NEW SLICED POLYTOPE")
+                logging.debug(fvalue)
+                logging.debug(new_polytope)
                 if new_polytope is False:
+                    logging.debug("THE POLYTOPE WE SLICED IS ")
+                    logging.debug(polytope)
                     new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
                     self.sliced_polytopes[(polytope, ax.name, fvalue, slice_axis_idx)] = new_polytope
-
+                logging.debug(new_polytope)
                 # store the native type
                 remapped_val = self.remapped_vals.get((value, ax.name), None)
                 if remapped_val is None:
@@ -163,16 +171,24 @@ class HullSlicer(Engine):
                     if ax.can_round:
                         remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
                     self.remapped_vals[(value, ax.name)] = remapped_val
+
                 # NOTE we remove unnecessary empty branches here too
                 if len(tuple([remapped_val])) == 0:
                     node.remove_branch()
                 else:
+                    node.pprint()
                     (child, next_nodes) = node.create_child(ax, remapped_val, compressed_axes, next_nodes)
                     child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
                     child["unsliced_polytopes"].remove(polytope)
                     if new_polytope is not None:
                         child["unsliced_polytopes"].add(new_polytope)
                     next_nodes.append(child)
+                    logging.debug("INSIDE HULLSLICER")
+                    logging.debug(child)
+                    logging.debug(new_polytope)
+                    logging.debug(next_nodes)
+                    logging.debug(node["unsliced_polytopes"])
+                    logging.debug([pol.axes() for pol in node["unsliced_polytopes"]])
 
     def _build_branch(self, ax, node, datacube, next_nodes):
         # print("HERE IN BUILD BRANCH")
@@ -214,8 +230,15 @@ class HullSlicer(Engine):
             for ax in datacube.axes.values():
                 next_nodes = []
                 for node in current_nodes:
+                    # logging.debug("INSIDE EXTRACT")
+                    # node.pprint()
+                    logging.debug("ARE INSIDE EXTRACT LOOP")
+                    logging.debug(next_nodes)
+                    logging.debug(node)
                     self._build_branch(ax, node, datacube, next_nodes)
                 current_nodes = next_nodes
+                logging.debug("ARE OUTSIDE EXTRACT LOOP")
+                logging.debug(next_nodes)
 
             request.merge(r)
         return request
@@ -253,6 +276,8 @@ def _reduce_dimension(intersects, slice_axis_idx):
 def slice(polytope: ConvexPolytope, axis, value, slice_axis_idx):
     if polytope.is_flat:
         if value in chain(*polytope.points):
+            logging.debug("PROBLEM HERE!!!!!!!!")
+            logging.debug(slice_axis_idx)
             intersects = [[value]]
         else:
             return None
