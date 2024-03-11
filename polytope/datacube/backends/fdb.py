@@ -48,7 +48,8 @@ class FDBDatacube(Datacube):
         fdb_requests_decoding_info = []
         self.get_fdb_requests(requests, fdb_requests, fdb_requests_decoding_info)
 
-        # TODO: note that this doesn't exactly work as intended, it's just going to retrieve value from gribjump that corresponds to first value in the compressed tuples
+        # TODO: note that this doesn't exactly work as intended, it's just going to retrieve value from gribjump that
+        # corresponds to first value in the compressed tuples
         for request in fdb_requests:
             for key in request[0].keys():
                 # remove the tuple of the request when we ask the fdb
