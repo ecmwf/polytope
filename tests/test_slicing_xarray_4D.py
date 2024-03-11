@@ -3,7 +3,6 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.datacube.tensor_index_tree import TensorIndexTree
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
