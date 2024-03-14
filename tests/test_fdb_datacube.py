@@ -3,7 +3,7 @@ import pytest
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select
+from polytope.shapes import Box, Select, Span
 
 # import geopandas as gpd
 # import matplotlib.pyplot as plt
@@ -44,6 +44,10 @@ class TestSlicingFDBDatacube:
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 9
+        assert result.leaves[1].flatten()["longitude"][0] == 0.070093457944
+        assert result.leaves[4].flatten()["longitude"][0] == 0.070148090413
+        assert result.leaves[7].flatten()["longitude"][0] == 0.070202808112
+        assert result.leaves[0].result == 297.9250183105469
 
         # lats = []
         # lons = []
@@ -62,3 +66,23 @@ class TestSlicingFDBDatacube:
         # plt.scatter(lons, lats, s=16, c="red", cmap="YlOrRd")
         # plt.colorbar(label="Temperature")
         # plt.show()
+
+    @pytest.mark.fdb
+    def test_fdb_datacube_select_grid(self):
+        request = Request(
+            Select("step", [0]),
+            Select("levtype", ["sfc"]),
+            Select("date", [pd.Timestamp("20230625T120000")]),
+            Select("domain", ["g"]),
+            Select("expver", ["0001"]),
+            Select("param", ["167"]),
+            Select("class", ["od"]),
+            Select("stream", ["oper"]),
+            Select("type", ["an"]),
+            Select("latitude", [0.035149384216]),
+            Span("longitude", 0, 0.070093457944),
+        )
+        result = self.API.retrieve(request)
+        result.pprint()
+        assert len(result.leaves) == 1
+        assert result.leaves[0].flatten()["longitude"] == (0.0, 0.070093457944)

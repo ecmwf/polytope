@@ -62,8 +62,8 @@ class TestReducedLatLonGrid:
         leaves = result.leaves
         for i in range(len(leaves)):
             cubepath = leaves[i].flatten()
-            lat = cubepath["latitude"]
-            lon = cubepath["longitude"]
+            lat = cubepath["latitude"][0]
+            lon = cubepath["longitude"][0]
             del cubepath
             lats.append(lat)
             lons.append(lon)

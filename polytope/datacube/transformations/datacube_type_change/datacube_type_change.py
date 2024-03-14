@@ -58,7 +58,10 @@ class TypeChangeStrToInt(DatacubeAxisTypeChange):
         return int(value)
 
     def make_str(self, value):
-        return str(value)
+        values = []
+        for val in value:
+            values.append(str(val))
+        return tuple(values)
 
 
 _type_to_datacube_type_change_lookup = {"int": "TypeChangeStrToInt"}

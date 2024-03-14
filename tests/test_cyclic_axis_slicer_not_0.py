@@ -36,27 +36,27 @@ class TestSlicingCyclicAxisNotOverZero:
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 20
-        assert [leaf.value for leaf in result.leaves] == [
-            -1.1,
-            -1.0,
-            -0.9,
-            -0.8,
-            -0.7,
-            -0.6,
-            -0.5,
-            -0.4,
-            -0.3,
-            -0.2,
-            -1.1,
-            -1.0,
-            -0.9,
-            -0.8,
-            -0.7,
-            -0.6,
-            -0.5,
-            -0.4,
-            -0.3,
-            -0.2,
+        assert [leaf.values for leaf in result.leaves] == [
+            (-1.1,),
+            (-1.0,),
+            (-0.9,),
+            (-0.8,),
+            (-0.7,),
+            (-0.6,),
+            (-0.5,),
+            (-0.4,),
+            (-0.3,),
+            (-0.2,),
+            (-1.1,),
+            (-1.0,),
+            (-0.9,),
+            (-0.8,),
+            (-0.7,),
+            (-0.6,),
+            (-0.5,),
+            (-0.4,),
+            (-0.3,),
+            (-0.2,),
         ]
 
     def test_cyclic_float_axis_inside_cyclic_range(self):
@@ -65,23 +65,23 @@ class TestSlicingCyclicAxisNotOverZero:
         )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 16
-        assert [leaf.value for leaf in result.leaves] == [
-            -1.0,
-            -0.9,
-            -0.8,
-            -0.7,
-            -0.6,
-            -0.5,
-            -0.4,
-            -0.3,
-            -1.0,
-            -0.9,
-            -0.8,
-            -0.7,
-            -0.6,
-            -0.5,
-            -0.4,
-            -0.3,
+        assert [leaf.values for leaf in result.leaves] == [
+            (-1.0,),
+            (-0.9,),
+            (-0.8,),
+            (-0.7,),
+            (-0.6,),
+            (-0.5,),
+            (-0.4,),
+            (-0.3,),
+            (-1.0,),
+            (-0.9,),
+            (-0.8,),
+            (-0.7,),
+            (-0.6,),
+            (-0.5,),
+            (-0.4,),
+            (-0.3,),
         ]
 
     def test_cyclic_float_axis_above_axis_range(self):
@@ -90,7 +90,18 @@ class TestSlicingCyclicAxisNotOverZero:
         )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 10
-        assert [leaf.value for leaf in result.leaves] == [-0.7, -0.6, -0.5, -0.4, -0.3, -0.7, -0.6, -0.5, -0.4, -0.3]
+        assert [leaf.values for leaf in result.leaves] == [
+            (-0.7,),
+            (-0.6,),
+            (-0.5,),
+            (-0.4,),
+            (-0.3,),
+            (-0.7,),
+            (-0.6,),
+            (-0.5,),
+            (-0.4,),
+            (-0.3,),
+        ]
 
     def test_cyclic_float_axis_two_range_loops(self):
         request = Request(
@@ -98,27 +109,27 @@ class TestSlicingCyclicAxisNotOverZero:
         )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 20
-        assert [leaf.value for leaf in result.leaves] == [
-            -1.1,
-            -1.0,
-            -0.9,
-            -0.8,
-            -0.7,
-            -0.6,
-            -0.5,
-            -0.4,
-            -0.3,
-            -0.2,
-            -1.1,
-            -1.0,
-            -0.9,
-            -0.8,
-            -0.7,
-            -0.6,
-            -0.5,
-            -0.4,
-            -0.3,
-            -0.2,
+        assert [leaf.values for leaf in result.leaves] == [
+            (-1.1,),
+            (-1.0,),
+            (-0.9,),
+            (-0.8,),
+            (-0.7,),
+            (-0.6,),
+            (-0.5,),
+            (-0.4,),
+            (-0.3,),
+            (-0.2,),
+            (-1.1,),
+            (-1.0,),
+            (-0.9,),
+            (-0.8,),
+            (-0.7,),
+            (-0.6,),
+            (-0.5,),
+            (-0.4,),
+            (-0.3,),
+            (-0.2,),
         ]
 
     def test_cyclic_float_axis_below_axis_range(self):
@@ -127,7 +138,18 @@ class TestSlicingCyclicAxisNotOverZero:
         )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 10
-        assert [leaf.value for leaf in result.leaves] == [-0.7, -0.6, -0.5, -0.4, -0.3, -0.7, -0.6, -0.5, -0.4, -0.3]
+        assert [leaf.values for leaf in result.leaves] == [
+            (-0.7,),
+            (-0.6,),
+            (-0.5,),
+            (-0.4,),
+            (-0.3,),
+            (-0.7,),
+            (-0.6,),
+            (-0.5,),
+            (-0.4,),
+            (-0.3,),
+        ]
 
     def test_cyclic_float_axis_below_axis_range_crossing_seam(self):
         request = Request(
@@ -135,25 +157,25 @@ class TestSlicingCyclicAxisNotOverZero:
         )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 20
-        assert [leaf.value for leaf in result.leaves] == [
-            -1.0,
-            -0.9,
-            -0.8,
-            -0.7,
-            -0.6,
-            -0.5,
-            -0.4,
-            -0.3,
-            -0.2,
-            -0.1,
-            -1.0,
-            -0.9,
-            -0.8,
-            -0.7,
-            -0.6,
-            -0.5,
-            -0.4,
-            -0.3,
-            -0.2,
-            -0.1,
+        assert [leaf.values for leaf in result.leaves] == [
+            (-1.0,),
+            (-0.9,),
+            (-0.8,),
+            (-0.7,),
+            (-0.6,),
+            (-0.5,),
+            (-0.4,),
+            (-0.3,),
+            (-0.2,),
+            (-0.1,),
+            (-1.0,),
+            (-0.9,),
+            (-0.8,),
+            (-0.7,),
+            (-0.6,),
+            (-0.5,),
+            (-0.4,),
+            (-0.3,),
+            (-0.2,),
+            (-0.1,),
         ]

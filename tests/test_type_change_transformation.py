@@ -25,4 +25,4 @@ class TestTypeChangeTransformation:
         request = Request(Select("step", [0]))
         result = self.API.retrieve(request)
         result.pprint()
-        assert result.leaves[0].flatten()["step"] == 0
+        assert result.leaves[0].flatten()["step"] == (0,)

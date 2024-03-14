@@ -63,8 +63,8 @@ class TestRegularGrid:
         leaves = result.leaves
         for i in range(len(leaves)):
             cubepath = leaves[i].flatten()
-            lat = cubepath["latitude"]
-            lon = cubepath["longitude"]
+            lat = cubepath["latitude"][0]
+            lon = cubepath["longitude"][0]
             lats.append(lat)
             lons.append(lon)
             nearest_points = find_nearest_latlon("./tests/data/era5-levels-members.grib", lat, lon)

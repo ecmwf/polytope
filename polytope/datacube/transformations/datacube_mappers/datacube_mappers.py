@@ -19,6 +19,7 @@ class DatacubeMapper(DatacubeAxisTransformation):
         self._final_transformation = self.generate_final_transformation()
         self._final_mapped_axes = self._final_transformation._mapped_axes
         self._axis_reversed = self._final_transformation._axis_reversed
+        self.compressed_grid_axes = self._final_transformation.compressed_grid_axes
 
     def generate_final_transformation(self):
         map_type = _type_to_datacube_mapper_lookup[self.grid_type]
@@ -80,6 +81,8 @@ class DatacubeMapper(DatacubeAxisTransformation):
             return self.first_axis_vals()
         if axis.name == self._mapped_axes()[1]:
             first_val = path[self._mapped_axes()[0]]
+            if not isinstance(first_val, tuple):
+                first_val = (first_val,)
             return self.second_axis_vals(first_val)
 
     def unmap_path_key(self, key_value_path, leaf_path, unwanted_path, axis):

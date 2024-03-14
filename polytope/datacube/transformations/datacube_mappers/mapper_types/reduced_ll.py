@@ -11,6 +11,7 @@ class ReducedLatLonMapper(DatacubeMapper):
         self._resolution = resolution
         self._axis_reversed = {mapped_axes[0]: False, mapped_axes[1]: False}
         self._first_axis_vals = self.first_axis_vals()
+        self.compressed_grid_axes = [self._mapped_axes[1]]
 
     def first_axis_vals(self):
         resolution = 180 / (self._resolution - 1)
@@ -1469,7 +1470,7 @@ class ReducedLatLonMapper(DatacubeMapper):
             ]
 
     def second_axis_vals(self, first_val):
-        first_idx = self._first_axis_vals.index(first_val)
+        first_idx = self._first_axis_vals.index(first_val[0])
         Ny = self.lon_spacing()[first_idx]
         second_spacing = 360 / Ny
         return [i * second_spacing for i in range(Ny)]
@@ -1497,9 +1498,9 @@ class ReducedLatLonMapper(DatacubeMapper):
 
     def unmap(self, first_val, second_val):
         tol = 1e-8
-        first_val = [i for i in self._first_axis_vals if first_val - tol <= i <= first_val + tol][0]
-        first_idx = self._first_axis_vals.index(first_val)
-        second_val = [i for i in self.second_axis_vals(first_val) if second_val - tol <= i <= second_val + tol][0]
+        first_value = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
+        first_idx = self._first_axis_vals.index(first_value)
+        second_val = [i for i in self.second_axis_vals(first_val) if second_val[0] - tol <= i <= second_val[0] + tol][0]
         second_idx = self.second_axis_vals(first_val).index(second_val)
         reduced_ll_index = self.axes_idx_to_reduced_ll_idx(first_idx, second_idx)
         return reduced_ll_index

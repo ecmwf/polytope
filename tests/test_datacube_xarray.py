@@ -1,3 +1,5 @@
+import datetime
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -94,7 +96,7 @@ class TestXarrayDatacube:
         assert len(idxs) == 0
 
         # Tests on "step" axis, path is a sub-datacube at a specific date
-        partial_request = DatacubePath(date="2000-01-01")
+        partial_request["date"] = (datetime.datetime.strptime("2000-01-01", "%Y-%m-%d"),)
 
         # Check parsing a step correctly converts type to int
         assert type(datacube.get_mapper("step").parse(3)) == float
@@ -107,18 +109,23 @@ class TestXarrayDatacube:
         assert idxs == [0, 3, 6, 9]
         assert isinstance(idxs[0], int)
 
+        partial_request["date"] = (datetime.datetime.strptime("2000-01-01", "%Y-%m-%d"),)
+
         # Check discretizing along 'step' axis at a specific step gives one value
         idxs = datacube.get_indices(partial_request, label, 3, 3)
         assert len(idxs) == 1
         assert idxs[0] == 3
         assert isinstance(idxs[0], int)
 
+        partial_request["date"] = (datetime.datetime.strptime("2000-01-01", "%Y-%m-%d"),)
+
         # Check discretizing along 'step' axis at a step which does not exist in discrete space gives no values
         idxs = datacube.get_indices(partial_request, label, 4, 4)
         assert len(idxs) == 0
 
         # Tests on "level" axis, path is a sub-datacube at a specific date/step
-        partial_request = DatacubePath(date="2000-01-01", step=3)
+        partial_request["date"] = (datetime.datetime.strptime("2000-01-01", "%Y-%m-%d"),)
+        partial_request["step"] = (3,)
 
         # Check parsing a level correctly converts type to int
         assert type(datacube.get_mapper("level").parse(3)) == float

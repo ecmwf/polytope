@@ -47,10 +47,10 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[-20, -20]]),
         )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 1
-        assert result.leaves[0].flatten()["latitude"] == -20
-        assert result.leaves[0].flatten()["longitude"] == -20
+        assert result.leaves[0].flatten()["latitude"] == (-20,)
+        assert result.leaves[0].flatten()["longitude"] == (-20,)
 
     @pytest.mark.fdb
     def test_fdb_datacube_2(self):
@@ -67,7 +67,7 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[-20, 50 + 360]]),
         )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 1
-        assert result.leaves[0].flatten()["latitude"] == -20
-        assert result.leaves[0].flatten()["longitude"] == 50
+        assert result.leaves[0].flatten()["latitude"] == (-20,)
+        assert result.leaves[0].flatten()["longitude"] == (50,)
