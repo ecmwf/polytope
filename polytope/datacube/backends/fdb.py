@@ -1,13 +1,12 @@
 import logging
 from copy import deepcopy
+from itertools import product
 
+import numpy as np
 import pygribjump as pygj
 
 from ...utility.geometry import nearest_pt
 from .datacube import Datacube, IndexTree
-from itertools import product
-import math
-import numpy as np
 
 
 class FDBDatacube(Datacube):
@@ -54,21 +53,15 @@ class FDBDatacube(Datacube):
         # TODO: note that this doesn't exactly work as intended, it's just going to retrieve value from gribjump that
         # corresponds to first value in the compressed tuples
 
-        complete_fdb_requests = []
-
-        branch_tuple_variations = []
         complete_branch_combi_sizes = []
         output_values = []
         for request in fdb_requests:
-            print("THE REQUEST IS")
-            print(request)
             interm_branch_tuple_values = []
             for key in request[0].keys():
                 # remove the tuple of the request when we ask the fdb
                 interm_branch_tuple_values.append(request[0][key])
                 request[0][key] = request[0][key][0]
             branch_tuple_combi = product(*interm_branch_tuple_values)
-            branch_tuple_variations.append(branch_tuple_combi)
             # TODO: now build the relevant requests from this and ask gj for them
             # TODO: then group the output values together to fit back with the original compressed request and continue
             new_requests = []
@@ -77,53 +70,24 @@ class FDBDatacube(Datacube):
                 for i, key in enumerate(request[0].keys()):
                     new_request[key] = combi[i]
                 new_requests.append((new_request, request[1]))
-            # print(new_requests)
-            # print(fdb_requests)
             branch_output_values = self.gj.extract(new_requests)
-            # print(branch_output_values)
             branch_combi_sizes = [len(t) for t in interm_branch_tuple_values]
-            # branch_combi_sizes.append(len(request[1]))
-            # branch_combi_sizes.append(request[1][1]-request[1][0])
 
             all_remapped_output_values = []
             for k, req in enumerate(new_requests):
                 output = branch_output_values[k][0]
                 output_dict = {}
                 for i, o in enumerate(output):
-                    o_key = o[0]
-                    o_val = o[1]
-                    output_dict[i] = o_key
+                    output_dict[i] = o[0]
 
-                # print("HERE")
-                # print(output)
-                # all_remapped_output_values.extend([o[0] for o in output])
                 all_remapped_output_values.append(output_dict)
-            
-            # branch_combi_sizes_output = [math.prod(branch_combi_sizes)]
-            # batched_outputs = []
-            # for batch_size in branch_combi_sizes:
-            #     batched(all_remapped_output_values, batch_size)
-            
+
             output_data_branch = []
             output_data_branch = np.array(all_remapped_output_values)
-            print("AND NOW")
-            print(output_data_branch)
-            print("FINISHED THE OUTPUT DATA BRANCH")
-            print(tuple(branch_combi_sizes))
             output_data_branch = np.reshape(output_data_branch, tuple(branch_combi_sizes))
-            # print("SHOULD BE OUTPUT DATA IN RIGHT FORMAT")
-            # print(output_data_branch[0][2])
             output_values.append([output_data_branch])
             complete_branch_combi_sizes.append([list(range(b)) for b in branch_combi_sizes])
 
-            
-            # actual_batched_sizes = [math.prod(branch_combi_sizes[i:]) for i in range(1, len(branch_combi_sizes))]
-            # for size in branch_combi_sizes:
-            #     batch_size = len()
-
-
-        # output_values = self.gj.extract(fdb_requests)
-        print(output_values)
         self.assign_fdb_output_to_nodes(output_values, fdb_requests_decoding_info, complete_branch_combi_sizes)
 
     def get_fdb_requests(self, requests: IndexTree, fdb_requests=[], fdb_requests_decoding_info=[], leaf_path=None):
@@ -271,16 +235,9 @@ class FDBDatacube(Datacube):
         return (range_l, current_idx, fdb_range_n)
 
     def assign_fdb_output_to_nodes(self, output_values, fdb_requests_decoding_info, complete_branch_combi_sizes):
-        # print("HERE THE COMPLETE BRANCH COMBI SIZES")
-        # print(complete_branch_combi_sizes)
-        # print("HERE THE OUTPUT VALUES WE GET")
-        # print(output_values)
         for k in range(len(output_values)):
             combi_sizes = complete_branch_combi_sizes[k]
-            # print("COMBI SIZES")
-            # print(combi_sizes)
             combi_sizes_combis = list(product(*combi_sizes))
-            # print(combi_sizes_combis)
             request_output_values = output_values[k]
             (
                 original_indices,
@@ -298,30 +255,14 @@ class FDBDatacube(Datacube):
                         new_range_lengths.append(range_lengths[j][i])
             sorted_fdb_range_nodes = [new_fdb_range_nodes[i] for i in original_indices]
             sorted_range_lengths = [new_range_lengths[i] for i in original_indices]
-            size_combi_idx = 0
             for i in range(len(sorted_fdb_range_nodes)):
                 for j in range(sorted_range_lengths[i]):
                     n = sorted_fdb_range_nodes[i][j]
-                    # size_combi = combi_sizes_combis[size_combi_idx]
-                    # size_combi_idx += 1
-                    # if True:
                     for size_combi in list(combi_sizes_combis):
-                        # print(size_combi)
-                        # print(request_output_values)
                         interm_output_values = request_output_values[0]
-                        print("HERE THE OUTPUT VALUES WE GET")
-                        print(interm_output_values)
                         for val in size_combi:
                             interm_output_values = interm_output_values[val]
-                        # n.result = interm_output_values[0][i][j]
                         n.result = interm_output_values[i][j]
-                        # n.result = interm_output_values
-                    size_combi_idx += 1
-
-                    # for branch_stage in combi_sizes:
-                    #     for m in range(len(branch_stage)):
-                    #         interm_output_values = interm_output_values[m]
-                    # n.result = request_output_values[0][i][0][j]
 
     def sort_fdb_request_ranges(self, range_lengths, current_start_idx, lat_length):
         interm_request_ranges = []
