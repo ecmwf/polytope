@@ -17,6 +17,7 @@ def encode_tree(tree: IndexTree):
         node.double_val = tree.value
     if isinstance(tree.value, str):
         node.str_val = tree.value
+    # TODO: handle also timesteps and timedeltas...
 
     # Nest children in protobuf root tree node
     for c in tree.children:
@@ -54,5 +55,27 @@ def encode_child(tree: IndexTree, child: IndexTree):
     tree.children.append(child)
 
 
-def decode_tree(tree: IndexTree, filename):
-    pass
+def decode_tree(datacube):
+    node = pb2.Node()
+    with open("./serializedTree", "rb") as f:
+        node.ParseFromString(f.read())
+
+    tree = IndexTree()
+
+    tree.axis = datacube._axes[node.axis]
+    tree.value = node.value
+
+    # Put contents of node children into tree
+    decode_child(node, tree, datacube)
+
+    return tree
+
+
+def decode_child(node, tree, datacube):
+    if len(node.children) == 0:
+        tree.result = node.result
+    for child in node.children:
+        child_axis = datacube._axes[child.axis]
+        child_node = IndexTree(child_axis, child.value)
+        tree.add_child(child_node)
+        decode_child(child, child_node, datacube)
