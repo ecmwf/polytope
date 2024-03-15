@@ -17,4 +17,4 @@ class TestTreeProtobuf:
         node.children.extend([node2, node3])
 
         assert len(node.children) == 3
-        assert len(node.childre[2].children) == 1
+        assert len(node.children[2].children) == 1
