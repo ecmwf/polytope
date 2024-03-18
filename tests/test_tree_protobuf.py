@@ -1,8 +1,8 @@
+import polytope.datacube.index_tree_pb2 as pb2
+
+
 class TestTreeProtobuf:
-
     def test_protobuf_tree(self):
-        import polytope.datacube.index_tree_pb2 as pb2
-
         node = pb2.Node()
         node2 = pb2.Node()
         node3 = pb2.Node()
