@@ -2,13 +2,18 @@ syntax = "proto2";
 
 package index_tree;
 
+message Value {
+        oneof value {
+            string str_val = 1;
+            int64 int_val = 2;
+            double double_val = 3;
+        }
+    }
+
 message Node {
     optional string axis = 1;
-    oneof value {
-        string str_val = 2;
-        int64 int_val = 3;
-        double double_val = 4;
-    }
-    optional double result = 5;
-    repeated Node children = 6;
+    repeated Value value = 2;
+    repeated double result = 3;
+    repeated Node children = 4;
 }
+

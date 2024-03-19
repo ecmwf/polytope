@@ -260,6 +260,8 @@ class FDBDatacube(Datacube):
                     n = sorted_fdb_range_nodes[i][j]
                     for size_combi in list(combi_sizes_combis):
                         interm_output_values = request_output_values[0]
+                        # TODO: the result associated to nodes is still only a simple float, not an array and is not
+                        # the right one...
                         for val in size_combi:
                             interm_output_values = interm_output_values[val]
                         n.result = interm_output_values[i][j]

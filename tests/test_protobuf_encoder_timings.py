@@ -35,6 +35,7 @@ class TestEncoder:
             Box(["latitude", "longitude"], [0, 0], [5, 5]),
         )
         self.tree = self.API.retrieve(request)
+        # self.tree.pprint()
 
     @pytest.mark.fdb
     def test_encoding(self):
