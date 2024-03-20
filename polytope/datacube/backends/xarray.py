@@ -12,7 +12,6 @@ class XArrayDatacube(Datacube):
     def __init__(self, dataarray: xr.DataArray, axis_options=None, datacube_options=None, point_cloud_options=None):
         super().__init__(axis_options, datacube_options)
         self.dataarray = dataarray
-        treated_axes = []
         self.has_point_cloud = point_cloud_options
 
         for name, values in dataarray.coords.variables.items():

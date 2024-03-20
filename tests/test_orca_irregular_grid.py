@@ -1,20 +1,18 @@
+# import geopandas as gpd
+# import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import pytest
-import numpy as np
+import xarray as xr
+from helper_functions import find_nearest_latlon
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
-import xarray as xr
-import geopandas as gpd
-import matplotlib.pyplot as plt
-
-from helper_functions import download_test_data, find_nearest_latlon
 
 
 class TestQuadTreeSlicer:
     def setup_method(self, method):
-        from polytope.datacube.backends.fdb import FDBDatacube
 
         self.slicer = HullSlicer()
         self.engine_options = {
@@ -25,7 +23,7 @@ class TestQuadTreeSlicer:
             "oceanModelLayer": "hullslicer",
             "valid_time": "hullslicer",
         }
-        arr = xr.open_dataset("../../Downloads/Reference_eORCA12_U_to_HEALPix_32.grib", engine='cfgrib').avg_uo
+        arr = xr.open_dataset("../../Downloads/Reference_eORCA12_U_to_HEALPix_32.grib", engine="cfgrib").avg_uo
         self.latitudes = arr.latitude.values
         self.longitudes = arr.longitude.values
         self.points = list(zip(self.latitudes, self.longitudes))
@@ -52,6 +50,7 @@ class TestQuadTreeSlicer:
             Box(["latitude", "longitude"], [65, 270], [75, 300]),
         )
         import time
+
         time0 = time.time()
         result = self.API.retrieve(request)
         time1 = time.time()
@@ -88,5 +87,3 @@ class TestQuadTreeSlicer:
         # plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
         # plt.colorbar(label="Temperature")
         # plt.show()
-
-        
