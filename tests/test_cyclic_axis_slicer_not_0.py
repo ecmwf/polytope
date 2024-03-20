@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
@@ -25,7 +24,6 @@ class TestSlicingCyclicAxisNotOverZero:
             "long": {"cyclic": [-1.1, -0.1]},
             "level": {"cyclic": [1, 129]},
         }
-        self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer, axis_options=self.options)
 
