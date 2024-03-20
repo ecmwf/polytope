@@ -31,9 +31,6 @@ class TestQuadTreeSlicer:
         self.points = list(zip(self.latitudes, self.longitudes))
         self.options = {
             "values": {"mapper": {"type": "irregular", "resolution": 1280, "axes": ["latitude", "longitude"]}},
-            # "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
-            # "step": {"type_change": "int"},
-            # "number": {"type_change": "int"},
         }
         # self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
         # self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options, point_cloud_options=self.points)
@@ -83,13 +80,13 @@ class TestQuadTreeSlicer:
             assert eccodes_lon - tol <= lon
             assert lon <= eccodes_lon + tol
 
-        worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
-        fig, ax = plt.subplots(figsize=(12, 6))
-        worldmap.plot(color="darkgrey", ax=ax)
+        # worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
+        # fig, ax = plt.subplots(figsize=(12, 6))
+        # worldmap.plot(color="darkgrey", ax=ax)
 
-        plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
-        plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
-        plt.colorbar(label="Temperature")
-        plt.show()
+        # plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
+        # plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
+        # plt.colorbar(label="Temperature")
+        # plt.show()
 
         
