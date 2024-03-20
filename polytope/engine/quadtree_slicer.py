@@ -97,5 +97,7 @@ class QuadTreeSlicer(Engine):
             grand_child.result = value
             grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             grand_child["unsliced_polytopes"].remove(polytope)
-            next_nodes.append(grand_child)
+            # child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
+            # child["unsliced_polytopes"].remove(polytope)
+            # next_nodes.append(grand_child)
         # TODO: but now what happens to the second axis in the point cloud?? Do we create a second node for it??

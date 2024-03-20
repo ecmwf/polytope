@@ -100,12 +100,14 @@ class Polytope:
 
                 next_nodes = []
                 for node in current_nodes:
+                    print(node)
                     engine._build_branch(ax, node, self.datacube, next_nodes)
                 current_nodes = next_nodes
             request.merge(r)
 
         # TODO: return tree
         # return self.engine.extract(self.datacube, polytopes)
+        request.pprint()
         return request
 
     def find_engine(self, ax):

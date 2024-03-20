@@ -15,7 +15,7 @@ class Engine:
         pass
 
     def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]) -> IndexTree:
-        # Relegate to the right slicer that the axes within the polytopes need to use
+        # Delegate to the right slicer that the axes within the polytopes need to use
         pass
 
     def check_slicer(self, ax):
