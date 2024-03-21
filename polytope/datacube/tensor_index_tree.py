@@ -16,7 +16,7 @@ class TensorIndexTree(object):
         self.values = values
         self.children = SortedList()
         self._parent = None
-        self.result = None
+        self.result = []
         self.axis = axis
         self.ancestors = []
 

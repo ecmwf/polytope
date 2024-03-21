@@ -58,3 +58,5 @@ class TestSlicingFDBDatacube:
             np.datetime64("2017-01-02T12:00:00"),
         )
         assert path1["levelist"] == ("850",)
+        print("FINAL")
+        print(result.leaves[0].result)

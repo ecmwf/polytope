@@ -47,7 +47,7 @@ class TestSlicingFDBDatacube:
         assert result.leaves[1].flatten()["longitude"][0] == 0.070093457944
         assert result.leaves[4].flatten()["longitude"][0] == 0.070148090413
         assert result.leaves[7].flatten()["longitude"][0] == 0.070202808112
-        assert result.leaves[0].result == 297.9250183105469
+        assert result.leaves[0].result == [297.9250183105469]
 
         # lats = []
         # lons = []
