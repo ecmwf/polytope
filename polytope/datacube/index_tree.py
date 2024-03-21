@@ -54,13 +54,6 @@ class IndexTree(object):
             c.copy_children_from_other(o)
         return
 
-    def pprint_2(self, level=0):
-        if self.axis.name == "root":
-            print("\n")
-        print("\t" * level + "\u21b3" + str(self))
-        for child in self.children:
-            child.pprint_2(level + 1)
-
     def _collect_leaf_nodes_old(self, leaves):
         if len(self.children) == 0:
             leaves.append(self)
@@ -191,6 +184,13 @@ class IndexTree(object):
         if len(self.children) == 0:
             logging.debug("\t" * (level + 1) + "\u21b3" + str(self.result))
 
+    def pprint_2(self, level=0):
+        if self.axis.name == "root":
+            print("\n")
+        print("\t" * level + "\u21b3" + str(self))
+        for child in self.children:
+            child.pprint_2(level + 1)
+
     def remove_branch(self):
         if not self.is_root():
             old_parent = self._parent
@@ -204,6 +204,20 @@ class IndexTree(object):
         ancestors = self.get_ancestors()
         for ancestor in ancestors:
             path[ancestor.axis.name] = ancestor.value
+        # add the result to the path
+        # NOTE: this is useful for the quadtree engine when we stash the point idx in the result
+        # if len(ancestors) != 0:
+        #     if ancestors[len(ancestors)-1].result is not None:
+        #         path["result"] = ancestors[len(ancestors)-1].result
+        return path
+
+    def flatten_with_result(self):
+        path = DatacubePath()
+        ancestors = self.get_ancestors()
+        for ancestor in ancestors:
+            path[ancestor.axis.name] = ancestor.value
+        if len(ancestors) != 0:
+            path["result"] = ancestors[-1].result
         return path
 
     def flatten_with_ancestors(self):
