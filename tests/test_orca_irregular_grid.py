@@ -30,6 +30,7 @@ class TestQuadTreeSlicer:
         self.options = {
             "values": {"mapper": {"type": "irregular", "resolution": 1280, "axes": ["latitude", "longitude"]}},
         }
+        print(arr)
         # self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
         # self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options, point_cloud_options=self.points)
         self.API = Polytope(
@@ -56,6 +57,7 @@ class TestQuadTreeSlicer:
         time1 = time.time()
         print("TIME TAKEN TO EXTRACT")
         print(time1 - time0)
+        print(len(result.leaves))
         result.pprint()
 
         lats = []
