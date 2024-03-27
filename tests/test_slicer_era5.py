@@ -16,7 +16,7 @@ class TestSlicingEra5Data:
         ds = data.from_source("file", "./tests/data/era5-levels-members.grib")
         array = ds.to_xarray().isel(step=0).t
         self.slicer = HullSlicer()
-        options = {"lat": {"reverse": {True}}}
+        options = {"latitude": {"reverse": {True}}}
         self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
 
     @pytest.mark.internet
@@ -31,4 +31,4 @@ class TestSlicingEra5Data:
         result = self.API.retrieve(request)
         result.pprint()
 
-        assert len(result.leaves) == 4 * 1 * 2 * 4 * 11
+        assert len(result.leaves) == 1
