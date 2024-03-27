@@ -42,21 +42,21 @@ class TestSlicing3DXarrayDatacube:
     def test_2D_box(self):
         request = Request(Box(["step", "level"], [3, 10], [6, 11]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 4
+        assert len(result.leaves) == 1
 
     def test_2D_box_union_disjoint_boxes(self):
         box1 = Box(["step", "level"], [3, 10], [6, 11])
         box2 = Box(["step", "level"], [7, 15], [12, 17])
         request = Request(Union(["step", "level"], box1, box2), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 4 + 6
+        assert len(result.leaves) == 2
 
     def test_2D_box_union_overlapping_boxes(self):
         box1 = Box(["step", "level"], [3, 9], [6, 11])
         box2 = Box(["step", "level"], [6, 10], [12, 17])
         request = Request(Union(["step", "level"], box1, box2), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 6 + 24 - 2
+        assert len(result.leaves) == 2
 
     def test_point(self):
         request = Request(Select("date", ["2000-01-03"]), Select("level", [100]), Select("step", [3]))
@@ -82,7 +82,8 @@ class TestSlicing3DXarrayDatacube:
         box2 = Box(["step", "level"], [6, 11], [12, 17])
         request = Request(Union(["step", "level"], box1, box2), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 4 + 3 * 7 - 1
+        result.pprint()
+        assert len(result.leaves) == 2
 
     def test_mix_existing_nonexisting_data(self):
         request = Request(Select("date", ["2000-01-03", "2000-01-04"]), Select("level", [100]), Select("step", [3]))
@@ -209,7 +210,7 @@ class TestSlicing3DXarrayDatacube:
         # Should slice a line in the level direction
         request = Request(Box(["level", "step"], [3, 3], [6, 3]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 4
+        assert len(result.leaves) == 1
 
     def test_swept_concave_polygon(self):
         # Tests what happens when we slice a concave shape which is swept across a path and see if concavity is lost

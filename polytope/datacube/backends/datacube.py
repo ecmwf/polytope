@@ -33,6 +33,7 @@ class Datacube(ABC):
         self._axes = None
         self.transformed_axes = []
         self.compressed_grid_axes = []
+        self.compressed_axes = []
 
     @abstractmethod
     def get(self, requests: IndexTree) -> Any:

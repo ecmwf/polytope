@@ -41,12 +41,12 @@ class TestSlicing4DXarrayDatacube:
     def test_3D_box(self):
         request = Request(Box(["step", "level", "lat"], [3, 10, 5.0], [6, 11, 6.0]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 2 * 2 * 11
+        assert len(result.leaves) == 1
 
     def test_4D_box(self):
         request = Request(Box(["step", "level", "lat", "date"], [3, 10, 5.0, "2000-01-01"], [6, 11, 6.0, "2000-01-02"]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 2 * 2 * 11 * 2
+        assert len(result.leaves) == 1
 
     def test_circle_int(self):
         request = Request(
@@ -203,13 +203,13 @@ class TestSlicing4DXarrayDatacube:
         # Slices a line in the step direction
         request = Request(Select("lat", [6]), Box(["level", "step"], [3, 3], [3, 9]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 3
+        assert len(result.leaves) == 1
 
     def test_flat_box_step(self):
         # Slices a line in the level direction
         request = Request(Select("lat", [6]), Box(["level", "step"], [3, 3], [7, 3]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 5
+        assert len(result.leaves) == 1
 
     def test_flat_disk_nonexisting(self):
         # Slices an empty disk because there is no step level

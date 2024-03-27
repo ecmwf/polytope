@@ -32,8 +32,8 @@ class TestSlicing3DXarrayDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 4
-        assert [leaf.values for leaf in result.leaves] == [(0.1,), (0.2,), (0.9,), (1.0,)]
+        assert len(result.leaves) == 1
+        assert [leaf.values for leaf in result.leaves] == [(0.9, 1.0, 0.1, 0.2)]
 
     def test_cyclic_float_surrounding(self):
         request = Request(

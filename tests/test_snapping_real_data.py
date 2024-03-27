@@ -63,7 +63,7 @@ class TestSlicingEra5Data:
         # plt.scatter([requested_lon], [requested_lat], s=16, c="blue")
         # plt.colorbar(label="Temperature")
         # plt.show()
-        assert len(longs) == 2
+        assert len(longs) == 1
         for lon in longs:
             assert lon == (0.0, 3.0, 357.0)
         for lat in lats:

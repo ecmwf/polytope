@@ -162,7 +162,7 @@ class Box(Shape):
         return self._axes
 
     def polytope(self):
-        return [ConvexPolytope(self.axes(), self.vertices)]
+        return [ConvexPolytope(self.axes(), self.vertices, is_1D=True)]
 
     def __repr__(self):
         return f"Box in {self._axes} with with lower corner {self._lower_corner} and upper corner{self._upper_corner}"

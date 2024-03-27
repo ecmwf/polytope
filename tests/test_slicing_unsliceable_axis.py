@@ -25,7 +25,7 @@ class TestSlicingUnsliceableAxis:
     def test_finding_existing_variable(self):
         request = Request(Box(["level"], [10], [11]), Select("date", ["2000-01-01"]), Select("variable", ["a"]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 2
+        assert len(result.leaves) == 1
 
     def test_finding_nonexisting_variable(self):
         request = Request(Box(["level"], [10], [11]), Select("date", ["2000-01-01"]), Select("variable", ["b"]))

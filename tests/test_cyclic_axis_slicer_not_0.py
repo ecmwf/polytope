@@ -35,17 +35,8 @@ class TestSlicingCyclicAxisNotOverZero:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 20
-        assert [leaf.values for leaf in result.leaves] == [
-            (-1.1,),
-            (-1.0,),
-            (-0.9,),
-            (-0.8,),
-            (-0.7,),
-            (-0.6,),
-            (-0.5,),
-            (-0.4,),
-            (-0.3,),
+        assert len(result.leaves) == 1
+        assert [(val,) for val in result.leaves[0].values] == [
             (-0.2,),
             (-1.1,),
             (-1.0,),
@@ -56,7 +47,6 @@ class TestSlicingCyclicAxisNotOverZero:
             (-0.5,),
             (-0.4,),
             (-0.3,),
-            (-0.2,),
         ]
 
     def test_cyclic_float_axis_inside_cyclic_range(self):
@@ -64,16 +54,8 @@ class TestSlicingCyclicAxisNotOverZero:
             Box(["step", "long"], [0, 0.0], [3, 0.7]), Select("date", ["2000-01-01"]), Select("level", [128])
         )
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 16
-        assert [leaf.values for leaf in result.leaves] == [
-            (-1.0,),
-            (-0.9,),
-            (-0.8,),
-            (-0.7,),
-            (-0.6,),
-            (-0.5,),
-            (-0.4,),
-            (-0.3,),
+        assert len(result.leaves) == 1
+        assert [(val,) for val in result.leaves[0].values] == [
             (-1.0,),
             (-0.9,),
             (-0.8,),
@@ -89,13 +71,8 @@ class TestSlicingCyclicAxisNotOverZero:
             Box(["step", "long"], [0, 1.3], [3, 1.7]), Select("date", ["2000-01-01"]), Select("level", [128])
         )
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 10
-        assert [leaf.values for leaf in result.leaves] == [
-            (-0.7,),
-            (-0.6,),
-            (-0.5,),
-            (-0.4,),
-            (-0.3,),
+        assert len(result.leaves) == 1
+        assert [(val,) for val in result.leaves[0].values] == [
             (-0.7,),
             (-0.6,),
             (-0.5,),
@@ -108,12 +85,8 @@ class TestSlicingCyclicAxisNotOverZero:
             Box(["step", "long"], [0, 0.3], [3, 2.7]), Select("date", ["2000-01-01"]), Select("level", [128])
         )
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 20
-        assert [leaf.values for leaf in result.leaves] == [
-            (-1.1,),
-            (-1.0,),
-            (-0.9,),
-            (-0.8,),
+        assert len(result.leaves) == 1
+        assert [(val,) for val in result.leaves[0].values] == [
             (-0.7,),
             (-0.6,),
             (-0.5,),
@@ -130,6 +103,15 @@ class TestSlicingCyclicAxisNotOverZero:
             (-0.4,),
             (-0.3,),
             (-0.2,),
+            (-1.1,),
+            (-1.0,),
+            (-0.9,),
+            (-0.8,),
+            (-0.7,),
+            (-0.6,),
+            (-0.5,),
+            (-0.4,),
+            (-0.3,),
         ]
 
     def test_cyclic_float_axis_below_axis_range(self):
@@ -137,13 +119,8 @@ class TestSlicingCyclicAxisNotOverZero:
             Box(["step", "long"], [0, -0.7], [3, -0.3]), Select("date", ["2000-01-01"]), Select("level", [128])
         )
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 10
-        assert [leaf.values for leaf in result.leaves] == [
-            (-0.7,),
-            (-0.6,),
-            (-0.5,),
-            (-0.4,),
-            (-0.3,),
+        assert len(result.leaves) == 1
+        assert [(val,) for val in result.leaves[0].values] == [
             (-0.7,),
             (-0.6,),
             (-0.5,),
@@ -156,11 +133,8 @@ class TestSlicingCyclicAxisNotOverZero:
             Box(["step", "long"], [0, -0.7], [3, 0.3]), Select("date", ["2000-01-01"]), Select("level", [128])
         )
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 20
-        assert [leaf.values for leaf in result.leaves] == [
-            (-1.0,),
-            (-0.9,),
-            (-0.8,),
+        assert len(result.leaves) == 1
+        assert [(val,) for val in result.leaves[0].values] == [
             (-0.7,),
             (-0.6,),
             (-0.5,),
@@ -172,10 +146,4 @@ class TestSlicingCyclicAxisNotOverZero:
             (-0.9,),
             (-0.8,),
             (-0.7,),
-            (-0.6,),
-            (-0.5,),
-            (-0.4,),
-            (-0.3,),
-            (-0.2,),
-            (-0.1,),
         ]

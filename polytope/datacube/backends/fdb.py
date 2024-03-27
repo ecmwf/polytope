@@ -65,6 +65,8 @@ class FDBDatacube(Datacube):
             interm_branch_tuple_values = []
             for key in compressed_request[0].keys():
                 # remove the tuple of the request when we ask the fdb
+
+                # TODO: here, would need to take care of axes that are merged and unmerged, which need to be carefully decompressed
                 interm_branch_tuple_values.append(compressed_request[0][key])
             request_combis = product(*interm_branch_tuple_values)
 

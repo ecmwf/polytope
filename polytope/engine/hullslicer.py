@@ -106,9 +106,10 @@ class HullSlicer(Engine):
 
         # TODO: find which axes can be compressed here...
         # compressed_axes = datacube.compressed_grid_axes
-        compressed_axes = []
-        if polytope.is_natively_1D:
-            compressed_axes.extend(polytope.axes())
+        # compressed_axes = []
+        # if polytope.is_natively_1D:
+        #     compressed_axes.extend(polytope.axes())
+        #     print(compressed_axes)
         # if polytope.method is not None:
         #     compressed_axes.extend(polytope.axes())
 
@@ -164,7 +165,7 @@ class HullSlicer(Engine):
                 if len(tuple([remapped_val])) == 0:
                     node.remove_branch()
                 else:
-                    (child, next_nodes) = node.create_child(ax, remapped_val, compressed_axes, next_nodes)
+                    (child, next_nodes) = node.create_child(ax, remapped_val, datacube.compressed_axes, next_nodes)
                     child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
                     child["unsliced_polytopes"].remove(polytope)
                     if new_polytope is not None:
