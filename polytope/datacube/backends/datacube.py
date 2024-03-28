@@ -112,8 +112,12 @@ class Datacube(ABC):
         If lower and upper are equal, returns the index which exactly matches that value (if it exists)
         e.g. returns integer discrete points between two floats
         """
+        # print(path)
         path = self.fit_path(path)
         indexes = axis.find_indexes(path, self)
+        # print(path)
+        # print(axis.name)
+        # print(indexes)
         idx_between = axis.find_indices_between(indexes, lower, upper, self, method)
 
         logging.info(f"For axis {axis.name} between {lower} and {upper}, found indices {idx_between}")
