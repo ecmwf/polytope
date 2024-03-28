@@ -14,6 +14,7 @@ options = {
     "step": {"type_change": "int"},
     "number": {"type_change": "int"},
     "longitude": {"cyclic": [0, 360]},
+    "latitude": {"reverse": {True}},
 }
 config = {"class": "od", "expver": "0001", "levtype": "sfc", "type": "pf"}
 fdbdatacube = FDBDatacube(config, axis_options=options)
@@ -46,3 +47,4 @@ print(time.time() - time1)
 print(time.time() - time2)
 print(time4-time3)
 print(len(result.leaves))
+result.pprint()
