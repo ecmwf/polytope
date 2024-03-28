@@ -13,16 +13,14 @@ class TestSlicingFDBDatacube:
         # Create a dataarray with 3 labelled axes using different index types
         self.options = {
             "values": {
-                "transformation": {
                     "mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
-                }
             },
-            "date": {"transformation": {"merge": {"with": "time", "linkers": [" ", "00"]}}},
-            "step": {"transformation": {"type_change": "int"}},
-            "levelist": {"transformation": {"type_change": "int"}},
-            "longitude": {"transformation": {"cyclic": [0, 360]}},
+            "date": {"merge": {"with": "time", "linkers": [" ", "00"]}},
+            "step": {"type_change": "int"},
+            "levelist": {"type_change": "int"},
+            "longitude": {"cyclic": [0, 360]},
         }
-        self.config = {"class": "od", "expver": "0001", "levtype": "sfc"}
+        self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
