@@ -17,6 +17,7 @@ class TestOctahedralGrid:
         self.options = {
             "values": {"mapper": {"type": "healpix", "resolution": 32, "axes": ["latitude", "longitude"]}},
             "longitude": {"cyclic": [0, 360]},
+            "latitude": {"reverse": True}
         }
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.latlon_array, engine=self.slicer, axis_options=self.options)
@@ -31,7 +32,7 @@ class TestOctahedralGrid:
             Select("valid_time", ["2022-12-14T13:00:00"]),
         )
         result = self.API.retrieve(request)
-        result.pprint()
+        # result.pprint()
         assert len(result.leaves) == 40
 
         lats = []
