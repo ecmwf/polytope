@@ -68,32 +68,6 @@ class XArrayDatacube(Datacube):
                     key = subxarray.name
                     requests.result = (key, value)
 
-    def old_get(self, requests: IndexTree):
-        for r in requests.leaves:
-            path = r.flatten()
-            if len(path.items()) == self.axis_counter:
-                # first, find the grid mapper transform
-                unmapped_path = {}
-                path_copy = deepcopy(path)
-                for key in path_copy:
-                    axis = self._axes[key]
-                    key_value_path = {key: path_copy[key]}
-                    # (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
-                    (key_value_path, path, unmapped_path) = axis.unmap_path_key(key_value_path, path, unmapped_path)
-                path.update(key_value_path)
-                path.update(unmapped_path)
-
-                unmapped_path = {}
-                self.refit_path(path, unmapped_path, path)
-
-                subxarray = self.dataarray.sel(path, method="nearest")
-                subxarray = subxarray.sel(unmapped_path)
-                value = subxarray.item()
-                key = subxarray.name
-                r.result = (key, value)
-            else:
-                r.remove_branch()
-
     def datacube_natural_indexes(self, axis, subarray):
         if axis.name in self.complete_axes:
             indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
