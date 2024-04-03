@@ -195,7 +195,8 @@ class Datacube(ABC):
         class Config(ConfigModel):
             config: list[AxisConfig] = []
 
-        axis_config = Conflator(app_name="polytope", model=Config, cli=False, **axis_options).load()
+        # axis_config = Conflator(app_name="polytope", model=Config, cli=False, **axis_options).load()
+        axis_config = Conflator(app_name="polytope", model=Config, cli=False, *axis_options).load()
 
         return axis_config
 

@@ -22,19 +22,20 @@ class TestSlicingEra5Data:
         array = ds.to_xarray().isel(step=0).t
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
-        options = yaml.safe_load(
-            """
-                            config:
-                                - axis_name: latitude
-                                  transformations:
-                                    - name: "reverse"
-                                      is_reverse: True
-                                - axis_name: longitude
-                                  transformations:
-                                    - name: "cyclic"
-                                      range: [0, 360]
-                            """
-        )
+        # options = yaml.safe_load(
+        #     """
+        #                     config:
+        #                         - axis_name: latitude
+        #                           transformations:
+        #                             - name: "reverse"
+        #                               is_reverse: True
+        #                         - axis_name: longitude
+        #                           transformations:
+        #                             - name: "cyclic"
+        #                               range: [0, 360]
+        #                     """
+        # )
+        options = {"config": [{"axis_name": "latitude", "transformations": {"name": "reverse", "is_reverse": True}}, {"axis_name": "longitude", "transformations": {"name": "cyclic", "range": [0, 360]}}]}
         self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
 
     @pytest.mark.internet
