@@ -110,6 +110,9 @@ class DatacubeAxis(ABC):
                 indexes_between = indexes[start:end].to_list()
                 indexes_between_ranges.extend(indexes_between)
             else:
+                # print(self.name)
+                # print(indexes)
+                # print(low)
                 start = indexes.searchsorted(low, "left")
                 end = indexes.searchsorted(up, "right")
                 indexes_between = indexes[start:end].to_list()
@@ -173,6 +176,7 @@ class IntDatacubeAxis(DatacubeAxis):
         # TODO: Maybe here, store transformations as a dico instead
         self.transformations = []
         self.type = 0
+        self.can_round = True
 
     def parse(self, value: Any) -> Any:
         return float(value)
@@ -194,6 +198,7 @@ class FloatDatacubeAxis(DatacubeAxis):
         self.range = None
         self.transformations = []
         self.type = 0.0
+        self.can_round = True
 
     def parse(self, value: Any) -> Any:
         return float(value)
@@ -215,6 +220,7 @@ class PandasTimestampDatacubeAxis(DatacubeAxis):
         self.range = None
         self.transformations = []
         self.type = pd.Timestamp("2000-01-01T00:00:00")
+        self.can_round = False
 
     def parse(self, value: Any) -> Any:
         if isinstance(value, np.str_):
@@ -244,6 +250,7 @@ class PandasTimedeltaDatacubeAxis(DatacubeAxis):
         self.range = None
         self.transformations = []
         self.type = np.timedelta64(0, "s")
+        self.can_round = False
 
     def parse(self, value: Any) -> Any:
         if isinstance(value, np.str_):
@@ -272,6 +279,7 @@ class UnsliceableDatacubeAxis(DatacubeAxis):
         self.tol = float("NaN")
         self.range = None
         self.transformations = []
+        self.can_round = False
 
     def parse(self, value: Any) -> Any:
         return value

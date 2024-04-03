@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -42,4 +43,20 @@ class TestSlicingFDBDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 6
+        assert len(result.leaves) == 2
+        path1 = result.leaves[0].flatten()
+        assert path1["date"] == (
+            np.datetime64("2017-01-01T12:00:00"),
+            np.datetime64("2017-01-02T00:00:00"),
+            np.datetime64("2017-01-02T12:00:00"),
+        )
+        assert path1["levelist"] == ("500",)
+        path1 = result.leaves[1].flatten()
+        assert path1["date"] == (
+            np.datetime64("2017-01-01T12:00:00"),
+            np.datetime64("2017-01-02T00:00:00"),
+            np.datetime64("2017-01-02T12:00:00"),
+        )
+        assert path1["levelist"] == ("850",)
+        print("FINAL")
+        print(result.leaves[0].result)

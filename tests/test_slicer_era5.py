@@ -29,6 +29,6 @@ class TestSlicingEra5Data:
         )
 
         result = self.API.retrieve(request)
-        # result.pprint()
+        result.pprint()
 
-        assert len(result.leaves) == 4 * 1 * 2 * 4 * 11
+        assert len(result.leaves) == 1

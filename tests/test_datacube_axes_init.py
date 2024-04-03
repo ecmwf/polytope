@@ -37,7 +37,7 @@ class TestInitDatacubeAxes:
             89.73614327160958,
             89.6658939412157,
         ]
-        assert self.datacube._axes["longitude"].find_indexes({"latitude": 89.94618771566562}, self.datacube)[:8] == [
+        assert self.datacube._axes["longitude"].find_indexes({"latitude": (89.94618771566562,)}, self.datacube)[:8] == [
             0.0,
             18.0,
             36.0,
@@ -47,7 +47,9 @@ class TestInitDatacubeAxes:
             108.0,
             126.0,
         ]
-        assert len(self.datacube._axes["longitude"].find_indexes({"latitude": 89.94618771566562}, self.datacube)) == 20
+        assert (
+            len(self.datacube._axes["longitude"].find_indexes({"latitude": (89.94618771566562,)}, self.datacube)) == 20
+        )
         assert self.datacube._axes["latitude"].find_indexes({}, self.datacube)[:5] == [
             89.94618771566562,
             89.87647835333229,
@@ -55,7 +57,7 @@ class TestInitDatacubeAxes:
             89.73614327160958,
             89.6658939412157,
         ]
-        assert self.datacube._axes["longitude"].find_indexes({"latitude": 89.94618771566562}, self.datacube)[:8] == [
+        assert self.datacube._axes["longitude"].find_indexes({"latitude": (89.94618771566562,)}, self.datacube)[:8] == [
             0.0,
             18.0,
             36.0,
@@ -65,15 +67,19 @@ class TestInitDatacubeAxes:
             108.0,
             126.0,
         ]
-        assert len(self.datacube._axes["longitude"].find_indexes({"latitude": 89.94618771566562}, self.datacube)) == 20
+        assert (
+            len(self.datacube._axes["longitude"].find_indexes({"latitude": (89.94618771566562,)}, self.datacube)) == 20
+        )
         lon_ax = self.datacube._axes["longitude"]
         lat_ax = self.datacube._axes["latitude"]
         (path_key, path, unmapped_path) = lat_ax.unmap_path_key({"latitude": 89.94618771566562}, {}, {})
         assert path == {}
         assert unmapped_path == {"latitude": 89.94618771566562}
-        (path_key, path, unmapped_path) = lon_ax.unmap_path_key({"longitude": 0.0}, {}, {"latitude": 89.94618771566562})
+        (path_key, path, unmapped_path) = lon_ax.unmap_path_key(
+            {"longitude": (0.0,)}, {}, {"latitude": (89.94618771566562,)}
+        )
         assert path == {}
-        assert unmapped_path == {"latitude": 89.94618771566562}
+        assert unmapped_path == {"latitude": (89.94618771566562,)}
         assert path_key == {"values": 0}
         assert lat_ax.find_indices_between([89.94618771566562, 89.87647835333229], 89.87, 90, self.datacube, 0) == [
             89.94618771566562,

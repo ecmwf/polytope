@@ -7,6 +7,7 @@ import xarray as xr
 from ...utility.combinatorics import validate_axes
 from ..datacube_axis import DatacubeAxis
 from ..index_tree import DatacubePath, IndexTree
+from ..transformations.datacube_mappers.datacube_mappers import DatacubeMapper
 from ..transformations.datacube_transformations import (
     DatacubeAxisTransformation,
     has_transform,
@@ -31,6 +32,8 @@ class Datacube(ABC):
         self.nearest_search = {}
         self._axes = None
         self.transformed_axes = []
+        self.compressed_grid_axes = []
+        self.compressed_axes = []
         self.unwanted_path = {}
 
     @abstractmethod
@@ -55,6 +58,9 @@ class Datacube(ABC):
         )
         for blocked_axis in transformation.blocked_axes():
             self.blocked_axes.append(blocked_axis)
+        if isinstance(transformation, DatacubeMapper):
+            for compressed_grid_axis in transformation.compressed_grid_axes:
+                self.compressed_grid_axes.append(compressed_grid_axis)
         if len(final_axis_names) > 1:
             self.coupled_axes.append(final_axis_names)
         for axis_name in final_axis_names:
@@ -107,8 +113,12 @@ class Datacube(ABC):
         If lower and upper are equal, returns the index which exactly matches that value (if it exists)
         e.g. returns integer discrete points between two floats
         """
+        # print(path)
         path = self.fit_path(path)
         indexes = axis.find_indexes(path, self)
+        # print(path)
+        # print(axis.name)
+        # print(indexes)
         idx_between = axis.find_indices_between(indexes, lower, upper, self, method)
 
         logging.info(f"For axis {axis.name} between {lower} and {upper}, found indices {idx_between}")

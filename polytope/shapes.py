@@ -23,17 +23,18 @@ class Shape(ABC):
 
 
 class ConvexPolytope(Shape):
-    def __init__(self, axes, points, method=None):
+    def __init__(self, axes, points, method=None, is_1D=False):
         self._axes = list(axes)
         self.is_flat = False
         if len(self._axes) == 1:
             self.is_flat = True
         self.points = points
         self.method = method
+        self.is_natively_1D = is_1D
 
     def extents(self, axis):
         if self.is_flat:
-            slice_axis_idx = 1
+            slice_axis_idx = 0
             lower = min(self.points)[0]
             upper = max(self.points)[0]
         else:
@@ -44,7 +45,7 @@ class ConvexPolytope(Shape):
         return (lower, upper, slice_axis_idx)
 
     def __str__(self):
-        return f"Polytope in {self.axes} with points {self.points}"
+        return f"Polytope in {self.axes()} with points {self.points}"
 
     def axes(self):
         return self._axes
@@ -66,7 +67,7 @@ class Select(Shape):
         return [self.axis]
 
     def polytope(self):
-        return [ConvexPolytope([self.axis], [[v]], self.method) for v in self.values]
+        return [ConvexPolytope([self.axis], [[v]], self.method, is_1D=True) for v in self.values]
 
     def __repr__(self):
         return f"Select in {self.axis} with points {self.values}"
@@ -84,7 +85,7 @@ class Point(Shape):
             assert len(self.values) == 1
         for i in range(len(axes)):
             polytope_points = [v[i] for v in self.values]
-            self.polytopes.extend([ConvexPolytope([axes[i]], [[point]], self.method) for point in polytope_points])
+            self.polytopes.extend([ConvexPolytope([axes[i]], [[point]], self.method, is_1D=True) for point in polytope_points])
 
     def axes(self):
         return self._axes
@@ -110,7 +111,7 @@ class Span(Shape):
         return [self.axis]
 
     def polytope(self):
-        return [ConvexPolytope([self.axis], [[self.lower], [self.upper]])]
+        return [ConvexPolytope([self.axis], [[self.lower], [self.upper]], is_1D=True)]
 
     def __repr__(self):
         return f"Span in {self.axis} with range from {self.lower} to {self.upper}"
@@ -161,7 +162,7 @@ class Box(Shape):
         return self._axes
 
     def polytope(self):
-        return [ConvexPolytope(self.axes(), self.vertices)]
+        return [ConvexPolytope(self.axes(), self.vertices, is_1D=True)]
 
     def __repr__(self):
         return f"Box in {self._axes} with with lower corner {self._lower_corner} and upper corner{self._upper_corner}"

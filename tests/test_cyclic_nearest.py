@@ -76,8 +76,8 @@ class TestRegularGrid:
         )
         result = self.API.retrieve(request)
         longitude_val_1 = result.leaves[0].flatten()["longitude"]
-        result.pprint_2()
-        assert longitude_val_1 == 283.561643835616
+        result.pprint()
+        assert longitude_val_1 == (283.561643835616,)
 
         request = Request(
             Select("step", [0]),
@@ -93,5 +93,5 @@ class TestRegularGrid:
         )
         result = self.API.retrieve(request)
         longitude_val_1 = result.leaves[0].flatten()["longitude"]
-        result.pprint_2()
-        assert longitude_val_1 == 283.561643835616
+        result.pprint()
+        assert longitude_val_1 == (283.561643835616,)
