@@ -3,7 +3,6 @@ import yaml
 from earthkit import data
 from helper_functions import download_test_data
 
-from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
@@ -17,7 +16,6 @@ class TestSlicingMultipleTransformationsOneAxis:
         ds = data.from_source("file", "./tests/data/foo.grib")
         self.latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
         self.latlon_array = self.latlon_array.t2m
-        self.xarraydatacube = XArrayDatacube(self.latlon_array)
         self.options = yaml.safe_load(
             """
                             config:

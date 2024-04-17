@@ -58,7 +58,11 @@ class HullSlicer(Engine):
             next_nodes.append(child)
         else:
             # raise a value not found error
-            raise ValueError()
+            errmsg = (
+                f"Datacube does not have expected index {lower} of type {type(lower)}"
+                f"on {ax.name} along the path {path}"
+            )
+            raise ValueError(errmsg)
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, lower, upper, next_nodes, slice_axis_idx):
         tol = ax.tol
@@ -80,8 +84,8 @@ class HullSlicer(Engine):
             if flattened.get(datacube.coupled_axes[0][0], None) is not None:
                 flattened_tuple = (datacube.coupled_axes[0][0], flattened.get(datacube.coupled_axes[0][0], None))
                 flattened = {flattened_tuple[0]: flattened_tuple[1]}
-            else:
-                flattened = {}
+            # else:
+            #     flattened = {}
 
         values = self.axis_values_between.get((flattened_tuple, ax.name, lower, upper, method), None)
         if self.axis_values_between.get((flattened_tuple, ax.name, lower, upper, method), None) is None:
@@ -163,24 +167,16 @@ class HullSlicer(Engine):
                     if node.axis.name == datacube.axis_with_identical_structure_after:
                         stored_val = node.value
                         cached_node = node
-                        # logging.info("Caching number 1")
                     elif node.axis.name == datacube.axis_with_identical_structure_after and node.value != stored_val:
                         repeated_sub_nodes.append(node)
                         del node["unsliced_polytopes"]
-                        # logging.info(f"Skipping number {node.value}")
                         continue
 
                     self._build_branch(ax, node, datacube, next_nodes)
                 current_nodes = next_nodes
 
-            # logging.info("=== BEFORE COPYING ===")
-
             for n in repeated_sub_nodes:
-                # logging.info(f"Copying children for number {n.value}")
                 n.copy_children_from_other(cached_node)
-
-            # logging.info("=== AFTER COPYING ===")
-            # request.pprint()
 
             request.merge(r)
         return request

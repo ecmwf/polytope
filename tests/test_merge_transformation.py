@@ -3,7 +3,6 @@ import pandas as pd
 import xarray as xr
 import yaml
 
-from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Select
@@ -30,7 +29,6 @@ class TestMergeTransformation:
                                       linkers: ["T", "00"]
                             """
         )
-        self.xarraydatacube = XArrayDatacube(self.array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.array, engine=self.slicer, axis_options=self.options)
 

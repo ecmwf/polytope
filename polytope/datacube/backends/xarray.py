@@ -1,5 +1,6 @@
 from copy import deepcopy
 
+import numpy as np
 import xarray as xr
 
 from .datacube import Datacube, IndexTree
@@ -9,6 +10,7 @@ class XArrayDatacube(Datacube):
     """Xarray arrays are labelled, axes can be defined as strings or integers (e.g. "time" or 0)."""
 
     def __init__(self, dataarray: xr.DataArray, axis_options=None, datacube_options=None):
+        super().__init__(axis_options, datacube_options)
         if axis_options is None:
             axis_options = {}
         if datacube_options is None:
@@ -17,13 +19,6 @@ class XArrayDatacube(Datacube):
         self.axis_counter = 0
         self._axes = None
         self.dataarray = dataarray
-        treated_axes = []
-        self.complete_axes = []
-        self.blocked_axes = []
-        self.fake_axes = []
-        self.nearest_search = None
-        self.coupled_axes = []
-        self.axis_with_identical_structure_after = datacube_options.get("identical structure after")
 
         for name, values in dataarray.coords.variables.items():
             options = None
@@ -32,24 +27,24 @@ class XArrayDatacube(Datacube):
                     options = opt
             if name in dataarray.dims:
                 self._check_and_add_axes(options, name, values)
-                treated_axes.append(name)
+                self.treated_axes.append(name)
                 self.complete_axes.append(name)
             else:
                 if self.dataarray[name].dims == ():
                     self._check_and_add_axes(options, name, values)
-                    treated_axes.append(name)
+                    self.treated_axes.append(name)
         for name in dataarray.dims:
-            if name not in treated_axes:
+            if name not in self.treated_axes:
                 options = None
                 for opt in self.axis_options:
                     if opt.axis_name == name:
                         options = opt
                 val = dataarray[name].values[0]
                 self._check_and_add_axes(options, name, val)
-                treated_axes.append(name)
+                self.treated_axes.append(name)
         # add other options to axis which were just created above like "lat" for the mapper transformations for eg
         for name in self._axes:
-            if name not in treated_axes:
+            if name not in self.treated_axes:
                 options = None
                 for opt in self.axis_options:
                     if opt.axis_name == name:
@@ -66,9 +61,15 @@ class XArrayDatacube(Datacube):
                 path_copy = deepcopy(path)
                 for key in path_copy:
                     axis = self._axes[key]
-                    (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
-                # TODO: here do nearest point search
-                path = self.fit_path(path)
+                    key_value_path = {key: path_copy[key]}
+                    # (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
+                    (key_value_path, path, unmapped_path) = axis.unmap_path_key(key_value_path, path, unmapped_path)
+                path.update(key_value_path)
+                path.update(unmapped_path)
+
+                unmapped_path = {}
+                self.refit_path(path, unmapped_path, path)
+
                 subxarray = self.dataarray.sel(path, method="nearest")
                 subxarray = subxarray.sel(unmapped_path)
                 value = subxarray.item()
@@ -82,13 +83,34 @@ class XArrayDatacube(Datacube):
             indexes = next(iter(subarray.xindexes.values())).to_pandas_index()
         else:
             if subarray[axis.name].values.ndim == 0:
-                indexes = [subarray[axis.name].values]
+                # NOTE how we handle the two special datetime and timedelta cases to conform with numpy arrays
+                if np.issubdtype(subarray[axis.name].values.dtype, np.datetime64):
+                    indexes = [subarray[axis.name].astype("datetime64[us]").values]
+                elif np.issubdtype(subarray[axis.name].values.dtype, np.timedelta64):
+                    indexes = [subarray[axis.name].astype("timedelta64[us]").values]
+                else:
+                    indexes = [subarray[axis.name].values.tolist()]
             else:
                 indexes = subarray[axis.name].values
         return indexes
 
+    def refit_path(self, path_copy, unmapped_path, path):
+        for key in path.keys():
+            if key not in self.dataarray.dims:
+                path_copy.pop(key)
+            if key not in self.dataarray.coords.dtypes:
+                unmapped_path.update({key: path[key]})
+                path_copy.pop(key)
+            for key in self.dataarray.coords.dtypes:
+                key_dtype = self.dataarray.coords.dtypes[key]
+                if key_dtype.type is np.str_ and key in path.keys():
+                    unmapped_path.update({key: path[key]})
+                    path_copy.pop(key, None)
+
     def select(self, path, unmapped_path):
-        subarray = self.dataarray.sel(path, method="nearest")
+        path_copy = deepcopy(path)
+        self.refit_path(path_copy, unmapped_path, path)
+        subarray = self.dataarray.sel(path_copy, method="nearest")
         subarray = subarray.sel(unmapped_path)
         return subarray
 

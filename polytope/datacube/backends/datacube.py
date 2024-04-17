@@ -1,6 +1,5 @@
 import importlib
 import logging
-import math
 from abc import ABC, abstractmethod
 from typing import Any, List, Literal, Optional, Union
 
@@ -8,7 +7,7 @@ import xarray as xr
 from conflator import ConfigModel, Conflator
 from pydantic import ConfigDict
 
-from ...utility.combinatorics import unique, validate_axes
+from ...utility.combinatorics import validate_axes
 from ..datacube_axis import DatacubeAxis
 from ..index_tree import DatacubePath, IndexTree
 from ..transformations.datacube_transformations import (
@@ -18,6 +17,24 @@ from ..transformations.datacube_transformations import (
 
 
 class Datacube(ABC):
+    def __init__(self, axis_options=None, datacube_options=None):
+        if axis_options is None:
+            self.axis_options = {}
+        else:
+            self.axis_options = axis_options
+        if datacube_options is None:
+            datacube_options = {}
+        self.axis_with_identical_structure_after = datacube_options.get("identical structure after")
+        self.coupled_axes = []
+        self.axis_counter = 0
+        self.complete_axes = []
+        self.blocked_axes = []
+        self.fake_axes = []
+        self.treated_axes = []
+        self.nearest_search = {}
+        self._axes = None
+        self.transformed_axes = []
+
     @abstractmethod
     def get(self, requests: IndexTree) -> Any:
         """Return data given a set of request trees"""
@@ -49,18 +66,17 @@ class Datacube(ABC):
 
             # first need to change the values so that we have right type
             values = transformation.change_val_type(axis_name, values)
-            if self._axes is None:
-                DatacubeAxis.create_standard(axis_name, values, self)
-            elif axis_name not in self._axes.keys():
+            if self._axes is None or axis_name not in self._axes.keys():
                 DatacubeAxis.create_standard(axis_name, values, self)
             # add transformation tag to axis, as well as transformation options for later
             setattr(self._axes[axis_name], has_transform[transformation_type_key.name], True)  # where has_transform is
             # a factory inside datacube_transformations to set the has_transform, is_cyclic etc axis properties
             # add the specific transformation handled here to the relevant axes
             # Modify the axis to update with the tag
-            decorator_module = importlib.import_module("polytope.datacube.datacube_axis")
-            decorator = getattr(decorator_module, transformation_type_key.name)
-            decorator(self._axes[axis_name])
+
+            # decorator_module = importlib.import_module("polytope.datacube.datacube_axis")
+            # decorator = getattr(decorator_module, transformation_type_key.name)
+            # decorator(self._axes[axis_name])
             if transformation not in self._axes[axis_name].transformations:  # Avoids duplicates being stored
                 self._axes[axis_name].transformations.append(transformation)
 
@@ -73,9 +89,7 @@ class Datacube(ABC):
             self._add_all_transformation_axes(options, name, values)
         else:
             if name not in self.blocked_axes:
-                if self._axes is None:
-                    DatacubeAxis.create_standard(name, values, self)
-                elif name not in self._axes.keys():
+                if self._axes is None or name not in self._axes.keys():
                     DatacubeAxis.create_standard(name, values, self)
 
     def has_index(self, path: DatacubePath, axis, index):
@@ -99,44 +113,10 @@ class Datacube(ABC):
         """
         path = self.fit_path(path)
         indexes = axis.find_indexes(path, self)
-        search_ranges = axis.remap([lower, upper])
-        original_search_ranges = axis.to_intervals([lower, upper])
-        # Find the offsets for each interval in the requested range, which we will need later
-        search_ranges_offset = []
-        for r in original_search_ranges:
-            offset = axis.offset(r)
-            search_ranges_offset.append(offset)
-        idx_between = self._look_up_datacube(search_ranges, search_ranges_offset, indexes, axis, method)
-        # Remove duplicates even if difference of the order of the axis tolerance
-        if offset is not None:
-            # Note that we can only do unique if not dealing with time values
-            idx_between = unique(idx_between)
+        idx_between = axis.find_indices_between(indexes, lower, upper, self, method)
 
         logging.info(f"For axis {axis.name} between {lower} and {upper}, found indices {idx_between}")
 
-        return idx_between
-
-    def _look_up_datacube(self, search_ranges, search_ranges_offset, indexes, axis, method):
-        idx_between = []
-        for i in range(len(search_ranges)):
-            r = search_ranges[i]
-            offset = search_ranges_offset[i]
-            low = r[0]
-            up = r[1]
-            indexes_between = axis.find_indices_between([indexes], low, up, self, method)
-            # Now the indexes_between are values on the cyclic range so need to remap them to their original
-            # values before returning them
-            for j in range(len(indexes_between)):
-                # if we have a special indexes between range that needs additional offset, treat it here
-                if len(indexes_between[j]) == 0:
-                    idx_between = idx_between
-                else:
-                    for k in range(len(indexes_between[j])):
-                        if offset is None:
-                            indexes_between[j][k] = indexes_between[j][k]
-                        else:
-                            indexes_between[j][k] = round(indexes_between[j][k] + offset, int(-math.log10(axis.tol)))
-                        idx_between.append(indexes_between[j][k])
         return idx_between
 
     def get_mapper(self, axis):
@@ -196,7 +176,7 @@ class Datacube(ABC):
             config: list[AxisConfig] = []
 
         # axis_config = Conflator(app_name="polytope", model=Config, cli=False, **axis_options).load()
-        axis_config = Conflator(app_name="polytope", model=Config, cli=False, *axis_options).load()
+        axis_config = Conflator(app_name="polytope", model=Config, cli=False, **axis_options).load()
 
         return axis_config
 

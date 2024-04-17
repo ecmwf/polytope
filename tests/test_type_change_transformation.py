@@ -2,7 +2,6 @@ import numpy as np
 import xarray as xr
 import yaml
 
-from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Select
@@ -28,7 +27,6 @@ class TestTypeChangeTransformation:
                                       type: "int"
                             """
         )
-        self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
 

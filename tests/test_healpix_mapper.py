@@ -3,7 +3,6 @@ import yaml
 from earthkit import data
 from helper_functions import download_test_data, find_nearest_latlon
 
-from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
@@ -16,7 +15,6 @@ class TestOctahedralGrid:
 
         ds = data.from_source("file", "./tests/data/healpix.grib")
         self.latlon_array = ds.to_xarray().isel(step=0).isel(time=0).isel(isobaricInhPa=0).z
-        self.xarraydatacube = XArrayDatacube(self.latlon_array)
         self.options = yaml.safe_load(
             """
                             config:

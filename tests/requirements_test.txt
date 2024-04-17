@@ -1,8 +1,8 @@
 -r ../requirements.txt
-pytest==8.0.0 
-cffi==1.15.1
-eccodes==1.5.2
-h5netcdf==1.1.0
-h5py==3.8.0
-earthkit==0.0.1
-earthkit-data==0.1.3
+pytest
+cffi
+eccodes
+h5netcdf
+h5py
+earthkit
+earthkit-data
