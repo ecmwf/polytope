@@ -293,6 +293,8 @@ _type_to_axis_lookup = {
     np.datetime64: PandasTimestampDatacubeAxis(),
     np.timedelta64: PandasTimedeltaDatacubeAxis(),
     np.float64: FloatDatacubeAxis(),
+    np.float32: FloatDatacubeAxis(),
+    np.int32: IntDatacubeAxis(),
     np.str_: UnsliceableDatacubeAxis(),
     str: UnsliceableDatacubeAxis(),
     np.object_: UnsliceableDatacubeAxis(),
