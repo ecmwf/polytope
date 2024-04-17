@@ -39,6 +39,7 @@ class TestAxisMappers:
         assert axis.to_float(2) == 2.0
         assert axis.from_float(2) == 2.0
         assert axis.serialize(2.0) == 2.0
+        transformation = DatacubeAxisCyclic("", {})
 
         options = yaml.safe_load(
             """
