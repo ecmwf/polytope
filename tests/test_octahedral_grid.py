@@ -16,7 +16,6 @@ class TestOctahedralGrid:
         ds = data.from_source("file", "./tests/data/foo.grib")
         self.latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
         self.latlon_array = self.latlon_array.t2m
-        self.xarraydatacube = XArrayDatacube(self.latlon_array)
         self.options = yaml.safe_load(
             """
                             config:
