@@ -13,7 +13,8 @@ site
 *.grib
 *.gif
 *.html
+*.req
+.mypy_cache
 example_eo
 example_mri
-.mypy_cache
-*.req
+polytope_python.egg-info

@@ -9,9 +9,10 @@ from .datacube import Datacube, IndexTree
 class XArrayDatacube(Datacube):
     """Xarray arrays are labelled, axes can be defined as strings or integers (e.g. "time" or 0)."""
 
-    def __init__(self, dataarray: xr.DataArray, axis_options=None, datacube_options=None):
+    def __init__(self, dataarray: xr.DataArray, axis_options=None, datacube_options=None, point_cloud_options=None):
         super().__init__(axis_options, datacube_options)
         self.dataarray = dataarray
+        self.has_point_cloud = point_cloud_options
 
         for name, values in dataarray.coords.variables.items():
             if name in dataarray.dims:
@@ -37,24 +38,28 @@ class XArrayDatacube(Datacube):
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
 
+    def find_point_cloud(self):
+        # TODO: somehow, find the point cloud of irregular grid if it exists
+        if self.has_point_cloud:
+            return self.has_point_cloud
+
     def get(self, requests: IndexTree):
         for r in requests.leaves:
-            path = r.flatten()
-            if len(path.items()) == self.axis_counter:
+            path = r.flatten_with_result()
+            if len(path.items()) == self.axis_counter + 1:
                 # first, find the grid mapper transform
                 unmapped_path = {}
                 path_copy = deepcopy(path)
                 for key in path_copy:
-                    axis = self._axes[key]
-                    key_value_path = {key: path_copy[key]}
-                    # (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
-                    (key_value_path, path, unmapped_path) = axis.unmap_path_key(key_value_path, path, unmapped_path)
+                    if key != "result":
+                        axis = self._axes[key]
+                        key_value_path = {key: path_copy[key]}
+                        (key_value_path, path, unmapped_path) = axis.unmap_path_key(key_value_path, path, unmapped_path)
                 path.update(key_value_path)
                 path.update(unmapped_path)
 
                 unmapped_path = {}
                 self.refit_path(path, unmapped_path, path)
-
                 subxarray = self.dataarray.sel(path, method="nearest")
                 subxarray = subxarray.sel(unmapped_path)
                 value = subxarray.item()
@@ -83,9 +88,9 @@ class XArrayDatacube(Datacube):
         for key in path.keys():
             if key not in self.dataarray.dims:
                 path_copy.pop(key)
-            if key not in self.dataarray.coords.dtypes:
+            elif key not in self.dataarray.coords.dtypes:
                 unmapped_path.update({key: path[key]})
-                path_copy.pop(key)
+                path_copy.pop(key, None)
             for key in self.dataarray.coords.dtypes:
                 key_dtype = self.dataarray.coords.dtypes[key]
                 if key_dtype.type is np.str_ and key in path.keys():
