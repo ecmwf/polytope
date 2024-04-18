@@ -52,10 +52,17 @@ def encode_tree(tree: TensorIndexTree):
 #                  float: "double_val"}
 
 
-def encode_child(tree: TensorIndexTree, child: TensorIndexTree, node):
+def encode_child(tree: TensorIndexTree, child: TensorIndexTree, node, result_size=[]):
     child_node = pb2.Node()
 
     child_node.axis = child.axis.name
+    result_size.append(len(child.values))
+
+    # Add the result size to the final node
+    # TODO: how to assign repeated fields more efficiently?
+    # NOTE: this will only really be efficient when we compress and have less leaves
+    if len(child.children) == 0:
+        child_node.result_size.extend(result_size)
     # NOTE: do we need this if we parse the tree before it has values?
     # TODO: not clear if child.value is a numpy array or a simple float...
     # TODO: not clear what happens if child.value is a np array since this is not a supported type by protobuf
@@ -99,7 +106,8 @@ def encode_child(tree: TensorIndexTree, child: TensorIndexTree, node):
             child_node.value.append(child_node_val)
 
     for c in child.children:
-        encode_child(child, c, child_node)
+        result_size.append(len(child.values))
+        encode_child(child, c, child_node, result_size)
 
     # NOTE: we append the children once their branch has been completed until the leaf
     node.children.append(child_node)
@@ -128,6 +136,7 @@ def decode_tree(datacube):
 def decode_child(node, tree, datacube):
     if len(node.children) == 0:
         tree.result = node.result
+        tree.result_size = node.result_size
     for child in node.children:
         child_axis = datacube._axes[child.axis]
         child_vals = []

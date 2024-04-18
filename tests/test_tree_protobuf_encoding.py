@@ -50,3 +50,4 @@ class TestEncoder:
         encode_tree(self.fake_tree)
         decoded_tree = decode_tree(self.datacube)
         decoded_tree.pprint()
+        assert decoded_tree.leaves[0].result_size == [1, 1, 1]

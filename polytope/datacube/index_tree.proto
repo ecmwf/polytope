@@ -13,7 +13,8 @@ message Value {
 message Node {
     optional string axis = 1;
     repeated Value value = 2;
-    repeated double result = 3;
-    repeated Node children = 4;
+    repeated double result = 3 [packed=true];
+    repeated int64 result_size = 4 [packed=true];
+    repeated Node children = 5;
 }
 

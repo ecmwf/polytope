@@ -19,6 +19,7 @@ class TensorIndexTree(object):
         self.result = None
         self.axis = axis
         self.ancestors = []
+        self.result_size = []
 
     @property
     def leaves(self):
