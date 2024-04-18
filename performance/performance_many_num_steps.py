@@ -1,14 +1,12 @@
 import time
 
+import numpy as np
 import pandas as pd
+from earthkit import data
 
 from polytope.datacube.backends.fdb import FDBDatacube
 from polytope.polytope import Polytope, Request
 from polytope.shapes import All, Point, Select, Span
-
-import numpy as np
-
-from earthkit import data
 
 time1 = time.time()
 # Create a dataarray with 3 labelled axes using different index types
@@ -26,7 +24,6 @@ array = ds.to_xarray().t2m
 print(array)
 
 
-
 config = {"class": "od", "expver": "0001", "levtype": "sfc", "type": "pf"}
 fdbdatacube = FDBDatacube(config, axis_options=options)
 # self_API = Polytope(datacube=fdbdatacube, axis_options=options)
@@ -39,7 +36,7 @@ for i in range(10):
     time2 = time.time()
 
 request = Request(
-    Span("step", np.timedelta64(0, "s"), np.timedelta64(5*24*3600, "s")),
+    Span("step", np.timedelta64(0, "s"), np.timedelta64(5 * 24 * 3600, "s")),
     # Select("levtype", ["sfc"]),
     # Select("date", [pd.Timestamp("20231205T000000")]),
     Select("time", [pd.Timestamp("20231205T000000")]),

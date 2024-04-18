@@ -42,7 +42,7 @@ class XArrayDatacube(Datacube):
             leaf_path = {}
         if requests.axis.name == "root":
             for c in requests.children:
-                self.get(c, leaf_path, axis_counter+1)
+                self.get(c, leaf_path, axis_counter + 1)
         else:
             key_value_path = {requests.axis.name: requests.value}
             ax = requests.axis
@@ -53,7 +53,7 @@ class XArrayDatacube(Datacube):
             if len(requests.children) != 0:
                 # We are not a leaf and we loop over
                 for c in requests.children:
-                    self.get(c, leaf_path, axis_counter+1)
+                    self.get(c, leaf_path, axis_counter + 1)
             else:
                 if self.axis_counter != axis_counter:
                     requests.remove_branch()
