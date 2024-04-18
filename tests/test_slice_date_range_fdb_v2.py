@@ -30,6 +30,10 @@ class TestSlicingFDBDatacube:
                                   transformations:
                                     - name: "type_change"
                                       type: "int"
+                                - axis_name: latitude
+                                  transformations:
+                                    - name: "reverse"
+                                      is_reverse: True
                             """
         )
         self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "stream": "enda"}

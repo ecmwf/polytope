@@ -43,6 +43,10 @@ class TestRegularGrid:
                                   transformations:
                                     - name: "cyclic"
                                       range: [0, 360]
+                                - axis_name: latitude
+                                  transformations:
+                                    - name: "reverse"
+                                      is_reverse: True
                             """
         )
         self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "step": "0"}

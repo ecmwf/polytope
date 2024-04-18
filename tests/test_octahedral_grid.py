@@ -25,6 +25,10 @@ class TestOctahedralGrid:
                                       type: "octahedral"
                                       resolution: 1280
                                       axes: ["latitude", "longitude"]
+                                - axis_name: latitude
+                                  transformations:
+                                    - name: "reverse"
+                                      is_reverse: True
                             """
         )
         self.slicer = HullSlicer()

@@ -29,6 +29,10 @@ class TestSlicingMultipleTransformationsOneAxis:
                                   transformations:
                                     - name: "cyclic"
                                       range: [0, 360.0]
+                                - axis_name: latitude
+                                  transformations:
+                                    - name: "reverse"
+                                      is_reverse: True
                             """
         )
         self.slicer = HullSlicer()

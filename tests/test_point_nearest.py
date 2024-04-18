@@ -38,6 +38,10 @@ class TestSlicingFDBDatacube:
                                   transformations:
                                     - name: "cyclic"
                                       range: [0, 360]
+                                - axis_name: latitude
+                                  transformations:
+                                    - name: "reverse"
+                                      is_reverse: True
                             """
         )
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
