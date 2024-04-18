@@ -3,7 +3,7 @@ from copy import deepcopy
 import numpy as np
 import xarray as xr
 
-from .datacube import Datacube, IndexTree
+from .datacube import Datacube
 
 
 class XArrayDatacube(Datacube):
