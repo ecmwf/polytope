@@ -1,3 +1,4 @@
+import argparse
 import logging
 from abc import ABC, abstractmethod
 from typing import Any, List, Literal, Optional, Union
@@ -165,16 +166,13 @@ class Datacube(ABC):
             axis_name: str = ""
             transformations: list[action_subclasses_union]
 
-            # @validator("axis_name")
-            # def check_size(cls, v):
-            #     assert v in self.datacube._axes.keys()
-            #     return v
-
         class Config(ConfigModel):
             config: list[AxisConfig] = []
 
-        # axis_config = Conflator(app_name="polytope", model=Config, cli=False, **axis_options).load()
-        axis_config = Conflator(app_name="polytope", model=Config, cli=False, **axis_options).load()
+        parser = argparse.ArgumentParser(allow_abbrev=False)
+        axis_config = Conflator(app_name="polytope", model=Config, cli=False, argparser=parser).load()
+        if axis_options.get("config"):
+            axis_config = Config(config=axis_options.get("config"))
 
         return axis_config
 

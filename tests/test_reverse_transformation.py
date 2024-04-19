@@ -1,6 +1,5 @@
 import numpy as np
 import xarray as xr
-import yaml
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
@@ -17,15 +16,8 @@ class TestSlicingReverseTransformation:
                 "lat": [4, 3, 2, 1],
             },
         )
-        options = yaml.safe_load(
-            """
-                            config:
-                                - axis_name: lat
-                                  transformations:
-                                    - name: "reverse"
-                                      is_reverse: True
-                            """
-        )
+        options = {"config": [{"axis_name": "lat", "transformations": [{"name": "reverse",
+                                                                        "is_reverse": True}]}]}
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
 

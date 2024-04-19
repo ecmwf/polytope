@@ -1,5 +1,4 @@
 import pytest
-import yaml
 from earthkit import data
 from helper_functions import download_test_data
 
@@ -16,25 +15,14 @@ class TestSlicingMultipleTransformationsOneAxis:
         ds = data.from_source("file", "./tests/data/foo.grib")
         self.latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
         self.latlon_array = self.latlon_array.t2m
-        self.options = yaml.safe_load(
-            """
-                            config:
-                                - axis_name: values
-                                  transformations:
-                                    - name: "mapper"
-                                      type: "octahedral"
-                                      resolution: 1280
-                                      axes: ["latitude", "longitude"]
-                                - axis_name: longitude
-                                  transformations:
-                                    - name: "cyclic"
-                                      range: [0, 360.0]
-                                - axis_name: latitude
-                                  transformations:
-                                    - name: "reverse"
-                                      is_reverse: True
-                            """
-        )
+        self.options = {"config": [{"axis_name": "values", "transformations": [{"name": "mapper",
+                                                                                "type": "octahedral",
+                                                                                "resolution": 1280,
+                                                                                "axes": ["latitude", "longitude"]}]},
+                                   {"axis_name": "latitude", "transformations": [{"name": "reverse",
+                                                                                  "is_reverse": True}]},
+                                   {"axis_name": "longitude", "transformations": [{"name": "cyclic",
+                                                                                   "range": [0, 360]}]}]}
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.latlon_array, engine=self.slicer, axis_options=self.options)
 
