@@ -11,18 +11,23 @@ class TestSlicingFDBDatacube:
         from polytope.datacube.backends.fdb import FDBDatacube
 
         # Create a dataarray with 3 labelled axes using different index types
-        self.options = {"config": [{"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
-                                   {"axis_name": "date", "transformations": [{"name": "merge",
-                                                                              "other_axis": "time",
-                                                                              "linkers": ["T", "00"]}]},
-                                   {"axis_name": "values", "transformations": [{"name": "mapper",
-                                                                                "type": "octahedral",
-                                                                                "resolution": 1280,
-                                                                                "axes": ["latitude", "longitude"]}]},
-                                   {"axis_name": "latitude", "transformations": [{"name": "reverse",
-                                                                                  "is_reverse": True}]},
-                                   {"axis_name": "longitude", "transformations": [{"name": "cyclic",
-                                                                                   "range": [0, 360]}]}]}
+        self.options = {
+            "config": [
+                {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
+                {
+                    "axis_name": "date",
+                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
+                },
+                {
+                    "axis_name": "values",
+                    "transformations": [
+                        {"name": "mapper", "type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                    ],
+                },
+                {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
+                {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
+            ]
+        }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "type": "fc", "stream": "oper"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
         self.slicer = HullSlicer()

@@ -14,19 +14,29 @@ class TestSlicingFDBDatacube:
         from polytope.datacube.backends.fdb import FDBDatacube
 
         # Create a dataarray with 3 labelled axes using different index types
-        self.options = {"config": [{"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
-                                   {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
-                                   {"axis_name": "levelist", "transformations": [{"name": "type_change",
-                                                                                  "type": "int"}]},
-                                   {"axis_name": "date", "transformations": [{"name": "merge",
-                                                                              "other_axis": "time",
-                                                                              "linkers": ["T", "00"]}]},
-                                   {"axis_name": "values", "transformations": [{"name": "mapper",
-                                                                                "type": "local_regular",
-                                                                                "resolution": [193, 417],
-                                                                                "axes": ["latitude", "longitude"],
-                                                                                "local": [45.485, 48.1,
-                                                                                          5.28985, 10.9087]}]}]}
+        self.options = {
+            "config": [
+                {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
+                {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
+                {"axis_name": "levelist", "transformations": [{"name": "type_change", "type": "int"}]},
+                {
+                    "axis_name": "date",
+                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
+                },
+                {
+                    "axis_name": "values",
+                    "transformations": [
+                        {
+                            "name": "mapper",
+                            "type": "local_regular",
+                            "resolution": [193, 417],
+                            "axes": ["latitude", "longitude"],
+                            "local": [45.485, 48.1, 5.28985, 10.9087],
+                        }
+                    ],
+                },
+            ]
+        }
         self.config = {"param": "3008"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
         self.slicer = HullSlicer()

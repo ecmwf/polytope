@@ -20,10 +20,12 @@ class TestSlicingCyclic:
                 "long": [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
             },
         )
-        self.options = {"config": [{"axis_name": "long", "transformations": [{"name": "cyclic",
-                                                                              "range": [0, 1.0]}]},
-                                   {"axis_name": "level", "transformations": [{"name": "cyclic",
-                                                                               "range": [1, 129]}]}]}
+        self.options = {
+            "config": [
+                {"axis_name": "long", "transformations": [{"name": "cyclic", "range": [0, 1.0]}]},
+                {"axis_name": "level", "transformations": [{"name": "cyclic", "range": [1, 129]}]},
+            ]
+        }
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer, axis_options=self.options)
 

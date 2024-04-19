@@ -16,17 +16,23 @@ class TestReducedLatLonGrid:
 
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/wave.grib"
         download_test_data(nexus_url, "wave.grib")
-        self.options = {"config": [{"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
-                                   {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
-                                   {"axis_name": "date", "transformations": [{"name": "merge",
-                                                                              "other_axis": "time",
-                                                                              "linkers": ["T", "00"]}]},
-                                   {"axis_name": "values", "transformations": [{"name": "mapper",
-                                                                                "type": "reduced_ll",
-                                                                                "resolution": 1441,
-                                                                                "axes": ["latitude", "longitude"]}]},
-                                   {"axis_name": "longitude", "transformations": [{"name": "cyclic",
-                                                                                   "range": [0, 360]}]}]}
+        self.options = {
+            "config": [
+                {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
+                {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
+                {
+                    "axis_name": "date",
+                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
+                },
+                {
+                    "axis_name": "values",
+                    "transformations": [
+                        {"name": "mapper", "type": "reduced_ll", "resolution": 1441, "axes": ["latitude", "longitude"]}
+                    ],
+                },
+                {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
+            ]
+        }
         self.config = {"class": "od", "stream": "wave"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
         self.slicer = HullSlicer()
