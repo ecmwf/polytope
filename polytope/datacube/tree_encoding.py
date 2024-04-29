@@ -4,6 +4,7 @@ import pandas as pd
 from . import index_tree_pb2 as pb2
 from .datacube_axis import IntDatacubeAxis
 from .tensor_index_tree import TensorIndexTree
+from copy import deepcopy
 
 
 def encode_tree(tree: TensorIndexTree):
@@ -56,12 +57,14 @@ def encode_child(tree: TensorIndexTree, child: TensorIndexTree, node, result_siz
     child_node = pb2.Node()
 
     child_node.axis = child.axis.name
-    result_size.append(len(child.values))
+    # result_size.append(len(child.values))
 
     # Add the result size to the final node
     # TODO: how to assign repeated fields more efficiently?
     # NOTE: this will only really be efficient when we compress and have less leaves
     if len(child.children) == 0:
+        # child_node.result_size.extend(result_size)
+        result_size.append(len(child.values))
         child_node.result_size.extend(result_size)
     # NOTE: do we need this if we parse the tree before it has values?
     # TODO: not clear if child.value is a numpy array or a simple float...
@@ -106,8 +109,10 @@ def encode_child(tree: TensorIndexTree, child: TensorIndexTree, node, result_siz
             child_node.value.append(child_node_val)
 
     for c in child.children:
-        result_size.append(len(child.values))
-        encode_child(child, c, child_node, result_size)
+        # result_size.append(len(child.values))
+        new_result_size = deepcopy(result_size)
+        new_result_size.append(len(child.values))
+        encode_child(child, c, child_node, new_result_size)
 
     # NOTE: we append the children once their branch has been completed until the leaf
     node.children.append(child_node)
