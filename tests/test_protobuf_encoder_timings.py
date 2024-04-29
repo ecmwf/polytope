@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from polytope.datacube.tree_encoding import decode_tree, encode_tree
+from polytope.datacube.tree_encoding_capnp import decode_tree, encode_tree
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
