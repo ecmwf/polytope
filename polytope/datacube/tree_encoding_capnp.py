@@ -4,6 +4,7 @@ import pandas as pd
 
 from .datacube_axis import IntDatacubeAxis
 from .tensor_index_tree import TensorIndexTree
+from copy import deepcopy
 
 tree_obj = capnp.load('indexTree.capnp')
 
@@ -19,8 +20,8 @@ def encode_tree(tree: TensorIndexTree):
             node.result.append(result)
 
     # Nest children in protobuf root tree node
+    children = node.init("children", int(len(tree.children)))
     for i, c in enumerate(tree.children):
-        children = node.init("children", int(len(tree.children)))
         encode_child(tree, c, i, node, children)
 
     # Write to file
@@ -34,15 +35,16 @@ def encode_child(tree: TensorIndexTree, child: TensorIndexTree, i, node, childre
     values = child_node.init('value', int(len(child.values)))
 
     child_node.axis = child.axis.name
-    result_size.append(len(child.values))
+    # result_size.append(len(child.values))
 
     # Add the result size to the final node
     # TODO: how to assign repeated fields more efficiently?
     # NOTE: this will only really be efficient when we compress and have less leaves
     if len(child.children) == 0:
         # child_node.resultSize.extend(result_size)
+        result_size.append(len(child.values))
         child_node.resultSize = result_size
-    
+
     # NOTE: do we need this if we parse the tree before it has values?
     # TODO: not clear if child.value is a numpy array or a simple float...
     # TODO: not clear what happens if child.value is a np array since this is not a supported type by protobuf
@@ -93,10 +95,11 @@ def encode_child(tree: TensorIndexTree, child: TensorIndexTree, i, node, childre
             # child_node.value.append(child_node_val)
             values[j] = child_node_val
 
+    child_children = child_node.init("children", int(len(child.children)))
     for k, c in enumerate(child.children):
-        result_size.append(len(child.values))
-        child_children = child_node.init("children", int(len(child.children)))
-        encode_child(child, c, k, child_node, child_children, result_size)
+        new_result_size = deepcopy(result_size)
+        new_result_size.append(len(child.values))
+        encode_child(child, c, k, child_node, child_children, new_result_size)
 
     # NOTE: we append the children once their branch has been completed until the leaf
     # node.children.append(child_node)
@@ -104,9 +107,13 @@ def encode_child(tree: TensorIndexTree, child: TensorIndexTree, i, node, childre
 
 
 def decode_tree(datacube):
-    node = tree_obj.Node.read("./serializedTree")
-    # with open("./serializedTree", "rb") as f:
-    #     node.ParseFromString(f.read())
+    # node = tree_obj.Node.read("./serializedTree")
+    with open("./serializedTree", "rb") as f:
+        node = tree_obj.Node.read(f)
+        # node_bytes = f.read()
+        # node_reader = tree_obj.Node.from_bytes(node_bytes)
+        # # node = tree_obj.Node.read(node_reader)
+        # node = node_reader.get_root(tree_obj.Node)
 
     tree = TensorIndexTree()
 
@@ -128,10 +135,20 @@ def decode_child(node, tree, datacube):
         tree.result = node.result
         tree.result_size = node.resultSize
     for child in node.children:
+        # print("NOW")
+        # print(child)
         child_axis = datacube._axes[child.axis]
         child_vals = []
         for child_val in child.value:
-            child_vals.append(getattr(child_val, child_val.WhichOneof("value")))
+            which = child_val.value.which()
+            if which == "strVal":
+                new_child_val = child_val.value.strVal
+            if which == "intVal":
+                new_child_val = child_val.value.intVal
+            if which == "doubleVal":
+                new_child_val = child_val.value.doubleVal
+            # child_vals.append(getattr(child_val, child_val.WhichOneof("value")))
+            child_vals.append(new_child_val)
         child_vals = tuple(child_vals)
         child_node = TensorIndexTree(child_axis, child_vals)
         tree.add_child(child_node)
