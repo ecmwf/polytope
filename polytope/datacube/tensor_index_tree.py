@@ -1,38 +1,25 @@
 import copy
-import json
 import logging
-from typing import OrderedDict
 
 from sortedcontainers import SortedList
 
 from .datacube_axis import IntDatacubeAxis, UnsliceableDatacubeAxis
+from .index_tree import DatacubePath
 
 
-class DatacubePath(OrderedDict):
-    def values(self):
-        return tuple(super().values())
-
-    def keys(self):
-        return tuple(super().keys())
-
-    def pprint(self):
-        result = ""
-        for k, v in self.items():
-            result += f"{k}={v},"
-        print(result[:-1])
-
-
-class IndexTree(object):
+class TensorIndexTree(object):
     root = IntDatacubeAxis()
     root.name = "root"
 
-    def __init__(self, axis=root, value=None):
-        self.value = value
+    def __init__(self, axis=root, values=tuple()):
+        # NOTE: the values here is a tuple so we can hash it
+        self.values = values
         self.children = SortedList()
         self._parent = None
         self.result = None
         self.axis = axis
         self.ancestors = []
+        self.result_size = []
 
     @property
     def leaves(self):
@@ -42,23 +29,16 @@ class IndexTree(object):
 
     @property
     def leaves_with_ancestors(self):
-        # TODO: could store ancestors directly in leaves? Change here
         leaves = []
         self._collect_leaf_nodes(leaves)
         return leaves
 
     def copy_children_from_other(self, other):
         for o in other.children:
-            c = IndexTree(o.axis, copy.copy(o.value))
+            c = TensorIndexTree(o.axis, copy.copy(o.value))
             self.add_child(c)
             c.copy_children_from_other(o)
         return
-
-    def _collect_leaf_nodes_old(self, leaves):
-        if len(self.children) == 0:
-            leaves.append(self)
-        for n in self.children:
-            n._collect_leaf_nodes(leaves)
 
     def _collect_leaf_nodes(self, leaves):
         # NOTE: leaves_and_ancestors is going to be a list of tuples, where first entry is leaf and second entry is a
@@ -69,7 +49,7 @@ class IndexTree(object):
         for n in self.children:
             for ancestor in self.ancestors:
                 n.ancestors.append(ancestor)
-            if self.axis != IndexTree.root:
+            if self.axis != TensorIndexTree.root:
                 n.ancestors.append(self)
             n._collect_leaf_nodes(leaves)
 
@@ -83,33 +63,35 @@ class IndexTree(object):
         return delattr(self, key)
 
     def __hash__(self):
-        return hash((self.axis.name, self.value))
+        return hash((self.axis.name, self.values))
 
     def __eq__(self, other):
-        if not isinstance(other, IndexTree):
+        if not isinstance(other, TensorIndexTree):
             return False
         if self.axis.name != other.axis.name:
             return False
         else:
-            if other.value == self.value:
+            if other.values == self.values:
                 return True
             else:
                 if isinstance(self.axis, UnsliceableDatacubeAxis):
                     return False
                 else:
-                    if other.value - 2 * other.axis.tol <= self.value <= other.value + 2 * other.axis.tol:
-                        return True
-                    elif self.value - 2 * self.axis.tol <= other.value <= self.value + 2 * self.axis.tol:
-                        return True
-                    else:
+                    if len(other.values) != len(self.values):
                         return False
+                    for i in range(len(other.values)):
+                        other_val = other.values[i]
+                        self_val = self.values[i]
+                        if abs(other_val - self_val) > 2 * max(other.axis.tol, self.axis.tol):
+                            return False
+                    return True
 
     def __lt__(self, other):
-        return (self.axis.name, self.value) < (other.axis.name, other.value)
+        return (self.axis.name, self.values) < (other.axis.name, other.values)
 
     def __repr__(self):
         if self.axis != "root":
-            return f"{self.axis.name}={self.value}"
+            return f"{self.axis.name}={self.values}"
         else:
             return f"{self.axis}"
 
@@ -117,18 +99,44 @@ class IndexTree(object):
         self.children.add(node)
         node._parent = self
 
-    def create_child_not_safe(self, axis, value):
-        node = IndexTree(axis, value)
-        self.add_child(node)
-        return node
+    def find_compressed_child(self, axis):
+        for c in self.children:
+            if c.axis == axis:
+                return c
+        return None
 
-    def create_child(self, axis, value):
-        node = IndexTree(axis, value)
-        existing = self.find_child(node)
-        if not existing:
-            self.add_child(node)
-            return node
-        return existing
+    def create_child(self, axis, value, compressed_axes, next_nodes):
+        # TODO: if the axis should not be compressed, just create a child with a tuple value with a single value
+        # TODO: if the axis should be compressed, check if we already have a child with the axis name.
+        # TODO: Then: if we have such a child, add to its tuple value the new value.
+        # TODO: Else, just create a child with a tuple value with a single value
+
+        if axis.name not in compressed_axes:
+            # In this case, the child should not already exist? But you never know if the slicer hasn't found the same
+            # value twice? It shouldn't though?
+            # Can safely add the child here though to self
+            node = TensorIndexTree(axis, (value,))
+            existing_child = self.find_child(node)
+            if not existing_child:
+                self.add_child(node)
+                return (node, next_nodes)
+            return (existing_child, next_nodes)
+        else:
+            # TODO: find the compressed child
+            existing_compressed_child = self.find_compressed_child(axis)
+            if existing_compressed_child:
+                # NOTE: do we even need to hash the values anymore if we implement logic to only compare children when
+                # we have the right compressed children? Then could have a list here for the values which is easier to
+                # manipulate...
+                new_value = list(existing_compressed_child.values)
+                new_value.append(value)
+                existing_compressed_child.values = tuple(new_value)
+                next_nodes.remove(existing_compressed_child)
+                return (existing_compressed_child, next_nodes)
+            else:
+                node = TensorIndexTree(axis, (value,))
+                self.add_child(node)
+                return (node, next_nodes)
 
     @property
     def parent(self):
@@ -167,14 +175,6 @@ class IndexTree(object):
             else:
                 my_child.merge(other_child)
 
-    def intersect(self, other):
-        for my_child in self.children:
-            other_child = other.find_child(my_child)
-            if not other_child:
-                my_child.remove_branch()
-            else:
-                my_child.intersect(other_child)
-
     def pprint(self, level=0):
         if self.axis.name == "root":
             logging.debug("\n")
@@ -192,45 +192,31 @@ class IndexTree(object):
             if len(old_parent.children) == 0:
                 old_parent.remove_branch()
 
+    def remove_compressed_branch(self, value):
+        if value in self.values:
+            if len(self.values) == 1:
+                self.remove_branch()
+            else:
+                self.values = tuple(val for val in self.values if val != value)
+
     def flatten(self):
         path = DatacubePath()
         ancestors = self.get_ancestors()
         for ancestor in ancestors:
-            path[ancestor.axis.name] = ancestor.value
+            path[ancestor.axis.name] = ancestor.values
         return path
 
     def flatten_with_ancestors(self):
         path = DatacubePath()
         ancestors = self.ancestors
         for ancestor in ancestors:
-            path[ancestor.axis.name] = ancestor.value
+            path[ancestor.axis.name] = ancestor.values
         return path
 
     def get_ancestors(self):
         ancestors = []
         current_node = self
-        while current_node.axis != IndexTree.root:
+        while current_node.axis != TensorIndexTree.root:
             ancestors.append(current_node)
             current_node = current_node.parent
         return ancestors[::-1]
-
-    def to_dict(self):
-        dico = dict()
-        if self.children != []:
-            # Need to create these lists in case different children have different axis and we need to give values
-            # to each axis
-            axis_names = [c.axis.name for c in self.children]
-            sub_dicts = [dict() for axis in axis_names]
-            for i in range(len(axis_names)):
-                dico[axis_names[i]] = sub_dicts[i]
-            for c in self.children:
-                key = c.axis.serialize(c.value)
-                axis_name = c.axis.name
-                dico[axis_name][key] = c.to_dict()
-        if self.children == []:
-            return self.result
-        return dico
-
-    def to_json(self):
-        dico = self.to_dict()
-        return json.dumps(dico, default=str)

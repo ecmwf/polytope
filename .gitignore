@@ -17,3 +17,4 @@ example_eo
 example_mri
 .mypy_cache
 *.req
+serializedTree

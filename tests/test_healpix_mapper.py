@@ -40,16 +40,17 @@ class TestOctahedralGrid:
         tol = 1e-8
         for i in range(len(result.leaves)):
             cubepath = result.leaves[i].flatten()
-            lat = cubepath["latitude"]
-            lon = cubepath["longitude"]
-            lats.append(lat)
-            lons.append(lon)
-            nearest_points = find_nearest_latlon("./tests/data/healpix.grib", lat, lon)
-            eccodes_lat = nearest_points[0][0]["lat"]
-            eccodes_lon = nearest_points[0][0]["lon"]
-            eccodes_lats.append(eccodes_lat)
-            assert eccodes_lat - tol <= lat
-            assert lat <= eccodes_lat + tol
-            assert eccodes_lon - tol <= lon
-            assert lon <= eccodes_lon + tol
+            lat = cubepath["latitude"][0]
+            new_lons = cubepath["longitude"]
+            for lon in new_lons:
+                lats.append(lat)
+                lons.append(lon)
+                nearest_points = find_nearest_latlon("./tests/data/healpix.grib", lat, lon)
+                eccodes_lat = nearest_points[0][0]["lat"]
+                eccodes_lon = nearest_points[0][0]["lon"]
+                assert eccodes_lat - tol <= lat
+                assert lat <= eccodes_lat + tol
+                assert eccodes_lon - tol <= lon
+                assert lon <= eccodes_lon + tol
+            eccodes_lats.append(lat)
         assert len(eccodes_lats) == 40

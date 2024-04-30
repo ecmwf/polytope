@@ -173,6 +173,7 @@ class IntDatacubeAxis(DatacubeAxis):
         # TODO: Maybe here, store transformations as a dico instead
         self.transformations = []
         self.type = 0
+        self.can_round = True
 
     def parse(self, value: Any) -> Any:
         return float(value)
@@ -194,6 +195,7 @@ class FloatDatacubeAxis(DatacubeAxis):
         self.range = None
         self.transformations = []
         self.type = 0.0
+        self.can_round = True
 
     def parse(self, value: Any) -> Any:
         return float(value)
@@ -215,6 +217,7 @@ class PandasTimestampDatacubeAxis(DatacubeAxis):
         self.range = None
         self.transformations = []
         self.type = pd.Timestamp("2000-01-01T00:00:00")
+        self.can_round = False
 
     def parse(self, value: Any) -> Any:
         if isinstance(value, np.str_):
@@ -244,6 +247,7 @@ class PandasTimedeltaDatacubeAxis(DatacubeAxis):
         self.range = None
         self.transformations = []
         self.type = np.timedelta64(0, "s")
+        self.can_round = False
 
     def parse(self, value: Any) -> Any:
         if isinstance(value, np.str_):
@@ -272,6 +276,7 @@ class UnsliceableDatacubeAxis(DatacubeAxis):
         self.tol = float("NaN")
         self.range = None
         self.transformations = []
+        self.can_round = False
 
     def parse(self, value: Any) -> Any:
         return value

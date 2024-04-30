@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package index_tree;
+
+message Value {
+        oneof value {
+            string str_val = 1;
+            int64 int_val = 2;
+            double double_val = 3;
+        }
+    }
+
+message Node {
+    string axis = 1;
+    repeated Value value = 2;
+    repeated double result = 3;
+    repeated int64 result_size = 4;
+    repeated Node children = 5;
+}
+

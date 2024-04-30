@@ -32,7 +32,6 @@ class TestSlicingEra5Data:
         request = Request(
             Box(["number", "isobaricInhPa"], [6, 500.0], [6, 850.0]),
             Select("time", ["2017-01-02T12:00:00"]),
-            # Box(["latitude", "longitude"], lower_corner=[0.0, 0.0], upper_corner=[10.0, 30.0]),
             Select("latitude", [requested_lat], method="surrounding"),
             Select("longitude", [requested_lon], method="surrounding"),
             Select("step", [np.timedelta64(0, "s")]),
@@ -64,5 +63,8 @@ class TestSlicingEra5Data:
         # plt.scatter([requested_lon], [requested_lat], s=16, c="blue")
         # plt.colorbar(label="Temperature")
         # plt.show()
+        assert len(longs) == 2
         for lon in longs:
-            assert lon in [357, 0, 3]
+            assert lon == (0.0, 3.0, 357.0)
+        for lat in lats:
+            assert lat == (-3.0, 0.0, 3.0)

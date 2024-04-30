@@ -36,27 +36,27 @@ class TestSlicingCyclic:
         result = self.API.retrieve(request)
         assert len(result.leaves) == 20
         result.pprint()
-        assert [leaf.value for leaf in result.leaves] == [
-            0.1,
-            0.2,
-            0.3,
-            0.4,
-            0.5,
-            0.6,
-            0.7,
-            0.8,
-            0.9,
-            1.0,
-            0.1,
-            0.2,
-            0.3,
-            0.4,
-            0.5,
-            0.6,
-            0.7,
-            0.8,
-            0.9,
-            1.0,
+        assert [leaf.values for leaf in result.leaves] == [
+            (0.1,),
+            (0.2,),
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
+            (0.8,),
+            (0.9,),
+            (1.0,),
+            (0.1,),
+            (0.2,),
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
+            (0.8,),
+            (0.9,),
+            (1.0,),
         ]
 
     def test_cyclic_float_axis_across_seam_repeated(self):
@@ -66,29 +66,29 @@ class TestSlicingCyclic:
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 22
-        assert [leaf.value for leaf in result.leaves] == [
-            0.0,
-            0.1,
-            0.2,
-            0.3,
-            0.4,
-            0.5,
-            0.6,
-            0.7,
-            0.8,
-            0.9,
-            1.0,
-            0.0,
-            0.1,
-            0.2,
-            0.3,
-            0.4,
-            0.5,
-            0.6,
-            0.7,
-            0.8,
-            0.9,
-            1.0,
+        assert [leaf.values for leaf in result.leaves] == [
+            (0.0,),
+            (0.1,),
+            (0.2,),
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
+            (0.8,),
+            (0.9,),
+            (1.0,),
+            (0.0,),
+            (0.1,),
+            (0.2,),
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
+            (0.8,),
+            (0.9,),
+            (1.0,),
         ]
 
     def test_cyclic_float_axis_across_seam_repeated_twice(self):
@@ -98,29 +98,29 @@ class TestSlicingCyclic:
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 22
-        assert [leaf.value for leaf in result.leaves] == [
-            0.0,
-            0.1,
-            0.2,
-            0.3,
-            0.4,
-            0.5,
-            0.6,
-            0.7,
-            0.8,
-            0.9,
-            1.0,
-            0.0,
-            0.1,
-            0.2,
-            0.3,
-            0.4,
-            0.5,
-            0.6,
-            0.7,
-            0.8,
-            0.9,
-            1.0,
+        assert [leaf.values for leaf in result.leaves] == [
+            (0.0,),
+            (0.1,),
+            (0.2,),
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
+            (0.8,),
+            (0.9,),
+            (1.0,),
+            (0.0,),
+            (0.1,),
+            (0.2,),
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
+            (0.8,),
+            (0.9,),
+            (1.0,),
         ]
 
     def test_cyclic_float_axis_inside_cyclic_range(self):
@@ -130,23 +130,23 @@ class TestSlicingCyclic:
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 16
-        assert [leaf.value for leaf in result.leaves] == [
-            0.0,
-            0.1,
-            0.2,
-            0.3,
-            0.4,
-            0.5,
-            0.6,
-            0.7,
-            0.0,
-            0.1,
-            0.2,
-            0.3,
-            0.4,
-            0.5,
-            0.6,
-            0.7,
+        assert [leaf.values for leaf in result.leaves] == [
+            (0.0,),
+            (0.1,),
+            (0.2,),
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
+            (0.0,),
+            (0.1,),
+            (0.2,),
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
         ]
 
     def test_cyclic_float_axis_above_axis_range(self):
@@ -158,7 +158,18 @@ class TestSlicingCyclic:
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 10
-        assert [leaf.value for leaf in result.leaves] == [0.3, 0.4, 0.5, 0.6, 0.7, 0.3, 0.4, 0.5, 0.6, 0.7]
+        assert [leaf.values for leaf in result.leaves] == [
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
+        ]
 
     def test_cyclic_float_axis_two_range_loops(self):
         request = Request(
@@ -167,29 +178,29 @@ class TestSlicingCyclic:
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 22
-        assert [leaf.value for leaf in result.leaves] == [
-            0.0,
-            0.1,
-            0.2,
-            0.3,
-            0.4,
-            0.5,
-            0.6,
-            0.7,
-            0.8,
-            0.9,
-            1.0,
-            0.0,
-            0.1,
-            0.2,
-            0.3,
-            0.4,
-            0.5,
-            0.6,
-            0.7,
-            0.8,
-            0.9,
-            1.0,
+        assert [leaf.values for leaf in result.leaves] == [
+            (0.0,),
+            (0.1,),
+            (0.2,),
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
+            (0.8,),
+            (0.9,),
+            (1.0,),
+            (0.0,),
+            (0.1,),
+            (0.2,),
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
+            (0.8,),
+            (0.9,),
+            (1.0,),
         ]
 
     def test_cyclic_float_axis_below_axis_range(self):
@@ -199,7 +210,18 @@ class TestSlicingCyclic:
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 10
-        assert [leaf.value for leaf in result.leaves] == [0.3, 0.4, 0.5, 0.6, 0.7, 0.3, 0.4, 0.5, 0.6, 0.7]
+        assert [leaf.values for leaf in result.leaves] == [
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
+        ]
 
     def test_cyclic_float_axis_below_axis_range_crossing_seam(self):
         request = Request(
@@ -208,27 +230,27 @@ class TestSlicingCyclic:
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 20
-        assert [leaf.value for leaf in result.leaves] == [
-            0.0,
-            0.1,
-            0.2,
-            0.3,
-            0.4,
-            0.5,
-            0.6,
-            0.7,
-            0.8,
-            0.9,
-            0.0,
-            0.1,
-            0.2,
-            0.3,
-            0.4,
-            0.5,
-            0.6,
-            0.7,
-            0.8,
-            0.9,
+        assert [leaf.values for leaf in result.leaves] == [
+            (0.0,),
+            (0.1,),
+            (0.2,),
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
+            (0.8,),
+            (0.9,),
+            (0.0,),
+            (0.1,),
+            (0.2,),
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
+            (0.8,),
+            (0.9,),
         ]
 
     def test_cyclic_float_axis_reversed(self):
@@ -238,34 +260,45 @@ class TestSlicingCyclic:
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 10
-        assert [leaf.value for leaf in result.leaves] == [0.3, 0.4, 0.5, 0.6, 0.7, 0.3, 0.4, 0.5, 0.6, 0.7]
+        assert [leaf.values for leaf in result.leaves] == [
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
+        ]
 
     def test_two_cyclic_axis_wrong_axis_order(self):
         request = Request(Box(["step", "long", "level"], [0, 1.3, 131], [3, 1.7, 132]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 20
-        assert [leaf.value for leaf in result.leaves] == [
-            0.3,
-            0.4,
-            0.5,
-            0.6,
-            0.7,
-            0.3,
-            0.4,
-            0.5,
-            0.6,
-            0.7,
-            0.3,
-            0.4,
-            0.5,
-            0.6,
-            0.7,
-            0.3,
-            0.4,
-            0.5,
-            0.6,
-            0.7,
+        assert [leaf.values for leaf in result.leaves] == [
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
         ]
 
     def test_two_cyclic_axis(self):
@@ -273,27 +306,27 @@ class TestSlicingCyclic:
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 20
-        assert [leaf.value for leaf in result.leaves] == [
-            0.3,
-            0.4,
-            0.5,
-            0.6,
-            0.7,
-            0.3,
-            0.4,
-            0.5,
-            0.6,
-            0.7,
-            0.3,
-            0.4,
-            0.5,
-            0.6,
-            0.7,
-            0.3,
-            0.4,
-            0.5,
-            0.6,
-            0.7,
+        assert [leaf.values for leaf in result.leaves] == [
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
+            (0.3,),
+            (0.4,),
+            (0.5,),
+            (0.6,),
+            (0.7,),
         ]
 
     def test_select_cyclic_float_axis_edge(self):
@@ -301,11 +334,11 @@ class TestSlicingCyclic:
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 6
-        assert [leaf.value for leaf in result.leaves] == [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        assert [leaf.values for leaf in result.leaves] == [(0.0,), (0.0,), (0.0,), (0.0,), (0.0,), (0.0,)]
 
     def test_cyclic_int_axis(self):
         request = Request(Box(["step", "level"], [0, 3], [3, 5]), Select("date", ["2000-01-01"]), Select("long", [0.1]))
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 6
-        assert [leaf.value for leaf in result.leaves] == [0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+        assert [leaf.values for leaf in result.leaves] == [(0.1,), (0.1,), (0.1,), (0.1,), (0.1,), (0.1,)]

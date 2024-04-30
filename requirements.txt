@@ -4,3 +4,4 @@ scipy
 sortedcontainers
 tripy
 xarray
+protobuf

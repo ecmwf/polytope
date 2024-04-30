@@ -33,7 +33,7 @@ class TestSlicing3DXarrayDatacube:
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 4
-        assert [leaf.value for leaf in result.leaves] == [0.1, 0.2, 0.9, 1.0]
+        assert [leaf.values for leaf in result.leaves] == [(0.1,), (0.2,), (0.9,), (1.0,)]
 
     def test_cyclic_float_surrounding(self):
         request = Request(
@@ -47,7 +47,8 @@ class TestSlicing3DXarrayDatacube:
         for leaf in result.leaves:
             path = leaf.flatten()
             lon_val = path["long"]
-            assert lon_val in [0.0, 0.1, 0.9, 1.0]
+            for val in lon_val:
+                assert val in [0.0, 0.1, 0.9, 1.0]
 
     def test_cyclic_float_surrounding_below_seam(self):
         request = Request(
@@ -61,4 +62,5 @@ class TestSlicing3DXarrayDatacube:
         for leaf in result.leaves:
             path = leaf.flatten()
             lon_val = path["long"]
-            assert lon_val in [0.0, 0.1, 0.9, 1.0]
+            for val in lon_val:
+                assert val in [0.0, 0.1, 0.9, 1.0]

@@ -26,7 +26,9 @@ class TestFloatType:
         request = Request(Span("lat", 4.1, 4.3), Select("long", [4.1]), Select("alt", [4.1]))
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 3
+        assert len(result.leaves) == 1
+        path = result.leaves[0].flatten()
+        assert path["lat"] == (4.1, 4.2, 4.3)
 
     def test_slicing_point(self):
         request = Request(Select("lat", [4.1]), Select("long", [4.1]), Select("alt", [4.1]))
