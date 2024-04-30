@@ -10,7 +10,7 @@ class DatacubeAxisTypeChange(DatacubeAxisTransformation):
     def __init__(self, name, type_options):
         self.name = name
         self.transformation_options = type_options
-        self.new_type = type_options
+        self.new_type = type_options.type
         self._final_transformation = self.generate_final_transformation()
 
     def generate_final_transformation(self):
