@@ -16,7 +16,7 @@ class FDBDatacube(Datacube):
 
         logging.info("Created an FDB datacube with options: " + str(axis_options))
 
-        self.unwanted_path = {}
+        # self.unwanted_path = {}
 
         partial_request = config
         # Find values in the level 3 FDB datacube

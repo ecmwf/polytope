@@ -31,6 +31,7 @@ class Datacube(ABC):
         self.nearest_search = {}
         self._axes = None
         self.transformed_axes = []
+        self.unwanted_path = {}
 
     @abstractmethod
     def get(self, requests: IndexTree) -> Any:

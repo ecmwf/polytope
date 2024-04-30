@@ -3,7 +3,7 @@ from copy import deepcopy
 import numpy as np
 import xarray as xr
 
-from .datacube import Datacube, IndexTree
+from .datacube import Datacube
 
 
 class XArrayDatacube(Datacube):
@@ -37,31 +37,36 @@ class XArrayDatacube(Datacube):
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
 
-    def get(self, requests: IndexTree):
-        for r in requests.leaves:
-            path = r.flatten()
-            if len(path.items()) == self.axis_counter:
-                # first, find the grid mapper transform
-                unmapped_path = {}
-                path_copy = deepcopy(path)
-                for key in path_copy:
-                    axis = self._axes[key]
-                    key_value_path = {key: path_copy[key]}
-                    # (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
-                    (key_value_path, path, unmapped_path) = axis.unmap_path_key(key_value_path, path, unmapped_path)
-                path.update(key_value_path)
-                path.update(unmapped_path)
-
-                unmapped_path = {}
-                self.refit_path(path, unmapped_path, path)
-
-                subxarray = self.dataarray.sel(path, method="nearest")
-                subxarray = subxarray.sel(unmapped_path)
-                value = subxarray.item()
-                key = subxarray.name
-                r.result = (key, value)
+    def get(self, requests, leaf_path=None, axis_counter=0):
+        if leaf_path is None:
+            leaf_path = {}
+        if requests.axis.name == "root":
+            for c in requests.children:
+                self.get(c, leaf_path, axis_counter + 1)
+        else:
+            key_value_path = {requests.axis.name: requests.value}
+            ax = requests.axis
+            (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
+                key_value_path, leaf_path, self.unwanted_path
+            )
+            leaf_path.update(key_value_path)
+            if len(requests.children) != 0:
+                # We are not a leaf and we loop over
+                for c in requests.children:
+                    self.get(c, leaf_path, axis_counter + 1)
             else:
-                r.remove_branch()
+                if self.axis_counter != axis_counter:
+                    requests.remove_branch()
+                else:
+                    # We are at a leaf and need to assign value to it
+                    leaf_path_copy = deepcopy(leaf_path)
+                    unmapped_path = {}
+                    self.refit_path(leaf_path_copy, unmapped_path, leaf_path)
+                    subxarray = self.dataarray.sel(leaf_path_copy, method="nearest")
+                    subxarray = subxarray.sel(unmapped_path)
+                    value = subxarray.item()
+                    key = subxarray.name
+                    requests.result = (key, value)
 
     def datacube_natural_indexes(self, axis, subarray):
         if axis.name in self.complete_axes:
