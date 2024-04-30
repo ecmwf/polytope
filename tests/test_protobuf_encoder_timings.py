@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from polytope.datacube.tree_encoding_capnp import decode_tree, encode_tree
+from polytope.datacube.tree_encoding import decode_tree, encode_tree
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
@@ -42,13 +42,13 @@ class TestEncoder:
         import time
 
         time0 = time.time()
-        encode_tree(self.tree)
+        encoded_bytes = encode_tree(self.tree)
         time1 = time.time()
         print("TIME TO ENCODE")
         print(time1 - time0)
         print(len(self.tree.leaves))
         time2 = time.time()
-        decoded_tree = decode_tree(self.datacube)
+        decoded_tree = decode_tree(self.datacube, encoded_bytes)
         time3 = time.time()
         print("TIME TO DECODE")
         print(time3 - time2)

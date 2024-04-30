@@ -47,7 +47,7 @@ class TestEncoder:
         }
 
     def test_encoding(self):
-        encode_tree(self.fake_tree)
-        decoded_tree = decode_tree(self.datacube)
+        encoded_bytes = encode_tree(self.fake_tree)
+        decoded_tree = decode_tree(self.datacube, encoded_bytes)
         decoded_tree.pprint()
         assert decoded_tree.leaves[0].result_size == [1, 1]

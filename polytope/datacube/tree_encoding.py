@@ -43,8 +43,15 @@ def encode_tree(tree: TensorIndexTree):
         encode_child(tree, c, node)
 
     # Write to file
-    with open("./serializedTree", "wb") as fd:
-        fd.write(node.SerializeToString())
+        
+    # TODO: JUST RETURN A BYTES HERE
+    return node.SerializeToString()
+    # import time
+    # time1 = time.time()
+    # with open("./serializedTree", "wb") as fd:
+    #     fd.write(node.SerializeToString())
+    # print("TIME NOW")
+    # print(time.time() - time1)
 
 
 # TODO: complete the type mappings to the right value protobuf attribute and use as a factory?
@@ -71,8 +78,9 @@ def encode_child(tree: TensorIndexTree, child: TensorIndexTree, node, result_siz
     # TODO: not clear what happens if child.value is a np array since this is not a supported type by protobuf
     if child.result is not None:
         if isinstance(child.result, list):
-            for result in child.result:
-                child_node.result.append(result)
+            child_node.result.extend(child.result)
+            # for result in child.result:
+            #     child_node.result.append(result)
         else:
             child_node.result.append(child.result)
 
@@ -118,10 +126,11 @@ def encode_child(tree: TensorIndexTree, child: TensorIndexTree, node, result_siz
     node.children.append(child_node)
 
 
-def decode_tree(datacube):
+def decode_tree(datacube, bytearray):
     node = pb2.Node()
-    with open("./serializedTree", "rb") as f:
-        node.ParseFromString(f.read())
+    node.ParseFromString(bytearray)
+    # with open("./serializedTree", "rb") as f:
+    #     node.ParseFromString(f.read())
 
     tree = TensorIndexTree()
 
