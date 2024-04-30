@@ -147,6 +147,8 @@ class HullSlicer(Engine):
         if True:
             for value in values:
                 # convert to float for slicing
+
+                # TODO: if we already have a node with this axis, then do not need to slice again here? just need to add the value to the node's value tuple...
                 fvalue = ax.to_float(value)
                 new_polytope = self.sliced_polytopes.get((polytope, ax.name, fvalue, slice_axis_idx), False)
                 if new_polytope is False:
