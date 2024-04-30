@@ -34,6 +34,7 @@ class Datacube(ABC):
         self.transformed_axes = []
         self.compressed_grid_axes = []
         self.compressed_axes = []
+        self.merged_axes = []
 
     @abstractmethod
     def get(self, requests: IndexTree) -> Any:
@@ -55,6 +56,12 @@ class Datacube(ABC):
         transformation = DatacubeAxisTransformation.create_transform(
             name, transformation_type_key, transformation_options
         )
+
+        # do not compress merged axes
+        if transformation_type_key == "merge":
+            self.merged_axes.append(name)
+            self.merged_axes.append(final_axis_names)
+
         for blocked_axis in transformation.blocked_axes():
             self.blocked_axes.append(blocked_axis)
         if isinstance(transformation, DatacubeMapper):

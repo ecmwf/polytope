@@ -57,7 +57,10 @@ class Polytope:
         """Higher-level API which takes a request and uses it to slice the datacube"""
         for polytope in request.polytopes():
             if polytope.is_natively_1D:
-                self.datacube.compressed_axes.extend(polytope.axes())
+                for ax in polytope.axes():
+                    if ax not in self.datacube.merged_axes:
+                        # self.datacube.compressed_axes.extend(polytope.axes())
+                        self.datacube.compressed_axes.append(ax)
                 # print(self.datacube.compressed_axes)
         # TODO: remove grid axes from the possible compressed_axes
         all_datacube_coupled_axes = []
