@@ -10,7 +10,10 @@ def group(polytopes: List[ConvexPolytope]):
     # Group polytopes into polytopes which share the same axes
     groups = {}
     for p in polytopes:
-        groups.setdefault(tuple(sorted(p.axes())), []).append(p)
+        if p.is_natively_1D:
+            groups.setdefault(tuple(sorted(p.axes())), [[]])[0].append(p)
+        else:
+            groups.setdefault(tuple(sorted(p.axes())), []).append(p)
     concatenation = []
     for other_group in list(groups.keys()):
         for key in other_group:

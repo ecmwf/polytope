@@ -47,7 +47,8 @@ class HullSlicer(Engine):
                 flattened_tuple = (datacube.coupled_axes[0][0], path.get(datacube.coupled_axes[0][0], None))
                 path = {flattened_tuple[0]: flattened_tuple[1]}
             else:
-                path = {}
+                # path = {}
+                pass
 
         if self.axis_values_between.get((flattened_tuple, ax.name, lower), None) is None:
             self.axis_values_between[(flattened_tuple, ax.name, lower)] = datacube.has_index(path, ax, lower)
@@ -196,9 +197,11 @@ class HullSlicer(Engine):
             self._unique_continuous_points(p, datacube)
 
         groups, input_axes = group(polytopes)
+        print(groups)
         datacube.validate(input_axes)
         request = TensorIndexTree()
         combinations = tensor_product(groups)
+        print(combinations)
 
         # NOTE: could optimise here if we know combinations will always be for one request.
         # Then we do not need to create a new index tree and merge it to request, but can just
