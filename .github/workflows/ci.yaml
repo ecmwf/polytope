@@ -23,6 +23,7 @@ jobs:
     uses: ecmwf-actions/downstream-ci/.github/workflows/downstream-ci.yml@add-conflator
     with:
       conflator: ecmwf/conflator@${{ github.event.pull_request.head.sha || github.sha }}
+      codecov_upload: true
       python_qa: true
     secrets: inherit
 
