@@ -54,7 +54,7 @@ class TestRegularGrid:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 10
+        assert len(result.leaves) == 5
 
         lats = []
         lons = []
@@ -84,4 +84,4 @@ class TestRegularGrid:
         # plt.colorbar(label="Temperature")
         # plt.show()
 
-        assert len(eccodes_lats) == 10
+        assert len(eccodes_lats) == 5

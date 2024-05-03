@@ -197,11 +197,11 @@ class HullSlicer(Engine):
             self._unique_continuous_points(p, datacube)
 
         groups, input_axes = group(polytopes)
-        print(groups)
+        # print(groups)
         datacube.validate(input_axes)
         request = TensorIndexTree()
         combinations = tensor_product(groups)
-        print(combinations)
+        # print(combinations)
 
         # NOTE: could optimise here if we know combinations will always be for one request.
         # Then we do not need to create a new index tree and merge it to request, but can just
@@ -209,7 +209,14 @@ class HullSlicer(Engine):
 
         for c in combinations:
             r = TensorIndexTree()
-            r["unsliced_polytopes"] = set(c)
+            new_c = []
+            print(combinations)
+            for combi in c:
+                if isinstance(combi, list):
+                    new_c.extend(combi)
+                else:
+                    new_c.append(combi)
+            r["unsliced_polytopes"] = set(new_c)
             current_nodes = [r]
             for ax in datacube.axes.values():
                 next_nodes = []

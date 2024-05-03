@@ -32,7 +32,7 @@ class TestSlicing3DXarrayDatacube:
         request = Request(Point(["step", "level"], [[3, 10], [3, 12]]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 2
+        assert len(result.leaves) == 1
         assert result.leaves[0].axis.name == "level"
 
     def test_point_surrounding_step(self):

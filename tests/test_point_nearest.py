@@ -76,7 +76,7 @@ class TestSlicingFDBDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 3
+        assert len(result.leaves) == 1
 
     @pytest.mark.fdb
     def test_fdb_datacube_true_point_3(self):

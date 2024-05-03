@@ -31,6 +31,10 @@ class ConvexPolytope(Shape):
         self.points = points
         self.method = method
         self.is_natively_1D = is_1D
+        self.is_in_union = False
+
+    def add_to_union(self):
+        self.is_in_union = True
 
     def extents(self, axis):
         if self.is_flat:
@@ -345,7 +349,10 @@ class Union(Shape):
         self._shapes = shapes
 
         for s in shapes:
-            self.polytopes.extend(s.polytope())
+            for poly in s.polytope():
+                poly.add_to_union()
+                self.polytopes.append(poly)
+            # self.polytopes.extend(s.polytope())
 
     def axes(self):
         return self._axes
