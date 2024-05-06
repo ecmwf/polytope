@@ -67,7 +67,7 @@ class HullSlicer(Engine):
             )
             raise ValueError(errmsg)
 
-    def _build_sliceable_child(self, polytope, ax, node, datacube, lower, upper, next_nodes, slice_axis_idx):
+    def find_values_between(self, polytope, ax, node, datacube, lower, upper):
         tol = ax.tol
         lower = ax.from_float(lower - tol)
         upper = ax.from_float(upper + tol)
@@ -87,95 +87,56 @@ class HullSlicer(Engine):
             if flattened.get(datacube.coupled_axes[0][0], None) is not None:
                 flattened_tuple = (datacube.coupled_axes[0][0], flattened.get(datacube.coupled_axes[0][0], None))
                 flattened = {flattened_tuple[0]: flattened_tuple[1]}
-            else:
-                # flattened = {}
-                pass
 
         values = self.axis_values_between.get((flattened_tuple, ax.name, lower, upper, method), None)
         if self.axis_values_between.get((flattened_tuple, ax.name, lower, upper, method), None) is None:
-            # print(flattened_tuple)
             values = datacube.get_indices(flattened, ax, lower, upper, method)
             self.axis_values_between[(flattened_tuple, ax.name, lower, upper, method)] = values
+        return values
 
+    def remap_values(self, ax, value):
+        remapped_val = self.remapped_vals.get((value, ax.name), None)
+        if remapped_val is None:
+            remapped_val = value
+            if ax.is_cyclic:
+                remapped_val_interm = ax.remap([value, value])[0]
+                remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
+            if ax.can_round:
+                remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
+            self.remapped_vals[(value, ax.name)] = remapped_val
+        return remapped_val
+
+    def _build_sliceable_child(self, polytope, ax, node, datacube, lower, upper, next_nodes, slice_axis_idx):
+        values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
         if len(values) == 0:
             node.remove_branch()
 
-        # # check whether polytope is 1D and that the axis is not a coupled axis
-        # # read from the datacube which grid axes can be compressed...
-        # if ax.name not in datacube.compressed_grid_axes:
-        #     ax_in_forbidden_axes = not any(ax.name in sublist for sublist in datacube.coupled_axes)
-        # else:
-        #     ax_in_forbidden_axes = True
-
-        # TODO: find which axes can be compressed here...
-        # compressed_axes = datacube.compressed_grid_axes
-        # compressed_axes = []
-        # if polytope.is_natively_1D:
-        #     compressed_axes.extend(polytope.axes())
-        #     print(compressed_axes)
-        # if polytope.method is not None:
-        #     compressed_axes.extend(polytope.axes())
-
-        # if polytope.is_natively_1D and ax_in_forbidden_axes:
-        #     # TODO: instead of checking here whether an axis/indices can be compressed and doing a for loop,
-        #     # do this logic of recursively adding children to the tensor index tree, so do this inside of create_child
-        #     all_remapped_vals = []
-        #     for value in values:
-        #         fvalue = ax.to_float(value)
-        #         remapped_val = self.remapped_vals.get((value, ax.name), None)
-        #         if remapped_val is None:
-        #             remapped_val = value
-        #             if ax.is_cyclic:
-        #                 remapped_val_interm = ax.remap([value, value])[0]
-        #                 remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
-        #                 remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
-        #             self.remapped_vals[(value, ax.name)] = remapped_val
-        #         all_remapped_vals.append(remapped_val)
-        #     # NOTE we remove unnecessary empty branches here too
-        #     if len(tuple(all_remapped_vals)) == 0:
-        #         node.remove_branch()
-        #     else:
-        #         child = node.create_child(ax, tuple(all_remapped_vals))
-        #         # TODO: here, we will now recursively add values to the tuple inside the created child, and we will
-        #           only need to assign the unsliced polytopes of the child at the end?
-        #         child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
-        #         child["unsliced_polytopes"].remove(polytope)
-        #         next_nodes.append(child)
-        # else:
-
         # TODO: here add the children that are required now to the tree
+        for value in values:
+            # convert to float for slicing
 
-        if True:
-            for value in values:
-                # convert to float for slicing
-
-                # TODO: if we already have a node with this axis, then do not need to slice again here? just need to add the value to the node's value tuple...
-                fvalue = ax.to_float(value)
+            # TODO: if we already have a node with this axis, then do not need to slice again here?
+            # just need to add the value to the node's value tuple...
+            fvalue = ax.to_float(value)
+            if ax.name not in datacube.compressed_axes:
                 new_polytope = self.sliced_polytopes.get((polytope, ax.name, fvalue, slice_axis_idx), False)
-                if new_polytope is False:
-                    new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
+            else:
+                new_polytope = self.sliced_polytopes.get((polytope, ax.name, None, slice_axis_idx), False)
+            if new_polytope is False:
+                new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
+                if ax.name not in datacube.compressed_axes:
                     self.sliced_polytopes[(polytope, ax.name, fvalue, slice_axis_idx)] = new_polytope
-                # store the native type
-                remapped_val = self.remapped_vals.get((value, ax.name), None)
-                if remapped_val is None:
-                    remapped_val = value
-                    if ax.is_cyclic:
-                        remapped_val_interm = ax.remap([value, value])[0]
-                        remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
-                    if ax.can_round:
-                        remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
-                    self.remapped_vals[(value, ax.name)] = remapped_val
-
-                # NOTE we remove unnecessary empty branches here too
-                if len(tuple([remapped_val])) == 0:
-                    node.remove_branch()
                 else:
-                    (child, next_nodes) = node.create_child(ax, remapped_val, datacube.compressed_axes, next_nodes)
-                    child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
-                    child["unsliced_polytopes"].remove(polytope)
-                    if new_polytope is not None:
-                        child["unsliced_polytopes"].add(new_polytope)
-                    next_nodes.append(child)
+                    self.sliced_polytopes[(polytope, ax.name, None, slice_axis_idx)] = new_polytope
+            # store the native type
+            remapped_val = self.remap_values(ax, value)
+
+            (child, next_nodes) = node.create_child(ax, remapped_val, datacube.compressed_axes, next_nodes)
+            child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
+            child["unsliced_polytopes"].remove(polytope)
+            if new_polytope is not None:
+                child["unsliced_polytopes"].add(new_polytope)
+            next_nodes.append(child)
 
     def _build_branch(self, ax, node, datacube, next_nodes):
         for polytope in node["unsliced_polytopes"]:
