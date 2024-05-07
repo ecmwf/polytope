@@ -65,7 +65,8 @@ class Polytope:
         # TODO: remove grid axes from the possible compressed_axes
         all_datacube_coupled_axes = []
         for coupled_axes in self.datacube.coupled_axes:
-            # NOTE: the last axis from the coupled axes can always be compressed? Causes problems to fetch data using pygribjump
+            # NOTE: the last axis from the coupled axes can always be compressed? Causes problems to fetch data
+            # using pygribjump
             all_datacube_coupled_axes.extend(coupled_axes)
         self.datacube.compressed_axes = [
             ax for ax in self.datacube.compressed_axes if ax not in all_datacube_coupled_axes

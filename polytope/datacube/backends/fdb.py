@@ -2,7 +2,6 @@ import logging
 from copy import deepcopy
 from itertools import product
 
-import numpy as np
 import pygribjump as pygj
 
 from ...utility.geometry import nearest_pt
@@ -74,8 +73,6 @@ class FDBDatacube(Datacube):
             interm_branch_tuple_values = []
             for key in compressed_request[0].keys():
                 # remove the tuple of the request when we ask the fdb
-
-                # TODO: here, would need to take care of axes that are merged and unmerged, which need to be carefully decompressed
                 interm_branch_tuple_values.append(compressed_request[0][key])
             request_combis = product(*interm_branch_tuple_values)
 
@@ -101,7 +98,8 @@ class FDBDatacube(Datacube):
         #         request[0][key] = request[0][key][0]
         #     branch_tuple_combi = product(*interm_branch_tuple_values)
         #     # TODO: now build the relevant requests from this and ask gj for them
-        #     # TODO: then group the output values together to fit back with the original compressed request and continue
+        #     # TODO: then group the output values together to fit back with the original compressed request
+        #     # and continue
         #     new_requests = []
         #     for combi in branch_tuple_combi:
         #         new_request = {}
