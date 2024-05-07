@@ -57,8 +57,6 @@ class TestSlicingFDBDatacube:
         result.pprint()
         assert len(result.leaves) == 3
         path1 = result.leaves[0].flatten()
-        assert path1["date"] == (
-            np.datetime64("2017-01-01T12:00:00"),
-        )
+        assert path1["date"] == (np.datetime64("2017-01-01T12:00:00"),)
         assert set(path1["levelist"]) == set((850, 500))
         assert len(result.leaves[0].result) == 2
