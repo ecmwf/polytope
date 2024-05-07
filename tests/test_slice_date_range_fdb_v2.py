@@ -15,7 +15,7 @@ class TestSlicingFDBDatacube:
         self.options = {
             "config": [
                 {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
-                {"axis_name": "level_list", "transformations": [{"name": "type_change", "type": "int"}]},
+                {"axis_name": "levelist", "transformations": [{"name": "type_change", "type": "int"}]},
                 {
                     "axis_name": "date",
                     "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
@@ -55,19 +55,10 @@ class TestSlicingFDBDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 6
+        assert len(result.leaves) == 3
         path1 = result.leaves[0].flatten()
         assert path1["date"] == (
             np.datetime64("2017-01-01T12:00:00"),
-            # np.datetime64("2017-01-02T00:00:00"),
-            # np.datetime64("2017-01-02T12:00:00"),
         )
-        assert path1["levelist"] == ("500",)
-        path1 = result.leaves[1].flatten()
-        assert path1["date"] == (
-            np.datetime64("2017-01-01T12:00:00"),
-            # np.datetime64("2017-01-02T00:00:00"),
-            # np.datetime64("2017-01-02T12:00:00"),
-        )
-        assert path1["levelist"] == ("850",)
-        assert len(result.leaves[0].result) == 1
+        assert set(path1["levelist"]) == set((850, 500))
+        assert len(result.leaves[0].result) == 2
