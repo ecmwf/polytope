@@ -137,6 +137,28 @@ class TensorIndexTree(object):
                 self.add_child(node)
                 return (node, next_nodes)
 
+    def add_value(self, value):
+        new_values = list(self.values)
+        new_values.append(value)
+        self.values = tuple(new_values)
+        # return self
+
+    def new_create_child(self, axis, value, next_nodes):
+        # TODO: if the axis should not be compressed, just create a child with a tuple value with a single value
+        # TODO: if the axis should be compressed, check if we already have a child with the axis name.
+        # TODO: Then: if we have such a child, add to its tuple value the new value.
+        # TODO: Else, just create a child with a tuple value with a single value
+
+        # In this case, the child should not already exist? But you never know if the slicer hasn't found the same
+        # value twice? It shouldn't though?
+        # Can safely add the child here though to self
+        node = TensorIndexTree(axis, (value,))
+        existing_child = self.find_child(node)
+        if not existing_child:
+            self.add_child(node)
+            return (node, next_nodes)
+        return (existing_child, next_nodes)
+
     @property
     def parent(self):
         return self._parent
