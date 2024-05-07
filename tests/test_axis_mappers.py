@@ -1,5 +1,7 @@
 import pandas as pd
+import yaml
 
+from polytope.datacube.backends.datacube import Datacube
 from polytope.datacube.datacube_axis import (
     DatacubeAxisCyclic,
     FloatDatacubeAxis,
@@ -31,13 +33,25 @@ class TestAxisMappers:
 
     def test_float_axis_cyclic(self):
         axis = FloatDatacubeAxis()
+
         axis.is_cyclic = True
         assert axis.parse(2) == 2.0
         assert axis.to_float(2) == 2.0
         assert axis.from_float(2) == 2.0
         assert axis.serialize(2.0) == 2.0
-        transformation = DatacubeAxisCyclic("", {})
 
+        options = yaml.safe_load(
+            """
+                            config:
+                                - axis_name: long
+                                  transformations:
+                                    - name: "cyclic"
+                                      range: [0, 1.0]
+                            """
+        )
+        transformation = Datacube.create_axes_config(options)
+        transformation_option = transformation.config[0].transformations[0]
+        transformation = DatacubeAxisCyclic("", transformation_option)
         # Test the to_intervals function
         transformation.range = [1, 3]
         assert transformation.to_intervals([4, 7], [[]], axis) == [[4, 5], [5, 7], [7, 7]]
