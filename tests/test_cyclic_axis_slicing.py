@@ -47,19 +47,6 @@ class TestSlicingCyclic:
             (0.5,),
             (0.6,),
             (0.7,),
-            # (0.8,),
-            # (0.9,),
-            # (1.0,),
-            # (0.1,),
-            # (0.2,),
-            # (0.3,),
-            # (0.4,),
-            # (0.5,),
-            # (0.6,),
-            # (0.7,),
-            # (0.8,),
-            # (0.9,),
-            # (1.0,),
         ]
 
     def test_cyclic_float_axis_across_seam_repeated(self):
@@ -81,17 +68,6 @@ class TestSlicingCyclic:
             (0.8,),
             (0.9,),
             (1.0,),
-            # (0.0,),
-            # (0.1,),
-            # (0.2,),
-            # (0.3,),
-            # (0.4,),
-            # (0.5,),
-            # (0.6,),
-            # (0.7,),
-            # (0.8,),
-            # (0.9,),
-            # (1.0,),
         ]
 
     def test_cyclic_float_axis_across_seam_repeated_twice(self):
@@ -141,14 +117,6 @@ class TestSlicingCyclic:
             (0.5,),
             (0.6,),
             (0.7,),
-            # (0.0,),
-            # (0.1,),
-            # (0.2,),
-            # (0.3,),
-            # (0.4,),
-            # (0.5,),
-            # (0.6,),
-            # (0.7,),
         ]
 
     def test_cyclic_float_axis_above_axis_range(self):
@@ -166,11 +134,6 @@ class TestSlicingCyclic:
             (0.5,),
             (0.6,),
             (0.7,),
-            # (0.3,),
-            # (0.4,),
-            # (0.5,),
-            # (0.6,),
-            # (0.7,),
         ]
 
     def test_cyclic_float_axis_two_range_loops(self):
@@ -181,9 +144,6 @@ class TestSlicingCyclic:
         # result.pprint()
         assert len(result.leaves) == 1
         assert [(val,) for val in result.leaves[0].values] == [
-            # (0.0,),
-            # (0.1,),
-            # (0.2,),
             (0.3,),
             (0.4,),
             (0.5,),
@@ -192,7 +152,6 @@ class TestSlicingCyclic:
             (0.8,),
             (0.9,),
             (1.0,),
-            # (0.0,),
             (0.1,),
             (0.2,),
             (0.3,),
@@ -202,7 +161,6 @@ class TestSlicingCyclic:
             (0.7,),
             (0.8,),
             (0.9,),
-            # (1.0,),
             (0.0,),
             (0.1,),
             (0.2,),
@@ -226,11 +184,6 @@ class TestSlicingCyclic:
             (0.5,),
             (0.6,),
             (0.7,),
-            # (0.3,),
-            # (0.4,),
-            # (0.5,),
-            # (0.6,),
-            # (0.7,),
         ]
 
     def test_cyclic_float_axis_below_axis_range_crossing_seam(self):
@@ -241,9 +194,6 @@ class TestSlicingCyclic:
         # result.pprint()
         assert len(result.leaves) == 1
         assert [(val,) for val in result.leaves[0].values] == [
-            # (0.0,),
-            # (0.1,),
-            # (0.2,),
             (0.3,),
             (0.4,),
             (0.5,),
@@ -255,12 +205,6 @@ class TestSlicingCyclic:
             (0.1,),
             (0.2,),
             (0.3,),
-            # (0.4,),
-            # (0.5,),
-            # (0.6,),
-            # (0.7,),
-            # (0.8,),
-            # (0.9,),
         ]
 
     def test_cyclic_float_axis_reversed(self):
@@ -276,11 +220,6 @@ class TestSlicingCyclic:
             (0.5,),
             (0.6,),
             (0.7,),
-            # (0.3,),
-            # (0.4,),
-            # (0.5,),
-            # (0.6,),
-            # (0.7,),
         ]
 
     def test_two_cyclic_axis_wrong_axis_order(self):
@@ -294,21 +233,6 @@ class TestSlicingCyclic:
             (0.5,),
             (0.6,),
             (0.7,),
-            # (0.3,),
-            # (0.4,),
-            # (0.5,),
-            # (0.6,),
-            # (0.7,),
-            # (0.3,),
-            # (0.4,),
-            # (0.5,),
-            # (0.6,),
-            # (0.7,),
-            # (0.3,),
-            # (0.4,),
-            # (0.5,),
-            # (0.6,),
-            # (0.7,),
         ]
 
     def test_two_cyclic_axis(self):
@@ -322,21 +246,6 @@ class TestSlicingCyclic:
             (0.5,),
             (0.6,),
             (0.7,),
-            # (0.3,),
-            # (0.4,),
-            # (0.5,),
-            # (0.6,),
-            # (0.7,),
-            # (0.3,),
-            # (0.4,),
-            # (0.5,),
-            # (0.6,),
-            # (0.7,),
-            # (0.3,),
-            # (0.4,),
-            # (0.5,),
-            # (0.6,),
-            # (0.7,),
         ]
 
     def test_select_cyclic_float_axis_edge(self):

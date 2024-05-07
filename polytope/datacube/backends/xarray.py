@@ -3,7 +3,7 @@ from copy import deepcopy
 import numpy as np
 import xarray as xr
 
-from .datacube import Datacube, IndexTree
+from .datacube import Datacube, TensorIndexTree
 
 
 class XArrayDatacube(Datacube):
@@ -37,7 +37,7 @@ class XArrayDatacube(Datacube):
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
 
-    def get(self, requests: IndexTree):
+    def get(self, requests: TensorIndexTree):
         for r in requests.leaves:
             path = r.flatten()
             if len(path.items()) == self.axis_counter:

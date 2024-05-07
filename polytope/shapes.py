@@ -354,7 +354,6 @@ class Union(Shape):
             for poly in s.polytope():
                 poly.add_to_union()
                 self.polytopes.append(poly)
-            # self.polytopes.extend(s.polytope())
 
     def axes(self):
         return self._axes

@@ -110,9 +110,6 @@ class DatacubeAxis(ABC):
                 indexes_between = indexes[start:end].to_list()
                 indexes_between_ranges.extend(indexes_between)
             else:
-                # print(self.name)
-                # print(indexes)
-                # print(low)
                 start = indexes.searchsorted(low, "left")
                 end = indexes.searchsorted(up, "right")
                 indexes_between = indexes[start:end].to_list()

@@ -46,16 +46,13 @@ class HullSlicer(Engine):
             if path.get(datacube.coupled_axes[0][0], None) is not None:
                 flattened_tuple = (datacube.coupled_axes[0][0], path.get(datacube.coupled_axes[0][0], None))
                 path = {flattened_tuple[0]: flattened_tuple[1]}
-            else:
-                # path = {}
-                pass
 
         if self.axis_values_between.get((flattened_tuple, ax.name, lower), None) is None:
             self.axis_values_between[(flattened_tuple, ax.name, lower)] = datacube.has_index(path, ax, lower)
         datacube_has_index = self.axis_values_between[(flattened_tuple, ax.name, lower)]
 
         if datacube_has_index:
-            (child, next_nodes) = node.create_child(ax, lower, datacube.compressed_grid_axes, next_nodes)
+            (child, next_nodes) = node.create_child(ax, lower, next_nodes)
             child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             child["unsliced_polytopes"].remove(polytope)
             next_nodes.append(child)
@@ -106,88 +103,16 @@ class HullSlicer(Engine):
             self.remapped_vals[(value, ax.name)] = remapped_val
         return remapped_val
 
-    # def _build_sliceable_child(self, polytope, ax, node, datacube, lower, upper, next_nodes, slice_axis_idx):
-    #     values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
-    #     if len(values) == 0:
-    #         node.remove_branch()
-
-    #     # TODO: here add the children that are required now to the tree
-    #     for value in values:
-    #         # convert to float for slicing
-
-    #         # TODO: if we already have a node with this axis, then do not need to slice again here?
-    #         # just need to add the value to the node's value tuple...
-    #         fvalue = ax.to_float(value)
-    #         if ax.name not in datacube.compressed_axes:
-    #             new_polytope = self.sliced_polytopes.get((polytope, ax.name, fvalue, slice_axis_idx), False)
-    #         else:
-    #             new_polytope = self.sliced_polytopes.get((polytope, ax.name, None, slice_axis_idx), False)
-    #         if new_polytope is False:
-    #             new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
-    #             if ax.name not in datacube.compressed_axes:
-    #                 self.sliced_polytopes[(polytope, ax.name, fvalue, slice_axis_idx)] = new_polytope
-    #             else:
-    #                 self.sliced_polytopes[(polytope, ax.name, None, slice_axis_idx)] = new_polytope
-    #         # store the native type
-    #         remapped_val = self.remap_values(ax, value)
-
-    #         (child, next_nodes) = node.create_child(ax, remapped_val, datacube.compressed_axes, next_nodes)
-    #         child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
-    #         child["unsliced_polytopes"].remove(polytope)
-    #         if new_polytope is not None:
-    #             child["unsliced_polytopes"].add(new_polytope)
-    #         next_nodes.append(child)
-
-    # def _build_sliceable_child(self, polytope, ax, node, datacube, lower, upper, next_nodes, slice_axis_idx):
-    #     values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
-    #     if len(values) == 0:
-    #         node.remove_branch()
-
-    #     # TODO: here add the children that are required now to the tree
-    #     for i, value in enumerate(values):
-
-    #         if i == 0:
-    #             fvalue = ax.to_float(value)
-    #             new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
-    #             remapped_val = self.remap_values(ax, value)
-    #             (child, next_nodes) = node.new_create_child(ax, remapped_val, next_nodes)
-    #             child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
-    #             child["unsliced_polytopes"].remove(polytope)
-    #             if new_polytope is not None:
-    #                 child["unsliced_polytopes"].add(new_polytope)
-    #             next_nodes.append(child)
-    #         else:
-    #             if ax.name not in datacube.compressed_axes:
-    #                 fvalue = ax.to_float(value)
-    #                 new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
-    #                 remapped_val = self.remap_values(ax, value)
-    #                 (child, next_nodes) = node.new_create_child(ax, remapped_val, next_nodes)
-    #                 child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
-    #                 child["unsliced_polytopes"].remove(polytope)
-    #                 if new_polytope is not None:
-    #                     child["unsliced_polytopes"].add(new_polytope)
-    #                 next_nodes.append(child)
-    #             else:
-    #                 remapped_val = self.remap_values(ax, value)
-    #                 # print("HERE?")
-    #                 # print(ax.name)
-    #                 # print(remapped_val)
-    #                 child.add_value(remapped_val)
-    #                 # do not need to create a new node, just add the value to the node values
-    #             # if i == len(values) or ax.name not in datacube.compressed_axes:
-    #             #     next_nodes.append(child)
-
     def _build_sliceable_child(self, polytope, ax, node, datacube, values, next_nodes, slice_axis_idx):
         if len(values) == 0:
             node.remove_branch()
 
-        # TODO: here add the children that are required now to the tree
         for i, value in enumerate(values):
             if i == 0:
                 fvalue = ax.to_float(value)
                 new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
                 remapped_val = self.remap_values(ax, value)
-                (child, next_nodes) = node.new_create_child(ax, remapped_val, next_nodes)
+                (child, next_nodes) = node.create_child(ax, remapped_val, next_nodes)
                 child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
                 child["unsliced_polytopes"].remove(polytope)
                 if new_polytope is not None:
@@ -198,7 +123,7 @@ class HullSlicer(Engine):
                     fvalue = ax.to_float(value)
                     new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
                     remapped_val = self.remap_values(ax, value)
-                    (child, next_nodes) = node.new_create_child(ax, remapped_val, next_nodes)
+                    (child, next_nodes) = node.create_child(ax, remapped_val, next_nodes)
                     child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
                     child["unsliced_polytopes"].remove(polytope)
                     if new_polytope is not None:
@@ -206,46 +131,15 @@ class HullSlicer(Engine):
                     next_nodes.append(child)
                 else:
                     remapped_val = self.remap_values(ax, value)
-                    # print("HERE?")
-                    # print(ax.name)
-                    # print(remapped_val)
                     child.add_value(remapped_val)
-                    # do not need to create a new node, just add the value to the node values
-                # if i == len(values) or ax.name not in datacube.compressed_axes:
-                #     next_nodes.append(child)
-
-            # TODO: if we already have a node with this axis, then do not need to slice again here?
-            # just need to add the value to the node's value tuple...
-            # fvalue = ax.to_float(value)
-            # if ax.name not in datacube.compressed_axes:
-            #     new_polytope = self.sliced_polytopes.get((polytope, ax.name, fvalue, slice_axis_idx), False)
-            # else:
-            #     new_polytope = self.sliced_polytopes.get((polytope, ax.name, None, slice_axis_idx), False)
-            # if new_polytope is False:
-            #     new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
-            #     if ax.name not in datacube.compressed_axes:
-            #         self.sliced_polytopes[(polytope, ax.name, fvalue, slice_axis_idx)] = new_polytope
-            #     else:
-            #         self.sliced_polytopes[(polytope, ax.name, None, slice_axis_idx)] = new_polytope
-            # store the native type
-            # remapped_val = self.remap_values(ax, value)
-
-            # (child, next_nodes) = node.create_child(ax, remapped_val, datacube.compressed_axes, next_nodes)
-            # child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
-            # child["unsliced_polytopes"].remove(polytope)
-            # if new_polytope is not None:
-            #     child["unsliced_polytopes"].add(new_polytope)
-            # next_nodes.append(child)
 
     def _build_branch(self, ax, node, datacube, next_nodes):
-        # TODO: finish problem with select not compressing here...
         if ax.name not in datacube.compressed_axes:
             for polytope in node["unsliced_polytopes"]:
                 if ax.name in polytope._axes:
                     lower, upper, slice_axis_idx = polytope.extents(ax.name)
                     # here, first check if the axis is an unsliceable axis and directly build node if it is
                     # NOTE: we should have already created the ax_is_unsliceable cache before
-                    # values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
                     if self.ax_is_unsliceable[ax.name]:
                         self._build_unsliceable_child(polytope, ax, node, datacube, lower, next_nodes, slice_axis_idx)
                     else:
@@ -263,7 +157,6 @@ class HullSlicer(Engine):
                     lower, upper, slice_axis_idx = polytope.extents(ax.name)
                     if not first_slice_axis_idx:
                         first_slice_axis_idx = slice_axis_idx
-                    # values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
                     if self.ax_is_unsliceable[ax.name]:
                         self._build_unsliceable_child(polytope, ax, node, datacube, lower, next_nodes, slice_axis_idx)
                     else:
@@ -273,23 +166,7 @@ class HullSlicer(Engine):
                 self._build_sliceable_child(
                     first_polytope, ax, node, datacube, all_values, next_nodes, first_slice_axis_idx
                 )
-
         del node["unsliced_polytopes"]
-
-    # def _build_branch(self, ax, node, datacube, next_nodes):
-    #     for polytope in node["unsliced_polytopes"]:
-    #         if ax.name in polytope._axes:
-    #             lower, upper, slice_axis_idx = polytope.extents(ax.name)
-    #             # here, first check if the axis is an unsliceable axis and directly build node if it is
-
-    #             # NOTE: we should have already created the ax_is_unsliceable cache before
-
-    #             if self.ax_is_unsliceable[ax.name]:
-    #                 self._build_unsliceable_child(polytope, ax, node, datacube, lower, next_nodes, slice_axis_idx)
-    #             else:
-    #                 self._build_sliceable_child(polytope,
-    #                                             ax, node, datacube, lower, upper, next_nodes, slice_axis_idx)
-    #     del node["unsliced_polytopes"]
 
     def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
         # Convert the polytope points to float type to support triangulation and interpolation
@@ -297,11 +174,9 @@ class HullSlicer(Engine):
             self._unique_continuous_points(p, datacube)
 
         groups, input_axes = group(polytopes)
-        # print(groups)
         datacube.validate(input_axes)
         request = TensorIndexTree()
         combinations = tensor_product(groups)
-        # print(combinations)
 
         # NOTE: could optimise here if we know combinations will always be for one request.
         # Then we do not need to create a new index tree and merge it to request, but can just
@@ -310,7 +185,6 @@ class HullSlicer(Engine):
         for c in combinations:
             r = TensorIndexTree()
             new_c = []
-            print(combinations)
             for combi in c:
                 if isinstance(combi, list):
                     new_c.extend(combi)

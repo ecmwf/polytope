@@ -59,10 +59,9 @@ class Polytope:
             if polytope.is_natively_1D:
                 for ax in polytope.axes():
                     if ax not in self.datacube.merged_axes:
-                        # self.datacube.compressed_axes.extend(polytope.axes())
                         self.datacube.compressed_axes.append(ax)
-                # print(self.datacube.compressed_axes)
-        # TODO: remove grid axes from the possible compressed_axes
+
+        # remove grid axes from the possible compressed_axes
         all_datacube_coupled_axes = []
         for coupled_axes in self.datacube.coupled_axes:
             # NOTE: the last axis from the coupled axes can always be compressed? Causes problems to fetch data using pygribjump
@@ -70,9 +69,6 @@ class Polytope:
         self.datacube.compressed_axes = [
             ax for ax in self.datacube.compressed_axes if ax not in all_datacube_coupled_axes
         ]
-
-        # for ax in self.datacube.coupled_axes:
-        #     self.datacube.compressed_axes.remove(ax)
         request_tree = self.engine.extract(self.datacube, request.polytopes())
         self.datacube.get(request_tree)
         return request_tree

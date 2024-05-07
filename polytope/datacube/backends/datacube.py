@@ -6,7 +6,7 @@ import xarray as xr
 
 from ...utility.combinatorics import validate_axes
 from ..datacube_axis import DatacubeAxis
-from ..index_tree import DatacubePath, IndexTree
+from ..tensor_index_tree import DatacubePath, TensorIndexTree
 from ..transformations.datacube_mappers.datacube_mappers import DatacubeMapper
 from ..transformations.datacube_transformations import (
     DatacubeAxisTransformation,
@@ -37,7 +37,7 @@ class Datacube(ABC):
         self.merged_axes = []
 
     @abstractmethod
-    def get(self, requests: IndexTree) -> Any:
+    def get(self, requests: TensorIndexTree) -> Any:
         """Return data given a set of request trees"""
 
     @property
@@ -119,12 +119,8 @@ class Datacube(ABC):
         If lower and upper are equal, returns the index which exactly matches that value (if it exists)
         e.g. returns integer discrete points between two floats
         """
-        # print(path)
         path = self.fit_path(path)
         indexes = axis.find_indexes(path, self)
-        # print(path)
-        # print(axis.name)
-        # print(indexes)
         idx_between = axis.find_indices_between(indexes, lower, upper, self, method)
 
         logging.info(f"For axis {axis.name} between {lower} and {upper}, found indices {idx_between}")
