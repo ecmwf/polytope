@@ -63,7 +63,7 @@ class Datacube(ABC):
         )
 
         # do not compress merged axes
-        if transformation_type_key == "merge":
+        if transformation_type_key.name == "merge":
             self.merged_axes.append(name)
             self.merged_axes.append(final_axis_names)
 
