@@ -79,7 +79,6 @@ class FDBDatacube(Datacube):
                 output_values = self.gj.extract([complete_uncompressed_request])
                 self.assign_fdb_output_to_nodes(output_values, [fdb_requests_decoding_info[j]])
 
-
         # output_values = self.gj.extract(fdb_requests)
         # self.assign_fdb_output_to_nodes(output_values, fdb_requests_decoding_info)
 

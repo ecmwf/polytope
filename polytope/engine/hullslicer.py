@@ -183,7 +183,6 @@ class HullSlicer(Engine):
 
         # TODO: here add the children that are required now to the tree
         for i, value in enumerate(values):
-
             if i == 0:
                 fvalue = ax.to_float(value)
                 new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
@@ -271,7 +270,9 @@ class HullSlicer(Engine):
                         values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
                         all_values.extend(values)
             if not self.ax_is_unsliceable[ax.name]:
-                self._build_sliceable_child(first_polytope, ax, node, datacube, all_values, next_nodes, first_slice_axis_idx)
+                self._build_sliceable_child(
+                    first_polytope, ax, node, datacube, all_values, next_nodes, first_slice_axis_idx
+                )
 
         del node["unsliced_polytopes"]
 
@@ -286,7 +287,8 @@ class HullSlicer(Engine):
     #             if self.ax_is_unsliceable[ax.name]:
     #                 self._build_unsliceable_child(polytope, ax, node, datacube, lower, next_nodes, slice_axis_idx)
     #             else:
-    #                 self._build_sliceable_child(polytope, ax, node, datacube, lower, upper, next_nodes, slice_axis_idx)
+    #                 self._build_sliceable_child(polytope,
+    #                                             ax, node, datacube, lower, upper, next_nodes, slice_axis_idx)
     #     del node["unsliced_polytopes"]
 
     def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):

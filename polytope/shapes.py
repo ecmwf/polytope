@@ -89,7 +89,9 @@ class Point(Shape):
             assert len(self.values) == 1
         for i in range(len(axes)):
             polytope_points = [v[i] for v in self.values]
-            self.polytopes.extend([ConvexPolytope([axes[i]], [[point]], self.method, is_1D=True) for point in polytope_points])
+            self.polytopes.extend(
+                [ConvexPolytope([axes[i]], [[point]], self.method, is_1D=True) for point in polytope_points]
+            )
 
     def axes(self):
         return self._axes
