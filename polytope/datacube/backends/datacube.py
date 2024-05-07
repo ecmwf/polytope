@@ -1,8 +1,11 @@
+import argparse
 import logging
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, List, Literal, Optional, Union
 
 import xarray as xr
+from conflator import ConfigModel, Conflator
+from pydantic import ConfigDict
 
 from ...utility.combinatorics import validate_axes
 from ..datacube_axis import DatacubeAxis
@@ -35,6 +38,7 @@ class Datacube(ABC):
         self.compressed_grid_axes = []
         self.compressed_axes = []
         self.merged_axes = []
+        self.unwanted_path = {}
 
     @abstractmethod
     def get(self, requests: IndexTree) -> Any:
@@ -50,15 +54,16 @@ class Datacube(ABC):
 
     def _create_axes(self, name, values, transformation_type_key, transformation_options):
         # first check what the final axes are for this axis name given transformations
+        transformation_options = transformation_type_key
         final_axis_names = DatacubeAxisTransformation.get_final_axes(
-            name, transformation_type_key, transformation_options
+            name, transformation_type_key.name, transformation_options
         )
         transformation = DatacubeAxisTransformation.create_transform(
-            name, transformation_type_key, transformation_options
+            name, transformation_type_key.name, transformation_options
         )
 
         # do not compress merged axes
-        if transformation_type_key == "merge":
+        if transformation_type_key.name == "merge":
             self.merged_axes.append(name)
             self.merged_axes.append(final_axis_names)
 
@@ -78,8 +83,8 @@ class Datacube(ABC):
             if self._axes is None or axis_name not in self._axes.keys():
                 DatacubeAxis.create_standard(axis_name, values, self)
             # add transformation tag to axis, as well as transformation options for later
-            setattr(self._axes[axis_name], has_transform[transformation_type_key], True)  # where has_transform is a
-            # factory inside datacube_transformations to set the has_transform, is_cyclic etc axis properties
+            setattr(self._axes[axis_name], has_transform[transformation_type_key.name], True)  # where has_transform is
+            # a factory inside datacube_transformations to set the has_transform, is_cyclic etc axis properties
             # add the specific transformation handled here to the relevant axes
             # Modify the axis to update with the tag
 
@@ -87,7 +92,7 @@ class Datacube(ABC):
                 self._axes[axis_name].transformations.append(transformation)
 
     def _add_all_transformation_axes(self, options, name, values):
-        for transformation_type_key in options.keys():
+        for transformation_type_key in options.transformations:
             if transformation_type_key != "cyclic":
                 self.transformed_axes.append(name)
             self._create_axes(name, values, transformation_type_key, options)
@@ -142,6 +147,52 @@ class Datacube(ABC):
             value = path[key]
             path[key] = self._axes[key].remap([value, value])[0][0]
         return path
+
+    @staticmethod
+    def create_axes_config(axis_options):
+        class TransformationConfig(ConfigModel):
+            model_config = ConfigDict(extra="forbid")
+            name: str = ""
+
+        class CyclicConfig(TransformationConfig):
+            name: Literal["cyclic"]
+            range: List[float] = [0]
+
+        class MapperConfig(TransformationConfig):
+            name: Literal["mapper"]
+            type: str = ""
+            resolution: Union[int, List[int]] = 0
+            axes: List[str] = [""]
+            local: Optional[List[float]] = None
+
+        class ReverseConfig(TransformationConfig):
+            name: Literal["reverse"]
+            is_reverse: bool = False
+
+        class TypeChangeConfig(TransformationConfig):
+            name: Literal["type_change"]
+            type: str = "int"
+
+        class MergeConfig(TransformationConfig):
+            name: Literal["merge"]
+            other_axis: str = ""
+            linkers: List[str] = [""]
+
+        action_subclasses_union = Union[CyclicConfig, MapperConfig, ReverseConfig, TypeChangeConfig, MergeConfig]
+
+        class AxisConfig(ConfigModel):
+            axis_name: str = ""
+            transformations: list[action_subclasses_union]
+
+        class Config(ConfigModel):
+            config: list[AxisConfig] = []
+
+        parser = argparse.ArgumentParser(allow_abbrev=False)
+        axis_config = Conflator(app_name="polytope", model=Config, cli=False, argparser=parser).load()
+        if axis_options.get("config"):
+            axis_config = Config(config=axis_options.get("config"))
+
+        return axis_config
 
     @staticmethod
     def create(datacube, axis_options: dict, datacube_options={}):

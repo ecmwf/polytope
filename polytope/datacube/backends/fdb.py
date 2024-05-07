@@ -2,7 +2,6 @@ import logging
 from copy import deepcopy
 from itertools import product
 
-import numpy as np
 import pygribjump as pygj
 
 from ...utility.geometry import nearest_pt
@@ -19,6 +18,7 @@ class FDBDatacube(Datacube):
         logging.info("Created an FDB datacube with options: " + str(axis_options))
 
         self.unwanted_path = {}
+        self.axis_options = Datacube.create_axes_config(axis_options).config
 
         partial_request = config
         # Find values in the level 3 FDB datacube
@@ -31,7 +31,11 @@ class FDBDatacube(Datacube):
         self.fdb_coordinates["values"] = []
         for name, values in self.fdb_coordinates.items():
             values.sort()
-            options = axis_options.get(name, None)
+            options = None
+            for opt in self.axis_options:
+                if opt.axis_name == name:
+                    options = opt
+            # options = axis_options.get(name, None)
             self._check_and_add_axes(options, name, values)
             self.treated_axes.append(name)
             self.complete_axes.append(name)
@@ -39,7 +43,11 @@ class FDBDatacube(Datacube):
         # add other options to axis which were just created above like "lat" for the mapper transformations for eg
         for name in self._axes:
             if name not in self.treated_axes:
-                options = axis_options.get(name, None)
+                options = None
+                for opt in self.axis_options:
+                    if opt.axis_name == name:
+                        options = opt
+                # options = axis_options.get(name, None)
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
 
@@ -65,8 +73,6 @@ class FDBDatacube(Datacube):
             interm_branch_tuple_values = []
             for key in compressed_request[0].keys():
                 # remove the tuple of the request when we ask the fdb
-
-                # TODO: here, would need to take care of axes that are merged and unmerged, which need to be carefully decompressed
                 interm_branch_tuple_values.append(compressed_request[0][key])
             request_combis = product(*interm_branch_tuple_values)
 
@@ -92,7 +98,8 @@ class FDBDatacube(Datacube):
         #         request[0][key] = request[0][key][0]
         #     branch_tuple_combi = product(*interm_branch_tuple_values)
         #     # TODO: now build the relevant requests from this and ask gj for them
-        #     # TODO: then group the output values together to fit back with the original compressed request and continue
+        #     # TODO: then group the output values together to fit back with the original compressed request
+        #     # and continue
         #     new_requests = []
         #     for combi in branch_tuple_combi:
         #         new_request = {}

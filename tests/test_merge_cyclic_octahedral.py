@@ -22,9 +22,19 @@ class TestMultipleTransformations:
         )
 
         self.options = {
-            "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
-            "values": {"mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}},
-            "step": {"cyclic": [0, 2]},
+            "config": [
+                {"axis_name": "step", "transformations": [{"name": "cyclic", "type": [0, 2]}]},
+                {
+                    "axis_name": "date",
+                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
+                },
+                {
+                    "axis_name": "values",
+                    "transformations": [
+                        {"name": "mapper", "type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                    ],
+                },
+            ]
         }
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.array, engine=self.slicer, axis_options=self.options)

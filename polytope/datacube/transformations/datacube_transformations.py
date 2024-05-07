@@ -14,7 +14,8 @@ class DatacubeAxisTransformation(ABC):
         file_name = ".datacube_" + transformation_file_name
         module = import_module("polytope.datacube.transformations" + file_name + file_name)
         constructor = getattr(module, transformation_type)
-        transformation_type_option = transformation_options[transformation_type_key]
+        # transformation_type_option = transformation_options[transformation_type_key]
+        transformation_type_option = transformation_options
         new_transformation = deepcopy(constructor(name, transformation_type_option))
 
         new_transformation.name = name
