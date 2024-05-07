@@ -18,6 +18,7 @@ class FDBDatacube(Datacube):
         logging.info("Created an FDB datacube with options: " + str(axis_options))
 
         self.unwanted_path = {}
+        self.axis_options = Datacube.create_axes_config(axis_options).config
 
         partial_request = config
         # Find values in the level 3 FDB datacube
@@ -30,7 +31,11 @@ class FDBDatacube(Datacube):
         self.fdb_coordinates["values"] = []
         for name, values in self.fdb_coordinates.items():
             values.sort()
-            options = axis_options.get(name, None)
+            options = None
+            for opt in self.axis_options:
+                if opt.axis_name == name:
+                    options = opt
+            # options = axis_options.get(name, None)
             self._check_and_add_axes(options, name, values)
             self.treated_axes.append(name)
             self.complete_axes.append(name)
@@ -38,7 +43,11 @@ class FDBDatacube(Datacube):
         # add other options to axis which were just created above like "lat" for the mapper transformations for eg
         for name in self._axes:
             if name not in self.treated_axes:
-                options = axis_options.get(name, None)
+                options = None
+                for opt in self.axis_options:
+                    if opt.axis_name == name:
+                        options = opt
+                # options = axis_options.get(name, None)
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
 
@@ -64,7 +73,6 @@ class FDBDatacube(Datacube):
             interm_branch_tuple_values = []
             for key in compressed_request[0].keys():
                 # remove the tuple of the request when we ask the fdb
-
                 interm_branch_tuple_values.append(compressed_request[0][key])
             request_combis = product(*interm_branch_tuple_values)
 

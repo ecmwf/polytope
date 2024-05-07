@@ -15,8 +15,16 @@ class TestOctahedralGrid:
         ds = data.from_source("file", "./tests/data/healpix.grib")
         self.latlon_array = ds.to_xarray().isel(step=0).isel(time=0).isel(isobaricInhPa=0).z
         self.options = {
-            "values": {"mapper": {"type": "healpix", "resolution": 32, "axes": ["latitude", "longitude"]}},
-            "longitude": {"cyclic": [0, 360]},
+            "config": [
+                {
+                    "axis_name": "values",
+                    "transformations": [
+                        {"name": "mapper", "type": "healpix", "resolution": 32, "axes": ["latitude", "longitude"]}
+                    ],
+                },
+                {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
+                {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
+            ]
         }
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.latlon_array, engine=self.slicer, axis_options=self.options)
@@ -31,7 +39,7 @@ class TestOctahedralGrid:
             Select("valid_time", ["2022-12-14T13:00:00"]),
         )
         result = self.API.retrieve(request)
-        result.pprint()
+        # result.pprint()
         assert len(result.leaves) == 40
 
         lats = []
