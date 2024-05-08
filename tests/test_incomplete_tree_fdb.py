@@ -32,9 +32,46 @@ class TestRegularGrid:
             ]
         }
         self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "step": "0"}
-        self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options, compressed_axes_options=["longitude", "latitude", "levtype", "step", "date", "domain", "expver", "param", "class", "stream", "type", "levelist", "number"])
+        self.fdbdatacube = FDBDatacube(
+            self.config,
+            axis_options=self.options,
+            compressed_axes_options=[
+                "longitude",
+                "latitude",
+                "levtype",
+                "step",
+                "date",
+                "domain",
+                "expver",
+                "param",
+                "class",
+                "stream",
+                "type",
+                "levelist",
+                "number",
+            ],
+        )
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options, compressed_axes_options=["longitude", "latitude", "levtype", "step", "date", "domain", "expver", "param", "class", "stream", "type", "levelist", "number"])
+        self.API = Polytope(
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            axis_options=self.options,
+            compressed_axes_options=[
+                "longitude",
+                "latitude",
+                "levtype",
+                "step",
+                "date",
+                "domain",
+                "expver",
+                "param",
+                "class",
+                "stream",
+                "type",
+                "levelist",
+                "number",
+            ],
+        )
 
     @pytest.mark.internet
     @pytest.mark.fdb

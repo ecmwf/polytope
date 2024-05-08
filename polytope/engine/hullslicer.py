@@ -184,8 +184,8 @@ class HullSlicer(Engine):
         for compressed_axis in compressable_axes:
             if compressed_axis in datacube.compressed_axes:
                 self.compressed_axes.append(compressed_axis)
-            
-        print(datacube.compressed_axes)    
+
+        print(datacube.compressed_axes)
 
         print(self.compressed_axes)
 

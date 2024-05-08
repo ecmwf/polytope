@@ -27,7 +27,12 @@ class TestOctahedralGrid:
             ]
         }
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.latlon_array, engine=self.slicer, axis_options=self.options, compressed_axes_options=["longitude", "latitude", "number", "step", "time", "surface", "valid_time"])
+        self.API = Polytope(
+            datacube=self.latlon_array,
+            engine=self.slicer,
+            axis_options=self.options,
+            compressed_axes_options=["longitude", "latitude", "number", "step", "time", "surface", "valid_time"],
+        )
 
     @pytest.mark.internet
     def test_octahedral_grid(self):

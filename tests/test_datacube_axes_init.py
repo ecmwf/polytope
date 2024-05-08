@@ -29,7 +29,24 @@ class TestInitDatacubeAxes:
             ]
         }
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=latlon_array, engine=self.slicer, axis_options=self.options, compressed_axes_options=["longitude", "latitude", "levtype", "step", "date", "domain", "expver", "param", "class", "stream", "type"])
+        self.API = Polytope(
+            datacube=latlon_array,
+            engine=self.slicer,
+            axis_options=self.options,
+            compressed_axes_options=[
+                "longitude",
+                "latitude",
+                "levtype",
+                "step",
+                "date",
+                "domain",
+                "expver",
+                "param",
+                "class",
+                "stream",
+                "type",
+            ],
+        )
         self.datacube = self.API.datacube
 
     @pytest.mark.internet

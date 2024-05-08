@@ -27,7 +27,9 @@ class TestMergeTransformation:
             ]
         }
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.array, engine=self.slicer, axis_options=self.options, compressed_axes_options=["date", "time"])
+        self.API = Polytope(
+            datacube=self.array, engine=self.slicer, axis_options=self.options, compressed_axes_options=["date", "time"]
+        )
 
     def test_merge_axis(self):
         request = Request(Select("date", [pd.Timestamp("20000101T060000")]))

@@ -30,7 +30,7 @@ class ConvexPolytope(Shape):
             self.is_flat = True
         self.points = points
         self.method = method
-        self.is_orthogonal= is_orthogonal
+        self.is_orthogonal = is_orthogonal
         self.is_in_union = False
 
     def add_to_union(self):

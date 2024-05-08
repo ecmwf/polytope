@@ -28,7 +28,12 @@ class TestSlicingMultipleTransformationsOneAxis:
             ]
         }
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.latlon_array, engine=self.slicer, axis_options=self.options, compressed_axes_options=["longitude", "latitude", "surface", "step", "time", "valid_time", "number"])
+        self.API = Polytope(
+            datacube=self.latlon_array,
+            engine=self.slicer,
+            axis_options=self.options,
+            compressed_axes_options=["longitude", "latitude", "surface", "step", "time", "valid_time", "number"],
+        )
 
     @pytest.mark.internet
     def test_merge_axis(self):

@@ -25,7 +25,12 @@ class TestSlicingEra5Data:
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
             ]
         }
-        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options, compressed_axes_options=["longitude", "latitude", "step", "time", "number", "isobaricInhPa"])
+        self.API = Polytope(
+            datacube=array,
+            engine=self.slicer,
+            axis_options=options,
+            compressed_axes_options=["longitude", "latitude", "step", "time", "number", "isobaricInhPa"],
+        )
 
     @pytest.mark.internet
     def test_surrounding_on_grid_point(self):
