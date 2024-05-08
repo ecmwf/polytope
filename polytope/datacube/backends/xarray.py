@@ -9,8 +9,8 @@ from .datacube import Datacube
 class XArrayDatacube(Datacube):
     """Xarray arrays are labelled, axes can be defined as strings or integers (e.g. "time" or 0)."""
 
-    def __init__(self, dataarray: xr.DataArray, axis_options=None, datacube_options=None):
-        super().__init__(axis_options, datacube_options)
+    def __init__(self, dataarray: xr.DataArray, axis_options=None, datacube_options=None, compressed_axes_options=[]):
+        super().__init__(axis_options, datacube_options, compressed_axes_options)
         if axis_options is None:
             axis_options = {}
         if datacube_options is None:

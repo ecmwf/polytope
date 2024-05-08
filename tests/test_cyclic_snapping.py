@@ -18,7 +18,7 @@ class TestSlicing3DXarrayDatacube:
 
         options = {"config": [{"axis_name": "long", "transformations": [{"name": "cyclic", "range": [0, 1.0]}]}]}
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
+        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options, compressed_axes_options=["long"])
 
     # Testing different shapes
 

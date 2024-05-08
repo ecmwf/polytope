@@ -20,7 +20,7 @@ class TestSlicing3DXarrayDatacube:
             },
         )
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer)
+        self.API = Polytope(datacube=array, engine=self.slicer, compressed_axes_options=["level", "step", "date"])
 
     def test_point(self):
         request = Request(Point(["step", "level"], [[3, 10]]), Select("date", ["2000-01-01"]))

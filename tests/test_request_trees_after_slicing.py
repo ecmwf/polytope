@@ -20,7 +20,7 @@ class TestIndexTreesAfterSlicing:
         )
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer)
+        self.API = Polytope(datacube=array, engine=self.slicer, compressed_axes_options=["level", "step"])
 
     def test_path_values(self):
         box = Box(["step", "level"], [3.0, 1.0], [6.0, 3.0])

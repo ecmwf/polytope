@@ -29,9 +29,9 @@ class TestSlicingFDBDatacube:
             ]
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "type": "fc", "stream": "oper"}
-        self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
+        self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options, compressed_axes_options=["longitude", "latitude", "levtype", "step", "date", "domain", "expver", "param", "class", "stream", "type"])
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options, compressed_axes_options=["longitude", "latitude", "levtype", "step", "date", "domain", "expver", "param", "class", "stream", "type"])
 
     # Testing different shapes
     @pytest.mark.fdb

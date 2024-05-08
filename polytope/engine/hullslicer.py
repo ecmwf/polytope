@@ -22,6 +22,7 @@ class HullSlicer(Engine):
         self.has_value = {}
         self.sliced_polytopes = {}
         self.remapped_vals = {}
+        self.compressed_axes = []
 
     def _unique_continuous_points(self, p: ConvexPolytope, datacube: Datacube):
         for i, ax in enumerate(p._axes):
@@ -119,7 +120,7 @@ class HullSlicer(Engine):
                     child["unsliced_polytopes"].add(new_polytope)
                 next_nodes.append(child)
             else:
-                if ax.name not in datacube.compressed_axes:
+                if ax.name not in self.compressed_axes:
                     fvalue = ax.to_float(value)
                     new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
                     remapped_val = self.remap_values(ax, value)
@@ -134,7 +135,7 @@ class HullSlicer(Engine):
                     child.add_value(remapped_val)
 
     def _build_branch(self, ax, node, datacube, next_nodes):
-        if ax.name not in datacube.compressed_axes:
+        if ax.name not in self.compressed_axes:
             for polytope in node["unsliced_polytopes"]:
                 if ax.name in polytope._axes:
                     lower, upper, slice_axis_idx = polytope.extents(ax.name)
@@ -169,6 +170,25 @@ class HullSlicer(Engine):
         del node["unsliced_polytopes"]
 
     def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
+        # Determine list of axes to compress
+
+        # First determine compressable axes from input polytopes
+        compressable_axes = []
+        for polytope in polytopes:
+            if polytope.is_orthogonal:
+                for ax in polytope.axes():
+                    # if ax not in self.datacube.merged_axes:
+                    if True:
+                        compressable_axes.append(ax)
+        # Cross check this list with list of compressable axis from datacube (should not include any merged or coupled axes)
+        for compressed_axis in compressable_axes:
+            if compressed_axis in datacube.compressed_axes:
+                self.compressed_axes.append(compressed_axis)
+            
+        print(datacube.compressed_axes)    
+
+        print(self.compressed_axes)
+
         # Convert the polytope points to float type to support triangulation and interpolation
         for p in polytopes:
             self._unique_continuous_points(p, datacube)

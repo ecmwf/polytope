@@ -9,11 +9,13 @@ from .datacube import Datacube, TensorIndexTree
 
 
 class FDBDatacube(Datacube):
-    def __init__(self, config=None, axis_options=None, datacube_options=None):
+    def __init__(self, config=None, axis_options=None, datacube_options=None, compressed_axes_options=[]):
         if config is None:
             config = {}
 
-        super().__init__(axis_options, datacube_options)
+        super().__init__(axis_options, datacube_options, compressed_axes_options)
+        print("NOW IN FDB DATACUBE")
+        print(self.compressed_axes)
 
         logging.info("Created an FDB datacube with options: " + str(axis_options))
 

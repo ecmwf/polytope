@@ -27,7 +27,7 @@ class TestSlicingCyclicAxisNotOverZero:
             ]
         }
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=self.options, compressed_axes_options=["long", "level", "step", "date"])
 
     # Testing different shapes
 

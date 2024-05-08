@@ -18,7 +18,7 @@ class TestSlicingUnsliceableAxis:
             coords={"date": pd.date_range("2000-01-01", "2000-01-03", 3), "variable": ["a"], "level": range(1, 130)},
         )
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer)
+        self.API = Polytope(datacube=array, engine=self.slicer, compressed_axes_options=["date", "variable", "level"])
 
     # Testing different shapes
 

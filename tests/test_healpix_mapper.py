@@ -27,7 +27,7 @@ class TestOctahedralGrid:
             ]
         }
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.latlon_array, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(datacube=self.latlon_array, engine=self.slicer, axis_options=self.options, compressed_axes_options=["longitude", "latitude", "step", "time", "isobaricInhPa", "valid_time"])
 
     @pytest.mark.internet
     def test_healpix_grid(self):
@@ -39,7 +39,7 @@ class TestOctahedralGrid:
             Select("valid_time", ["2022-12-14T13:00:00"]),
         )
         result = self.API.retrieve(request)
-        # result.pprint()
+        result.pprint()
         assert len(result.leaves) == 40
 
         lats = []

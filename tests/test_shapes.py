@@ -25,7 +25,7 @@ class TestSlicing3DXarrayDatacube:
             "config": [{"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]}]
         }
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=self.options, compressed_axes_options=["date", "step", "level", "longitude"])
 
     def test_all(self):
         request = Request(Select("step", [3]), Select("date", ["2000-01-01"]), All("level"), Select("longitude", [1]))

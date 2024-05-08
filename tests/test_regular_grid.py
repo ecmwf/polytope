@@ -36,13 +36,14 @@ class TestRegularGrid:
         }
         self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "step": "0"}
         self.datacube_options = {"identical structure after": "number"}
-        self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options, datacube_options=self.datacube_options)
+        self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options, datacube_options=self.datacube_options, compressed_axes_options=["longitude", "latitude", "levtype", "step", "date", "domain", "expver", "param", "class", "stream", "type", "number", "levelist"])
         self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
             engine=self.slicer,
             axis_options=self.options,
             datacube_options=self.datacube_options,
+            compressed_axes_options=["longitude", "latitude", "levtype", "step", "date", "domain", "expver", "param", "class", "stream", "type", "number", "levelist"]
         )
 
     @pytest.mark.fdb

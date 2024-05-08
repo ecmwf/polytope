@@ -37,7 +37,7 @@ class TestMultipleTransformations:
             ]
         }
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.array, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(datacube=self.array, engine=self.slicer, axis_options=self.options, compressed_axes_options=["longitude", "latitude", "step", "date"])
 
     @pytest.mark.skip(reason="Datacube not formatted right.")
     def test_merge_axis(self):

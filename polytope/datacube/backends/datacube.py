@@ -18,7 +18,7 @@ from ..transformations.datacube_transformations import (
 
 
 class Datacube(ABC):
-    def __init__(self, axis_options=None, datacube_options=None):
+    def __init__(self, axis_options=None, datacube_options=None, compressed_axes_options=[]):
         if axis_options is None:
             self.axis_options = {}
         else:
@@ -36,9 +36,10 @@ class Datacube(ABC):
         self._axes = None
         self.transformed_axes = []
         self.compressed_grid_axes = []
-        self.compressed_axes = []
+        # self.compressed_axes = []
         self.merged_axes = []
         self.unwanted_path = {}
+        self.compressed_axes = compressed_axes_options
 
     @abstractmethod
     def get(self, requests: TensorIndexTree) -> Any:
@@ -66,14 +67,22 @@ class Datacube(ABC):
         if transformation_type_key.name == "merge":
             self.merged_axes.append(name)
             self.merged_axes.append(final_axis_names)
+            for axis in final_axis_names:
+                # remove the merged_axes from the possible compressed axes
+                if axis in self.compressed_axes:
+                    self.compressed_axes.remove(axis)
 
         for blocked_axis in transformation.blocked_axes():
             self.blocked_axes.append(blocked_axis)
         if isinstance(transformation, DatacubeMapper):
+            # TODO: do we use this?? This shouldn't work for a disk in lat/lon on a octahedral or other grid??
             for compressed_grid_axis in transformation.compressed_grid_axes:
                 self.compressed_grid_axes.append(compressed_grid_axis)
         if len(final_axis_names) > 1:
             self.coupled_axes.append(final_axis_names)
+            for axis in final_axis_names:
+                if axis in self.compressed_axes:
+                    self.compressed_axes.remove(axis)
         for axis_name in final_axis_names:
             self.fake_axes.append(axis_name)
             # if axis does not yet exist, create it
@@ -191,11 +200,13 @@ class Datacube(ABC):
         return axis_config
 
     @staticmethod
-    def create(datacube, axis_options: dict, datacube_options={}):
+    def create(datacube, axis_options: dict, datacube_options={}, compressed_axes_options=[]):
+        print("INSDEI DATACUBE CREATE")
+        print(compressed_axes_options)
         if isinstance(datacube, (xr.core.dataarray.DataArray, xr.core.dataset.Dataset)):
             from .xarray import XArrayDatacube
 
-            xadatacube = XArrayDatacube(datacube, axis_options, datacube_options)
+            xadatacube = XArrayDatacube(datacube, axis_options, datacube_options, compressed_axes_options)
             return xadatacube
         else:
             return datacube

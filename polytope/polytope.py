@@ -37,7 +37,7 @@ class Request:
 
 
 class Polytope:
-    def __init__(self, datacube, engine=None, axis_options=None, datacube_options=None):
+    def __init__(self, datacube, engine=None, axis_options=None, datacube_options=None, compressed_axes_options=[]):
         from .datacube import Datacube
         from .engine import Engine
 
@@ -46,7 +46,7 @@ class Polytope:
         if datacube_options is None:
             datacube_options = {}
 
-        self.datacube = Datacube.create(datacube, axis_options)
+        self.datacube = Datacube.create(datacube, axis_options, datacube_options, compressed_axes_options)
         self.engine = engine if engine is not None else Engine.default()
 
     def slice(self, polytopes: List[ConvexPolytope]):
@@ -55,21 +55,21 @@ class Polytope:
 
     def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
-        for polytope in request.polytopes():
-            if polytope.is_orthogonal:
-                for ax in polytope.axes():
-                    if ax not in self.datacube.merged_axes:
-                        self.datacube.compressed_axes.append(ax)
+        # for polytope in request.polytopes():
+        #     if polytope.is_orthogonal:
+        #         for ax in polytope.axes():
+        #             if ax not in self.datacube.merged_axes:
+        #                 self.datacube.compressed_axes.append(ax)
 
-        # remove grid axes from the possible compressed_axes
-        all_datacube_coupled_axes = []
-        for coupled_axes in self.datacube.coupled_axes:
-            # NOTE: the last axis from the coupled axes can always be compressed? Causes problems to fetch data
-            # using pygribjump
-            all_datacube_coupled_axes.extend(coupled_axes)
-        self.datacube.compressed_axes = [
-            ax for ax in self.datacube.compressed_axes if ax not in all_datacube_coupled_axes
-        ]
+        # # remove grid axes from the possible compressed_axes
+        # all_datacube_coupled_axes = []
+        # for coupled_axes in self.datacube.coupled_axes:
+        #     # NOTE: the last axis from the coupled axes can always be compressed? Causes problems to fetch data
+        #     # using pygribjump
+        #     all_datacube_coupled_axes.extend(coupled_axes)
+        # self.datacube.compressed_axes = [
+        #     ax for ax in self.datacube.compressed_axes if ax not in all_datacube_coupled_axes
+        # ]
         request_tree = self.engine.extract(self.datacube, request.polytopes())
         self.datacube.get(request_tree)
         return request_tree
