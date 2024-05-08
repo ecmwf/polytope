@@ -56,7 +56,7 @@ class Polytope:
     def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
         for polytope in request.polytopes():
-            if polytope.is_natively_1D:
+            if polytope.is_orthogonal:
                 for ax in polytope.axes():
                     if ax not in self.datacube.merged_axes:
                         self.datacube.compressed_axes.append(ax)

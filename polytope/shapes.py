@@ -23,14 +23,14 @@ class Shape(ABC):
 
 
 class ConvexPolytope(Shape):
-    def __init__(self, axes, points, method=None, is_1D=False):
+    def __init__(self, axes, points, method=None, is_orthogonal=False):
         self._axes = list(axes)
         self.is_flat = False
         if len(self._axes) == 1:
             self.is_flat = True
         self.points = points
         self.method = method
-        self.is_natively_1D = is_1D
+        self.is_orthogonal= is_orthogonal
         self.is_in_union = False
 
     def add_to_union(self):
@@ -71,7 +71,7 @@ class Select(Shape):
         return [self.axis]
 
     def polytope(self):
-        return [ConvexPolytope([self.axis], [[v]], self.method, is_1D=True) for v in self.values]
+        return [ConvexPolytope([self.axis], [[v]], self.method, is_orthogonal=True) for v in self.values]
 
     def __repr__(self):
         return f"Select in {self.axis} with points {self.values}"
@@ -90,7 +90,7 @@ class Point(Shape):
         for i in range(len(axes)):
             polytope_points = [v[i] for v in self.values]
             self.polytopes.extend(
-                [ConvexPolytope([axes[i]], [[point]], self.method, is_1D=True) for point in polytope_points]
+                [ConvexPolytope([axes[i]], [[point]], self.method, is_orthogonal=True) for point in polytope_points]
             )
 
     def axes(self):
@@ -117,7 +117,7 @@ class Span(Shape):
         return [self.axis]
 
     def polytope(self):
-        return [ConvexPolytope([self.axis], [[self.lower], [self.upper]], is_1D=True)]
+        return [ConvexPolytope([self.axis], [[self.lower], [self.upper]], is_orthogonal=True)]
 
     def __repr__(self):
         return f"Span in {self.axis} with range from {self.lower} to {self.upper}"
@@ -168,7 +168,7 @@ class Box(Shape):
         return self._axes
 
     def polytope(self):
-        return [ConvexPolytope(self.axes(), self.vertices, is_1D=True)]
+        return [ConvexPolytope(self.axes(), self.vertices, is_orthogonal=True)]
 
     def __repr__(self):
         return f"Box in {self._axes} with with lower corner {self._lower_corner} and upper corner{self._upper_corner}"
