@@ -12,7 +12,7 @@ from polytope.shapes import Disk, Select
 
 class TestRegularGrid:
     def setup_method(self, method):
-        from polytope.datacube.backends.fdb import FDBDatacube
+        import pygribjump as gj
 
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/era5-levels-members.grib"
         download_test_data(nexus_url, "era5-levels-members.grib")
@@ -36,29 +36,11 @@ class TestRegularGrid:
         }
         self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "step": "0"}
         self.datacube_options = {"identical structure after": "number"}
-        self.fdbdatacube = FDBDatacube(
-            self.config,
-            axis_options=self.options,
-            datacube_options=self.datacube_options,
-            compressed_axes_options=[
-                "longitude",
-                "latitude",
-                "levtype",
-                "step",
-                "date",
-                "domain",
-                "expver",
-                "param",
-                "class",
-                "stream",
-                "type",
-                "number",
-                "levelist",
-            ],
-        )
+        self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
+            config=self.config,
             engine=self.slicer,
             axis_options=self.options,
             datacube_options=self.datacube_options,

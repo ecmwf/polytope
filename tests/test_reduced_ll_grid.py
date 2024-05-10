@@ -12,7 +12,7 @@ from polytope.shapes import Box, Select
 
 class TestReducedLatLonGrid:
     def setup_method(self, method):
-        from polytope.datacube.backends.fdb import FDBDatacube
+        import pygribjump as gj
 
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/wave.grib"
         download_test_data(nexus_url, "wave.grib")
@@ -34,29 +34,12 @@ class TestReducedLatLonGrid:
             ]
         }
         self.config = {"class": "od", "stream": "wave"}
-        self.fdbdatacube = FDBDatacube(
-            self.config,
-            axis_options=self.options,
-            compressed_axes_options=[
-                "longitude",
-                "latitude",
-                "levtype",
-                "step",
-                "date",
-                "domain",
-                "expver",
-                "param",
-                "class",
-                "stream",
-                "type",
-                "direction",
-                "frequency",
-            ],
-        )
+        self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
             engine=self.slicer,
+            config=self.config,
             axis_options=self.options,
             compressed_axes_options=[
                 "longitude",

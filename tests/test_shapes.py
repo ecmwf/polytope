@@ -48,7 +48,7 @@ class TestSlicing3DXarrayDatacube:
 
     @pytest.mark.fdb
     def test_all_mapper_cyclic(self):
-        from polytope.datacube.backends.fdb import FDBDatacube
+        import pygribjump as gj
 
         self.options = {
             "config": [
@@ -69,9 +69,11 @@ class TestSlicing3DXarrayDatacube:
             ]
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "step": "11"}
-        self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
+        self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(
+            datacube=self.fdbdatacube, config=self.config, engine=self.slicer, axis_options=self.options
+        )
 
         request = Request(
             Select("step", [11]),

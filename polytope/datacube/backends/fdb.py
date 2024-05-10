@@ -2,14 +2,12 @@ import logging
 from copy import deepcopy
 from itertools import product
 
-import pygribjump as pygj
-
 from ...utility.geometry import nearest_pt
 from .datacube import Datacube, TensorIndexTree
 
 
 class FDBDatacube(Datacube):
-    def __init__(self, config=None, axis_options=None, datacube_options=None, compressed_axes_options=[]):
+    def __init__(self, gj, config=None, axis_options=None, datacube_options=None, compressed_axes_options=[]):
         if config is None:
             config = {}
 
@@ -23,7 +21,8 @@ class FDBDatacube(Datacube):
         partial_request = config
         # Find values in the level 3 FDB datacube
 
-        self.gj = pygj.GribJump()
+        # self.gj = pygj.GribJump()
+        self.gj = gj
         self.fdb_coordinates = self.gj.axes(partial_request)
 
         logging.info("Axes returned from GribJump are: " + str(self.fdb_coordinates))

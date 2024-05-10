@@ -3,6 +3,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, List, Literal, Optional, Union
 
+import pygribjump as pygj
 import xarray as xr
 from conflator import ConfigModel, Conflator
 from pydantic import ConfigDict
@@ -200,11 +201,15 @@ class Datacube(ABC):
         return axis_config
 
     @staticmethod
-    def create(datacube, axis_options: dict, datacube_options={}, compressed_axes_options=[]):
+    def create(datacube, config={}, axis_options={}, datacube_options={}, compressed_axes_options=[]):
+        # TODO: get the configs as None for pre-determined value and change them to empty dictionary inside the function
         if isinstance(datacube, (xr.core.dataarray.DataArray, xr.core.dataset.Dataset)):
             from .xarray import XArrayDatacube
 
             xadatacube = XArrayDatacube(datacube, axis_options, datacube_options, compressed_axes_options)
             return xadatacube
-        else:
-            return datacube
+        if isinstance(datacube, pygj.GribJump):
+            from .fdb import FDBDatacube
+
+            fdbdatacube = FDBDatacube(datacube, config, axis_options, datacube_options, compressed_axes_options)
+            return fdbdatacube

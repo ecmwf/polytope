@@ -8,7 +8,7 @@ from polytope.shapes import Point, Select
 
 class TestSlicingFDBDatacube:
     def setup_method(self, method):
-        from polytope.datacube.backends.fdb import FDBDatacube
+        import pygribjump as gj
 
         # Create a dataarray with 3 labelled axes using different index types
         self.options = {
@@ -36,27 +36,12 @@ class TestSlicingFDBDatacube:
             ]
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
-        self.fdbdatacube = FDBDatacube(
-            self.config,
-            axis_options=self.options,
-            compressed_axes_options=[
-                "longitude",
-                "latitude",
-                "levtype",
-                "step",
-                "date",
-                "domain",
-                "expver",
-                "param",
-                "class",
-                "stream",
-                "type",
-            ],
-        )
+        self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
             engine=self.slicer,
+            config=self.config,
             axis_options=self.options,
             compressed_axes_options=[
                 "longitude",
