@@ -126,6 +126,7 @@ class TestSlicingFDBDatacube:
     @pytest.mark.fdb
     def test_fdb_datacube_point_step_not_compressed(self):
         from polytope.datacube.backends.fdb import FDBDatacube
+
         self.fdbdatacube = FDBDatacube(
             self.config,
             axis_options=self.options,
