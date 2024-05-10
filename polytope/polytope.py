@@ -2,6 +2,7 @@ from typing import List
 
 from .shapes import ConvexPolytope
 from .utility.exceptions import AxisOverdefinedError
+from .options import PolytopeOptions
 
 
 class Request:
@@ -37,16 +38,14 @@ class Request:
 
 
 class Polytope:
-    def __init__(
-        self, datacube, engine=None, config=None, axis_options=None, compressed_axes_options=[]
-    ):
+    def __init__(self, datacube, engine=None, options=None):
         from .datacube import Datacube
         from .engine import Engine
 
-        if axis_options is None:
-            axis_options = {}
-        if config is None:
-            config = {}
+        if options is None:
+            options = {}
+
+        axis_options, compressed_axes_options, config = PolytopeOptions.get_polytope_options(options)
 
         self.datacube = Datacube.create(datacube, config, axis_options, compressed_axes_options)
         self.engine = engine if engine is not None else Engine.default()

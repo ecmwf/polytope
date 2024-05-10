@@ -46,9 +46,9 @@ class PolytopeOptions(ABC):
         path_subclasses_union = Union[str, int, float]
 
         class Config(ConfigModel):
-            axis_config: list[AxisConfig] = []
-            compressed_axes_config: list[str] = []
-            pre_path: Optional[Dict[str, path_subclasses_union]]
+            axis_config: list[AxisConfig]
+            compressed_axes_config: List[str] = [""]
+            pre_path: Optional[Dict[str, path_subclasses_union]] = {}
 
         parser = argparse.ArgumentParser(allow_abbrev=False)
         config_options = Conflator(app_name="polytope", model=Config, cli=False, argparser=parser).load()
