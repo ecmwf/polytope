@@ -169,9 +169,7 @@ class HullSlicer(Engine):
                 )
         del node["unsliced_polytopes"]
 
-    def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
-        # Determine list of axes to compress
-
+    def find_compressed_axes(self, datacube, polytopes):
         # First determine compressable axes from input polytopes
         compressable_axes = []
         for polytope in polytopes:
@@ -185,9 +183,9 @@ class HullSlicer(Engine):
             if compressed_axis in datacube.compressed_axes:
                 self.compressed_axes.append(compressed_axis)
 
-        print(datacube.compressed_axes)
-
-        print(self.compressed_axes)
+    def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
+        # Determine list of axes to compress
+        self.find_compressed_axes(datacube, polytopes)
 
         # Convert the polytope points to float type to support triangulation and interpolation
         for p in polytopes:

@@ -122,3 +122,56 @@ class TestSlicingFDBDatacube:
         result.pprint()
         assert len(result.leaves) == 6
         assert len(result.leaves[0].result) == 2
+
+    @pytest.mark.fdb
+    def test_fdb_datacube_point_step_not_compressed(self):
+        from polytope.datacube.backends.fdb import FDBDatacube
+        self.fdbdatacube = FDBDatacube(
+            self.config,
+            axis_options=self.options,
+            compressed_axes_options=[
+                "longitude",
+                "latitude",
+                "levtype",
+                "date",
+                "domain",
+                "expver",
+                "param",
+                "class",
+                "stream",
+                "type",
+            ],
+        )
+        self.slicer = HullSlicer()
+        self.API = Polytope(
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            axis_options=self.options,
+            compressed_axes_options=[
+                "longitude",
+                "latitude",
+                "levtype",
+                "date",
+                "domain",
+                "expver",
+                "param",
+                "class",
+                "stream",
+                "type",
+            ],
+        )
+        request = Request(
+            Span("step", 0, 1),
+            Select("levtype", ["sfc"]),
+            Select("date", [pd.Timestamp("20240103T0000")]),
+            Select("domain", ["g"]),
+            Select("expver", ["0001"]),
+            Select("param", ["167"]),
+            Select("class", ["od"]),
+            Select("stream", ["oper"]),
+            Select("type", ["fc"]),
+            Point(["latitude", "longitude"], [[0.035149384216, 0.0]], method="surrounding"),
+        )
+        result = self.API.retrieve(request)
+        result.pprint()
+        assert len(result.leaves) == 12
