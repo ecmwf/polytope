@@ -19,14 +19,11 @@ from ..transformations.datacube_transformations import (
 
 
 class Datacube(ABC):
-    def __init__(self, axis_options=None, datacube_options=None, compressed_axes_options=[]):
+    def __init__(self, axis_options=None, compressed_axes_options=[]):
         if axis_options is None:
             self.axis_options = {}
         else:
             self.axis_options = axis_options
-        if datacube_options is None:
-            datacube_options = {}
-        self.axis_with_identical_structure_after = datacube_options.get("identical structure after")
         self.coupled_axes = []
         self.axis_counter = 0
         self.complete_axes = []
@@ -37,7 +34,6 @@ class Datacube(ABC):
         self._axes = None
         self.transformed_axes = []
         self.compressed_grid_axes = []
-        # self.compressed_axes = []
         self.merged_axes = []
         self.unwanted_path = {}
         self.compressed_axes = compressed_axes_options
@@ -201,15 +197,15 @@ class Datacube(ABC):
         return axis_config
 
     @staticmethod
-    def create(datacube, config={}, axis_options={}, datacube_options={}, compressed_axes_options=[]):
+    def create(datacube, config={}, axis_options={}, compressed_axes_options=[]):
         # TODO: get the configs as None for pre-determined value and change them to empty dictionary inside the function
         if isinstance(datacube, (xr.core.dataarray.DataArray, xr.core.dataset.Dataset)):
             from .xarray import XArrayDatacube
 
-            xadatacube = XArrayDatacube(datacube, axis_options, datacube_options, compressed_axes_options)
+            xadatacube = XArrayDatacube(datacube, axis_options, compressed_axes_options)
             return xadatacube
         if isinstance(datacube, pygj.GribJump):
             from .fdb import FDBDatacube
 
-            fdbdatacube = FDBDatacube(datacube, config, axis_options, datacube_options, compressed_axes_options)
+            fdbdatacube = FDBDatacube(datacube, config, axis_options, compressed_axes_options)
             return fdbdatacube

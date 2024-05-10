@@ -35,7 +35,6 @@ class TestRegularGrid:
             ]
         }
         self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "step": "0"}
-        self.datacube_options = {"identical structure after": "number"}
         self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
         self.API = Polytope(
@@ -43,7 +42,6 @@ class TestRegularGrid:
             config=self.config,
             engine=self.slicer,
             axis_options=self.options,
-            datacube_options=self.datacube_options,
             compressed_axes_options=[
                 "longitude",
                 "latitude",
