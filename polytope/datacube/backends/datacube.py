@@ -201,8 +201,6 @@ class Datacube(ABC):
 
     @staticmethod
     def create(datacube, axis_options: dict, datacube_options={}, compressed_axes_options=[]):
-        print("INSDEI DATACUBE CREATE")
-        print(compressed_axes_options)
         if isinstance(datacube, (xr.core.dataarray.DataArray, xr.core.dataset.Dataset)):
             from .xarray import XArrayDatacube
 
