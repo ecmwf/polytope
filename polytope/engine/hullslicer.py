@@ -178,7 +178,8 @@ class HullSlicer(Engine):
                     # if ax not in self.datacube.merged_axes:
                     if True:
                         compressable_axes.append(ax)
-        # Cross check this list with list of compressable axis from datacube (should not include any merged or coupled axes)
+        # Cross check this list with list of compressable axis from datacube
+        # (should not include any merged or coupled axes)
         for compressed_axis in compressable_axes:
             if compressed_axis in datacube.compressed_axes:
                 self.compressed_axes.append(compressed_axis)
