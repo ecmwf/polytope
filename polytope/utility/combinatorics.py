@@ -8,6 +8,8 @@ from .exceptions import AxisNotFoundError, AxisOverdefinedError, AxisUnderdefine
 
 def group(polytopes: List[ConvexPolytope]):
     # Group polytopes into polytopes which share the same axes
+    # If the polytopes are orthogonal and not in a union, we first group them together into an additional list
+    # so we can treat them together as a single object
     groups = {}
     for p in polytopes:
         if p.is_orthogonal and not p.is_in_union:
