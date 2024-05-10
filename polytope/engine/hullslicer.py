@@ -36,7 +36,7 @@ class HullSlicer(Engine):
         # Remove duplicate points
         unique(p.points)
 
-    def _build_unsliceable_child(self, polytope, ax, node, datacube, lower, next_nodes, slice_axis_idx):
+    def _build_unsliceable_child(self, polytope, ax, node, datacube, lowers, next_nodes, slice_axis_idx):
         if not polytope.is_flat:
             raise UnsliceableShapeError(ax)
         path = node.flatten()
@@ -48,22 +48,26 @@ class HullSlicer(Engine):
                 flattened_tuple = (datacube.coupled_axes[0][0], path.get(datacube.coupled_axes[0][0], None))
                 path = {flattened_tuple[0]: flattened_tuple[1]}
 
-        if self.axis_values_between.get((flattened_tuple, ax.name, lower), None) is None:
-            self.axis_values_between[(flattened_tuple, ax.name, lower)] = datacube.has_index(path, ax, lower)
-        datacube_has_index = self.axis_values_between[(flattened_tuple, ax.name, lower)]
+        for i, lower in enumerate(lowers):
+            if self.axis_values_between.get((flattened_tuple, ax.name, lower), None) is None:
+                self.axis_values_between[(flattened_tuple, ax.name, lower)] = datacube.has_index(path, ax, lower)
+            datacube_has_index = self.axis_values_between[(flattened_tuple, ax.name, lower)]
 
-        if datacube_has_index:
-            (child, next_nodes) = node.create_child(ax, lower, next_nodes)
-            child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
-            child["unsliced_polytopes"].remove(polytope)
-            next_nodes.append(child)
-        else:
-            # raise a value not found error
-            errmsg = (
-                f"Datacube does not have expected index {lower} of type {type(lower)}"
-                f"on {ax.name} along the path {path}"
-            )
-            raise ValueError(errmsg)
+            if datacube_has_index:
+                if i == 0:
+                    (child, next_nodes) = node.create_child(ax, lower, next_nodes)
+                    child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
+                    child["unsliced_polytopes"].remove(polytope)
+                    next_nodes.append(child)
+                else:
+                    child.add_value(lower)
+            else:
+                # raise a value not found error
+                errmsg = (
+                    f"Datacube does not have expected index {lower} of type {type(lower)}"
+                    f"on {ax.name} along the path {path}"
+                )
+                raise ValueError(errmsg)
 
     def find_values_between(self, polytope, ax, node, datacube, lower, upper):
         tol = ax.tol
@@ -142,12 +146,13 @@ class HullSlicer(Engine):
                     # here, first check if the axis is an unsliceable axis and directly build node if it is
                     # NOTE: we should have already created the ax_is_unsliceable cache before
                     if self.ax_is_unsliceable[ax.name]:
-                        self._build_unsliceable_child(polytope, ax, node, datacube, lower, next_nodes, slice_axis_idx)
+                        self._build_unsliceable_child(polytope, ax, node, datacube, [lower], next_nodes, slice_axis_idx)
                     else:
                         values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
                         self._build_sliceable_child(polytope, ax, node, datacube, values, next_nodes, slice_axis_idx)
         else:
             all_values = []
+            all_lowers = []
             first_polytope = False
             first_slice_axis_idx = False
             for polytope in node["unsliced_polytopes"]:
@@ -159,14 +164,19 @@ class HullSlicer(Engine):
                     if not first_slice_axis_idx:
                         first_slice_axis_idx = slice_axis_idx
                     if self.ax_is_unsliceable[ax.name]:
-                        self._build_unsliceable_child(polytope, ax, node, datacube, lower, next_nodes, slice_axis_idx)
+                        all_lowers.append(lower)
                     else:
                         values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
                         all_values.extend(values)
-            if not self.ax_is_unsliceable[ax.name]:
+            if self.ax_is_unsliceable[ax.name]:
+                self._build_unsliceable_child(
+                    first_polytope, ax, node, datacube, all_lowers, next_nodes, first_slice_axis_idx
+                )
+            else:
                 self._build_sliceable_child(
                     first_polytope, ax, node, datacube, all_values, next_nodes, first_slice_axis_idx
                 )
+
         del node["unsliced_polytopes"]
 
     def find_compressed_axes(self, datacube, polytopes):
@@ -175,9 +185,7 @@ class HullSlicer(Engine):
         for polytope in polytopes:
             if polytope.is_orthogonal:
                 for ax in polytope.axes():
-                    # if ax not in self.datacube.merged_axes:
-                    if True:
-                        compressable_axes.append(ax)
+                    compressable_axes.append(ax)
         # Cross check this list with list of compressable axis from datacube
         # (should not include any merged or coupled axes)
         for compressed_axis in compressable_axes:
