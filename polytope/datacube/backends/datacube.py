@@ -1,12 +1,9 @@
-import argparse
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, List, Literal, Optional, Union
+from typing import Any
 
 import pygribjump as pygj
 import xarray as xr
-from conflator import ConfigModel, Conflator
-from pydantic import ConfigDict
 
 from ...utility.combinatorics import validate_axes
 from ..datacube_axis import DatacubeAxis
@@ -149,53 +146,6 @@ class Datacube(ABC):
             value = path[key]
             path[key] = self._axes[key].remap([value, value])[0][0]
         return path
-
-    # @staticmethod
-    # def create_axes_config(axis_options):
-    #     # class TransformationConfig(ConfigModel):
-    #     #     model_config = ConfigDict(extra="forbid")
-    #     #     name: str = ""
-
-    #     # class CyclicConfig(TransformationConfig):
-    #     #     name: Literal["cyclic"]
-    #     #     range: List[float] = [0]
-
-    #     # class MapperConfig(TransformationConfig):
-    #     #     name: Literal["mapper"]
-    #     #     type: str = ""
-    #     #     resolution: Union[int, List[int]] = 0
-    #     #     axes: List[str] = [""]
-    #     #     local: Optional[List[float]] = None
-
-    #     # class ReverseConfig(TransformationConfig):
-    #     #     name: Literal["reverse"]
-    #     #     is_reverse: bool = False
-
-    #     # class TypeChangeConfig(TransformationConfig):
-    #     #     name: Literal["type_change"]
-    #     #     type: str = "int"
-
-    #     # class MergeConfig(TransformationConfig):
-    #     #     name: Literal["merge"]
-    #     #     other_axis: str = ""
-    #     #     linkers: List[str] = [""]
-
-    #     # action_subclasses_union = Union[CyclicConfig, MapperConfig, ReverseConfig, TypeChangeConfig, MergeConfig]
-
-    #     # class AxisConfig(ConfigModel):
-    #     #     axis_name: str = ""
-    #     #     transformations: list[action_subclasses_union]
-
-    #     # class Config(ConfigModel):
-    #     #     config: list[AxisConfig] = []
-
-    #     # parser = argparse.ArgumentParser(allow_abbrev=False)
-    #     # axis_config = Conflator(app_name="polytope", model=Config, cli=False, argparser=parser).load()
-    #     # if axis_options.get("config"):
-    #     #     axis_config = Config(config=axis_options.get("config"))
-
-    #     # return axis_config
-    #     return axis_options
 
     @staticmethod
     def create(datacube, config={}, axis_options={}, compressed_axes_options=[]):

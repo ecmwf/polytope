@@ -35,7 +35,7 @@ class TestMultipleTransformations:
                     ],
                 },
             ],
-            "compressed_axes_config": ["longitude", "latitude", "step", "date"]
+            "compressed_axes_config": ["longitude", "latitude", "step", "date"],
         }
         self.slicer = HullSlicer()
         self.API = Polytope(

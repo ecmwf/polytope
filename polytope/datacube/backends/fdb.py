@@ -21,7 +21,6 @@ class FDBDatacube(Datacube):
         partial_request = config
         # Find values in the level 3 FDB datacube
 
-        # self.gj = pygj.GribJump()
         self.gj = gj
         self.fdb_coordinates = self.gj.axes(partial_request)
 
@@ -34,7 +33,7 @@ class FDBDatacube(Datacube):
             for opt in self.axis_options:
                 if opt.axis_name == name:
                     options = opt
-            # options = axis_options.get(name, None)
+
             self._check_and_add_axes(options, name, values)
             self.treated_axes.append(name)
             self.complete_axes.append(name)

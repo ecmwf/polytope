@@ -23,7 +23,7 @@ class TestSlicing3DXarrayDatacube:
         )
         self.options = {
             "axis_config": [{"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]}],
-            "compressed_axes_config": ["date", "step", "level", "longitude"]
+            "compressed_axes_config": ["date", "step", "level", "longitude"],
         }
         self.slicer = HullSlicer()
         self.API = Polytope(
@@ -67,13 +67,11 @@ class TestSlicing3DXarrayDatacube:
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
             ],
-            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "step": "11"}
+            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "step": "11"},
         }
         self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
-        self.API = Polytope(
-            datacube=self.fdbdatacube, engine=self.slicer, options=self.options
-        )
+        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, options=self.options)
 
         request = Request(
             Select("step", [11]),

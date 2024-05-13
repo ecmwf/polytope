@@ -44,46 +44,14 @@ class TestSlicingFDBDatacube:
                 "stream",
                 "type",
             ],
-            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
+            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
         }
-        # self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
-        # self.fdbdatacube = FDBDatacube(
-        #     self.config,
-        #     axis_options=self.options,
-        #     compressed_axes_options=[
-        #         "longitude",
-        #         "latitude",
-        #         "levtype",
-        #         "step",
-        #         "date",
-        #         "domain",
-        #         "expver",
-        #         "param",
-        #         "class",
-        #         "stream",
-        #         "type",
-        #     ],
-        # )
         self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
             engine=self.slicer,
-            # config=self.config,
             options=self.options,
-            # compressed_axes_options=[
-            #     "longitude",
-            #     "latitude",
-            #     "levtype",
-            #     "step",
-            #     "date",
-            #     "domain",
-            #     "expver",
-            #     "param",
-            #     "class",
-            #     "stream",
-            #     "type",
-            # ],
         )
 
     # Testing different shapes

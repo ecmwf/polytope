@@ -25,7 +25,7 @@ class TestOctahedralGrid:
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
             ],
-            "compressed_axes_config": ["longitude", "latitude", "step", "time", "isobaricInhPa", "valid_time"]
+            "compressed_axes_config": ["longitude", "latitude", "step", "time", "isobaricInhPa", "valid_time"],
         }
         self.slicer = HullSlicer()
         self.API = Polytope(

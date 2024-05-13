@@ -1,12 +1,12 @@
-from conflator import ConfigModel, Conflator
 import argparse
-from pydantic import ConfigDict
 from abc import ABC
-from typing import Literal, List, Union, Optional, Dict
+from typing import Dict, List, Literal, Optional, Union
+
+from conflator import ConfigModel, Conflator
+from pydantic import ConfigDict
 
 
 class PolytopeOptions(ABC):
-
     @staticmethod
     def get_polytope_options(options):
         class TransformationConfig(ConfigModel):
@@ -52,30 +52,13 @@ class PolytopeOptions(ABC):
 
         parser = argparse.ArgumentParser(allow_abbrev=False)
         config_options = Conflator(app_name="polytope", model=Config, cli=False, argparser=parser).load()
-        config_options = Config(axis_config=options.get("axis_config", []), compressed_axes_config=options.get("compressed_axes_config", [""]), pre_path=options.get("pre_path", {}))
+        config_options = Config(
+            axis_config=options.get("axis_config", []),
+            compressed_axes_config=options.get("compressed_axes_config", [""]),
+            pre_path=options.get("pre_path", {}),
+        )
         axis_config = config_options.axis_config
         compressed_axes_config = config_options.compressed_axes_config
         pre_path = config_options.pre_path
-        # config_options = Conflator(app_name="polytope", model=Config, cli=False, argparser=parser).load()
-        # axis_config = None
-        # compressed_axes_config = None
-        # pre_path = None
-        # if options.get("axis_config"):
-        #     config_options = Config(axis_config=options.get("axis_config"), compressed_axes_config=options.get("compressed_axes_config", [""]), pre_path=options.get("pre_path", {}))
-        #     axis_config = config_options.axis_config
-        #     compressed_axes_config = config_options.compressed_axes_config
-        #     pre_path = config_options.pre_path
 
         return (axis_config, compressed_axes_config, pre_path)
-
-    @staticmethod
-    def get_axis_config(options):
-        return PolytopeOptions.get_polytope_options(options)[0]
-
-    @staticmethod
-    def get_compressed_axes_config(options):
-        return PolytopeOptions.get_polytope_options(options)[1]
-
-    @staticmethod
-    def get_pre_path(options):
-        return PolytopeOptions.get_polytope_options(options)[2]

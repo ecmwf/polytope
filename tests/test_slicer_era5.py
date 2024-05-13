@@ -16,8 +16,10 @@ class TestSlicingEra5Data:
         ds = data.from_source("file", "./tests/data/era5-levels-members.grib")
         array = ds.to_xarray().isel(step=0).t
         self.slicer = HullSlicer()
-        options = {"axis_config": [{"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]}],
-                   "compressed_axes_config": ["number", "time", "latitude", "longitude", "step", "isobaricInhPa"]}
+        options = {
+            "axis_config": [{"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]}],
+            "compressed_axes_config": ["number", "time", "latitude", "longitude", "step", "isobaricInhPa"],
+        }
         self.API = Polytope(
             datacube=array,
             engine=self.slicer,

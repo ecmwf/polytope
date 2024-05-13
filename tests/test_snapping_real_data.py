@@ -24,7 +24,7 @@ class TestSlicingEra5Data:
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
             ],
-            "compressed_axes_config": ["longitude", "latitude", "step", "time", "number", "isobaricInhPa"]
+            "compressed_axes_config": ["longitude", "latitude", "step", "time", "number", "isobaricInhPa"],
         }
         self.API = Polytope(
             datacube=array,

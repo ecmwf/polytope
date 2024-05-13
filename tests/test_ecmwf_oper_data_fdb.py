@@ -40,29 +40,14 @@ class TestSlicingFDBDatacube:
                 "stream",
                 "type",
             ],
-            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "type": "fc", "stream": "oper"}
+            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "type": "fc", "stream": "oper"},
         }
-        # self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "type": "fc", "stream": "oper"}
         self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
             engine=self.slicer,
-            # config=self.config,
             options=self.options,
-            # compressed_axes_options=[
-            #     "longitude",
-            #     "latitude",
-            #     "levtype",
-            #     "step",
-            #     "date",
-            #     "domain",
-            #     "expver",
-            #     "param",
-            #     "class",
-            #     "stream",
-            #     "type",
-            # ],
         )
 
     # Testing different shapes
@@ -156,25 +141,12 @@ class TestSlicingFDBDatacube:
                 "stream",
                 "type",
             ],
-            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "type": "fc", "stream": "oper"}
+            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "type": "fc", "stream": "oper"},
         }
         self.API = Polytope(
             datacube=self.fdbdatacube,
             engine=self.slicer,
-            # config=self.config,
             options=self.options,
-            # compressed_axes_options=[
-            #     "longitude",
-            #     "latitude",
-            #     "levtype",
-            #     "date",
-            #     "domain",
-            #     "expver",
-            #     "param",
-            #     "class",
-            #     "stream",
-            #     "type",
-            # ],
         )
         request = Request(
             Span("step", 0, 1),

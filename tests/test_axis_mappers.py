@@ -1,5 +1,4 @@
 import pandas as pd
-from polytope.options import PolytopeOptions
 
 from polytope.datacube.datacube_axis import (
     DatacubeAxisCyclic,
@@ -8,6 +7,7 @@ from polytope.datacube.datacube_axis import (
     PandasTimedeltaDatacubeAxis,
     PandasTimestampDatacubeAxis,
 )
+from polytope.options import PolytopeOptions
 
 
 class TestAxisMappers:

@@ -17,8 +17,10 @@ class TestTypeChangeTransformation:
             },
         )
         self.array = array
-        options = {"axis_config": [{"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]}],
-                   "compressed_axes_config": ["step"]}
+        options = {
+            "axis_config": [{"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]}],
+            "compressed_axes_config": ["step"],
+        }
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 

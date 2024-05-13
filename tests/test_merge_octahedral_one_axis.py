@@ -26,7 +26,7 @@ class TestSlicingMultipleTransformationsOneAxis:
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
             ],
-            "compressed_axes_config": ["longitude", "latitude", "surface", "step", "time", "valid_time", "number"]
+            "compressed_axes_config": ["longitude", "latitude", "surface", "step", "time", "valid_time", "number"],
         }
         self.slicer = HullSlicer()
         self.API = Polytope(
