@@ -16,7 +16,7 @@ class TestSlicingMultipleTransformationsOneAxis:
         self.latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
         self.latlon_array = self.latlon_array.t2m
         self.options = {
-            "config": [
+            "axis_config": [
                 {
                     "axis_name": "values",
                     "transformations": [
@@ -25,14 +25,14 @@ class TestSlicingMultipleTransformationsOneAxis:
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
-            ]
+            ],
+            "compressed_axes_config": ["longitude", "latitude", "surface", "step", "time", "valid_time", "number"]
         }
         self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.latlon_array,
             engine=self.slicer,
-            axis_options=self.options,
-            compressed_axes_options=["longitude", "latitude", "surface", "step", "time", "valid_time", "number"],
+            options=self.options,
         )
 
     @pytest.mark.internet

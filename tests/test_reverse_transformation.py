@@ -16,9 +16,10 @@ class TestSlicingReverseTransformation:
                 "lat": [4, 3, 2, 1],
             },
         )
-        options = {"config": [{"axis_name": "lat", "transformations": [{"name": "reverse", "is_reverse": True}]}]}
+        options = {"axis_config": [{"axis_name": "lat", "transformations": [{"name": "reverse", "is_reverse": True}]}],
+                   "compressed_axes_config": ["lat"]}
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options, compressed_axes_options=["lat"])
+        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 
     def test_reverse_transformation(self):
         request = Request(Select("lat", [1, 2, 3]))

@@ -46,20 +46,25 @@ class PolytopeOptions(ABC):
         path_subclasses_union = Union[str, int, float]
 
         class Config(ConfigModel):
-            axis_config: list[AxisConfig]
+            axis_config: List[AxisConfig] = []
             compressed_axes_config: List[str] = [""]
             pre_path: Optional[Dict[str, path_subclasses_union]] = {}
 
         parser = argparse.ArgumentParser(allow_abbrev=False)
         config_options = Conflator(app_name="polytope", model=Config, cli=False, argparser=parser).load()
-        axis_config = None
-        compressed_axes_config = None
-        pre_path = None
-        if options.get("axis_config") or options.get("compressed_axes_config") or options.get("pre_path"):
-            config_options = Config(config=options)
-            axis_config = config_options.axis_config
-            compressed_axes_config = config_options.compressed_axes_config
-            pre_path = config_options.pre_path
+        config_options = Config(axis_config=options.get("axis_config", []), compressed_axes_config=options.get("compressed_axes_config", [""]), pre_path=options.get("pre_path", {}))
+        axis_config = config_options.axis_config
+        compressed_axes_config = config_options.compressed_axes_config
+        pre_path = config_options.pre_path
+        # config_options = Conflator(app_name="polytope", model=Config, cli=False, argparser=parser).load()
+        # axis_config = None
+        # compressed_axes_config = None
+        # pre_path = None
+        # if options.get("axis_config"):
+        #     config_options = Config(axis_config=options.get("axis_config"), compressed_axes_config=options.get("compressed_axes_config", [""]), pre_path=options.get("pre_path", {}))
+        #     axis_config = config_options.axis_config
+        #     compressed_axes_config = config_options.compressed_axes_config
+        #     pre_path = config_options.pre_path
 
         return (axis_config, compressed_axes_config, pre_path)
 

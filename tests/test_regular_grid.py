@@ -17,7 +17,7 @@ class TestRegularGrid:
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/era5-levels-members.grib"
         download_test_data(nexus_url, "era5-levels-members.grib")
         self.options = {
-            "config": [
+            "axis_config": [
                 {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
                 {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
                 {
@@ -32,17 +32,9 @@ class TestRegularGrid:
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
-            ]
-        }
-        self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "step": "0"}
-        self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
-        self.API = Polytope(
-            datacube=self.fdbdatacube,
-            config=self.config,
-            engine=self.slicer,
-            axis_options=self.options,
-            compressed_axes_options=[
+            ],
+            "pre_path": {"class": "ea", "expver": "0001", "levtype": "pl", "step": "0"},
+            "compressed_axes_config": [
                 "longitude",
                 "latitude",
                 "levtype",
@@ -57,6 +49,13 @@ class TestRegularGrid:
                 "number",
                 "levelist",
             ],
+        }
+        self.fdbdatacube = gj.GribJump()
+        self.slicer = HullSlicer()
+        self.API = Polytope(
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            options=self.options,
         )
 
     @pytest.mark.fdb

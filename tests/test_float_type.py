@@ -20,7 +20,8 @@ class TestFloatType:
             },
         )
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer, compressed_axes_options=["lat", "long", "alt"])
+        options = {"compressed_axes_config": ["lat", "long", "alt"]}
+        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 
     def test_slicing_span(self):
         request = Request(Span("lat", 4.1, 4.3), Select("long", [4.1]), Select("alt", [4.1]))

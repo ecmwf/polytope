@@ -22,7 +22,7 @@ class TestMultipleTransformations:
         )
 
         self.options = {
-            "config": [
+            "axis_config": [
                 {"axis_name": "step", "transformations": [{"name": "cyclic", "type": [0, 2]}]},
                 {
                     "axis_name": "date",
@@ -34,14 +34,14 @@ class TestMultipleTransformations:
                         {"name": "mapper", "type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
                     ],
                 },
-            ]
+            ],
+            "compressed_axes_config": ["longitude", "latitude", "step", "date"]
         }
         self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.array,
             engine=self.slicer,
-            axis_options=self.options,
-            compressed_axes_options=["longitude", "latitude", "step", "date"],
+            options=self.options,
         )
 
     @pytest.mark.skip(reason="Datacube not formatted right.")

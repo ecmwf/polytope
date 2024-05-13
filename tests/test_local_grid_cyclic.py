@@ -12,7 +12,7 @@ class TestSlicingFDBDatacube:
 
         # Create a dataarray with 3 labelled axes using different index types
         self.options = {
-            "config": [
+            "axis_config": [
                 {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
                 {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
                 {
@@ -33,17 +33,9 @@ class TestSlicingFDBDatacube:
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [-180, 180]}]},
-            ]
-        }
-        self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
-        self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
-        self.API = Polytope(
-            datacube=self.fdbdatacube,
-            engine=self.slicer,
-            config=self.config,
-            axis_options=self.options,
-            compressed_axes_options=[
+            ],
+            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
+            "compressed_axes_config": [
                 "longitude",
                 "latitude",
                 "levtype",
@@ -56,6 +48,13 @@ class TestSlicingFDBDatacube:
                 "stream",
                 "type",
             ],
+        }
+        self.fdbdatacube = gj.GribJump()
+        self.slicer = HullSlicer()
+        self.API = Polytope(
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            options=self.options,
         )
 
     # Testing different shapes

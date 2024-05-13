@@ -18,7 +18,7 @@ class TestRegularGrid:
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/era5-levels-members.grib"
         download_test_data(nexus_url, "era5-levels-members.grib")
         self.options = {
-            "config": [
+            "axis_config": [
                 {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
                 {
                     "axis_name": "date",
@@ -32,17 +32,8 @@ class TestRegularGrid:
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
-            ]
-        }
-        self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper", "type": "fc"}
-        self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
-        self.API = Polytope(
-            datacube=self.fdbdatacube,
-            config=self.config,
-            engine=self.slicer,
-            axis_options=self.options,
-            compressed_axes_options=[
+            ],
+            "compressed_axes_options": [
                 "longitude",
                 "latitude",
                 "levtype",
@@ -55,6 +46,29 @@ class TestRegularGrid:
                 "stream",
                 "type",
             ],
+            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper", "type": "fc"}
+        }
+        # self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper", "type": "fc"}
+        self.fdbdatacube = gj.GribJump()
+        self.slicer = HullSlicer()
+        self.API = Polytope(
+            datacube=self.fdbdatacube,
+            # config=self.config,
+            engine=self.slicer,
+            options=self.options,
+            # compressed_axes_options=[
+            #     "longitude",
+            #     "latitude",
+            #     "levtype",
+            #     "step",
+            #     "date",
+            #     "domain",
+            #     "expver",
+            #     "param",
+            #     "class",
+            #     "stream",
+            #     "type",
+            # ],
         )
 
     def find_nearest_latlon(self, grib_file, target_lat, target_lon):
