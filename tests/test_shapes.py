@@ -22,14 +22,14 @@ class TestSlicing3DXarrayDatacube:
             },
         )
         self.options = {
-            "config": [{"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]}]
+            "axis_config": [{"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]}],
+            "compressed_axes_config": ["date", "step", "level", "longitude"],
         }
         self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=array,
             engine=self.slicer,
-            axis_options=self.options,
-            compressed_axes_options=["date", "step", "level", "longitude"],
+            options=self.options,
         )
 
     def test_all(self):
@@ -48,10 +48,10 @@ class TestSlicing3DXarrayDatacube:
 
     @pytest.mark.fdb
     def test_all_mapper_cyclic(self):
-        from polytope.datacube.backends.fdb import FDBDatacube
+        import pygribjump as gj
 
         self.options = {
-            "config": [
+            "axis_config": [
                 {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
                 {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
                 {
@@ -66,12 +66,12 @@ class TestSlicing3DXarrayDatacube:
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
-            ]
+            ],
+            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "step": "11"},
         }
-        self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "step": "11"}
-        self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
+        self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, options=self.options)
 
         request = Request(
             Select("step", [11]),

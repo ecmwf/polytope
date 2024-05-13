@@ -11,11 +11,11 @@ from polytope.shapes import Box, Select
 
 class TestSlicingFDBDatacube:
     def setup_method(self, method):
-        from polytope.datacube.backends.fdb import FDBDatacube
+        import pygribjump as gj
 
         # Create a dataarray with 3 labelled axes using different index types
         self.options = {
-            "config": [
+            "axis_config": [
                 {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
                 {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
                 {"axis_name": "levelist", "transformations": [{"name": "type_change", "type": "int"}]},
@@ -35,20 +35,16 @@ class TestSlicingFDBDatacube:
                         }
                     ],
                 },
-            ]
+            ],
+            "pre_path": {"param": "3008"},
+            "compressed_axes_config": ["longitude", "latitude", "levtype", "levelist", "step", "date", "param"],
         }
-        self.config = {"param": "3008"}
-        self.fdbdatacube = FDBDatacube(
-            self.config,
-            axis_options=self.options,
-            compressed_axes_options=["longitude", "latitude", "levtype", "levelist", "step", "date", "param"],
-        )
+        self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
             engine=self.slicer,
-            axis_options=self.options,
-            compressed_axes_options=["longitude", "latitude", "levtype", "levelist", "step", "date", "param"],
+            options=self.options,
         )
 
     # Testing different shapes

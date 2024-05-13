@@ -7,8 +7,8 @@ from .datacube import Datacube, DatacubePath, TensorIndexTree
 
 
 class MockDatacube(Datacube):
-    def __init__(self, dimensions, datacube_options={}, compressed_axes_options=[]):
-        super().__init__({}, datacube_options, compressed_axes_options)
+    def __init__(self, dimensions, compressed_axes_options=[]):
+        super().__init__({}, compressed_axes_options)
         assert isinstance(dimensions, dict)
 
         self.dimensions = dimensions

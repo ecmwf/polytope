@@ -1,11 +1,6 @@
-import argparse
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, List, Literal, Optional, Union
-
-import xarray as xr
-from conflator import ConfigModel, Conflator
-from pydantic import ConfigDict
+from typing import Any
 
 from ...utility.combinatorics import validate_axes
 from ..datacube_axis import DatacubeAxis
@@ -18,14 +13,11 @@ from ..transformations.datacube_transformations import (
 
 
 class Datacube(ABC):
-    def __init__(self, axis_options=None, datacube_options=None, compressed_axes_options=[]):
+    def __init__(self, axis_options=None, compressed_axes_options=[]):
         if axis_options is None:
             self.axis_options = {}
         else:
             self.axis_options = axis_options
-        if datacube_options is None:
-            datacube_options = {}
-        self.axis_with_identical_structure_after = datacube_options.get("identical structure after")
         self.coupled_axes = []
         self.axis_counter = 0
         self.complete_axes = []
@@ -36,7 +28,6 @@ class Datacube(ABC):
         self._axes = None
         self.transformed_axes = []
         self.compressed_grid_axes = []
-        # self.compressed_axes = []
         self.merged_axes = []
         self.unwanted_path = {}
         self.compressed_axes = compressed_axes_options
@@ -154,57 +145,15 @@ class Datacube(ABC):
         return path
 
     @staticmethod
-    def create_axes_config(axis_options):
-        class TransformationConfig(ConfigModel):
-            model_config = ConfigDict(extra="forbid")
-            name: str = ""
-
-        class CyclicConfig(TransformationConfig):
-            name: Literal["cyclic"]
-            range: List[float] = [0]
-
-        class MapperConfig(TransformationConfig):
-            name: Literal["mapper"]
-            type: str = ""
-            resolution: Union[int, List[int]] = 0
-            axes: List[str] = [""]
-            local: Optional[List[float]] = None
-
-        class ReverseConfig(TransformationConfig):
-            name: Literal["reverse"]
-            is_reverse: bool = False
-
-        class TypeChangeConfig(TransformationConfig):
-            name: Literal["type_change"]
-            type: str = "int"
-
-        class MergeConfig(TransformationConfig):
-            name: Literal["merge"]
-            other_axis: str = ""
-            linkers: List[str] = [""]
-
-        action_subclasses_union = Union[CyclicConfig, MapperConfig, ReverseConfig, TypeChangeConfig, MergeConfig]
-
-        class AxisConfig(ConfigModel):
-            axis_name: str = ""
-            transformations: list[action_subclasses_union]
-
-        class Config(ConfigModel):
-            config: list[AxisConfig] = []
-
-        parser = argparse.ArgumentParser(allow_abbrev=False)
-        axis_config = Conflator(app_name="polytope", model=Config, cli=False, argparser=parser).load()
-        if axis_options.get("config"):
-            axis_config = Config(config=axis_options.get("config"))
-
-        return axis_config
-
-    @staticmethod
-    def create(datacube, axis_options: dict, datacube_options={}, compressed_axes_options=[]):
-        if isinstance(datacube, (xr.core.dataarray.DataArray, xr.core.dataset.Dataset)):
+    def create(datacube, config={}, axis_options={}, compressed_axes_options=[]):
+        # TODO: get the configs as None for pre-determined value and change them to empty dictionary inside the function
+        if type(datacube).__name__ == "DataArray":
             from .xarray import XArrayDatacube
 
-            xadatacube = XArrayDatacube(datacube, axis_options, datacube_options, compressed_axes_options)
+            xadatacube = XArrayDatacube(datacube, axis_options, compressed_axes_options)
             return xadatacube
-        else:
-            return datacube
+        if type(datacube).__name__ == "GribJump":
+            from .fdb import FDBDatacube
+
+            fdbdatacube = FDBDatacube(datacube, config, axis_options, compressed_axes_options)
+            return fdbdatacube

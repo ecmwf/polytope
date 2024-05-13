@@ -17,7 +17,7 @@ class TestInitDatacubeAxes:
         latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
         latlon_array = latlon_array.t2m
         self.options = {
-            "config": [
+            "axis_config": [
                 {
                     "axis_name": "values",
                     "transformations": [
@@ -26,14 +26,8 @@ class TestInitDatacubeAxes:
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
-            ]
-        }
-        self.slicer = HullSlicer()
-        self.API = Polytope(
-            datacube=latlon_array,
-            engine=self.slicer,
-            axis_options=self.options,
-            compressed_axes_options=[
+            ],
+            "compressed_axes_config": [
                 "longitude",
                 "latitude",
                 "levtype",
@@ -46,6 +40,25 @@ class TestInitDatacubeAxes:
                 "stream",
                 "type",
             ],
+        }
+        self.slicer = HullSlicer()
+        self.API = Polytope(
+            datacube=latlon_array,
+            engine=self.slicer,
+            options=self.options,
+            # compressed_axes_options=[
+            #     "longitude",
+            #     "latitude",
+            #     "levtype",
+            #     "step",
+            #     "date",
+            #     "domain",
+            #     "expver",
+            #     "param",
+            #     "class",
+            #     "stream",
+            #     "type",
+            # ],
         )
         self.datacube = self.API.datacube
 

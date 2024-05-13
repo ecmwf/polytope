@@ -16,7 +16,7 @@ class TestOctahedralGrid:
         self.latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
         self.latlon_array = self.latlon_array.t2m
         self.options = {
-            "config": [
+            "axis_config": [
                 {
                     "axis_name": "values",
                     "transformations": [
@@ -24,14 +24,14 @@ class TestOctahedralGrid:
                     ],
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
-            ]
+            ],
+            "compressed_axes_config": ["longitude", "latitude", "number", "step", "time", "surface", "valid_time"],
         }
         self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.latlon_array,
             engine=self.slicer,
-            axis_options=self.options,
-            compressed_axes_options=["longitude", "latitude", "number", "step", "time", "surface", "valid_time"],
+            options=self.options,
         )
 
     @pytest.mark.internet

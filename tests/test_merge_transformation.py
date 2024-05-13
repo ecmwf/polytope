@@ -19,16 +19,19 @@ class TestMergeTransformation:
             },
         )
         self.options = {
-            "config": [
+            "axis_config": [
                 {
                     "axis_name": "date",
                     "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
                 }
-            ]
+            ],
+            "compressed_axes_config": ["date", "time"],
         }
         self.slicer = HullSlicer()
         self.API = Polytope(
-            datacube=self.array, engine=self.slicer, axis_options=self.options, compressed_axes_options=["date", "time"]
+            datacube=self.array,
+            engine=self.slicer,
+            options=self.options,
         )
 
     def test_merge_axis(self):

@@ -15,7 +15,7 @@ class TestOctahedralGrid:
         ds = data.from_source("file", "./tests/data/healpix.grib")
         self.latlon_array = ds.to_xarray().isel(step=0).isel(time=0).isel(isobaricInhPa=0).z
         self.options = {
-            "config": [
+            "axis_config": [
                 {
                     "axis_name": "values",
                     "transformations": [
@@ -24,14 +24,14 @@ class TestOctahedralGrid:
                 },
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
-            ]
+            ],
+            "compressed_axes_config": ["longitude", "latitude", "step", "time", "isobaricInhPa", "valid_time"],
         }
         self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.latlon_array,
             engine=self.slicer,
-            axis_options=self.options,
-            compressed_axes_options=["longitude", "latitude", "step", "time", "isobaricInhPa", "valid_time"],
+            options=self.options,
         )
 
     @pytest.mark.internet

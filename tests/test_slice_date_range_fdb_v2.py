@@ -9,11 +9,11 @@ from polytope.shapes import Select, Span
 
 class TestSlicingFDBDatacube:
     def setup_method(self, method):
-        from polytope.datacube.backends.fdb import FDBDatacube
+        import pygribjump as gj
 
         # Create a dataarray with 3 labelled axes using different index types
         self.options = {
-            "config": [
+            "axis_config": [
                 {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
                 {"axis_name": "levelist", "transformations": [{"name": "type_change", "type": "int"}]},
                 {
@@ -28,13 +28,9 @@ class TestSlicingFDBDatacube:
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
-            ]
-        }
-        self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "stream": "enda"}
-        self.fdbdatacube = FDBDatacube(
-            self.config,
-            axis_options=self.options,
-            compressed_axes_options=[
+            ],
+            "pre_path": {"class": "ea", "expver": "0001", "levtype": "pl", "stream": "enda"},
+            "compressed_axes_config": [
                 "longitude",
                 "latitude",
                 "levtype",
@@ -49,27 +45,13 @@ class TestSlicingFDBDatacube:
                 "number",
                 "levelist",
             ],
-        )
+        }
+        self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
             engine=self.slicer,
-            axis_options=self.options,
-            compressed_axes_options=[
-                "longitude",
-                "latitude",
-                "levtype",
-                "step",
-                "date",
-                "domain",
-                "expver",
-                "param",
-                "class",
-                "stream",
-                "type",
-                "number",
-                "levelist",
-            ],
+            options=self.options,
         )
 
     # Testing different shapes
