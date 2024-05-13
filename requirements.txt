@@ -5,4 +5,3 @@ sortedcontainers
 tripy
 xarray
 conflator @ git+https://github.com/ecmwf/conflator.git@main
-pygribjump @ git+https://github.com/ecmwf/gribjump.git@master

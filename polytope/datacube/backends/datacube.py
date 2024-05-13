@@ -2,9 +2,6 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any
 
-import pygribjump as pygj
-import xarray as xr
-
 from ...utility.combinatorics import validate_axes
 from ..datacube_axis import DatacubeAxis
 from ..tensor_index_tree import DatacubePath, TensorIndexTree
@@ -150,12 +147,12 @@ class Datacube(ABC):
     @staticmethod
     def create(datacube, config={}, axis_options={}, compressed_axes_options=[]):
         # TODO: get the configs as None for pre-determined value and change them to empty dictionary inside the function
-        if isinstance(datacube, (xr.core.dataarray.DataArray, xr.core.dataset.Dataset)):
+        if type(datacube).__name__ == "DataArray":
             from .xarray import XArrayDatacube
 
             xadatacube = XArrayDatacube(datacube, axis_options, compressed_axes_options)
             return xadatacube
-        if isinstance(datacube, pygj.GribJump):
+        if type(datacube).__name__ == "GribJump":
             from .fdb import FDBDatacube
 
             fdbdatacube = FDBDatacube(datacube, config, axis_options, compressed_axes_options)
