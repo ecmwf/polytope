@@ -49,6 +49,7 @@ class Polytope:
 
         self.datacube = Datacube.create(datacube, config, axis_options, compressed_axes_options)
         self.engine = engine if engine is not None else Engine.default()
+        self.time = 0
 
     def slice(self, polytopes: List[ConvexPolytope]):
         """Low-level API which takes a polytope geometry object and uses it to slice the datacube"""
@@ -56,6 +57,9 @@ class Polytope:
 
     def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
+        import time
+        time0 = time.time()
         request_tree = self.engine.extract(self.datacube, request.polytopes())
+        self.time = time.time() - time0
         self.datacube.get(request_tree)
         return request_tree
