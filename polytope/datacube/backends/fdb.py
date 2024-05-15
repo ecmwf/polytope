@@ -8,7 +8,7 @@ from .datacube import Datacube, IndexTree
 
 
 class FDBDatacube(Datacube):
-    def __init__(self, config=None, axis_options=None, datacube_options=None):
+    def __init__(self, request, config=None, axis_options=None, datacube_options=None):
         if config is None:
             config = {}
 
@@ -21,9 +21,12 @@ class FDBDatacube(Datacube):
 
         partial_request = config
         # Find values in the level 3 FDB datacube
-
         self.gj = pygj.GribJump()
         self.fdb_coordinates = self.gj.axes(partial_request)
+        # self.fdb_coordinates = {}
+        # print(self.fdb_coordinates)
+
+        self.check_branching_axes(request)
 
         logging.info("Axes returned from GribJump are: " + str(self.fdb_coordinates))
 
@@ -51,6 +54,17 @@ class FDBDatacube(Datacube):
                 self._check_and_add_axes(options, name, val)
 
         logging.info("Polytope created axes for: " + str(self._axes.keys()))
+
+    def check_branching_axes(self, request):
+        polytopes = request.polytopes()
+        for polytope in polytopes:
+            for ax in polytope._axes:
+                if ax == "levtype":
+                    (upper, lower, idx) = polytope.extents(ax)
+                    print(polytope.points)
+                    print(idx)
+                    if "sfc" in polytope.points[idx]:
+                        self.fdb_coordinates.pop("levelist")
 
     def get(self, requests: IndexTree):
         fdb_requests = []
