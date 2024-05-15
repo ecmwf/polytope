@@ -21,6 +21,8 @@ class FDBDatacube(Datacube):
 
         partial_request = config
         # Find values in the level 3 FDB datacube
+        print("NOW LOOK ")
+        print(config)
         self.gj = pygj.GribJump()
         self.fdb_coordinates = self.gj.axes(partial_request)
         # self.fdb_coordinates = {}
