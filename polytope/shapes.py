@@ -33,7 +33,7 @@ class ConvexPolytope(Shape):
 
     def extents(self, axis):
         if self.is_flat:
-            slice_axis_idx = 1
+            slice_axis_idx = 0
             lower = min(self.points)[0]
             upper = max(self.points)[0]
         else:

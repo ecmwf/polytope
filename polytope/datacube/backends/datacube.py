@@ -36,6 +36,9 @@ class Datacube(ABC):
         self.transformed_axes = []
         self.unwanted_path = {}
 
+    def check_branching_axes(self, request):
+        pass
+
     @abstractmethod
     def get(self, requests: IndexTree) -> Any:
         """Return data given a set of request trees"""

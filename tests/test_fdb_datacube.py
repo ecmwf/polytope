@@ -52,6 +52,11 @@ class TestSlicingFDBDatacube:
             Select("type", ["an"]),
             Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
         )
+        from polytope.datacube.backends.fdb import FDBDatacube
+        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
+        self.slicer = HullSlicer()
+        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
+
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 9

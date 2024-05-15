@@ -36,14 +36,14 @@ class TestRegularGrid:
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper", "type": "fc"}
         self.datacube_options = {"identical structure after": "number"}
-        self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options, datacube_options=self.datacube_options)
-        self.slicer = HullSlicer()
-        self.API = Polytope(
-            datacube=self.fdbdatacube,
-            engine=self.slicer,
-            axis_options=self.options,
-            datacube_options=self.datacube_options,
-        )
+        # self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options, datacube_options=self.datacube_options)
+        # self.slicer = HullSlicer()
+        # self.API = Polytope(
+        #     datacube=self.fdbdatacube,
+        #     engine=self.slicer,
+        #     axis_options=self.options,
+        #     datacube_options=self.datacube_options,
+        # )
 
     def find_nearest_latlon(self, grib_file, target_lat, target_lon):
         # Open the GRIB file
@@ -71,6 +71,7 @@ class TestRegularGrid:
     @pytest.mark.fdb
     @pytest.mark.internet
     def test_regular_grid(self):
+        from polytope.datacube.backends.fdb import FDBDatacube
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -82,6 +83,14 @@ class TestRegularGrid:
             Select("stream", ["oper"]),
             Select("type", ["fc"]),
             Point(["latitude", "longitude"], [[39, 360 - 76.45]], method="nearest"),
+        )
+        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options, datacube_options=self.datacube_options)
+        self.slicer = HullSlicer()
+        self.API = Polytope(
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            axis_options=self.options,
+            datacube_options=self.datacube_options,
         )
         result = self.API.retrieve(request)
         longitude_val_1 = result.leaves[0].flatten()["longitude"]
@@ -99,6 +108,14 @@ class TestRegularGrid:
             Select("stream", ["oper"]),
             Select("type", ["fc"]),
             Point(["latitude", "longitude"], [[39, -76.45]], method="nearest"),
+        )
+        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options, datacube_options=self.datacube_options)
+        self.slicer = HullSlicer()
+        self.API = Polytope(
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            axis_options=self.options,
+            datacube_options=self.datacube_options,
         )
         result = self.API.retrieve(request)
         longitude_val_1 = result.leaves[0].flatten()["longitude"]
