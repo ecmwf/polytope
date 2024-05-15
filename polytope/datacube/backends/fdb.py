@@ -26,9 +26,11 @@ class FDBDatacube(Datacube):
         self.gj = pygj.GribJump()
         self.fdb_coordinates = self.gj.axes(partial_request)
         # self.fdb_coordinates = {}
-        # print(self.fdb_coordinates)
+        print("FDB COORDINATES")
+        print(self.fdb_coordinates)
 
         self.check_branching_axes(request)
+        print(self.fdb_coordinates)
 
         logging.info("Axes returned from GribJump are: " + str(self.fdb_coordinates))
 
@@ -63,12 +65,17 @@ class FDBDatacube(Datacube):
             for ax in polytope._axes:
                 if ax == "levtype":
                     (upper, lower, idx) = polytope.extents(ax)
-                    print(polytope.points)
-                    print(idx)
+                    # print(polytope.points)
+                    # print(idx)
                     if "sfc" in polytope.points[idx]:
                         self.fdb_coordinates.pop("levelist")
+                    # if "pl" in polytope.points[idx]:
+                    #     self.fdb_coordinates.pop("levelist")
 
     def get(self, requests: IndexTree):
+        # TODO: UNSURE ABOUT THIS
+        # if requests.is_root():
+        #     return requests
         fdb_requests = []
         fdb_requests_decoding_info = []
         self.get_fdb_requests(requests, fdb_requests, fdb_requests_decoding_info)
