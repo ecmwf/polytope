@@ -28,6 +28,7 @@ class FDBDatacube(Datacube):
         # self.fdb_coordinates = {}
         print("FDB COORDINATES")
         print(self.fdb_coordinates)
+        # self.necessary_popped_axes = {}
 
         self.check_branching_axes(request)
         print(self.fdb_coordinates)
@@ -71,17 +72,19 @@ class FDBDatacube(Datacube):
                         self.fdb_coordinates.pop("levelist")
                     # if "pl" in polytope.points[idx]:
                     #     self.fdb_coordinates.pop("levelist")
-        if "quantile" in self.fdb_coordinates.keys():
-            print("YES HERE??")
-            self.fdb_coordinates.pop("quantile")
+        # if "quantile" in self.fdb_coordinates.keys():
+        #     print("YES HERE??")
+        #     # self.necessary_popped_axes["quantile"] = self.fdb_coordinates["quantile"][0]
+        #     self.fdb_coordinates.pop("quantile")
 
     def get(self, requests: IndexTree):
-        requests.pprint_2()
+        # requests.pprint_2()
         if len(requests.children) == 0:
             return requests
         fdb_requests = []
         fdb_requests_decoding_info = []
         self.get_fdb_requests(requests, fdb_requests, fdb_requests_decoding_info)
+        print(fdb_requests)
         output_values = self.gj.extract(fdb_requests)
         self.assign_fdb_output_to_nodes(output_values, fdb_requests_decoding_info)
 
@@ -196,6 +199,7 @@ class FDBDatacube(Datacube):
 
         leaf_path_copy = deepcopy(leaf_path)
         leaf_path_copy.pop("values")
+        # leaf_path_copy.update(self.necessary_popped_axes)
         return (leaf_path_copy, range_lengths, current_start_idxs, fdb_node_ranges, lat_length)
 
     def get_last_layer_before_leaf(self, requests, leaf_path, range_l, current_idx, fdb_range_n):
