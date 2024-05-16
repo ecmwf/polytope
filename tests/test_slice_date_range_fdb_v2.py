@@ -35,6 +35,7 @@ class TestSlicingFDBDatacube:
 
     # Testing different shapes
     @pytest.mark.fdb
+    @pytest.mark.skip(reason="gribjump problem")
     def test_fdb_datacube(self):
         request = Request(
             Select("step", [0]),

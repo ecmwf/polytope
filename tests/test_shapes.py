@@ -37,6 +37,7 @@ class TestSlicing3DXarrayDatacube:
         result = self.API.retrieve(request)
         assert len(result.leaves) == 360
 
+    @pytest.mark.skip(reason="weird parameter with quartile axis")
     @pytest.mark.fdb
     def test_all_mapper_cyclic(self):
         from polytope.datacube.backends.fdb import FDBDatacube

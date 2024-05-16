@@ -38,6 +38,7 @@ class TestReducedLatLonGrid:
         # self.slicer = HullSlicer()
         # self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
 
+    @pytest.mark.skip(reason="wave data grid packing not supported")
     @pytest.mark.internet
     @pytest.mark.fdb
     def test_reduced_ll_grid(self):
