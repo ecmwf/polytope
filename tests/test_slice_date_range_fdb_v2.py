@@ -8,8 +8,6 @@ from polytope.shapes import Select, Span
 
 class TestSlicingFDBDatacube:
     def setup_method(self, method):
-        from polytope.datacube.backends.fdb import FDBDatacube
-
         # Create a dataarray with 3 labelled axes using different index types
         self.options = {
             "config": [
@@ -29,9 +27,6 @@ class TestSlicingFDBDatacube:
             ]
         }
         self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "stream": "enda"}
-        # self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
-        # self.slicer = HullSlicer()
-        # self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
 
     # Testing different shapes
     @pytest.mark.fdb
@@ -53,6 +48,7 @@ class TestSlicingFDBDatacube:
             Select("number", ["0"]),
         )
         from polytope.datacube.backends.fdb import FDBDatacube
+
         self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)

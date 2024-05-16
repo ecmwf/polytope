@@ -21,17 +21,10 @@ class FDBDatacube(Datacube):
 
         partial_request = config
         # Find values in the level 3 FDB datacube
-        print("NOW LOOK ")
-        print(config)
         self.gj = pygj.GribJump()
         self.fdb_coordinates = self.gj.axes(partial_request)
-        # self.fdb_coordinates = {}
-        print("FDB COORDINATES")
-        print(self.fdb_coordinates)
-        # self.necessary_popped_axes = {}
 
         self.check_branching_axes(request)
-        print(self.fdb_coordinates)
 
         logging.info("Axes returned from GribJump are: " + str(self.fdb_coordinates))
 
@@ -42,7 +35,7 @@ class FDBDatacube(Datacube):
             for opt in self.axis_options:
                 if opt.axis_name == name:
                     options = opt
-            # options = axis_options.get(name, None)
+
             self._check_and_add_axes(options, name, values)
             self.treated_axes.append(name)
             self.complete_axes.append(name)
@@ -54,7 +47,7 @@ class FDBDatacube(Datacube):
                 for opt in self.axis_options:
                     if opt.axis_name == name:
                         options = opt
-                # options = axis_options.get(name, None)
+
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
 
@@ -66,25 +59,15 @@ class FDBDatacube(Datacube):
             for ax in polytope._axes:
                 if ax == "levtype":
                     (upper, lower, idx) = polytope.extents(ax)
-                    # print(polytope.points)
-                    # print(idx)
                     if "sfc" in polytope.points[idx]:
                         self.fdb_coordinates.pop("levelist")
-                    # if "pl" in polytope.points[idx]:
-                    #     self.fdb_coordinates.pop("levelist")
-        # if "quantile" in self.fdb_coordinates.keys():
-        #     print("YES HERE??")
-        #     # self.necessary_popped_axes["quantile"] = self.fdb_coordinates["quantile"][0]
-        #     self.fdb_coordinates.pop("quantile")
 
     def get(self, requests: IndexTree):
-        # requests.pprint_2()
         if len(requests.children) == 0:
             return requests
         fdb_requests = []
         fdb_requests_decoding_info = []
         self.get_fdb_requests(requests, fdb_requests, fdb_requests_decoding_info)
-        print(fdb_requests)
         output_values = self.gj.extract(fdb_requests)
         self.assign_fdb_output_to_nodes(output_values, fdb_requests_decoding_info)
 

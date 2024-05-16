@@ -11,8 +11,6 @@ from polytope.shapes import Box, Select
 
 class TestSlicingFDBDatacube:
     def setup_method(self, method):
-        from polytope.datacube.backends.fdb import FDBDatacube
-
         # Create a dataarray with 3 labelled axes using different index types
         self.options = {
             "config": [
@@ -38,9 +36,6 @@ class TestSlicingFDBDatacube:
             ]
         }
         self.config = {"param": "3008"}
-        # self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
-        # self.slicer = HullSlicer()
-        # self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
 
     # Testing different shapes
     @pytest.mark.fdb
@@ -55,6 +50,7 @@ class TestSlicingFDBDatacube:
             Box(["latitude", "longitude"], [47.38, 7], [47.5, 7.14]),
         )
         from polytope.datacube.backends.fdb import FDBDatacube
+
         self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
