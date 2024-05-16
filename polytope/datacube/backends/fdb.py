@@ -71,11 +71,14 @@ class FDBDatacube(Datacube):
                         self.fdb_coordinates.pop("levelist")
                     # if "pl" in polytope.points[idx]:
                     #     self.fdb_coordinates.pop("levelist")
+        if "quantile" in self.fdb_coordinates.keys():
+            print("YES HERE??")
+            self.fdb_coordinates.pop("quantile")
 
     def get(self, requests: IndexTree):
-        # TODO: UNSURE ABOUT THIS
-        # if requests.is_root():
-        #     return requests
+        requests.pprint_2()
+        if len(requests.children) == 0:
+            return requests
         fdb_requests = []
         fdb_requests_decoding_info = []
         self.get_fdb_requests(requests, fdb_requests, fdb_requests_decoding_info)

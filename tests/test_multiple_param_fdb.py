@@ -29,9 +29,9 @@ class TestSlicingFDBDatacube:
             ]
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper", "type": "fc"}
-        self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
-        self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
+        # self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
+        # self.slicer = HullSlicer()
+        # self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
 
     # Testing different shapes
     @pytest.mark.fdb
@@ -48,6 +48,10 @@ class TestSlicingFDBDatacube:
             Select("type", ["fc"]),
             Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
         )
+        from polytope.datacube.backends.fdb import FDBDatacube
+        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
+        self.slicer = HullSlicer()
+        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 18
