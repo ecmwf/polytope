@@ -61,6 +61,9 @@ class FDBDatacube(Datacube):
                     (upper, lower, idx) = polytope.extents(ax)
                     if "sfc" in polytope.points[idx]:
                         self.fdb_coordinates.pop("levelist")
+        print(self.fdb_coordinates)
+        self.fdb_coordinates.pop("quantile", None)
+        print(self.fdb_coordinates)
 
     def get(self, requests: IndexTree):
         if len(requests.children) == 0:
