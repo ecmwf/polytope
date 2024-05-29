@@ -8,9 +8,10 @@ from polytope.shapes import Point, Select
 
 class TestSlicingFDBDatacube:
     def setup_method(self, method):
+
         # Create a dataarray with 3 labelled axes using different index types
         self.options = {
-            "config": [
+            "axis_config": [
                 {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
                 {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
                 {
@@ -30,13 +31,27 @@ class TestSlicingFDBDatacube:
                     ],
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
-            ]
+            ],
+            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
+            "compressed_axes_config": [
+                "longitude",
+                "latitude",
+                "levtype",
+                "step",
+                "date",
+                "domain",
+                "expver",
+                "param",
+                "class",
+                "stream",
+                "type",
+            ],
         }
-        self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
 
     # Testing different shapes
     @pytest.mark.fdb
     def test_fdb_datacube(self):
+        import pygribjump as gj
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -49,19 +64,23 @@ class TestSlicingFDBDatacube:
             Select("type", ["fc"]),
             Point(["latitude", "longitude"], [[0.16, 0.176]], method="nearest"),
         )
-        from polytope.datacube.backends.fdb import FDBDatacube
-
-        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
+        self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(
+            request=request,
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            options=self.options,
+        )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 1
-        assert result.leaves[0].flatten()["latitude"] == 0
-        assert result.leaves[0].flatten()["longitude"] == 0
+        assert result.leaves[0].flatten()["latitude"] == (0,)
+        assert result.leaves[0].flatten()["longitude"] == (0,)
 
     @pytest.mark.fdb
     def test_point_outside_local_region(self):
+        import pygribjump as gj
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -74,19 +93,23 @@ class TestSlicingFDBDatacube:
             Select("type", ["fc"]),
             Point(["latitude", "longitude"], [[0.16, 61]], method="nearest"),
         )
-        from polytope.datacube.backends.fdb import FDBDatacube
-
-        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
+        self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(
+            request=request,
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            options=self.options,
+        )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 1
-        assert result.leaves[0].flatten()["latitude"] == 0
-        assert result.leaves[0].flatten()["longitude"] == 60
+        assert result.leaves[0].flatten()["latitude"] == (0,)
+        assert result.leaves[0].flatten()["longitude"] == (60,)
 
     @pytest.mark.fdb
     def test_point_outside_local_region_2(self):
+        import pygribjump as gj
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -99,19 +122,23 @@ class TestSlicingFDBDatacube:
             Select("type", ["fc"]),
             Point(["latitude", "longitude"], [[41, 1]], method="nearest"),
         )
-        from polytope.datacube.backends.fdb import FDBDatacube
-
-        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
+        self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(
+            request=request,
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            options=self.options,
+        )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 1
-        assert result.leaves[0].flatten()["latitude"] == 40
-        assert result.leaves[0].flatten()["longitude"] == 1
+        assert result.leaves[0].flatten()["latitude"] == (40,)
+        assert result.leaves[0].flatten()["longitude"] == (1,)
 
     @pytest.mark.fdb
     def test_point_outside_local_region_3(self):
+        import pygribjump as gj
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -124,18 +151,22 @@ class TestSlicingFDBDatacube:
             Select("type", ["fc"]),
             Point(["latitude", "longitude"], [[1, 61]]),
         )
-        from polytope.datacube.backends.fdb import FDBDatacube
-
-        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
+        self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(
+            request=request,
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            options=self.options,
+        )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 1
         assert result.is_root()
 
     @pytest.mark.fdb
     def test_point_outside_local_region_4(self):
+        import pygribjump as gj
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -148,18 +179,22 @@ class TestSlicingFDBDatacube:
             Select("type", ["fc"]),
             Point(["latitude", "longitude"], [[41, 1]]),
         )
-        from polytope.datacube.backends.fdb import FDBDatacube
-
-        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
+        self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(
+            request=request,
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            options=self.options,
+        )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 1
         assert result.is_root()
 
     @pytest.mark.fdb
     def test_point_outside_local_region_5(self):
+        import pygribjump as gj
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -172,18 +207,22 @@ class TestSlicingFDBDatacube:
             Select("type", ["fc"]),
             Point(["latitude", "longitude"], [[-41, 1]]),
         )
-        from polytope.datacube.backends.fdb import FDBDatacube
-
-        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
+        self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(
+            request=request,
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            options=self.options,
+        )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 1
         assert result.is_root()
 
     @pytest.mark.fdb
     def test_point_outside_local_region_6(self):
+        import pygribjump as gj
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -196,18 +235,22 @@ class TestSlicingFDBDatacube:
             Select("type", ["fc"]),
             Point(["latitude", "longitude"], [[-30, -21]]),
         )
-        from polytope.datacube.backends.fdb import FDBDatacube
-
-        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
+        self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(
+            request=request,
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            options=self.options,
+        )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 1
         assert result.is_root()
 
     @pytest.mark.fdb
     def test_point_outside_local_region_7(self):
+        import pygribjump as gj
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -220,19 +263,23 @@ class TestSlicingFDBDatacube:
             Select("type", ["fc"]),
             Point(["latitude", "longitude"], [[-41, 1]], method="nearest"),
         )
-        from polytope.datacube.backends.fdb import FDBDatacube
-
-        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
+        self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(
+            request=request,
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            options=self.options,
+        )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 1
-        assert result.leaves[0].flatten()["latitude"] == -40
-        assert result.leaves[0].flatten()["longitude"] == 1
+        assert result.leaves[0].flatten()["latitude"] == (-40,)
+        assert result.leaves[0].flatten()["longitude"] == (1,)
 
     @pytest.mark.fdb
     def test_point_outside_local_region_8(self):
+        import pygribjump as gj
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -245,19 +292,23 @@ class TestSlicingFDBDatacube:
             Select("type", ["fc"]),
             Point(["latitude", "longitude"], [[-30, -21]], method="nearest"),
         )
-        from polytope.datacube.backends.fdb import FDBDatacube
-
-        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
+        self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(
+            request=request,
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            options=self.options,
+        )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 1
-        assert result.leaves[0].flatten()["latitude"] == -30
-        assert result.leaves[0].flatten()["longitude"] == -20
+        assert result.leaves[0].flatten()["latitude"] == (-30,)
+        assert result.leaves[0].flatten()["longitude"] == (-20,)
 
     @pytest.mark.fdb
     def test_point_outside_local_region_9(self):
+        import pygribjump as gj
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -270,13 +321,16 @@ class TestSlicingFDBDatacube:
             Select("type", ["fc"]),
             Point(["latitude", "longitude"], [[-30, -21]], method="surrounding"),
         )
-        from polytope.datacube.backends.fdb import FDBDatacube
-
-        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
+        self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(
+            request=request,
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            options=self.options,
+        )
         result = self.API.retrieve(request)
-        result.pprint_2()
+        result.pprint()
         assert len(result.leaves) == 3
-        assert result.leaves[0].flatten()["latitude"] == -31
-        assert result.leaves[0].flatten()["longitude"] == -20
+        assert result.leaves[0].flatten()["latitude"] == (-31.0,)
+        assert result.leaves[0].flatten()["longitude"] == (-20,)

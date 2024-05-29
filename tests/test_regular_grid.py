@@ -12,10 +12,11 @@ from polytope.shapes import Disk, Select
 
 class TestRegularGrid:
     def setup_method(self, method):
+
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/era5-levels-members.grib"
         download_test_data(nexus_url, "era5-levels-members.grib")
         self.options = {
-            "config": [
+            "axis_config": [
                 {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
                 {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
                 {
@@ -30,14 +31,29 @@ class TestRegularGrid:
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
-            ]
+            ],
+            "pre_path": {"class": "ea", "expver": "0001", "levtype": "pl", "step": "0"},
+            "compressed_axes_config": [
+                "longitude",
+                "latitude",
+                "levtype",
+                "step",
+                "date",
+                "domain",
+                "expver",
+                "param",
+                "class",
+                "stream",
+                "type",
+                "number",
+                "levelist",
+            ],
         }
-        self.config = {"class": "ea", "expver": "0001", "levtype": "pl", "step": "0"}
-        self.datacube_options = {"identical structure after": "number"}
 
     @pytest.mark.fdb
     @pytest.mark.internet
     def test_regular_grid(self):
+        import pygribjump as gj
         request = Request(
             Select("step", [0]),
             Select("levtype", ["pl"]),
@@ -52,21 +68,17 @@ class TestRegularGrid:
             Select("levelist", ["500"]),
             Select("number", ["0", "1"]),
         )
-        from polytope.datacube.backends.fdb import FDBDatacube
-
-        self.fdbdatacube = FDBDatacube(
-            request, self.config, axis_options=self.options, datacube_options=self.datacube_options
-        )
+        self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
         self.API = Polytope(
+            request=request,
             datacube=self.fdbdatacube,
             engine=self.slicer,
-            axis_options=self.options,
-            datacube_options=self.datacube_options,
+            options=self.options,
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 10
+        assert len(result.leaves) == 5
 
         lats = []
         lons = []
@@ -75,8 +87,8 @@ class TestRegularGrid:
         leaves = result.leaves
         for i in range(len(leaves)):
             cubepath = leaves[i].flatten()
-            lat = cubepath["latitude"]
-            lon = cubepath["longitude"]
+            lat = cubepath["latitude"][0]
+            lon = cubepath["longitude"][0]
             lats.append(lat)
             lons.append(lon)
             nearest_points = find_nearest_latlon("./tests/data/era5-levels-members.grib", lat, lon)
@@ -96,4 +108,4 @@ class TestRegularGrid:
         # plt.colorbar(label="Temperature")
         # plt.show()
 
-        assert len(eccodes_lats) == 10
+        assert len(eccodes_lats) == 5

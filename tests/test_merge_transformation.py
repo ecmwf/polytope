@@ -19,17 +19,23 @@ class TestMergeTransformation:
             },
         )
         self.options = {
-            "config": [
+            "axis_config": [
                 {
                     "axis_name": "date",
                     "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
                 }
-            ]
+            ],
+            "compressed_axes_config": ["date", "time"],
         }
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.array, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(
+            request={},
+            datacube=self.array,
+            engine=self.slicer,
+            options=self.options,
+        )
 
     def test_merge_axis(self):
         request = Request(Select("date", [pd.Timestamp("20000101T060000")]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].flatten()["date"] == pd.Timestamp("2000-01-01T06:00:00")
+        assert result.leaves[0].flatten()["date"] == (np.datetime64("2000-01-01T06:00:00"),)

@@ -16,7 +16,7 @@ class TestOctahedralGrid:
         self.latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
         self.latlon_array = self.latlon_array.t2m
         self.options = {
-            "config": [
+            "axis_config": [
                 {
                     "axis_name": "values",
                     "transformations": [
@@ -24,10 +24,16 @@ class TestOctahedralGrid:
                     ],
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
-            ]
+            ],
+            "compressed_axes_config": ["longitude", "latitude", "number", "step", "time", "surface", "valid_time"],
         }
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.latlon_array, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(
+            request={},
+            datacube=self.latlon_array,
+            engine=self.slicer,
+            options=self.options,
+        )
 
     @pytest.mark.internet
     def test_octahedral_grid(self):
@@ -40,6 +46,7 @@ class TestOctahedralGrid:
             Select("valid_time", ["2023-06-25T12:00:00"]),
         )
         result = self.API.retrieve(request)
+        result.pprint()
         assert len(result.leaves) == 9
 
         lats = []
@@ -52,12 +59,12 @@ class TestOctahedralGrid:
             lon = cubepath["longitude"]
             lats.append(lat)
             lons.append(lon)
-            nearest_points = find_nearest_latlon("./tests/data/foo.grib", lat, lon)
+            nearest_points = find_nearest_latlon("./tests/data/foo.grib", lat[0], lon[0])
             eccodes_lat = nearest_points[0][0]["lat"]
             eccodes_lon = nearest_points[0][0]["lon"]
             eccodes_lats.append(eccodes_lat)
-            assert eccodes_lat - tol <= lat
-            assert lat <= eccodes_lat + tol
-            assert eccodes_lon - tol <= lon
-            assert lon <= eccodes_lon + tol
+            assert eccodes_lat - tol <= lat[0]
+            assert lat[0] <= eccodes_lat + tol
+            assert eccodes_lon - tol <= lon[0]
+            assert lon[0] <= eccodes_lon + tol
         assert len(eccodes_lats) == 9

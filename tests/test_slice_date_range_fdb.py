@@ -8,9 +8,10 @@ from polytope.shapes import Box, Select, Span
 
 class TestSlicingFDBDatacube:
     def setup_method(self, method):
+
         # Create a dataarray with 3 labelled axes using different index types
         self.options = {
-            "config": [
+            "axis_config": [
                 {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
                 {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
                 {
@@ -25,13 +26,27 @@ class TestSlicingFDBDatacube:
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
-            ]
+            ],
+            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
+            "compressed_axes-config": [
+                "longitude",
+                "latitude",
+                "levtype",
+                "step",
+                "date",
+                "domain",
+                "expver",
+                "param",
+                "class",
+                "stream",
+                "type",
+            ],
         }
-        self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
 
     # Testing different shapes
     @pytest.mark.fdb
     def test_fdb_datacube(self):
+        import pygribjump as gj
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -44,11 +59,15 @@ class TestSlicingFDBDatacube:
             Select("type", ["an"]),
             Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
         )
-        from polytope.datacube.backends.fdb import FDBDatacube
 
-        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
+        self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(
+            request=request,
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            options=self.options,
+        )
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 9

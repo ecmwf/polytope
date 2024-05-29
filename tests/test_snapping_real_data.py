@@ -20,12 +20,18 @@ class TestSlicingEra5Data:
         array = ds.to_xarray().isel(step=0).t
         self.slicer = HullSlicer()
         options = {
-            "config": [
+            "axis_config": [
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
-            ]
+            ],
+            "compressed_axes_config": ["longitude", "latitude", "step", "time", "number", "isobaricInhPa"],
         }
-        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
+        self.API = Polytope(
+            request={},
+            datacube=array,
+            engine=self.slicer,
+            options=options,
+        )
 
     @pytest.mark.internet
     def test_surrounding_on_grid_point(self):
@@ -34,7 +40,6 @@ class TestSlicingEra5Data:
         request = Request(
             Box(["number", "isobaricInhPa"], [6, 500.0], [6, 850.0]),
             Select("time", ["2017-01-02T12:00:00"]),
-            # Box(["latitude", "longitude"], lower_corner=[0.0, 0.0], upper_corner=[10.0, 30.0]),
             Select("latitude", [requested_lat], method="surrounding"),
             Select("longitude", [requested_lon], method="surrounding"),
             Select("step", [np.timedelta64(0, "s")]),
@@ -66,5 +71,8 @@ class TestSlicingEra5Data:
         # plt.scatter([requested_lon], [requested_lat], s=16, c="blue")
         # plt.colorbar(label="Temperature")
         # plt.show()
+        assert len(longs) == 1
         for lon in longs:
-            assert lon in [357, 0, 3]
+            assert lon == (0.0, 3.0, 357.0)
+        for lat in lats:
+            assert lat == (-3.0, 0.0, 3.0)

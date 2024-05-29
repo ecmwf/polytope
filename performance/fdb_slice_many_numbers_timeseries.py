@@ -14,7 +14,9 @@ options = {
     "step": {"type_change": "int"},
     "number": {"type_change": "int"},
     "longitude": {"cyclic": [0, 360]},
+    "latitude": {"reverse": {True}},
 }
+
 config = {"class": "od", "expver": "0001", "levtype": "sfc", "type": "pf"}
 fdbdatacube = FDBDatacube(config, axis_options=options)
 self_API = Polytope(datacube=fdbdatacube, axis_options=options)
@@ -39,7 +41,12 @@ request = Request(
     Point(["latitude", "longitude"], [[0.04, 0]], method="surrounding"),
     All("number"),
 )
+time3 = time.time()
 result = self_API.retrieve(request)
+time4 = time.time()
 print(time.time() - time1)
 print(time.time() - time2)
+print(time4 - time3)
 print(len(result.leaves))
+print([len(leaf.result) for leaf in result.leaves])
+result.pprint()

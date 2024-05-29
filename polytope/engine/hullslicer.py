@@ -5,8 +5,9 @@ from typing import List
 
 import scipy.spatial
 
-from ..datacube.backends.datacube import Datacube, IndexTree
+from ..datacube.backends.datacube import Datacube
 from ..datacube.datacube_axis import UnsliceableDatacubeAxis
+from ..datacube.tensor_index_tree import TensorIndexTree
 from ..shapes import ConvexPolytope
 from ..utility.combinatorics import argmax, argmin, group, tensor_product, unique
 from ..utility.exceptions import UnsliceableShapeError
@@ -21,6 +22,7 @@ class HullSlicer(Engine):
         self.has_value = {}
         self.sliced_polytopes = {}
         self.remapped_vals = {}
+        self.compressed_axes = []
 
     def _unique_continuous_points(self, p: ConvexPolytope, datacube: Datacube):
         for i, ax in enumerate(p._axes):
@@ -34,37 +36,40 @@ class HullSlicer(Engine):
         # Remove duplicate points
         unique(p.points)
 
-    def _build_unsliceable_child(self, polytope, ax, node, datacube, lower, next_nodes, slice_axis_idx):
+    def _build_unsliceable_child(self, polytope, ax, node, datacube, lowers, next_nodes, slice_axis_idx):
         if not polytope.is_flat:
             raise UnsliceableShapeError(ax)
         path = node.flatten()
 
+        # all unsliceable children are natively 1D so can group them together in a tuple...
         flattened_tuple = tuple()
         if len(datacube.coupled_axes) > 0:
             if path.get(datacube.coupled_axes[0][0], None) is not None:
                 flattened_tuple = (datacube.coupled_axes[0][0], path.get(datacube.coupled_axes[0][0], None))
                 path = {flattened_tuple[0]: flattened_tuple[1]}
+
+        for i, lower in enumerate(lowers):
+            if self.axis_values_between.get((flattened_tuple, ax.name, lower), None) is None:
+                self.axis_values_between[(flattened_tuple, ax.name, lower)] = datacube.has_index(path, ax, lower)
+            datacube_has_index = self.axis_values_between[(flattened_tuple, ax.name, lower)]
+
+            if datacube_has_index:
+                if i == 0:
+                    (child, next_nodes) = node.create_child(ax, lower, next_nodes)
+                    child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
+                    child["unsliced_polytopes"].remove(polytope)
+                    next_nodes.append(child)
+                else:
+                    child.add_value(lower)
             else:
-                path = {}
+                # raise a value not found error
+                errmsg = (
+                    f"Datacube does not have expected index {lower} of type {type(lower)}"
+                    f"on {ax.name} along the path {path}"
+                )
+                raise ValueError(errmsg)
 
-        if self.axis_values_between.get((flattened_tuple, ax.name, lower), None) is None:
-            self.axis_values_between[(flattened_tuple, ax.name, lower)] = datacube.has_index(path, ax, lower)
-        datacube_has_index = self.axis_values_between[(flattened_tuple, ax.name, lower)]
-
-        if datacube_has_index:
-            child = node.create_child(ax, lower)
-            child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
-            child["unsliced_polytopes"].remove(polytope)
-            next_nodes.append(child)
-        else:
-            # raise a value not found error
-            errmsg = (
-                f"Datacube does not have expected index {lower} of type {type(lower)}"
-                f"on {ax.name} along the path {path}"
-            )
-            raise ValueError(errmsg)
-
-    def _build_sliceable_child(self, polytope, ax, node, datacube, lower, upper, next_nodes, slice_axis_idx):
+    def find_values_between(self, polytope, ax, node, datacube, lower, upper):
         tol = ax.tol
         lower = ax.from_float(lower - tol)
         upper = ax.from_float(upper + tol)
@@ -73,8 +78,8 @@ class HullSlicer(Engine):
         if method == "nearest":
             datacube.nearest_search[ax.name] = polytope.points
 
-        # TODO: this hashing doesn't work because we need to know the latitude val for finding longitude values
-        # TODO: Maybe create a coupled_axes list inside of datacube and add to it during axis formation, then here
+        # NOTE: caching
+        # Create a coupled_axes list inside of datacube and add to it during axis formation, then here
         # do something like if ax is in second place of coupled_axes, then take the flattened part of the array that
         # corresponds to the first place of cooupled_axes in the hashing
         # Else, if we do not need the flattened bit in the hash, can just put an empty string instead?
@@ -84,64 +89,120 @@ class HullSlicer(Engine):
             if flattened.get(datacube.coupled_axes[0][0], None) is not None:
                 flattened_tuple = (datacube.coupled_axes[0][0], flattened.get(datacube.coupled_axes[0][0], None))
                 flattened = {flattened_tuple[0]: flattened_tuple[1]}
-            # else:
-            #     flattened = {}
 
         values = self.axis_values_between.get((flattened_tuple, ax.name, lower, upper, method), None)
         if self.axis_values_between.get((flattened_tuple, ax.name, lower, upper, method), None) is None:
             values = datacube.get_indices(flattened, ax, lower, upper, method)
             self.axis_values_between[(flattened_tuple, ax.name, lower, upper, method)] = values
+        return values
 
+    def remap_values(self, ax, value):
+        remapped_val = self.remapped_vals.get((value, ax.name), None)
+        if remapped_val is None:
+            remapped_val = value
+            if ax.is_cyclic:
+                remapped_val_interm = ax.remap([value, value])[0]
+                remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
+            if ax.can_round:
+                remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
+            self.remapped_vals[(value, ax.name)] = remapped_val
+        return remapped_val
+
+    def _build_sliceable_child(self, polytope, ax, node, datacube, values, next_nodes, slice_axis_idx):
         if len(values) == 0:
             node.remove_branch()
 
-        for value in values:
-            # convert to float for slicing
-            fvalue = ax.to_float(value)
-            new_polytope = self.sliced_polytopes.get((polytope, ax.name, fvalue, slice_axis_idx), False)
-            if new_polytope is False:
+        for i, value in enumerate(values):
+            if i == 0:
+                fvalue = ax.to_float(value)
                 new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
-                self.sliced_polytopes[(polytope, ax.name, fvalue, slice_axis_idx)] = new_polytope
-
-            # store the native type
-            remapped_val = self.remapped_vals.get((value, ax.name), None)
-            if remapped_val is None:
-                remapped_val = value
-                if ax.is_cyclic:
-                    remapped_val_interm = ax.remap([value, value])[0]
-                    remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
-                    remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
-                self.remapped_vals[(value, ax.name)] = remapped_val
-
-            child = node.create_child(ax, remapped_val)
-            child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
-            child["unsliced_polytopes"].remove(polytope)
-            if new_polytope is not None:
-                child["unsliced_polytopes"].add(new_polytope)
-            next_nodes.append(child)
+                remapped_val = self.remap_values(ax, value)
+                (child, next_nodes) = node.create_child(ax, remapped_val, next_nodes)
+                child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
+                child["unsliced_polytopes"].remove(polytope)
+                if new_polytope is not None:
+                    child["unsliced_polytopes"].add(new_polytope)
+                next_nodes.append(child)
+            else:
+                if ax.name not in self.compressed_axes:
+                    fvalue = ax.to_float(value)
+                    new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
+                    remapped_val = self.remap_values(ax, value)
+                    (child, next_nodes) = node.create_child(ax, remapped_val, next_nodes)
+                    child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
+                    child["unsliced_polytopes"].remove(polytope)
+                    if new_polytope is not None:
+                        child["unsliced_polytopes"].add(new_polytope)
+                    next_nodes.append(child)
+                else:
+                    remapped_val = self.remap_values(ax, value)
+                    child.add_value(remapped_val)
 
     def _build_branch(self, ax, node, datacube, next_nodes):
-        for polytope in node["unsliced_polytopes"]:
-            if ax.name in polytope._axes:
-                lower, upper, slice_axis_idx = polytope.extents(ax.name)
-                # here, first check if the axis is an unsliceable axis and directly build node if it is
+        if ax.name not in self.compressed_axes:
+            for polytope in node["unsliced_polytopes"]:
+                if ax.name in polytope._axes:
+                    lower, upper, slice_axis_idx = polytope.extents(ax.name)
+                    # here, first check if the axis is an unsliceable axis and directly build node if it is
+                    # NOTE: we should have already created the ax_is_unsliceable cache before
+                    if self.ax_is_unsliceable[ax.name]:
+                        self._build_unsliceable_child(polytope, ax, node, datacube, [lower], next_nodes, slice_axis_idx)
+                    else:
+                        values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
+                        self._build_sliceable_child(polytope, ax, node, datacube, values, next_nodes, slice_axis_idx)
+        else:
+            all_values = []
+            all_lowers = []
+            first_polytope = False
+            first_slice_axis_idx = False
+            for polytope in node["unsliced_polytopes"]:
+                if ax.name in polytope._axes:
+                    # keep track of the first polytope defined on the given axis
+                    if not first_polytope:
+                        first_polytope = polytope
+                    lower, upper, slice_axis_idx = polytope.extents(ax.name)
+                    if not first_slice_axis_idx:
+                        first_slice_axis_idx = slice_axis_idx
+                    if self.ax_is_unsliceable[ax.name]:
+                        all_lowers.append(lower)
+                    else:
+                        values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
+                        all_values.extend(values)
+            if self.ax_is_unsliceable[ax.name]:
+                self._build_unsliceable_child(
+                    first_polytope, ax, node, datacube, all_lowers, next_nodes, first_slice_axis_idx
+                )
+            else:
+                self._build_sliceable_child(
+                    first_polytope, ax, node, datacube, all_values, next_nodes, first_slice_axis_idx
+                )
 
-                # NOTE: we should have already created the ax_is_unsliceable cache before
-
-                if self.ax_is_unsliceable[ax.name]:
-                    self._build_unsliceable_child(polytope, ax, node, datacube, lower, next_nodes, slice_axis_idx)
-                else:
-                    self._build_sliceable_child(polytope, ax, node, datacube, lower, upper, next_nodes, slice_axis_idx)
         del node["unsliced_polytopes"]
 
+    def find_compressed_axes(self, datacube, polytopes):
+        # First determine compressable axes from input polytopes
+        compressable_axes = []
+        for polytope in polytopes:
+            if polytope.is_orthogonal:
+                for ax in polytope.axes():
+                    compressable_axes.append(ax)
+        # Cross check this list with list of compressable axis from datacube
+        # (should not include any merged or coupled axes)
+        for compressed_axis in compressable_axes:
+            if compressed_axis in datacube.compressed_axes:
+                self.compressed_axes.append(compressed_axis)
+
     def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
+        # Determine list of axes to compress
+        self.find_compressed_axes(datacube, polytopes)
+
         # Convert the polytope points to float type to support triangulation and interpolation
         for p in polytopes:
             self._unique_continuous_points(p, datacube)
 
         groups, input_axes = group(polytopes)
         datacube.validate(input_axes)
-        request = IndexTree()
+        request = TensorIndexTree()
         combinations = tensor_product(groups)
 
         # NOTE: could optimise here if we know combinations will always be for one request.
@@ -149,34 +210,23 @@ class HullSlicer(Engine):
         # directly work on request and return it...
 
         for c in combinations:
-            cached_node = None
-            repeated_sub_nodes = []
-
-            r = IndexTree()
-            r["unsliced_polytopes"] = set(c)
+            r = TensorIndexTree()
+            new_c = []
+            for combi in c:
+                if isinstance(combi, list):
+                    new_c.extend(combi)
+                else:
+                    new_c.append(combi)
+            r["unsliced_polytopes"] = set(new_c)
             current_nodes = [r]
             for ax in datacube.axes.values():
                 next_nodes = []
+                interm_next_nodes = []
                 for node in current_nodes:
-                    # detect if node is for number == 1
-                    # store a reference to that node
-                    # skip processing the other 49 numbers
-                    # at the end, copy that initial reference 49 times and add to request with correct number
-
-                    stored_val = None
-                    if node.axis.name == datacube.axis_with_identical_structure_after:
-                        stored_val = node.value
-                        cached_node = node
-                    elif node.axis.name == datacube.axis_with_identical_structure_after and node.value != stored_val:
-                        repeated_sub_nodes.append(node)
-                        del node["unsliced_polytopes"]
-                        continue
-
-                    self._build_branch(ax, node, datacube, next_nodes)
+                    self._build_branch(ax, node, datacube, interm_next_nodes)
+                    next_nodes.extend(interm_next_nodes)
+                    interm_next_nodes = []
                 current_nodes = next_nodes
-
-            for n in repeated_sub_nodes:
-                n.copy_children_from_other(cached_node)
 
             request.merge(r)
         return request

@@ -22,27 +22,37 @@ class TestSlicing3DXarrayDatacube:
             },
         )
         self.options = {
-            "config": [{"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]}]
+            "axis_config": [{"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]}],
+            "compressed_axes_config": ["date", "step", "level", "longitude"],
         }
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(
+            request={},
+            datacube=array,
+            engine=self.slicer,
+            options=self.options,
+        )
 
     def test_all(self):
         request = Request(Select("step", [3]), Select("date", ["2000-01-01"]), All("level"), Select("longitude", [1]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 129
+        assert len(result.leaves) == 1
+        path = result.leaves[0].flatten()
+        assert path["level"] == tuple(range(1, 130))
 
     def test_all_cyclic(self):
         request = Request(Select("step", [3]), Select("date", ["2000-01-01"]), Select("level", [1]), All("longitude"))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 360
+        assert len(result.leaves) == 1
+        path = result.leaves[0].flatten()
+        assert path["longitude"] == tuple(range(0, 360))
 
     @pytest.mark.fdb
     def test_all_mapper_cyclic(self):
-        from polytope.datacube.backends.fdb import FDBDatacube
+        import pygribjump as gj
 
         self.options = {
-            "config": [
+            "axis_config": [
                 {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
                 {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
                 {
@@ -57,9 +67,11 @@ class TestSlicing3DXarrayDatacube:
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
-            ]
+            ],
+            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
         }
-        self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
+        self.fdbdatacube = gj.GribJump()
+        self.slicer = HullSlicer()
 
         request = Request(
             Select("step", [11]),
@@ -74,9 +86,29 @@ class TestSlicing3DXarrayDatacube:
             Span("latitude", 89.9, 90),
             All("longitude"),
         )
-        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
-        self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(request=request, datacube=self.fdbdatacube, engine=self.slicer, options=self.options)
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 20
+        assert tuple([leaf.flatten()["longitude"][0] for leaf in result.leaves]) == (
+            0.0,
+            18.0,
+            36.0,
+            54.0,
+            72.0,
+            90.0,
+            108.0,
+            126.0,
+            144.0,
+            162.0,
+            180.0,
+            198.0,
+            216.0,
+            234.0,
+            252.0,
+            270.0,
+            288.0,
+            306.0,
+            324.0,
+            342.0,
+        )

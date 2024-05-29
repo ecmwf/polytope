@@ -3,12 +3,12 @@ from copy import deepcopy
 
 from ...utility.combinatorics import validate_axes
 from ..datacube_axis import IntDatacubeAxis
-from .datacube import Datacube, DatacubePath, IndexTree
+from .datacube import Datacube, DatacubePath, TensorIndexTree
 
 
 class MockDatacube(Datacube):
-    def __init__(self, dimensions, datacube_options={}):
-        super().__init__({}, datacube_options)
+    def __init__(self, dimensions, compressed_axes_options=[]):
+        super().__init__({}, compressed_axes_options)
         assert isinstance(dimensions, dict)
 
         self.dimensions = dimensions
@@ -24,14 +24,14 @@ class MockDatacube(Datacube):
             self.stride[k] = stride_cumulative
             stride_cumulative *= self.dimensions[k]
 
-    def get(self, requests: IndexTree):
+    def get(self, requests: TensorIndexTree):
         # Takes in a datacube and verifies the leaves of the tree are complete
         # (ie it found values for all datacube axis)
 
         for r in requests.leaves:
             path = r.flatten()
             if len(path.items()) == len(self.dimensions.items()):
-                result = 0
+                result = (0,)
                 for k, v in path.items():
                     result += v * self.stride[k]
 

@@ -18,14 +18,15 @@ class TestSlicingUnsliceableAxis:
             coords={"date": pd.date_range("2000-01-01", "2000-01-03", 3), "variable": ["a"], "level": range(1, 130)},
         )
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer)
+        options = {"compressed_axes_config": ["date", "variable", "level"]}
+        self.API = Polytope(request={}, datacube=array, engine=self.slicer, options=options)
 
     # Testing different shapes
 
     def test_finding_existing_variable(self):
         request = Request(Box(["level"], [10], [11]), Select("date", ["2000-01-01"]), Select("variable", ["a"]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 2
+        assert len(result.leaves) == 1
 
     def test_finding_nonexisting_variable(self):
         request = Request(Box(["level"], [10], [11]), Select("date", ["2000-01-01"]), Select("variable", ["b"]))

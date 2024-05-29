@@ -21,13 +21,19 @@ class TestSlicing3DXarrayDatacube:
             },
         )
         options = {
-            "config": [
+            "axis_config": [
                 {"axis_name": "long", "transformations": [{"name": "cyclic", "range": [0, 1.0]}]},
                 {"axis_name": "level", "transformations": [{"name": "cyclic", "range": [0, 129]}]},
-            ]
+            ],
+            "compressed_axes_config": ["long", "level", "step", "date"],
         }
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
+        self.API = Polytope(
+            request={},
+            datacube=array,
+            engine=self.slicer,
+            options=options,
+        )
 
     # Testing different shapes
 
@@ -37,8 +43,8 @@ class TestSlicing3DXarrayDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 4
-        assert [leaf.value for leaf in result.leaves] == [0.1, 0.2, 0.9, 1.0]
+        assert len(result.leaves) == 1
+        assert [leaf.values for leaf in result.leaves] == [(0.9, 1.0, 0.1, 0.2)]
 
     def test_cyclic_float_surrounding(self):
         request = Request(
@@ -52,7 +58,8 @@ class TestSlicing3DXarrayDatacube:
         for leaf in result.leaves:
             path = leaf.flatten()
             lon_val = path["long"]
-            assert lon_val in [0.0, 0.1, 0.9, 1.0]
+            for val in lon_val:
+                assert val in [0.0, 0.1, 0.9, 1.0]
 
     def test_cyclic_float_surrounding_below_seam(self):
         request = Request(
@@ -66,4 +73,5 @@ class TestSlicing3DXarrayDatacube:
         for leaf in result.leaves:
             path = leaf.flatten()
             lon_val = path["long"]
-            assert lon_val in [0.0, 0.1, 0.9, 1.0]
+            for val in lon_val:
+                assert val in [0.0, 0.1, 0.9, 1.0]

@@ -16,9 +16,12 @@ class TestSlicing3DXarrayDatacube:
             },
         )
 
-        options = {"config": [{"axis_name": "long", "transformations": [{"name": "cyclic", "range": [0, 1.0]}]}]}
+        options = {
+            "axis_config": [{"axis_name": "long", "transformations": [{"name": "cyclic", "range": [0, 1.0]}]}],
+            "compressed_axes_config": ["long"],
+        }
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
+        self.API = Polytope(request={}, datacube=array, engine=self.slicer, options=options)
 
     # Testing different shapes
 
@@ -26,8 +29,8 @@ class TestSlicing3DXarrayDatacube:
         request = Request(Select("long", [-0.2], method="surrounding"))
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 2
-        assert result.leaves[0].flatten()["long"] == 0.0
-        assert result.leaves[1].flatten()["long"] == 0.5
-        assert result.leaves[0].result == (None, 0)
-        assert result.leaves[1].result == (None, 1)
+        assert len(result.leaves) == 1
+        assert result.leaves[0].flatten()["long"] == (0.5, 0.0)
+        assert result.leaves[0].result[0] is None
+        assert result.leaves[0].result[1][0] == 1
+        assert result.leaves[0].result[1][1] == 0

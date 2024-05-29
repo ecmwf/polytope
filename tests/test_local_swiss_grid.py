@@ -11,9 +11,10 @@ from polytope.shapes import Box, Select
 
 class TestSlicingFDBDatacube:
     def setup_method(self, method):
+
         # Create a dataarray with 3 labelled axes using different index types
         self.options = {
-            "config": [
+            "axis_config": [
                 {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
                 {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
                 {"axis_name": "levelist", "transformations": [{"name": "type_change", "type": "int"}]},
@@ -33,14 +34,16 @@ class TestSlicingFDBDatacube:
                         }
                     ],
                 },
-            ]
+            ],
+            "pre_path": {"param": "3008"},
+            "compressed_axes_config": ["longitude", "latitude", "levtype", "levelist", "step", "date", "param"],
         }
-        self.config = {"param": "3008"}
 
     # Testing different shapes
     @pytest.mark.fdb
     @pytest.mark.skip("Non-accessible data")
     def test_fdb_datacube(self):
+        import pygribjump as gj
         request = Request(
             Select("step", [0]),
             Select("levtype", ["unknown"]),
@@ -49,11 +52,14 @@ class TestSlicingFDBDatacube:
             Select("levelist", [1]),
             Box(["latitude", "longitude"], [47.38, 7], [47.5, 7.14]),
         )
-        from polytope.datacube.backends.fdb import FDBDatacube
-
-        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
+        self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(
+            request=request,
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            options=self.options,
+        )
         result = self.API.retrieve(request)
         # result.pprint_2()
         assert len(result.leaves) == 99
