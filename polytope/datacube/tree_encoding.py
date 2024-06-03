@@ -2,7 +2,7 @@ from copy import deepcopy
 
 from . import index_tree_pb2 as pb2
 from .datacube_axis import IntDatacubeAxis
-from .index_tree import IndexTree
+from .index_tree_pb2 import IndexTree
 
 
 def encode_tree(tree: IndexTree):
@@ -49,36 +49,6 @@ def encode_child(tree: IndexTree, child: IndexTree, node, result_size=[]):
     child_node.value.extend(child.values)
     # for child_val in child.values:
     #     child_node.value.append(child_val)
-    # if isinstance(child.values[0], int):
-    #     for i, child_val in enumerate(child.values):
-    #         child_node_val = pb2.Value()
-    #         child_node_val.int_val = child_val
-    #         child_node.value.append(child_node_val)
-    # if isinstance(child.values[0], float):
-    #     for i, child_val in enumerate(child.values):
-    #         child_node_val = pb2.Value()
-    #         child_node_val.double_val = child_val
-    #         child_node.value.append(child_node_val)
-    # if isinstance(child.values[0], str):
-    #     for i, child_val in enumerate(child.values):
-    #         child_node_val = pb2.Value()
-    #         child_node_val.str_val = child_val
-    #         child_node.value.append(child_node_val)
-    # if isinstance(child.values[0], pd.Timestamp):
-    #     for i, child_val in enumerate(child.values):
-    #         child_node_val = pb2.Value()
-    #         child_node_val.str_val = child_val.strftime("%Y%m%dT%H%M%S")
-    #         child_node.value.append(child_node_val)
-    # if isinstance(child.values[0], np.datetime64):
-    #     for i, child_val in enumerate(child.values):
-    #         child_node_val = pb2.Value()
-    #         child_node_val.str_val = pd.to_datetime(str(child_val)).strftime("%Y/%m/%dT%H:%M:%S")
-    #         child_node.value.append(child_node_val)
-    # if isinstance(child.values[0], np.timedelta64):
-    #     for i, child_val in enumerate(child.values):
-    #         child_node_val = pb2.Value()
-    #         child_node_val.str_val = str(child_val)
-    #         child_node.value.append(child_node_val)
 
     for c in child.children:
         new_result_size = deepcopy(result_size)
@@ -115,10 +85,7 @@ def decode_child(node, tree, datacube):
         tree.indexes = node.indexes
     for child in node.children:
         child_axis = datacube._axes[child.axis]
-        child_vals = []
-        for child_val in child.value:
-            child_vals.append(getattr(child_val, child_val.WhichOneof("value")))
-        child_vals = tuple(child_vals)
+        child_vals = tuple(child.value)
         child_node = IndexTree(child_axis, child_vals)
         tree.add_child(child_node)
         decode_child(child, child_node, datacube)
