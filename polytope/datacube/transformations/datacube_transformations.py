@@ -53,6 +53,9 @@ class DatacubeAxisTransformation(ABC):
     def unmap_path_key(self, key_value_path, leaf_path, unwanted_path, axis):
         return (key_value_path, leaf_path, unwanted_path)
 
+    def unmap_tree_node(self, node, unwanted_path):
+        return (node, unwanted_path)
+
     def find_indices_between(self, indexes_ranges, low, up, datacube, method, indexes_between_ranges, axis):
         return indexes_between_ranges
 

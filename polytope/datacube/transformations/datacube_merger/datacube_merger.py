@@ -88,3 +88,15 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
             new_key_value_path[self._first_axis] = first_val
             new_key_value_path[self._second_axis] = second_val
         return (new_key_value_path, leaf_path, unwanted_path)
+
+    def unmap_tree_node(self, node, unwanted_path):
+        if node._axis.name == self._first_axis:
+            new_first_vals = []
+            new_second_vals = []
+            for value in node.values:
+                (first_val, second_val) = self.unmerge(value)
+                new_first_vals.append(first_val)
+                new_second_vals.append(second_val)
+            node.values = new_first_vals
+            interm_node = node.add_node_layer_after(node._axis, new_second_vals)
+        return (interm_node, unwanted_path)

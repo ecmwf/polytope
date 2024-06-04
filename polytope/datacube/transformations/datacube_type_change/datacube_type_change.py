@@ -48,6 +48,15 @@ class DatacubeAxisTypeChange(DatacubeAxisTransformation):
             key_value_path[axis.name] = unchanged_val
         return (key_value_path, leaf_path, unwanted_path)
 
+    def unmap_tree_node(self, node, unwanted_path):
+        if node.axis.name == self.name:
+            new_node_vals = []
+            for value in node.values:
+                unchanged_val = self.make_str(value)
+                new_node_vals.append(unchanged_val)
+            node.values = new_node_vals
+        return (node, unwanted_path)
+
 
 class TypeChangeStrToInt(DatacubeAxisTypeChange):
     def __init__(self, axis_name, new_type):

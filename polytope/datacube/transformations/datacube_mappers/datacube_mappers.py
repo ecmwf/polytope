@@ -98,6 +98,10 @@ class DatacubeMapper(DatacubeAxisTransformation):
             key_value_path[self.old_axis] = unmapped_idx
         return (key_value_path, leaf_path, unwanted_path)
 
+    def unmap_tree_node(self, node, unwanted_path):
+        # TODO
+        pass
+
 
 _type_to_datacube_mapper_lookup = {
     "octahedral": "OctahedralGridMapper",
