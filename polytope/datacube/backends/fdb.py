@@ -296,14 +296,14 @@ class FDBDatacube(Datacube):
     def prep_tree_encoding(self, node, unwanted_path=None):
         # TODO: prepare the tree for protobuf encoding
         # ie transform all axes for gribjump and adding the index property on the leaves
-
         if unwanted_path is None:
             unwanted_path = {}
 
-        ax = node.axis
-        (node, unwanted_path) = ax.unmap_tree_node(node, unwanted_path)
-        for c in node.children:
-            self.prep_tree_encoding(c, unwanted_path)
+        if len(node.children) != 0:
+            ax = node.axis
+            (node, unwanted_path) = ax.unmap_tree_node(node, unwanted_path)
+            for c in node.children:
+                self.prep_tree_encoding(c, unwanted_path)
 
         # if leaf_path is None:
         #     leaf_path = {}

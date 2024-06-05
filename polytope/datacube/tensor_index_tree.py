@@ -143,7 +143,7 @@ class TensorIndexTree(object):
     def add_node_layer_after(self, ax, vals):
         interm_node = TensorIndexTree(ax, vals)
         interm_node.children = self.children
-        interm_node.parent = self
+        interm_node._parent = self
         self.children = SortedList()
         self.children.add(interm_node)
         return interm_node

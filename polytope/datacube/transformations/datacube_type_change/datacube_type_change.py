@@ -50,10 +50,11 @@ class DatacubeAxisTypeChange(DatacubeAxisTransformation):
 
     def unmap_tree_node(self, node, unwanted_path):
         if node.axis.name == self.name:
-            new_node_vals = []
-            for value in node.values:
-                unchanged_val = self.make_str(value)
-                new_node_vals.append(unchanged_val)
+            new_node_vals = self.make_str(node.values)
+            # new_node_vals = []
+            # for value in node.values:
+            #     unchanged_val = self.make_str(value)
+            #     new_node_vals.append(unchanged_val)
             node.values = new_node_vals
         return (node, unwanted_path)
 
