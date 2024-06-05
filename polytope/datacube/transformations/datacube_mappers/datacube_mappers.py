@@ -99,8 +99,19 @@ class DatacubeMapper(DatacubeAxisTransformation):
         return (key_value_path, leaf_path, unwanted_path)
 
     def unmap_tree_node(self, node, unwanted_path):
-        # TODO
-        pass
+        values = node.values
+        if node._axis.name == self._mapped_axes()[0]:
+            unwanted_path[node._axis.name] = values
+            returned_node = node
+        if node._axis.name == self._mapped_axes()[1]:
+            first_vals = unwanted_path[self._mapped_axes()[0]]
+            unmapped_idxs = []
+            for first_val in first_vals:
+                for val in values:
+                    unmapped_idx = self.unmap(first_val, val)
+                    unmapped_idxs.append(unmapped_idx)
+            returned_node = node.hide_non_index_nodes(unmapped_idxs)
+        return (returned_node, unwanted_path)
 
 
 _type_to_datacube_mapper_lookup = {
