@@ -99,9 +99,6 @@ class DatacubeMapper(DatacubeAxisTransformation):
         return (key_value_path, leaf_path, unwanted_path)
 
     def unmap_tree_node(self, node, unwanted_path):
-        print("ever here?")
-        print(node.axis.name)
-        # TODO: why is this only ever latitude and never gets to longitude?
         values = node.values
         if node.axis.name == self._mapped_axes()[0]:
             unwanted_path[node.axis.name] = values

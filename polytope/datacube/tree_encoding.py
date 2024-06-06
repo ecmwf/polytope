@@ -26,16 +26,19 @@ def encode_tree(tree: IndexTree):
 def encode_child(tree: IndexTree, child: IndexTree, node, result_size=[]):
     child_node = pb2.Node()
 
-    child_node.axis = child.axis.name
-
     # Add the result size to the final node
     # TODO: how to assign repeated fields more efficiently?
     # NOTE: this will only really be efficient when we compress and have less leaves
     if len(child.children) == 0:
+        # TODO: here, we need to find the last node which isn't hidden and add all of this to that one
         result_size.append(len(child.values))
         result_size.append(len(child.indexes))
         child_node.result_size.extend(result_size)
         child_node.indexes.extend(child.indexes)
+
+    # TODO: need to add axis and children etc to the encoded node only if the tree node isn't hidden 
+    child_node.axis = child.axis.name
+
     # NOTE: do we need this if we parse the tree before it has values?
     # TODO: not clear if child.value is a numpy array or a simple float...
     # TODO: not clear what happens if child.value is a np array since this is not a supported type by protobuf

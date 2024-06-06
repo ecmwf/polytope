@@ -299,11 +299,21 @@ class FDBDatacube(Datacube):
         if unwanted_path is None:
             unwanted_path = {}
 
+        ax = node.axis
+        (new_node, unwanted_path) = ax.unmap_tree_node(node, unwanted_path)
+
         if len(node.children) != 0:
-            ax = node.axis
-            (node, unwanted_path) = ax.unmap_tree_node(node, unwanted_path)
-            for c in node.children:
+            for c in new_node.children:
                 self.prep_tree_encoding(c, unwanted_path)
+        
+        # if len(node.children) != 0:
+        #     ax = node.axis
+        #     (node, unwanted_path) = ax.unmap_tree_node(node, unwanted_path)
+        #     for c in node.children:
+        #         self.prep_tree_encoding(c, unwanted_path)
+        # else:
+        #     ax = node.axis
+        #     (node, unwanted_path) = ax.unmap_tree_node(node, unwanted_path)
 
         # if leaf_path is None:
         #     leaf_path = {}

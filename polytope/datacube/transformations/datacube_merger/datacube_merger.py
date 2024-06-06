@@ -100,5 +100,5 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
             #     new_second_vals.append(second_val)
             node.values = new_first_vals
             # TODO: actually need to give the second axis of the transformation to get the interm axis
-            interm_node = node.add_node_layer_after(node.axis, new_second_vals)
+            interm_node = node.add_node_layer_after(self._second_axis, new_second_vals)
         return (interm_node, unwanted_path)

@@ -140,7 +140,9 @@ class TensorIndexTree(object):
             return None
         return child
 
-    def add_node_layer_after(self, ax, vals):
+    def add_node_layer_after(self, ax_name, vals):
+        ax = IntDatacubeAxis()
+        ax.name = ax_name
         interm_node = TensorIndexTree(ax, vals)
         interm_node.children = self.children
         interm_node._parent = self
@@ -176,8 +178,15 @@ class TensorIndexTree(object):
     
     def hide_two_levels(self):
         self.hidden = True
-        if (self._parent.children) == 1:
+        if self._parent.non_hidden_children() == 0:
             self._parent.hidden = True
+
+    def non_hidden_children(self):
+        non_hidden_child_counter = 0
+        for c in self.children:
+            if not c.hidden:
+                non_hidden_child_counter += 1
+        return non_hidden_child_counter
 
     # def skip_node(self):
     #     # NOTE: remove this node and give its children to its parent
@@ -202,7 +211,8 @@ class TensorIndexTree(object):
             logging.debug("\n")
         logging.debug("\t" * level + "\u21b3" + str(self))
         for child in self.children:
-            child.pprint(level + 1)
+            if not child.hidden:
+                child.pprint(level + 1)
         if len(self.children) == 0:
             logging.debug("\t" * (level + 1) + "\u21b3" + str(self.result))
 
