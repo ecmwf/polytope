@@ -9,4 +9,5 @@ message Node {
     repeated double result = 4;
     repeated int64 size_result = 5;
     repeated Node children = 6;
+    repeated int64 size_indexes_branch = 7;
 }

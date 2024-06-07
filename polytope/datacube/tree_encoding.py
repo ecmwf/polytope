@@ -26,18 +26,39 @@ def encode_tree(tree: TensorIndexTree):
 def encode_child(tree: TensorIndexTree, child: TensorIndexTree, node, result_size=[]):
     child_node = pb2.Node()
 
+    new_result_size = deepcopy(result_size)
+    new_result_size.append(len(child.values))
+
     # Add the result size to the final node
     # TODO: how to assign repeated fields more efficiently?
     # NOTE: this will only really be efficient when we compress and have less leaves
-    if len(child.children) == 0:
-        # TODO: here, we need to find the last node which isn't hidden and add all of this to that one
-        result_size.append(len(child.values))
-        # result_size.append(len(child.indexes))
-        child_node.size_result.extend(result_size)
-        child_node.indexes.extend(child.indexes)
+    # if len(child.children) == 0:
+    #     # TODO: here, we need to find the last node which isn't hidden and add all of this to that one
+    #     result_size.append(len(child.values))
+    #     # result_size.append(len(child.indexes))
+    #     child_node.size_result.extend(result_size)
+    #     child_node.indexes.extend(child.indexes)
+
+    # if len(child.children) != 0:
+    #     if len(child.children[0].children) == 0:
+    #         # NOTE: here we are with tree is the grandparent so need to add everything to it, including the size_index
+    #     result_size.append(len(child.values))
+    #     # result_size.append(len(child.indexes))
+    #     child_node.size_result.extend(result_size)
+    #     child_node.indexes.extend(child.indexes)
+
+    if child.hidden:
+        # add indexes to parent and add also indexes size...
+        node.indexes.extend(tree.indexes)
+        node.size_indexes_branch.append(len(child.children))
+        # node.size_result.extend(result_size)
+
 
     # TODO: need to add axis and children etc to the encoded node only if the tree node isn't hidden 
-    child_node.axis = child.axis.name
+    else:
+        child_node.axis = child.axis.name
+        child_node.value.extend(child.values)
+        child_node.size_result.extend(new_result_size)
 
     # NOTE: do we need this if we parse the tree before it has values?
     # TODO: not clear if child.value is a numpy array or a simple float...
@@ -49,13 +70,13 @@ def encode_child(tree: TensorIndexTree, child: TensorIndexTree, node, result_siz
     #         child_node.result.append(child.result)
 
     # Assign the node value according to the type
-    child_node.value.extend(child.values)
+    # child_node.value.extend(child.values)
     # for child_val in child.values:
     #     child_node.value.append(child_val)
 
     for c in child.children:
-        new_result_size = deepcopy(result_size)
-        new_result_size.append(len(child.values))
+        # new_result_size = deepcopy(result_size)
+        # new_result_size.append(len(child.values))
         encode_child(child, c, child_node, new_result_size)
 
     # NOTE: we append the children once their branch has been completed until the leaf
@@ -87,9 +108,18 @@ def decode_child(node, tree, datacube):
         tree.result = node.result
         tree.result_size = node.size_result
         tree.indexes = node.indexes
+        tree.indexes_size = node.size_indexes_branch
     for child in node.children:
-        child_axis = datacube._axes[child.axis]
-        child_vals = tuple(child.value)
-        child_node = TensorIndexTree(child_axis, child_vals)
-        tree.add_child(child_node)
-        decode_child(child, child_node, datacube)
+        if child.axis in datacube._axes.keys():
+            child_axis = datacube._axes[child.axis]
+            child_vals = tuple(child.value)
+            child_node = TensorIndexTree(child_axis, child_vals)
+            tree.add_child(child_node)
+            decode_child(child, child_node, datacube)
+        else:
+            grandchild_axis = datacube._axes[child.children[0].axis]
+            for c in child.children:
+                grandchild_vals = tuple(c.value)
+                grandchild_node = TensorIndexTree(grandchild_axis, grandchild_vals)
+                tree.add_child(grandchild_node)
+                decode_child(c, grandchild_node, datacube)
