@@ -7,9 +7,6 @@ from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Point, Select
 
-# import geopandas as gpd
-# import matplotlib.pyplot as plt
-
 
 class TestRegularGrid:
     def setup_method(self, method):
@@ -74,8 +71,6 @@ class TestRegularGrid:
     @pytest.mark.internet
     def test_regular_grid(self):
         import pygribjump as gj
-
-        from polytope.datacube.backends.fdb import FDBDatacube
 
         request = Request(
             Select("step", [0]),
