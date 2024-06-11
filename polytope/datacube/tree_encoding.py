@@ -23,6 +23,12 @@ def encode_tree(tree: TensorIndexTree):
     return node.SerializeToString()
 
 
+def write_encoded_tree_to_file(tree_bytes):
+    with open("encodedTree", "wb") as fs:
+        print(tree_bytes)
+        fs.write(tree_bytes)
+
+
 def encode_child(tree: TensorIndexTree, child: TensorIndexTree, node, result_size=[]):
     child_node = pb2.Node()
 

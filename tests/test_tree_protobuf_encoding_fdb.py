@@ -12,7 +12,7 @@ from polytope.datacube.datacube_axis import (
     UnsliceableDatacubeAxis,
 )
 from polytope.datacube.tensor_index_tree import TensorIndexTree
-from polytope.datacube.tree_encoding import decode_tree, encode_tree
+from polytope.datacube.tree_encoding import decode_tree, encode_tree, write_encoded_tree_to_file
 
 
 class TestEncoder:
@@ -82,6 +82,7 @@ class TestEncoder:
         fdb_datacube = self.API.datacube
         fdb_datacube.prep_tree_encoding(result)
         encoded_bytes = encode_tree(result)
+        # write_encoded_tree_to_file(encoded_bytes)
         decoded_tree = decode_tree(fdb_datacube, encoded_bytes)
         decoded_tree.pprint()
         assert decoded_tree.leaves[0].result_size == [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
