@@ -22,8 +22,6 @@ class FDBDatacube(Datacube):
         # Find values in the level 3 FDB datacube
 
         self.gj = gj
-        print("WHATS GJ here?")
-        print(self.gj)
         self.fdb_coordinates = self.gj.axes(partial_request)
 
         self.check_branching_axes(request)
@@ -63,9 +61,7 @@ class FDBDatacube(Datacube):
                     (upper, lower, idx) = polytope.extents(ax)
                     if "sfc" in polytope.points[idx]:
                         self.fdb_coordinates.pop("levelist")
-        print(self.fdb_coordinates)
         self.fdb_coordinates.pop("quantile", None)
-        print(self.fdb_coordinates)
 
     def get(self, requests: TensorIndexTree):
         if len(requests.children) == 0:
