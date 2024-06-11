@@ -8,8 +8,6 @@ from polytope.shapes import Point, Select
 
 class TestSlicingFDBDatacube:
     def setup_method(self, method):
-        from polytope.datacube.backends.fdb import FDBDatacube
-
         # Create a dataarray with 3 labelled axes using different index types
         self.options = {
             "config": [
@@ -30,9 +28,6 @@ class TestSlicingFDBDatacube:
             ]
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
-        self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
-        self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
 
     # Testing different shapes
     @pytest.mark.fdb
@@ -49,6 +44,11 @@ class TestSlicingFDBDatacube:
             Select("type", ["an"]),
             Point(["latitude", "longitude"], [[0.16, 0.176]], method="nearest"),
         )
+        from polytope.datacube.backends.fdb import FDBDatacube
+
+        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
+        self.slicer = HullSlicer()
+        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
 
@@ -66,6 +66,11 @@ class TestSlicingFDBDatacube:
             Select("type", ["an"]),
             Point(["latitude", "longitude"], [[0.175746921078, 0.210608424337]], method="nearest"),
         )
+        from polytope.datacube.backends.fdb import FDBDatacube
+
+        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
+        self.slicer = HullSlicer()
+        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 1
@@ -84,6 +89,11 @@ class TestSlicingFDBDatacube:
             Select("type", ["fc"]),
             Point(["latitude", "longitude"], [[0.035149384216, 0.0]], method="nearest"),
         )
+        from polytope.datacube.backends.fdb import FDBDatacube
+
+        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
+        self.slicer = HullSlicer()
+        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 3
@@ -102,6 +112,11 @@ class TestSlicingFDBDatacube:
             Select("type", ["fc"]),
             Point(["latitude", "longitude"], [[0.035149384216, -0.01]], method="nearest"),
         )
+        from polytope.datacube.backends.fdb import FDBDatacube
+
+        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
+        self.slicer = HullSlicer()
+        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 1
@@ -122,6 +137,11 @@ class TestSlicingFDBDatacube:
             Select("type", ["fc"]),
             Point(["latitude", "longitude"], [[0.035149384216, 360 - 0.01]], method="nearest"),
         )
+        from polytope.datacube.backends.fdb import FDBDatacube
+
+        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
+        self.slicer = HullSlicer()
+        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 1
@@ -142,6 +162,11 @@ class TestSlicingFDBDatacube:
             Select("type", ["fc"]),
             Point(["latitude", "longitude"], [[0.035149384216, 359.97]], method="nearest"),
         )
+        from polytope.datacube.backends.fdb import FDBDatacube
+
+        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
+        self.slicer = HullSlicer()
+        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
         result = self.API.retrieve(request)
         # result.pprint_2()
         assert len(result.leaves) == 1

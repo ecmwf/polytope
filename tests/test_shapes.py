@@ -59,14 +59,10 @@ class TestSlicing3DXarrayDatacube:
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
             ]
         }
-        self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "step": "11"}
-        self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
-        self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
+        self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
 
         request = Request(
             Select("step", [11]),
-            Select("number", [1]),
             Select("levtype", ["sfc"]),
             Select("date", [pd.Timestamp("20230710T120000")]),
             Select("domain", ["g"]),
@@ -78,6 +74,9 @@ class TestSlicing3DXarrayDatacube:
             Span("latitude", 89.9, 90),
             All("longitude"),
         )
+        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
+        self.slicer = HullSlicer()
+        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 20

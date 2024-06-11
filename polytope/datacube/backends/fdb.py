@@ -8,7 +8,7 @@ from .datacube import Datacube, IndexTree
 
 
 class FDBDatacube(Datacube):
-    def __init__(self, config=None, axis_options=None, datacube_options=None):
+    def __init__(self, request, config=None, axis_options=None, datacube_options=None):
         if config is None:
             config = {}
 
@@ -21,9 +21,10 @@ class FDBDatacube(Datacube):
 
         partial_request = config
         # Find values in the level 3 FDB datacube
-
         self.gj = pygj.GribJump()
         self.fdb_coordinates = self.gj.axes(partial_request)
+
+        self.check_branching_axes(request)
 
         logging.info("Axes returned from GribJump are: " + str(self.fdb_coordinates))
 
@@ -34,7 +35,7 @@ class FDBDatacube(Datacube):
             for opt in self.axis_options:
                 if opt.axis_name == name:
                     options = opt
-            # options = axis_options.get(name, None)
+
             self._check_and_add_axes(options, name, values)
             self.treated_axes.append(name)
             self.complete_axes.append(name)
@@ -46,13 +47,27 @@ class FDBDatacube(Datacube):
                 for opt in self.axis_options:
                     if opt.axis_name == name:
                         options = opt
-                # options = axis_options.get(name, None)
+
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
 
         logging.info("Polytope created axes for: " + str(self._axes.keys()))
 
+    def check_branching_axes(self, request):
+        polytopes = request.polytopes()
+        for polytope in polytopes:
+            for ax in polytope._axes:
+                if ax == "levtype":
+                    (upper, lower, idx) = polytope.extents(ax)
+                    if "sfc" in polytope.points[idx]:
+                        self.fdb_coordinates.pop("levelist")
+        print(self.fdb_coordinates)
+        self.fdb_coordinates.pop("quantile", None)
+        print(self.fdb_coordinates)
+
     def get(self, requests: IndexTree):
+        if len(requests.children) == 0:
+            return requests
         fdb_requests = []
         fdb_requests_decoding_info = []
         self.get_fdb_requests(requests, fdb_requests, fdb_requests_decoding_info)
@@ -170,6 +185,7 @@ class FDBDatacube(Datacube):
 
         leaf_path_copy = deepcopy(leaf_path)
         leaf_path_copy.pop("values")
+        # leaf_path_copy.update(self.necessary_popped_axes)
         return (leaf_path_copy, range_lengths, current_start_idxs, fdb_node_ranges, lat_length)
 
     def get_last_layer_before_leaf(self, requests, leaf_path, range_l, current_idx, fdb_range_n):

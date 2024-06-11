@@ -12,8 +12,6 @@ from polytope.shapes import Box, Select
 
 class TestReducedLatLonGrid:
     def setup_method(self, method):
-        from polytope.datacube.backends.fdb import FDBDatacube
-
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/wave.grib"
         download_test_data(nexus_url, "wave.grib")
         self.options = {
@@ -34,10 +32,8 @@ class TestReducedLatLonGrid:
             ]
         }
         self.config = {"class": "od", "stream": "wave"}
-        self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
-        self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
 
+    @pytest.mark.skip(reason="wave data grid packing not supported")
     @pytest.mark.internet
     @pytest.mark.fdb
     def test_reduced_ll_grid(self):
@@ -55,6 +51,11 @@ class TestReducedLatLonGrid:
             Select("type", ["fc"]),
             Box(["latitude", "longitude"], [0, 0], [1.2, 1.5]),
         )
+        from polytope.datacube.backends.fdb import FDBDatacube
+
+        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
+        self.slicer = HullSlicer()
+        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 130

@@ -8,8 +8,6 @@ from polytope.shapes import Point, Select
 
 class TestSlicingFDBDatacube:
     def setup_method(self, method):
-        from polytope.datacube.backends.fdb import FDBDatacube
-
         # Create a dataarray with 3 labelled axes using different index types
         self.options = {
             "config": [
@@ -36,9 +34,6 @@ class TestSlicingFDBDatacube:
             ]
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
-        self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
-        self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
 
     # Testing different shapes
     @pytest.mark.fdb
@@ -55,6 +50,11 @@ class TestSlicingFDBDatacube:
             Select("type", ["fc"]),
             Point(["latitude", "longitude"], [[-20, -20]]),
         )
+        from polytope.datacube.backends.fdb import FDBDatacube
+
+        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
+        self.slicer = HullSlicer()
+        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
         result = self.API.retrieve(request)
         result.pprint_2()
         assert len(result.leaves) == 1
@@ -75,6 +75,11 @@ class TestSlicingFDBDatacube:
             Select("type", ["fc"]),
             Point(["latitude", "longitude"], [[-20, 50 + 360]]),
         )
+        from polytope.datacube.backends.fdb import FDBDatacube
+
+        self.fdbdatacube = FDBDatacube(request, self.config, axis_options=self.options)
+        self.slicer = HullSlicer()
+        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
         result = self.API.retrieve(request)
         result.pprint_2()
         assert len(result.leaves) == 1
