@@ -93,3 +93,8 @@ def decode_child(node, tree, datacube):
                 grandchild_node = TensorIndexTree(grandchild_axis, grandchild_vals)
                 tree.add_child(grandchild_node)
                 decode_child(c, grandchild_node, datacube)
+
+
+def decode_into_tree(tree, bytearray):
+    # TODO: write a decoder that decodes the bytearray (ie results) from gribjump directly into the tree instance
+    pass
