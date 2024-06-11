@@ -8,7 +8,6 @@ from polytope.shapes import Point, Select
 
 class TestSlicingFDBDatacube:
     def setup_method(self, method):
-
         # Create a dataarray with 3 labelled axes using different index types
         self.options = {
             "axis_config": [
@@ -52,6 +51,7 @@ class TestSlicingFDBDatacube:
     @pytest.mark.fdb
     def test_fdb_datacube(self):
         import pygribjump as gj
+
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -81,6 +81,7 @@ class TestSlicingFDBDatacube:
     @pytest.mark.fdb
     def test_point_outside_local_region(self):
         import pygribjump as gj
+
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -110,6 +111,7 @@ class TestSlicingFDBDatacube:
     @pytest.mark.fdb
     def test_point_outside_local_region_2(self):
         import pygribjump as gj
+
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -139,6 +141,7 @@ class TestSlicingFDBDatacube:
     @pytest.mark.fdb
     def test_point_outside_local_region_3(self):
         import pygribjump as gj
+
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -167,6 +170,7 @@ class TestSlicingFDBDatacube:
     @pytest.mark.fdb
     def test_point_outside_local_region_4(self):
         import pygribjump as gj
+
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -195,6 +199,7 @@ class TestSlicingFDBDatacube:
     @pytest.mark.fdb
     def test_point_outside_local_region_5(self):
         import pygribjump as gj
+
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -223,6 +228,7 @@ class TestSlicingFDBDatacube:
     @pytest.mark.fdb
     def test_point_outside_local_region_6(self):
         import pygribjump as gj
+
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -251,6 +257,7 @@ class TestSlicingFDBDatacube:
     @pytest.mark.fdb
     def test_point_outside_local_region_7(self):
         import pygribjump as gj
+
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -280,6 +287,7 @@ class TestSlicingFDBDatacube:
     @pytest.mark.fdb
     def test_point_outside_local_region_8(self):
         import pygribjump as gj
+
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -309,6 +317,7 @@ class TestSlicingFDBDatacube:
     @pytest.mark.fdb
     def test_point_outside_local_region_9(self):
         import pygribjump as gj
+
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),

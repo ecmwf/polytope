@@ -3,7 +3,7 @@ import pytest
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select, Span
+from polytope.shapes import Box, Select
 
 # import geopandas as gpd
 # import matplotlib.pyplot as plt
@@ -11,7 +11,6 @@ from polytope.shapes import Box, Select, Span
 
 class TestSlicingFDBDatacube:
     def setup_method(self, method):
-
         # Create a dataarray with 3 labelled axes using different index types
         self.options = {
             "axis_config": [
@@ -50,6 +49,7 @@ class TestSlicingFDBDatacube:
     @pytest.mark.fdb
     def test_fdb_datacube(self):
         import pygribjump as gj
+
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -76,4 +76,14 @@ class TestSlicingFDBDatacube:
         for leaf in result.leaves:
             assert leaf.hidden
             assert leaf._parent.hidden
-            assert leaf._parent._parent.indexes == [3294704, 3294705, 3294706, 3289572, 3289573, 3289574, 3284444, 3284445, 3284446]
+            assert leaf._parent._parent.indexes == [
+                3294704,
+                3294705,
+                3294706,
+                3289572,
+                3289573,
+                3289574,
+                3284444,
+                3284445,
+                3284446,
+            ]

@@ -9,7 +9,6 @@ from polytope.shapes import Select, Span
 
 class TestSlicingFDBDatacube:
     def setup_method(self, method):
-
         # Create a dataarray with 3 labelled axes using different index types
         self.options = {
             "axis_config": [
@@ -51,6 +50,7 @@ class TestSlicingFDBDatacube:
     @pytest.mark.skip(reason="gribjump problem")
     def test_fdb_datacube(self):
         import pygribjump as gj
+
         request = Request(
             Select("step", [0]),
             Select("levtype", ["pl"]),

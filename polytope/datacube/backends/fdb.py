@@ -305,31 +305,6 @@ class FDBDatacube(Datacube):
         if len(node.children) != 0:
             for c in new_node.children:
                 self.prep_tree_encoding(c, unwanted_path)
-        
-        # if len(node.children) != 0:
-        #     ax = node.axis
-        #     (node, unwanted_path) = ax.unmap_tree_node(node, unwanted_path)
-        #     for c in node.children:
-        #         self.prep_tree_encoding(c, unwanted_path)
-        # else:
-        #     ax = node.axis
-        #     (node, unwanted_path) = ax.unmap_tree_node(node, unwanted_path)
-
-        # if leaf_path is None:
-        #     leaf_path = {}
-        # # NOTE: this is now applying the transformations, but on a flat leaf... we need to apply it to the tree
-        # ax = tree.axis
-        # key_value_path = {ax.name: tree.values}
-        # (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
-        #     key_value_path, leaf_path, self.unwanted_path
-        # )
-        # leaf_path.update(key_value_path)
-        # pass
-
-    # def iterative_tree_transformation(self, tree, leaf_path=None):
-    #     # TODO: iteratively apply the transformations for the axes in the tree
-    #     pass
-        
 
     def prep_tree_decoding(self, tree):
         # TODO: transform the tree after decoding from protobuf

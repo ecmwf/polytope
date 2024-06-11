@@ -12,7 +12,6 @@ from polytope.shapes import Box, Select
 
 class TestReducedLatLonGrid:
     def setup_method(self, method):
-
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/wave.grib"
         download_test_data(nexus_url, "wave.grib")
         self.options = {
@@ -54,6 +53,7 @@ class TestReducedLatLonGrid:
     @pytest.mark.fdb
     def test_reduced_ll_grid(self):
         import pygribjump as gj
+
         request = Request(
             Select("step", [1]),
             Select("date", [pd.Timestamp("20231129T000000")]),

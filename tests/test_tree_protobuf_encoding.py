@@ -1,9 +1,7 @@
-import numpy as np
 import pandas as pd
 import pytest
 
 from polytope.datacube.backends.mock import MockDatacube
-from polytope.datacube.backends.fdb import FDBDatacube
 from polytope.datacube.datacube_axis import (
     FloatDatacubeAxis,
     IntDatacubeAxis,
@@ -50,10 +48,12 @@ class TestEncoder:
 
     @pytest.mark.fdb
     def test_encoding(self):
+        import pygribjump as gj
+
         from polytope.engine.hullslicer import HullSlicer
         from polytope.polytope import Polytope, Request
         from polytope.shapes import Box, Select
-        import pygribjump as gj
+
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),

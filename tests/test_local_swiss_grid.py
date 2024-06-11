@@ -11,7 +11,6 @@ from polytope.shapes import Box, Select
 
 class TestSlicingFDBDatacube:
     def setup_method(self, method):
-
         # Create a dataarray with 3 labelled axes using different index types
         self.options = {
             "axis_config": [
@@ -44,6 +43,7 @@ class TestSlicingFDBDatacube:
     @pytest.mark.skip("Non-accessible data")
     def test_fdb_datacube(self):
         import pygribjump as gj
+
         request = Request(
             Select("step", [0]),
             Select("levtype", ["unknown"]),

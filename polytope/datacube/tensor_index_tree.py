@@ -151,31 +151,17 @@ class TensorIndexTree(object):
         return interm_node
 
     def delete_non_index_nodes(self, index_vals):
-        # TODO: when there is an index node, we want to delete the parent and node
-        # and instead get the index property on the grandparent
-        # BUT... how do we do this? Because since we delete two nodes, we might loose some info
-        # Especially if the parent has several children, we can't just remove it like that?
-        # Instead, we could maybe do the classic remove like we did before which removes up to 
-        # a certain point and give the values to the grandparent at that point before removing 
-        # completely the two parent and self nodes?
         grandparent = self._parent._parent
         grandparent.indexes.extend(index_vals)
         self.remove_branch()
         return grandparent
-    
+
     def hide_non_index_nodes(self, index_vals):
-        # TODO: when there is an index node, we want to delete the parent and node
-        # and instead get the index property on the grandparent
-        # BUT... how do we do this? Because since we delete two nodes, we might loose some info
-        # Especially if the parent has several children, we can't just remove it like that?
-        # Instead, we could maybe do the classic remove like we did before which removes up to 
-        # a certain point and give the values to the grandparent at that point before removing 
-        # completely the two parent and self nodes?
         grandparent = self._parent._parent
         grandparent.indexes.extend(index_vals)
         self.hide_two_levels()
         return grandparent
-    
+
     def hide_two_levels(self):
         self.hidden = True
         if self._parent.non_hidden_children() == 0:
@@ -187,16 +173,6 @@ class TensorIndexTree(object):
             if not c.hidden:
                 non_hidden_child_counter += 1
         return non_hidden_child_counter
-
-    # def skip_node(self):
-    #     # NOTE: remove this node and give its children to its parent
-    #     # TODO: what do we give back? What happens when self has multiple children?
-    #     self.parent = None
-    #     self._parent.children.remove(self)
-    #     for child in self.children:
-    #         self._parent.add_child(child)
-    #     # TODO: is this the right thing to return?
-    #     return self._parent
 
     def merge(self, other):
         for other_child in other.children:

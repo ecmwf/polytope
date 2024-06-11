@@ -89,12 +89,10 @@ class DatacubeAxis(ABC):
                 key_value_path, leaf_path, unwanted_path, self
             )
         return (key_value_path, leaf_path, unwanted_path)
-    
+
     def unmap_tree_node(self, node, unwanted_path):
         for transformation in self.transformations[::-1]:
-            (node, unwanted_path) = transformation.unmap_tree_node(
-                node, unwanted_path
-            )
+            (node, unwanted_path) = transformation.unmap_tree_node(node, unwanted_path)
         return (node, unwanted_path)
 
     def _remap_val_to_axis_range(self, value):

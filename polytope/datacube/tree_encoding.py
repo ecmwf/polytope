@@ -35,57 +35,21 @@ def encode_child(tree: TensorIndexTree, child: TensorIndexTree, node, result_siz
     new_result_size = deepcopy(result_size)
     new_result_size.append(len(child.values))
 
-    # Add the result size to the final node
-    # TODO: how to assign repeated fields more efficiently?
-    # NOTE: this will only really be efficient when we compress and have less leaves
-    # if len(child.children) == 0:
-    #     # TODO: here, we need to find the last node which isn't hidden and add all of this to that one
-    #     result_size.append(len(child.values))
-    #     # result_size.append(len(child.indexes))
-    #     child_node.size_result.extend(result_size)
-    #     child_node.indexes.extend(child.indexes)
-
-    # if len(child.children) != 0:
-    #     if len(child.children[0].children) == 0:
-    #         # NOTE: here we are with tree is the grandparent so need to add everything to it, including the size_index
-    #     result_size.append(len(child.values))
-    #     # result_size.append(len(child.indexes))
-    #     child_node.size_result.extend(result_size)
-    #     child_node.indexes.extend(child.indexes)
-
     if child.hidden:
         # add indexes to parent and add also indexes size...
         node.indexes.extend(tree.indexes)
         node.size_indexes_branch.append(len(child.children))
-        # node.size_result.extend(result_size)
 
-
-    # TODO: need to add axis and children etc to the encoded node only if the tree node isn't hidden 
+    # need to add axis and children etc to the encoded node only if the tree node isn't hidden
     else:
         child_node.axis = child.axis.name
         child_node.value.extend(child.values)
         child_node.size_result.extend(new_result_size)
 
-    # NOTE: do we need this if we parse the tree before it has values?
-    # TODO: not clear if child.value is a numpy array or a simple float...
-    # TODO: not clear what happens if child.value is a np array since this is not a supported type by protobuf
-    # if child.result is not None:
-    #     if isinstance(child.result, list):
-    #         child_node.result.extend(child.result)
-    #     else:
-    #         child_node.result.append(child.result)
-
-    # Assign the node value according to the type
-    # child_node.value.extend(child.values)
-    # for child_val in child.values:
-    #     child_node.value.append(child_val)
-
     for c in child.children:
-        # new_result_size = deepcopy(result_size)
-        # new_result_size.append(len(child.values))
         encode_child(child, c, child_node, new_result_size)
 
-    # NOTE: we append the children once their branch has been completed until the leaf
+    # we append the children once their branch has been completed until the leaf
     if not child.hidden:
         node.children.append(child_node)
 

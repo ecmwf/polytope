@@ -12,7 +12,6 @@ from polytope.shapes import Disk, Select
 
 class TestRegularGrid:
     def setup_method(self, method):
-
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/era5-levels-members.grib"
         download_test_data(nexus_url, "era5-levels-members.grib")
         self.options = {
@@ -54,6 +53,7 @@ class TestRegularGrid:
     @pytest.mark.internet
     def test_regular_grid(self):
         import pygribjump as gj
+
         request = Request(
             Select("step", [0]),
             Select("levtype", ["pl"]),
