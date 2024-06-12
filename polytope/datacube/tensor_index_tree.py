@@ -1,12 +1,8 @@
 import logging
+from bisect import bisect_left
 from typing import OrderedDict
 
-from sortedcontainers import SortedList
-
 from .datacube_axis import IntDatacubeAxis, UnsliceableDatacubeAxis
-
-from ..utility.list_tools import bisect_left_cmp, bisect_right_cmp
-from bisect import bisect_left, bisect_right
 
 
 class DatacubePath(OrderedDict):
@@ -98,14 +94,7 @@ class TensorIndexTree(object):
             return f"{self.axis}"
 
     def add_child(self, node, index=0):
-        print("ADDING CHILDREN")
-        print(self.children)
         self.children.insert(index, node)
-        # if node.axis.reorder:
-        #     self.children.insert(0, node)
-        # else:
-        #     self.children.append(node)
-        print(self.children)
         node._parent = self
 
     def add_value(self, value):
@@ -142,26 +131,7 @@ class TensorIndexTree(object):
         return self.parent is None
 
     def find_child(self, node):
-        # index = self.children.bisect_left(node)
-        # index = bisect_right_cmp(self.children, node, cmp=lambda x, y: x > y)
-        # if node not in self.children:
-        # index = bisect_left(self.children, node)
-        # print(self.children)
-        # print(node)
-        # print(index)
-        # print("LOOK NOW")
-        # print(node in self.children)
-        # if index >= len(self.children):
-        #     print("here also")
-        #     return None
-        # child = self.children[index]
         child = next((c for c in self.children if c == node), None)
-        # print("now")
-        # print(child)
-        # print(child == node)
-        # if not child == node:
-        #     print("here")
-        #     return None
         index = bisect_left(self.children, node)
         return (child, index)
 
