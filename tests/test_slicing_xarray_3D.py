@@ -100,6 +100,7 @@ class TestSlicing3DXarrayDatacube:
         points = [[1, 0], [3, 0], [2, 3], [3, 6], [1, 6]]
         request = Request(Polygon(["level", "step"], points), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
+        result.pprint()
         self.xarraydatacube.get(result)
         assert len(result.leaves) == 8
 

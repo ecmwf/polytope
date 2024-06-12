@@ -5,6 +5,9 @@ from sortedcontainers import SortedList
 
 from .datacube_axis import IntDatacubeAxis, UnsliceableDatacubeAxis
 
+from ..utility.list_tools import bisect_left_cmp, bisect_right_cmp
+from bisect import bisect_left, bisect_right
+
 
 class DatacubePath(OrderedDict):
     def values(self):
@@ -27,7 +30,7 @@ class TensorIndexTree(object):
     def __init__(self, axis=root, values=tuple()):
         # NOTE: the values here is a tuple so we can hash it
         self.values = values
-        self.children = SortedList()
+        self.children = []
         self._parent = None
         self.result = []
         self.axis = axis
@@ -94,8 +97,15 @@ class TensorIndexTree(object):
         else:
             return f"{self.axis}"
 
-    def add_child(self, node):
-        self.children.add(node)
+    def add_child(self, node, index=0):
+        print("ADDING CHILDREN")
+        print(self.children)
+        self.children.insert(index, node)
+        # if node.axis.reorder:
+        #     self.children.insert(0, node)
+        # else:
+        #     self.children.append(node)
+        print(self.children)
         node._parent = self
 
     def add_value(self, value):
@@ -105,9 +115,9 @@ class TensorIndexTree(object):
 
     def create_child(self, axis, value, next_nodes):
         node = TensorIndexTree(axis, (value,))
-        existing_child = self.find_child(node)
+        (existing_child, index) = self.find_child(node)
         if not existing_child:
-            self.add_child(node)
+            self.add_child(node, index)
             return (node, next_nodes)
         return (existing_child, next_nodes)
 
@@ -120,7 +130,7 @@ class TensorIndexTree(object):
         if self.parent is not None:
             self.parent.children.remove(self)
         self._parent = node
-        self._parent.children.add(self)
+        self._parent.children.append(self)
 
     def get_root(self):
         node = self
@@ -132,13 +142,28 @@ class TensorIndexTree(object):
         return self.parent is None
 
     def find_child(self, node):
-        index = self.children.bisect_left(node)
-        if index >= len(self.children):
-            return None
-        child = self.children[index]
-        if not child == node:
-            return None
-        return child
+        # index = self.children.bisect_left(node)
+        # index = bisect_right_cmp(self.children, node, cmp=lambda x, y: x > y)
+        # if node not in self.children:
+        # index = bisect_left(self.children, node)
+        # print(self.children)
+        # print(node)
+        # print(index)
+        # print("LOOK NOW")
+        # print(node in self.children)
+        # if index >= len(self.children):
+        #     print("here also")
+        #     return None
+        # child = self.children[index]
+        child = next((c for c in self.children if c == node), None)
+        # print("now")
+        # print(child)
+        # print(child == node)
+        # if not child == node:
+        #     print("here")
+        #     return None
+        index = bisect_left(self.children, node)
+        return (child, index)
 
     def add_node_layer_after(self, ax_name, vals):
         ax = IntDatacubeAxis()
@@ -146,8 +171,8 @@ class TensorIndexTree(object):
         interm_node = TensorIndexTree(ax, vals)
         interm_node.children = self.children
         interm_node._parent = self
-        self.children = SortedList()
-        self.children.add(interm_node)
+        self.children = []
+        self.children.append(interm_node)
         return interm_node
 
     def delete_non_index_nodes(self, index_vals):
@@ -176,9 +201,10 @@ class TensorIndexTree(object):
 
     def merge(self, other):
         for other_child in other.children:
-            my_child = self.find_child(other_child)
+            (my_child, _) = self.find_child(other_child)
             if not my_child:
-                self.add_child(other_child)
+                idx = bisect_left(self.children, other_child)
+                self.add_child(other_child, idx)
             else:
                 my_child.merge(other_child)
 
