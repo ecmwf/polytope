@@ -1,5 +1,5 @@
-from copy import deepcopy
 import math
+from copy import deepcopy
 
 from . import index_tree_pb2 as pb2
 from .datacube_axis import IntDatacubeAxis
@@ -124,5 +124,5 @@ def decode_child_into_tree(tree, node):
             for j in range(num_lon_branches):
                 lon_node = lat_node.children[j]
                 next_result_idx = start_result_idx + num_results
-                lon_node.result = node.result[start_result_idx: next_result_idx]
+                lon_node.result = node.result[start_result_idx:next_result_idx]
                 start_result_idx = next_result_idx
