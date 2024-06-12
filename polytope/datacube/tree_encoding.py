@@ -1,4 +1,5 @@
 from copy import deepcopy
+import math
 
 from . import index_tree_pb2 as pb2
 from .datacube_axis import IntDatacubeAxis
@@ -42,6 +43,7 @@ def encode_child(tree: TensorIndexTree, child: TensorIndexTree, node, result_siz
 
     # need to add axis and children etc to the encoded node only if the tree node isn't hidden
     else:
+        # new_result_size.append(len(child.values))
         child_node.axis = child.axis.name
         child_node.value.extend(child.values)
         child_node.size_result.extend(new_result_size)
@@ -97,4 +99,30 @@ def decode_child(node, tree, datacube):
 
 def decode_into_tree(tree, bytearray):
     # TODO: write a decoder that decodes the bytearray (ie results) from gribjump directly into the tree instance
-    pass
+    node = pb2.Node()
+    node.ParseFromString(bytearray)
+
+    decode_child_into_tree(tree, node)
+
+    return tree
+
+
+def decode_child_into_tree(tree, node):
+    if not tree.hidden:
+        # iterate through tree
+        for i, child in enumerate(tree.children):
+            node_c = node.children[i]
+            decode_child_into_tree(child, node_c)
+    else:
+        # TODO: if it's hidden, use the sizes to attribute to the hidden lat/lon nodes...
+        num_results = math.prod(node.size_result)
+        num_lat_branches = len(tree.children)
+        start_result_idx = 0
+        for i in range(num_lat_branches):
+            lat_node = tree.children[i]
+            num_lon_branches = len(lat_node.children)
+            for j in range(num_lon_branches):
+                lon_node = lat_node.children[j]
+                next_result_idx = start_result_idx + num_results
+                lon_node.result = node.result[start_result_idx: next_result_idx]
+                start_result_idx = next_result_idx
