@@ -20,6 +20,7 @@ nav:
         - Overview: User_Guide/Overview.md
         - Getting Started: User_Guide/Getting_started.md
         - Example: User_Guide/Example.md
+        - Building Features: User_Guide/Building_features.md
     - Developer Guide:
         - Overview: Developer_Guide/Overview.md
         - Datacube: Developer_Guide/Datacube.md
