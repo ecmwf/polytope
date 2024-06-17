@@ -148,7 +148,10 @@ class FDBDatacube(Datacube):
         if len(self.nearest_search) != 0:
             first_ax_name = requests.children[0].axis.name
             second_ax_name = requests.children[0].children[0].axis.name
-            # TODO: throw error if first_ax_name or second_ax_name not in self.nearest_search.keys()
+
+            if first_ax_name not in self.nearest_search.keys() or second_ax_name not in self.nearest_search.keys():
+                raise Exception("nearest point search axis are wrong")
+
             second_ax = requests.children[0].children[0].axis
 
             # TODO: actually, here we should not remap the nearest_pts, we should instead unmap the
