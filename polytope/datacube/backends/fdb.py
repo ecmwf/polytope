@@ -70,10 +70,7 @@ class FDBDatacube(Datacube):
         fdb_requests_decoding_info = []
         self.get_fdb_requests(requests, fdb_requests, fdb_requests_decoding_info)
 
-        # TODO: note that this doesn't exactly work as intended, it's just going to retrieve value from gribjump that
-        # corresponds to first value in the compressed tuples
-
-        # TODO: here, loop through the fdb requests and request from gj and directly add to the nodes
+        # here, loop through the fdb requests and request from gj and directly add to the nodes
 
         total_request_decoding_info = []
         total_uncompressed_requests = []
@@ -96,14 +93,10 @@ class FDBDatacube(Datacube):
                 for i, key in enumerate(compressed_request[0].keys()):
                     uncompressed_request[key] = combi[i]
                 complete_uncompressed_request = (uncompressed_request, compressed_request[1])
-                # TODO: here, accumulate requests to extract all at the same time?
+                # here, accumulate requests to extract all at the same time?
                 total_uncompressed_requests.append(complete_uncompressed_request)
                 total_request_decoding_info.append(fdb_requests_decoding_info[j])
-        # output_values = self.gj.extract([complete_uncompressed_request])
         output_values = self.gj.extract(total_uncompressed_requests)
-        print("WHAT DO WE APPEND TO?")
-        print(total_request_decoding_info)
-        # self.assign_fdb_output_to_nodes(output_values, [fdb_requests_decoding_info[j]])
         self.assign_fdb_output_to_nodes(output_values, total_request_decoding_info)
 
     def get_fdb_requests(
