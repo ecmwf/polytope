@@ -80,10 +80,8 @@ class FDBDatacube(Datacube):
             # Need to determine the possible decompressed requests
 
             # find the possible combinations of compressed indices
-
             interm_branch_tuple_values = []
             for key in compressed_request[0].keys():
-                # remove the tuple of the request when we ask the fdb
                 interm_branch_tuple_values.append(compressed_request[0][key])
             request_combis = product(*interm_branch_tuple_values)
 
@@ -93,7 +91,7 @@ class FDBDatacube(Datacube):
                 for i, key in enumerate(compressed_request[0].keys()):
                     uncompressed_request[key] = combi[i]
                 complete_uncompressed_request = (uncompressed_request, compressed_request[1])
-                # here, accumulate requests to extract all at the same time?
+                # here, accumulate requests to extract all at the same time
                 total_uncompressed_requests.append(complete_uncompressed_request)
                 total_request_decoding_info.append(fdb_requests_decoding_info[j])
         output_values = self.gj.extract(total_uncompressed_requests)
