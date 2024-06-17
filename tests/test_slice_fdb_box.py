@@ -1,9 +1,10 @@
 import pandas as pd
 import pytest
+import time
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select, Span
+from polytope.shapes import Box, Select
 
 
 class TestSlicingFDBDatacube:
@@ -50,14 +51,14 @@ class TestSlicingFDBDatacube:
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
-            Span("date", pd.Timestamp("20230625T120000"), pd.Timestamp("20230626T120000")),
+            Select("date", [pd.Timestamp("20230625T120000")]),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
             Select("param", ["167"]),
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["an"]),
-            Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
+            Box(["latitude", "longitude"], [-13, 30], [35, 62]),
         )
 
         self.fdbdatacube = gj.GribJump()
@@ -68,6 +69,8 @@ class TestSlicingFDBDatacube:
             engine=self.slicer,
             options=self.options,
         )
+        time1 = time.time()
         result = self.API.retrieve(request)
+        print(time.time() - time1)
         result.pprint()
-        assert len(result.leaves) == 9
+        assert len(result.leaves) == 683

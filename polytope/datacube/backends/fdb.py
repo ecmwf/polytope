@@ -1,6 +1,7 @@
 import logging
 from copy import deepcopy
 from itertools import product
+import time
 
 from ...utility.geometry import nearest_pt
 from .datacube import Datacube, TensorIndexTree
@@ -94,7 +95,12 @@ class FDBDatacube(Datacube):
                 # here, accumulate requests to extract all at the same time
                 total_uncompressed_requests.append(complete_uncompressed_request)
                 total_request_decoding_info.append(fdb_requests_decoding_info[j])
+        # print(total_uncompressed_requests)
+        time1 = time.time()
         output_values = self.gj.extract(total_uncompressed_requests)
+        # print(total_uncompressed_requests)
+        print("GJ TIME")
+        print(time.time() - time1)
         self.assign_fdb_output_to_nodes(output_values, total_request_decoding_info)
 
     def get_fdb_requests(
@@ -221,29 +227,34 @@ class FDBDatacube(Datacube):
         for c in requests.children:
             # now c are the leaves of the initial tree
             key_value_path = {c.axis.name: c.values}
+            # print("NOW LOOK")
+            # print(c.values)
             ax = c.axis
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
-            leaf_path.update(key_value_path)
-            last_idx = key_value_path["values"]
-            if current_idx[i] is None:
-                current_idx[i] = last_idx
-                fdb_range_n[i][range_l[i] - 1] = c
-            else:
-                if last_idx == current_idx[i] + range_l[i]:
-                    range_l[i] += 1
-                    fdb_range_n[i][range_l[i] - 1] = c
-                else:
-                    key_value_path = {c.axis.name: c.values}
-                    ax = c.axis
-                    (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
-                        key_value_path, leaf_path, self.unwanted_path
-                    )
-                    leaf_path.update(key_value_path)
-                    i += 1
-                    current_start_idx = key_value_path["values"]
-                    current_idx[i] = current_start_idx
+            range_l = [len(c.values)]
+            current_idx = [key_value_path["values"]]
+            fdb_range_n[i] = [c]*range_l[0]
+            # leaf_path.update(key_value_path)
+            # last_idx = key_value_path["values"]
+            # if current_idx[i] is None:
+            #     current_idx[i] = last_idx
+            #     fdb_range_n[i][range_l[i] - 1] = c
+            # else:
+            #     if last_idx == current_idx[i] + range_l[i]:
+            #         range_l[i] += 1
+            #         fdb_range_n[i][range_l[i] - 1] = c
+            #     else:
+            #         key_value_path = {c.axis.name: c.values}
+            #         ax = c.axis
+            #         (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
+            #             key_value_path, leaf_path, self.unwanted_path
+            #         )
+            #         leaf_path.update(key_value_path)
+            #         i += 1
+            #         current_start_idx = key_value_path["values"]
+            #         current_idx[i] = current_start_idx
         return (range_l, current_idx, fdb_range_n)
 
     def assign_fdb_output_to_nodes(self, output_values, fdb_requests_decoding_info):
@@ -267,6 +278,10 @@ class FDBDatacube(Datacube):
             sorted_range_lengths = [new_range_lengths[i] for i in original_indices]
             for i in range(len(sorted_fdb_range_nodes)):
                 for j in range(sorted_range_lengths[i]):
+                    # print("NOW LOOK REALLY")
+                    # print((i,j))
+                    # print(len(sorted_fdb_range_nodes[i]))
+                    # print(sorted_fdb_range_nodes)
                     n = sorted_fdb_range_nodes[i][j]
                     n.result.append(request_output_values[0][i][0][j])
 
