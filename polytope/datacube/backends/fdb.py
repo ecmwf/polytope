@@ -128,9 +128,9 @@ class FDBDatacube(Datacube):
                 (original_indices, sorted_request_ranges) = self.sort_fdb_request_ranges(
                     range_lengths, current_start_idxs, lat_length
                 )
-                fdb_requests.append(tuple((path, sorted_request_ranges)))
+                fdb_requests.append((path, sorted_request_ranges))
                 fdb_requests_decoding_info.append(
-                    tuple((original_indices, fdb_node_ranges, lat_length, range_lengths, current_start_idxs))
+                    (original_indices, fdb_node_ranges, lat_length, range_lengths, current_start_idxs)
                 )
 
             # Otherwise remap the path for this key and iterate again over children
