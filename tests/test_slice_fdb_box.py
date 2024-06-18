@@ -1,6 +1,7 @@
+import time
+
 import pandas as pd
 import pytest
-import time
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request

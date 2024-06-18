@@ -226,7 +226,7 @@ class FDBDatacube(Datacube):
         i = 0
         for c in requests.children:
             # now c are the leaves of the initial tree
-            key_value_path = {c.axis.name: c.values}
+            key_value_path = {c.axis.name: [c.values[0]]}
             # print("NOW LOOK")
             # print(c.values)
             ax = c.axis
@@ -291,7 +291,7 @@ class FDBDatacube(Datacube):
         for i in range(lat_length):
             for j in range(len(range_lengths[i])):
                 if current_start_idx[i][j] is not None:
-                    current_request_ranges = (current_start_idx[i][j], current_start_idx[i][j] + range_lengths[i][j])
+                    current_request_ranges = (current_start_idx[i][j][0], current_start_idx[i][j][0] + range_lengths[i][j])
                     interm_request_ranges.append(current_request_ranges)
         request_ranges_with_idx = list(enumerate(interm_request_ranges))
         sorted_list = sorted(request_ranges_with_idx, key=lambda x: x[1][0])
