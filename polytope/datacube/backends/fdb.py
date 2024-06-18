@@ -196,16 +196,16 @@ class FDBDatacube(Datacube):
                                 lon_child.remove_compressed_branch(value)
 
         lat_length = len(requests.children)
-        range_lengths = [False] * lat_length
+        # range_lengths = [False] * lat_length
         current_start_idxs = [False] * lat_length
         fdb_node_ranges = [False] * lat_length
         for i in range(len(requests.children)):
             lat_child = requests.children[i]
             lon_length = len(lat_child.children)
-            range_lengths[i] = [1] * lon_length
+            # range_lengths[i] = [1] * lon_length
             current_start_idxs[i] = [None] * lon_length
             fdb_node_ranges[i] = [[TensorIndexTree.root] * lon_length] * lon_length
-            range_length = deepcopy(range_lengths[i])
+            # range_length = deepcopy(range_lengths[i])
             current_start_idx = deepcopy(current_start_idxs[i])
             fdb_range_nodes = deepcopy(fdb_node_ranges[i])
             key_value_path = {lat_child.axis.name: lat_child.values}
@@ -214,15 +214,15 @@ class FDBDatacube(Datacube):
                 key_value_path, leaf_path, self.unwanted_path
             )
             leaf_path.update(key_value_path)
-            (range_lengths[i], current_start_idxs[i], fdb_node_ranges[i]) = self.get_last_layer_before_leaf(
-                lat_child, leaf_path, range_length, current_start_idx, fdb_range_nodes
+            (current_start_idxs[i], fdb_node_ranges[i]) = self.get_last_layer_before_leaf(
+                lat_child, leaf_path, current_start_idx, fdb_range_nodes
             )
 
         leaf_path_copy = deepcopy(leaf_path)
         leaf_path_copy.pop("values", None)
-        return (leaf_path_copy, range_lengths, current_start_idxs, fdb_node_ranges, lat_length)
+        return (leaf_path_copy, [], current_start_idxs, fdb_node_ranges, lat_length)
 
-    def get_last_layer_before_leaf(self, requests, leaf_path, range_l, current_idx, fdb_range_n):
+    def get_last_layer_before_leaf(self, requests, leaf_path, current_idx, fdb_range_n):
         i = 0
         for c in requests.children:
             # now c are the leaves of the initial tree
@@ -233,11 +233,11 @@ class FDBDatacube(Datacube):
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
-            print(key_value_path)
+            # print(key_value_path)
             # TODO: change this to accommodate non consecutive indexes being compressed too
-            range_l = [len(c.values)]
+            # range_l = [len(c.values)]
             current_idx = [key_value_path["values"]]
-            fdb_range_n[i] = [c]*range_l[0]
+            fdb_range_n[i] = [c]*len(c.values)
             # leaf_path.update(key_value_path)
             # last_idx = key_value_path["values"]
             # if current_idx[i] is None:
@@ -257,7 +257,7 @@ class FDBDatacube(Datacube):
             #         i += 1
             #         current_start_idx = key_value_path["values"]
             #         current_idx[i] = current_start_idx
-        return (range_l, current_idx, fdb_range_n)
+        return (current_idx, fdb_range_n)
 
     def assign_fdb_output_to_nodes(self, output_values, fdb_requests_decoding_info):
         for k in range(len(output_values)):
@@ -270,29 +270,48 @@ class FDBDatacube(Datacube):
                 current_start_idxs,
             ) = fdb_requests_decoding_info[k]
             new_fdb_range_nodes = []
-            new_range_lengths = []
+            # new_range_lengths = []
             for j in range(lat_length):
-                for i in range(len(range_lengths[j])):
-                    if current_start_idxs[j][i] is not None:
-                        new_fdb_range_nodes.append(fdb_node_ranges[j][i])
-                        new_range_lengths.append(range_lengths[j][i])
+                # for i in range(len(range_lengths[j])):
+                for i in range(len(current_start_idxs[j])):
+                    # if current_start_idxs[j][i] is not None:
+                    new_fdb_range_nodes.append(fdb_node_ranges[j][i])
+                    # new_range_lengths.append(range_lengths[j][i])
             sorted_fdb_range_nodes = [new_fdb_range_nodes[i] for i in original_indices]
-            sorted_range_lengths = [new_range_lengths[i] for i in original_indices]
+            # sorted_range_lengths = [new_range_lengths[i] for i in original_indices]
+            sorted_current_start_idxs = [current_start_idxs[i] for i in original_indices]
             for i in range(len(sorted_fdb_range_nodes)):
-                for j in range(sorted_range_lengths[i]):
+                # for k in range(sorted_range_lengths[i]):
+                for k in range(len(sorted_current_start_idxs[i][0])):
+                    # print(k)
+                    # print(len(current_start_idxs[len(current_start_idxs)-i][0]))
+                    # print(sorted_range_lengths[i])
                     # print("NOW LOOK REALLY")
                     # print((i,j))
                     # print(len(sorted_fdb_range_nodes[i]))
                     # print(sorted_fdb_range_nodes)
-                    n = sorted_fdb_range_nodes[i][j]
-                    n.result.append(request_output_values[0][i][0][j])
+                    # print(j)
+                    # print(len(sorted_fdb_range_nodes[i]))
+                    # print("WHAT IT WAS")
+                    # print(sorted_range_lengths[i])
+                    # print(j)
+                    n = sorted_fdb_range_nodes[i]
+                    n = n[k]
+                    n.result.append(request_output_values[0][i][0][k])
 
     def sort_fdb_request_ranges(self, range_lengths, current_start_idx, lat_length):
         interm_request_ranges = []
         for i in range(lat_length):
-            for j in range(len(range_lengths[i])):
-                if current_start_idx[i][j] is not None:
-                    current_request_ranges = (current_start_idx[i][j][0], current_start_idx[i][j][0] + range_lengths[i][j])
+            # for j in range(len(range_lengths[i])):
+            if True:
+                # if current_start_idx[i][0] is not None:
+                if True:
+                    # print("NOW?")
+                    # print(range_lengths)
+                    # print(current_start_idx)
+                    # current_request_ranges = (current_start_idx[i][j][0], current_start_idx[i][j][0] + range_lengths[i][j])
+                    current_request_ranges = (current_start_idx[i][0][0], current_start_idx[i][0][-1]+1)
+                    # print(current_request_ranges)
                     interm_request_ranges.append(current_request_ranges)
         request_ranges_with_idx = list(enumerate(interm_request_ranges))
         sorted_list = sorted(request_ranges_with_idx, key=lambda x: x[1][0])
