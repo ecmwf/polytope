@@ -226,13 +226,14 @@ class FDBDatacube(Datacube):
         i = 0
         for c in requests.children:
             # now c are the leaves of the initial tree
-            key_value_path = {c.axis.name: [c.values[0]]}
+            key_value_path = {c.axis.name: c.values}
             # print("NOW LOOK")
             # print(c.values)
             ax = c.axis
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
+            print(key_value_path)
             # TODO: change this to accommodate non consecutive indexes being compressed too
             range_l = [len(c.values)]
             current_idx = [key_value_path["values"]]
