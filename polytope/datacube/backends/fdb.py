@@ -233,6 +233,7 @@ class FDBDatacube(Datacube):
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
+            # TODO: change this to accommodate non consecutive indexes being compressed too
             range_l = [len(c.values)]
             current_idx = [key_value_path["values"]]
             fdb_range_n[i] = [c]*range_l[0]

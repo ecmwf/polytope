@@ -123,4 +123,5 @@ class TestInitDatacubeAxes:
             Select("valid_time", ["2023-06-25T12:00:00"]),
         )
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 9
+        result.pprint()
+        assert len(result.leaves) == 3

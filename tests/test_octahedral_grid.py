@@ -47,7 +47,8 @@ class TestOctahedralGrid:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 9
+        assert len(result.leaves) == 3
+        assert result.leaves[0].result[1].size == 3
 
         lats = []
         lons = []
@@ -60,11 +61,25 @@ class TestOctahedralGrid:
             lats.append(lat)
             lons.append(lon)
             nearest_points = find_nearest_latlon("./tests/data/foo.grib", lat[0], lon[0])
+            nearest_points_2 = find_nearest_latlon("./tests/data/foo.grib", lat[0], lon[1])
+            nearest_points_3 = find_nearest_latlon("./tests/data/foo.grib", lat[0], lon[2])
             eccodes_lat = nearest_points[0][0]["lat"]
             eccodes_lon = nearest_points[0][0]["lon"]
+            eccodes_lat_2 = nearest_points_2[0][0]["lat"]
+            eccodes_lon_2 = nearest_points_2[0][0]["lon"]
+            eccodes_lat_3 = nearest_points_3[0][0]["lat"]
+            eccodes_lon_3 = nearest_points_3[0][0]["lon"]
             eccodes_lats.append(eccodes_lat)
             assert eccodes_lat - tol <= lat[0]
             assert lat[0] <= eccodes_lat + tol
             assert eccodes_lon - tol <= lon[0]
             assert lon[0] <= eccodes_lon + tol
-        assert len(eccodes_lats) == 9
+            assert eccodes_lat_2 - tol <= lat[0]
+            assert lat[0] <= eccodes_lat_2 + tol
+            assert eccodes_lon_2 - tol <= lon[1]
+            assert lon[1] <= eccodes_lon_2 + tol
+            assert eccodes_lat_3 - tol <= lat[0]
+            assert lat[0] <= eccodes_lat_3 + tol
+            assert eccodes_lon_3 - tol <= lon[2]
+            assert lon[2] <= eccodes_lon_3 + tol
+        assert len(eccodes_lats) == 3

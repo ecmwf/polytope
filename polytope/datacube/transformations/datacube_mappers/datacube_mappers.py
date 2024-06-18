@@ -92,6 +92,9 @@ class DatacubeMapper(DatacubeAxisTransformation):
             unwanted_path[axis.name] = unwanted_val
         if axis.name == self._mapped_axes()[1]:
             first_val = unwanted_path[self._mapped_axes()[0]]
+            unmapped_idx = []
+            # for val in value:
+            #     unmapped_idx.append(self.unmap(first_val, (val,)))
             unmapped_idx = self.unmap(first_val, value)
             leaf_path.pop(self._mapped_axes()[0], None)
             key_value_path.pop(axis.name)
