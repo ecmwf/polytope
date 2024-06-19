@@ -218,6 +218,8 @@ class FDBDatacube(Datacube):
 
     def get_last_layer_before_leaf(self, requests, leaf_path, range_l, current_idx, fdb_range_n):
         i = 0
+        print("IN LAST LAYER")
+        print(fdb_range_n)
         for c in requests.children:
             # now c are the leaves of the initial tree
             key_value_path = {c.axis.name: c.values}
@@ -231,6 +233,10 @@ class FDBDatacube(Datacube):
                 current_idx[i] = last_idx
                 fdb_range_n[i][range_l[i] - 1] = c
             else:
+                print("NOW PROBLEM?")
+                print(i)
+                print(last_idx)
+                print(current_idx[i] + range_l[i])
                 if last_idx == current_idx[i] + range_l[i]:
                     range_l[i] += 1
                     fdb_range_n[i][range_l[i] - 1] = c
@@ -244,6 +250,8 @@ class FDBDatacube(Datacube):
                     i += 1
                     current_start_idx = key_value_path["values"]
                     current_idx[i] = current_start_idx
+        print("IN LAST LAYER")
+        print(fdb_range_n)
         return (range_l, current_idx, fdb_range_n)
 
     def assign_fdb_output_to_nodes(self, output_values, fdb_requests_decoding_info):
@@ -264,10 +272,16 @@ class FDBDatacube(Datacube):
                         new_fdb_range_nodes.append(fdb_node_ranges[j][i])
                         new_range_lengths.append(range_lengths[j][i])
             sorted_fdb_range_nodes = [new_fdb_range_nodes[i] for i in original_indices]
+            # print("HERE NOW??")
+            # print(sorted_fdb_range_nodes)
+            # print("AND NORMAL ONES")
+            # print(fdb_node_ranges)
             sorted_range_lengths = [new_range_lengths[i] for i in original_indices]
             for i in range(len(sorted_fdb_range_nodes)):
                 for j in range(sorted_range_lengths[i]):
                     n = sorted_fdb_range_nodes[i][j]
+                    # print("WHAT DO WE APPEND TO??")
+                    # print(n)
                     n.result.append(request_output_values[0][i][0][j])
 
     def sort_fdb_request_ranges(self, range_lengths, current_start_idx, lat_length):
