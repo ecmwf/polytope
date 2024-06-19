@@ -167,9 +167,10 @@ class FDBDatacube(Datacube):
         for i in range(len(requests.children)):
             lat_child = requests.children[i]
             lon_length = len(lat_child.children)
-            range_lengths[i] = [1] * lon_length
+            range_lengths[i] = [0] * lon_length
             current_start_idxs[i] = [None] * lon_length
-            fdb_node_ranges[i] = [[IndexTree.root] * lon_length] * lon_length
+            # fdb_node_ranges[i] = [[IndexTree.root] * lon_length] * lon_length
+            fdb_node_ranges[i] = [ [ IndexTree.root for y in range( lon_length ) ] for x in range( lon_length ) ]
             range_length = deepcopy(range_lengths[i])
             current_start_idx = deepcopy(current_start_idxs[i])
             fdb_range_nodes = deepcopy(fdb_node_ranges[i])
@@ -190,7 +191,16 @@ class FDBDatacube(Datacube):
 
     def get_last_layer_before_leaf(self, requests, leaf_path, range_l, current_idx, fdb_range_n):
         i = 0
+        print("NOW LOOK")
+        print(fdb_range_n)
+        print(range_l)
+        print(current_idx)
         for c in requests.children:
+            fdb_range_n_i = fdb_range_n[i]
+            print("HERE SHOULD HAVE DIFFERENT I")
+            print(fdb_range_n_i)
+            # print(fdb_range_n[1])
+            print(i)
             # now c are the leaves of the initial tree
             key_value_path = {c.axis.name: c.value}
             ax = c.axis
@@ -200,12 +210,13 @@ class FDBDatacube(Datacube):
             leaf_path.update(key_value_path)
             last_idx = key_value_path["values"]
             if current_idx[i] is None:
+                range_l[i] = 1
                 current_idx[i] = last_idx
-                fdb_range_n[i][range_l[i] - 1] = c
+                fdb_range_n_i[range_l[i] - 1] = c
             else:
                 if last_idx == current_idx[i] + range_l[i]:
                     range_l[i] += 1
-                    fdb_range_n[i][range_l[i] - 1] = c
+                    fdb_range_n_i[range_l[i] - 1] = c
                 else:
                     key_value_path = {c.axis.name: c.value}
                     ax = c.axis
@@ -216,6 +227,14 @@ class FDBDatacube(Datacube):
                     i += 1
                     current_start_idx = key_value_path["values"]
                     current_idx[i] = current_start_idx
+                    range_l[i] = 1
+                    # print(i)
+                    # range_l[i] = 1
+                    fdb_range_n[i][range_l[i] - 1] = c
+        print("AND AT THE END?")
+        print(fdb_range_n)
+        print(current_idx)
+        print(range_l)
         return (range_l, current_idx, fdb_range_n)
 
     def assign_fdb_output_to_nodes(self, output_values, fdb_requests_decoding_info):
