@@ -3,7 +3,7 @@ import pytest
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select, Span, Disk
+from polytope.shapes import Box, Disk, Select, Span
 
 
 class TestSlicingFDBDatacube:
@@ -55,7 +55,6 @@ class TestSlicingFDBDatacube:
 
     @pytest.mark.fdb
     def test_fdb_datacube_disk(self):
-        import pygribjump as gj
 
         request = Request(
             Select("step", [0]),
@@ -82,7 +81,6 @@ class TestSlicingFDBDatacube:
 
     @pytest.mark.fdb
     def test_fdb_datacube_disk_2(self):
-        import pygribjump as gj
 
         request = Request(
             Select("step", [0]),
