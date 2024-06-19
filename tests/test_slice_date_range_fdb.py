@@ -3,7 +3,7 @@ import pytest
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select, Span, Disk
+from polytope.shapes import Box, Disk, Select, Span
 
 
 class TestSlicingFDBDatacube:
@@ -102,3 +102,33 @@ class TestSlicingFDBDatacube:
         assert len(result.leaves) == 6
         for i in range(len(result.leaves)):
             assert len(result.leaves[i].result) == 1
+
+    @pytest.mark.fdb
+    def test_fdb_datacube_disk_2(self):
+        import pygribjump as gj
+        request = Request(
+            Select("step", [0]),
+            Select("levtype", ["sfc"]),
+            Span("date", pd.Timestamp("20230625T120000"), pd.Timestamp("20230626T120000")),
+            Select("domain", ["g"]),
+            Select("expver", ["0001"]),
+            Select("param", ["167"]),
+            Select("class", ["od"]),
+            Select("stream", ["oper"]),
+            Select("type", ["an"]),
+            Disk(["latitude", "longitude"], [0.05, 0.070148090413], [0.1, 0.15]),
+        )
+
+        self.fdbdatacube = gj.GribJump()
+        self.slicer = HullSlicer()
+        self.API = Polytope(
+            request=request,
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            options=self.options,
+        )
+        result = self.API.retrieve(request)
+        result.pprint()
+        assert len(result.leaves) == 11
+        for i in range(len(result.leaves)):
+            assert result.leaves[i].result is not None
