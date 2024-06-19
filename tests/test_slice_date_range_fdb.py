@@ -106,6 +106,7 @@ class TestSlicingFDBDatacube:
     @pytest.mark.fdb
     def test_fdb_datacube_disk_2(self):
         import pygribjump as gj
+
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
