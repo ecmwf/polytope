@@ -23,7 +23,15 @@ class FDBDatacube(Datacube):
         # Find values in the level 3 FDB datacube
 
         self.gj = gj
+        self.unmapping_time = 0
+        self.request_sorting_time = 0
+        self.bunching_up_request_time = 0
+        self.appending_info_time = 0
+
+        time0 = time.time()
         self.fdb_coordinates = self.gj.axes(partial_request)
+        print("GJ AXES TIME")
+        print(time.time()-time0)
 
         self.check_branching_axes(request)
 
@@ -65,6 +73,7 @@ class FDBDatacube(Datacube):
         self.fdb_coordinates.pop("quantile", None)
 
     def get(self, requests: TensorIndexTree):
+        time4 = time.time()
         if len(requests.children) == 0:
             return requests
         fdb_requests = []
@@ -75,6 +84,7 @@ class FDBDatacube(Datacube):
 
         total_request_decoding_info = []
         total_uncompressed_requests = []
+        time0 = time.time()
         for j, compressed_request in enumerate(fdb_requests):
             uncompressed_request = {}
 
@@ -96,15 +106,30 @@ class FDBDatacube(Datacube):
                 total_uncompressed_requests.append(complete_uncompressed_request)
                 total_request_decoding_info.append(fdb_requests_decoding_info[j])
         # print(total_uncompressed_requests)
+        print("UNCOMPRESS AND FLATTEN TREE")
+        print(time.time() - time0)
         time1 = time.time()
         output_values = self.gj.extract(total_uncompressed_requests)
         # print(total_uncompressed_requests)
         print("GJ TIME")
         print(time.time() - time1)
+        time2 = time.time()
         self.assign_fdb_output_to_nodes(output_values, total_request_decoding_info)
+        print("ASSIGN GJ DATA TO RIGHT NODES")
+        print(time.time() - time2)
+        print("UNMAPPING TIME")
+        print(self.unmapping_time)
+        print("REQUEST SORTING TIME")
+        print(self.request_sorting_time)
+        print("BUNCH REQUESTS TIME AT LAT")
+        print(self.bunching_up_request_time)
+        print("APPENDING INFO TIME")
+        print(self.appending_info_time)
+        print("TOTAL GET TIME")
+        print(time.time() - time4)
 
     def get_fdb_requests(
-        self, requests: TensorIndexTree, fdb_requests=[], fdb_requests_decoding_info=[], leaf_path=None
+        self, requests: TensorIndexTree, fdb_requests=[], fdb_requests_decoding_info=[], leaf_path=None, bunch_up_request_time=0
     ):
         if leaf_path is None:
             leaf_path = {}
@@ -119,23 +144,30 @@ class FDBDatacube(Datacube):
         else:
             key_value_path = {requests.axis.name: requests.values}
             ax = requests.axis
+            time0 = time.time()
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
+            self.unmapping_time += time.time() - time0
             leaf_path.update(key_value_path)
             if len(requests.children[0].children[0].children) == 0:
                 # find the fdb_requests and associated nodes to which to add results
-
+                time2 = time.time()
                 (path, range_lengths, current_start_idxs, fdb_node_ranges, lat_length) = self.get_2nd_last_values(
                     requests, leaf_path
                 )
+                self.bunching_up_request_time += time.time() - time2
+                time1 = time.time()
                 (original_indices, sorted_request_ranges) = self.sort_fdb_request_ranges(
                     range_lengths, current_start_idxs, lat_length
                 )
+                self.request_sorting_time += time.time() - time1
+                time3 = time.time()
                 fdb_requests.append((path, sorted_request_ranges))
                 fdb_requests_decoding_info.append(
                     (original_indices, fdb_node_ranges, lat_length, range_lengths, current_start_idxs)
                 )
+                self.appending_info_time += time.time() - time3
 
             # Otherwise remap the path for this key and iterate again over children
             else:
@@ -210,9 +242,12 @@ class FDBDatacube(Datacube):
             fdb_range_nodes = deepcopy(fdb_node_ranges[i])
             key_value_path = {lat_child.axis.name: lat_child.values}
             ax = lat_child.axis
+            time0 = time.time()
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
+            self.unmapping_time += time.time() - time0
+            self.bunching_up_request_time -= time.time() - time0
             leaf_path.update(key_value_path)
             (current_start_idxs[i], fdb_node_ranges[i]) = self.get_last_layer_before_leaf(
                 lat_child, leaf_path, current_start_idx, fdb_range_nodes
@@ -235,9 +270,12 @@ class FDBDatacube(Datacube):
             # print("NOW LOOK")
             # print(c.values)
             ax = c.axis
+            time0 = time.time()
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
+            self.unmapping_time += time.time() - time0
+            self.bunching_up_request_time -= time.time() - time0
             # print(key_value_path)
             # TODO: change this to accommodate non consecutive indexes being compressed too
             # range_l = [len(c.values)]

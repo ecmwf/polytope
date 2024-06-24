@@ -59,7 +59,7 @@ class TestSlicingFDBDatacube:
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["an"]),
-            Box(["latitude", "longitude"], [-13, 30], [35, 62]),
+            Box(["latitude", "longitude"], [-20, 61], [48, 36]),
         )
 
         self.fdbdatacube = gj.GribJump()
@@ -74,4 +74,6 @@ class TestSlicingFDBDatacube:
         result = self.API.retrieve(request)
         print(time.time() - time1)
         result.pprint()
-        assert len(result.leaves) == 683
+        for leaf in result.leaves:
+            assert leaf.result is not None
+        assert len(result.leaves) == 968

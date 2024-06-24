@@ -57,6 +57,13 @@ class Polytope:
     def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
         # self.datacube.check_branching_axes(request)
+        import time
+        time0 = time.time()
         request_tree = self.engine.extract(self.datacube, request.polytopes())
+        print("POLYTOPE FIND TREE BY SLICING")
+        print(time.time() - time0)
+        time1 = time.time()
         self.datacube.get(request_tree)
+        print("FDB GET TIME")
+        print(time.time() - time1)
         return request_tree
