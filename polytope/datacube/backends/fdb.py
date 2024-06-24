@@ -27,6 +27,7 @@ class FDBDatacube(Datacube):
         self.request_sorting_time = 0
         self.bunching_up_request_time = 0
         self.appending_info_time = 0
+        self.sorting_time = 0
 
         time0 = time.time()
         self.fdb_coordinates = self.gj.axes(partial_request)
@@ -127,9 +128,11 @@ class FDBDatacube(Datacube):
         print(self.appending_info_time)
         print("TOTAL GET TIME")
         print(time.time() - time4)
+        print("SORTING TIME")
+        print(self.sorting_time)
 
     def get_fdb_requests(
-        self, requests: TensorIndexTree, fdb_requests=[], fdb_requests_decoding_info=[], leaf_path=None, bunch_up_request_time=0
+        self, requests: TensorIndexTree, fdb_requests=[], fdb_requests_decoding_info=[], leaf_path=None,
     ):
         if leaf_path is None:
             leaf_path = {}
@@ -320,43 +323,27 @@ class FDBDatacube(Datacube):
                 current_start_idxs,
             ) = fdb_requests_decoding_info[k]
             # print(output_values)
-            new_fdb_range_nodes = []
-            # new_range_lengths = []
-            # for j in range(lat_length):
-            #     # for i in range(len(range_lengths[j])):
-            #     for i in range(len(current_start_idxs[j])):
-            #         # if current_start_idxs[j][i] is not None:
-            #         new_fdb_range_nodes.append(fdb_node_ranges[j][i])
-            #         # new_range_lengths.append(range_lengths[j][i])
-            # print("BEFORE SORTING")
-            # print(fdb_node_ranges[0])
-            # print(new_fdb_range_nodes)
+            # new_fdb_range_nodes = []
+            # print("NOW")
             # print(original_indices)
+            # TODO: what happens when we remove sorting?
+            # time1 = time.time()
             sorted_fdb_range_nodes = [fdb_node_ranges[i] for i in original_indices]
-            # sorted_range_lengths = [new_range_lengths[i] for i in original_indices]
             sorted_current_start_idxs = [current_start_idxs[i] for i in original_indices]
+            # print(time.time() - time1)
+            # self.sorting_time +=time.time() - time1
+            # time1 = time.time()
             for i in range(len(sorted_fdb_range_nodes)):
                 # for k in range(sorted_range_lengths[i]):
-                for k in range(len(sorted_current_start_idxs[i])):
-                    # print(k)
-                    # print(len(current_start_idxs[len(current_start_idxs)-i][0]))
-                    # print(sorted_range_lengths[i])
-                    # print("NOW LOOK REALLY")
-                    # print((i,j))
-                    # print(len(sorted_fdb_range_nodes[i]))
-                    # print(sorted_fdb_range_nodes)
-                    # print(j)
-                    # print(len(sorted_fdb_range_nodes[i]))
-                    # print("WHAT IT WAS")
-                    # print(sorted_range_lengths[i])
-                    # print(j)
-                    n = sorted_fdb_range_nodes[i]
-                    # print("WHAT's n NOW")
-                    # print(n)
-                    # print(sorted_fdb_range_nodes)
-                    n = n[k][0]
-                    # print(n)
-                    n.result.append(request_output_values[0][i][0][k])
+                n = sorted_fdb_range_nodes[i]
+                interm_request_output_values = request_output_values[0][i][0]
+                # TODO: k again??
+                for j in range(len(sorted_current_start_idxs[i])):
+                    # n = sorted_fdb_range_nodes[i]
+                    m = n[j][0]
+                    time1 = time.time()
+                    m.result.append(interm_request_output_values[j])
+                    self.sorting_time += time.time() - time1
 
     def sort_fdb_request_ranges(self, range_lengths, current_start_idx, lat_length):
         interm_request_ranges = []
@@ -365,10 +352,6 @@ class FDBDatacube(Datacube):
             if True:
                 # if current_start_idx[i][0] is not None:
                 if True:
-                    # print("NOW?")
-                    # print(range_lengths)
-                    # print(current_start_idx)
-                    # current_request_ranges = (current_start_idx[i][j][0], current_start_idx[i][j][0] + range_lengths[i][j])
                     current_request_ranges = (current_start_idx[i][0], current_start_idx[i][-1]+1)
                     # print(current_request_ranges)
                     interm_request_ranges.append(current_request_ranges)
