@@ -192,7 +192,7 @@ class HullSlicer(Engine):
             if compressed_axis in datacube.compressed_axes:
                 self.compressed_axes.append(compressed_axis)
         # add the last axis of the grid always (longitude) as a compressed axis
-        self.compressed_axes.append(datacube.coupled_axes[0][-1])
+        # self.compressed_axes.append(datacube.coupled_axes[0][-1])
 
     def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
         # Determine list of axes to compress
