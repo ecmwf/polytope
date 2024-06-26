@@ -33,8 +33,9 @@ class FDBDatacube(Datacube):
         time0 = time.time()
         self.fdb_coordinates = self.gj.axes(partial_request)
         print("GJ AXES TIME")
-        print(time.time()-time0)
+        print(time.time() - time0)
 
+        # TODO: do this outside datacube intialisation somehow...
         self.check_branching_axes(request)
 
         logging.info("Axes returned from GribJump are: " + str(self.fdb_coordinates))
@@ -109,6 +110,7 @@ class FDBDatacube(Datacube):
                 # here, accumulate requests to extract all at the same time
                 total_uncompressed_requests.append(complete_uncompressed_request)
                 total_request_decoding_info.append(fdb_requests_decoding_info[j])
+        # print("LOOK NOW")
         # print(total_uncompressed_requests)
         print("UNCOMPRESS AND FLATTEN TREE")
         print(time.time() - time0)
@@ -136,7 +138,11 @@ class FDBDatacube(Datacube):
         print(self.sorting_time)
 
     def get_fdb_requests(
-        self, requests: TensorIndexTree, fdb_requests=[], fdb_requests_decoding_info=[], leaf_path=None,
+        self,
+        requests: TensorIndexTree,
+        fdb_requests=[],
+        fdb_requests_decoding_info=[],
+        leaf_path=None,
     ):
         if leaf_path is None:
             leaf_path = {}
@@ -167,9 +173,12 @@ class FDBDatacube(Datacube):
                 time1 = time.time()
                 # print("AND NOW LOOK NOW")
                 # print(current_start_idxs)
-                (original_indices, sorted_request_ranges, fdb_node_ranges, current_start_idxs) = self.sort_fdb_request_ranges(
-                    range_lengths, current_start_idxs, lat_length, fdb_node_ranges
-                )
+                (
+                    original_indices,
+                    sorted_request_ranges,
+                    fdb_node_ranges,
+                    current_start_idxs,
+                ) = self.sort_fdb_request_ranges(range_lengths, current_start_idxs, lat_length, fdb_node_ranges)
                 self.request_sorting_time += time.time() - time1
                 time3 = time.time()
                 fdb_requests.append((path, sorted_request_ranges))
@@ -366,6 +375,7 @@ class FDBDatacube(Datacube):
         for i in range(lat_length):
             interm_fdb_nodes = fdb_node_ranges[i]
             interm_start_idx = current_start_idx[i]
+            interm_start_idx.sort()
             # print("WHAT IS THE CURREENT START IDX")
             # print(interm_start_idx)
             # for j in range(len(range_lengths[i])):
@@ -374,9 +384,9 @@ class FDBDatacube(Datacube):
                 if True:
                     # print(current_start_idx[i][-1]+1 - current_start_idx[i][0])
                     # print(len(current_start_idx[i]))
-                    if abs(current_start_idx[i][-1]+1 - current_start_idx[i][0]) <= len(current_start_idx[i]):
+                    if abs(interm_start_idx[-1] + 1 - interm_start_idx[0]) <= len(interm_start_idx):
                         # print("WE DID NOT DIVIDE THE IDX RANGES")
-                        current_request_ranges = (current_start_idx[i][0], current_start_idx[i][-1]+1)
+                        current_request_ranges = (interm_start_idx[0], interm_start_idx[-1] + 1)
                         # print(current_request_ranges)
                         interm_request_ranges.append(current_request_ranges)
                         new_fdb_node_ranges.append(interm_fdb_nodes)
@@ -384,18 +394,18 @@ class FDBDatacube(Datacube):
                     else:
                         time0 = time.time()
                         # TODO: see where we have jump in indices and separate the ranges there
-                        jumps = list(map(operator.sub, current_start_idx[i][1:], current_start_idx[i][:-1]))
+                        jumps = list(map(operator.sub, interm_start_idx[1:], interm_start_idx[:-1]))
                         last_idx = 0
                         for j, jump in enumerate(jumps):
                             # new_interm_fdb_nodes = []
                             # new_interm_start_idx = []
                             if jump > 1:
-                                current_request_ranges = (current_start_idx[i][last_idx], current_start_idx[i][j]+1)
+                                current_request_ranges = (interm_start_idx[last_idx], interm_start_idx[j] + 1)
                                 # new_interm_fdb_nodes.append(interm_fdb_nodes[last_idx:j + 1])
                                 # new_interm_start_idx.append(interm_start_idx[last_idx:j + 1])
-                                new_fdb_node_ranges.append(interm_fdb_nodes[last_idx:j + 1])
-                                new_current_start_idx.append(interm_start_idx[last_idx:j + 1])
-                                last_idx = j+1
+                                new_fdb_node_ranges.append(interm_fdb_nodes[last_idx : j + 1])
+                                new_current_start_idx.append(interm_start_idx[last_idx : j + 1])
+                                last_idx = j + 1
                                 interm_request_ranges.append(current_request_ranges)
                                 # print("DID WE NOT ADD HERE?")
                                 # print(new_interm_start_idx)
@@ -404,8 +414,8 @@ class FDBDatacube(Datacube):
                                 # print(j)
                                 # new_interm_fdb_nodes.append(interm_fdb_nodes[last_idx:j])
                                 # new_interm_start_idx.append(interm_start_idx[last_idx:j])
-                            if j == len(current_start_idx[i]) - 2:
-                                current_request_ranges = (current_start_idx[i][last_idx], current_start_idx[i][-1]+1)
+                            if j == len(interm_start_idx) - 2:
+                                current_request_ranges = (interm_start_idx[last_idx], interm_start_idx[-1] + 1)
                                 interm_request_ranges.append(current_request_ranges)
                                 # new_interm_fdb_nodes.append(interm_fdb_nodes[last_idx:])
                                 # new_interm_start_idx.append(interm_start_idx[last_idx:])

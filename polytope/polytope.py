@@ -58,6 +58,7 @@ class Polytope:
         """Higher-level API which takes a request and uses it to slice the datacube"""
         # self.datacube.check_branching_axes(request)
         import time
+
         time0 = time.time()
         request_tree = self.engine.extract(self.datacube, request.polytopes())
         print("POLYTOPE FIND TREE BY SLICING")

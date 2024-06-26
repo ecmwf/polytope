@@ -43,7 +43,7 @@ class TestSlicingFDBDatacube:
                 "class",
                 "stream",
                 "type",
-                "number"
+                "number",
             ],
         }
 
@@ -67,7 +67,7 @@ class TestSlicingFDBDatacube:
             Box(["latitude", "longitude"], [-20, 61], [48, 36]),
             # Box(["latitude", "longitude"], [0, 1], [1, 2]),
             # Select("number", [1, 2]),
-            All("number")
+            All("number"),
         )
         # request = Request(
         #     Select("step", [0]),

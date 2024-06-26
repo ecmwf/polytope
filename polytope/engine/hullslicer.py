@@ -192,11 +192,28 @@ class HullSlicer(Engine):
             if compressed_axis in datacube.compressed_axes:
                 self.compressed_axes.append(compressed_axis)
         # add the last axis of the grid always (longitude) as a compressed axis
-        self.compressed_axes.append(datacube.coupled_axes[0][-1])
+        k, last_value = _, datacube.axes[k] = datacube.axes.popitem()
+        self.compressed_axes.append(k)
+        # if len(datacube.coupled_axes) != 0:
+        #     self.compressed_axes.append(datacube.coupled_axes[0][-1])
+
+    def remove_compressed_axis_in_union(self, polytopes):
+        for p in polytopes:
+            if p.is_in_union:
+                for axis in p.axes():
+                    # if axis in self.compressed_axes:
+                    if axis == self.compressed_axes[-1]:
+                        self.compressed_axes.remove(axis)
 
     def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
         # Determine list of axes to compress
         self.find_compressed_axes(datacube, polytopes)
+
+        # REMOVE COMPRESSED AXES WHICH ARE IN A UNION
+        self.remove_compressed_axis_in_union(polytopes)
+
+        print("LOOK NOW")
+        print(self.compressed_axes)
 
         # Convert the polytope points to float type to support triangulation and interpolation
         for p in polytopes:

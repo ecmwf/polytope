@@ -101,9 +101,11 @@ class TestSlicingFDBDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 6
-        for i in range(len(result.leaves)):
-            assert len(result.leaves[i].result) == 1
+        assert len(result.leaves) == 2
+        assert len(result.leaves[0].result) == 3
+        assert len(result.leaves[1].result) == 3
+        assert len(result.leaves[0].values) == 3
+        assert len(result.leaves[1].values) == 3
 
     @pytest.mark.fdb
     def test_fdb_datacube_disk_2(self):
@@ -132,6 +134,10 @@ class TestSlicingFDBDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 11
-        for i in range(len(result.leaves)):
-            assert len(result.leaves[i].result) == 1
+        assert len(result.leaves) == 3
+        assert len(result.leaves[0].result) == 3
+        assert len(result.leaves[1].result) == 5
+        assert len(result.leaves[2].result) == 3
+        assert len(result.leaves[0].values) == 3
+        assert len(result.leaves[1].values) == 5
+        assert len(result.leaves[2].values) == 3
