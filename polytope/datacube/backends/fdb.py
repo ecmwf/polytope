@@ -150,9 +150,7 @@ class FDBDatacube(Datacube):
             leaf_path.update(key_value_path)
             if len(requests.children[0].children[0].children) == 0:
                 # find the fdb_requests and associated nodes to which to add results
-                (path, current_start_idxs, fdb_node_ranges, lat_length) = self.get_2nd_last_values(
-                    requests, leaf_path
-                )
+                (path, current_start_idxs, fdb_node_ranges, lat_length) = self.get_2nd_last_values(requests, leaf_path)
                 time1 = time.time()
                 (
                     original_indices,
@@ -162,9 +160,7 @@ class FDBDatacube(Datacube):
                 ) = self.sort_fdb_request_ranges(current_start_idxs, lat_length, fdb_node_ranges)
                 self.request_sorting_time += time.time() - time1
                 fdb_requests.append((path, sorted_request_ranges))
-                fdb_requests_decoding_info.append(
-                    (original_indices, fdb_node_ranges, current_start_idxs)
-                )
+                fdb_requests_decoding_info.append((original_indices, fdb_node_ranges, current_start_idxs))
 
             # Otherwise remap the path for this key and iterate again over children
             else:
@@ -275,7 +271,7 @@ class FDBDatacube(Datacube):
             for i in range(len(sorted_fdb_range_nodes)):
                 n = sorted_fdb_range_nodes[i][0]
                 interm_request_output_values = request_output_values[0][i][0]
-                n.result.extend(interm_request_output_values[:len(current_start_idxs[i])])
+                n.result.extend(interm_request_output_values[: len(current_start_idxs[i])])
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
         interm_request_ranges = []
