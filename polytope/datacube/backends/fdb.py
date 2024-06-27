@@ -179,7 +179,7 @@ class FDBDatacube(Datacube):
             second_ax_name = requests.children[0].children[0].axis.name
 
             if first_ax_name not in self.nearest_search.keys() or second_ax_name not in self.nearest_search.keys():
-                raise Exception("nearest point search axis are wrong")
+                raise Exception("nearest point search axes are wrong")
 
             second_ax = requests.children[0].children[0].axis
 
