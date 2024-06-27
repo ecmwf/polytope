@@ -1,8 +1,8 @@
 import logging
+import operator
+import time
 from copy import deepcopy
 from itertools import product
-import time
-import operator
 
 from ...utility.geometry import nearest_pt
 from .datacube import Datacube, TensorIndexTree
