@@ -281,7 +281,8 @@ class FDBDatacube(Datacube):
         for i in range(lat_length):
             interm_fdb_nodes = fdb_node_ranges[i]
             interm_start_idx = current_start_idx[i]
-            # TODO: if we sorted the cyclic values in increasing order on the tree too, then we wouldn't have to sort here?
+            # TODO: if we sorted the cyclic values in increasing order on the tree too,
+            # then we wouldn't have to sort here?
             sorted_list = sorted(enumerate(interm_start_idx), key=lambda x: x[1])
             original_indices_idx, interm_start_idx = zip(*sorted_list)
             for interm_fdb_nodes_obj in interm_fdb_nodes:
