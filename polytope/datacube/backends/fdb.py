@@ -279,7 +279,7 @@ class FDBDatacube(Datacube):
         return (leaf_path_copy, [], current_start_idxs, fdb_node_ranges, lat_length)
 
     def get_last_layer_before_leaf(self, requests, leaf_path, current_idx, fdb_range_n):
-        i = 0
+        # i = 0
         current_idx = []
         fdb_range_n = []
         for c in requests.children:
@@ -345,7 +345,7 @@ class FDBDatacube(Datacube):
             # TODO: what happens when we remove sorting?
             # time1 = time.time()
             sorted_fdb_range_nodes = [fdb_node_ranges[i] for i in original_indices]
-            sorted_current_start_idxs = [current_start_idxs[i] for i in original_indices]
+            # sorted_current_start_idxs = [current_start_idxs[i] for i in original_indices]
             # print(time.time() - time1)
             # self.sorting_time +=time.time() - time1
             # time1 = time.time()
@@ -355,8 +355,8 @@ class FDBDatacube(Datacube):
             for i in range(len(sorted_fdb_range_nodes)):
                 # for k in range(sorted_range_lengths[i]):
                 # n = sorted_fdb_range_nodes[i]
-                print("WHAT ARE THE SORTED RANGES HERE?")
-                print(fdb_node_ranges)
+                # print("WHAT ARE THE SORTED RANGES HERE?")
+                # print(fdb_node_ranges)
                 n = sorted_fdb_range_nodes[i][0]
                 interm_request_output_values = request_output_values[0][i][0]
                 n.result.extend(interm_request_output_values[:len(current_start_idxs[i])])
@@ -381,22 +381,25 @@ class FDBDatacube(Datacube):
         for i in range(lat_length):
             interm_fdb_nodes = fdb_node_ranges[i]
             interm_start_idx = current_start_idx[i]
+            # print("NOW FIRST THE START IDX")
+            # print(interm_start_idx)
+            # print(interm_fdb_nodes)
             # print(interm_fdb_nodes)
             # print(interm_start_idx)
             # interm_start_idx.sort()
-            # TODO: need to sort here, but also need to resort the resulting ranges after in that case so that we assign the right result...
-            # sorted_list = sorted(enumerate(interm_start_idx), key=lambda x: x[1])
-            # original_indices, interm_start_idx = zip(*sorted_list)
+            # TODO: if we sorted the cyclic values in increasing order on the tree too, then we wouldn't have to sort here?
+            sorted_list = sorted(enumerate(interm_start_idx), key=lambda x: x[1])
+            original_indices_idx, interm_start_idx = zip(*sorted_list)
+            for interm_fdb_nodes_obj in interm_fdb_nodes:
+                interm_fdb_nodes_obj.values = tuple([interm_fdb_nodes_obj.values[j] for j in original_indices_idx])
             # print(original_indices)
             # interm_fdb_nodes = [interm_fdb_nodes[i] for i in original_indices]
-            # TODO HERE: need to get the sorting order and also reorder interm_fdb_nodes...
-            # print("WHAT IS THE CURREENT START IDX")
-            # print(interm_start_idx)
             # for j in range(len(range_lengths[i])):
             if True:
                 # if current_start_idx[i][0] is not None:
                 if True:
                     # print(current_start_idx[i][-1]+1 - current_start_idx[i][0])
+                    # new_fdb_node_ranges_tuples = []
                     # print(len(current_start_idx[i]))
                     if abs(interm_start_idx[-1] + 1 - interm_start_idx[0]) <= len(interm_start_idx):
                         # print("WE DID NOT DIVIDE THE IDX RANGES")
@@ -404,11 +407,13 @@ class FDBDatacube(Datacube):
                         # print(current_request_ranges)
                         interm_request_ranges.append(current_request_ranges)
                         new_fdb_node_ranges.append(interm_fdb_nodes)
+                        # new_fdb_node_ranges_tuples.append()
                         new_current_start_idx.append(interm_start_idx)
                     else:
-                        time0 = time.time()
+                        # time0 = time.time()
                         # TODO: see where we have jump in indices and separate the ranges there
                         jumps = list(map(operator.sub, interm_start_idx[1:], interm_start_idx[:-1]))
+                        # new_fdb_node_ranges_tuple = []
                         last_idx = 0
                         for j, jump in enumerate(jumps):
                             # new_interm_fdb_nodes = []
@@ -419,6 +424,8 @@ class FDBDatacube(Datacube):
                                 # new_interm_start_idx.append(interm_start_idx[last_idx:j + 1])
                                 # new_fdb_node_ranges.append(interm_fdb_nodes[last_idx : j + 1])
                                 new_fdb_node_ranges.append(interm_fdb_nodes)
+                                # new_fdb_node_ranges_tuple.append(interm_fdb_nodes)
+                                # new_fdb_node_ranges_tuple.append(interm_fdb_nodes)
                                 new_current_start_idx.append(interm_start_idx[last_idx : j + 1])
                                 last_idx = j + 1
                                 interm_request_ranges.append(current_request_ranges)
@@ -436,16 +443,27 @@ class FDBDatacube(Datacube):
                                 # new_interm_start_idx.append(interm_start_idx[last_idx:])
                                 # new_fdb_node_ranges.append(interm_fdb_nodes[last_idx:])
                                 new_fdb_node_ranges.append(interm_fdb_nodes)
+                                # new_fdb_node_ranges_tuple.append(interm_fdb_nodes)
                                 new_current_start_idx.append(interm_start_idx[last_idx:])
-                        print("TIME FOR CONSTRUCTING THE JUMP RANGES")
-                        print(time.time() - time0)
+                        # new_fdb_node_ranges.append(new_fdb_node_ranges_tuple)
+                        # print("TIME FOR CONSTRUCTING THE JUMP RANGES")
+                        # print(time.time() - time0)
+            
         request_ranges_with_idx = list(enumerate(interm_request_ranges))
+        # print("LOOK NOW")
+        # print(new_fdb_node_ranges)
+        # print(original_indices_idx)
+        # sorted_new_fdb_node_ranges = [new_fdb_node_ranges[j] for j in original_indices_idx]
+        # final_sorted_new_fdb_node_ranges = []
+        # for sorted_range in sorted_new_fdb_node_ranges:
+        #     final_sorted_new_fdb_node_ranges.extend(sorted_range)
         sorted_list = sorted(request_ranges_with_idx, key=lambda x: x[1][0])
         original_indices, sorted_request_ranges = zip(*sorted_list)
-        print("INSIDE THE SORTING PROBLEM?")
-        print(sorted_request_ranges)
-        print(new_current_start_idx)
-        print(new_fdb_node_ranges)
+        # print("INSIDE THE SORTING PROBLEM?")
+        # print(sorted_request_ranges)
+        # print(new_current_start_idx)
+        # print(new_fdb_node_ranges)
+        # return (original_indices, sorted_request_ranges, new_fdb_node_ranges, new_current_start_idx)
         return (original_indices, sorted_request_ranges, new_fdb_node_ranges, new_current_start_idx)
 
     def datacube_natural_indexes(self, axis, subarray):
