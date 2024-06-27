@@ -30,7 +30,7 @@ class TestSlicing3DXarrayDatacube:
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 1
-        assert result.leaves[0].flatten()["long"] == (0.5, 0.0)
+        assert result.leaves[0].flatten()["long"] == (0.0, 0.5)
         assert result.leaves[0].result[0] is None
-        assert result.leaves[0].result[1][0] == 1
-        assert result.leaves[0].result[1][1] == 0
+        assert result.leaves[0].result[1][0] == 0
+        assert result.leaves[0].result[1][1] == 1

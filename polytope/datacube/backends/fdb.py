@@ -1,8 +1,8 @@
 import logging
+import operator
+import time
 from copy import deepcopy
 from itertools import product
-import time
-import operator
 
 from ...utility.geometry import nearest_pt
 from .datacube import Datacube, TensorIndexTree
@@ -260,18 +260,25 @@ class FDBDatacube(Datacube):
         return (current_idx, fdb_range_n)
 
     def assign_fdb_output_to_nodes(self, output_values, fdb_requests_decoding_info):
-        for k in range(len(output_values)):
-            request_output_values = output_values[k]
+        for k, request_output_values in enumerate(output_values):
+            # request_output_values = output_values[k]
             (
                 original_indices,
                 fdb_node_ranges,
                 current_start_idxs,
             ) = fdb_requests_decoding_info[k]
+            request_output_values = request_output_values[0]
+
             sorted_fdb_range_nodes = [fdb_node_ranges[i] for i in original_indices]
-            for i in range(len(sorted_fdb_range_nodes)):
-                n = sorted_fdb_range_nodes[i][0]
-                interm_request_output_values = request_output_values[0][i][0]
-                n.result.extend(interm_request_output_values[: len(current_start_idxs[i])])
+            for node_range, interm_values, start_idx in zip(
+                sorted_fdb_range_nodes, request_output_values, current_start_idxs
+            ):
+                node_range[0].result.extend(interm_values[0][: len(start_idx)])
+
+            # for i in range(len(sorted_fdb_range_nodes)):
+            #     n = sorted_fdb_range_nodes[i][0]
+            #     interm_request_output_values = request_output_values[i][0]
+            #     n.result.extend(interm_request_output_values[: len(current_start_idxs[i])])
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
         interm_request_ranges = []
@@ -282,11 +289,11 @@ class FDBDatacube(Datacube):
             interm_fdb_nodes = fdb_node_ranges[i]
             interm_start_idx = current_start_idx[i]
             # TODO: if we sorted the cyclic values in increasing order on the tree too, then we wouldn't have to sort here?
-            sorted_list = sorted(enumerate(interm_start_idx), key=lambda x: x[1])
-            original_indices_idx, interm_start_idx = zip(*sorted_list)
-            for interm_fdb_nodes_obj in interm_fdb_nodes:
-                interm_fdb_nodes_obj.values = tuple([interm_fdb_nodes_obj.values[j] for j in original_indices_idx])
-            if abs(interm_start_idx[-1] + 1 - interm_start_idx[0]) <= len(interm_start_idx):
+            # sorted_list = sorted(enumerate(interm_start_idx), key=lambda x: x[1])
+            # original_indices_idx, interm_start_idx = zip(*sorted_list)
+            # for interm_fdb_nodes_obj in interm_fdb_nodes:
+            #     interm_fdb_nodes_obj.values = tuple([interm_fdb_nodes_obj.values[j] for j in original_indices_idx])
+            if interm_start_idx[-1] + 1 - interm_start_idx[0] <= len(interm_start_idx):
                 current_request_ranges = (interm_start_idx[0], interm_start_idx[-1] + 1)
                 interm_request_ranges.append(current_request_ranges)
                 new_fdb_node_ranges.append(interm_fdb_nodes)

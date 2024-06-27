@@ -1,3 +1,4 @@
+import bisect
 import logging
 from typing import OrderedDict
 
@@ -100,7 +101,8 @@ class TensorIndexTree(object):
 
     def add_value(self, value):
         new_values = list(self.values)
-        new_values.append(value)
+        # new_values.append(value)
+        bisect.insort(new_values, value)
         self.values = tuple(new_values)
 
     def create_child(self, axis, value, next_nodes):

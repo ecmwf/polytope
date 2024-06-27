@@ -3,10 +3,10 @@ import time
 import pandas as pd
 import pytest
 
+from polytope.datacube.tree_encoding import decode_into_tree, decode_tree, encode_tree
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select, All
-from polytope.datacube.tree_encoding import decode_tree, encode_tree, decode_into_tree
+from polytope.shapes import All, Box, Select
 
 
 class TestSlicingFDBDatacube:
