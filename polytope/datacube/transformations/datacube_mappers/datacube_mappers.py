@@ -121,4 +121,5 @@ _type_to_datacube_mapper_lookup = {
     "regular": "RegularGridMapper",
     "reduced_ll": "ReducedLatLonMapper",
     "local_regular": "LocalRegularGridMapper",
+    "nested_healpix": "NestedHealpixGridMapper",
 }
