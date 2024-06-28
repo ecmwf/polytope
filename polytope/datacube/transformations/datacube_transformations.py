@@ -57,6 +57,8 @@ class DatacubeAxisTransformation(ABC):
         return (node, unwanted_path)
 
     def find_indices_between(self, indexes_ranges, low, up, datacube, method, indexes_between_ranges, axis):
+        print("HERE WHAT DO WE HAVE")
+        print(indexes_between_ranges)
         return indexes_between_ranges
 
     def _remap_val_to_axis_range(self, value, axis):

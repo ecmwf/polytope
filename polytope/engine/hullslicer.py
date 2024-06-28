@@ -94,6 +94,8 @@ class HullSlicer(Engine):
         if self.axis_values_between.get((flattened_tuple, ax.name, lower, upper, method), None) is None:
             values = datacube.get_indices(flattened, ax, lower, upper, method)
             self.axis_values_between[(flattened_tuple, ax.name, lower, upper, method)] = values
+        print("FOUND VALUES IN BETWEEN")
+        print(values)
         return values
 
     def remap_values(self, ax, value):
@@ -108,23 +110,17 @@ class HullSlicer(Engine):
             self.remapped_vals[(value, ax.name)] = remapped_val
         return remapped_val
 
-    def _build_sliceable_child(self, polytope, ax, node, datacube, values, next_nodes, slice_axis_idx):
-        if len(values) == 0:
+    def _build_sliceable_child(self, polytope, ax, node, datacube, all_values, next_nodes, slice_axis_idx):
+
+        if len(all_values) == 0:
             node.remove_branch()
 
-        for i, value in enumerate(values):
-            if i == 0:
-                fvalue = ax.to_float(value)
-                new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
-                remapped_val = self.remap_values(ax, value)
-                (child, next_nodes) = node.create_child(ax, remapped_val, next_nodes)
-                child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
-                child["unsliced_polytopes"].remove(polytope)
-                if new_polytope is not None:
-                    child["unsliced_polytopes"].add(new_polytope)
-                next_nodes.append(child)
-            else:
-                if ax.name not in self.compressed_axes:
+        for values in all_values:
+            # if len(values) == 0:
+            #     node.remove_branch()
+
+            for i, value in enumerate(values):
+                if i == 0:
                     fvalue = ax.to_float(value)
                     new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
                     remapped_val = self.remap_values(ax, value)
@@ -135,8 +131,19 @@ class HullSlicer(Engine):
                         child["unsliced_polytopes"].add(new_polytope)
                     next_nodes.append(child)
                 else:
-                    remapped_val = self.remap_values(ax, value)
-                    child.add_value(remapped_val)
+                    if ax.name not in self.compressed_axes:
+                        fvalue = ax.to_float(value)
+                        new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
+                        remapped_val = self.remap_values(ax, value)
+                        (child, next_nodes) = node.create_child(ax, remapped_val, next_nodes)
+                        child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
+                        child["unsliced_polytopes"].remove(polytope)
+                        if new_polytope is not None:
+                            child["unsliced_polytopes"].add(new_polytope)
+                        next_nodes.append(child)
+                    else:
+                        remapped_val = self.remap_values(ax, value)
+                        child.add_value(remapped_val)
 
     def _build_branch(self, ax, node, datacube, next_nodes):
         if ax.name not in self.compressed_axes:
@@ -167,12 +174,14 @@ class HullSlicer(Engine):
                         all_lowers.append(lower)
                     else:
                         values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
-                        all_values.extend(values)
+                        all_values.append(values)
             if self.ax_is_unsliceable[ax.name]:
                 self._build_unsliceable_child(
                     first_polytope, ax, node, datacube, all_lowers, next_nodes, first_slice_axis_idx
                 )
             else:
+                print("HERE ALL VALUES")
+                print(all_values)
                 self._build_sliceable_child(
                     first_polytope, ax, node, datacube, all_values, next_nodes, first_slice_axis_idx
                 )
