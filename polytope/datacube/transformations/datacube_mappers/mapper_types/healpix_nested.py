@@ -14,7 +14,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
         self._first_axis_vals = self.first_axis_vals()
         self.compressed_grid_axes = [self._mapped_axes[1]]
         self.Nside = self._resolution
-        self.k = math.log2(self.Nside)
+        self.k = int(math.log2(self.Nside))
         self.Npix = 12 * self.Nside * self.Nside
         self.Ncap = (self.Nside * (self.Nside - 1)) * 2
 
@@ -162,6 +162,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
             0x5555555555555555,
         ]
 
+        i = int(i)
         b = i & __masks[0]
         b = (b ^ (b << 16)) & __masks[1]
         b = (b ^ (b << 8)) & __masks[2]

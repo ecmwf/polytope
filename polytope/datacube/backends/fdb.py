@@ -60,10 +60,16 @@ class FDBDatacube(Datacube):
                 if ax == "levtype":
                     (upper, lower, idx) = polytope.extents(ax)
                     if "sfc" in polytope.points[idx]:
-                        self.fdb_coordinates.pop("levelist")
+                        print(self.fdb_coordinates)
+                        self.fdb_coordinates.pop("levelist", None)
         self.fdb_coordinates.pop("quantile", None)
+        # TODO: When do these not appear??
+        self.fdb_coordinates.pop("direction", None)
+        self.fdb_coordinates.pop("frequency", None)
 
     def get(self, requests: TensorIndexTree):
+        # requests.pprint()
+        # requests.pprint()
         if len(requests.children) == 0:
             return requests
         fdb_requests = []
@@ -94,6 +100,8 @@ class FDBDatacube(Datacube):
                 for i, key in enumerate(compressed_request[0].keys()):
                     uncompressed_request[key] = combi[i]
                 complete_uncompressed_request = (uncompressed_request, compressed_request[1])
+                print("NOW LOOK")
+                print([complete_uncompressed_request])
                 output_values = self.gj.extract([complete_uncompressed_request])
                 self.assign_fdb_output_to_nodes(output_values, [fdb_requests_decoding_info[j]])
 
