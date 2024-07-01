@@ -45,10 +45,15 @@ class PolytopeOptions(ABC):
 
         path_subclasses_union = Union[str, int, float]
 
+        class GribJumpAxesConfig(ConfigModel):
+            axis_name: str = ""
+            values: List[str] = [""]
+
         class Config(ConfigModel):
             axis_config: List[AxisConfig] = []
             compressed_axes_config: List[str] = [""]
             pre_path: Optional[Dict[str, path_subclasses_union]] = {}
+            alternative_axes: List[GribJumpAxesConfig] = []
 
         parser = argparse.ArgumentParser(allow_abbrev=False)
         config_options = Conflator(app_name="polytope", model=Config, cli=False, argparser=parser).load()
@@ -56,9 +61,11 @@ class PolytopeOptions(ABC):
             axis_config=options.get("axis_config", []),
             compressed_axes_config=options.get("compressed_axes_config", [""]),
             pre_path=options.get("pre_path", {}),
+            alternative_axes=options.get("alternative_axes", [])
         )
         axis_config = config_options.axis_config
         compressed_axes_config = config_options.compressed_axes_config
         pre_path = config_options.pre_path
+        alternative_axes = config_options.alternative_axes
 
-        return (axis_config, compressed_axes_config, pre_path)
+        return (axis_config, compressed_axes_config, pre_path, alternative_axes)

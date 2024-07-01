@@ -1,6 +1,6 @@
 import pytest
 from earthkit import data
-from helper_functions import download_test_data, find_nearest_latlon
+# from helper_functions import download_test_data, find_nearest_latlon
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
@@ -53,6 +53,68 @@ class TestHealpixNestedGrid:
                 "longitude",
                 "latitude",
             ],
+            "alternative_axes": [
+                {
+                    "axis_name": "class",
+                    "values": ["d1",]
+                },
+                {
+                    "axis_name": "activity",
+                    "values": ["ScenarioMIP",]
+                },
+                {
+                    "axis_name": "dataset",
+                    "values": ["climate-dt"],
+                },
+                {
+                    "axis_name": "date",
+                    "values": ["20200102"],
+                },
+                {
+                    "axis_name": "time",
+                    "values": ["0100"],
+                },
+                {
+                    "axis_name": "experiment",
+                    "values": ["SSP5-8.5"],
+                },
+                {
+                    "axis_name": "expver",
+                    "values": ["0001"],
+                },
+                {
+                    "axis_name": "generation",
+                    "values": ["1"],
+                },
+                {
+                    "axis_name": "levtype",
+                    "values": ["sfc"],
+                },
+                {
+                    "axis_name": "model",
+                    "values": ["IFS-NEMO"],
+                },
+                {
+                    "axis_name": "param",
+                    "values": ["167"],
+                },
+                {
+                    "axis_name": "realization",
+                    "values": ["1"],
+                },
+                {
+                    "axis_name": "resolution",
+                    "values": ["standard"],
+                },
+                {
+                    "axis_name": "stream",
+                    "values": ["clte"],
+                },
+                {
+                    "axis_name": "type",
+                    "values": ["fc"],
+                },
+            ],
         }
 
     @pytest.mark.internet
@@ -90,6 +152,8 @@ class TestHealpixNestedGrid:
         result.pprint()
         assert len(result.leaves) == 18
 
+        from helper_functions import download_test_data, find_nearest_latlon
+
         lats = []
         lons = []
         eccodes_lats = []
@@ -108,4 +172,4 @@ class TestHealpixNestedGrid:
             assert lat[0] <= eccodes_lat + tol
             assert eccodes_lon - tol <= lon[0]
             assert lon[0] <= eccodes_lon + tol
-        assert len(eccodes_lats) == 4
+        assert len(eccodes_lats) == 18

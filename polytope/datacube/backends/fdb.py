@@ -7,7 +7,7 @@ from .datacube import Datacube, TensorIndexTree
 
 
 class FDBDatacube(Datacube):
-    def __init__(self, gj, request, config=None, axis_options=None, compressed_axes_options=[]):
+    def __init__(self, gj, request, config=None, axis_options=None, compressed_axes_options=[], alternative_axes=[]):
         if config is None:
             config = {}
 
@@ -22,9 +22,15 @@ class FDBDatacube(Datacube):
         # Find values in the level 3 FDB datacube
 
         self.gj = gj
-        self.fdb_coordinates = self.gj.axes(partial_request)
+        if len(alternative_axes) == 0:
+            self.fdb_coordinates = self.gj.axes(partial_request)
+            self.check_branching_axes(request)
+        else:
+            self.fdb_coordinates = {}
+            for axis_config in alternative_axes:
+                self.fdb_coordinates[axis_config.axis_name] = axis_config.values
 
-        self.check_branching_axes(request)
+        # self.check_branching_axes(request)
 
         logging.info("Axes returned from GribJump are: " + str(self.fdb_coordinates))
 
