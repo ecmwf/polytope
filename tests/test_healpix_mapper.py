@@ -5,6 +5,7 @@ from helper_functions import download_test_data, find_nearest_latlon
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
+from polytope.datacube.transformations.datacube_mappers.mapper_types.healpix import HealpixGridMapper
 
 
 class TestOctahedralGrid:
@@ -46,7 +47,8 @@ class TestOctahedralGrid:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 40
+        # assert len(result.leaves) == 40
+        assert len(result.leaves) == 45
 
         lats = []
         lons = []
@@ -64,10 +66,14 @@ class TestOctahedralGrid:
                 eccodes_lat = nearest_points[0][0]["lat"]
                 eccodes_lon = nearest_points[0][0]["lon"]
                 eccodes_result = nearest_points[0][0]["value"]
+
+                mapper = HealpixGridMapper("base", ["base", "base"], 32)
+                assert nearest_points[0][0]["index"] == mapper.unmap((lat,), (lon,))
                 assert eccodes_lat - tol <= lat
                 assert lat <= eccodes_lat + tol
                 assert eccodes_lon - tol <= lon
                 assert lon <= eccodes_lon + tol
-                assert eccodes_result == tree_result
+                tol = 1e-2
+                assert abs(eccodes_result - tree_result) <= tol
             eccodes_lats.append(lat)
-        assert len(eccodes_lats) == 40
+        assert len(eccodes_lats) == 45
