@@ -86,6 +86,7 @@ class TestRegularGrid:
         tol = 1e-8
         leaves = result.leaves
         for i in range(len(leaves)):
+            result_tree = leaves[i].result[1]
             cubepath = leaves[i].flatten()
             lat = cubepath["latitude"][0]
             lon = cubepath["longitude"][0]
@@ -94,11 +95,13 @@ class TestRegularGrid:
             nearest_points = find_nearest_latlon("./tests/data/era5-levels-members.grib", lat, lon)
             eccodes_lat = nearest_points[0][0]["lat"]
             eccodes_lon = nearest_points[0][0]["lon"]
+            eccodes_value = nearest_points[0][0]["value"]
             eccodes_lats.append(eccodes_lat)
             assert eccodes_lat - tol <= lat
             assert lat <= eccodes_lat + tol
             assert eccodes_lon - tol <= lon
             assert lon <= eccodes_lon + tol
+            assert eccodes_value == result_tree
 
         # worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
         # fig, ax = plt.subplots(figsize=(12, 6))

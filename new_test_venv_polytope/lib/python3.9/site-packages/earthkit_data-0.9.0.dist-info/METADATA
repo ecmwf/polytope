@@ -1,0 +1,161 @@
+Metadata-Version: 2.1
+Name: earthkit-data
+Version: 0.9.0
+Summary: A format-agnostic Python interface for geospatial data
+Author-email: "European Centre for Medium-Range Weather Forecasts (ECMWF)" <software.support@ecmwf.int>
+License: Apache License Version 2.0
+Project-URL: Documentation, https://earthkit-data.readthedocs.io/
+Project-URL: Homepage, https://github.com/ecmwf/earthkit-data/
+Project-URL: Issues, https://github.com/ecmwf/earthkit-data.issues
+Project-URL: Repository, https://github.com/ecmwf/earthkit-data/
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: cfgrib >=0.9.10.1
+Requires-Dist: dask
+Requires-Dist: earthkit-geo >=0.2
+Requires-Dist: earthkit-meteo >=0.0.1
+Requires-Dist: eccodes >=1.7
+Requires-Dist: entrypoints
+Requires-Dist: filelock
+Requires-Dist: jinja2
+Requires-Dist: jsonschema
+Requires-Dist: markdown
+Requires-Dist: multiurl
+Requires-Dist: netcdf4
+Requires-Dist: pandas
+Requires-Dist: pdbufr >=0.11
+Requires-Dist: pyyaml
+Requires-Dist: tqdm >=4.63
+Requires-Dist: xarray >=0.19
+Provides-Extra: all
+Requires-Dist: cartopy ; extra == 'all'
+Requires-Dist: cdsapi ; extra == 'all'
+Requires-Dist: cfgrib >=0.9.10.1 ; extra == 'all'
+Requires-Dist: dask ; extra == 'all'
+Requires-Dist: earthkit-geo >=0.2 ; extra == 'all'
+Requires-Dist: earthkit-meteo >=0.0.1 ; extra == 'all'
+Requires-Dist: eccodes >=1.7 ; extra == 'all'
+Requires-Dist: eccovjson >=0.0.5 ; extra == 'all'
+Requires-Dist: ecmwf-api-client >=1.6.1 ; extra == 'all'
+Requires-Dist: ecmwf-opendata >=0.3.3 ; extra == 'all'
+Requires-Dist: entrypoints ; extra == 'all'
+Requires-Dist: filelock ; extra == 'all'
+Requires-Dist: geopandas ; extra == 'all'
+Requires-Dist: hda ; extra == 'all'
+Requires-Dist: jinja2 ; extra == 'all'
+Requires-Dist: jsonschema ; extra == 'all'
+Requires-Dist: markdown ; extra == 'all'
+Requires-Dist: multiurl ; extra == 'all'
+Requires-Dist: nbconvert ; extra == 'all'
+Requires-Dist: nbformat ; extra == 'all'
+Requires-Dist: netcdf4 ; extra == 'all'
+Requires-Dist: pandas ; extra == 'all'
+Requires-Dist: pdbufr >=0.11 ; extra == 'all'
+Requires-Dist: polytope-client >=0.7.4 ; extra == 'all'
+Requires-Dist: pyfdb ; extra == 'all'
+Requires-Dist: pyodc ; extra == 'all'
+Requires-Dist: pytest ; extra == 'all'
+Requires-Dist: pytest-cov ; extra == 'all'
+Requires-Dist: pytest-forked ; extra == 'all'
+Requires-Dist: pytest-timeout ; extra == 'all'
+Requires-Dist: pyyaml ; extra == 'all'
+Requires-Dist: tqdm >=4.63 ; extra == 'all'
+Requires-Dist: xarray >=0.19 ; extra == 'all'
+Provides-Extra: cds
+Requires-Dist: cdsapi ; extra == 'cds'
+Provides-Extra: eccovjson
+Requires-Dist: eccovjson >=0.0.5 ; extra == 'eccovjson'
+Provides-Extra: ecmwf-opendata
+Requires-Dist: ecmwf-opendata >=0.3.3 ; extra == 'ecmwf-opendata'
+Provides-Extra: fdb
+Requires-Dist: pyfdb ; extra == 'fdb'
+Provides-Extra: geopandas
+Requires-Dist: geopandas ; extra == 'geopandas'
+Provides-Extra: mars
+Requires-Dist: ecmwf-api-client >=1.6.1 ; extra == 'mars'
+Provides-Extra: odb
+Requires-Dist: pyodc ; extra == 'odb'
+Provides-Extra: polytope
+Requires-Dist: polytope-client >=0.7.4 ; extra == 'polytope'
+Provides-Extra: projection
+Requires-Dist: cartopy ; extra == 'projection'
+Provides-Extra: test
+Requires-Dist: nbconvert ; extra == 'test'
+Requires-Dist: nbformat ; extra == 'test'
+Requires-Dist: pytest ; extra == 'test'
+Requires-Dist: pytest-cov ; extra == 'test'
+Requires-Dist: pytest-forked ; extra == 'test'
+Requires-Dist: pytest-timeout ; extra == 'test'
+Provides-Extra: wekeo
+Requires-Dist: hda ; extra == 'wekeo'
+
+# earthkit-data
+
+<img src="docs/_static/earthkit-data.png" width="120">
+
+[![PyPI version fury.io](https://badge.fury.io/py/earthkit-data.svg)](https://pypi.python.org/pypi/earthkit-data/)
+[![PyPI pyversions](https://img.shields.io/pypi/pyversions/earthkit-data.svg)](https://pypi.python.org/pypi/earthkit-data/)
+
+**DISCLAIMER**
+
+> This project is in the **BETA** stage of development. Please be aware that interfaces and functionality may change as the project develops. If this software is to be used in operational systems you are **strongly advised to use a released tag in your system configuration**, and you should be willing to accept incoming changes and bug fixes that require adaptations on your part. ECMWF **does use** this software in operations and abides by the same caveats.
+
+A format-agnostic interface for geospatial data with a focus on meteorology and
+climate science.
+
+## Documentation
+
+The documentation can be found at https://earthkit-data.readthedocs.io/.
+
+## Install
+
+Install via `pip` with:
+
+```
+$ pip install earthkit-data
+```
+
+More details, such as how to install any necessary binaries, can be found  at https://earthkit-data.readthedocs.io/en/latest/install.html.
+
+Alternatively, install via `conda` with:
+
+```
+$ conda install earthkit-data -c conda-forge
+```
+
+This will bring in some necessary binary dependencies for you.
+
+## License
+
+```
+Copyright 2022, European Centre for Medium Range Weather Forecasts.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+In applying this licence, ECMWF does not waive the privileges and immunities
+granted to it by virtue of its status as an intergovernmental organisation
+nor does it submit to any jurisdiction.
+```

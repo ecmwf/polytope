@@ -22,8 +22,12 @@ class FDBDatacube(Datacube):
         # Find values in the level 3 FDB datacube
 
         self.gj = gj
+        print("WE WERE HERE AT SOME POINT NOOO??")
+        print(alternative_axes)
         if len(alternative_axes) == 0:
             self.fdb_coordinates = self.gj.axes(partial_request)
+            print("THE FDB COORDS ARE")
+            print(self.fdb_coordinates)
             self.check_branching_axes(request)
         else:
             self.fdb_coordinates = {}

@@ -61,6 +61,19 @@ class HealpixGridMapper(DatacubeMapper):
         if idx == 2 * self._resolution - 1:
             vals = [r_start + i * (360 / (4 * self._resolution)) for i in range(4 * self._resolution)]
             return vals
+    
+    def HEALPix_nj(self, i):
+        assert self._resolution > 0, "N must be greater than 0"
+        ni = 4 * self._resolution - 1
+        assert i < ni, "i must be less than ni"
+
+        if i < self._resolution:
+            return 4 * (i + 1)
+        elif i < 3 * self._resolution:
+            return 4 * self._resolution
+        else:
+            return self.HEALPix_nj(self._resolution, ni - 1 - i)
+
 
     def map_second_axis(self, first_val, lower, upper):
         axis_lines = self.second_axis_vals(first_val)

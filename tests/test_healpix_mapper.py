@@ -52,8 +52,9 @@ class TestOctahedralGrid:
         lons = []
         eccodes_lats = []
         tol = 1e-8
-        for i in range(len(result.leaves)):
-            cubepath = result.leaves[i].flatten()
+        for i, leaf in enumerate(result.leaves):
+            cubepath = leaf.flatten()
+            tree_result = leaf.result[1].tolist()
             lat = cubepath["latitude"][0]
             new_lons = cubepath["longitude"]
             for lon in new_lons:
@@ -62,9 +63,11 @@ class TestOctahedralGrid:
                 nearest_points = find_nearest_latlon("./tests/data/healpix.grib", lat, lon)
                 eccodes_lat = nearest_points[0][0]["lat"]
                 eccodes_lon = nearest_points[0][0]["lon"]
+                eccodes_result = nearest_points[0][0]["value"]
                 assert eccodes_lat - tol <= lat
                 assert lat <= eccodes_lat + tol
                 assert eccodes_lon - tol <= lon
                 assert lon <= eccodes_lon + tol
+                assert eccodes_result == tree_result
             eccodes_lats.append(lat)
         assert len(eccodes_lats) == 40

@@ -16,7 +16,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
         self.Nside = self._resolution
         self.k = int(math.log2(self.Nside))
         self.Npix = 12 * self.Nside * self.Nside
-        self.Ncap = (self.Nside * (self.Nside - 1)) * 2
+        self.Ncap = (self.Nside * (self.Nside - 1)) << 1
 
     def first_axis_vals(self):
         rad2deg = 180 / math.pi
@@ -131,21 +131,21 @@ class NestedHealpixGridMapper(DatacubeMapper):
         return healpix_index
 
     def div_03(self, a, b):
-        t = 1 if a >= (b * 2) else 0
-        a -= t * (b * 2)
-        return (t * 2) + (1 if a >= b else 0)
+        t = 1 if a >= (b << 1) else 0
+        a -= t * (b << 1)
+        return (t << 1) + (1 if a >= b else 0)
 
     def pll(self, f):
         pll_values = [1, 3, 5, 7, 0, 2, 4, 6, 1, 3, 5, 7]
         return pll_values[f]
 
     def to_nest(self, f, ring, Nring, phi, shift):
-        r = ((2 + (f >> 2)) << self.k) - ring - 1
-        p = 2 * phi - self.pll(f) * Nring - shift - 1
+        r = int(((2 + (f >> 2)) << self.k) - ring - 1)
+        p = int(2 * phi - self.pll(f) * Nring - shift - 1)
         if p >= 2 * self.Nside:
             p -= 8 * self.Nside
-        i = int(max(0, (r + p))) / 2
-        j = int(max(0, (r - p))) / 2
+        i = int((r + p)) >> 1
+        j = int((r - p)) >> 1
 
         return self.fij_to_nest(f, i, j, self.k)
 
@@ -201,4 +201,6 @@ class NestedHealpixGridMapper(DatacubeMapper):
             return self.to_nest(f, ring, self.Nside, phi, ring & 1)
 
     def int_sqrt(self, i):
+        print("HERE")
+        print(math.sqrt(i + 0.5))
         return math.sqrt(i + 0.5)

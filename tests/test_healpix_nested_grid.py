@@ -1,5 +1,7 @@
 import pytest
-from earthkit import data
+import geopandas as gpd
+import matplotlib.pyplot as plt
+# from earthkit import data
 # from helper_functions import download_test_data, find_nearest_latlon
 
 from polytope.engine.hullslicer import HullSlicer
@@ -76,7 +78,7 @@ class TestHealpixNestedGrid:
                 },
                 {
                     "axis_name": "experiment",
-                    "values": ["SSP5-8.5"],
+                    "values": ["SSP3-7.0"],
                 },
                 {
                     "axis_name": "expver",
@@ -126,7 +128,7 @@ class TestHealpixNestedGrid:
             Select("class", ["d1"]),
             Select("dataset", ["climate-dt"]),
             Select("date", [pd.Timestamp("20200102T010000")]),
-            Select("experiment", ['SSP5-8.5']),
+            Select("experiment", ['SSP3-7.0']),
             Select("expver", ["0001"]),
             Select("generation", ["1"]),
             Select("levtype", ["sfc"]),
@@ -157,9 +159,11 @@ class TestHealpixNestedGrid:
         lats = []
         lons = []
         eccodes_lats = []
+        eccodes_lons = []
         tol = 1e-8
-        for i in range(len(result.leaves)):
-            cubepath = result.leaves[i].flatten()
+        for i, leaf in enumerate(result.leaves[4:]):
+            cubepath = leaf.flatten()
+            result_tree = leaf.result[0]
             lat = cubepath["latitude"]
             lon = cubepath["longitude"]
             lats.append(lat)
@@ -167,9 +171,21 @@ class TestHealpixNestedGrid:
             nearest_points = find_nearest_latlon("./tests/data/healpix_nested.grib", lat[0], lon[0])
             eccodes_lat = nearest_points[0][0]["lat"]
             eccodes_lon = nearest_points[0][0]["lon"]
+            eccodes_result = nearest_points[3][0]["value"]
             eccodes_lats.append(eccodes_lat)
+            eccodes_lons.append(eccodes_lon)
             assert eccodes_lat - tol <= lat[0]
             assert lat[0] <= eccodes_lat + tol
             assert eccodes_lon - tol <= lon[0]
             assert lon[0] <= eccodes_lon + tol
+            assert eccodes_result == result_tree
         assert len(eccodes_lats) == 18
+
+        worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
+        fig, ax = plt.subplots(figsize=(12, 6))
+        worldmap.plot(color="darkgrey", ax=ax)
+
+        plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
+        plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
+        plt.colorbar(label="Temperature")
+        plt.show()
