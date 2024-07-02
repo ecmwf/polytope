@@ -8,6 +8,7 @@ from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
 import pandas as pd
+from polytope.datacube.transformations.datacube_mappers.mapper_types.healpix_nested import NestedHealpixGridMapper
 
 
 class TestHealpixNestedGrid:
@@ -152,7 +153,8 @@ class TestHealpixNestedGrid:
         
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 18
+        # assert len(result.leaves) == 18
+        assert len(result.leaves) == 21
 
         from helper_functions import download_test_data, find_nearest_latlon
 
@@ -161,7 +163,7 @@ class TestHealpixNestedGrid:
         eccodes_lats = []
         eccodes_lons = []
         tol = 1e-8
-        for i, leaf in enumerate(result.leaves[4:]):
+        for i, leaf in enumerate(result.leaves[:]):
             cubepath = leaf.flatten()
             result_tree = leaf.result[0]
             lat = cubepath["latitude"]
@@ -174,12 +176,15 @@ class TestHealpixNestedGrid:
             eccodes_result = nearest_points[3][0]["value"]
             eccodes_lats.append(eccodes_lat)
             eccodes_lons.append(eccodes_lon)
+
+            mapper = NestedHealpixGridMapper("base", ["base", "base"], 128)
+            assert nearest_points[0][0]["index"] == mapper.unmap(lat, lon)
             assert eccodes_lat - tol <= lat[0]
             assert lat[0] <= eccodes_lat + tol
             assert eccodes_lon - tol <= lon[0]
             assert lon[0] <= eccodes_lon + tol
             assert eccodes_result == result_tree
-        assert len(eccodes_lats) == 18
+        assert len(eccodes_lats) == 21
 
         worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
         fig, ax = plt.subplots(figsize=(12, 6))
