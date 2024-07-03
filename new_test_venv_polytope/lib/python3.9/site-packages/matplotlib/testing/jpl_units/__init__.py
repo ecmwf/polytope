@@ -30,14 +30,11 @@ in one frame may not be the same in another.
 
 from .Duration import Duration
 from .Epoch import Epoch
-from .UnitDbl import UnitDbl
-
-from .StrConverter import StrConverter
 from .EpochConverter import EpochConverter
+from .StrConverter import StrConverter
+from .UnitDbl import UnitDbl
 from .UnitDblConverter import UnitDblConverter
-
 from .UnitDblFormatter import UnitDblFormatter
-
 
 __version__ = "1.0"
 

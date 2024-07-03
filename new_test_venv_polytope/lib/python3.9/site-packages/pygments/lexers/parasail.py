@@ -11,8 +11,17 @@
 import re
 
 from pygments.lexer import RegexLexer, include
-from pygments.token import Text, Comment, Operator, Keyword, Name, String, \
-    Number, Punctuation, Literal
+from pygments.token import (
+    Comment,
+    Keyword,
+    Literal,
+    Name,
+    Number,
+    Operator,
+    Punctuation,
+    String,
+    Text,
+)
 
 __all__ = ['ParaSailLexer']
 

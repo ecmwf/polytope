@@ -1,14 +1,14 @@
-from . import artist
-from .axes import Axes
-from .backend_bases import RendererBase, MouseEvent
-from .path import Path
-from .transforms import Transform, Bbox
-
 from typing import Any, Literal, overload
 
 import numpy as np
 from numpy.typing import ArrayLike
-from .typing import ColorType, LineStyleType, CapStyleType, JoinStyleType
+
+from . import artist
+from .axes import Axes
+from .backend_bases import MouseEvent, RendererBase
+from .path import Path
+from .transforms import Bbox, Transform
+from .typing import CapStyleType, ColorType, JoinStyleType, LineStyleType
 
 class Patch(artist.Artist):
     zorder: float

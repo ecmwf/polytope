@@ -4,14 +4,13 @@ __all__ = [
     'CBaseDumper', 'CSafeDumper', 'CDumper'
 ]
 
-from yaml._yaml import CParser, CEmitter
+from yaml._yaml import CEmitter, CParser
 
 from .constructor import *
-
-from .serializer import *
 from .representer import *
-
 from .resolver import *
+from .serializer import *
+
 
 class CBaseLoader(CParser, BaseConstructor, BaseResolver):
 

@@ -1,7 +1,7 @@
-from matplotlib.tri import Triangulation, TriFinder
-
 from typing import Literal
+
 import numpy as np
+from matplotlib.tri import Triangulation, TriFinder
 from numpy.typing import ArrayLike
 
 class TriInterpolator:

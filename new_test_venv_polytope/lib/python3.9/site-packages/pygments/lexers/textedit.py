@@ -13,8 +13,17 @@ from bisect import bisect
 
 from pygments.lexer import RegexLexer, bygroups, default, include, this, using
 from pygments.lexers.python import PythonLexer
-from pygments.token import Comment, Keyword, Name, Number, Operator, \
-    Punctuation, String, Text, Whitespace
+from pygments.token import (
+    Comment,
+    Keyword,
+    Name,
+    Number,
+    Operator,
+    Punctuation,
+    String,
+    Text,
+    Whitespace,
+)
 
 __all__ = ['AwkLexer', 'SedLexer', 'VimLexer']
 

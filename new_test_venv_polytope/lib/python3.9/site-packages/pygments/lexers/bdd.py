@@ -9,8 +9,16 @@
 """
 
 from pygments.lexer import RegexLexer, include
-from pygments.token import Comment, Keyword, Name, String, Number, Text, \
-    Punctuation, Whitespace
+from pygments.token import (
+    Comment,
+    Keyword,
+    Name,
+    Number,
+    Punctuation,
+    String,
+    Text,
+    Whitespace,
+)
 
 __all__ = ['BddLexer']
 

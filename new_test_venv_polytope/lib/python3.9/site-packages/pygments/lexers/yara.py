@@ -9,8 +9,17 @@
 """
 
 from pygments.lexer import RegexLexer, words
-from pygments.token import Comment, String, Name, Text, Punctuation, \
-    Operator, Keyword, Whitespace, Number
+from pygments.token import (
+    Comment,
+    Keyword,
+    Name,
+    Number,
+    Operator,
+    Punctuation,
+    String,
+    Text,
+    Whitespace,
+)
 
 __all__ = ['YaraLexer']
 

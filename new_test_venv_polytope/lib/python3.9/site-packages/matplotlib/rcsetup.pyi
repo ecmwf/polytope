@@ -1,7 +1,7 @@
-from cycler import Cycler
-
 from collections.abc import Callable, Iterable
 from typing import Any, Literal, TypeVar
+
+from cycler import Cycler
 from matplotlib.typing import ColorType, LineStyleType, MarkEveryType
 
 interactive_bk: list[str]

@@ -155,5 +155,7 @@ class Datacube(ABC):
         if type(datacube).__name__ == "GribJump":
             from .fdb import FDBDatacube
 
-            fdbdatacube = FDBDatacube(datacube, request, config, axis_options, compressed_axes_options, alternative_axes)
+            fdbdatacube = FDBDatacube(
+                datacube, request, config, axis_options, compressed_axes_options, alternative_axes
+            )
             return fdbdatacube

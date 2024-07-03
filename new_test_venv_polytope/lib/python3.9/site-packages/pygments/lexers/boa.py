@@ -9,8 +9,16 @@
 """
 
 from pygments.lexer import RegexLexer, words
-from pygments.token import String, Comment, Keyword, Name, Number, Operator, \
-    Punctuation, Whitespace
+from pygments.token import (
+    Comment,
+    Keyword,
+    Name,
+    Number,
+    Operator,
+    Punctuation,
+    String,
+    Whitespace,
+)
 
 __all__ = ['BoaLexer']
 

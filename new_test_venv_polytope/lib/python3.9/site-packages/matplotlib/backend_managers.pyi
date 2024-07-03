@@ -1,9 +1,9 @@
+from collections.abc import Callable, Iterable
+from typing import Any, TypeVar
+
 from matplotlib import backend_tools, widgets
 from matplotlib.backend_bases import FigureCanvasBase
 from matplotlib.figure import Figure
-
-from collections.abc import Callable, Iterable
-from typing import Any, TypeVar
 
 class ToolEvent:
     name: str

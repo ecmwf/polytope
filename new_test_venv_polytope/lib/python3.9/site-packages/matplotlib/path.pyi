@@ -1,11 +1,11 @@
-from .bezier import BezierSegment
-from .transforms import Affine2D, Transform, Bbox
 from collections.abc import Generator, Iterable, Sequence
+from typing import Any, overload
 
 import numpy as np
 from numpy.typing import ArrayLike
 
-from typing import Any, overload
+from .bezier import BezierSegment
+from .transforms import Affine2D, Bbox, Transform
 
 class Path:
     code_type: type[np.uint8]

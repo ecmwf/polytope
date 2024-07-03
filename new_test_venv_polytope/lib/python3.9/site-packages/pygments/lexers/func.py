@@ -9,8 +9,17 @@
 """
 
 from pygments.lexer import RegexLexer, include, words
-from pygments.token import Text, Comment, Operator, Keyword, Name, String, \
-    Number, Whitespace, Punctuation
+from pygments.token import (
+    Comment,
+    Keyword,
+    Name,
+    Number,
+    Operator,
+    Punctuation,
+    String,
+    Text,
+    Whitespace,
+)
 
 __all__ = ['FuncLexer']
 

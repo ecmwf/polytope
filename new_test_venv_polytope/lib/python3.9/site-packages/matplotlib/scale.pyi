@@ -1,8 +1,8 @@
-from matplotlib.axis import Axis
-from matplotlib.transforms import Transform
-
 from collections.abc import Callable, Iterable
 from typing import Literal
+
+from matplotlib.axis import Axis
+from matplotlib.transforms import Transform
 from numpy.typing import ArrayLike
 
 class ScaleBase:

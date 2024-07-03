@@ -1,9 +1,9 @@
 """Epoch module."""
 
-import functools
-import operator
-import math
 import datetime as DT
+import functools
+import math
+import operator
 
 from matplotlib import _api
 from matplotlib.dates import date2num

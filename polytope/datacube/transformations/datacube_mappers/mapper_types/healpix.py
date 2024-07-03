@@ -45,30 +45,10 @@ class HealpixGridMapper(DatacubeMapper):
         values = self.HEALPix_longitudes(idx)
         return values
 
-        # # Polar caps
-        # if idx < self._resolution - 1 or 3 * self._resolution - 1 < idx <= 4 * self._resolution - 2:
-        #     start = 45 / (idx + 1)
-        #     vals = [start + i * (360 / (4 * (idx + 1))) for i in range(4 * (idx + 1))]
-        #     return vals
-        # # Equatorial belts
-        # start = 45 / self._resolution
-        # if self._resolution - 1 <= idx < 2 * self._resolution - 1 or 2 * self._resolution <= idx < 3 * self._resolution:
-        #     r_start = start * (2 - (((idx + 1) - self._resolution + 1) % 2))
-        #     vals = [r_start + i * (360 / (4 * self._resolution)) for i in range(4 * self._resolution)]
-        #     if vals[-1] == 360:
-        #         vals[-1] = 0
-        #     return vals
-        # # Equator
-        # temp_val = 1 if self._resolution % 2 else 0
-        # r_start = start * (1 - temp_val)
-        # if idx == 2 * self._resolution - 1:
-        #     vals = [r_start + i * (360 / (4 * self._resolution)) for i in range(4 * self._resolution)]
-        #     return vals
-    
     def second_axis_vals_from_idx(self, first_val_idx):
         values = self.HEALPix_longitudes(first_val_idx)
         return values
-    
+
     def HEALPix_nj(self, i):
         assert self._resolution > 0
         ni = 4 * self._resolution - 1
@@ -80,14 +60,16 @@ class HealpixGridMapper(DatacubeMapper):
             return 4 * self._resolution
         else:
             return self.HEALPix_nj(ni - 1 - i)
-        
+
     def HEALPix_longitudes(self, i):
         Nj = self.HEALPix_nj(i)
         step = 360.0 / Nj
-        start = step / 2.0 if i < self._resolution or 3 * self._resolution - 1 < i or (i + self._resolution) % 2 else 0.0
+        start = (
+            step / 2.0 if i < self._resolution or 3 * self._resolution - 1 < i or (i + self._resolution) % 2 else 0.0
+        )
 
         longitudes = [start + n * step for n in range(Nj)]
-        
+
         return longitudes
 
     def map_second_axis(self, first_val, lower, upper):

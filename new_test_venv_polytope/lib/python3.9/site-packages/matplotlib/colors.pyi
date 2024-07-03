@@ -1,12 +1,12 @@
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from matplotlib import cbook, scale
 import re
-
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from typing import Any, Literal, overload
-from .typing import ColorType
 
 import numpy as np
+from matplotlib import cbook, scale
 from numpy.typing import ArrayLike
+
+from .typing import ColorType
 
 # Explicitly export colors dictionaries which are imported in the impl
 BASE_COLORS: dict[str, ColorType]

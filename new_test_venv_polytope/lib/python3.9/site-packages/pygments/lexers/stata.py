@@ -9,11 +9,10 @@
 """
 
 import re
-from pygments.lexer import RegexLexer, default, include, words
-from pygments.token import Comment, Keyword, Name, Number, \
-    String, Text, Operator
 
+from pygments.lexer import RegexLexer, default, include, words
 from pygments.lexers._stata_builtins import builtins_base, builtins_functions
+from pygments.token import Comment, Keyword, Name, Number, Operator, String, Text
 
 __all__ = ['StataLexer']
 

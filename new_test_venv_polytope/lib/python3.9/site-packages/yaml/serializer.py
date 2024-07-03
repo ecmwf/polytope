@@ -5,6 +5,7 @@ from .error import YAMLError
 from .events import *
 from .nodes import *
 
+
 class SerializerError(YAMLError):
     pass
 

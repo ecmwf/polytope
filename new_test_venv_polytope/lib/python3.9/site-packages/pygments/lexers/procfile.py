@@ -9,7 +9,7 @@
 """
 
 from pygments.lexer import RegexLexer, bygroups
-from pygments.token import Name, Number, String, Text, Punctuation
+from pygments.token import Name, Number, Punctuation, String, Text
 
 __all__ = ["ProcfileLexer"]
 

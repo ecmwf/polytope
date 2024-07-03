@@ -10,7 +10,7 @@
 
 from pygments.lexer import bygroups, inherit, words
 from pygments.lexers import PrologLexer
-from pygments.token import Operator, Keyword, Name, String, Punctuation
+from pygments.token import Keyword, Name, Operator, Punctuation, String
 
 __all__ = ['CplintLexer']
 

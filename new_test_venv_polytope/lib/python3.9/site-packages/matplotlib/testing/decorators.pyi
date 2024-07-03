@@ -1,10 +1,10 @@
 from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any, TypeVar
-from typing_extensions import ParamSpec
 
 from matplotlib.figure import Figure
 from matplotlib.typing import RcStyleType
+from typing_extensions import ParamSpec
 
 _P = ParamSpec("_P")
 _R = TypeVar("_R")

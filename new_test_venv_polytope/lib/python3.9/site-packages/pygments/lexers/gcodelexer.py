@@ -9,7 +9,7 @@
 """
 
 from pygments.lexer import RegexLexer, bygroups
-from pygments.token import Comment, Name, Text, Keyword, Number
+from pygments.token import Comment, Keyword, Name, Number, Text
 
 __all__ = ['GcodeLexer']
 

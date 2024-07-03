@@ -1,8 +1,8 @@
 import os
 import sys
-import pytest
 
 import matplotlib.backends.backend_webagg_core
+import pytest
 from matplotlib.testing import subprocess_run_for_testing
 
 

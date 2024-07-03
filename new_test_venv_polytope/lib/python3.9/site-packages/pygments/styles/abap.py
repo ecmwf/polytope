@@ -9,9 +9,7 @@
 """
 
 from pygments.style import Style
-from pygments.token import Keyword, Name, Comment, String, Error, \
-    Number, Operator
-
+from pygments.token import Comment, Error, Keyword, Name, Number, Operator, String
 
 __all__ = ['AbapStyle']
 

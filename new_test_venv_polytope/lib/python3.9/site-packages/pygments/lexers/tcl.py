@@ -9,8 +9,16 @@
 """
 
 from pygments.lexer import RegexLexer, include, words
-from pygments.token import Text, Comment, Operator, Keyword, Name, String, \
-    Number, Whitespace
+from pygments.token import (
+    Comment,
+    Keyword,
+    Name,
+    Number,
+    Operator,
+    String,
+    Text,
+    Whitespace,
+)
 from pygments.util import shebang_matches
 
 __all__ = ['TclLexer']

@@ -14,7 +14,6 @@ iterwalk.
 
 from fontTools.misc.textTools import tostr
 
-
 XML_DECLARATION = """<?xml version='1.0' encoding='%s'?>"""
 
 __all__ = [

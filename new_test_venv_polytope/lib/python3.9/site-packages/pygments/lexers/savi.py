@@ -9,8 +9,18 @@
 """
 
 from pygments.lexer import RegexLexer, bygroups, include
-from pygments.token import Whitespace, Keyword, Name, String, Number, \
-  Operator, Punctuation, Comment, Generic, Error
+from pygments.token import (
+    Comment,
+    Error,
+    Generic,
+    Keyword,
+    Name,
+    Number,
+    Operator,
+    Punctuation,
+    String,
+    Whitespace,
+)
 
 __all__ = ['SaviLexer']
 

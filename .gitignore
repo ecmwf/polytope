@@ -18,3 +18,4 @@ example_mri
 .mypy_cache
 *.req
 polytope_python.egg-info
+new_test_venv_polytope

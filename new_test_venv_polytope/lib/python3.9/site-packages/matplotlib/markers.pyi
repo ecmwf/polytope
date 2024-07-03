@@ -1,9 +1,9 @@
 from typing import Literal
 
+from numpy.typing import ArrayLike
+
 from .path import Path
 from .transforms import Affine2D, Transform
-
-from numpy.typing import ArrayLike
 from .typing import CapStyleType, FillStyleType, JoinStyleType
 
 TICKLEFT: int

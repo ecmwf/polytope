@@ -6,7 +6,11 @@
 """Module that provides a GUI-based editor for Matplotlib's figure options."""
 
 from itertools import chain
-from matplotlib import cbook, cm, colors as mcolors, markers, image as mimage
+
+from matplotlib import cbook, cm
+from matplotlib import colors as mcolors
+from matplotlib import image as mimage
+from matplotlib import markers
 from matplotlib.backends.qt_compat import QtGui
 from matplotlib.backends.qt_editor import _formlayout
 from matplotlib.dates import DateConverter, num2date

@@ -1,7 +1,6 @@
 import pytest
-
-from referencing import Registry, Resource, Specification
 import referencing.jsonschema
+from referencing import Registry, Resource, Specification
 
 
 @pytest.mark.parametrize(

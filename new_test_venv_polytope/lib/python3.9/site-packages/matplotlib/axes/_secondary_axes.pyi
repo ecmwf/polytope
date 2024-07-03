@@ -1,12 +1,11 @@
-from matplotlib.axes._base import _AxesBase
-from matplotlib.axis import Tick
-
-from matplotlib.transforms import Transform
-
 from collections.abc import Callable, Iterable
 from typing import Literal
-from numpy.typing import ArrayLike
+
+from matplotlib.axes._base import _AxesBase
+from matplotlib.axis import Tick
+from matplotlib.transforms import Transform
 from matplotlib.typing import ColorType
+from numpy.typing import ArrayLike
 
 class SecondaryAxis(_AxesBase):
     def __init__(

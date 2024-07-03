@@ -10,12 +10,35 @@
 
 import re
 
-from pygments.lexer import bygroups, combined, default, do_insertions, include, \
-    inherit, Lexer, RegexLexer, this, using, words, line_re
-from pygments.token import Text, Comment, Operator, Keyword, Name, String, \
-    Number, Punctuation, Other, Generic, Whitespace
-from pygments.util import get_bool_opt
 import pygments.unistring as uni
+from pygments.lexer import (
+    Lexer,
+    RegexLexer,
+    bygroups,
+    combined,
+    default,
+    do_insertions,
+    include,
+    inherit,
+    line_re,
+    this,
+    using,
+    words,
+)
+from pygments.token import (
+    Comment,
+    Generic,
+    Keyword,
+    Name,
+    Number,
+    Operator,
+    Other,
+    Punctuation,
+    String,
+    Text,
+    Whitespace,
+)
+from pygments.util import get_bool_opt
 
 __all__ = ['JavascriptLexer', 'KalLexer', 'LiveScriptLexer', 'DartLexer',
            'TypeScriptLexer', 'LassoLexer', 'ObjectiveJLexer',

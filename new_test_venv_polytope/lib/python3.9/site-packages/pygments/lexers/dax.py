@@ -9,8 +9,16 @@
 """
 
 from pygments.lexer import RegexLexer, words
-from pygments.token import Comment, Punctuation, Whitespace,\
-    Name, Operator, String, Number, Text
+from pygments.token import (
+    Comment,
+    Name,
+    Number,
+    Operator,
+    Punctuation,
+    String,
+    Text,
+    Whitespace,
+)
 
 __all__ = ['DaxLexer']
 

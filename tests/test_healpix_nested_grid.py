@@ -1,41 +1,18 @@
-import pytest
 import geopandas as gpd
 import matplotlib.pyplot as plt
-# from earthkit import data
-# from helper_functions import download_test_data, find_nearest_latlon
+import pandas as pd
+import pytest
 
+from polytope.datacube.transformations.datacube_mappers.mapper_types.healpix_nested import (
+    NestedHealpixGridMapper,
+)
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
-import pandas as pd
-from polytope.datacube.transformations.datacube_mappers.mapper_types.healpix_nested import NestedHealpixGridMapper
 
 
 class TestHealpixNestedGrid:
     def setup_method(self, method):
-        # ds = data.from_source("file", "./tests/data/healpix_nested.grib")
-        # ds.to_xarray()
-        # self.latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
-        # self.latlon_array = self.latlon_array.t2m
-        # self.options = {
-        #     "axis_config": [
-        #         {
-        #             "axis_name": "values",
-        #             "transformations": [
-        #                 {"name": "mapper", "type": "healpix_nested", "resolution": 1024, "axes": ["latitude", "longitude"]}
-        #             ],
-        #         },
-        #         {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
-        #     ],
-        #     "compressed_axes_config": ["longitude", "latitude", "number", "step", "time", "surface", "valid_time"],
-        # }
-        # self.slicer = HullSlicer()
-        # self.API = Polytope(
-        #     request={},
-        #     datacube=self.latlon_array,
-        #     engine=self.slicer,
-        #     options=self.options,
-        # )
         self.options = {
             "axis_config": [
                 {
@@ -45,7 +22,12 @@ class TestHealpixNestedGrid:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "healpix_nested", "resolution": 128, "axes": ["latitude", "longitude"]}
+                        {
+                            "name": "mapper",
+                            "type": "healpix_nested",
+                            "resolution": 128,
+                            "axes": ["latitude", "longitude"],
+                        }
                     ],
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
@@ -59,11 +41,15 @@ class TestHealpixNestedGrid:
             "alternative_axes": [
                 {
                     "axis_name": "class",
-                    "values": ["d1",]
+                    "values": [
+                        "d1",
+                    ],
                 },
                 {
                     "axis_name": "activity",
-                    "values": ["ScenarioMIP",]
+                    "values": [
+                        "ScenarioMIP",
+                    ],
                 },
                 {
                     "axis_name": "dataset",
@@ -129,7 +115,7 @@ class TestHealpixNestedGrid:
             Select("class", ["d1"]),
             Select("dataset", ["climate-dt"]),
             Select("date", [pd.Timestamp("20200102T010000")]),
-            Select("experiment", ['SSP3-7.0']),
+            Select("experiment", ["SSP3-7.0"]),
             Select("expver", ["0001"]),
             Select("generation", ["1"]),
             Select("levtype", ["sfc"]),
@@ -150,13 +136,12 @@ class TestHealpixNestedGrid:
             engine=self.slicer,
             options=self.options,
         )
-        
+
         result = self.API.retrieve(request)
         result.pprint()
-        # assert len(result.leaves) == 18
         assert len(result.leaves) == 21
 
-        from helper_functions import download_test_data, find_nearest_latlon
+        from helper_functions import find_nearest_latlon
 
         lats = []
         lons = []

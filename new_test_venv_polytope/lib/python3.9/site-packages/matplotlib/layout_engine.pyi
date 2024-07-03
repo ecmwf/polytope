@@ -1,6 +1,6 @@
-from matplotlib.figure import Figure
-
 from typing import Any
+
+from matplotlib.figure import Figure
 
 class LayoutEngine:
     def __init__(self, **kwargs: Any) -> None: ...

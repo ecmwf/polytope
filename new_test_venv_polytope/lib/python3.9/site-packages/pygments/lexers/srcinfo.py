@@ -12,7 +12,7 @@
 """
 
 from pygments.lexer import RegexLexer, words
-from pygments.token import Text, Comment, Keyword, Name, Operator, Whitespace
+from pygments.token import Comment, Keyword, Name, Operator, Text, Whitespace
 
 __all__ = ['SrcinfoLexer']
 

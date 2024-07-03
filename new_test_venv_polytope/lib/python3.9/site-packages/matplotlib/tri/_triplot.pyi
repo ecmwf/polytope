@@ -1,8 +1,8 @@
-from matplotlib.tri._triangulation import Triangulation
+from typing import overload
+
 from matplotlib.axes import Axes
 from matplotlib.lines import Line2D
-
-from typing import overload
+from matplotlib.tri._triangulation import Triangulation
 from numpy.typing import ArrayLike
 
 @overload

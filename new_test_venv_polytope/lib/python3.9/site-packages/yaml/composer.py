@@ -5,6 +5,7 @@ from .error import MarkedYAMLError
 from .events import *
 from .nodes import *
 
+
 class ComposerError(MarkedYAMLError):
     pass
 

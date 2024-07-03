@@ -9,7 +9,7 @@
 """
 
 from pygments.lexer import RegexLexer, words
-from pygments.token import Whitespace, Comment, String, Keyword, Name, Text
+from pygments.token import Comment, Keyword, Name, String, Text, Whitespace
 
 __all__ = ["MIPSLexer"]
 

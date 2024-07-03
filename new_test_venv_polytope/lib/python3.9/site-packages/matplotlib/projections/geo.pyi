@@ -1,8 +1,8 @@
+from typing import Any, Literal
+
 from matplotlib.axes import Axes
 from matplotlib.ticker import Formatter
 from matplotlib.transforms import Transform
-
-from typing import Any, Literal
 
 class GeoAxes(Axes):
     class ThetaFormatter(Formatter):

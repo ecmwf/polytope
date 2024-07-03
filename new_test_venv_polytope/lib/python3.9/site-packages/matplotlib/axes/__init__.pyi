@@ -2,7 +2,6 @@ from typing import TypeVar
 
 from ._axes import Axes as Axes
 
-
 _T = TypeVar("_T")
 
 # Backcompat.

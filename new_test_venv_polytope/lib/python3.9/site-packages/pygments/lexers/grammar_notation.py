@@ -9,8 +9,18 @@
 """
 
 from pygments.lexer import RegexLexer, bygroups, include, this, using, words
-from pygments.token import Comment, Keyword, Literal, Name, Number, \
-    Operator, Punctuation, String, Text, Whitespace
+from pygments.token import (
+    Comment,
+    Keyword,
+    Literal,
+    Name,
+    Number,
+    Operator,
+    Punctuation,
+    String,
+    Text,
+    Whitespace,
+)
 
 __all__ = ['BnfLexer', 'AbnfLexer', 'JsgfLexer', 'PegLexer']
 

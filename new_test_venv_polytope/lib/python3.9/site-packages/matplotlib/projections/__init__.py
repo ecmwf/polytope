@@ -52,7 +52,7 @@ A full-fledged and heavily annotated example is in
 `matplotlib.projections.polar` may also be of interest.
 """
 
-from .. import axes, _docstring
+from .. import _docstring, axes
 from .geo import AitoffAxes, HammerAxes, LambertAxes, MollweideAxes
 from .polar import PolarAxes
 

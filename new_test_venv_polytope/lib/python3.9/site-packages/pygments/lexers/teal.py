@@ -9,8 +9,7 @@
 """
 
 from pygments.lexer import RegexLexer, bygroups, include, words
-from pygments.token import Comment, Name, Number, String, Text, Keyword, \
-    Whitespace
+from pygments.token import Comment, Keyword, Name, Number, String, Text, Whitespace
 
 __all__ = ['TealLexer']
 

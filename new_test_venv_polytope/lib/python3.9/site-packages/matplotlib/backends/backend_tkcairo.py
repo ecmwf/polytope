@@ -3,8 +3,8 @@ import sys
 import numpy as np
 
 from . import _backend_tk
-from .backend_cairo import cairo, FigureCanvasCairo
-from ._backend_tk import _BackendTk, FigureCanvasTk
+from ._backend_tk import FigureCanvasTk, _BackendTk
+from .backend_cairo import FigureCanvasCairo, cairo
 
 
 class FigureCanvasTkCairo(FigureCanvasCairo, FigureCanvasTk):

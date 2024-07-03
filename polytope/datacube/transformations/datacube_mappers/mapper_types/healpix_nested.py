@@ -65,7 +65,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
     #     if idx == 2 * self._resolution - 1:
     #         vals = [r_start + i * (360 / (4 * self._resolution)) for i in range(4 * self._resolution)]
     #         return vals
-        
+
     def second_axis_vals(self, first_val):
         tol = 1e-8
         first_val = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
@@ -93,11 +93,11 @@ class NestedHealpixGridMapper(DatacubeMapper):
         # if idx == 2 * self._resolution - 1:
         #     vals = [r_start + i * (360 / (4 * self._resolution)) for i in range(4 * self._resolution)]
         #     return vals
-    
+
     def second_axis_vals_from_idx(self, first_val_idx):
         values = self.HEALPix_longitudes(first_val_idx)
         return values
-    
+
     def HEALPix_nj(self, i):
         assert self._resolution > 0
         ni = 4 * self._resolution - 1
@@ -109,14 +109,16 @@ class NestedHealpixGridMapper(DatacubeMapper):
             return 4 * self._resolution
         else:
             return self.HEALPix_nj(ni - 1 - i)
-        
+
     def HEALPix_longitudes(self, i):
         Nj = self.HEALPix_nj(i)
         step = 360.0 / Nj
-        start = step / 2.0 if i < self._resolution or 3 * self._resolution - 1 < i or (i + self._resolution) % 2 else 0.0
+        start = (
+            step / 2.0 if i < self._resolution or 3 * self._resolution - 1 < i or (i + self._resolution) % 2 else 0.0
+        )
 
         longitudes = [start + n * step for n in range(Nj)]
-        
+
         return longitudes
 
     def map_second_axis(self, first_val, lower, upper):

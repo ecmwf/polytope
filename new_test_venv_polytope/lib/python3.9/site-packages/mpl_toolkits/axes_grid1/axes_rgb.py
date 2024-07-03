@@ -2,7 +2,7 @@ from types import MethodType
 
 import numpy as np
 
-from .axes_divider import make_axes_locatable, Size
+from .axes_divider import Size, make_axes_locatable
 from .mpl_axes import Axes, SimpleAxisArtist
 
 

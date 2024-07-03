@@ -8,10 +8,18 @@
     :license: BSD, see LICENSE for details.
 """
 
-from pygments.lexer import RegexLexer, words, include, bygroups, using, \
-    this, default
-from pygments.token import Text, Comment, Operator, Keyword, Name, \
-    Number, Punctuation, String, Whitespace
+from pygments.lexer import RegexLexer, bygroups, default, include, this, using, words
+from pygments.token import (
+    Comment,
+    Keyword,
+    Name,
+    Number,
+    Operator,
+    Punctuation,
+    String,
+    Text,
+    Whitespace,
+)
 
 __all__ = ['GLShaderLexer', 'PostScriptLexer', 'AsymptoteLexer', 'GnuplotLexer',
            'PovrayLexer', 'HLSLShaderLexer']

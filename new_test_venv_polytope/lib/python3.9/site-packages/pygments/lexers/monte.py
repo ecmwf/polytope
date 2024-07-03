@@ -8,9 +8,18 @@
     :license: BSD, see LICENSE for details.
 """
 
-from pygments.token import Comment, Error, Keyword, Name, Number, Operator, \
-    Punctuation, String, Whitespace
 from pygments.lexer import RegexLexer, include, words
+from pygments.token import (
+    Comment,
+    Error,
+    Keyword,
+    Name,
+    Number,
+    Operator,
+    Punctuation,
+    String,
+    Whitespace,
+)
 
 __all__ = ['MonteLexer']
 

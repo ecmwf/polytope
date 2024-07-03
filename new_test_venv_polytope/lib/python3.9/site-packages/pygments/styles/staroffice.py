@@ -11,7 +11,6 @@
 from pygments.style import Style
 from pygments.token import Comment, Error, Literal, Name, Token
 
-
 __all__ = ['StarofficeStyle']
 
 

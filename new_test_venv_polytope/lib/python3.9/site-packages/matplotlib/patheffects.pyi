@@ -1,11 +1,10 @@
 from collections.abc import Iterable, Sequence
 from typing import Any
 
-from matplotlib.backend_bases import RendererBase, GraphicsContextBase
-from matplotlib.path import Path
+from matplotlib.backend_bases import GraphicsContextBase, RendererBase
 from matplotlib.patches import Patch
+from matplotlib.path import Path
 from matplotlib.transforms import Transform
-
 from matplotlib.typing import ColorType
 
 class AbstractPathEffect:

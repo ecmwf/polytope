@@ -1,10 +1,9 @@
 from typing import Literal, overload
 
 import numpy as np
-from numpy.typing import ArrayLike
-
 from matplotlib.tri._triangulation import Triangulation
 from matplotlib.tri._triinterpolate import TriInterpolator
+from numpy.typing import ArrayLike
 
 class TriRefiner:
     def __init__(self, triangulation: Triangulation) -> None: ...

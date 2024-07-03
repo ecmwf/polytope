@@ -62,9 +62,10 @@
 __all__ = ['Parser', 'ParserError']
 
 from .error import MarkedYAMLError
-from .tokens import *
 from .events import *
 from .scanner import *
+from .tokens import *
+
 
 class ParserError(MarkedYAMLError):
     pass

@@ -1,10 +1,10 @@
-from matplotlib.artist import Artist
-from matplotlib.lines import Line2D
-from matplotlib.collections import LineCollection
-from matplotlib.patches import Rectangle
-
 from collections.abc import Callable
 from typing import Any, Literal
+
+from matplotlib.artist import Artist
+from matplotlib.collections import LineCollection
+from matplotlib.lines import Line2D
+from matplotlib.patches import Rectangle
 from numpy.typing import ArrayLike
 
 class Container(tuple):

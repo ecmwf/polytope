@@ -10,8 +10,16 @@
 import re
 
 from pygments.lexer import RegexLexer, words
-from pygments.token import Comment, Operator, Keyword, Name, String, \
-    Number, Punctuation, Whitespace
+from pygments.token import (
+    Comment,
+    Keyword,
+    Name,
+    Number,
+    Operator,
+    Punctuation,
+    String,
+    Whitespace,
+)
 
 __all__ = ['TlsLexer']
 

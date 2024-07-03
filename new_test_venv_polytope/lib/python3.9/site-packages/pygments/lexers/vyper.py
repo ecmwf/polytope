@@ -9,8 +9,17 @@
 """
 
 from pygments.lexer import RegexLexer, bygroups, words
-from pygments.token import (Comment, String, Name, Keyword, Number,
-                            Operator, Punctuation, Text, Whitespace)
+from pygments.token import (
+    Comment,
+    Keyword,
+    Name,
+    Number,
+    Operator,
+    Punctuation,
+    String,
+    Text,
+    Whitespace,
+)
 
 __all__ = ['VyperLexer']
 

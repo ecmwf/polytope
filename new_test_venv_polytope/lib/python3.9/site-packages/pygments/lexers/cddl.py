@@ -13,8 +13,17 @@
 """
 
 from pygments.lexer import RegexLexer, bygroups, include, words
-from pygments.token import Comment, Error, Keyword, Name, Number, Operator, \
-    Punctuation, String, Whitespace
+from pygments.token import (
+    Comment,
+    Error,
+    Keyword,
+    Name,
+    Number,
+    Operator,
+    Punctuation,
+    String,
+    Whitespace,
+)
 
 __all__ = ['CddlLexer']
 

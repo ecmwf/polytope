@@ -1,11 +1,12 @@
+from typing import Literal
+
 from matplotlib.axes import Axes
-from matplotlib.colors import Normalize, Colormap
 from matplotlib.collections import LineCollection, PatchCollection
+from matplotlib.colors import Colormap, Normalize
 from matplotlib.patches import ArrowStyle
 from matplotlib.transforms import Transform
-
-from typing import Literal
 from numpy.typing import ArrayLike
+
 from .typing import ColorType
 
 def streamplot(

@@ -31,9 +31,7 @@ def download_test_data(nexus_url, filename):
 
 
 def find_nearest_latlon(grib_file, target_lat, target_lon):
-    # import os 
-    # os.environ['ECCODES_DEFINITION_PATH'] = "/Users/male/git/eccodes_2_36/share/eccodes/definitions"
-    
+
     # Open the GRIB file
     f = open(grib_file)
 

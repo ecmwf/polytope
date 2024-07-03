@@ -1,4 +1,8 @@
-import ctypes, ctypes.util, operator, sys
+import ctypes
+import ctypes.util
+import operator
+import sys
+
 from . import model
 
 if sys.version_info < (3,):

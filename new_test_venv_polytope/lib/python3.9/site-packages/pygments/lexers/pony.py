@@ -9,8 +9,16 @@
 """
 
 from pygments.lexer import RegexLexer, bygroups, words
-from pygments.token import Text, Comment, Operator, Keyword, Name, String, \
-    Number, Punctuation
+from pygments.token import (
+    Comment,
+    Keyword,
+    Name,
+    Number,
+    Operator,
+    Punctuation,
+    String,
+    Text,
+)
 
 __all__ = ['PonyLexer']
 

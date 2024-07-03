@@ -9,7 +9,7 @@
 """
 
 from pygments.lexer import RegexLexer, bygroups
-from pygments.token import Name, Literal, String, Punctuation, Whitespace
+from pygments.token import Literal, Name, Punctuation, String, Whitespace
 
 __all__ = ["SmartGameFormatLexer"]
 

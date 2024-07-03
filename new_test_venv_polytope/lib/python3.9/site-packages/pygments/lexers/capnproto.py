@@ -9,7 +9,7 @@
 """
 
 from pygments.lexer import RegexLexer, default
-from pygments.token import Text, Comment, Keyword, Name, Literal, Whitespace
+from pygments.token import Comment, Keyword, Literal, Name, Text, Whitespace
 
 __all__ = ['CapnProtoLexer']
 

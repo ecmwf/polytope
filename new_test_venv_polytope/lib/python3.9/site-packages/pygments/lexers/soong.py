@@ -9,8 +9,15 @@
 """
 
 from pygments.lexer import RegexLexer, bygroups, include
-from pygments.token import Comment, Name, Number, Operator, Punctuation, \
-        String, Whitespace
+from pygments.token import (
+    Comment,
+    Name,
+    Number,
+    Operator,
+    Punctuation,
+    String,
+    Whitespace,
+)
 
 __all__ = ['SoongLexer']
 

@@ -10,10 +10,20 @@
 
 import re
 
-from pygments.lexer import RegexLexer, include, bygroups, default, combined, \
-    words
-from pygments.token import Text, Comment, Operator, Keyword, Name, String, \
-    Number, Punctuation, Error, Whitespace, Other
+from pygments.lexer import RegexLexer, bygroups, combined, default, include, words
+from pygments.token import (
+    Comment,
+    Error,
+    Keyword,
+    Name,
+    Number,
+    Operator,
+    Other,
+    Punctuation,
+    String,
+    Text,
+    Whitespace,
+)
 from pygments.util import get_bool_opt, get_list_opt
 
 __all__ = ['LuaLexer', 'LuauLexer', 'MoonScriptLexer', 'ChaiscriptLexer', 'LSLLexer',

@@ -9,8 +9,7 @@
 """
 
 from pygments.lexer import RegexLexer, include, words
-from pygments.token import Operator, Name, \
-    Number, Whitespace, Punctuation, Comment
+from pygments.token import Comment, Name, Number, Operator, Punctuation, Whitespace
 
 __all__ = ['TlbLexer']
 

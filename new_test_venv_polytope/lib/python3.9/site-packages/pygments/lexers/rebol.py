@@ -11,8 +11,17 @@
 import re
 
 from pygments.lexer import RegexLexer, bygroups
-from pygments.token import Text, Comment, Operator, Keyword, Name, String, \
-    Number, Generic, Whitespace
+from pygments.token import (
+    Comment,
+    Generic,
+    Keyword,
+    Name,
+    Number,
+    Operator,
+    String,
+    Text,
+    Whitespace,
+)
 
 __all__ = ['RebolLexer', 'RedLexer']
 

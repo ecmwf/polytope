@@ -1,7 +1,7 @@
 from contextlib import nullcontext
 
 from .backend_cairo import FigureCanvasCairo
-from .backend_gtk3 import GLib, Gtk, FigureCanvasGTK3, _BackendGTK3
+from .backend_gtk3 import FigureCanvasGTK3, GLib, Gtk, _BackendGTK3
 
 
 class FigureCanvasGTK3Cairo(FigureCanvasCairo, FigureCanvasGTK3):

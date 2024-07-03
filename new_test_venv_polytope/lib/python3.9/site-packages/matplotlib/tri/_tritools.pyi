@@ -1,6 +1,5 @@
-from matplotlib.tri import Triangulation
-
 import numpy as np
+from matplotlib.tri import Triangulation
 
 class TriAnalyzer:
     def __init__(self, triangulation: Triangulation) -> None: ...

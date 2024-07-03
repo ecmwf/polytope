@@ -9,8 +9,16 @@
 """
 
 from pygments.lexer import RegexLexer, bygroups, words
-from pygments.token import Text, Comment, Keyword, Name, String, \
-    Number, Whitespace, Punctuation
+from pygments.token import (
+    Comment,
+    Keyword,
+    Name,
+    Number,
+    Punctuation,
+    String,
+    Text,
+    Whitespace,
+)
 
 __all__ = ['SmithyLexer']
 

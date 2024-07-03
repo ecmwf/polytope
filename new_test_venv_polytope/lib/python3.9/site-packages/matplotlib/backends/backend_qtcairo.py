@@ -1,7 +1,7 @@
 import ctypes
 
-from .backend_cairo import cairo, FigureCanvasCairo
-from .backend_qt import _BackendQT, FigureCanvasQT
+from .backend_cairo import FigureCanvasCairo, cairo
+from .backend_qt import FigureCanvasQT, _BackendQT
 from .qt_compat import QT_API, QtCore, QtGui
 
 

@@ -8,9 +8,8 @@
     :license: BSD, see LICENSE for details.
 """
 
-from pygments.lexer import RegexLexer, words, bygroups, default
-from pygments.token import Comment, Keyword, Name, String, Punctuation, \
-    Whitespace
+from pygments.lexer import RegexLexer, bygroups, default, words
+from pygments.token import Comment, Keyword, Name, Punctuation, String, Whitespace
 
 __all__ = ['VerifpalLexer']
 

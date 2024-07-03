@@ -1,10 +1,12 @@
-from .path import Path
-from .patches import Patch
-from .figure import Figure
-import numpy as np
-from numpy.typing import ArrayLike
 from collections.abc import Iterable, Sequence
 from typing import Literal
+
+import numpy as np
+from numpy.typing import ArrayLike
+
+from .figure import Figure
+from .patches import Patch
+from .path import Path
 
 DEBUG: bool
 

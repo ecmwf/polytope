@@ -30,8 +30,7 @@
 """
 
 from pygments.style import Style
-from pygments.token import Keyword, Name, Comment, String, Error, Operator
-
+from pygments.token import Comment, Error, Keyword, Name, Operator, String
 
 __all__ = ['AlgolStyle']
 

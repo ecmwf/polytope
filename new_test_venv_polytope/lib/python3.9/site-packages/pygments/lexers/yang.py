@@ -9,7 +9,7 @@
 """
 
 from pygments.lexer import RegexLexer, bygroups, words
-from pygments.token import Text, Token, Name, String, Comment, Number
+from pygments.token import Comment, Name, Number, String, Text, Token
 
 __all__ = ['YangLexer']
 
