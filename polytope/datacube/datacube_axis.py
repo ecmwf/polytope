@@ -287,6 +287,7 @@ class UnsliceableDatacubeAxis(DatacubeAxis):
         return value
 
     def to_float(self, value: pd.Timedelta):
+        print(self.name)
         raise TypeError("Tried to slice unsliceable axis")
 
     def from_float(self, value):
