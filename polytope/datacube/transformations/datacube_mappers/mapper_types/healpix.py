@@ -78,30 +78,30 @@ class HealpixGridMapper(DatacubeMapper):
         return return_vals
 
     def axes_idx_to_healpix_idx(self, first_idx, second_idx):
-        idx = 0
-        for i in range(first_idx):
-            idx += len(self.second_axis_vals_from_idx(i))
-        idx += second_idx
-        return idx
         # idx = 0
-        # for i in range(self._resolution - 1):
-        #     if i != first_idx:
-        #         idx += 4 * (i + 1)
-        #     else:
-        #         idx += second_idx
-        #         return idx
-        # for i in range(self._resolution - 1, 3 * self._resolution):
-        #     if i != first_idx:
-        #         idx += 4 * self._resolution
-        #     else:
-        #         idx += second_idx
-        #         return idx
-        # for i in range(3 * self._resolution, 4 * self._resolution - 1):
-        #     if i != first_idx:
-        #         idx += 4 * (4 * self._resolution - 1 - i + 1)
-        #     else:
-        #         idx += second_idx
-        #         return idx
+        # for i in range(first_idx):
+        #     idx += len(self.second_axis_vals_from_idx(i))
+        # idx += second_idx
+        # return idx
+        idx = 0
+        for i in range(self._resolution - 1):
+            if i != first_idx:
+                idx += 4 * (i + 1)
+            else:
+                idx += second_idx
+                return idx
+        for i in range(self._resolution - 1, 3 * self._resolution):
+            if i != first_idx:
+                idx += 4 * self._resolution
+            else:
+                idx += second_idx
+                return idx
+        for i in range(3 * self._resolution, 4 * self._resolution - 1):
+            if i != first_idx:
+                idx += 4 * (4 * self._resolution - 1 - i + 1)
+            else:
+                idx += second_idx
+                return idx
 
     def find_second_idx(self, first_val, second_val):
         tol = 1e-10
