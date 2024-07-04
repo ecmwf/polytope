@@ -1,7 +1,6 @@
 import pandas as pd
 import pytest
-from earthkit import data
-from helper_functions import download_test_data, find_nearest_latlon
+from helper_functions import find_nearest_latlon
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
