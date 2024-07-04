@@ -37,6 +37,7 @@ class TestHealpixNestedGrid:
         }
 
     @pytest.mark.internet
+    @pytest.mark.fdb
     def test_healpix_nested_grid(self):
         import pygribjump as gj
 
