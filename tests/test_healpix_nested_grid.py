@@ -10,29 +10,6 @@ from polytope.shapes import Box, Select
 
 class TestHealpixNestedGrid:
     def setup_method(self, method):
-        # ds = data.from_source("file", "./tests/data/healpix_nested.grib")
-        # ds.to_xarray()
-        # self.latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
-        # self.latlon_array = self.latlon_array.t2m
-        # self.options = {
-        #     "axis_config": [
-        #         {
-        #             "axis_name": "values",
-        #             "transformations": [
-        #                 {"name": "mapper", "type": "healpix_nested", "resolution": 1024, "axes": ["latitude", "longitude"]}
-        #             ],
-        #         },
-        #         {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
-        #     ],
-        #     "compressed_axes_config": ["longitude", "latitude", "number", "step", "time", "surface", "valid_time"],
-        # }
-        # self.slicer = HullSlicer()
-        # self.API = Polytope(
-        #     request={},
-        #     datacube=self.latlon_array,
-        #     engine=self.slicer,
-        #     options=self.options,
-        # )
         self.options = {
             "axis_config": [
                 {
