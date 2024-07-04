@@ -31,7 +31,6 @@ def download_test_data(nexus_url, filename):
 
 
 def find_nearest_latlon(grib_file, target_lat, target_lon):
-
     # Open the GRIB file
     f = open(grib_file)
 

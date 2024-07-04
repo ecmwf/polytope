@@ -19,3 +19,4 @@ example_mri
 *.req
 polytope_python.egg-info
 new_test_venv_polytope
+new_venv_polytope
