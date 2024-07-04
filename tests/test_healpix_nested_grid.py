@@ -1,3 +1,4 @@
+import pandas as pd
 import pytest
 from earthkit import data
 from helper_functions import download_test_data, find_nearest_latlon
@@ -5,7 +6,6 @@ from helper_functions import download_test_data, find_nearest_latlon
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
-import pandas as pd
 
 
 class TestHealpixNestedGrid:
@@ -42,7 +42,12 @@ class TestHealpixNestedGrid:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "healpix_nested", "resolution": 128, "axes": ["latitude", "longitude"]}
+                        {
+                            "name": "mapper",
+                            "type": "healpix_nested",
+                            "resolution": 128,
+                            "axes": ["latitude", "longitude"],
+                        }
                     ],
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
@@ -64,7 +69,7 @@ class TestHealpixNestedGrid:
             Select("class", ["d1"]),
             Select("dataset", ["climate-dt"]),
             Select("date", [pd.Timestamp("20200102T010000")]),
-            Select("experiment", ['SSP5-8.5']),
+            Select("experiment", ["SSP5-8.5"]),
             Select("expver", ["0001"]),
             Select("generation", ["1"]),
             Select("levtype", ["sfc"]),
@@ -85,7 +90,7 @@ class TestHealpixNestedGrid:
             engine=self.slicer,
             options=self.options,
         )
-        
+
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 18
