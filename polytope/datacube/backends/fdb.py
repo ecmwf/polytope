@@ -22,12 +22,8 @@ class FDBDatacube(Datacube):
         # Find values in the level 3 FDB datacube
 
         self.gj = gj
-        print("WE WERE HERE AT SOME POINT NOOO??")
-        print(alternative_axes)
         if len(alternative_axes) == 0:
             self.fdb_coordinates = self.gj.axes(partial_request)
-            print("THE FDB COORDS ARE")
-            print(self.fdb_coordinates)
             self.check_branching_axes(request)
         else:
             self.fdb_coordinates = {}
@@ -70,7 +66,6 @@ class FDBDatacube(Datacube):
                 if ax == "levtype":
                     (upper, lower, idx) = polytope.extents(ax)
                     if "sfc" in polytope.points[idx]:
-                        print(self.fdb_coordinates)
                         self.fdb_coordinates.pop("levelist", None)
         self.fdb_coordinates.pop("quantile", None)
         # TODO: When do these not appear??
@@ -78,8 +73,6 @@ class FDBDatacube(Datacube):
         self.fdb_coordinates.pop("frequency", None)
 
     def get(self, requests: TensorIndexTree):
-        # requests.pprint()
-        # requests.pprint()
         if len(requests.children) == 0:
             return requests
         fdb_requests = []
@@ -112,21 +105,9 @@ class FDBDatacube(Datacube):
                 for i, key in enumerate(compressed_request[0].keys()):
                     uncompressed_request[key] = combi[i]
                 complete_uncompressed_request = (uncompressed_request, compressed_request[1])
-                print("NOW LOOK")
-                print([complete_uncompressed_request])
-                # output_values = self.gj.extract([complete_uncompressed_request])
-                # self.assign_fdb_output_to_nodes(output_values, [fdb_requests_decoding_info[j]])
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
-                # output_values = self.gj.extract([complete_uncompressed_request])
-                # self.assign_fdb_output_to_nodes(output_values, [fdb_requests_decoding_info[j]])
-            # print(len(complete_list_complete_uncompressed_requests))
-            # print(complete_list_complete_uncompressed_requests)
             output_values = self.gj.extract(complete_list_complete_uncompressed_requests)
-            print("THE OUTPUT VALUES")
-            print(len(output_values[0]))
-            # for k, output_vals in enumerate(output_values):
-            # self.assign_fdb_output_to_nodes(output_values, [fdb_requests_decoding_info[j]])
             self.assign_fdb_output_to_nodes(output_values, complete_fdb_decoding_info)
 
     def get_fdb_requests(

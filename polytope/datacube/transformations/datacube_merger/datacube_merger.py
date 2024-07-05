@@ -92,12 +92,6 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
     def unmap_tree_node(self, node, unwanted_path):
         if node.axis.name == self._first_axis:
             (new_first_vals, new_second_vals) = self.unmerge(node.values)
-            # new_first_vals = []
-            # new_second_vals = []
-            # for value in node.values:
-            #     (first_val, second_val) = self.unmerge(value)
-            #     new_first_vals.append(first_val)
-            #     new_second_vals.append(second_val)
             node.values = new_first_vals
             # TODO: actually need to give the second axis of the transformation to get the interm axis
             interm_node = node.add_node_layer_after(self._second_axis, new_second_vals)

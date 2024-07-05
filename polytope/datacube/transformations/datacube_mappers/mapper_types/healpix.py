@@ -78,11 +78,6 @@ class HealpixGridMapper(DatacubeMapper):
         return return_vals
 
     def axes_idx_to_healpix_idx(self, first_idx, second_idx):
-        # idx = 0
-        # for i in range(first_idx):
-        #     idx += len(self.second_axis_vals_from_idx(i))
-        # idx += second_idx
-        # return idx
         idx = 0
         for i in range(self._resolution - 1):
             if i != first_idx:
