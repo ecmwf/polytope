@@ -30,7 +30,7 @@ class TestHealpixNestedGrid:
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
             ],
             "pre_path": {"class": "d1", "expver": "0001", "levtype": "sfc", "stream": "clte"},
-            "compressed_axes-config": [
+            "compressed_axes_config": [
                 "longitude",
                 "latitude",
             ],
