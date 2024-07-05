@@ -85,6 +85,7 @@ class FDBDatacube(Datacube):
         # TODO: here, loop through the fdb requests and request from gj and directly add to the nodes
 
         for j, compressed_request in enumerate(fdb_requests):
+            # TODO: can we do gj extract outside of this loop?
             uncompressed_request = {}
 
             # Need to determine the possible decompressed requests
