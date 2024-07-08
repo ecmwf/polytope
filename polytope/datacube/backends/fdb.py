@@ -83,7 +83,8 @@ class FDBDatacube(Datacube):
         # corresponds to first value in the compressed tuples
 
         # TODO: here, loop through the fdb requests and request from gj and directly add to the nodes
-
+        complete_list_complete_uncompressed_requests = []
+        complete_fdb_decoding_info = []
         for j, compressed_request in enumerate(fdb_requests):
             # TODO: can we do gj extract outside of this loop?
             uncompressed_request = {}
@@ -99,8 +100,8 @@ class FDBDatacube(Datacube):
             request_combis = product(*interm_branch_tuple_values)
 
             # Need to extract the possible requests and add them to the right nodes
-            complete_list_complete_uncompressed_requests = []
-            complete_fdb_decoding_info = []
+            # complete_list_complete_uncompressed_requests = []
+            # complete_fdb_decoding_info = []
             for combi in request_combis:
                 uncompressed_request = {}
                 for i, key in enumerate(compressed_request[0].keys()):
@@ -108,8 +109,8 @@ class FDBDatacube(Datacube):
                 complete_uncompressed_request = (uncompressed_request, compressed_request[1])
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
-            output_values = self.gj.extract(complete_list_complete_uncompressed_requests)
-            self.assign_fdb_output_to_nodes(output_values, complete_fdb_decoding_info)
+        output_values = self.gj.extract(complete_list_complete_uncompressed_requests)
+        self.assign_fdb_output_to_nodes(output_values, complete_fdb_decoding_info)
 
     def get_fdb_requests(
         self, requests: TensorIndexTree, fdb_requests=[], fdb_requests_decoding_info=[], leaf_path=None
