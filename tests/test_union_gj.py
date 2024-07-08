@@ -3,7 +3,7 @@ import pytest
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Union, Select, Span
+from polytope.shapes import Box, Select, Span, Union
 
 
 class TestSlicingFDBDatacube:
