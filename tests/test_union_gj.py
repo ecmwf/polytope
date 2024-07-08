@@ -63,7 +63,7 @@ class TestSlicingFDBDatacube:
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["an"]),
-            union
+            union,
         )
 
         self.fdbdatacube = gj.GribJump()
