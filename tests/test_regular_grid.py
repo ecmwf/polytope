@@ -97,8 +97,8 @@ class TestRegularGrid:
             lats.append(lat)
             lons.append(lon)
             nearest_points = find_nearest_latlon("./tests/data/era5-levels-members.grib", lat, lon)
-            eccodes_lat = nearest_points[121][0]["lat"]
-            eccodes_lon = nearest_points[121][0]["lon"]
+            eccodes_lat = nearest_points[0][0]["lat"]
+            eccodes_lon = nearest_points[0][0]["lon"]
             eccodes_value = nearest_points[121][0]["value"]
             eccodes_lats.append(eccodes_lat)
 

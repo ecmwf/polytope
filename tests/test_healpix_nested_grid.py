@@ -34,7 +34,7 @@ class TestHealpixNestedGrid:
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
             ],
             "pre_path": {"class": "d1", "expver": "0001", "levtype": "sfc", "stream": "clte"},
-            "compressed_axes-config": [
+            "compressed_axes_config": [
                 "longitude",
                 "latitude",
             ],
@@ -172,11 +172,11 @@ class TestHealpixNestedGrid:
             assert eccodes_result == result_tree
         assert len(eccodes_lats) == 21
 
-        worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
-        fig, ax = plt.subplots(figsize=(12, 6))
-        worldmap.plot(color="darkgrey", ax=ax)
+        # worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
+        # fig, ax = plt.subplots(figsize=(12, 6))
+        # worldmap.plot(color="darkgrey", ax=ax)
 
-        plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
-        plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
-        plt.colorbar(label="Temperature")
-        plt.show()
+        # plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
+        # plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
+        # plt.colorbar(label="Temperature")
+        # plt.show()

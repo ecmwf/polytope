@@ -54,10 +54,10 @@ class TestOctahedralGrid:
         eccodes_lats = []
         tol = 1e-8
         for i, leaf in enumerate(result.leaves):
-            cubepath = result.leaves[i].flatten()
-            tree_result = leaf.result[1].tolist()
+            cubepath = leaf.flatten()
             lat = cubepath["latitude"]
             lon = cubepath["longitude"]
+            tree_result = leaf.result[1].tolist()
             lats.append(lat)
             lons.append(lon)
             nearest_points = find_nearest_latlon("./tests/data/foo.grib", lat[0], lon[0])

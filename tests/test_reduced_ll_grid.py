@@ -96,6 +96,7 @@ class TestReducedLatLonGrid:
             tree_result = leaves[i].result[1]
             lat = cubepath["latitude"][0]
             lon = cubepath["longitude"][0]
+            tree_result = leaves[i].result[1]
             del cubepath
             lats.append(lat)
             lons.append(lon)

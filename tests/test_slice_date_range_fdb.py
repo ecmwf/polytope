@@ -27,7 +27,7 @@ class TestSlicingFDBDatacube:
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
             ],
             "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
-            "compressed_axes-config": [
+            "compressed_axes_config": [
                 "longitude",
                 "latitude",
                 "levtype",
