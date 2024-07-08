@@ -2,6 +2,9 @@ import pytest
 from earthkit import data
 from helper_functions import download_test_data, find_nearest_latlon
 
+from polytope.datacube.transformations.datacube_mappers.mapper_types.healpix import (
+    HealpixGridMapper,
+)
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
@@ -46,14 +49,15 @@ class TestOctahedralGrid:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 40
+        assert len(result.leaves) == 45
 
         lats = []
         lons = []
         eccodes_lats = []
         tol = 1e-8
-        for i in range(len(result.leaves)):
-            cubepath = result.leaves[i].flatten()
+        for i, leaf in enumerate(result.leaves):
+            cubepath = leaf.flatten()
+            tree_result = leaf.result[1].tolist()
             lat = cubepath["latitude"][0]
             new_lons = cubepath["longitude"]
             for lon in new_lons:
@@ -62,9 +66,15 @@ class TestOctahedralGrid:
                 nearest_points = find_nearest_latlon("./tests/data/healpix.grib", lat, lon)
                 eccodes_lat = nearest_points[0][0]["lat"]
                 eccodes_lon = nearest_points[0][0]["lon"]
+                eccodes_result = nearest_points[0][0]["value"]
+
+                mapper = HealpixGridMapper("base", ["base", "base"], 32)
+                assert nearest_points[0][0]["index"] == mapper.unmap((lat,), (lon,))
                 assert eccodes_lat - tol <= lat
                 assert lat <= eccodes_lat + tol
                 assert eccodes_lon - tol <= lon
                 assert lon <= eccodes_lon + tol
+                tol = 1e-2
+                assert abs(eccodes_result - tree_result) <= tol
             eccodes_lats.append(lat)
-        assert len(eccodes_lats) == 40
+        assert len(eccodes_lats) == 45

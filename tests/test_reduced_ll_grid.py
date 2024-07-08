@@ -95,6 +95,7 @@ class TestReducedLatLonGrid:
             cubepath = leaves[i].flatten()
             lat = cubepath["latitude"][0]
             lon = cubepath["longitude"][0]
+            tree_result = leaves[i].result[1]
             del cubepath
             lats.append(lat)
             lons.append(lon)
@@ -103,10 +104,12 @@ class TestReducedLatLonGrid:
             eccodes_lon = nearest_points.lon
             eccodes_lats.append(eccodes_lat)
             eccodes_lons.append(eccodes_lon)
+            eccodes_resullt = nearest_points.value
             assert eccodes_lat - tol <= lat
             assert lat <= eccodes_lat + tol
             assert eccodes_lon - tol <= lon
             assert lon <= eccodes_lon + tol
+            assert tree_result == eccodes_resullt
         f.close()
 
         # worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
