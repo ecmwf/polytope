@@ -96,7 +96,8 @@ class TestRegularGrid:
         tol = 1e-8
         leaves = result.leaves
         for i in range(len(leaves)):
-            result_tree = leaves[i].result[1]
+            right_pl_results = leaves[i].result[len(leaves[i].values):]
+            result_tree = right_pl_results[0]
             cubepath = leaves[i].flatten()
             lat = cubepath["latitude"][0]
             lon = cubepath["longitude"][0]

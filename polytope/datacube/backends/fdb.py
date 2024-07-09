@@ -139,14 +139,12 @@ class FDBDatacube(Datacube):
             if len(requests.children[0].children[0].children) == 0:
                 # find the fdb_requests and associated nodes to which to add results
                 (path, current_start_idxs, fdb_node_ranges, lat_length) = self.get_2nd_last_values(requests, leaf_path)
-                time1 = time.time()
                 (
                     original_indices,
                     sorted_request_ranges,
                     fdb_node_ranges,
                     current_start_idxs,
                 ) = self.sort_fdb_request_ranges(current_start_idxs, lat_length, fdb_node_ranges)
-                self.request_sorting_time += time.time() - time1
                 fdb_requests.append((path, sorted_request_ranges))
                 fdb_requests_decoding_info.append((original_indices, fdb_node_ranges, current_start_idxs))
 
@@ -216,7 +214,6 @@ class FDBDatacube(Datacube):
             lon_length = len(lat_child.children)
             current_start_idxs[i] = [None] * lon_length
             fdb_node_ranges[i] = [[TensorIndexTree.root for y in range(lon_length)] for x in range(lon_length)]
-            range_length = deepcopy(range_lengths[i])
             current_start_idx = deepcopy(current_start_idxs[i])
             fdb_range_nodes = deepcopy(fdb_node_ranges[i])
             key_value_path = {lat_child.axis.name: lat_child.values}
@@ -237,7 +234,6 @@ class FDBDatacube(Datacube):
         current_idx = []
         fdb_range_n = []
         for c in requests.children:
-            fdb_range_n_i = fdb_range_n[i]
             # now c are the leaves of the initial tree
             key_value_path = {c.axis.name: c.values}
             ax = c.axis

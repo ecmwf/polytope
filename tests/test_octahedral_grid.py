@@ -71,12 +71,14 @@ class TestOctahedralGrid:
             eccodes_lon_2 = nearest_points_2[0][0]["lon"]
             eccodes_lat_3 = nearest_points_3[0][0]["lat"]
             eccodes_lon_3 = nearest_points_3[0][0]["lon"]
+            eccodes_value_2 = nearest_points_2[0][0]["value"]
+            eccodes_value_3 = nearest_points_3[0][0]["value"]
             eccodes_lats.append(eccodes_lat)
             assert eccodes_lat - tol <= lat[0]
             assert lat[0] <= eccodes_lat + tol
             assert eccodes_lon - tol <= lon[0]
             assert lon[0] <= eccodes_lon + tol
-            assert eccodes_value == tree_result
+            assert [eccodes_value, eccodes_value_2, eccodes_value_3] == tree_result
             assert eccodes_lat_2 - tol <= lat[0]
             assert lat[0] <= eccodes_lat_2 + tol
             assert eccodes_lon_2 - tol <= lon[1]
