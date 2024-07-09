@@ -50,6 +50,8 @@ class TestOctahedralGrid:
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 45
+        assert result.leaves[0].result[1].size == 3
+        assert result.leaves[1].result[1].size == 5
 
         lats = []
         lons = []

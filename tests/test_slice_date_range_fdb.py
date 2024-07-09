@@ -70,7 +70,77 @@ class TestSlicingFDBDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 9
+        assert len(result.leaves) == 3
+        for i in range(len(result.leaves)):
+            assert len(result.leaves[i].result) == 3
+
+    @pytest.mark.fdb
+    def test_fdb_datacube_disk(self):
+        import pygribjump as gj
+
+        request = Request(
+            Select("step", [0]),
+            Select("levtype", ["sfc"]),
+            Span("date", pd.Timestamp("20230625T120000"), pd.Timestamp("20230626T120000")),
+            Select("domain", ["g"]),
+            Select("expver", ["0001"]),
+            Select("param", ["167"]),
+            Select("class", ["od"]),
+            Select("stream", ["oper"]),
+            Select("type", ["an"]),
+            Disk(["latitude", "longitude"], [0, 0], [0.1, 0.1]),
+        )
+
+        self.fdbdatacube = gj.GribJump()
+        self.slicer = HullSlicer()
+        self.API = Polytope(
+            request=request,
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            options=self.options,
+        )
+        result = self.API.retrieve(request)
+        result.pprint()
+        assert len(result.leaves) == 2
+        assert len(result.leaves[0].result) == 3
+        assert len(result.leaves[1].result) == 3
+        assert len(result.leaves[0].values) == 3
+        assert len(result.leaves[1].values) == 3
+
+    @pytest.mark.fdb
+    def test_fdb_datacube_disk_2(self):
+        import pygribjump as gj
+
+        request = Request(
+            Select("step", [0]),
+            Select("levtype", ["sfc"]),
+            Span("date", pd.Timestamp("20230625T120000"), pd.Timestamp("20230626T120000")),
+            Select("domain", ["g"]),
+            Select("expver", ["0001"]),
+            Select("param", ["167"]),
+            Select("class", ["od"]),
+            Select("stream", ["oper"]),
+            Select("type", ["an"]),
+            Disk(["latitude", "longitude"], [0.05, 0.070148090413], [0.1, 0.15]),
+        )
+
+        self.fdbdatacube = gj.GribJump()
+        self.slicer = HullSlicer()
+        self.API = Polytope(
+            request=request,
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            options=self.options,
+        )
+        result = self.API.retrieve(request)
+        result.pprint()
+        assert len(result.leaves) == 3
+        assert len(result.leaves[0].result) == 3
+        assert len(result.leaves[1].result) == 5
+        assert len(result.leaves[2].result) == 3
+        assert len(result.leaves[0].values) == 3
+        assert len(result.leaves[1].values) == 5
+        assert len(result.leaves[2].values) == 3
 
     @pytest.mark.fdb
     def test_fdb_datacube_disk(self):

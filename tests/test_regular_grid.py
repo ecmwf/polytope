@@ -78,7 +78,13 @@ class TestRegularGrid:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 5
+        assert len(result.leaves) == 3
+        assert len(result.leaves[0].result) == 2
+        assert len(result.leaves[1].result) == 6
+        assert len(result.leaves[2].result) == 2
+        assert len(result.leaves[0].values) == 1
+        assert len(result.leaves[1].values) == 3
+        assert len(result.leaves[2].values) == 1
 
         from polytope.datacube.transformations.datacube_mappers.mapper_types.regular import (
             RegularGridMapper,
@@ -119,4 +125,4 @@ class TestRegularGrid:
         # plt.colorbar(label="Temperature")
         # plt.show()
 
-        assert len(eccodes_lats) == 5
+        assert len(eccodes_lats) == 3

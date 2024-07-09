@@ -28,8 +28,8 @@ class TestIndexTreesAfterSlicing:
         polytope = box.polytope()
         request = self.slicer.extract(self.xarraydatacube, polytope)
         datacube_path = request.leaves[0].flatten()
-        # request.pprint()
-        assert datacube_path.values() == tuple([tuple([3.0]), tuple([1.0])])
+        request.pprint()
+        assert datacube_path.values() == tuple([tuple([3.0]), tuple([1.0, 2, 3])])
         assert len(datacube_path.values()) == 2
 
     def test_path_keys(self):
@@ -52,8 +52,9 @@ class TestIndexTreesAfterSlicing:
         polytope = box.polytope()
         request = self.slicer.extract(self.xarraydatacube, polytope)
         path = request.leaves[0].flatten()
+        request.pprint()
         assert path["step"] == tuple([3.0])
-        assert path["level"] == tuple([1.0])
+        assert path["level"] == tuple([1.0, 2, 3])
 
     def test_add_child(self):
         box = Box(["step", "level"], [3.0, 1.0], [6.0, 3.0])

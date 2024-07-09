@@ -131,7 +131,14 @@ class TestSlicing4DXarrayDatacube:
         ellipsoid = Ellipsoid(["step", "level", "lat"], [6, 3, 2.1], [3, 1, 0.1])
         request = Request(ellipsoid, Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 7
+        result.pprint()
+        assert len(result.leaves) == 5
+        assert len(result.leaves[2].values) == 3
+        assert np.size(result.leaves[2].result[1]) == 3
+        for i in range(len(result.leaves)):
+            if i != 2:
+                assert len(result.leaves[i].values) == 1
+                assert np.size(result.leaves[i].result[1]) == 1
 
     # Testing empty shapes
 
