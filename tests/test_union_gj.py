@@ -167,4 +167,6 @@ class TestSlicingFDBDatacube:
             total_lons += len(leaf.values)
             total_vals += len(leaf.result)
         assert total_lons == 9
+        # TODO: there is a problem somewhere when we assign the values to the nodes
+        # OR the problem is when we remove duplicates before giving to gribjump? Check
         assert total_vals == 9
