@@ -161,7 +161,7 @@ class FDBDatacube(Datacube):
                 for c in requests.children:
                     self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path)
 
-    def remove_duplicates_in_request_ranges(self, sorted_request_ranges, fdb_node_ranges, current_start_idxs):
+    def remove_duplicates_in_request_ranges(self, fdb_node_ranges, current_start_idxs):
         time1 = time.time()
         seen_indices = []
         sorted_request_ranges = []
