@@ -163,7 +163,6 @@ class FDBDatacube(Datacube):
     def remove_duplicates_in_request_ranges(self, fdb_node_ranges, current_start_idxs):
         time1 = time.time()
         seen_indices = set()
-        # sorted_request_ranges = []
         for i, idxs_list in enumerate(current_start_idxs):
             for k, sub_lat_idxs in enumerate(idxs_list):
                 actual_fdb_node = fdb_node_ranges[i][k]
@@ -188,16 +187,9 @@ class FDBDatacube(Datacube):
 
         print("TIME REMOVING DUPLICATES")
         print(time.time() - time1)
-        # return (sorted_request_ranges, fdb_node_ranges, current_start_idxs)
         return (fdb_node_ranges, current_start_idxs)
 
-    def get_2nd_last_values(self, requests, leaf_path=None):
-        if leaf_path is None:
-            leaf_path = {}
-        # In this function, we recursively loop over the last two layers of the tree and store the indices of the
-        # request ranges in those layers
-
-        # Find nearest point first before retrieving
+    def nearest_lat_lon_search(self, requests):
         if len(self.nearest_search) != 0:
             first_ax_name = requests.children[0].axis.name
             second_ax_name = requests.children[0].children[0].axis.name
@@ -243,6 +235,13 @@ class FDBDatacube(Datacube):
                         for value in lon_child.values:
                             if value not in possible_lons:
                                 lon_child.remove_compressed_branch(value)
+
+    def get_2nd_last_values(self, requests, leaf_path=None):
+        if leaf_path is None:
+            leaf_path = {}
+        # In this function, we recursively loop over the last two layers of the tree and store the indices of the
+        # request ranges in those layers
+        self.nearest_lat_lon_search(requests)
 
         lat_length = len(requests.children)
         current_start_idxs = [False] * lat_length
@@ -297,9 +296,6 @@ class FDBDatacube(Datacube):
                 n.result.extend(interm_request_output_values)
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
-        # (interm_request_ranges, new_fdb_node_ranges, new_current_start_idx) = self.remove_duplicates_in_request_ranges(
-        #     fdb_node_ranges, current_start_idx
-        # )
         (new_fdb_node_ranges, new_current_start_idx) = self.remove_duplicates_in_request_ranges(
             fdb_node_ranges, current_start_idx
         )
