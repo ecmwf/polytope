@@ -164,32 +164,34 @@ class FDBDatacube(Datacube):
     def remove_duplicates_in_request_ranges(self, sorted_request_ranges, fdb_node_ranges, current_start_idxs):
         time1 = time.time()
         seen_indices = []
+        sorted_request_ranges = []
         for i, idxs_list in enumerate(current_start_idxs):
-            original_fdb_node_range_vals = []
-            copy_idxs_list = []
-            new_current_start_idx = []
-            for j, idx in enumerate(idxs_list):
-                if idx not in seen_indices:
-                    # TODO: need to remove it from the values in the corresponding tree node
-                    # TODO: need to readjust the range we give to gj ... DONE?
-                    original_fdb_node_range_vals.append(fdb_node_ranges[i][0].values[j])
-                    copy_idxs_list.append(idxs_list[j])
-                    seen_indices.append(idx)
-                    new_current_start_idx.append(idx)
-            idxs_list = copy_idxs_list
-            if original_fdb_node_range_vals != []:
-                fdb_node_ranges[i][0].values = tuple(original_fdb_node_range_vals)
-            else:
-                # there are no values on this node anymore so can remove it
-                fdb_node_ranges[i][0].remove_branch()
-            if idxs_list != []:
-                sorted_request_ranges[i] = (idxs_list[0], idxs_list[-1] + 1)
-            else:
-                sorted_request_ranges[i] = tuple()
-            current_start_idxs[i] = new_current_start_idx
+            # original_fdb_node_range_vals = list(deepcopy(fdb_node_ranges[i][0].values))
+            for k, sub_lat_idxs in enumerate(idxs_list):
+                original_fdb_node_range_vals = []
+                # copy_idxs_list = list(deepcopy(idxs_list))
+                copy_idxs_list = []
+                new_current_start_idx = []
+                for j, idx in enumerate(sub_lat_idxs):
+                    if idx not in seen_indices:
+                        # TODO: need to remove it from the values in the corresponding tree node
+                        # TODO: need to readjust the range we give to gj ... DONE?
+                        original_fdb_node_range_vals.append(fdb_node_ranges[i][k][0].values[j])
+                        copy_idxs_list.append(sub_lat_idxs[j])
+                        seen_indices.append(idx)
+                        new_current_start_idx.append(idx)
+                if original_fdb_node_range_vals != []:
+                    fdb_node_ranges[i][k][0].values = tuple(original_fdb_node_range_vals)
+                else:
+                    # there are no values on this node anymore so can remove it
+                    fdb_node_ranges[i][k][0].remove_branch()
+                if len(new_current_start_idx) == 0:
+                    current_start_idxs[i].pop(k)
+                else:
+                    current_start_idxs[i][k] = new_current_start_idx
 
         for i, sorted_req_range in enumerate(sorted_request_ranges):
-            if len(sorted_req_range) == 0:
+            if len(sorted_req_range[0]) == 0:
                 sorted_request_ranges.pop(i)
                 fdb_node_ranges.pop(i)
                 current_start_idxs.pop(i)
@@ -301,10 +303,12 @@ class FDBDatacube(Datacube):
             for i in range(len(sorted_fdb_range_nodes)):
                 n = sorted_fdb_range_nodes[i][0]
                 interm_request_output_values = request_output_values[0][i][0]
-                # n.result.extend(interm_request_output_values[: len(current_start_idxs[i])])
                 n.result.extend(interm_request_output_values)
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
+        (interm_request_ranges, new_fdb_node_ranges, new_current_start_idx) = self.remove_duplicates_in_request_ranges(
+            fdb_node_ranges, current_start_idx
+        )
         interm_request_ranges = []
         # TODO: modify the start indexes to have as many arrays as the request ranges
         new_fdb_node_ranges = []
@@ -340,8 +344,6 @@ class FDBDatacube(Datacube):
                             interm_request_ranges.append(current_request_ranges)
                             new_fdb_node_ranges.append(interm_fdb_nodes[j])
                             new_current_start_idx.append(interm_start_idx[last_idx:])
-        # TODO: is this right or does it also need to be in the loop?
-        (interm_request_ranges, new_fdb_node_ranges, new_current_start_idx) = self.remove_duplicates_in_request_ranges(interm_request_ranges, new_fdb_node_ranges, new_current_start_idx)
         request_ranges_with_idx = list(enumerate(interm_request_ranges))
         sorted_list = sorted(request_ranges_with_idx, key=lambda x: x[1][0])
         original_indices, sorted_request_ranges = zip(*sorted_list)
