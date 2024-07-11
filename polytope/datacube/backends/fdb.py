@@ -163,38 +163,30 @@ class FDBDatacube(Datacube):
 
     def remove_duplicates_in_request_ranges(self, fdb_node_ranges, current_start_idxs):
         time1 = time.time()
-        seen_indices = []
+        seen_indices = set()
         sorted_request_ranges = []
         for i, idxs_list in enumerate(current_start_idxs):
-            # original_fdb_node_range_vals = list(deepcopy(fdb_node_ranges[i][0].values))
             for k, sub_lat_idxs in enumerate(idxs_list):
+                actual_fdb_node = fdb_node_ranges[i][k]
                 original_fdb_node_range_vals = []
-                # copy_idxs_list = list(deepcopy(idxs_list))
-                # copy_idxs_list = []
                 new_current_start_idx = []
                 for j, idx in enumerate(sub_lat_idxs):
                     if idx not in seen_indices:
                         # TODO: need to remove it from the values in the corresponding tree node
                         # TODO: need to readjust the range we give to gj ... DONE?
-                        original_fdb_node_range_vals.append(fdb_node_ranges[i][k][0].values[j])
-                        # copy_idxs_list.append(sub_lat_idxs[j])
-                        seen_indices.append(idx)
+                        original_fdb_node_range_vals.append(actual_fdb_node[0].values[j])
+                        seen_indices.add(idx)
                         new_current_start_idx.append(idx)
                 if original_fdb_node_range_vals != []:
-                    fdb_node_ranges[i][k][0].values = tuple(original_fdb_node_range_vals)
+                    actual_fdb_node[0].values = tuple(original_fdb_node_range_vals)
                 else:
                     # there are no values on this node anymore so can remove it
-                    fdb_node_ranges[i][k][0].remove_branch()
+                    actual_fdb_node[0].remove_branch()
                 if len(new_current_start_idx) == 0:
                     current_start_idxs[i].pop(k)
                 else:
                     current_start_idxs[i][k] = new_current_start_idx
 
-        # for i, sorted_req_range in enumerate(sorted_request_ranges):
-        #     if len(sorted_req_range[0]) == 0:
-        #         # sorted_request_ranges.pop(i)
-        #         fdb_node_ranges.pop(i)
-        #         current_start_idxs.pop(i)
         print("TIME REMOVING DUPLICATES")
         print(time.time() - time1)
         return (sorted_request_ranges, fdb_node_ranges, current_start_idxs)
