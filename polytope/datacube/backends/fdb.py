@@ -170,14 +170,14 @@ class FDBDatacube(Datacube):
             for k, sub_lat_idxs in enumerate(idxs_list):
                 original_fdb_node_range_vals = []
                 # copy_idxs_list = list(deepcopy(idxs_list))
-                copy_idxs_list = []
+                # copy_idxs_list = []
                 new_current_start_idx = []
                 for j, idx in enumerate(sub_lat_idxs):
                     if idx not in seen_indices:
                         # TODO: need to remove it from the values in the corresponding tree node
                         # TODO: need to readjust the range we give to gj ... DONE?
                         original_fdb_node_range_vals.append(fdb_node_ranges[i][k][0].values[j])
-                        copy_idxs_list.append(sub_lat_idxs[j])
+                        # copy_idxs_list.append(sub_lat_idxs[j])
                         seen_indices.append(idx)
                         new_current_start_idx.append(idx)
                 if original_fdb_node_range_vals != []:
@@ -190,11 +190,11 @@ class FDBDatacube(Datacube):
                 else:
                     current_start_idxs[i][k] = new_current_start_idx
 
-        for i, sorted_req_range in enumerate(sorted_request_ranges):
-            if len(sorted_req_range[0]) == 0:
-                sorted_request_ranges.pop(i)
-                fdb_node_ranges.pop(i)
-                current_start_idxs.pop(i)
+        # for i, sorted_req_range in enumerate(sorted_request_ranges):
+        #     if len(sorted_req_range[0]) == 0:
+        #         # sorted_request_ranges.pop(i)
+        #         fdb_node_ranges.pop(i)
+        #         current_start_idxs.pop(i)
         print("TIME REMOVING DUPLICATES")
         print(time.time() - time1)
         return (sorted_request_ranges, fdb_node_ranges, current_start_idxs)
