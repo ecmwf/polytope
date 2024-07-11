@@ -151,10 +151,9 @@ class FDBDatacube(Datacube):
                     original_indices,
                     sorted_request_ranges,
                     fdb_node_ranges,
-                    current_start_idxs,
                 ) = self.sort_fdb_request_ranges(current_start_idxs, lat_length, fdb_node_ranges)
                 fdb_requests.append((path, sorted_request_ranges))
-                fdb_requests_decoding_info.append((original_indices, fdb_node_ranges, current_start_idxs))
+                fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
 
             # Otherwise remap the path for this key and iterate again over children
             else:
@@ -164,7 +163,7 @@ class FDBDatacube(Datacube):
     def remove_duplicates_in_request_ranges(self, fdb_node_ranges, current_start_idxs):
         time1 = time.time()
         seen_indices = set()
-        sorted_request_ranges = []
+        # sorted_request_ranges = []
         for i, idxs_list in enumerate(current_start_idxs):
             for k, sub_lat_idxs in enumerate(idxs_list):
                 actual_fdb_node = fdb_node_ranges[i][k]
@@ -189,7 +188,8 @@ class FDBDatacube(Datacube):
 
         print("TIME REMOVING DUPLICATES")
         print(time.time() - time1)
-        return (sorted_request_ranges, fdb_node_ranges, current_start_idxs)
+        # return (sorted_request_ranges, fdb_node_ranges, current_start_idxs)
+        return (fdb_node_ranges, current_start_idxs)
 
     def get_2nd_last_values(self, requests, leaf_path=None):
         if leaf_path is None:
@@ -289,7 +289,6 @@ class FDBDatacube(Datacube):
             (
                 original_indices,
                 fdb_node_ranges,
-                current_start_idxs,
             ) = fdb_requests_decoding_info[k]
             sorted_fdb_range_nodes = [fdb_node_ranges[i] for i in original_indices]
             for i in range(len(sorted_fdb_range_nodes)):
@@ -298,13 +297,15 @@ class FDBDatacube(Datacube):
                 n.result.extend(interm_request_output_values)
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
-        (interm_request_ranges, new_fdb_node_ranges, new_current_start_idx) = self.remove_duplicates_in_request_ranges(
+        # (interm_request_ranges, new_fdb_node_ranges, new_current_start_idx) = self.remove_duplicates_in_request_ranges(
+        #     fdb_node_ranges, current_start_idx
+        # )
+        (new_fdb_node_ranges, new_current_start_idx) = self.remove_duplicates_in_request_ranges(
             fdb_node_ranges, current_start_idx
         )
         interm_request_ranges = []
         # TODO: modify the start indexes to have as many arrays as the request ranges
         new_fdb_node_ranges = []
-        new_current_start_idx = []
         for i in range(lat_length):
             interm_fdb_nodes = fdb_node_ranges[i]
             old_interm_start_idx = current_start_idx[i]
@@ -314,13 +315,11 @@ class FDBDatacube(Datacube):
                 sorted_list = sorted(enumerate(old_interm_start_idx[j]), key=lambda x: x[1])
                 original_indices_idx, interm_start_idx = zip(*sorted_list)
                 for interm_fdb_nodes_obj in interm_fdb_nodes[j]:
-                    # interm_fdb_nodes_obj.values = tuple(interm_fdb_nodes_obj.values)
                     interm_fdb_nodes_obj.values = tuple([interm_fdb_nodes_obj.values[k] for k in original_indices_idx])
                 if abs(interm_start_idx[-1] + 1 - interm_start_idx[0]) <= len(interm_start_idx):
                     current_request_ranges = (interm_start_idx[0], interm_start_idx[-1] + 1)
                     interm_request_ranges.append(current_request_ranges)
                     new_fdb_node_ranges.append(interm_fdb_nodes[j])
-                    new_current_start_idx.append(interm_start_idx)
                 else:
                     jumps = list(map(operator.sub, interm_start_idx[1:], interm_start_idx[:-1]))
                     last_idx = 0
@@ -328,18 +327,16 @@ class FDBDatacube(Datacube):
                         if jump > 1:
                             current_request_ranges = (interm_start_idx[last_idx], interm_start_idx[k] + 1)
                             new_fdb_node_ranges.append(interm_fdb_nodes[j])
-                            new_current_start_idx.append(interm_start_idx[last_idx : k + 1])
                             last_idx = k + 1
                             interm_request_ranges.append(current_request_ranges)
                         if k == len(interm_start_idx) - 2:
                             current_request_ranges = (interm_start_idx[last_idx], interm_start_idx[-1] + 1)
                             interm_request_ranges.append(current_request_ranges)
                             new_fdb_node_ranges.append(interm_fdb_nodes[j])
-                            new_current_start_idx.append(interm_start_idx[last_idx:])
         request_ranges_with_idx = list(enumerate(interm_request_ranges))
         sorted_list = sorted(request_ranges_with_idx, key=lambda x: x[1][0])
         original_indices, sorted_request_ranges = zip(*sorted_list)
-        return (original_indices, sorted_request_ranges, new_fdb_node_ranges, new_current_start_idx)
+        return (original_indices, sorted_request_ranges, new_fdb_node_ranges)
 
     def datacube_natural_indexes(self, axis, subarray):
         indexes = subarray.get(axis.name, None)
