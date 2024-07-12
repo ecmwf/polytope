@@ -210,4 +210,4 @@ class NestedHealpixGridMapper(DatacubeMapper):
             return self.to_nest(f, ring, self.Nside, phi, ring & 1)
 
     def int_sqrt(self, i):
-        return math.sqrt(i + 0.5)
+        return int(math.sqrt(i + 0.5))
