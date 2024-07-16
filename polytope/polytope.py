@@ -1,11 +1,15 @@
 from typing import List
 
-from .options import PolytopeOptions
-from .datacube.index_tree import IndexTree
+from .datacube.tensor_index_tree import TensorIndexTree
 from .engine.hullslicer import HullSlicer
 from .engine.quadtree_slicer import QuadTreeSlicer
+from .options import PolytopeOptions
 from .shapes import ConvexPolytope
-from .utility.engine_tools import find_polytope_combinations
+from .datacube.backends.datacube import Datacube
+from .datacube.datacube_axis import UnsliceableDatacubeAxis
+
+# from .utility.engine_tools import find_polytope_combinations
+from .utility.combinatorics import group, tensor_product, unique
 from .utility.exceptions import AxisOverdefinedError
 
 
@@ -59,6 +63,8 @@ class Polytope:
         if engine_options is None:
             engine_options = {}
 
+        self.compressed_axes = []
+
         axis_options, compressed_axes_options, config, alternative_axes = PolytopeOptions.get_polytope_options(options)
 
         self.datacube = Datacube.create(
@@ -67,8 +73,8 @@ class Polytope:
             config,
             axis_options,
             compressed_axes_options,
+            point_cloud_options,
             alternative_axes,
-            point_cloud_options=point_cloud_options,
         )
         self.engine = engine if engine is not None else Engine.default()
         if engine_options == {}:
@@ -76,6 +82,7 @@ class Polytope:
                 engine_options[ax_name] = "hullslicer"
         self.engine_options = engine_options
         self.engines = self.create_engines()
+        self.ax_is_unsliceable = {}
 
     def create_engines(self):
         engines = {}
@@ -88,36 +95,88 @@ class Polytope:
         if "hullslicer" in engine_types:
             engines["hullslicer"] = HullSlicer()
         return engines
+    
+    def _unique_continuous_points(self, p: ConvexPolytope, datacube: Datacube):
+        for i, ax in enumerate(p._axes):
+            mapper = datacube.get_mapper(ax)
+            if self.ax_is_unsliceable.get(ax, None) is None:
+                self.ax_is_unsliceable[ax] = isinstance(mapper, UnsliceableDatacubeAxis)
+            if self.ax_is_unsliceable[ax]:
+                break
+            for j, val in enumerate(p.points):
+                p.points[j][i] = mapper.to_float(mapper.parse(p.points[j][i]))
+        # Remove duplicate points
+        unique(p.points)
 
-    def slice(self, polytopes: List[ConvexPolytope]):
+    def slice(self, datacube, polytopes: List[ConvexPolytope]):
         """Low-level API which takes a polytope geometry object and uses it to slice the datacube"""
 
-        combinations = find_polytope_combinations(self.datacube, polytopes)
+        self.find_compressed_axes(datacube, polytopes)
 
-        request = IndexTree()
+        # Convert the polytope points to float type to support triangulation and interpolation
+        for p in polytopes:
+            self._unique_continuous_points(p, datacube)
+
+        groups, input_axes = group(polytopes)
+        datacube.validate(input_axes)
+        request = TensorIndexTree()
+        combinations = tensor_product(groups)
+        # combinations = find_polytope_combinations(self.datacube, polytopes)
+        # request = TensorIndexTree()
+
+        # NOTE: could optimise here if we know combinations will always be for one request.
+        # Then we do not need to create a new index tree and merge it to request, but can just
+        # directly work on request and return it...
 
         for c in combinations:
-            r = IndexTree()
-            r["unsliced_polytopes"] = set(c)
+            r = TensorIndexTree()
+            new_c = []
+            for combi in c:
+                if isinstance(combi, list):
+                    new_c.extend(combi)
+                else:
+                    new_c.append(combi)
+            r["unsliced_polytopes"] = set(new_c)
             current_nodes = [r]
-            for ax in self.datacube.axes.values():
-                # determine the slicer for each axis
+            for ax in datacube.axes.values():
                 engine = self.find_engine(ax)
-
-                # TODO: what happens when we have a quadtree engine and we handle two axes at once??
-                # Need to build the two axes nodes as just one node within the slicer engine...
-
                 next_nodes = []
+                interm_next_nodes = []
                 for node in current_nodes:
-                    print(node)
-                    engine._build_branch(ax, node, self.datacube, next_nodes)
+                    engine._build_branch(ax, node, datacube, interm_next_nodes, self)
+                    next_nodes.extend(interm_next_nodes)
+                    interm_next_nodes = []
                 current_nodes = next_nodes
-            request.merge(r)
 
-        # TODO: return tree
-        # return self.engine.extract(self.datacube, polytopes)
-        request.pprint()
+            request.merge(r)
         return request
+
+        # combinations = find_polytope_combinations(self.datacube, polytopes)
+
+        # request = TensorIndexTree()
+
+        # for c in combinations:
+        #     r = TensorIndexTree()
+        #     r["unsliced_polytopes"] = set(c)
+        #     current_nodes = [r]
+        #     for ax in self.datacube.axes.values():
+        #         # determine the slicer for each axis
+        #         engine = self.find_engine(ax)
+
+        #         # TODO: what happens when we have a quadtree engine and we handle two axes at once??
+        #         # Need to build the two axes nodes as just one node within the slicer engine...
+
+        #         next_nodes = []
+        #         for node in current_nodes:
+        #             print(node)
+        #             engine._build_branch(ax, node, self.datacube, next_nodes)
+        #         current_nodes = next_nodes
+        #     request.merge(r)
+
+        # # TODO: return tree
+        # # return self.engine.extract(self.datacube, polytopes)
+        # request.pprint()
+        # return request
 
     def find_engine(self, ax):
         slicer_type = self.engine_options[ax.name]
@@ -132,6 +191,21 @@ class Polytope:
 
     def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
-        request_tree = self.slice(request.polytopes())
+        request_tree = self.slice(self.datacube, request.polytopes())
         self.datacube.get(request_tree)
         return request_tree
+
+    def find_compressed_axes(self, datacube, polytopes):
+        # First determine compressable axes from input polytopes
+        compressable_axes = []
+        for polytope in polytopes:
+            if polytope.is_orthogonal:
+                for ax in polytope.axes():
+                    compressable_axes.append(ax)
+        # Cross check this list with list of compressable axis from datacube
+        # (should not include any merged or coupled axes)
+        for compressed_axis in compressable_axes:
+            if compressed_axis in datacube.compressed_axes:
+                self.compressed_axes.append(compressed_axis)
+        # print("WHAT ARE THE COMPRESSED AXES?")
+        # print(self.compressed_axes)

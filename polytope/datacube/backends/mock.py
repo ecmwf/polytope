@@ -13,10 +13,10 @@ class MockDatacube(Datacube):
 
         self.dimensions = dimensions
 
-        self.mappers = {}
+        self._axes = {}
         for name in self.dimensions:
-            self.mappers[name] = deepcopy(IntDatacubeAxis())
-            self.mappers[name].name = name
+            self._axes[name] = deepcopy(IntDatacubeAxis())
+            self._axes[name].name = name
 
         self.stride = {}
         stride_cumulative = 1
@@ -40,7 +40,7 @@ class MockDatacube(Datacube):
                 r.remove_branch()
 
     def get_mapper(self, axis):
-        return self.mappers[axis]
+        return self._axes[axis]
 
     def get_indices(self, path: DatacubePath, axis, lower, upper, method=None):
         if lower == upper == math.ceil(lower):
@@ -57,7 +57,7 @@ class MockDatacube(Datacube):
 
     @property
     def axes(self):
-        return self.mappers
+        return self._axes
 
     def validate(self, axes):
         return validate_axes(self.axes, axes)

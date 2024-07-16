@@ -26,7 +26,9 @@ class TestSlicerComponents:
     def test_extract(self):
         box = Box(["step", "level"], [3.0, 1.0], [6.0, 3.0])
         polytope = box.polytope()
-        request = self.slicer.extract(self.xarraydatacube, polytope)
+        # request = self.slicer.extract(self.xarraydatacube, polytope)
+        API = Polytope(request={}, datacube=self.xarraydatacube, engine=self.slicer, options={})
+        request = API.slice(self.xarraydatacube, polytope)
         assert request.axis == TensorIndexTree.root
         assert request.parent is None
         assert request.values is tuple()

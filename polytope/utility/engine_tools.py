@@ -2,7 +2,7 @@ from typing import List
 
 from ..datacube.backends.datacube import Datacube
 from ..datacube.datacube_axis import UnsliceableDatacubeAxis
-from ..datacube.index_tree import IndexTree
+from ..datacube.tensor_index_tree import TensorIndexTree
 from ..shapes import ConvexPolytope
 from .combinatorics import group, tensor_product, unique
 
@@ -19,7 +19,7 @@ def unique_continuous_points_in_polytope(p: ConvexPolytope, datacube: Datacube):
     unique(p.points)
 
 
-def find_polytope_combinations(datacube: Datacube, polytopes: List[ConvexPolytope]) -> IndexTree:
+def find_polytope_combinations(datacube: Datacube, polytopes: List[ConvexPolytope]) -> TensorIndexTree:
     # here, we find the different possible polytope combinations that cover all of the datacube axes
 
     for p in polytopes:

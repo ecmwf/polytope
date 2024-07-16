@@ -169,6 +169,8 @@ class Datacube(ABC):
                 datacube, request, config, axis_options, compressed_axes_options, alternative_axes
             )
             return fdbdatacube
+        else:
+            return datacube
 
     @abstractmethod
     def find_point_cloud(self):

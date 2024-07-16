@@ -249,7 +249,7 @@ class FDBDatacube(Datacube):
         for c in requests.children:
             fdb_range_n_i = fdb_range_n[i]
             # now c are the leaves of the initial tree
-            key_value_path = {c.axis.name: c.value}
+            key_value_path = {c.axis.name: c.values}
             leaf_path["result"] = c.result
             ax = c.axis
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
