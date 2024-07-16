@@ -9,7 +9,9 @@ from .datacube import Datacube
 class XArrayDatacube(Datacube):
     """Xarray arrays are labelled, axes can be defined as strings or integers (e.g. "time" or 0)."""
 
-    def __init__(self, dataarray: xr.DataArray, axis_options=None, compressed_axes_options=[]):
+    def __init__(
+        self, dataarray: xr.DataArray, axis_options=None, compressed_axes_options=[], point_cloud_options=None
+    ):
         super().__init__(axis_options, compressed_axes_options)
         if axis_options is None:
             axis_options = {}
@@ -17,6 +19,7 @@ class XArrayDatacube(Datacube):
         self.axis_counter = 0
         self._axes = None
         self.dataarray = dataarray
+        self.has_point_cloud = point_cloud_options
 
         for name, values in dataarray.coords.variables.items():
             options = None
@@ -49,6 +52,11 @@ class XArrayDatacube(Datacube):
                         options = opt
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
+
+    def find_point_cloud(self):
+        # TODO: somehow, find the point cloud of irregular grid if it exists
+        if self.has_point_cloud:
+            return self.has_point_cloud
 
     def get(self, requests, leaf_path=None, axis_counter=0):
         if leaf_path is None:
@@ -107,9 +115,9 @@ class XArrayDatacube(Datacube):
         for key in path.keys():
             if key not in self.dataarray.dims:
                 path_copy.pop(key)
-            if key not in self.dataarray.coords.dtypes:
+            elif key not in self.dataarray.coords.dtypes:
                 unmapped_path.update({key: path[key]})
-                path_copy.pop(key)
+                path_copy.pop(key, None)
             for key in self.dataarray.coords.dtypes:
                 key_dtype = self.dataarray.coords.dtypes[key]
                 if key_dtype.type is np.str_ and key in path.keys():

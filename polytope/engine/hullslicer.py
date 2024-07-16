@@ -9,7 +9,8 @@ from ..datacube.backends.datacube import Datacube
 from ..datacube.datacube_axis import UnsliceableDatacubeAxis
 from ..datacube.tensor_index_tree import TensorIndexTree
 from ..shapes import ConvexPolytope
-from ..utility.combinatorics import argmax, argmin, group, tensor_product, unique
+from ..utility.combinatorics import argmax, argmin, group, tensor_product
+from ..utility.engine_tools import unique_continuous_points_in_polytope
 from ..utility.exceptions import UnsliceableShapeError
 from ..utility.geometry import lerp
 from .engine import Engine
@@ -19,7 +20,6 @@ class HullSlicer(Engine):
     def __init__(self):
         self.ax_is_unsliceable = {}
         self.axis_values_between = {}
-        self.has_value = {}
         self.sliced_polytopes = {}
         self.remapped_vals = {}
         self.compressed_axes = []
@@ -198,7 +198,7 @@ class HullSlicer(Engine):
 
         # Convert the polytope points to float type to support triangulation and interpolation
         for p in polytopes:
-            self._unique_continuous_points(p, datacube)
+            unique_continuous_points_in_polytope(p, datacube)
 
         groups, input_axes = group(polytopes)
         datacube.validate(input_axes)
@@ -262,6 +262,7 @@ def _reduce_dimension(intersects, slice_axis_idx):
 
 
 def slice(polytope: ConvexPolytope, axis, value, slice_axis_idx):
+    # TODO: maybe these functions should go in the slicing tools?
     if polytope.is_flat:
         if value in chain(*polytope.points):
             intersects = [[value]]

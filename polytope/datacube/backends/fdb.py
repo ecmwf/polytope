@@ -7,7 +7,16 @@ from .datacube import Datacube, TensorIndexTree
 
 
 class FDBDatacube(Datacube):
-    def __init__(self, gj, request, config=None, axis_options=None, compressed_axes_options=[], alternative_axes=[]):
+    def __init__(
+        self,
+        gj,
+        request,
+        config=None,
+        axis_options=None,
+        compressed_axes_options=[],
+        point_cloud_options=None,
+        alternative_axes=[],
+    ):
         if config is None:
             config = {}
 
@@ -17,6 +26,7 @@ class FDBDatacube(Datacube):
 
         self.unwanted_path = {}
         self.axis_options = axis_options
+        self.has_point_cloud = point_cloud_options  # NOTE: here, will be True/False
 
         partial_request = config
         # Find values in the level 3 FDB datacube
@@ -58,6 +68,11 @@ class FDBDatacube(Datacube):
                 self._check_and_add_axes(options, name, val)
 
         logging.info("Polytope created axes for: " + str(self._axes.keys()))
+
+    def find_point_cloud(self):
+        # TODO: somehow, find the point cloud of irregular grid if it exists
+        if self.has_point_cloud:
+            return self.has_point_cloud
 
     def check_branching_axes(self, request):
         polytopes = request.polytopes()
@@ -226,6 +241,7 @@ class FDBDatacube(Datacube):
 
         leaf_path_copy = deepcopy(leaf_path)
         leaf_path_copy.pop("values", None)
+        leaf_path_copy.pop("result")
         return (leaf_path_copy, range_lengths, current_start_idxs, fdb_node_ranges, lat_length)
 
     def get_last_layer_before_leaf(self, requests, leaf_path, range_l, current_idx, fdb_range_n):
@@ -233,7 +249,8 @@ class FDBDatacube(Datacube):
         for c in requests.children:
             fdb_range_n_i = fdb_range_n[i]
             # now c are the leaves of the initial tree
-            key_value_path = {c.axis.name: c.values}
+            key_value_path = {c.axis.name: c.value}
+            leaf_path["result"] = c.result
             ax = c.axis
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
