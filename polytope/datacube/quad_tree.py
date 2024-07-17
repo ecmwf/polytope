@@ -12,19 +12,9 @@ from ..engine.slicing_tools import slice_in_two
 """
 
 
-def normalize_rect(rect):
-    x1, y1, x2, y2 = rect
-    if x1 > x2:
-        x1, x2 = x2, x1
-    if y1 > y2:
-        y1, y2 = y2, y1
-    return (x1, y1, x2, y2)
-
-
 class QuadNode:
     def __init__(self, item, index):
         self.item = item
-        # self.rect = rect
         self.index = index
 
     def is_contained_in(self, polygon):
@@ -51,7 +41,6 @@ class QuadTree:
         self.size = tuple(size)
         self.depth = depth
         self.node_items = set()
-        # self.parent = self
 
     def quadrant_rectangle_points(self):
         return set(
@@ -65,12 +54,7 @@ class QuadTree:
 
     def build_point_tree(self, points):
         # TODO: SLOW, scales linearly with number of points
-        # normalized_points = [(tuple(p), (p[0], p[1], p[0], p[1])) for p in points]
-
-        # for index, (point, p_rect) in enumerate(normalized_points):
-        #     self.insert(point, p_rect, index)
         for index, p in enumerate(points):
-            # p_rect = (p[0], p[1], p[0], p[1])
             self.insert(tuple(p), index)
 
     def pprint(self):
@@ -95,7 +79,6 @@ class QuadTree:
 
     def insert(self, item, index):
 
-        # node_items = [node.item for node in self.nodes]
         if not self.children:
             node = QuadNode(item, index)
             if item not in self.node_items:
@@ -109,38 +92,6 @@ class QuadTree:
             return self.insert_into_children(item, index)
 
     def insert_into_children(self, item, index):
-        # if rect spans center then insert here
-        # NOTE: probably do not need this since rect[0] = rect[2] and rect[1] = rect[3] when we work with points only
-        # so these conditions will never be true
-        # if (rect[0] <= self.center[0] and rect[2] > self.center[0]) and (
-        #     rect[1] <= self.center[1] and rect[3] > self.center[1]
-        # ):
-        #     node = QuadNode(item, rect, index)
-        #     self.nodes.append(node)
-        #     return node
-        # else:
-        #     return_nodes = []
-        #     # try to insert into children
-        #     if rect[0] <= self.center[0]:
-        #         if rect[1] <= self.center[1]:
-        #             self.children[0].insert(item, rect, index)
-        #         if rect[3] >= self.center[1]:
-        #             self.children[1].insert(item, rect, index)
-        #     if rect[2] >= self.center[0]:
-        #         if rect[1] <= self.center[1]:
-        #             self.children[2].insert(item, rect, index)
-        #         if rect[3] >= self.center[1]:
-        #             self.children[3].insert(item, rect, index)
-        #     return return_nodes
-        # if (item[0] <= self.center[0] and item[0] > self.center[0]) and (
-        #     item[1] <= self.center[1] and item[1] > self.center[1]
-        # ):
-        #     node = QuadNode(item, index)
-        #     self.nodes.append(node)
-        #     return node
-        # else:
-        # if True:
-        # return_nodes = []
         # try to insert into children
         if item[0] <= self.center[0]:
             if item[1] <= self.center[1]:
@@ -152,7 +103,6 @@ class QuadTree:
                 self.children[2].insert(item, index)
             if item[1] >= self.center[1]:
                 self.children[3].insert(item, index)
-        # return return_nodes
 
     def split(self):
         half_size = [s / 2 for s in self.size]
@@ -209,9 +159,6 @@ class QuadTree:
                     self.children[2].query_polygon(q3_polygon, results)
                     self.children[3].query_polygon(q4_polygon, results)
 
-                # for node in self.nodes:
-                #     if node.is_contained_in(polygon):
-                #         results.add(node)
                 results.update(node for node in self.nodes if node.is_contained_in(polygon))
 
             return results
