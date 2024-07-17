@@ -68,18 +68,18 @@ class TestQuadTreeSlicer:
         polytope = Box(["lat", "lon"], [1, 1], [20, 30]).polytope()[0]
         results = slicer.quad_tree.query_polygon(polytope)
         assert len(results) == 3
-        assert (10, 10, 10, 10) in [node.rect for node in results]
-        assert (5, 10, 5, 10) in [node.rect for node in results]
-        assert (5, 20, 5, 20) in [node.rect for node in results]
+        assert (10, 10) in [node.item for node in results]
+        assert (5, 10) in [node.item for node in results]
+        assert (5, 20) in [node.item for node in results]
         points = [[10, 10], [80, 10], [-5, 5], [5, 50], [5, 10], [50, 10], [2, 10], [15, 15]]
         slicer = QuadTreeSlicer(points)
         polytope = ConvexPolytope(["lat", "lon"], [[-10, 1], [20, 1], [5, 20]])
         results = slicer.quad_tree.query_polygon(polytope)
         assert len(results) == 4
-        assert (-5, 5, -5, 5) in [node.rect for node in results]
-        assert (5, 10, 5, 10) in [node.rect for node in results]
-        assert (10, 10, 10, 10) in [node.rect for node in results]
-        assert (2, 10, 2, 10) in [node.rect for node in results]
+        assert (-5, 5) in [node.item for node in results]
+        assert (5, 10) in [node.item for node in results]
+        assert (10, 10) in [node.item for node in results]
+        assert (2, 10) in [node.item for node in results]
 
     @pytest.mark.fdb
     def test_slice_in_two_vertically(self):
@@ -97,26 +97,26 @@ class TestQuadTreeSlicer:
 
     @pytest.mark.fdb
     def test_quad_node_is_contained_in_box(self):
-        node = QuadNode(1, [1, 1, 1, 1], 0)
+        node = QuadNode([1, 1], 0)
         polytope = Box(["lat", "lon"], [0, 0], [2, 2]).polytope()[0]
         assert node.is_contained_in(polytope)
-        second_node = QuadNode(1, [3, 3, 3, 3], 0)
+        second_node = QuadNode([3, 3], 0)
         assert not second_node.is_contained_in(polytope)
-        third_node = QuadNode(1, [1, 0, 1, 0], 0)
+        third_node = QuadNode([1, 0], 0)
         assert third_node.is_contained_in(polytope)
 
     @pytest.mark.fdb
     def test_quad_node_is_contained_in_triangle(self):
-        node = QuadNode(1, [1, 1, 1, 1], 0)
+        node = QuadNode([1, 1], 0)
         polytope = ConvexPolytope(["lat", "lon"], [[0, 0], [1, 1], [2, 0]])
         assert node.is_contained_in(polytope)
-        node = QuadNode(1, [1, 0.5, 1, 0.5], 0)
+        node = QuadNode([1, 0.5], 0)
         assert node.is_contained_in(polytope)
-        second_node = QuadNode(1, [3, 3, 3, 3], 0)
+        second_node = QuadNode([3, 3], 0)
         assert not second_node.is_contained_in(polytope)
-        third_node = QuadNode(1, [1, 0, 1, 0], 0)
+        third_node = QuadNode([1, 0], 0)
         assert third_node.is_contained_in(polytope)
-        third_node = QuadNode(1, [0.1, 0.5, 0.1, 0.5], 0)
+        third_node = QuadNode([0.1, 0.5], 0)
         assert not third_node.is_contained_in(polytope)
 
     @pytest.mark.fdb

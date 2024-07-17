@@ -79,8 +79,8 @@ class QuadTreeSlicer(Engine):
         for point in extracted_points:
             # convert to float for slicing
             value = point.index
-            lat_val = point.rect[0]
-            lon_val = point.rect[1]
+            lat_val = point.item[0]
+            lon_val = point.item[1]
             # values_axis = IntDatacubeAxis()
             lat_ax = ax
 
