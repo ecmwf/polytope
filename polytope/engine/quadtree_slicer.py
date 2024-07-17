@@ -33,7 +33,7 @@ class QuadTreeSlicer(Engine):
             values_axis.name = "values"
             result = point.item
             # TODO: make finding the axes objects nicer?
-            child = request.create_child(values_axis, idx)
+            (child, _) = request.create_child(values_axis, idx, [])
             child.result = result
 
         # NOTE: code for getting lat/lon instead of point indices
@@ -91,10 +91,10 @@ class QuadTreeSlicer(Engine):
 
             # store the native type
             # child = node.create_child(ax, value)
-            child = node.create_child(lat_ax, lat_val)
-            grand_child = child.create_child(lon_ax, lon_val)
+            (child, _) = node.create_child(lat_ax, lat_val, [])
+            (grand_child , _) = child.create_child(lon_ax, lon_val, [])
             # NOTE: the index of the point is stashed in the branches' result
-            grand_child.result = value
+            grand_child.indexes = [value]
             grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             grand_child["unsliced_polytopes"].remove(polytope)
             # child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])

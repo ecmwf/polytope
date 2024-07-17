@@ -12,4 +12,4 @@ class IrregularGridMapper(DatacubeMapper):
     def unmap(self, first_val, second_val, unmapped_idx=None):
         # TODO: But to unmap for the irregular grid, need the request tree
         # Suppose we get the idx value somehow from the tree, as an idx input
-        return unmapped_idx
+        return unmapped_idx[0]

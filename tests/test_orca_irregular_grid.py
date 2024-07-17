@@ -22,23 +22,23 @@ class TestQuadTreeSlicer:
             "oceanModelLayer": "hullslicer",
             "valid_time": "hullslicer",
         }
-        arr = xr.open_dataset("../../Downloads/Reference_eORCA12_U_to_HEALPix_32.grib", engine="cfgrib").avg_uo
-        self.latitudes = arr.latitude.values
-        self.longitudes = arr.longitude.values
+        self.arr = xr.open_dataset("../../Downloads/Reference_eORCA12_U_to_HEALPix_32.grib", engine="cfgrib").avg_uo
+        self.latitudes = self.arr.latitude.values
+        self.longitudes = self.arr.longitude.values
         self.points = list(zip(self.latitudes, self.longitudes))
         self.options = {
-            "values": {"mapper": {"type": "irregular", "resolution": 1280, "axes": ["latitude", "longitude"]}},
+            "axis_config": [
+                {
+                    "axis_name": "values",
+                    "transformations": [
+                        {"name": "mapper", "type": "irregular", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                    ],
+                },
+            ],
         }
-        print(arr)
+        print(self.arr)
         # self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
         # self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options, point_cloud_options=self.points)
-        self.API = Polytope(
-            datacube=arr,
-            engine=self.slicer,
-            axis_options=self.options,
-            engine_options=self.engine_options,
-            point_cloud_options=self.points,
-        )
 
     @pytest.mark.fdb
     def test_quad_tree_slicer_extract(self):
@@ -48,6 +48,15 @@ class TestQuadTreeSlicer:
             Select("time", [pd.Timestamp("2017-09-06T00:00:00.000000000")]),
             Select("valid_time", [pd.Timestamp("2017-09-06T00:00:00.000000000")]),
             Box(["latitude", "longitude"], [65, 270], [75, 300]),
+        )
+
+        self.API = Polytope(
+            request=request,
+            datacube=self.arr,
+            engine=self.slicer,
+            options=self.options,
+            engine_options=self.engine_options,
+            point_cloud_options=self.points,
         )
         import time
 
@@ -66,8 +75,8 @@ class TestQuadTreeSlicer:
         tol = 1e-8
         for i in range(len(result.leaves)):
             cubepath = result.leaves[i].flatten()
-            lat = cubepath["latitude"]
-            lon = cubepath["longitude"] - 360
+            lat = cubepath["latitude"][0]
+            lon = cubepath["longitude"][0] - 360
             lats.append(lat)
             lons.append(lon)
             nearest_points = find_nearest_latlon("../../Downloads/Reference_eORCA12_U_to_HEALPix_32.grib", lat, lon)

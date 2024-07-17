@@ -74,6 +74,8 @@ class XArrayDatacube(Datacube):
             if len(requests.children) != 0:
                 # We are not a leaf and we loop over
                 for c in requests.children:
+                    if axis_counter == self.axis_counter - 1:
+                        leaf_path["index"] = c.indexes
                     self.get(c, leaf_path, axis_counter + 1)
             else:
                 if self.axis_counter != axis_counter:
@@ -82,9 +84,12 @@ class XArrayDatacube(Datacube):
                     # We are at a leaf and need to assign value to it
                     leaf_path_copy = deepcopy(leaf_path)
                     unmapped_path = {}
+                    print(leaf_path_copy)
                     self.refit_path(leaf_path_copy, unmapped_path, leaf_path)
+                    print(leaf_path_copy)
                     for key in leaf_path_copy:
-                        leaf_path_copy[key] = list(leaf_path_copy[key])
+                        if isinstance(leaf_path_copy[key], tuple):
+                            leaf_path_copy[key] = list(leaf_path_copy[key])
                     for key in unmapped_path:
                         if isinstance(unmapped_path[key], tuple):
                             unmapped_path[key] = list(unmapped_path[key])

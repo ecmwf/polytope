@@ -69,6 +69,7 @@ class TestPolytopeExtract:
     @pytest.mark.fdb
     def test_2D_box(self):
         import pygribjump as gj
+
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -89,14 +90,14 @@ class TestPolytopeExtract:
             engine=self.slicer,
             options=self.options,
             engine_options=self.engine_options,
-            point_cloud_options=self.quadtree_points
+            point_cloud_options=self.quadtree_points,
         )
         result = self.API.retrieve(request)
 
         assert len(result.leaves) == 3
-        assert result.leaves[0].flatten()["longitude"] == 0
-        assert result.leaves[0].flatten()["latitude"] == 0.035149384216
-        assert result.leaves[1].flatten()["longitude"] == 10
-        assert result.leaves[1].flatten()["latitude"] == 5
-        assert result.leaves[2].flatten()["longitude"] == 10
-        assert result.leaves[2].flatten()["latitude"] == 10
+        assert result.leaves[0].flatten()["longitude"] == (0,)
+        assert result.leaves[0].flatten()["latitude"] == (0.035149384216,)
+        assert result.leaves[1].flatten()["longitude"] == (10,)
+        assert result.leaves[1].flatten()["latitude"] == (5,)
+        assert result.leaves[2].flatten()["longitude"] == (10,)
+        assert result.leaves[2].flatten()["latitude"] == (10,)
