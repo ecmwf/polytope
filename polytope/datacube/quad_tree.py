@@ -121,90 +121,64 @@ class QuadTree:
             # try to insert into children
             if rect[0] <= self.center[0]:
                 if rect[1] <= self.center[1]:
-                    # return self.children[0].insert(item, rect, index)
                     self.children[0].insert(item, rect, index)
-                    # new_nodes = self.children[0].insert(item, rect, index)
-                    # return_nodes.extend(new_nodes)
                 if rect[3] >= self.center[1]:
-                    # return self.children[1].insert(item, rect, index)
                     self.children[1].insert(item, rect, index)
-                    # new_nodes = self.children[1].insert(item, rect, index)
-                    # return_nodes.extend(new_nodes)
             if rect[2] >= self.center[0]:
                 if rect[1] <= self.center[1]:
-                    # return self.children[2].insert(item, rect, index)
                     self.children[2].insert(item, rect, index)
-                    # new_nodes = self.children[2].insert(item, rect, index)
-                    # return_nodes.extend(new_nodes)
                 if rect[3] >= self.center[1]:
                     self.children[3].insert(item, rect, index)
             return return_nodes
 
     def split(self):
-        self.children = [
-            QuadTree(
-                self.center[0] - self.size[0] / 2,
-                self.center[1] - self.size[1] / 2,
-                [s / 2 for s in self.size],
-                self.depth + 1,
-            ),
-            QuadTree(
-                self.center[0] - self.size[0] / 2,
-                self.center[1] + self.size[1] / 2,
-                [s / 2 for s in self.size],
-                self.depth + 1,
-            ),
-            QuadTree(
-                self.center[0] + self.size[0] / 2,
-                self.center[1] - self.size[1] / 2,
-                [s / 2 for s in self.size],
-                self.depth + 1,
-            ),
-            QuadTree(
-                self.center[0] + self.size[0] / 2,
-                self.center[1] + self.size[1] / 2,
-                [s / 2 for s in self.size],
-                self.depth + 1,
-            ),
+        half_size = [s / 2 for s in self.size]
+        x_center, y_center = self.center[0], self.center[1]
+        hx, hy = half_size[0], half_size[1]
+
+        new_centers = [
+            (x_center - hx, y_center - hy),
+            (x_center - hx, y_center + hy),
+            (x_center + hx, y_center - hy),
+            (x_center + hx, y_center + hy),
         ]
+
+        self.children = [
+            QuadTree(new_center[0], new_center[1], half_size, self.depth + 1)
+            for new_center in new_centers
+        ]
+
+        # self.children = [
+        #     QuadTree(
+        #         self.center[0] - self.size[0] / 2,
+        #         self.center[1] - self.size[1] / 2,
+        #         [s / 2 for s in self.size],
+        #         self.depth + 1,
+        #     ),
+        #     QuadTree(
+        #         self.center[0] - self.size[0] / 2,
+        #         self.center[1] + self.size[1] / 2,
+        #         [s / 2 for s in self.size],
+        #         self.depth + 1,
+        #     ),
+        #     QuadTree(
+        #         self.center[0] + self.size[0] / 2,
+        #         self.center[1] - self.size[1] / 2,
+        #         [s / 2 for s in self.size],
+        #         self.depth + 1,
+        #     ),
+        #     QuadTree(
+        #         self.center[0] + self.size[0] / 2,
+        #         self.center[1] + self.size[1] / 2,
+        #         [s / 2 for s in self.size],
+        #         self.depth + 1,
+        #     ),
+        # ]
 
         nodes = self.nodes
         self.nodes = []
         for node in nodes:
             self.insert_into_children(node.item, node.rect, node.index)
-
-    # def query_polygon(self, polygon, results=None):
-    #     # intersect quad tree with a 2D polygon
-    #     if results is None:
-    #         results = set()
-
-    #     # intersect the children with the polygon
-    #     # TODO: here, we create None polygons... think about how to handle them
-    #     if polygon is None:
-    #         pass
-    #     else:
-    #         if len(self.children) > 0:
-
-    #             # first slice vertically
-    #             left_polygon, right_polygon = slice_in_two(polygon, self.center[0], 0)
-
-    #             # then slice horizontally
-    #             # ie need to slice the left and right polygons each in two to have the 4 quadrant polygons
-
-    #             q1_polygon, q2_polygon = slice_in_two(left_polygon, self.center[1], 1)
-    #             q3_polygon, q4_polygon = slice_in_two(right_polygon, self.center[1], 1)
-
-    #             # now query these 4 polygons further down the quadtree
-    #             self.children[0].query_polygon(q1_polygon, results)
-    #             self.children[1].query_polygon(q2_polygon, results)
-    #             self.children[2].query_polygon(q3_polygon, results)
-    #             self.children[3].query_polygon(q4_polygon, results)
-
-    #         for node in self.nodes:
-    #             if node.is_contained_in(polygon):
-    #                 results.add(node)
-
-    #         return results
 
     def query_polygon(self, polygon, results=None):
         # intersect quad tree with a 2D polygon
