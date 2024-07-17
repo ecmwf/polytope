@@ -142,7 +142,7 @@ class TestQuadTreeSlicer:
         assert len(tree.leaves) == 4
         tree.pprint()
 
-    @pytest.mark.skip("performance test")
+    # @pytest.mark.skip("performance test")
     @pytest.mark.fdb
     def test_large_scale_extraction(self):
         import time
@@ -157,10 +157,20 @@ class TestQuadTreeSlicer:
         Y = Y.reshape((np.prod(Y.shape),))
         coords = zip(X, Y)
         points = [list(coord) for coord in coords]
+        time0 = time.time()
         slicer = QuadTreeSlicer(points)
+        print(time.time() - time0)
         polytope = Box(["latitude", "longitude"], [1, 1], [20, 30]).polytope()[0]
+        self.API = Polytope(
+            request=Request(polytope),
+            datacube=self.fdbdatacube,
+            engine=slicer,
+            options=self.options,
+            engine_options={"latitude": "quadtree", "longitude": "quadtree"},
+            point_cloud_options=points,
+        )
         time1 = time.time()
-        tree = slicer.extract(self.datacube, [polytope])
+        tree = slicer.extract(self.API.datacube, [polytope])
         print(time.time() - time1)  # = 5.919436931610107
         print(len(tree.leaves))  # = 55100
         # NOTE: maybe for 2D qhull here, scipy is not the fastest

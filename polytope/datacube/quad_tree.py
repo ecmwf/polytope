@@ -51,6 +51,7 @@ class QuadTree:
         self.center = [x, y]
         self.size = size
         self.depth = depth
+        self.node_items = set()
         # self.parent = self
 
     def quadrant_rectangle_points(self):
@@ -64,9 +65,10 @@ class QuadTree:
         )
 
     def build_point_tree(self, points):
+        # TODO: SLOW, scales linearly with number of points
         for index, p in enumerate(points):
             p_rect = (p[0], p[1], p[0], p[1])
-            self.insert(p, p_rect, index)
+            self.insert(tuple(p), p_rect, index)
 
     def pprint(self):
         if self.depth == 0:
@@ -91,10 +93,12 @@ class QuadTree:
     def insert(self, item, rect, index):
         rect = normalize_rect(rect)
 
+        # node_items = [node.item for node in self.nodes]
         if len(self.children) == 0:
             node = QuadNode(item, rect, index)
-            if item not in [node.item for node in self.nodes]:
+            if item not in self.node_items:
                 self.nodes.append(node)
+                self.node_items.add(node.item)
 
             if len(self.nodes) > self.MAX and self.depth < self.MAX_DEPTH:
                 self.split()
