@@ -293,7 +293,9 @@ class PathSegment(Shape):
             for p in polytope.points:
                 points.append([a + b for a, b in zip(p, start)])
                 points.append([a + b for a, b in zip(p, end)])
-            self.polytopes.append(ConvexPolytope(self.axes(), points))
+            poly = ConvexPolytope(self.axes(), points)
+            poly.add_to_union()
+            self.polytopes.append(poly)
 
     def axes(self):
         return self._axes
@@ -384,7 +386,9 @@ class Polygon(Shape):
         else:
             for t in triangles:
                 tri_points = [list(point) for point in t]
-                self.polytopes.append(ConvexPolytope(self.axes(), tri_points))
+                poly = ConvexPolytope(self.axes(), tri_points)
+                poly.add_to_union()
+                self.polytopes.append(poly)
 
     def axes(self):
         return self._axes

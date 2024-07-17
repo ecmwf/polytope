@@ -72,7 +72,7 @@ class Datacube(ABC):
         if len(final_axis_names) > 1:
             self.coupled_axes.append(final_axis_names)
             for axis in final_axis_names:
-                if axis in self.compressed_axes:
+                if axis in self.compressed_axes and axis != final_axis_names[-1]:
                     self.compressed_axes.remove(axis)
         for axis_name in final_axis_names:
             self.fake_axes.append(axis_name)
