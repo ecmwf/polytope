@@ -110,26 +110,51 @@ class QuadTree:
         # if rect spans center then insert here
         # NOTE: probably do not need this since rect[0] = rect[2] and rect[1] = rect[3] when we work with points only
         # so these conditions will never be true
-        if (rect[0] <= self.center[0] and rect[2] > self.center[0]) and (
-            rect[1] <= self.center[1] and rect[3] > self.center[1]
-        ):
+        # if (rect[0] <= self.center[0] and rect[2] > self.center[0]) and (
+        #     rect[1] <= self.center[1] and rect[3] > self.center[1]
+        # ):
+        #     node = QuadNode(item, rect, index)
+        #     self.nodes.append(node)
+        #     return node
+        # else:
+        #     return_nodes = []
+        #     # try to insert into children
+        #     if rect[0] <= self.center[0]:
+        #         if rect[1] <= self.center[1]:
+        #             self.children[0].insert(item, rect, index)
+        #         if rect[3] >= self.center[1]:
+        #             self.children[1].insert(item, rect, index)
+        #     if rect[2] >= self.center[0]:
+        #         if rect[1] <= self.center[1]:
+        #             self.children[2].insert(item, rect, index)
+        #         if rect[3] >= self.center[1]:
+        #             self.children[3].insert(item, rect, index)
+        #     return return_nodes
+        x_center, y_center = self.center
+
+        # Check if the rect spans the center
+        if (rect[0] <= x_center < rect[2]) and (rect[1] <= y_center < rect[3]):
             node = QuadNode(item, rect, index)
             self.nodes.append(node)
             return node
         else:
-            return_nodes = []
-            # try to insert into children
-            if rect[0] <= self.center[0]:
-                if rect[1] <= self.center[1]:
-                    self.children[0].insert(item, rect, index)
-                if rect[3] >= self.center[1]:
-                    self.children[1].insert(item, rect, index)
-            if rect[2] >= self.center[0]:
-                if rect[1] <= self.center[1]:
-                    self.children[2].insert(item, rect, index)
-                if rect[3] >= self.center[1]:
-                    self.children[3].insert(item, rect, index)
-            return return_nodes
+            # Conditions to check for each child
+            left = rect[0] <= x_center
+            right = rect[2] > x_center
+            bottom = rect[1] <= y_center
+            top = rect[3] > y_center
+
+            # Insert into the appropriate children
+            if left and bottom:
+                self.children[0].insert(item, rect, index)
+            if left and top:
+                self.children[1].insert(item, rect, index)
+            if right and bottom:
+                self.children[2].insert(item, rect, index)
+            if right and top:
+                self.children[3].insert(item, rect, index)
+
+            return []
 
     def split(self):
         half_size = [s / 2 for s in self.size]
