@@ -66,7 +66,6 @@ class Polytope:
         self.compressed_axes = []
 
         axis_options, compressed_axes_options, config, alternative_axes = PolytopeOptions.get_polytope_options(options)
-
         self.datacube = Datacube.create(
             request,
             datacube,

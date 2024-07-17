@@ -8,7 +8,7 @@ from polytope.shapes import Box, Select
 
 class TestPolytopeExtract:
     def setup_method(self, method):
-        from polytope.datacube.backends.fdb import FDBDatacube
+        # from polytope.datacube.backends.fdb import FDBDatacube
 
         # Create a dataarray with 3 labelled axes using different index types
         self.slicer = HullSlicer()
@@ -25,26 +25,50 @@ class TestPolytopeExtract:
             "expver": "hullslicer",
             "domain": "hullslicer",
         }
-        quadtree_points = [[10, 10], [0.035149384216, 0.0], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
+        self.quadtree_points = [[10, 10], [0.035149384216, 0.0], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
         self.options = {
-            "values": {"mapper": {"type": "irregular", "resolution": 1280, "axes": ["latitude", "longitude"]}},
-            "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
-            "step": {"type_change": "int"},
-            "number": {"type_change": "int"},
+            "axis_config": [
+                {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
+                {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
+                {
+                    "axis_name": "date",
+                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
+                },
+                {
+                    "axis_name": "values",
+                    "transformations": [
+                        {"name": "mapper", "type": "irregular", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                    ],
+                },
+            ],
+            "compressed_axes_config": [
+                "longitude",
+                "latitude",
+                "levtype",
+                "step",
+                "date",
+                "domain",
+                "expver",
+                "param",
+                "class",
+                "stream",
+                "type",
+            ],
+            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
         }
-        self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
-        self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options, point_cloud_options=quadtree_points)
-        self.API = Polytope(
-            datacube=self.fdbdatacube,
-            engine=self.slicer,
-            axis_options=self.options,
-            engine_options=self.engine_options,
-            point_cloud_options=quadtree_points,
-        )
+        # self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options, point_cloud_options=quadtree_points)
+        # self.API = Polytope(
+        #     datacube=self.fdbdatacube,
+        #     engine=self.slicer,
+        #     axis_options=self.options,
+        #     engine_options=self.engine_options,
+        #     point_cloud_options=quadtree_points,
+        # )
 
     # Testing different shapes
     @pytest.mark.fdb
     def test_2D_box(self):
+        import pygribjump as gj
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -56,6 +80,16 @@ class TestPolytopeExtract:
             Select("stream", ["oper"]),
             Select("type", ["an"]),
             Box(["latitude", "longitude"], [0, -0.1], [10, 10]),
+        )
+        self.fdbdatacube = gj.GribJump()
+        self.slicer = HullSlicer()
+        self.API = Polytope(
+            request=request,
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            options=self.options,
+            engine_options=self.engine_options,
+            point_cloud_options=self.quadtree_points
         )
         result = self.API.retrieve(request)
 

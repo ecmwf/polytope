@@ -166,7 +166,7 @@ class Datacube(ABC):
             from .fdb import FDBDatacube
 
             fdbdatacube = FDBDatacube(
-                datacube, request, config, axis_options, compressed_axes_options, alternative_axes
+                datacube, request, config, axis_options, compressed_axes_options, point_cloud_options, alternative_axes
             )
             return fdbdatacube
         else:

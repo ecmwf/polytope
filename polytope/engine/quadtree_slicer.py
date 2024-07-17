@@ -58,7 +58,7 @@ class QuadTreeSlicer(Engine):
         polygon_points = self.quad_tree.query_polygon(polytope)
         return polygon_points
 
-    def _build_branch(self, ax, node, datacube, next_nodes):
+    def _build_branch(self, ax, node, datacube, next_nodes, engine):
         for polytope in node["unsliced_polytopes"]:
             if ax.name in polytope._axes:
                 # here, first check if the axis is an unsliceable axis and directly build node if it is
