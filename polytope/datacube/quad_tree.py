@@ -92,16 +92,18 @@ class QuadTree:
             return self.insert_into_children(item, index)
 
     def insert_into_children(self, item, index):
+        x, y = item
+        cx, cy = self.center
         # try to insert into children
-        if item[0] <= self.center[0]:
-            if item[1] <= self.center[1]:
+        if x <= cx:
+            if y <= cy:
                 self.children[0].insert(item, index)
-            if item[1] >= self.center[1]:
+            if y >= cy:
                 self.children[1].insert(item, index)
-        if item[0] >= self.center[0]:
-            if item[1] <= self.center[1]:
+        if x >= cx:
+            if y <= cy:
                 self.children[2].insert(item, index)
-            if item[1] >= self.center[1]:
+            if y >= cy:
                 self.children[3].insert(item, index)
 
     def split(self):
