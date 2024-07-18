@@ -76,13 +76,8 @@ class TensorIndexTree(object):
                 if isinstance(self.axis, UnsliceableDatacubeAxis):
                     return False
                 else:
-                    if len(other.values) != len(self.values):
+                    if len(other.values) != len(self.values) or other.values != self.values:
                         return False
-                    for i in range(len(other.values)):
-                        other_val = other.values[i]
-                        self_val = self.values[i]
-                        if abs(other_val - self_val) > 2 * max(other.axis.tol, self.axis.tol):
-                            return False
                     return True
 
     def __lt__(self, other):
