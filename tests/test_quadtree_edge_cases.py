@@ -1,6 +1,5 @@
 import pytest
 
-from polytope.engine.quadtree_slicer import QuadTreeSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box
 
@@ -46,17 +45,15 @@ class TestQuadTreeSlicer:
     @pytest.mark.fdb
     def test_quad_tree_slicer_extract(self):
         points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10], [0.035149384216, 0.0]]
-        slicer = QuadTreeSlicer(points)
         polytope = Box(["latitude", "longitude"], [0, 0], [15, 15]).polytope()[0]
         self.API = Polytope(
             request=Request(polytope),
             datacube=self.fdbdatacube,
-            engine=slicer,
             options=self.options,
             engine_options={"latitude": "quadtree", "longitude": "quadtree"},
             point_cloud_options=points,
         )
-        tree = slicer.extract(self.API.datacube, [polytope])
+        tree = self.API.engines["quadtree"].extract(self.API.datacube, [polytope])
         tree.pprint()
         assert len(tree.leaves) == 3
         assert set([leaf.flatten()["values"] for leaf in tree.leaves]) == set([(0,), (4,), (6,)])

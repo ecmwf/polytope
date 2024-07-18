@@ -1,7 +1,6 @@
 import pandas as pd
 import pytest
 
-from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Point, Select
 
@@ -66,11 +65,9 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[-20, -20]]),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             request=request,
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -96,11 +93,9 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[-20, 50 + 360]]),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             request=request,
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)

@@ -1,14 +1,12 @@
 from typing import List
 
+from .datacube.backends.datacube import Datacube
+from .datacube.datacube_axis import UnsliceableDatacubeAxis
 from .datacube.tensor_index_tree import TensorIndexTree
 from .engine.hullslicer import HullSlicer
 from .engine.quadtree_slicer import QuadTreeSlicer
 from .options import PolytopeOptions
 from .shapes import ConvexPolytope
-from .datacube.backends.datacube import Datacube
-from .datacube.datacube_axis import UnsliceableDatacubeAxis
-
-# from .utility.engine_tools import find_polytope_combinations
 from .utility.combinatorics import group, tensor_product, unique
 from .utility.exceptions import AxisOverdefinedError
 
@@ -50,13 +48,14 @@ class Polytope:
         self,
         request,
         datacube,
-        engine=None,
+        # engine=None,
         options=None,
         engine_options=None,
         point_cloud_options=None,
     ):
         from .datacube import Datacube
-        from .engine import Engine
+
+        # from .engine import Engine
 
         if options is None:
             options = {}
@@ -75,7 +74,7 @@ class Polytope:
             point_cloud_options,
             alternative_axes,
         )
-        self.engine = engine if engine is not None else Engine.default()
+        # self.engine = engine if engine is not None else Engine.default()
         if engine_options == {}:
             for ax_name in self.datacube._axes.keys():
                 engine_options[ax_name] = "hullslicer"
@@ -94,7 +93,7 @@ class Polytope:
         if "hullslicer" in engine_types:
             engines["hullslicer"] = HullSlicer()
         return engines
-    
+
     def _unique_continuous_points(self, p: ConvexPolytope, datacube: Datacube):
         for i, ax in enumerate(p._axes):
             mapper = datacube.get_mapper(ax)

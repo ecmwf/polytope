@@ -2,7 +2,6 @@ import pandas as pd
 import pytest
 from helper_functions import download_test_data, find_nearest_latlon
 
-from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Disk, Select
 
@@ -69,11 +68,9 @@ class TestRegularGrid:
             Select("number", ["0", "1"]),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             request=request,
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)

@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Point, Select
 
@@ -19,9 +18,8 @@ class TestSlicing3DXarrayDatacube:
                 "level": range(1, 130),
             },
         )
-        self.slicer = HullSlicer()
         options = {"compressed_axes_config": ["level", "step", "date"]}
-        self.API = Polytope(request={}, datacube=array, engine=self.slicer, options=options)
+        self.API = Polytope(request={}, datacube=array, options=options)
 
     def test_point(self):
         request = Request(Point(["step", "level"], [[3, 10]]), Select("date", ["2000-01-01"]))

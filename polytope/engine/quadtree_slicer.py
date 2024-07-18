@@ -92,7 +92,7 @@ class QuadTreeSlicer(Engine):
             # store the native type
             # child = node.create_child(ax, value)
             (child, _) = node.create_child(lat_ax, lat_val, [])
-            (grand_child , _) = child.create_child(lon_ax, lon_val, [])
+            (grand_child, _) = child.create_child(lon_ax, lon_val, [])
             # NOTE: the index of the point is stashed in the branches' result
             grand_child.indexes = [value]
             grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])

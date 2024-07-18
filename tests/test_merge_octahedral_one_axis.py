@@ -2,7 +2,6 @@ import pytest
 from earthkit import data
 from helper_functions import download_test_data
 
-from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
 
@@ -28,11 +27,9 @@ class TestSlicingMultipleTransformationsOneAxis:
             ],
             "compressed_axes_config": ["longitude", "latitude", "surface", "step", "time", "valid_time", "number"],
         }
-        self.slicer = HullSlicer()
         self.API = Polytope(
             request={},
             datacube=self.latlon_array,
-            engine=self.slicer,
             options=self.options,
         )
 

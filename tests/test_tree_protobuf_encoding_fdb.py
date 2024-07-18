@@ -12,7 +12,6 @@ class TestEncoder:
     def test_encoding(self):
         import pygribjump as gj
 
-        from polytope.engine.hullslicer import HullSlicer
         from polytope.polytope import Polytope, Request
         from polytope.shapes import Box, Select
 
@@ -61,11 +60,9 @@ class TestEncoder:
             "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
         }
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             request=request,
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)

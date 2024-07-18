@@ -1,8 +1,9 @@
+import numpy as np
+import pygribjump as gj
+
 from polytope.engine.quadtree_slicer import QuadTreeSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box
-
-import pygribjump as gj
 
 options = {
     "axis_config": [
@@ -35,8 +36,6 @@ options = {
     "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
 }
 fdbdatacube = gj.GribJump()
-
-import numpy as np
 
 x = np.linspace(0, 100, 1000)
 y = np.linspace(0, 100, 1000)

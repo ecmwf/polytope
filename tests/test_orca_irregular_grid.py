@@ -6,14 +6,12 @@ import pytest
 import xarray as xr
 from helper_functions import find_nearest_latlon
 
-from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
 
 
 class TestQuadTreeSlicer:
     def setup_method(self, method):
-        self.slicer = HullSlicer()
         self.engine_options = {
             "step": "hullslicer",
             "time": "hullslicer",
@@ -53,7 +51,6 @@ class TestQuadTreeSlicer:
         self.API = Polytope(
             request=request,
             datacube=self.arr,
-            engine=self.slicer,
             options=self.options,
             engine_options=self.engine_options,
             point_cloud_options=self.points,

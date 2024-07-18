@@ -1,7 +1,6 @@
 import pandas as pd
 import pytest
 
-from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Point, Select
 
@@ -60,11 +59,9 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[0.16, 0.176]], method="nearest"),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             request=request,
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -87,11 +84,9 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[0.175746921078, 0.210608424337]], method="nearest"),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             request=request,
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -115,11 +110,9 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[0.035149384216, 0.0]], method="nearest"),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             request=request,
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -143,11 +136,9 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[0.035149384216, -0.01]], method="nearest"),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             request=request,
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -173,11 +164,9 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[0.035149384216, 360 - 0.01]], method="nearest"),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             request=request,
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -203,11 +192,9 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[0.035149384216, 359.97]], method="nearest"),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             request=request,
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)

@@ -3,7 +3,6 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import All, Select, Span
 
@@ -25,11 +24,9 @@ class TestSlicing3DXarrayDatacube:
             "axis_config": [{"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]}],
             "compressed_axes_config": ["date", "step", "level", "longitude"],
         }
-        self.slicer = HullSlicer()
         self.API = Polytope(
             request={},
             datacube=array,
-            engine=self.slicer,
             options=self.options,
         )
 
@@ -71,7 +68,6 @@ class TestSlicing3DXarrayDatacube:
             "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
         }
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
 
         request = Request(
             Select("step", [11]),
@@ -86,7 +82,7 @@ class TestSlicing3DXarrayDatacube:
             Span("latitude", 89.9, 90),
             All("longitude"),
         )
-        self.API = Polytope(request=request, datacube=self.fdbdatacube, engine=self.slicer, options=self.options)
+        self.API = Polytope(request=request, datacube=self.fdbdatacube, options=self.options)
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 20

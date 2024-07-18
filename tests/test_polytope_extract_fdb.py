@@ -1,7 +1,6 @@
 import pandas as pd
 import pytest
 
-from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
 
@@ -11,7 +10,6 @@ class TestPolytopeExtract:
         # from polytope.datacube.backends.fdb import FDBDatacube
 
         # Create a dataarray with 3 labelled axes using different index types
-        self.slicer = HullSlicer()
         self.engine_options = {
             "step": "hullslicer",
             "levtype": "hullslicer",
@@ -56,14 +54,6 @@ class TestPolytopeExtract:
             ],
             "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
         }
-        # self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options, point_cloud_options=quadtree_points)
-        # self.API = Polytope(
-        #     datacube=self.fdbdatacube,
-        #     engine=self.slicer,
-        #     axis_options=self.options,
-        #     engine_options=self.engine_options,
-        #     point_cloud_options=quadtree_points,
-        # )
 
     # Testing different shapes
     @pytest.mark.fdb
@@ -83,11 +73,9 @@ class TestPolytopeExtract:
             Box(["latitude", "longitude"], [0, -0.1], [10, 10]),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             request=request,
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
             engine_options=self.engine_options,
             point_cloud_options=self.quadtree_points,

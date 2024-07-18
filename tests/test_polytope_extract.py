@@ -1,8 +1,6 @@
 import numpy as np
 import xarray as xr
 
-# from polytope.datacube.backends.xarray import XArrayDatacube
-from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box
 
@@ -19,8 +17,6 @@ class TestPolytopeExtract:
                 "values": range(0, 100),
             },
         )
-        # self.xarraydatacube = XArrayDatacube(array)
-        self.slicer = HullSlicer()
         self.engine_options = {
             "step": "hullslicer",
             "level": "hullslicer",
@@ -38,13 +34,6 @@ class TestPolytopeExtract:
                 },
             ],
         }
-        # self.API = Polytope(
-        #     datacube=array,
-        #     engine=self.slicer,
-        #     axis_options=self.options,
-        #     engine_options=self.engine_options,
-        #     point_cloud_options=quadtree_points,
-        # )
 
     # Testing different shapes
 
@@ -53,7 +42,6 @@ class TestPolytopeExtract:
         self.API = Polytope(
             request=request,
             datacube=self.array,
-            engine=self.slicer,
             options=self.options,
             engine_options=self.engine_options,
             point_cloud_options=self.quadtree_points,

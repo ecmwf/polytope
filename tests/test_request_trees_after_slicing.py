@@ -3,7 +3,6 @@ import xarray as xr
 
 from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.datacube.datacube_axis import IntDatacubeAxis
-from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope
 from polytope.shapes import Box
 
@@ -19,9 +18,8 @@ class TestIndexTreesAfterSlicing:
             },
         )
         self.xarraydatacube = XArrayDatacube(array)
-        self.slicer = HullSlicer()
         options = {"compressed_axes_config": ["level", "step"]}
-        self.API = Polytope(request={}, datacube=array, engine=self.slicer, options=options)
+        self.API = Polytope(request={}, datacube=array, options=options)
 
     def test_path_values(self):
         box = Box(["step", "level"], [3.0, 1.0], [6.0, 3.0])

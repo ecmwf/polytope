@@ -5,7 +5,6 @@ from helper_functions import download_test_data, find_nearest_latlon
 from polytope.datacube.transformations.datacube_mappers.mapper_types.healpix import (
     HealpixGridMapper,
 )
-from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
 
@@ -30,11 +29,9 @@ class TestOctahedralGrid:
             ],
             "compressed_axes_config": ["longitude", "latitude", "step", "time", "isobaricInhPa", "valid_time"],
         }
-        self.slicer = HullSlicer()
         self.API = Polytope(
             request={},
             datacube=self.latlon_array,
-            engine=self.slicer,
             options=self.options,
         )
 

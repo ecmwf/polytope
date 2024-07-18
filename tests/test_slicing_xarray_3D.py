@@ -7,7 +7,6 @@ import xarray as xr
 
 from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.datacube.tensor_index_tree import TensorIndexTree
-from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import (
     Box,
@@ -34,9 +33,8 @@ class TestSlicing3DXarrayDatacube:
             },
         )
         self.xarraydatacube = XArrayDatacube(array)
-        self.slicer = HullSlicer()
         options = {"compressed_axes_config": ["date", "step", "level"]}
-        self.API = Polytope(request={}, datacube=array, engine=self.slicer, options=options)
+        self.API = Polytope(request={}, datacube=array, options=options)
 
     # Testing different shapes
 

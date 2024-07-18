@@ -17,9 +17,9 @@ from .engine import Engine
 
 
 class HullSlicer(Engine):
-
     def __init__(self):
         super().__init__()
+
     #     self.ax_is_unsliceable = {}
     #     self.axis_values_between = {}
     #     self.sliced_polytopes = {}
@@ -151,7 +151,9 @@ class HullSlicer(Engine):
                         self._build_unsliceable_child(polytope, ax, node, datacube, [lower], next_nodes, slice_axis_idx)
                     else:
                         values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
-                        self._build_sliceable_child(polytope, ax, node, datacube, values, next_nodes, slice_axis_idx, engine)
+                        self._build_sliceable_child(
+                            polytope, ax, node, datacube, values, next_nodes, slice_axis_idx, engine
+                        )
         else:
             all_values = []
             all_lowers = []

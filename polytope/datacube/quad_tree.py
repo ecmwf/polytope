@@ -78,7 +78,6 @@ class QuadTree:
             child.pprint()
 
     def insert(self, item, index):
-
         if not self.children:
             node = QuadNode(item, index)
             if item not in self.node_items:
@@ -119,8 +118,7 @@ class QuadTree:
         ]
 
         self.children = [
-            QuadTree(new_center[0], new_center[1], half_size, self.depth + 1)
-            for new_center in new_centers
+            QuadTree(new_center[0], new_center[1], half_size, self.depth + 1) for new_center in new_centers
         ]
 
         nodes = self.nodes

@@ -122,23 +122,20 @@ class TestQuadTreeSlicer:
     @pytest.mark.fdb
     def test_quad_tree_slicer_extract(self):
         points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
-        slicer = QuadTreeSlicer(points)
         polytope = Box(["latitude", "longitude"], [1, 1], [20, 30]).polytope()[0]
         self.API = Polytope(
             request=Request(polytope),
             datacube=self.fdbdatacube,
-            engine=slicer,
             options=self.options,
             engine_options={"latitude": "quadtree", "longitude": "quadtree"},
             point_cloud_options=points,
         )
-        tree = slicer.extract(self.API.datacube, [polytope])
+        tree = self.API.engines["quadtree"].extract(self.API.datacube, [polytope])
         assert len(tree.leaves) == 3
         tree.pprint()
         points = [[10, 10], [80, 10], [-5, 5], [5, 50], [5, 10], [50, 10], [2, 10], [15, 15]]
-        slicer = QuadTreeSlicer(points)
         polytope = ConvexPolytope(["latitude", "longitude"], [[-10, 1], [20, 1], [5, 20]])
-        tree = slicer.extract(self.API.datacube, [polytope])
+        tree = self.API.engines["quadtree"].extract(self.API.datacube, [polytope])
         assert len(tree.leaves) == 4
         tree.pprint()
 
@@ -158,19 +155,18 @@ class TestQuadTreeSlicer:
         coords = zip(X, Y)
         points = [list(coord) for coord in coords]
         time0 = time.time()
-        slicer = QuadTreeSlicer(points)
-        print(time.time() - time0)
         polytope = Box(["latitude", "longitude"], [1, 1], [20, 30]).polytope()[0]
         self.API = Polytope(
             request=Request(polytope),
             datacube=self.fdbdatacube,
-            engine=slicer,
             options=self.options,
             engine_options={"latitude": "quadtree", "longitude": "quadtree"},
             point_cloud_options=points,
         )
+        print(time.time() - time0)
         time1 = time.time()
-        tree = slicer.extract(self.API.datacube, [polytope])
+        print(self.API.engines)
+        tree = self.API.engines["quadtree"].extract(self.API.datacube, [polytope])
         print(time.time() - time1)  # = 5.919436931610107
         print(len(tree.leaves))  # = 55100
         # NOTE: maybe for 2D qhull here, scipy is not the fastest
