@@ -13,7 +13,6 @@ class Engine:
             engine_options = {}
         self.engine_options = engine_options
 
-        # self.ax_is_unsliceable = {}
         self.axis_values_between = {}
         self.sliced_polytopes = {}
         self.remapped_vals = {}

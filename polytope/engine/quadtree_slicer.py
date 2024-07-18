@@ -36,18 +36,6 @@ class QuadTreeSlicer(Engine):
             (child, _) = request.create_child(values_axis, idx, [])
             child.result = result
 
-        # NOTE: code for getting lat/lon instead of point indices
-        # for point in extracted_points:
-        #     # append each found leaf to the tree
-        #     lat = point.rect[0]
-        #     lon = point.rect[1]
-        #     result = point.item
-        #     # TODO: make finding the axes objects nicer?
-        #     lat_axis = datacube.axes[polytope._axes[0]]
-        #     lat_child = request.create_child(lat_axis, lat)
-        #     lon_axis = datacube.axes[polytope._axes[1]]
-        #     lon_child = lat_child.create_child(lon_axis, lon)
-        #     lon_child.result = result
         return request
 
     def extract_single(self, datacube, polytope):
@@ -81,23 +69,17 @@ class QuadTreeSlicer(Engine):
             value = point.index
             lat_val = point.item[0]
             lon_val = point.item[1]
-            # values_axis = IntDatacubeAxis()
             lat_ax = ax
 
             # TODO: is there a nicer way to get this axis that does not depend on knowing
             # the axis name in advance?
             lon_ax = datacube._axes["longitude"]
-            # values_axis.name = "pt_cloud_idx"
 
             # store the native type
-            # child = node.create_child(ax, value)
             (child, _) = node.create_child(lat_ax, lat_val, [])
             (grand_child, _) = child.create_child(lon_ax, lon_val, [])
             # NOTE: the index of the point is stashed in the branches' result
             grand_child.indexes = [value]
             grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             grand_child["unsliced_polytopes"].remove(polytope)
-            # child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
-            # child["unsliced_polytopes"].remove(polytope)
-            # next_nodes.append(grand_child)
         # TODO: but now what happens to the second axis in the point cloud?? Do we create a second node for it??

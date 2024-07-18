@@ -48,14 +48,11 @@ class Polytope:
         self,
         request,
         datacube,
-        # engine=None,
         options=None,
         engine_options=None,
         point_cloud_options=None,
     ):
         from .datacube import Datacube
-
-        # from .engine import Engine
 
         if options is None:
             options = {}
@@ -74,7 +71,6 @@ class Polytope:
             point_cloud_options,
             alternative_axes,
         )
-        # self.engine = engine if engine is not None else Engine.default()
         if engine_options == {}:
             for ax_name in self.datacube._axes.keys():
                 engine_options[ax_name] = "hullslicer"
@@ -86,7 +82,6 @@ class Polytope:
         engines = {}
         engine_types = set(self.engine_options.values())
         if "quadtree" in engine_types:
-            # quadtree_axes = [key for key in self.engine_options.keys() if self.engine_options[key] == "quadtree"]
             # TODO: need to get the corresponding point cloud from the datacube
             quadtree_points = self.datacube.find_point_cloud()
             engines["quadtree"] = QuadTreeSlicer(quadtree_points)
@@ -119,8 +114,6 @@ class Polytope:
         datacube.validate(input_axes)
         request = TensorIndexTree()
         combinations = tensor_product(groups)
-        # combinations = find_polytope_combinations(self.datacube, polytopes)
-        # request = TensorIndexTree()
 
         # NOTE: could optimise here if we know combinations will always be for one request.
         # Then we do not need to create a new index tree and merge it to request, but can just
@@ -148,33 +141,6 @@ class Polytope:
 
             request.merge(r)
         return request
-
-        # combinations = find_polytope_combinations(self.datacube, polytopes)
-
-        # request = TensorIndexTree()
-
-        # for c in combinations:
-        #     r = TensorIndexTree()
-        #     r["unsliced_polytopes"] = set(c)
-        #     current_nodes = [r]
-        #     for ax in self.datacube.axes.values():
-        #         # determine the slicer for each axis
-        #         engine = self.find_engine(ax)
-
-        #         # TODO: what happens when we have a quadtree engine and we handle two axes at once??
-        #         # Need to build the two axes nodes as just one node within the slicer engine...
-
-        #         next_nodes = []
-        #         for node in current_nodes:
-        #             print(node)
-        #             engine._build_branch(ax, node, self.datacube, next_nodes)
-        #         current_nodes = next_nodes
-        #     request.merge(r)
-
-        # # TODO: return tree
-        # # return self.engine.extract(self.datacube, polytopes)
-        # request.pprint()
-        # return request
 
     def find_engine(self, ax):
         slicer_type = self.engine_options[ax.name]
@@ -205,5 +171,3 @@ class Polytope:
         for compressed_axis in compressable_axes:
             if compressed_axis in datacube.compressed_axes:
                 self.compressed_axes.append(compressed_axis)
-        # print("WHAT ARE THE COMPRESSED AXES?")
-        # print(self.compressed_axes)

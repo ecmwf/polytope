@@ -15,24 +15,6 @@ class HullSlicer(Engine):
     def __init__(self):
         super().__init__()
 
-    #     self.ax_is_unsliceable = {}
-    #     self.axis_values_between = {}
-    #     self.sliced_polytopes = {}
-    #     self.remapped_vals = {}
-    #     self.compressed_axes = []
-
-    # def _unique_continuous_points(self, p: ConvexPolytope, datacube: Datacube):
-    #     for i, ax in enumerate(p._axes):
-    #         mapper = datacube.get_mapper(ax)
-    #         if self.ax_is_unsliceable.get(ax, None) is None:
-    #             self.ax_is_unsliceable[ax] = isinstance(mapper, UnsliceableDatacubeAxis)
-    #         if self.ax_is_unsliceable[ax]:
-    #             break
-    #         for j, val in enumerate(p.points):
-    #             p.points[j][i] = mapper.to_float(mapper.parse(p.points[j][i]))
-    #     # Remove duplicate points
-    #     unique(p.points)
-
     def _build_unsliceable_child(self, polytope, ax, node, datacube, lowers, next_nodes, slice_axis_idx):
         if not polytope.is_flat:
             raise UnsliceableShapeError(ax)
@@ -177,58 +159,6 @@ class HullSlicer(Engine):
                 )
 
         del node["unsliced_polytopes"]
-
-    # def find_compressed_axes(self, datacube, polytopes):
-    #     # First determine compressable axes from input polytopes
-    #     compressable_axes = []
-    #     for polytope in polytopes:
-    #         if polytope.is_orthogonal:
-    #             for ax in polytope.axes():
-    #                 compressable_axes.append(ax)
-    #     # Cross check this list with list of compressable axis from datacube
-    #     # (should not include any merged or coupled axes)
-    #     for compressed_axis in compressable_axes:
-    #         if compressed_axis in datacube.compressed_axes:
-    #             self.compressed_axes.append(compressed_axis)
-
-    # def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
-    #     # Determine list of axes to compress
-    #     self.find_compressed_axes(datacube, polytopes)
-
-    #     # Convert the polytope points to float type to support triangulation and interpolation
-    #     for p in polytopes:
-    #         unique_continuous_points_in_polytope(p, datacube)
-
-    #     groups, input_axes = group(polytopes)
-    #     datacube.validate(input_axes)
-    #     request = TensorIndexTree()
-    #     combinations = tensor_product(groups)
-
-    #     # NOTE: could optimise here if we know combinations will always be for one request.
-    #     # Then we do not need to create a new index tree and merge it to request, but can just
-    #     # directly work on request and return it...
-
-    #     for c in combinations:
-    #         r = TensorIndexTree()
-    #         new_c = []
-    #         for combi in c:
-    #             if isinstance(combi, list):
-    #                 new_c.extend(combi)
-    #             else:
-    #                 new_c.append(combi)
-    #         r["unsliced_polytopes"] = set(new_c)
-    #         current_nodes = [r]
-    #         for ax in datacube.axes.values():
-    #             next_nodes = []
-    #             interm_next_nodes = []
-    #             for node in current_nodes:
-    #                 self._build_branch(ax, node, datacube, interm_next_nodes)
-    #                 next_nodes.extend(interm_next_nodes)
-    #                 interm_next_nodes = []
-    #             current_nodes = next_nodes
-
-    #         request.merge(r)
-    #     return request
 
 
 def _find_intersects(polytope, slice_axis_idx, value):
