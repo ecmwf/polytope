@@ -1,6 +1,7 @@
+import cProfile
+
 import numpy as np
 import pygribjump as gj
-import cProfile
 
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box
@@ -53,4 +54,6 @@ API = Polytope(
     engine_options={"latitude": "quadtree", "longitude": "quadtree"},
     point_cloud_options=points,
 )
-cProfile.runctx("API.engines['quadtree'].extract(API.datacube, [polytope])", globals(), locals(), "profiled_extract_quadtree.pstats")
+cProfile.runctx(
+    "API.engines['quadtree'].extract(API.datacube, [polytope])", globals(), locals(), "profiled_extract_quadtree.pstats"
+)
