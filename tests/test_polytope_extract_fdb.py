@@ -4,13 +4,26 @@ import pytest
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
 
-# import geopandas as gpd
-# import matplotlib.pyplot as plt
 
-
-class TestSlicingFDBDatacube:
+class TestPolytopeExtract:
     def setup_method(self, method):
+        # from polytope.datacube.backends.fdb import FDBDatacube
+
         # Create a dataarray with 3 labelled axes using different index types
+        self.engine_options = {
+            "step": "hullslicer",
+            "levtype": "hullslicer",
+            "latitude": "quadtree",
+            "longitude": "quadtree",
+            "class": "hullslicer",
+            "date": "hullslicer",
+            "type": "hullslicer",
+            "stream": "hullslicer",
+            "param": "hullslicer",
+            "expver": "hullslicer",
+            "domain": "hullslicer",
+        }
+        self.quadtree_points = [[10, 10], [0.035149384216, 0.0], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
         self.options = {
             "axis_config": [
                 {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
@@ -22,11 +35,9 @@ class TestSlicingFDBDatacube:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                        {"name": "mapper", "type": "irregular", "resolution": 1280, "axes": ["latitude", "longitude"]}
                     ],
                 },
-                {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
-                {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
             ],
             "compressed_axes_config": [
                 "longitude",
@@ -46,7 +57,7 @@ class TestSlicingFDBDatacube:
 
     # Testing different shapes
     @pytest.mark.fdb
-    def test_fdb_datacube(self):
+    def test_2D_box(self):
         import pygribjump as gj
 
         request = Request(
@@ -59,28 +70,22 @@ class TestSlicingFDBDatacube:
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["an"]),
-            Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
+            Box(["latitude", "longitude"], [0, -0.1], [10, 10]),
         )
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(
             request=request,
             datacube=self.fdbdatacube,
             options=self.options,
+            engine_options=self.engine_options,
+            point_cloud_options=self.quadtree_points,
         )
         result = self.API.retrieve(request)
-        self.API.datacube.prep_tree_encoding(result)
-        result.pprint()
-        for leaf in result.leaves:
-            assert leaf.hidden
-            assert leaf._parent.hidden
-            assert leaf._parent._parent.indexes == [
-                3294704,
-                3294705,
-                3294706,
-                3289572,
-                3289573,
-                3289574,
-                3284444,
-                3284445,
-                3284446,
-            ]
+
+        assert len(result.leaves) == 3
+        assert result.leaves[0].flatten()["longitude"] == (0,)
+        assert result.leaves[0].flatten()["latitude"] == (0.035149384216,)
+        assert result.leaves[1].flatten()["longitude"] == (10,)
+        assert result.leaves[1].flatten()["latitude"] == (5,)
+        assert result.leaves[2].flatten()["longitude"] == (10,)
+        assert result.leaves[2].flatten()["latitude"] == (10,)

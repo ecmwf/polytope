@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Select
 
@@ -27,11 +26,9 @@ class TestMergeTransformation:
             ],
             "compressed_axes_config": ["date", "time"],
         }
-        self.slicer = HullSlicer()
         self.API = Polytope(
             request={},
             datacube=self.array,
-            engine=self.slicer,
             options=self.options,
         )
 

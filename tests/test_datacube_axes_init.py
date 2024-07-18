@@ -3,7 +3,6 @@ from earthkit import data
 from helper_functions import download_test_data
 
 from polytope.datacube.datacube_axis import FloatDatacubeAxis
-from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
 
@@ -41,11 +40,9 @@ class TestInitDatacubeAxes:
                 "type",
             ],
         }
-        self.slicer = HullSlicer()
         self.API = Polytope(
             request={},
             datacube=latlon_array,
-            engine=self.slicer,
             options=self.options,
         )
         self.datacube = self.API.datacube

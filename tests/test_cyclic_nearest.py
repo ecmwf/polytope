@@ -3,7 +3,6 @@ import pytest
 from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
 from helper_functions import download_test_data
 
-from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Point, Select
 
@@ -85,11 +84,9 @@ class TestRegularGrid:
             Point(["latitude", "longitude"], [[39, 360 - 76.45]], method="nearest"),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             request=request,
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -110,11 +107,9 @@ class TestRegularGrid:
             Point(["latitude", "longitude"], [[39, -76.45]], method="nearest"),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             request=request,
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)

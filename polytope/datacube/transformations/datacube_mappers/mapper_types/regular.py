@@ -48,7 +48,7 @@ class RegularGridMapper(DatacubeMapper):
         first_idx = self._first_axis_vals.index(first_val)
         return first_idx * 4 * self._resolution
 
-    def unmap(self, first_val, second_val):
+    def unmap(self, first_val, second_val, unmapped_idx=None):
         tol = 1e-8
         first_val = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
         first_idx = self._first_axis_vals.index(first_val)

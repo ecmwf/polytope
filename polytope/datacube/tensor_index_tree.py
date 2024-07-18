@@ -76,13 +76,8 @@ class TensorIndexTree(object):
                 if isinstance(self.axis, UnsliceableDatacubeAxis):
                     return False
                 else:
-                    if len(other.values) != len(self.values):
+                    if len(other.values) != len(self.values) or other.values != self.values:
                         return False
-                    for i in range(len(other.values)):
-                        other_val = other.values[i]
-                        self_val = self.values[i]
-                        if abs(other_val - self_val) > 2 * max(other.axis.tol, self.axis.tol):
-                            return False
                     return True
 
     def __lt__(self, other):
@@ -104,6 +99,7 @@ class TensorIndexTree(object):
         self.values = tuple(new_values)
 
     def create_child(self, axis, value, next_nodes):
+        # TODO: what if we remove the next nodes here?
         node = TensorIndexTree(axis, (value,))
         existing_child = self.find_child(node)
         if not existing_child:
@@ -133,12 +129,9 @@ class TensorIndexTree(object):
 
     def find_child(self, node):
         index = self.children.bisect_left(node)
-        if index >= len(self.children):
-            return None
-        child = self.children[index]
-        if not child == node:
-            return None
-        return child
+        if index < len(self.children) and self.children[index] == node:
+            return self.children[index]
+        return None
 
     def add_node_layer_after(self, ax_name, vals):
         ax = IntDatacubeAxis()

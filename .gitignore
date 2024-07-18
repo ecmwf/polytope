@@ -13,12 +13,15 @@ site
 *.grib
 *.gif
 *.html
+*.req
+.mypy_cache
 example_eo
 example_mri
-.mypy_cache
-*.req
 polytope_python.egg-info
 new_test_venv_polytope
 new_venv_polytope
 polytope_venv
 polytope_venv_latest
+newest-polytope-venv
+*.pstats
+*.profile

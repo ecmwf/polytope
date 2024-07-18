@@ -2,7 +2,6 @@ import pytest
 from earthkit import data
 from helper_functions import download_test_data, find_nearest_latlon
 
-from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
 
@@ -27,11 +26,9 @@ class TestOctahedralGrid:
             ],
             "compressed_axes_config": ["longitude", "latitude", "number", "step", "time", "surface", "valid_time"],
         }
-        self.slicer = HullSlicer()
         self.API = Polytope(
             request={},
             datacube=self.latlon_array,
-            engine=self.slicer,
             options=self.options,
         )
 

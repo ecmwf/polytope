@@ -145,17 +145,33 @@ class Datacube(ABC):
         return path
 
     @staticmethod
-    def create(request, datacube, config={}, axis_options={}, compressed_axes_options=[], alternative_axes=[]):
+    def create(
+        request,
+        datacube,
+        config={},
+        axis_options={},
+        compressed_axes_options=[],
+        point_cloud_options=None,
+        alternative_axes=[],
+    ):
         # TODO: get the configs as None for pre-determined value and change them to empty dictionary inside the function
         if type(datacube).__name__ == "DataArray":
             from .xarray import XArrayDatacube
 
-            xadatacube = XArrayDatacube(datacube, axis_options, compressed_axes_options)
+            xadatacube = XArrayDatacube(
+                datacube, axis_options, compressed_axes_options, point_cloud_options=point_cloud_options
+            )
             return xadatacube
         if type(datacube).__name__ == "GribJump":
             from .fdb import FDBDatacube
 
             fdbdatacube = FDBDatacube(
-                datacube, request, config, axis_options, compressed_axes_options, alternative_axes
+                datacube, request, config, axis_options, compressed_axes_options, point_cloud_options, alternative_axes
             )
             return fdbdatacube
+        else:
+            return datacube
+
+    @abstractmethod
+    def find_point_cloud(self):
+        pass

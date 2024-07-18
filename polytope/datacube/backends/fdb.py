@@ -7,7 +7,16 @@ from .datacube import Datacube, TensorIndexTree
 
 
 class FDBDatacube(Datacube):
-    def __init__(self, gj, request, config=None, axis_options=None, compressed_axes_options=[], alternative_axes=[]):
+    def __init__(
+        self,
+        gj,
+        request,
+        config=None,
+        axis_options=None,
+        compressed_axes_options=[],
+        point_cloud_options=None,
+        alternative_axes=[],
+    ):
         if config is None:
             config = {}
 
@@ -17,6 +26,7 @@ class FDBDatacube(Datacube):
 
         self.unwanted_path = {}
         self.axis_options = axis_options
+        self.has_point_cloud = point_cloud_options  # NOTE: here, will be True/False
 
         partial_request = config
         # Find values in the level 3 FDB datacube
@@ -58,6 +68,11 @@ class FDBDatacube(Datacube):
                 self._check_and_add_axes(options, name, val)
 
         logging.info("Polytope created axes for: " + str(self._axes.keys()))
+
+    def find_point_cloud(self):
+        # TODO: somehow, find the point cloud of irregular grid if it exists
+        if self.has_point_cloud:
+            return self.has_point_cloud
 
     def check_branching_axes(self, request):
         polytopes = request.polytopes()
@@ -216,16 +231,22 @@ class FDBDatacube(Datacube):
             fdb_range_nodes = deepcopy(fdb_node_ranges[i])
             key_value_path = {lat_child.axis.name: lat_child.values}
             ax = lat_child.axis
+            print("ABOVE CHILD LAYER BEFORE UNMAP")
+            print(leaf_path)
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
             leaf_path.update(key_value_path)
+            # print("THE LAYER BEFORE NOW")
+            # print(leaf_path)
+            # print(key_value_path)
             (range_lengths[i], current_start_idxs[i], fdb_node_ranges[i]) = self.get_last_layer_before_leaf(
                 lat_child, leaf_path, range_length, current_start_idx, fdb_range_nodes
             )
 
         leaf_path_copy = deepcopy(leaf_path)
         leaf_path_copy.pop("values", None)
+        leaf_path_copy.pop("index")
         return (leaf_path_copy, range_lengths, current_start_idxs, fdb_node_ranges, lat_length)
 
     def get_last_layer_before_leaf(self, requests, leaf_path, range_l, current_idx, fdb_range_n):
@@ -234,12 +255,22 @@ class FDBDatacube(Datacube):
             fdb_range_n_i = fdb_range_n[i]
             # now c are the leaves of the initial tree
             key_value_path = {c.axis.name: c.values}
+            # print("LOOK NOW")
+            # print(leaf_path)
+            # print(key_value_path)
+            leaf_path["index"] = c.indexes
             ax = c.axis
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
+            # print("AFTER UNMAPPING")
+            # print(leaf_path)
             leaf_path.update(key_value_path)
+            # print("LAST LEAF")
+            # print(leaf_path)
             last_idx = key_value_path["values"]
+            print("LAST IDX HERE")
+            print(last_idx)
             if current_idx[i] is None:
                 range_l[i] = 1
                 current_idx[i] = last_idx
