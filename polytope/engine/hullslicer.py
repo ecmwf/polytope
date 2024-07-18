@@ -1,16 +1,11 @@
 import math
 from copy import copy
 from itertools import chain
-from typing import List
 
 import scipy.spatial
 
-from ..datacube.backends.datacube import Datacube
-from ..datacube.datacube_axis import UnsliceableDatacubeAxis
-from ..datacube.tensor_index_tree import TensorIndexTree
 from ..shapes import ConvexPolytope
-from ..utility.combinatorics import argmax, argmin, group, tensor_product, unique
-from ..utility.engine_tools import unique_continuous_points_in_polytope
+from ..utility.combinatorics import argmax, argmin
 from ..utility.exceptions import UnsliceableShapeError
 from ..utility.geometry import lerp
 from .engine import Engine

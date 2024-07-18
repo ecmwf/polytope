@@ -165,7 +165,6 @@ class TestQuadTreeSlicer:
         )
         print(time.time() - time0)
         time1 = time.time()
-        print(self.API.engines)
         tree = self.API.engines["quadtree"].extract(self.API.datacube, [polytope])
         print(time.time() - time1)  # = 5.919436931610107
         print(len(tree.leaves))  # = 55100

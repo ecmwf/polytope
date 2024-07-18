@@ -1,7 +1,7 @@
 import numpy as np
 import pygribjump as gj
+import cProfile
 
-from polytope.engine.quadtree_slicer import QuadTreeSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box
 
@@ -45,14 +45,12 @@ X = X.reshape((np.prod(X.shape),))
 Y = Y.reshape((np.prod(Y.shape),))
 coords = zip(X, Y)
 points = [list(coord) for coord in coords]
-slicer = QuadTreeSlicer(points)
 polytope = Box(["latitude", "longitude"], [1, 1], [20, 30]).polytope()[0]
 API = Polytope(
     request=Request(polytope),
     datacube=fdbdatacube,
-    engine=slicer,
     options=options,
     engine_options={"latitude": "quadtree", "longitude": "quadtree"},
     point_cloud_options=points,
 )
-tree = slicer.extract(API.datacube, [polytope])
+cProfile.runctx("API.engines['quadtree'].extract(API.datacube, [polytope])", globals(), locals(), "profiled_extract_quadtree.pstats")
