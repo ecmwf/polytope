@@ -1,3 +1,4 @@
+import time
 from copy import copy
 
 from ..datacube.datacube_axis import IntDatacubeAxis
@@ -10,7 +11,6 @@ from ..datacube.quad_tree_encoding import (
 )
 from ..datacube.tensor_index_tree import TensorIndexTree
 from .engine import Engine
-import time
 
 
 class QuadTreeSlicer(Engine):
