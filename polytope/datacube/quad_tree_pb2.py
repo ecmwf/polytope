@@ -13,17 +13,17 @@ from google.protobuf.internal import builder as _builder
 _sym_db = _symbol_database.Default()
 
 
-
-
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fquad_tree.proto\x12\tquad_tree\"\'\n\x08QuadNode\x12\x0c\n\x04item\x18\x01 \x03(\x01\x12\r\n\x05index\x18\x02 \x01(\x03\"s\n\x08QuadTree\x12%\n\x08\x63hildren\x18\x01 \x03(\x0b\x32\x13.quad_tree.QuadTree\x12\"\n\x05nodes\x18\x02 \x03(\x0b\x32\x13.quad_tree.QuadNode\x12\x0e\n\x06\x63\x65nter\x18\x03 \x03(\x01\x12\x0c\n\x04size\x18\x04 \x03(\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
+    b'\n\x0fquad_tree.proto\x12\tquad_tree"\'\n\x08QuadNode\x12\x0c\n\x04item\x18\x01 \x03(\x01\x12\r\n\x05index\x18\x02 \x01(\x03"s\n\x08QuadTree\x12%\n\x08\x63hildren\x18\x01 \x03(\x0b\x32\x13.quad_tree.QuadTree\x12"\n\x05nodes\x18\x02 \x03(\x0b\x32\x13.quad_tree.QuadNode\x12\x0e\n\x06\x63\x65nter\x18\x03 \x03(\x01\x12\x0c\n\x04size\x18\x04 \x03(\x01\x62\x06proto3'
+)
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
-_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'quad_tree_pb2', _globals)
+_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, "quad_tree_pb2", _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
-  DESCRIPTOR._options = None
-  _globals['_QUADNODE']._serialized_start=30
-  _globals['_QUADNODE']._serialized_end=69
-  _globals['_QUADTREE']._serialized_start=71
-  _globals['_QUADTREE']._serialized_end=186
+    DESCRIPTOR._options = None
+    _globals["_QUADNODE"]._serialized_start = 30
+    _globals["_QUADNODE"]._serialized_end = 69
+    _globals["_QUADTREE"]._serialized_start = 71
+    _globals["_QUADTREE"]._serialized_end = 186
 # @@protoc_insertion_point(module_scope)
