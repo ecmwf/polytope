@@ -46,7 +46,6 @@ class Request:
 class Polytope:
     def __init__(
         self,
-        request,
         datacube,
         options=None,
         engine_options=None,
@@ -63,7 +62,6 @@ class Polytope:
 
         axis_options, compressed_axes_options, config, alternative_axes = PolytopeOptions.get_polytope_options(options)
         self.datacube = Datacube.create(
-            request,
             datacube,
             config,
             axis_options,
@@ -155,6 +153,9 @@ class Polytope:
 
     def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
+        # First remove non-valid branching datacube axes according to request
+        self.datacube.check_branching_axes(request)
+
         request_tree = self.slice(self.datacube, request.polytopes())
         self.datacube.get(request_tree)
         return request_tree

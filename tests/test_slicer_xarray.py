@@ -19,7 +19,7 @@ class TestXarraySlicing:
             },
         )
         options = {"compressed_axes_config": ["date", "step", "level"]}
-        self.API = Polytope(request={}, datacube=array, options=options)
+        self.API = Polytope(datacube=array, options=options)
 
     def test_2D_box(self):
         request = Request(Box(["step", "level"], [3, 10], [6, 11]), Select("date", ["2000-01-01"]))

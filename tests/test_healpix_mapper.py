@@ -30,7 +30,6 @@ class TestOctahedralGrid:
             "compressed_axes_config": ["longitude", "latitude", "step", "time", "isobaricInhPa", "valid_time"],
         }
         self.API = Polytope(
-            request={},
             datacube=self.latlon_array,
             options=self.options,
         )

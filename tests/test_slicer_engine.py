@@ -19,13 +19,13 @@ class TestSlicerComponents:
         )
         self.xarraydatacube = XArrayDatacube(array)
         options = {"compressed_axes_config": ["level", "step"]}
-        self.API = Polytope(request={}, datacube=array, options=options)
+        self.API = Polytope(datacube=array, options=options)
 
     def test_extract(self):
         box = Box(["step", "level"], [3.0, 1.0], [6.0, 3.0])
         polytope = box.polytope()
         # request = self.slicer.extract(self.xarraydatacube, polytope)
-        API = Polytope(request={}, datacube=self.xarraydatacube, options={})
+        API = Polytope(datacube=self.xarraydatacube, options={})
         request = API.slice(self.xarraydatacube, polytope)
         assert request.axis == TensorIndexTree.root
         assert request.parent is None

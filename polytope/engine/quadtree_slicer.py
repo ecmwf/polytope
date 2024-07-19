@@ -10,6 +10,7 @@ from ..datacube.quad_tree_encoding import (
 )
 from ..datacube.tensor_index_tree import TensorIndexTree
 from .engine import Engine
+import time
 
 
 class QuadTreeSlicer(Engine):
@@ -18,10 +19,16 @@ class QuadTreeSlicer(Engine):
         # NOTE: should this be inside of the datacube instead that we create the quadtree?
         quad_tree = QuadTree()
         quad_tree.build_point_tree(points)
+        time1 = time.time()
         bytes_array = encode_qtree(quad_tree)
         write_encoded_qtree_to_file(bytes_array)
+        print("TIME TO ENCODE QUADTREE")
+        print(time.time() - time1)
+        time2 = time.time()
         decoded_bytes_array = read_encoded_qtree_from_file()
         quad_tree = decode_qtree(decoded_bytes_array)
+        print("TIME TO DECODE QUADTREE")
+        print(time.time() - time2)
         self.quad_tree = quad_tree
 
     # method to slice polygon against quadtree

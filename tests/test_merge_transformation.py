@@ -27,7 +27,6 @@ class TestMergeTransformation:
             "compressed_axes_config": ["date", "time"],
         }
         self.API = Polytope(
-            request={},
             datacube=self.array,
             options=self.options,
         )

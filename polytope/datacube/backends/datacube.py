@@ -146,7 +146,6 @@ class Datacube(ABC):
 
     @staticmethod
     def create(
-        request,
         datacube,
         config={},
         axis_options={},
@@ -166,11 +165,14 @@ class Datacube(ABC):
             from .fdb import FDBDatacube
 
             fdbdatacube = FDBDatacube(
-                datacube, request, config, axis_options, compressed_axes_options, point_cloud_options, alternative_axes
+                datacube, config, axis_options, compressed_axes_options, point_cloud_options, alternative_axes
             )
             return fdbdatacube
         else:
             return datacube
+
+    def check_branching_axes(self, request):
+        pass
 
     @abstractmethod
     def find_point_cloud(self):

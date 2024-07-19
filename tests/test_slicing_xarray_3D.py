@@ -34,7 +34,7 @@ class TestSlicing3DXarrayDatacube:
         )
         self.xarraydatacube = XArrayDatacube(array)
         options = {"compressed_axes_config": ["date", "step", "level"]}
-        self.API = Polytope(request={}, datacube=array, options=options)
+        self.API = Polytope(datacube=array, options=options)
 
     # Testing different shapes
 

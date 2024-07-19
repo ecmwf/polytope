@@ -28,7 +28,6 @@ class TestSlicingMultipleTransformationsOneAxis:
             "compressed_axes_config": ["longitude", "latitude", "surface", "step", "time", "valid_time", "number"],
         }
         self.API = Polytope(
-            request={},
             datacube=self.latlon_array,
             options=self.options,
         )
