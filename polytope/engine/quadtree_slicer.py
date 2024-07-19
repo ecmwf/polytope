@@ -2,6 +2,12 @@ from copy import copy
 
 from ..datacube.datacube_axis import IntDatacubeAxis
 from ..datacube.quad_tree import QuadTree
+from ..datacube.quad_tree_encoding import (
+    decode_qtree,
+    encode_qtree,
+    read_encoded_qtree_from_file,
+    write_encoded_qtree_to_file,
+)
 from ..datacube.tensor_index_tree import TensorIndexTree
 from .engine import Engine
 
@@ -12,6 +18,10 @@ class QuadTreeSlicer(Engine):
         # NOTE: should this be inside of the datacube instead that we create the quadtree?
         quad_tree = QuadTree()
         quad_tree.build_point_tree(points)
+        bytes_array = encode_qtree(quad_tree)
+        write_encoded_qtree_to_file(bytes_array)
+        decoded_bytes_array = read_encoded_qtree_from_file()
+        quad_tree = decode_qtree(decoded_bytes_array)
         self.quad_tree = quad_tree
 
     # method to slice polygon against quadtree
