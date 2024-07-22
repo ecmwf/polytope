@@ -43,7 +43,6 @@ class TestInitDatacubeAxes:
         }
         self.slicer = HullSlicer()
         self.API = Polytope(
-            request={},
             datacube=latlon_array,
             engine=self.slicer,
             options=self.options,

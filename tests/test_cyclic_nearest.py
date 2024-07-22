@@ -87,7 +87,6 @@ class TestRegularGrid:
         self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
         self.API = Polytope(
-            request=request,
             datacube=self.fdbdatacube,
             engine=self.slicer,
             options=self.options,
@@ -112,7 +111,6 @@ class TestRegularGrid:
         self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
         self.API = Polytope(
-            request=request,
             datacube=self.fdbdatacube,
             engine=self.slicer,
             options=self.options,

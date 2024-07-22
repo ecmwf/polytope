@@ -21,7 +21,7 @@ class TestSlicerComponents:
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
         options = {"compressed_axes_config": ["level", "step"]}
-        self.API = Polytope(request={}, datacube=array, engine=self.slicer, options=options)
+        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 
     def test_extract(self):
         box = Box(["step", "level"], [3.0, 1.0], [6.0, 3.0])

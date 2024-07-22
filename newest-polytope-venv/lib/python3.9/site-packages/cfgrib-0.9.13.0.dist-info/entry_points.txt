@@ -1,0 +1,6 @@
+[console_scripts]
+cfgrib = cfgrib.__main__:cfgrib_cli
+
+[xarray.backends]
+cfgrib = cfgrib.xarray_plugin:CfGribBackend
+
