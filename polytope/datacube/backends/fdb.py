@@ -286,7 +286,8 @@ class FDBDatacube(Datacube):
                     n = sorted_fdb_range_nodes[i][j]
                     # n.result.append(request_output_values[0][i][0][j])
                     if len(request_output_values[0]) == 0:
-                        n.remove_branch()
+                        # n.remove_branch()
+                        n.result.append(None)
                     else:
                         n.result.append(request_output_values[0][i][0][j])
 
