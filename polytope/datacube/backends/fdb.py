@@ -284,7 +284,11 @@ class FDBDatacube(Datacube):
             for i in range(len(sorted_fdb_range_nodes)):
                 for j in range(sorted_range_lengths[i]):
                     n = sorted_fdb_range_nodes[i][j]
-                    n.result.append(request_output_values[0][i][0][j])
+                    # n.result.append(request_output_values[0][i][0][j])
+                    if len(request_output_values[0]) == 0:
+                        n.remove_branch()
+                    else:
+                        n.result.append(request_output_values[0][i][0][j])
 
     def sort_fdb_request_ranges(self, range_lengths, current_start_idx, lat_length):
         interm_request_ranges = []
