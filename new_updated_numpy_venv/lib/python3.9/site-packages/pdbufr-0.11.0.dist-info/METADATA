@@ -1,0 +1,54 @@
+Metadata-Version: 2.1
+Name: pdbufr
+Version: 0.11.0
+Summary: Pandas reader for the BUFR format using ecCodes.
+Home-page: https://github.com/ecmwf/pdbufr
+Author: European Centre for Medium-Range Weather Forecasts (ECMWF)
+Author-email: software.support@ecmwf.int
+License: Apache License Version 2.0
+Keywords: eccodes bufr pandas
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Operating System :: OS Independent
+License-File: LICENSE
+Requires-Dist: attrs
+Requires-Dist: eccodes
+Requires-Dist: pandas
+Provides-Extra: tests
+Requires-Dist: flake8 ; extra == 'tests'
+Requires-Dist: pytest ; extra == 'tests'
+Requires-Dist: pytest-cov ; extra == 'tests'
+Requires-Dist: requests ; extra == 'tests'
+
+pdbufr
+======
+
+.. image:: https://img.shields.io/pypi/v/pdbufr.svg
+   :target: https://pypi.python.org/pypi/pdbufr/
+
+
+*pdbufr* is a Python package implementing a `Pandas <https://pandas.pydata.org>`_ reader for the BUFR format using  `ecCodes <https://confluence.ecmwf.int/display/ECC>`_. It supports BUFR edition 3 and 4 files with uncompressed and compressed subsets. It works on Linux, MacOS and Windows, the ecCodes C-library is the only binary dependency. All modern versions of Python (>=3.6) and PyPy3 are supported.
+
+The documentation can be found at https://pdbufr.readthedocs.io/.
+
+
+License
+=======
+
+Copyright 2019- European Centre for Medium-Range Weather Forecasts (ECMWF).
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at: http://www.apache.org/licenses/LICENSE-2.0.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.

@@ -1,0 +1,85 @@
+Metadata-Version: 2.1
+Name: earthkit-geo
+Version: 0.2.0
+Summary: Geospatial computations
+Author-email: "European Centre for Medium-Range Weather Forecasts (ECMWF)" <software.support@ecmwf.int>
+License: Apache License Version 2.0
+Project-URL: Documentation, https://earthkit-geo.readthedocs.io/
+Project-URL: Homepage, https://github.com/ecmwf/earthkit-geo/
+Project-URL: Issues, https://github.com/ecmwf/earthkit-geo/issues
+Project-URL: Repository, https://github.com/ecmwf/earthkit-geo/
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: pyproj
+Requires-Dist: scipy
+Provides-Extra: test
+Requires-Dist: pytest ; extra == 'test'
+Requires-Dist: pytest-cov ; extra == 'test'
+
+# earthkit-geo
+
+[![PyPI version fury.io](https://badge.fury.io/py/earthkit-geo.svg)](https://pypi.python.org/pypi/earthkit-geo/)
+[![PyPI pyversions](https://img.shields.io/pypi/pyversions/earthkit-geo.svg)](https://pypi.python.org/pypi/earthkit-geo/)
+
+**DISCLAIMER**
+
+> This project is in the **BETA** stage of development. Please be aware that interfaces and functionality may change as the project develops. If this software is to be used in operational systems you are **strongly advised to use a released tag in your system configuration**, and you should be willing to accept incoming changes and bug fixes that require adaptations on your part. ECMWF **does use** this software in operations and abides by the same caveats.
+
+Geo-spatial methods.
+
+## Documentation
+
+The documentation can be found at https://earthkit-geo.readthedocs.io/.
+
+## Install
+
+Install via `pip` with:
+
+```
+$ pip install earthkit-geo
+```
+
+<!--
+More details, such as how to install any necessary binaries, can be found  at https://earthkit-geo.readthedocs.io/en/latest/install.html.
+
+Alternatively, install via `conda` with:
+
+```
+$ conda install earthkit-geo -c conda-forge
+```
+
+This will bring in some necessary binary dependencies for you. -->
+
+## License
+
+```
+Copyright 2024, European Centre for Medium Range Weather Forecasts.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+In applying this licence, ECMWF does not waive the privileges and immunities
+granted to it by virtue of its status as an intergovernmental organisation
+nor does it submit to any jurisdiction.
+```

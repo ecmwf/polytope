@@ -1,0 +1,1346 @@
+Metadata-Version: 2.1
+Name: cfgrib
+Version: 0.9.14.0
+Summary: Python interface to map GRIB files to the NetCDF Common Data Model following the CF Convention using ecCodes.
+Home-page: https://github.com/ecmwf/cfgrib
+Author: European Centre for Medium-Range Weather Forecasts (ECMWF)
+Author-email: software.support@ecmwf.int
+License: Apache License Version 2.0
+Keywords: eccodes grib xarray
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.7
+Requires-Dist: attrs (>=19.2)
+Requires-Dist: click
+Requires-Dist: eccodes (>=0.9.8)
+Requires-Dist: numpy
+Provides-Extra: tests
+Requires-Dist: dask[array] ; extra == 'tests'
+Requires-Dist: flake8 ; extra == 'tests'
+Requires-Dist: pytest ; extra == 'tests'
+Requires-Dist: pytest-cov ; extra == 'tests'
+Requires-Dist: scipy ; extra == 'tests'
+Requires-Dist: xarray (>=0.15) ; extra == 'tests'
+Provides-Extra: xarray
+Requires-Dist: xarray (>=0.15) ; extra == 'xarray'
+
+cfgrib: A Python interface to map GRIB files to the NetCDF Common Data Model following the CF Convention using ecCodes
+======================================================================================================================
+
+.. image:: https://img.shields.io/pypi/v/cfgrib.svg
+   :target: https://pypi.python.org/pypi/cfgrib/
+
+Python interface to map GRIB files to the
+`Unidata's Common Data Model v4 <https://docs.unidata.ucar.edu/netcdf-java/current/userguide/common_data_model_overview.html>`_
+following the `CF Conventions <http://cfconventions.org/>`_.
+The high level API is designed to support a GRIB engine for `xarray <http://xarray.pydata.org/>`_
+and it is inspired by `netCDF4-python <http://unidata.github.io/netcdf4-python/>`_
+and `h5netcdf <https://github.com/shoyer/h5netcdf>`_.
+Low level access and decoding is performed via the
+`ECMWF ecCodes library <https://confluence.ecmwf.int/display/ECC/>`_ and
+the `eccodes python package <https://pypi.org/project/eccodes>`_.
+
+Features with development status **Beta**:
+
+- enables the ``engine='cfgrib'`` option to read GRIB files with *xarray*,
+- reads most GRIB 1 and 2 files including heterogeneous ones with ``cfgrib.open_datasets``,
+- supports all modern versions of Python 3.9, 3.8, 3.7 and PyPy3,
+- the 0.9.6.x series with support for Python 2 will stay active and receive critical bugfixes,
+- works wherever *eccodes-python* does: *Linux*, *MacOS* and *Windows*
+- conda-forge package on all supported platforms,
+- reads the data lazily and efficiently in terms of both memory usage and disk access,
+- allows larger-than-memory and distributed processing via *xarray* and *dask*,
+- supports translating coordinates to different data models and naming conventions,
+- supports writing the index of a GRIB file to disk, to save a full-file scan on open,
+- accepts objects implementing a generic *Fieldset* interface as described in `ADVANCED_USAGE.rst`.
+
+Work in progress:
+
+- **Beta** install a ``cfgrib`` utility that can convert a GRIB file ``to_netcdf``
+  with a optional conversion to a specific coordinates data model,
+  see `#40 <https://github.com/ecmwf/cfgrib/issues/40>`_.
+- **Alpha/Broken** support writing carefully-crafted ``xarray.Dataset``'s to a GRIB1 or GRIB2 file,
+  see the *Advanced write usage* section below, `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_
+  and `#156 <https://github.com/ecmwf/cfgrib/issues/156>`_.
+
+Limitations:
+
+- relies on *ecCodes* for the CF attributes of the data variables,
+- relies on *ecCodes* for anything related to coordinate systems / ``gridType``,
+  see `#28 <https://github.com/ecmwf/cfgrib/issues/28>`_.
+
+
+Installation
+============
+
+The easiest way to install *cfgrib* and all its binary dependencies is via `Conda <https://conda.io/>`_::
+
+    $ conda install -c conda-forge cfgrib
+
+alternatively, if you install the binary dependencies yourself, you can install the
+Python package from *PyPI* with::
+
+    $ pip install cfgrib
+
+
+Binary dependencies
+-------------------
+
+*cfgrib* depends on the `eccodes python package <https://pypi.org/project/eccodes>`_
+to access the ECMWF *ecCodes* binary library,
+when not using *conda* please follow the *System dependencies* section there.
+
+You may run a simple selfcheck command to ensure that your system is set up correctly::
+
+    $ python -m cfgrib selfcheck
+    Found: ecCodes v2.20.0.
+    Your system is ready.
+
+
+Usage
+=====
+
+First, you need a well-formed GRIB file, if you don't have one at hand you can download our
+`ERA5 on pressure levels sample <https://get.ecmwf.int/repository/test-data/cfgrib/era5-levels-members.grib>`_::
+
+    $ wget https://get.ecmwf.int/repository/test-data/cfgrib/era5-levels-members.grib
+
+
+Read-only *xarray* GRIB engine
+------------------------------
+
+Most of *cfgrib* users want to open a GRIB file as a ``xarray.Dataset`` and
+need to have *xarray* installed::
+
+    $ pip install xarray
+
+In a Python interpreter try:
+
+.. code-block:: python
+
+    >>> import xarray as xr
+    >>> ds = xr.open_dataset('era5-levels-members.grib', engine='cfgrib')
+    >>> ds
+    <xarray.Dataset>
+    Dimensions:        (number: 10, time: 4, isobaricInhPa: 2, latitude: 61,
+                        longitude: 120)
+    Coordinates:
+    * number         (number) int64 0 1 2 3 4 5 6 7 8 9
+    * time           (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
+        step           timedelta64[ns] ...
+    * isobaricInhPa  (isobaricInhPa) float64 850.0 500.0
+    * latitude       (latitude) float64 90.0 87.0 84.0 81.0 ... -84.0 -87.0 -90.0
+    * longitude      (longitude) float64 0.0 3.0 6.0 9.0 ... 351.0 354.0 357.0
+        valid_time     (time) datetime64[ns] ...
+    Data variables:
+        z              (number, time, isobaricInhPa, latitude, longitude) float32 ...
+        t              (number, time, isobaricInhPa, latitude, longitude) float32 ...
+    Attributes:
+        GRIB_edition:            1
+        GRIB_centre:             ecmf
+        GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             European Centre for Medium-Range Weather Forecasts
+        history:                 ...
+
+The *cfgrib* ``engine`` supports all read-only features of *xarray* like:
+
+* merge the content of several GRIB files into a single dataset using ``xarray.open_mfdataset``,
+* work with larger-than-memory datasets with `dask <https://dask.org/>`_,
+* allow distributed processing with `dask.distributed <http://distributed.dask.org>`_.
+
+
+Read arbitrary GRIB keys
+------------------------
+
+By default *cfgrib* reads a limited set of ecCodes recognised *keys* from the GRIB files
+and exposes them as ``Dataset`` or ``DataArray`` attributes with the ``GRIB_`` prefix.
+It is possible to have *cfgrib* read additional keys to the attributes by adding the
+``read_keys`` dictionary key to the ``backend_kwargs`` with values the list of desired GRIB keys:
+
+.. code-block:: python
+
+    >>> ds = xr.open_dataset('era5-levels-members.grib', engine='cfgrib',
+    ...                      backend_kwargs={'read_keys': ['experimentVersionNumber']})
+    >>> ds.t.attrs['GRIB_experimentVersionNumber']
+    '0001'
+
+
+Translate to a custom data model
+--------------------------------
+
+Contrary to netCDF the GRIB data format is not self-describing and several details of the mapping
+to the *Unidata Common Data Model* are arbitrarily set by the software components decoding the format.
+Details like names and units of the coordinates are particularly important because
+*xarray* broadcast and selection rules depend on them.
+``cf2cfm`` is a small coordinate translation module distributed with *cfgrib* that make it easy to
+translate CF compliant coordinates, like the one provided by *cfgrib*, to a user-defined
+custom data model with set ``out_name``, ``units`` and ``stored_direction``.
+
+For example to translate a *cfgrib* styled ``xr.Dataset`` to the classic *ECMWF* coordinate
+naming conventions you can:
+
+.. code-block:: python
+
+    >>> import cf2cdm
+    >>> ds = xr.open_dataset('era5-levels-members.grib', engine='cfgrib')
+    >>> cf2cdm.translate_coords(ds, cf2cdm.ECMWF)
+    <xarray.Dataset>
+    Dimensions:     (number: 10, time: 4, level: 2, latitude: 61, longitude: 120)
+    Coordinates:
+    * number      (number) int64 0 1 2 3 4 5 6 7 8 9
+    * time        (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
+        step        timedelta64[ns] ...
+    * level       (level) float64 850.0 500.0
+    * latitude    (latitude) float64 90.0 87.0 84.0 81.0 ... -84.0 -87.0 -90.0
+    * longitude   (longitude) float64 0.0 3.0 6.0 9.0 ... 348.0 351.0 354.0 357.0
+        valid_time  (time) datetime64[ns] ...
+    Data variables:
+        z           (number, time, level, latitude, longitude) float32 ...
+        t           (number, time, level, latitude, longitude) float32 ...
+    Attributes:
+        GRIB_edition:            1
+        GRIB_centre:             ecmf
+        GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             European Centre for Medium-Range Weather Forecasts
+        history:                 ...
+
+To translate to the Common Data Model of the Climate Data Store use:
+
+.. code-block:: python
+
+    >>> import cf2cdm
+    >>> cf2cdm.translate_coords(ds, cf2cdm.CDS)
+    <xarray.Dataset>
+    Dimensions:                  (realization: 10, forecast_reference_time: 4,
+                                plev: 2, lat: 61, lon: 120)
+    Coordinates:
+    * realization              (realization) int64 0 1 2 3 4 5 6 7 8 9
+    * forecast_reference_time  (forecast_reference_time) datetime64[ns] 2017-01...
+        leadtime                 timedelta64[ns] ...
+    * plev                     (plev) float64 8.5e+04 5e+04
+    * lat                      (lat) float64 -90.0 -87.0 -84.0 ... 84.0 87.0 90.0
+    * lon                      (lon) float64 0.0 3.0 6.0 9.0 ... 351.0 354.0 357.0
+        time                     (forecast_reference_time) datetime64[ns] ...
+    Data variables:
+        z                        (realization, forecast_reference_time, plev, lat, lon) float32 ...
+        t                        (realization, forecast_reference_time, plev, lat, lon) float32 ...
+    Attributes:
+        GRIB_edition:            1
+        GRIB_centre:             ecmf
+        GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             European Centre for Medium-Range Weather Forecasts
+        history:                 ...
+
+
+Filter heterogeneous GRIB files
+-------------------------------
+
+``xr.open_dataset`` can open a GRIB file only if all the messages
+with the same ``shortName`` can be represented as a single hypercube.
+For example, a variable ``t`` cannot have both ``isobaricInhPa`` and ``hybrid`` ``typeOfLevel``'s,
+as this would result in multiple hypercubes for the same variable.
+Opening a non-conformant GRIB file will fail with a ``ValueError: multiple values for unique key...``
+error message, see `#2 <https://github.com/ecmwf/cfgrib/issues/2>`_.
+
+Furthermore if different variables depend on the same coordinate, for example ``step``,
+the values of the coordinate must match exactly.
+For example, if variables ``t`` and ``z`` share the same ``step`` coordinate,
+they must both have exactly the same set of steps.
+Opening a non-conformant GRIB file will fail with a ``ValueError: key present and new value is different...``
+error message, see `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_.
+
+In most cases you can handle complex GRIB files containing heterogeneous messages by passing
+the ``filter_by_keys`` key in ``backend_kwargs`` to select which GRIB messages belong to a
+well formed set of hypercubes.
+
+For example to open
+`US National Weather Service complex GRIB2 files <http://ftpprd.ncep.noaa.gov/data/nccf/com/nam/prod/>`_
+you can use:
+
+.. code-block:: python
+
+    >>> xr.open_dataset('nam.t00z.awp21100.tm00.grib2', engine='cfgrib',
+    ...     backend_kwargs={'filter_by_keys': {'typeOfLevel': 'surface'}})
+    <xarray.Dataset>
+    Dimensions:     (y: 65, x: 93)
+    Coordinates:
+        time        datetime64[ns] ...
+        step        timedelta64[ns] ...
+        surface     float64 ...
+        latitude    (y, x) float64 ...
+        longitude   (y, x) float64 ...
+        valid_time  datetime64[ns] ...
+    Dimensions without coordinates: y, x
+    Data variables:
+        gust        (y, x) float32 ...
+        sp          (y, x) float32 ...
+        orog        (y, x) float32 ...
+        tp          (y, x) float32 ...
+        acpcp       (y, x) float32 ...
+        csnow       (y, x) float32 ...
+        cicep       (y, x) float32 ...
+        cfrzr       (y, x) float32 ...
+        crain       (y, x) float32 ...
+        cape        (y, x) float32 ...
+        cin         (y, x) float32 ...
+        unknown     (y, x) float32 ...
+    Attributes:
+        GRIB_edition:            2
+        GRIB_centre:             kwbc
+        GRIB_centreDescription:  US National Weather Service - NCEP...
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             US National Weather Service - NCEP...
+        history:                 ...
+    >>> xr.open_dataset('nam.t00z.awp21100.tm00.grib2', engine='cfgrib',
+    ...     backend_kwargs={'filter_by_keys': {'typeOfLevel': 'heightAboveGround', 'level': 2}})
+    <xarray.Dataset>
+    Dimensions:            (y: 65, x: 93)
+    Coordinates:
+        time               datetime64[ns] ...
+        step               timedelta64[ns] ...
+        heightAboveGround  float64 ...
+        latitude           (y, x) float64 ...
+        longitude          (y, x) float64 ...
+        valid_time         datetime64[ns] ...
+    Dimensions without coordinates: y, x
+    Data variables:
+        t2m                (y, x) float32 ...
+        r2                 (y, x) float32 ...
+    Attributes:
+        GRIB_edition:            2
+        GRIB_centre:             kwbc
+        GRIB_centreDescription:  US National Weather Service - NCEP...
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             US National Weather Service - NCEP...
+        history:                 ...
+
+
+Automatic filtering
+-------------------
+
+*cfgrib* also provides a function that automates the selection of appropriate ``filter_by_keys``
+and returns a list of all valid ``xarray.Dataset``'s in the GRIB file.
+
+.. code-block:: python
+
+    >>> import cfgrib
+    >>> cfgrib.open_datasets('nam.t00z.awp21100.tm00.grib2')
+    [<xarray.Dataset>
+    Dimensions:                (y: 65, x: 93)
+    Coordinates:
+        time                   datetime64[ns] 2018-09-17
+        step                   timedelta64[ns] 00:00:00
+        atmosphereSingleLayer  float64 0.0
+        latitude               (y, x) float64 ...
+        longitude              (y, x) float64 ...
+        valid_time             datetime64[ns] ...
+    Dimensions without coordinates: y, x
+    Data variables:
+        pwat                   (y, x) float32 ...
+    Attributes:
+        GRIB_edition:            2
+        GRIB_centre:             kwbc
+        GRIB_centreDescription:  US National Weather Service - NCEP...
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             US National Weather Service - NCEP, <xarray.Dataset>
+    Dimensions:     (y: 65, x: 93)
+    Coordinates:
+        time        datetime64[ns] 2018-09-17
+        step        timedelta64[ns] 00:00:00
+        cloudBase   float64 0.0
+        latitude    (y, x) float64 12.19 12.39 12.58 12.77 ... 57.68 57.49 57.29
+        longitude   (y, x) float64 226.5 227.2 227.9 228.7 ... 308.5 309.6 310.6
+        valid_time  datetime64[ns] 2018-09-17
+    Dimensions without coordinates: y, x
+    Data variables:
+        pres        (y, x) float32 ...
+        gh          (y, x) float32 ...
+    Attributes:
+        GRIB_edition:            2
+        GRIB_centre:             kwbc
+        GRIB_centreDescription:  US National Weather Service - NCEP...
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             US National Weather Service - NCEP, <xarray.Dataset>
+    Dimensions:     (y: 65, x: 93)
+    Coordinates:
+        time        datetime64[ns] 2018-09-17
+        step        timedelta64[ns] 00:00:00
+        cloudTop    float64 0.0
+        latitude    (y, x) float64 12.19 12.39 12.58 12.77 ... 57.68 57.49 57.29
+        longitude   (y, x) float64 226.5 227.2 227.9 228.7 ... 308.5 309.6 310.6
+        valid_time  datetime64[ns] 2018-09-17
+    Dimensions without coordinates: y, x
+    Data variables:
+        pres        (y, x) float32 ...
+        t           (y, x) float32 ...
+        gh          (y, x) float32 ...
+    Attributes:
+        GRIB_edition:            2
+        GRIB_centre:             kwbc
+        GRIB_centreDescription:  US National Weather Service - NCEP...
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             US National Weather Service - NCEP, <xarray.Dataset>
+    Dimensions:            (y: 65, x: 93)
+    Coordinates:
+        time               datetime64[ns] 2018-09-17
+        step               timedelta64[ns] 00:00:00
+        heightAboveGround  float64 10.0
+        latitude           (y, x) float64 ...
+        longitude          (y, x) float64 ...
+        valid_time         datetime64[ns] ...
+    Dimensions without coordinates: y, x
+    Data variables:
+        u10                (y, x) float32 ...
+        v10                (y, x) float32 ...
+    Attributes:
+        GRIB_edition:            2
+        GRIB_centre:             kwbc
+        GRIB_centreDescription:  US National Weather Service - NCEP...
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             US National Weather Service - NCEP, <xarray.Dataset>
+    Dimensions:            (y: 65, x: 93)
+    Coordinates:
+        time               datetime64[ns] 2018-09-17
+        step               timedelta64[ns] 00:00:00
+        heightAboveGround  float64 2.0
+        latitude           (y, x) float64 12.19 12.39 12.58 ... 57.68 57.49 57.29
+        longitude          (y, x) float64 226.5 227.2 227.9 ... 308.5 309.6 310.6
+        valid_time         datetime64[ns] 2018-09-17
+    Dimensions without coordinates: y, x
+    Data variables:
+        t2m                (y, x) float32 ...
+        r2                 (y, x) float32 ...
+    Attributes:
+        GRIB_edition:            2
+        GRIB_centre:             kwbc
+        GRIB_centreDescription:  US National Weather Service - NCEP...
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             US National Weather Service - NCEP, <xarray.Dataset>
+    Dimensions:                 (heightAboveGroundLayer: 2, y: 65, x: 93)
+    Coordinates:
+        time                    datetime64[ns] 2018-09-17
+        step                    timedelta64[ns] 00:00:00
+    * heightAboveGroundLayer  (heightAboveGroundLayer) float64 1e+03 3e+03
+        latitude                (y, x) float64 ...
+        longitude               (y, x) float64 ...
+        valid_time              datetime64[ns] ...
+    Dimensions without coordinates: y, x
+    Data variables:
+        hlcy                    (heightAboveGroundLayer, y, x) float32 ...
+    Attributes:
+        GRIB_edition:            2
+        GRIB_centre:             kwbc
+        GRIB_centreDescription:  US National Weather Service - NCEP...
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             US National Weather Service - NCEP, <xarray.Dataset>
+    Dimensions:        (isobaricInhPa: 19, y: 65, x: 93)
+    Coordinates:
+        time           datetime64[ns] 2018-09-17
+        step           timedelta64[ns] 00:00:00
+    * isobaricInhPa  (isobaricInhPa) float64 1e+03 950.0 900.0 ... 150.0 100.0
+        latitude       (y, x) float64 12.19 12.39 12.58 12.77 ... 57.68 57.49 57.29
+        longitude      (y, x) float64 226.5 227.2 227.9 228.7 ... 308.5 309.6 310.6
+        valid_time     datetime64[ns] 2018-09-17
+    Dimensions without coordinates: y, x
+    Data variables:
+        t              (isobaricInhPa, y, x) float32 ...
+        u              (isobaricInhPa, y, x) float32 ...
+        v              (isobaricInhPa, y, x) float32 ...
+        w              (isobaricInhPa, y, x) float32 ...
+        gh             (isobaricInhPa, y, x) float32 ...
+        r              (isobaricInhPa, y, x) float32 ...
+    Attributes:
+        GRIB_edition:            2
+        GRIB_centre:             kwbc
+        GRIB_centreDescription:  US National Weather Service - NCEP...
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             US National Weather Service - NCEP, <xarray.Dataset>
+    Dimensions:        (isobaricInhPa: 5, y: 65, x: 93)
+    Coordinates:
+        time           datetime64[ns] 2018-09-17
+        step           timedelta64[ns] 00:00:00
+    * isobaricInhPa  (isobaricInhPa) float64 1e+03 850.0 700.0 500.0 250.0
+        latitude       (y, x) float64 ...
+        longitude      (y, x) float64 ...
+        valid_time     datetime64[ns] ...
+    Dimensions without coordinates: y, x
+    Data variables:
+        absv           (isobaricInhPa, y, x) float32 ...
+    Attributes:
+        GRIB_edition:            2
+        GRIB_centre:             kwbc
+        GRIB_centreDescription:  US National Weather Service - NCEP...
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             US National Weather Service - NCEP, <xarray.Dataset>
+    Dimensions:       (y: 65, x: 93)
+    Coordinates:
+        time          datetime64[ns] 2018-09-17
+        step          timedelta64[ns] 00:00:00
+        isothermZero  float64 0.0
+        latitude      (y, x) float64 12.19 12.39 12.58 12.77 ... 57.68 57.49 57.29
+        longitude     (y, x) float64 226.5 227.2 227.9 228.7 ... 308.5 309.6 310.6
+        valid_time    datetime64[ns] 2018-09-17
+    Dimensions without coordinates: y, x
+    Data variables:
+        gh            (y, x) float32 ...
+        r             (y, x) float32 ...
+    Attributes:
+        GRIB_edition:            2
+        GRIB_centre:             kwbc
+        GRIB_centreDescription:  US National Weather Service - NCEP...
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             US National Weather Service - NCEP, <xarray.Dataset>
+    Dimensions:     (y: 65, x: 93)
+    Coordinates:
+        time        datetime64[ns] 2018-09-17
+        step        timedelta64[ns] 00:00:00
+        maxWind     float64 0.0
+        latitude    (y, x) float64 12.19 12.39 12.58 12.77 ... 57.68 57.49 57.29
+        longitude   (y, x) float64 226.5 227.2 227.9 228.7 ... 308.5 309.6 310.6
+        valid_time  datetime64[ns] 2018-09-17
+    Dimensions without coordinates: y, x
+    Data variables:
+        pres        (y, x) float32 ...
+        u           (y, x) float32 ...
+        v           (y, x) float32 ...
+        gh          (y, x) float32 ...
+    Attributes:
+        GRIB_edition:            2
+        GRIB_centre:             kwbc
+        GRIB_centreDescription:  US National Weather Service - NCEP...
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             US National Weather Service - NCEP, <xarray.Dataset>
+    Dimensions:     (y: 65, x: 93)
+    Coordinates:
+        time        datetime64[ns] 2018-09-17
+        step        timedelta64[ns] 00:00:00
+        meanSea     float64 0.0
+        latitude    (y, x) float64 12.19 12.39 12.58 12.77 ... 57.68 57.49 57.29
+        longitude   (y, x) float64 226.5 227.2 227.9 228.7 ... 308.5 309.6 310.6
+        valid_time  datetime64[ns] 2018-09-17
+    Dimensions without coordinates: y, x
+    Data variables:
+        prmsl       (y, x) float32 ...
+        mslet       (y, x) float32 ...
+    Attributes:
+        GRIB_edition:            2
+        GRIB_centre:             kwbc
+        GRIB_centreDescription:  US National Weather Service - NCEP...
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             US National Weather Service - NCEP, <xarray.Dataset>
+    Dimensions:                  (pressureFromGroundLayer: 2, y: 65, x: 93)
+    Coordinates:
+        time                     datetime64[ns] 2018-09-17
+        step                     timedelta64[ns] 00:00:00
+    * pressureFromGroundLayer  (pressureFromGroundLayer) float64 9e+03 1.8e+04
+        latitude                 (y, x) float64 12.19 12.39 12.58 ... 57.49 57.29
+        longitude                (y, x) float64 226.5 227.2 227.9 ... 309.6 310.6
+        valid_time               datetime64[ns] 2018-09-17
+    Dimensions without coordinates: y, x
+    Data variables:
+        cape                     (pressureFromGroundLayer, y, x) float32 ...
+        cin                      (pressureFromGroundLayer, y, x) float32 ...
+    Attributes:
+        GRIB_edition:            2
+        GRIB_centre:             kwbc
+        GRIB_centreDescription:  US National Weather Service - NCEP...
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             US National Weather Service - NCEP, <xarray.Dataset>
+    Dimensions:                  (pressureFromGroundLayer: 5, y: 65, x: 93)
+    Coordinates:
+        time                     datetime64[ns] 2018-09-17
+        step                     timedelta64[ns] 00:00:00
+    * pressureFromGroundLayer  (pressureFromGroundLayer) float64 3e+03 ... 1.5e+04
+        latitude                 (y, x) float64 12.19 12.39 12.58 ... 57.49 57.29
+        longitude                (y, x) float64 226.5 227.2 227.9 ... 309.6 310.6
+        valid_time               datetime64[ns] 2018-09-17
+    Dimensions without coordinates: y, x
+    Data variables:
+        t                        (pressureFromGroundLayer, y, x) float32 ...
+        u                        (pressureFromGroundLayer, y, x) float32 ...
+        v                        (pressureFromGroundLayer, y, x) float32 ...
+        r                        (pressureFromGroundLayer, y, x) float32 ...
+    Attributes:
+        GRIB_edition:            2
+        GRIB_centre:             kwbc
+        GRIB_centreDescription:  US National Weather Service - NCEP...
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             US National Weather Service - NCEP, <xarray.Dataset>
+    Dimensions:                  (y: 65, x: 93)
+    Coordinates:
+        time                     datetime64[ns] 2018-09-17
+        step                     timedelta64[ns] 00:00:00
+        pressureFromGroundLayer  float64 3e+03
+        latitude                 (y, x) float64 ...
+        longitude                (y, x) float64 ...
+        valid_time               datetime64[ns] ...
+    Dimensions without coordinates: y, x
+    Data variables:
+        pli                      (y, x) float32 ...
+    Attributes:
+        GRIB_edition:            2
+        GRIB_centre:             kwbc
+        GRIB_centreDescription:  US National Weather Service - NCEP...
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             US National Weather Service - NCEP, <xarray.Dataset>
+    Dimensions:                  (y: 65, x: 93)
+    Coordinates:
+        time                     datetime64[ns] 2018-09-17
+        step                     timedelta64[ns] 00:00:00
+        pressureFromGroundLayer  float64 1.8e+04
+        latitude                 (y, x) float64 ...
+        longitude                (y, x) float64 ...
+        valid_time               datetime64[ns] ...
+    Dimensions without coordinates: y, x
+    Data variables:
+        4lftx                    (y, x) float32 ...
+    Attributes:
+        GRIB_edition:            2
+        GRIB_centre:             kwbc
+        GRIB_centreDescription:  US National Weather Service - NCEP...
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             US National Weather Service - NCEP, <xarray.Dataset>
+    Dimensions:     (y: 65, x: 93)
+    Coordinates:
+        time        datetime64[ns] 2018-09-17
+        step        timedelta64[ns] 00:00:00
+        surface     float64 0.0
+        latitude    (y, x) float64 12.19 12.39 12.58 12.77 ... 57.68 57.49 57.29
+        longitude   (y, x) float64 226.5 227.2 227.9 228.7 ... 308.5 309.6 310.6
+        valid_time  datetime64[ns] 2018-09-17
+    Dimensions without coordinates: y, x
+    Data variables:
+        unknown     (y, x) float32 ...
+        cape        (y, x) float32 ...
+        sp          (y, x) float32 ...
+        acpcp       (y, x) float32 ...
+        cin         (y, x) float32 ...
+        orog        (y, x) float32 ...
+        tp          (y, x) float32 ...
+        crain       (y, x) float32 ...
+        cfrzr       (y, x) float32 ...
+        cicep       (y, x) float32 ...
+        csnow       (y, x) float32 ...
+        gust        (y, x) float32 ...
+    Attributes:
+        GRIB_edition:            2
+        GRIB_centre:             kwbc
+        GRIB_centreDescription:  US National Weather Service - NCEP...
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             US National Weather Service - NCEP, <xarray.Dataset>
+    Dimensions:     (y: 65, x: 93)
+    Coordinates:
+        time        datetime64[ns] 2018-09-17
+        step        timedelta64[ns] 00:00:00
+        tropopause  float64 0.0
+        latitude    (y, x) float64 12.19 12.39 12.58 12.77 ... 57.68 57.49 57.29
+        longitude   (y, x) float64 226.5 227.2 227.9 228.7 ... 308.5 309.6 310.6
+        valid_time  datetime64[ns] 2018-09-17
+    Dimensions without coordinates: y, x
+    Data variables:
+        t           (y, x) float32 ...
+        u           (y, x) float32 ...
+        v           (y, x) float32 ...
+        trpp        (y, x) float32 ...
+    Attributes:
+        GRIB_edition:            2
+        GRIB_centre:             kwbc
+        GRIB_centreDescription:  US National Weather Service - NCEP...
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             US National Weather Service - NCEP]
+
+
+Advanced usage
+==============
+
+Write support
+=============
+
+**Please note that write support is Alpha.**
+Only ``xarray.Dataset``'s in *canonical* form,
+that is, with the coordinates names matching exactly the *cfgrib* coordinates,
+can be saved at the moment:
+
+.. code-block:: python
+
+    >>> from cfgrib.xarray_to_grib import to_grib
+    >>> ds = xr.open_dataset('era5-levels-members.grib', engine='cfgrib').sel(number=0)
+    >>> ds
+    <xarray.Dataset>
+    Dimensions:        (time: 4, isobaricInhPa: 2, latitude: 61, longitude: 120)
+    Coordinates:
+        number         int64 0
+    * time           (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
+        step           timedelta64[ns] ...
+    * isobaricInhPa  (isobaricInhPa) float64 850.0 500.0
+    * latitude       (latitude) float64 90.0 87.0 84.0 81.0 ... -84.0 -87.0 -90.0
+    * longitude      (longitude) float64 0.0 3.0 6.0 9.0 ... 351.0 354.0 357.0
+        valid_time     (time) datetime64[ns] ...
+    Data variables:
+        z              (time, isobaricInhPa, latitude, longitude) float32 ...
+        t              (time, isobaricInhPa, latitude, longitude) float32 ...
+    Attributes:
+        GRIB_edition:            1
+        GRIB_centre:             ecmf
+        GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             European Centre for Medium-Range Weather Forecasts
+        history:                 ...
+    >>> to_grib(ds, 'out1.grib', grib_keys={'edition': 2})
+    >>> xr.open_dataset('out1.grib', engine='cfgrib')
+    <xarray.Dataset>
+    Dimensions:        (time: 4, isobaricInhPa: 2, latitude: 61, longitude: 120)
+    Coordinates:
+        number         ...
+    * time           (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
+        step           timedelta64[ns] ...
+    * isobaricInhPa  (isobaricInhPa) float64 850.0 500.0
+    * latitude       (latitude) float64 90.0 87.0 84.0 81.0 ... -84.0 -87.0 -90.0
+    * longitude      (longitude) float64 0.0 3.0 6.0 9.0 ... 351.0 354.0 357.0
+        valid_time     (time) datetime64[ns] ...
+    Data variables:
+        z              (time, isobaricInhPa, latitude, longitude) float32 ...
+        t              (time, isobaricInhPa, latitude, longitude) float32 ...
+    Attributes:
+        GRIB_edition:            2
+        GRIB_centre:             ecmf
+        GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             European Centre for Medium-Range Weather Forecasts
+        history:                 ...
+
+Per-variable GRIB keys can be set by setting the ``attrs`` variable with key prefixed by ``GRIB_``,
+for example:
+
+.. code-block:: python
+
+    >>> import numpy as np
+    >>> import xarray as xr
+    >>> ds2 = xr.DataArray(
+    ...     np.zeros((5, 6)) + 300.,
+    ...     coords=[
+    ...         np.linspace(90., -90., 5),
+    ...         np.linspace(0., 360., 6, endpoint=False),
+    ...     ],
+    ...     dims=['latitude', 'longitude'],
+    ... ).to_dataset(name='skin_temperature')
+    >>> ds2.skin_temperature.attrs['GRIB_shortName'] = 'skt'
+    >>> to_grib(ds2, 'out2.grib')
+    >>> xr.open_dataset('out2.grib', engine='cfgrib')
+    <xarray.Dataset>
+    Dimensions:     (latitude: 5, longitude: 6)
+    Coordinates:
+        time        datetime64[ns] ...
+        step        timedelta64[ns] ...
+        surface     float64 ...
+    * latitude    (latitude) float64 90.0 45.0 0.0 -45.0 -90.0
+    * longitude   (longitude) float64 0.0 60.0 120.0 180.0 240.0 300.0
+        valid_time  datetime64[ns] ...
+    Data variables:
+        skt         (latitude, longitude) float32 ...
+    Attributes:
+        GRIB_edition:            2
+        GRIB_centre:             consensus
+        GRIB_centreDescription:  Consensus
+        GRIB_subCentre:          0
+        Conventions:             CF-1.7
+        institution:             Consensus
+        history:                 ...
+
+Dataset / Variable API
+----------------------
+
+The use of *xarray* is not mandatory and you can access the content of a GRIB file as
+an hypercube with the high level API in a Python interpreter:
+
+.. code-block:: python
+
+    >>> ds = cfgrib.open_file('era5-levels-members.grib')
+    >>> ds.attributes['GRIB_edition']
+    1
+    >>> sorted(ds.dimensions.items())
+    [('isobaricInhPa', 2), ('latitude', 61), ('longitude', 120), ('number', 10), ('time', 4)]
+    >>> sorted(ds.variables)
+    ['isobaricInhPa', 'latitude', 'longitude', 'number', 'step', 't', 'time', 'valid_time', 'z']
+    >>> var = ds.variables['t']
+    >>> var.dimensions
+    ('number', 'time', 'isobaricInhPa', 'latitude', 'longitude')
+    >>> var.data[:, :, :, :, :].mean()
+    262.92133
+    >>> ds = cfgrib.open_file('era5-levels-members.grib')
+    >>> ds.attributes['GRIB_edition']
+    1
+    >>> sorted(ds.dimensions.items())
+    [('isobaricInhPa', 2), ('latitude', 61), ('longitude', 120), ('number', 10), ('time', 4)]
+    >>> sorted(ds.variables)
+    ['isobaricInhPa', 'latitude', 'longitude', 'number', 'step', 't', 'time', 'valid_time', 'z']
+    >>> var = ds.variables['t']
+    >>> var.dimensions
+    ('number', 'time', 'isobaricInhPa', 'latitude', 'longitude')
+    >>> var.data[:, :, :, :, :].mean()
+    262.92133
+
+
+GRIB index file
+---------------
+
+By default *cfgrib* saves the index of the GRIB file to disk appending ``.idx``
+to the GRIB file name.
+Index files are an **experimental** and completely optional feature, feel free to
+remove them and try again in case of problems. Index files saving can be disable passing
+adding ``indexpath=''`` to the ``backend_kwargs`` keyword argument.
+
+
+Geographic Coordinate Caching
+-----------------------------
+
+By default, *cfgrib* caches computed geography coordinates for each record in the GRIB
+file when opening a dataset, which significantly speeds up dataset creation.
+This cache can theoretically grow unboundedly in memory in long-lived
+applications which read many different grid types. Should it be necessary,
+caching can be disabled by passing `backend_kwargs=dict(cache_geo_coords=False)`
+to `xarray.open_dataset()`, `cfgrib.open_dataset()`, or
+`cfgrib.open_datasets()`.
+
+Project resources
+=================
+
+============= =========================================================
+Development   https://github.com/ecmwf/cfgrib
+Download      https://pypi.org/project/cfgrib
+User support  https://stackoverflow.com/search?q=cfgrib
+Code quality  .. image:: https://codecov.io/gh/ecmwf/cfgrib/branch/master/graph/badge.svg
+                :target: https://codecov.io/gh/ecmwf/cfgrib
+                :alt: Coverage status on Codecov
+============= =========================================================
+
+
+Contributing
+============
+
+The main repository is hosted on GitHub,
+testing, bug reports and contributions are highly welcomed and appreciated:
+
+https://github.com/ecmwf/cfgrib
+
+Please see the CONTRIBUTING.rst document for the best way to help.
+
+Lead developers:
+
+- `Iain Russell <https://github.com/iainrussell>`_ - `ECMWF <https://ecmwf.int>`_
+- `Baudouin Raoult <https://github.com/b8raoult>`_ - ECMWF
+
+Main contributors:
+
+- `Alessandro Amici <https://github.com/alexamici>`_ - `B-Open <https://bopen.eu>`_
+- `Aureliana Barghini <https://github.com/aurghs>`_ - B-Open
+- `Leonardo Barcaroli <https://github.com/leophys>`_ - B-Open
+
+See also the list of `contributors <https://github.com/ecmwf/cfgrib/contributors>`_ who participated in this project.
+
+
+License
+=======
+
+Copyright 2017-2021 European Centre for Medium-Range Weather Forecasts (ECMWF).
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at: http://www.apache.org/licenses/LICENSE-2.0.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Changelog for cfgrib
+====================
+
+0.9.14.0 (2024-07-19)
+---------------------
+
+- Added `coords_as_attributes` argument to `open_dataset()` to allow selected dimensions
+  to be stored as attributes rather than dimensions, allowing more heterogeneous data
+  to be encoded as an xarray dataset.
+  See `#394 <https://github.com/ecmwf/cfgrib/pull/394>`_.
+
+- Added valid_month dimension if monthlyVerificationDate and validityTime are available.
+  See `#393 <https://github.com/ecmwf/cfgrib/pull/393>`_.
+
+- Added uvRelativeToGrid to list of GRIB keys read by default.
+  See `#379 <https://github.com/ecmwf/cfgrib/pull/379>`_.
+
+0.9.13.0 (2024-06-27)
+---------------------
+
+- Allow users to pass of list of values to filter a key by.
+  See `#384 <https://github.com/ecmwf/cfgrib/pull/384>`_.
+
+- Functionality to ignore keys when reading a grib file
+  See `#382 <https://github.com/ecmwf/cfgrib/pull/382>`_.
+
+- Preserve coordinate encoding in cfgrib.open_datasets
+  See `#381 <https://github.com/ecmwf/cfgrib/pull/381>`_.
+
+0.9.12.0 (2024-05-26)
+---------------------
+
+- fixed issue where GRIB messages with non-hourly steps could not be read
+  See `#370 <https://github.com/ecmwf/cfgrib/pull/370>`_.
+
+
+0.9.11.0 (2024-04-05)
+---------------------
+
+- added automatic caching of geographic coordinates for improved performance
+  See `#341 <https://github.com/ecmwf/cfgrib/pull/341>`_.
+
+- fixed issue where to_grib() could crash if given a dataset with a single-valued dimension
+  See `#347 <https://github.com/ecmwf/cfgrib/issues/347>`_.
+
+- fixed issue where values could not be extracted when alternativeRowScanning=1 and
+  grid is not represented as 2D
+  See `#358 <https://github.com/ecmwf/cfgrib/issues/358>`_.
+
+- fixed issue where the `grib_errors` parameter was not being handled correctly.
+  This parameter has now been renamed to `errors`.
+  See `#349 <https://github.com/ecmwf/cfgrib/issues/349>`_.
+
+- dropped support for Python 3.6.
+  See `#363 <https://github.com/ecmwf/cfgrib/issues/363>`_.
+
+
+0.9.10.4 (2023-05-19)
+---------------------
+
+- added --var-encoding-json (or -v) option to the to_netcdf tool, e.g.
+  ``cfgrib to_netcdf -v '{"dtype": "float", "scale_factor": 0.1}' -o $OUTFILE $INFILE``
+  See `#334 <https://github.com/ecmwf/cfgrib/pull/334>`_.
+- fix issue where xarrays derived from Gaussian grids did not have the correct
+  geometry when written back out as GRIB
+  See `#330 <https://github.com/ecmwf/cfgrib/issues/330>`_.
+- fix issue where open_datasets() could merge different GRIB fields
+  that have the same data values
+  See `#336 <https://github.com/ecmwf/cfgrib/issues/336>`_.
+
+0.9.10.3 (2022-11-24)
+---------------------
+
+- large reduction in memory leak
+  See `#320 <https://github.com/ecmwf/cfgrib/pull/320/>`_.
+
+- Replaced ``distutils.version`` by ``packaging.version`` and
+  added description and url to the xarray plugin.
+  See `#318 <https://github.com/ecmwf/cfgrib/pull/318/>`_.
+
+
+0.9.10.2 (2022-10-04)
+---------------------
+
+- added --netcdf_kwargs_json option to 'cfgrib to_netcdf'
+  See `#294 <https://github.com/ecmwf/cfgrib/pull/294/>`_.
+- fixed support for GRIB files with alternativeRowScanning=1
+  See  `#296 <https://github.com/ecmwf/cfgrib/pull/296/>`_.
+- fixed support for missing values
+  See `#313 <https://github.com/ecmwf/cfgrib/issues/313>`_.
+
+
+0.9.10.1 (2022-03-16)
+---------------------
+
+- Fix failure to read index files.
+  See `#292 <https://github.com/ecmwf/cfgrib/issues/292>`_.
+- Allow backend kwargs to be provided in the to_netcdf executable,
+  either via a json format string, or a path to a json file via -b.
+  See `#288 <https://github.com/ecmwf/cfgrib/pull/288/>`_.
+- Fixed issue where the use of relpath() could cause a problem on Windows.
+  See `#284 <https://github.com/ecmwf/cfgrib/issues/284>`_.
+- Fix passing of pathlib.Path.
+  See `#282 <https://github.com/ecmwf/cfgrib/issues/282>`_.
+- Fixed issue where writing an ensemble number into a GRIB file caused an error.
+  See `#278 <https://github.com/ecmwf/cfgrib/issues/278>`_.
+
+
+0.9.10.0 (2022-01-31)
+---------------------
+
+- Big internal refactor to add support for a generic ``Fieldset`` similar to Metview.
+  See `#243 <https://github.com/ecmwf/cfgrib/issues/243>`_.
+
+
+0.9.9.1 (2021-09-29)
+--------------------
+
+- Fix the plugin interface that was missing ``extra_coords``.
+  See `#231 <https://github.com/ecmwf/cfgrib/issues/231>`_.
+- Fix the crash when ``extra_coords`` return a scalar.
+  See `#238 <https://github.com/ecmwf/cfgrib/issues/238>`_.
+- Improve type-hints.
+  Needed by `#243 <https://github.com/ecmwf/cfgrib/issues/243>`_.
+
+
+0.9.9.0 (2021-04-09)
+--------------------
+
+- Depend on the ECMWF `eccodes python package <https://pypi.org/project/eccodes>`_ to access
+  the low level ecCodes C-library, dropping all other GRIB decoding options.
+  See: `#95 <https://github.com/ecmwf/cfgrib/issues/95>`_,
+  `#14 <https://github.com/ecmwf/cfgrib/issues/14>`_.
+  `#204 <https://github.com/ecmwf/cfgrib/issues/204>`_,
+  `#147 <https://github.com/ecmwf/cfgrib/issues/147>`_ and
+  `#141 <https://github.com/ecmwf/cfgrib/issues/141>`_.
+- Many performance improvements during the generation of the index and during data access.
+  See: `#142 <https://github.com/ecmwf/cfgrib/issues/142>`_ and
+  `#197 <https://github.com/ecmwf/cfgrib/issues/197>`_.
+- ``filter_by_keys`` now can select on all keys known to *ecCodes* without the need to
+  add non default ones to ``read_keys`` explicitly.
+  See: `#187 <https://github.com/ecmwf/cfgrib/issues/187>`_.
+- Include support for `engine="cfgrib"` using *xarray* 0.18+ new backend API.
+  See: `#216 <https://github.com/ecmwf/cfgrib/pull/216>`_.
+- Fixed issue where could not load a GRIB message that has only one grid point.
+  See: `#199 <https://github.com/ecmwf/cfgrib/issues/199>`_.
+- Decode ``level`` coordinates as float in all cases, fixed issue with non-int levels.
+  See: `#195 <https://github.com/ecmwf/cfgrib/issues/195>`_.
+
+
+0.9.8.5 (2020-11-11)
+--------------------
+
+- Simpler and clearer messages in the event of errors.
+- Use `ECCODES_DIR` environment variable if present. Ported from *eccodes-python*
+  by xavierabellan. See: `#162 <https://github.com/ecmwf/cfgrib/issues/162>`_.
+- Fix using current ecCodes bindings when setting `CFGRIB_USE_EXTERNAL_ECCODES_BINDINGS=1`.
+
+
+0.9.8.4 (2020-08-03)
+--------------------
+
+- Use `ecmwflibs` if present to find the *ecCodes* installation.
+
+
+0.9.8.3 (2020-06-25)
+--------------------
+
+- Added support for ``indexingDate``, ``indexingTime`` time coordinates.
+- ``lambert_azimuthal_equal_area`` grids are now returned as 2D arrays.
+  See: `#119 <https://github.com/ecmwf/cfgrib/issues/119>`_.
+
+
+0.9.8.2 (2020-05-22)
+--------------------
+
+- Add support for MULTI-FIELD messages used in some GRIB products to store
+  ``u`` and ``v`` components of wind (e.g. GFS, NAM, etc). This has been the single
+  most reported bug in *cfgrib* with two failed attempts at fixing it already.
+  Let's see if the third time's a charm. Please test!
+  See: `#45 <https://github.com/ecmwf/cfgrib/issues/45>`_,
+  `#76 <https://github.com/ecmwf/cfgrib/issues/76>`_ and
+  `#111 <https://github.com/ecmwf/cfgrib/issues/111>`_.
+
+
+0.9.8.1 (2020-03-13)
+--------------------
+
+- Always open GRIB files in binary mode, by @b8raoult
+
+
+0.9.8.0 (2020-03-12)
+--------------------
+
+- Add support of experimental pyeccodes low-level driver by @b8raoult
+
+
+0.9.7.7 (2020-01-24)
+--------------------
+
+- Add support for `forecastMonth` in `cf2cdm.translate_coords`.
+
+
+0.9.7.6 (2019-12-05)
+--------------------
+
+- Fix the README.
+
+
+0.9.7.5 (2019-12-05)
+--------------------
+
+- Deprecate ``ensure_valid_time`` and the config option ``preferred_time_dimension`` that
+  are now better handled via ``time_dims``.
+
+
+0.9.7.4 (2019-11-22)
+--------------------
+
+- Add more options to ``time_dims`` forecasts products may be represented as
+  ``('time', 'verifying_time')`` or ``('time', 'forecastMonth')``.
+  See: `#97 <https://github.com/ecmwf/cfgrib/issues/97>`_.
+
+
+0.9.7.3 (2019-11-04)
+--------------------
+
+- Add support for selecting the time coordinates to use as dimensions via ``time_dims``.
+  Forecasts products may be represented as ``('time', 'step')`` (the default),
+  ``('time', 'valid_time')`` or ``('valid_time', 'step')``.
+  See: `#97 <https://github.com/ecmwf/cfgrib/issues/97>`_.
+- Reduce the in-memory footprint of the ``FieldIndex`` and the size of ``.idx`` files.
+
+
+0.9.7.2 (2019-09-24)
+--------------------
+
+- Add support to read additional keys from the GRIB files via ``read_keys``, they
+  appear in the variable ``attrs`` and you can ``filter_by_keys`` on them.
+  This is a general solution for all issues where users know the name of the additional keys
+  they are interested in.
+  See: `#89 <https://github.com/ecmwf/cfgrib/issues/89>`_ and
+  `#101 <https://github.com/ecmwf/cfgrib/issues/101>`_.
+
+
+0.9.7.1 (2019-07-08)
+--------------------
+
+- Fix a bytes-in-the-place-of-str bug when attempting to write a GRIB on Windows.
+  See: `#91 <https://github.com/ecmwf/cfgrib/issues/91>`_.
+- Honor setting ``indexpath`` in ``open_datasets``,
+  See: `#93 <https://github.com/ecmwf/cfgrib/issues/93>`_.
+
+
+0.9.7 (2019-05-27)
+------------------
+
+- Much improved ``cfgrib.open_datasets`` heuristics now reads many more
+  heterogeneous GRIB files. The function is now a supported API.
+  See: `#63 <https://github.com/ecmwf/cfgrib/issues/63>`_,
+  `#66 <https://github.com/ecmwf/cfgrib/issues/66>`_,
+  `#73 <https://github.com/ecmwf/cfgrib/issues/73>`_ and
+  `#75 <https://github.com/ecmwf/cfgrib/issues/75>`_.
+- Fix conda dependencies on Python 2 only package,
+  See: `#78 <https://github.com/ecmwf/cfgrib/issues/78>`_.
+
+
+0.9.7rc1 (2019-05-14)
+---------------------
+
+- Drop support for Python 2, in line with *xarray* 0.12.0.
+  The 0.9.6.x series will be supported long term for Python 2 users.
+  See: `#69 <https://github.com/ecmwf/cfgrib/issues/69>`_.
+- Sync internal ecCodes bindings API to the one in eccodes-python.
+  See: `#81 <https://github.com/ecmwf/cfgrib/issues/81>`_.
+- Source code has been formatted with ``black -S -l 99``.
+- Added initial support for spectral coordinates.
+
+
+0.9.6.2 (2019-04-15)
+--------------------
+
+- Improve merging of variables into a dataset.
+  See: `#63 <https://github.com/ecmwf/cfgrib/issues/63>`_.
+
+
+0.9.6.1.post1 (2019-03-17)
+--------------------------
+
+- Fix an issue in the README format.
+
+
+0.9.6.1 (2019-03-17)
+--------------------
+
+- Fixed (for real) MULTI-FIELD messages,
+  See: `#45 <https://github.com/ecmwf/cfgrib/issues/45>`_.
+- Added a protocol version to the index file. Old ``*.idx`` files must be removed.
+
+
+0.9.6.post1 (2019-03-07)
+------------------------
+
+- Fix an important typo in the README. See: `#64 <https://github.com/ecmwf/cfgrib/issues/64>`_.
+
+
+0.9.6 (2019-02-26)
+------------------
+
+- Add support for *Windows* by installing *ecCodes* via *conda*.
+  See: `#7 <https://github.com/ecmwf/cfgrib/issues/7>`_.
+- Added *conda-forge* package.
+  See: `#5 <https://github.com/ecmwf/cfgrib/issues/5>`_.
+
+
+0.9.5.7 (2019-02-24)
+--------------------
+
+- Fixed a serious bug in the computation of the suggested ``filter_by_keys`` for non-cubic
+  GRIB files. As a result ``cfgrib.xarray_store.open_datasets`` was not finding all the
+  variables in the files.
+  See: `#54 <https://github.com/ecmwf/cfgrib/issues/54>`_.
+- Fixed a serious bug in variable naming that could drop or at worse mix the values of variables.
+  Again see: `#54 <https://github.com/ecmwf/cfgrib/issues/54>`_.
+- Re-opened `#45 <https://github.com/ecmwf/cfgrib/issues/45>`_ as the fix was returning wrong data.
+  Now we are back to dropping all variable in a MULTI-FIELD except the first.
+
+
+0.9.5.6 (2019-02-04)
+--------------------
+
+- Do not set explicit timezone in ``units`` to avoid crashing some versions of *xarray*.
+  See: `#44 <https://github.com/ecmwf/cfgrib/issues/44>`_.
+
+
+0.9.5.5 (2019-02-02)
+--------------------
+
+- Enable ecCodes implicit MULTI-FIELD support by default, needed for NAM Products by NCEP.
+  See: `#45 <https://github.com/ecmwf/cfgrib/issues/45>`_.
+- Added support for ``depthBelowLand`` coordinate.
+
+
+0.9.5.4 (2019-01-25)
+--------------------
+
+- Add support for building ``valid_time`` from a bad ``time-step`` hypercube.
+
+
+0.9.5.3 (2019-01-25)
+--------------------
+
+- Also convert is ``valid_time`` can index all times and steps in ``translate_coords``.
+
+
+0.9.5.2 (2019-01-24)
+--------------------
+
+- Set ``valid_time`` as preferred time dimension for the CDS data model.
+- Fall back to using the generic ``GRIB2`` *ecCodes* template when no better option is found.
+  See: `#39 <https://github.com/ecmwf/cfgrib/issues/39>`_.
+
+
+0.9.5.1 (2018-12-27)
+--------------------
+
+- Fix the crash when using ``cf2cdm.translate_coords`` on datasets with non-dimension coordinates.
+  See: `#41 <https://github.com/ecmwf/cfgrib/issues/41>`_.
+- Added a ``cfgrib`` script that can translate GRIB to netCDF.
+  See: `#40 <https://github.com/ecmwf/cfgrib/issues/40>`_.
+
+
+0.9.5 (2018-12-20)
+------------------
+
+- Drop support for *xarray* versions prior to *v0.11* to reduce complexity.
+  (This is really only v0.10.9).
+  See: `#32 <https://github.com/ecmwf/cfgrib/issues/32>`_.
+- Declare the data as ``CF-1.7`` compliant via the  ``Conventions`` global attribute.
+  See: `#36 <https://github.com/ecmwf/cfgrib/issues/36>`_.
+- Tested larger-than-memory and distributed processing via *dask* and *dask.distributed*.
+  See: `#33 <https://github.com/ecmwf/cfgrib/issues/33>`_.
+- Promote write support via ``cfgrib.to_grib`` to **Alpha**.
+  See: `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_.
+- Provide the ``cf2cdm.translate_coords`` utility function to translate the coordinates
+  between CF-compliant data models, defined by ``out_name``, ``units`` and ``store_direction``.
+  See: `#24 <https://github.com/ecmwf/cfgrib/issues/24>`_.
+- Provide ``cfgrib.__version__``.
+  See: `#31 <https://github.com/ecmwf/cfgrib/issues/31>`_.
+- Raise with a better error message when users attempt to open a file that is not a GRIB.
+  See: `#34 <https://github.com/ecmwf/cfgrib/issues/34>`_.
+- Make 2D grids for ``rotated_ll`` and ``rotated_gg`` ``gridType``'s.
+  See: `#35 <https://github.com/ecmwf/cfgrib/issues/35>`_.
+
+
+0.9.4.1 (2018-11-08)
+--------------------
+
+- Fix formatting for PyPI page.
+
+
+0.9.4 (2018-11-08)
+------------------
+
+- Saves one index file per set of ``index_keys`` in a much more robust way.
+- Refactor CF-encoding and add the new ``encode_cf`` option to ``backend_kwargs``.
+  See: `#23 <https://github.com/ecmwf/cfgrib/issues/23>`_.
+- Refactor error handling and the option to ignore errors (not well documented yet).
+  See: `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_.
+- Do not crash on ``gridType`` not fully supported by the installed *ecCodes*
+  See: `#27 <https://github.com/ecmwf/cfgrib/issues/27>`_.
+- Several smaller bug fixes and performance improvements.
+
+
+0.9.3.1 (2018-10-28)
+--------------------
+
+- Assorted README fixes, in particular advertise index file support as alpha.
+
+
+0.9.3 (2018-10-28)
+------------------
+
+- Big performance improvement: add alpha support to save to and read from disk
+  the GRIB index produced by the full-file scan at the first open.
+  See: `#20 <https://github.com/ecmwf/cfgrib/issues/20>`_.
+
+
+0.9.2 (2018-10-22)
+------------------
+
+- Rename coordinate ``air_pressure`` to ``isobaricInhPa`` for consistency
+  with all other vertical ``level`` coordinates.
+  See: `#25 <https://github.com/ecmwf/cfgrib/issues/25>`_.
+
+
+0.9.1.post1 (2018-10-19)
+------------------------
+
+- Fix PyPI description.
+
+
+0.9.1 (2018-10-19)
+------------------
+
+- Change the usage of ``cfgrib.open_dataset`` to allign it with ``xarray.open_dataset``,
+  in particular ``filter_by_key`` must be added into the ``backend_kwargs`` dictionary.
+  See: `#21 <https://github.com/ecmwf/cfgrib/issues/21>`_.
+
+0.9.0 (2018-10-14)
+------------------
+
+- Beta release with read support.
+
+
