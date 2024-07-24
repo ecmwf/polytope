@@ -293,7 +293,10 @@ class FDBDatacube(Datacube):
             for i in range(len(sorted_fdb_range_nodes)):
                 n = sorted_fdb_range_nodes[i][0]
                 if len(request_output_values[0]) == 0:
-                    n.remove_branch()
+                    # If we are here, no data was found for this path in the fdb
+                    none_array = [None] * len(n.values)
+                    n.result.extend(none_array)
+                    # n.remove_branch()
                 else:
                     interm_request_output_values = request_output_values[0][i][0]
                     n.result.extend(interm_request_output_values)
