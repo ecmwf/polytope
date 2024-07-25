@@ -29,7 +29,6 @@ class TestSlicing3DXarrayDatacube:
         }
         self.slicer = HullSlicer()
         self.API = Polytope(
-            request={},
             datacube=array,
             engine=self.slicer,
             options=options,

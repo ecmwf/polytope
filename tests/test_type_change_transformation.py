@@ -22,7 +22,7 @@ class TestTypeChangeTransformation:
             "compressed_axes_config": ["step"],
         }
         self.slicer = HullSlicer()
-        self.API = Polytope(request={}, datacube=array, engine=self.slicer, options=options)
+        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 
     def test_merge_axis(self):
         request = Request(Select("step", [0]))

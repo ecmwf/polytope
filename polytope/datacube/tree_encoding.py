@@ -26,7 +26,6 @@ def encode_tree(tree: TensorIndexTree):
 
 def write_encoded_tree_to_file(tree_bytes):
     with open("encodedTree", "wb") as fs:
-        print(tree_bytes)
         fs.write(tree_bytes)
 
 
@@ -39,18 +38,12 @@ def encode_child(tree: TensorIndexTree, child: TensorIndexTree, node, result_siz
 
     if child.hidden:
         # add indexes to parent and add also indexes size...
-        # print("LOOK NOW")
-        # print(len(tree.indexes))
-        # print(len(node.indexes))
-        # print(node.indexes)
         node.indexes.extend(tree.indexes)
-        # node.size_indexes_branch.append(len(child.children))
         break_tag = False
         return break_tag
 
     # need to add axis and children etc to the encoded node only if the tree node isn't hidden
     else:
-        # new_result_size.append(len(child.values))
         child_node.axis = child.axis.name
         child_node.value.extend(child.values)
         child_node.size_result.extend(new_result_size)
@@ -61,7 +54,6 @@ def encode_child(tree: TensorIndexTree, child: TensorIndexTree, node, result_siz
                 for c_ in child.children:
                     child_node.size_indexes_branch.append(len(c_.children))
                 break
-            # encode_child(child, c, child_node, [])
 
         # we append the children once their branch has been completed until the leaf
         if not child.hidden:

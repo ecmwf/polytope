@@ -1,6 +1,5 @@
 import logging
 import operator
-import time
 from copy import deepcopy
 from itertools import product
 
@@ -9,7 +8,7 @@ from .datacube import Datacube, TensorIndexTree
 
 
 class FDBDatacube(Datacube):
-    def __init__(self, gj, request, config=None, axis_options=None, compressed_axes_options=[], alternative_axes=[]):
+    def __init__(self, gj, config=None, axis_options=None, compressed_axes_options=[], alternative_axes=[]):
         if config is None:
             config = {}
 
@@ -26,13 +25,10 @@ class FDBDatacube(Datacube):
         self.gj = gj
         if len(alternative_axes) == 0:
             self.fdb_coordinates = self.gj.axes(partial_request)
-            self.check_branching_axes(request)
         else:
             self.fdb_coordinates = {}
             for axis_config in alternative_axes:
                 self.fdb_coordinates[axis_config.axis_name] = axis_config.values
-
-        # self.check_branching_axes(request)
 
         logging.info("Axes returned from GribJump are: " + str(self.fdb_coordinates))
 
@@ -74,8 +70,14 @@ class FDBDatacube(Datacube):
         self.fdb_coordinates.pop("direction", None)
         self.fdb_coordinates.pop("frequency", None)
 
+        # NOTE: verify that we also remove the axis object for axes we've removed here
+        axes_to_remove = set(self.complete_axes) - set(self.fdb_coordinates.keys())
+
+        # Remove the keys from self._axes
+        for axis_name in axes_to_remove:
+            self._axes.pop(axis_name, None)
+
     def get(self, requests: TensorIndexTree):
-        time1 = time.time()
         if len(requests.children) == 0:
             return requests
         fdb_requests = []
@@ -109,16 +111,8 @@ class FDBDatacube(Datacube):
                 complete_uncompressed_request = (uncompressed_request, compressed_request[1])
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
-        print("TIME BEFORE GJ EXTRACT")
-        print(time.time() - time1)
-        time0 = time.time()
         output_values = self.gj.extract(complete_list_complete_uncompressed_requests)
-        print("GJ EXTRACT TIME")
-        print(time.time() - time0)
-        time2 = time.time()
         self.assign_fdb_output_to_nodes(output_values, complete_fdb_decoding_info)
-        print("TIME ASSIGNING GJ OUTPUT TO NODES")
-        print(time.time() - time2)
 
     def get_fdb_requests(
         self,
@@ -161,7 +155,6 @@ class FDBDatacube(Datacube):
                     self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path)
 
     def remove_duplicates_in_request_ranges(self, fdb_node_ranges, current_start_idxs):
-        time1 = time.time()
         seen_indices = set()
         for i, idxs_list in enumerate(current_start_idxs):
             for k, sub_lat_idxs in enumerate(idxs_list):
@@ -184,9 +177,6 @@ class FDBDatacube(Datacube):
                     current_start_idxs[i].pop(k)
                 else:
                     current_start_idxs[i][k] = new_current_start_idx
-
-        print("TIME REMOVING DUPLICATES")
-        print(time.time() - time1)
         return (fdb_node_ranges, current_start_idxs)
 
     def nearest_lat_lon_search(self, requests):

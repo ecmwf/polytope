@@ -1,25 +1,50 @@
 import time
 
 import pandas as pd
+import pygribjump as gj
 
-from polytope.datacube.backends.fdb import FDBDatacube
 from polytope.polytope import Polytope, Request
 from polytope.shapes import All, Point, Select
 
 time1 = time.time()
 # Create a dataarray with 3 labelled axes using different index types
-options = {
-    "values": {"mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}},
-    "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
-    "step": {"type_change": "int"},
-    "number": {"type_change": "int"},
-    "longitude": {"cyclic": [0, 360]},
-    "latitude": {"reverse": {True}},
-}
 
-config = {"class": "od", "expver": "0001", "levtype": "sfc", "type": "pf"}
-fdbdatacube = FDBDatacube(config, axis_options=options)
-self_API = Polytope(datacube=fdbdatacube, axis_options=options)
+# config = {"class": "od", "expver": "0001", "levtype": "sfc", "type": "pf"}
+options = {
+    "axis_config": [
+        {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
+        {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
+        {
+            "axis_name": "date",
+            "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
+        },
+        {
+            "axis_name": "values",
+            "transformations": [
+                {"name": "mapper", "type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
+            ],
+        },
+        {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
+        {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
+    ],
+    "compressed_axes_config": [
+        "longitude",
+        "latitude",
+        "levtype",
+        "step",
+        "date",
+        "domain",
+        "expver",
+        "param",
+        "class",
+        "stream",
+        "type",
+        "number",
+    ],
+    "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "type": "pf"},
+}
+fdbdatacube = gj.GribJump()
+self_API = Polytope(datacube=fdbdatacube, options=options)
 
 print(time.time() - time1)
 
@@ -44,6 +69,8 @@ request = Request(
 time3 = time.time()
 result = self_API.retrieve(request)
 time4 = time.time()
+print("Polytope time")
+print(self_API.time)
 print(time.time() - time1)
 print(time.time() - time2)
 print(time4 - time3)

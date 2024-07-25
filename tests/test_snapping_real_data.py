@@ -27,7 +27,6 @@ class TestSlicingEra5Data:
             "compressed_axes_config": ["longitude", "latitude", "step", "time", "number", "isobaricInhPa"],
         }
         self.API = Polytope(
-            request={},
             datacube=array,
             engine=self.slicer,
             options=options,

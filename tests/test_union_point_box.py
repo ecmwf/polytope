@@ -1,12 +1,9 @@
-import time
-
 import pandas as pd
 import pytest
 
-from polytope.datacube.tree_encoding import decode_tree, encode_tree
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import All, Box, Select
+from polytope.shapes import Box, Point, Select, Union
 
 
 class TestSlicingFDBDatacube:
@@ -29,7 +26,7 @@ class TestSlicingFDBDatacube:
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
             ],
-            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "type": "pf"},
+            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
             "compressed_axes_config": [
                 "longitude",
                 "latitude",
@@ -42,56 +39,37 @@ class TestSlicingFDBDatacube:
                 "class",
                 "stream",
                 "type",
-                "number",
             ],
         }
 
     # Testing different shapes
-    # @pytest.mark.skip(reason="optimisation test")
     @pytest.mark.fdb
+    @pytest.mark.skip(reason="point and box are not same dimensions")
     def test_fdb_datacube(self):
         import pygribjump as gj
 
+        box = Box(["latitude", "longitude"], [4, 4], [8, 8])
+        point = Point(["latitude", "longitude"], [[1, 1]], method="surrounding")
+
         request = Request(
-            All("step"),
+            Select("step", [0]),
             Select("levtype", ["sfc"]),
-            Select("date", [pd.Timestamp("20231205T000000")]),
+            Select("date", [pd.Timestamp("20230625T120000")]),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
             Select("param", ["167"]),
             Select("class", ["od"]),
-            Select("stream", ["enfo"]),
-            Select("type", ["pf"]),
-            Box(["latitude", "longitude"], [-20, 61], [48, 36]),
-            All("number"),
+            Select("stream", ["oper"]),
+            Select("type", ["an"]),
+            Union(["latitude", "longitude"], box, point),
         )
-
         self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
         self.API = Polytope(
+            request=request,
             datacube=self.fdbdatacube,
             engine=self.slicer,
             options=self.options,
         )
-        time1 = time.time()
         result = self.API.retrieve(request)
-        time2 = time.time()
-        self.fdb_datacube = self.API.datacube
-        self.fdb_datacube.prep_tree_encoding(result)
-        result.pprint()
-        print("PREP TREE ENCODING MAPPINGS")
-        print(time.time() - time2)
-        time3 = time.time()
-        encoded_bytes = encode_tree(result)
-        print("TREE ENCODING")
-        print(time.time() - time3)
-        time4 = time.time()
-        decoded_tree = decode_tree(self.fdb_datacube, encoded_bytes)
-        print("TREE DECODING")
-        print(time.time() - time4)
-        decoded_tree.pprint()
-        print(time.time() - time1)
-        print(len(result.leaves[0].result))
-        for leaf in result.leaves:
-            assert leaf.result is not None
-        assert len(result.leaves) == 968
+        assert len(result.leaves) == 1

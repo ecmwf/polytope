@@ -38,7 +38,7 @@ class Request:
 
 
 class Polytope:
-    def __init__(self, request, datacube, engine=None, options=None):
+    def __init__(self, datacube, engine=None, options=None):
         from .datacube import Datacube
         from .engine import Engine
 
@@ -47,10 +47,9 @@ class Polytope:
 
         axis_options, compressed_axes_options, config, alternative_axes = PolytopeOptions.get_polytope_options(options)
 
-        self.datacube = Datacube.create(
-            request, datacube, config, axis_options, compressed_axes_options, alternative_axes
-        )
+        self.datacube = Datacube.create(datacube, config, axis_options, compressed_axes_options, alternative_axes)
         self.engine = engine if engine is not None else Engine.default()
+        self.time = 0
 
     def slice(self, polytopes: List[ConvexPolytope]):
         """Low-level API which takes a polytope geometry object and uses it to slice the datacube"""
@@ -58,15 +57,7 @@ class Polytope:
 
     def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
-        # self.datacube.check_branching_axes(request)
-        import time
-
-        time0 = time.time()
+        self.datacube.check_branching_axes(request)
         request_tree = self.engine.extract(self.datacube, request.polytopes())
-        print("POLYTOPE FIND TREE BY SLICING")
-        print(time.time() - time0)
-        time1 = time.time()
         self.datacube.get(request_tree)
-        print("FDB GET TIME")
-        print(time.time() - time1)
         return request_tree
