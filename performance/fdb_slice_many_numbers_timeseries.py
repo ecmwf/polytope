@@ -1,11 +1,11 @@
 import time
 
 import pandas as pd
+import pygribjump as gj
 
 from polytope.datacube.backends.fdb import FDBDatacube
 from polytope.polytope import Polytope, Request
 from polytope.shapes import All, Point, Select
-import pygribjump as gj
 
 time1 = time.time()
 # Create a dataarray with 3 labelled axes using different index types
