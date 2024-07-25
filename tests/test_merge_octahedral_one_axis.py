@@ -30,7 +30,6 @@ class TestSlicingMultipleTransformationsOneAxis:
         }
         self.slicer = HullSlicer()
         self.API = Polytope(
-            request={},
             datacube=self.latlon_array,
             engine=self.slicer,
             options=self.options,

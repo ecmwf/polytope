@@ -9,7 +9,7 @@ from .datacube import Datacube, TensorIndexTree
 
 
 class FDBDatacube(Datacube):
-    def __init__(self, gj, request, config=None, axis_options=None, compressed_axes_options=[], alternative_axes=[]):
+    def __init__(self, gj, config=None, axis_options=None, compressed_axes_options=[], alternative_axes=[]):
         if config is None:
             config = {}
 
@@ -26,13 +26,10 @@ class FDBDatacube(Datacube):
         self.gj = gj
         if len(alternative_axes) == 0:
             self.fdb_coordinates = self.gj.axes(partial_request)
-            self.check_branching_axes(request)
         else:
             self.fdb_coordinates = {}
             for axis_config in alternative_axes:
                 self.fdb_coordinates[axis_config.axis_name] = axis_config.values
-
-        # self.check_branching_axes(request)
 
         logging.info("Axes returned from GribJump are: " + str(self.fdb_coordinates))
 
@@ -73,6 +70,13 @@ class FDBDatacube(Datacube):
         # TODO: When do these not appear??
         self.fdb_coordinates.pop("direction", None)
         self.fdb_coordinates.pop("frequency", None)
+
+        # NOTE: verify that we also remove the axis object for axes we've removed here
+        axes_to_remove = set(self.complete_axes) - set(self.fdb_coordinates.keys())
+
+        # Remove the keys from self._axes
+        for axis_name in axes_to_remove:
+            self._axes.pop(axis_name, None)
 
     def get(self, requests: TensorIndexTree):
         time1 = time.time()

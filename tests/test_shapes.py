@@ -27,7 +27,6 @@ class TestSlicing3DXarrayDatacube:
         }
         self.slicer = HullSlicer()
         self.API = Polytope(
-            request={},
             datacube=array,
             engine=self.slicer,
             options=self.options,
@@ -86,7 +85,7 @@ class TestSlicing3DXarrayDatacube:
             Span("latitude", 89.9, 90),
             All("longitude"),
         )
-        self.API = Polytope(request=request, datacube=self.fdbdatacube, engine=self.slicer, options=self.options)
+        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, options=self.options)
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 1

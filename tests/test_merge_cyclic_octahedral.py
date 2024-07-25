@@ -39,7 +39,6 @@ class TestMultipleTransformations:
         }
         self.slicer = HullSlicer()
         self.API = Polytope(
-            request={},
             datacube=self.array,
             engine=self.slicer,
             options=self.options,

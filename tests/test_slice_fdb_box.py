@@ -29,7 +29,6 @@ class TestSlicingFDBDatacube:
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
             ],
-            # "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
             "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "type": "pf"},
             "compressed_axes_config": [
                 "longitude",
@@ -54,7 +53,6 @@ class TestSlicingFDBDatacube:
         import pygribjump as gj
 
         request = Request(
-            # Select("step", [0, 1]),
             All("step"),
             Select("levtype", ["sfc"]),
             Select("date", [pd.Timestamp("20231205T000000")]),
@@ -64,29 +62,13 @@ class TestSlicingFDBDatacube:
             Select("class", ["od"]),
             Select("stream", ["enfo"]),
             Select("type", ["pf"]),
-            # Select("latitude", [0.035149384216], method="surrounding"),
             Box(["latitude", "longitude"], [-20, 61], [48, 36]),
-            # Box(["latitude", "longitude"], [0, 1], [1, 2]),
-            # Select("number", [1, 2]),
             All("number"),
         )
-        # request = Request(
-        #     Select("step", [0]),
-        #     Select("levtype", ["sfc"]),
-        #     Select("date", [pd.Timestamp("20230625T120000")]),
-        #     Select("domain", ["g"]),
-        #     Select("expver", ["0001"]),
-        #     Select("param", ["167"]),
-        #     Select("class", ["od"]),
-        #     Select("stream", ["oper"]),
-        #     Select("type", ["an"]),
-        #     Box(["latitude", "longitude"], [-20, 61], [48, 36]),
-        # )
 
         self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
         self.API = Polytope(
-            request=request,
             datacube=self.fdbdatacube,
             engine=self.slicer,
             options=self.options,
@@ -108,12 +90,7 @@ class TestSlicingFDBDatacube:
         print("TREE DECODING")
         print(time.time() - time4)
         decoded_tree.pprint()
-        # time5 = time.time()
-        # decode_into_tree(result, encoded_bytes)
-        # print("TREE DECODE INTO")
-        # print(time.time() - time5)
         print(time.time() - time1)
-        # result.pprint()
         print(len(result.leaves[0].result))
         for leaf in result.leaves:
             assert leaf.result is not None

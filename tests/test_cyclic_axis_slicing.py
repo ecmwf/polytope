@@ -29,7 +29,6 @@ class TestSlicingCyclic:
         }
         self.slicer = HullSlicer()
         self.API = Polytope(
-            request={},
             datacube=array,
             engine=self.slicer,
             options=self.options,
