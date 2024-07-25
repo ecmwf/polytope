@@ -66,6 +66,8 @@ class XArrayDatacube(Datacube):
                 self.get(c, leaf_path, axis_counter + 1)
         else:
             key_value_path = {requests.axis.name: requests.values}
+            # num_indexes = len(requests.values)
+            print(key_value_path)
             ax = requests.axis
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
@@ -83,6 +85,7 @@ class XArrayDatacube(Datacube):
                 else:
                     # We are at a leaf and need to assign value to it
                     leaf_path_copy = deepcopy(leaf_path)
+                    # leaf_path_copy["values"] = tuple([leaf_path["values"][0] + i for i in range(num_indexes)])
                     unmapped_path = {}
                     print(leaf_path_copy)
                     self.refit_path(leaf_path_copy, unmapped_path, leaf_path)

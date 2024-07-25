@@ -19,7 +19,7 @@ class TestSlicing3DXarrayDatacube:
             "axis_config": [{"axis_name": "long", "transformations": [{"name": "cyclic", "range": [0, 1.0]}]}],
             "compressed_axes_config": ["long"],
         }
-        self.API = Polytope(request={}, datacube=array, options=options)
+        self.API = Polytope(datacube=array, options=options)
 
     # Testing different shapes
 

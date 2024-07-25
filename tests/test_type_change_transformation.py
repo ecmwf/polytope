@@ -20,7 +20,7 @@ class TestTypeChangeTransformation:
             "axis_config": [{"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]}],
             "compressed_axes_config": ["step"],
         }
-        self.API = Polytope(request={}, datacube=array, options=options)
+        self.API = Polytope(datacube=array, options=options)
 
     def test_merge_axis(self):
         request = Request(Select("step", [0]))

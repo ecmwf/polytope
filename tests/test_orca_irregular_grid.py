@@ -49,7 +49,6 @@ class TestQuadTreeSlicer:
         )
 
         self.API = Polytope(
-            request=request,
             datacube=self.arr,
             options=self.options,
             engine_options=self.engine_options,

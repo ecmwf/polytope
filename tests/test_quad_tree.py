@@ -3,7 +3,7 @@ import pytest
 from polytope.datacube.quad_tree import QuadNode
 from polytope.engine.quadtree_slicer import QuadTreeSlicer
 from polytope.engine.slicing_tools import slice_in_two
-from polytope.polytope import Polytope, Request
+from polytope.polytope import Polytope
 from polytope.shapes import Box, ConvexPolytope
 
 
@@ -124,7 +124,6 @@ class TestQuadTreeSlicer:
         points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
         polytope = Box(["latitude", "longitude"], [1, 1], [20, 30]).polytope()[0]
         self.API = Polytope(
-            request=Request(polytope),
             datacube=self.fdbdatacube,
             options=self.options,
             engine_options={"latitude": "quadtree", "longitude": "quadtree"},
@@ -157,7 +156,6 @@ class TestQuadTreeSlicer:
         time0 = time.time()
         polytope = Box(["latitude", "longitude"], [1, 1], [20, 30]).polytope()[0]
         self.API = Polytope(
-            request=Request(polytope),
             datacube=self.fdbdatacube,
             options=self.options,
             engine_options={"latitude": "quadtree", "longitude": "quadtree"},

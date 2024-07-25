@@ -15,6 +15,9 @@ class Test:
     def setup_method(self):
         ds = data.from_source("file", "./examples/data/winds.grib")
         array = ds.to_xarray()
+        print(array.number)
+        print(array.surface)
+        print(array.time)
         array = array.isel(time=0).isel(surface=0).isel(number=0).u10
         self.array = array
         self.slicer = HullSlicer()

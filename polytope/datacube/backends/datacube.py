@@ -72,7 +72,7 @@ class Datacube(ABC):
         if len(final_axis_names) > 1:
             self.coupled_axes.append(final_axis_names)
             for axis in final_axis_names:
-                if axis in self.compressed_axes:
+                if axis in self.compressed_axes and axis != final_axis_names[-1]:
                     self.compressed_axes.remove(axis)
         for axis_name in final_axis_names:
             self.fake_axes.append(axis_name)
@@ -146,7 +146,6 @@ class Datacube(ABC):
 
     @staticmethod
     def create(
-        request,
         datacube,
         config={},
         axis_options={},
@@ -166,11 +165,14 @@ class Datacube(ABC):
             from .fdb import FDBDatacube
 
             fdbdatacube = FDBDatacube(
-                datacube, request, config, axis_options, compressed_axes_options, point_cloud_options, alternative_axes
+                datacube, config, axis_options, compressed_axes_options, point_cloud_options, alternative_axes
             )
             return fdbdatacube
         else:
             return datacube
+
+    def check_branching_axes(self, request):
+        pass
 
     @abstractmethod
     def find_point_cloud(self):

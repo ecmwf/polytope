@@ -30,7 +30,6 @@ class TestOctahedralGrid:
             "compressed_axes_config": ["longitude", "latitude", "step", "time", "isobaricInhPa", "valid_time"],
         }
         self.API = Polytope(
-            request={},
             datacube=self.latlon_array,
             options=self.options,
         )
@@ -46,7 +45,9 @@ class TestOctahedralGrid:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 45
+        assert len(result.leaves) == 10
+        assert result.leaves[0].result[1].size == 4
+        assert result.leaves[1].result[1].size == 5
 
         lats = []
         lons = []
@@ -57,7 +58,7 @@ class TestOctahedralGrid:
             tree_result = leaf.result[1].tolist()
             lat = cubepath["latitude"][0]
             new_lons = cubepath["longitude"]
-            for lon in new_lons:
+            for j, lon in enumerate(new_lons):
                 lats.append(lat)
                 lons.append(lon)
                 nearest_points = find_nearest_latlon("./tests/data/healpix.grib", lat, lon)
@@ -72,6 +73,6 @@ class TestOctahedralGrid:
                 assert eccodes_lon - tol <= lon
                 assert lon <= eccodes_lon + tol
                 tol = 1e-2
-                assert abs(eccodes_result - tree_result) <= tol
+                assert abs(eccodes_result - tree_result[j]) <= tol
             eccodes_lats.append(lat)
-        assert len(eccodes_lats) == 45
+        assert len(eccodes_lats) == 10

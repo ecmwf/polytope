@@ -46,7 +46,6 @@ class Request:
 class Polytope:
     def __init__(
         self,
-        request,
         datacube,
         options=None,
         engine_options=None,
@@ -63,7 +62,6 @@ class Polytope:
 
         axis_options, compressed_axes_options, config, alternative_axes = PolytopeOptions.get_polytope_options(options)
         self.datacube = Datacube.create(
-            request,
             datacube,
             config,
             axis_options,
@@ -105,6 +103,7 @@ class Polytope:
         """Low-level API which takes a polytope geometry object and uses it to slice the datacube"""
 
         self.find_compressed_axes(datacube, polytopes)
+        self.remove_compressed_axis_in_union(polytopes)
 
         # Convert the polytope points to float type to support triangulation and interpolation
         for p in polytopes:
@@ -141,6 +140,14 @@ class Polytope:
 
             request.merge(r)
         return request
+    
+    def remove_compressed_axis_in_union(self, polytopes):
+        for p in polytopes:
+            if p.is_in_union:
+                for axis in p.axes():
+                    # if axis in self.compressed_axes:
+                    if axis == self.compressed_axes[-1]:
+                        self.compressed_axes.remove(axis)
 
     def find_engine(self, ax):
         slicer_type = self.engine_options[ax.name]
@@ -149,12 +156,23 @@ class Polytope:
     def old_retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
         # self.datacube.check_branching_axes(request)
+        import time
+
+        time0 = time.time()
         request_tree = self.engine.extract(self.datacube, request.polytopes())
+        print("POLYTOPE FIND TREE BY SLICING")
+        print(time.time() - time0)
+        time1 = time.time()
         self.datacube.get(request_tree)
+        print("FDB GET TIME")
+        print(time.time() - time1)
         return request_tree
 
     def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
+        # First remove non-valid branching datacube axes according to request
+        self.datacube.check_branching_axes(request)
+
         request_tree = self.slice(self.datacube, request.polytopes())
         self.datacube.get(request_tree)
         return request_tree
@@ -171,3 +189,6 @@ class Polytope:
         for compressed_axis in compressable_axes:
             if compressed_axis in datacube.compressed_axes:
                 self.compressed_axes.append(compressed_axis)
+        # add the last axis of the grid always (longitude) as a compressed axis
+        k, last_value = _, datacube.axes[k] = datacube.axes.popitem()
+        self.compressed_axes.append(k)

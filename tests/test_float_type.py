@@ -19,7 +19,7 @@ class TestFloatType:
             },
         )
         options = {"compressed_axes_config": ["lat", "long", "alt"]}
-        self.API = Polytope(request={}, datacube=array, options=options)
+        self.API = Polytope(datacube=array, options=options)
 
     def test_slicing_span(self):
         request = Request(Span("lat", 4.1, 4.3), Select("long", [4.1]), Select("alt", [4.1]))
