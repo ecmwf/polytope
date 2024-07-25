@@ -81,7 +81,7 @@ class TestSlicing3DXarrayDatacube:
         box2 = Box(["step", "level"], [6, 11], [12, 17])
         request = Request(Union(["step", "level"], box1, box2), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        result.pprint()
+        # result.pprint()
         assert len(result.leaves) == 2
 
     def test_mix_existing_nonexisting_data(self):
@@ -92,21 +92,34 @@ class TestSlicing3DXarrayDatacube:
     def test_disk(self):
         request = Request(Disk(["level", "step"], [6, 6], [3, 3]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 9
+        # result.pprint()
+        assert len(result.leaves) == 3
+        assert len(result.leaves[0].values) == 1
+        assert len(result.leaves[1].values) == 7
+        assert len(result.leaves[2].values) == 1
+        assert np.size(result.leaves[0].result[1]) == 1
+        assert np.size(result.leaves[1].result[1]) == 7
+        assert np.size(result.leaves[2].result[1]) == 1
 
     def test_concave_polygon(self):
+        # TODO: fix the overlapping branches?
         points = [[1, 0], [3, 0], [2, 3], [3, 6], [1, 6]]
         request = Request(Polygon(["level", "step"], points), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
         self.xarraydatacube.get(result)
+        # result.pprint()
         assert len(result.leaves) == 8
 
     def test_polytope(self):
         points = [[0, 1], [3, 1], [3, 2], [0, 2]]
         request = Request(ConvexPolytope(["step", "level"], points), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
+        result.pprint()
         self.xarraydatacube.get(result)
-        assert len(result.leaves) == 4
+        assert len(result.leaves) == 2
+        for leaf in result.leaves:
+            assert len(leaf.values) == 2
+            assert np.size(leaf.result[1]) == 2
 
     # Testing empty shapes
 
@@ -218,6 +231,7 @@ class TestSlicing3DXarrayDatacube:
         swept_poly = PathSegment(["level", "step"], concave_polygon, [0, 0], [1, 3])
         request = Request(swept_poly, Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
+        result.pprint()
         self.xarraydatacube.get(result)
         assert len(result.leaves) == 12
 
