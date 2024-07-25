@@ -51,6 +51,7 @@ class Polytope:
             request, datacube, config, axis_options, compressed_axes_options, alternative_axes
         )
         self.engine = engine if engine is not None else Engine.default()
+        self.time = 0
 
     def slice(self, polytopes: List[ConvexPolytope]):
         """Low-level API which takes a polytope geometry object and uses it to slice the datacube"""
