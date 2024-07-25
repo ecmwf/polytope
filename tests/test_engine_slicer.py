@@ -70,10 +70,8 @@ class TestEngineSlicer:
         # assert len(result.leaves) == 4
         assert len(result.leaves) == 10
         polytopes = Box(["x", "y"], lower_corner=[3, 3], upper_corner=[6, 6]).polytope()
-        result = self.slicer.extract(datacube, polytopes)
-        assert len(result.leaves) == 4 * 4
-        result = self.slicer.extract(datacube, polytopes)
-        assert len(result.leaves) == 4 * 4
+        result = API.slice(datacube, polytopes)
+        assert len(result.leaves) == 4
 
     def test_2D_box_get_function(self):
         datacube = MockDatacube({"x": 100, "y": 100})

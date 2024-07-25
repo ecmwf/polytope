@@ -103,6 +103,7 @@ class Polytope:
         """Low-level API which takes a polytope geometry object and uses it to slice the datacube"""
 
         self.find_compressed_axes(datacube, polytopes)
+        self.remove_compressed_axis_in_union(polytopes)
 
         # Convert the polytope points to float type to support triangulation and interpolation
         for p in polytopes:
@@ -139,6 +140,14 @@ class Polytope:
 
             request.merge(r)
         return request
+    
+    def remove_compressed_axis_in_union(self, polytopes):
+        for p in polytopes:
+            if p.is_in_union:
+                for axis in p.axes():
+                    # if axis in self.compressed_axes:
+                    if axis == self.compressed_axes[-1]:
+                        self.compressed_axes.remove(axis)
 
     def find_engine(self, ax):
         slicer_type = self.engine_options[ax.name]
