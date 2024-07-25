@@ -68,7 +68,8 @@ class TestSlicingFDBDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 9
+        assert len(result.leaves) == 3
+        assert len(result.leaves[0].result) == 3
 
     @pytest.mark.fdb
     def test_fdb_datacube_point(self):
@@ -96,8 +97,9 @@ class TestSlicingFDBDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 6
+        assert len(result.leaves) == 3
         assert set(result.leaves[0].flatten()["step"]) == set((0, 1))
+        assert len(result.leaves[0].result) == 4
 
     @pytest.mark.fdb
     def test_fdb_datacube_point_v2(self):
@@ -125,8 +127,8 @@ class TestSlicingFDBDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 6
-        assert len(result.leaves[0].result) == 2
+        assert len(result.leaves) == 3
+        assert len(result.leaves[0].result) == 4
 
     @pytest.mark.fdb
     def test_fdb_datacube_point_step_not_compressed(self):
@@ -184,4 +186,5 @@ class TestSlicingFDBDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 12
+        assert len(result.leaves) == 6
+        assert len(result.leaves[0].result) == 2
