@@ -3,7 +3,10 @@ import pytest
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Point, Select
+from polytope.shapes import Box, Select
+
+# import geopandas as gpd
+# import matplotlib.pyplot as plt
 
 
 class TestSlicingFDBDatacube:
@@ -20,19 +23,12 @@ class TestSlicingFDBDatacube:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {
-                            "name": "mapper",
-                            "type": "local_regular",
-                            "resolution": [80, 80],
-                            "axes": ["latitude", "longitude"],
-                            "local": [-40, 40, -20, 60],
-                        }
+                        {"name": "mapper", "type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
                     ],
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
-                {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [-180, 180]}]},
+                {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
             ],
-            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
             "compressed_axes_config": [
                 "longitude",
                 "latitude",
@@ -46,6 +42,7 @@ class TestSlicingFDBDatacube:
                 "stream",
                 "type",
             ],
+            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
         }
 
     # Testing different shapes
@@ -56,14 +53,14 @@ class TestSlicingFDBDatacube:
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
-            Select("date", [pd.Timestamp("20240129T000000")]),
+            Select("date", [pd.Timestamp("20230625T120000")]),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
             Select("param", ["167"]),
             Select("class", ["od"]),
             Select("stream", ["oper"]),
-            Select("type", ["fc"]),
-            Point(["latitude", "longitude"], [[-20, -20]]),
+            Select("type", ["an"]),
+            Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
         )
         self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
@@ -74,37 +71,19 @@ class TestSlicingFDBDatacube:
             options=self.options,
         )
         result = self.API.retrieve(request)
+        self.API.datacube.prep_tree_encoding(result)
         result.pprint()
-        assert len(result.leaves) == 1
-        assert result.leaves[0].flatten()["latitude"] == (-20,)
-        assert result.leaves[0].flatten()["longitude"] == (-20,)
-
-    @pytest.mark.fdb
-    def test_fdb_datacube_2(self):
-        import pygribjump as gj
-
-        request = Request(
-            Select("step", [0]),
-            Select("levtype", ["sfc"]),
-            Select("date", [pd.Timestamp("20240129T000000")]),
-            Select("domain", ["g"]),
-            Select("expver", ["0001"]),
-            Select("param", ["167"]),
-            Select("class", ["od"]),
-            Select("stream", ["oper"]),
-            Select("type", ["fc"]),
-            Point(["latitude", "longitude"], [[-20, 50 + 360]]),
-        )
-        self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
-        self.API = Polytope(
-            request=request,
-            datacube=self.fdbdatacube,
-            engine=self.slicer,
-            options=self.options,
-        )
-        result = self.API.retrieve(request)
-        result.pprint()
-        assert len(result.leaves) == 1
-        assert result.leaves[0].flatten()["latitude"] == (-20,)
-        assert result.leaves[0].flatten()["longitude"] == (50,)
+        for leaf in result.leaves:
+            assert leaf.hidden
+            assert leaf._parent.hidden
+            assert leaf._parent._parent.indexes == [
+                3294704,
+                3294705,
+                3294706,
+                3289572,
+                3289573,
+                3289574,
+                3284444,
+                3284445,
+                3284446,
+            ]

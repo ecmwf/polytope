@@ -1,7 +1,8 @@
-numpy
+numpy == 1.26.4
 pandas
 scipy
 sortedcontainers
 tripy
 xarray
 conflator @ git+https://github.com/ecmwf/conflator.git@main
+protobuf

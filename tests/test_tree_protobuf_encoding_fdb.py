@@ -1,17 +1,37 @@
 import pandas as pd
 import pytest
 
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select
+from polytope.datacube.tree_encoding import decode_tree, encode_tree
 
 
-class TestSlicingFDBDatacube:
-    def setup_method(self, method):
-        # Create a dataarray with 3 labelled axes using different index types
+class TestEncoder:
+    def setup_method(self):
+        pass
+
+    @pytest.mark.fdb
+    def test_encoding(self):
+        import pygribjump as gj
+
+        from polytope.engine.hullslicer import HullSlicer
+        from polytope.polytope import Polytope, Request
+        from polytope.shapes import Box, Select
+
+        request = Request(
+            Select("step", [0]),
+            Select("levtype", ["sfc"]),
+            Select("date", [pd.Timestamp("20230625T120000")]),
+            Select("domain", ["g"]),
+            Select("expver", ["0001"]),
+            Select("param", ["167"]),
+            Select("class", ["od"]),
+            Select("stream", ["oper"]),
+            Select("type", ["an"]),
+            Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
+        )
         self.options = {
             "axis_config": [
                 {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
+                {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
                 {
                     "axis_name": "date",
                     "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
@@ -25,7 +45,6 @@ class TestSlicingFDBDatacube:
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
             ],
-            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper", "type": "fc"},
             "compressed_axes_config": [
                 "longitude",
                 "latitude",
@@ -39,25 +58,8 @@ class TestSlicingFDBDatacube:
                 "stream",
                 "type",
             ],
+            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
         }
-
-    # Testing different shapes
-    @pytest.mark.fdb
-    def test_fdb_datacube(self):
-        import pygribjump as gj
-
-        request = Request(
-            Select("step", [0]),
-            Select("levtype", ["sfc"]),
-            Select("date", [pd.Timestamp("20240118T000000")]),
-            Select("domain", ["g"]),
-            Select("expver", ["0001"]),
-            Select("param", ["49", "167"]),
-            Select("class", ["od"]),
-            Select("stream", ["oper"]),
-            Select("type", ["fc"]),
-            Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
-        )
         self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
         self.API = Polytope(
@@ -68,4 +70,11 @@ class TestSlicingFDBDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 9
+        fdb_datacube = self.API.datacube
+        fdb_datacube.prep_tree_encoding(result)
+        encoded_bytes = encode_tree(result)
+        # write_encoded_tree_to_file(encoded_bytes)
+        decoded_tree = decode_tree(fdb_datacube, encoded_bytes)
+        decoded_tree.pprint()
+        assert decoded_tree.leaves[0].result_size == [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        assert decoded_tree.leaves[0].indexes_size == [3, 3, 3]

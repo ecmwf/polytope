@@ -21,13 +21,14 @@ class TestSlicingCyclicAxisNegVals:
             },
         )
         options = {
-            "config": [
+            "axis_config": [
                 {"axis_name": "long", "transformations": [{"name": "cyclic", "range": [-1.1, -0.1]}]},
                 {"axis_name": "level", "transformations": [{"name": "cyclic", "range": [1, 129]}]},
-            ]
+            ],
+            "compressed_axes_config": ["long", "level", "step", "date"],
         }
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
+        self.API = Polytope(request={}, datacube=array, engine=self.slicer, options=options)
 
     # Testing different shapes
 
@@ -37,28 +38,18 @@ class TestSlicingCyclicAxisNegVals:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 20
-        assert [leaf.value for leaf in result.leaves] == [
-            -1.1,
-            -1.0,
-            -0.9,
-            -0.8,
-            -0.7,
-            -0.6,
-            -0.5,
-            -0.4,
-            -0.3,
-            -0.2,
-            -1.1,
-            -1.0,
-            -0.9,
-            -0.8,
-            -0.7,
-            -0.6,
-            -0.5,
-            -0.4,
-            -0.3,
-            -0.2,
+        assert len(result.leaves) == 1
+        assert [(val,) for val in result.leaves[0].values] == [
+            (-0.2,),
+            (-1.1,),
+            (-1.0,),
+            (-0.9,),
+            (-0.8,),
+            (-0.7,),
+            (-0.6,),
+            (-0.5,),
+            (-0.4,),
+            (-0.3,),
         ]
 
     def test_cyclic_float_axis_inside_cyclic_range(self):
@@ -67,24 +58,16 @@ class TestSlicingCyclicAxisNegVals:
         )
         result = self.API.retrieve(request)
         # result.pprint()
-        assert len(result.leaves) == 16
-        assert [leaf.value for leaf in result.leaves] == [
-            -1.0,
-            -0.9,
-            -0.8,
-            -0.7,
-            -0.6,
-            -0.5,
-            -0.4,
-            -0.3,
-            -1.0,
-            -0.9,
-            -0.8,
-            -0.7,
-            -0.6,
-            -0.5,
-            -0.4,
-            -0.3,
+        assert len(result.leaves) == 1
+        assert [(val,) for val in result.leaves[0].values] == [
+            (-1.0,),
+            (-0.9,),
+            (-0.8,),
+            (-0.7,),
+            (-0.6,),
+            (-0.5,),
+            (-0.4,),
+            (-0.3,),
         ]
 
     def test_cyclic_float_axis_above_axis_range(self):
@@ -93,8 +76,14 @@ class TestSlicingCyclicAxisNegVals:
         )
         result = self.API.retrieve(request)
         # result.pprint()
-        assert len(result.leaves) == 10
-        assert [leaf.value for leaf in result.leaves] == [-0.7, -0.6, -0.5, -0.4, -0.3, -0.7, -0.6, -0.5, -0.4, -0.3]
+        assert len(result.leaves) == 1
+        assert [(val,) for val in result.leaves[0].values] == [
+            (-0.7,),
+            (-0.6,),
+            (-0.5,),
+            (-0.4,),
+            (-0.3,),
+        ]
 
     def test_cyclic_float_axis_two_range_loops(self):
         request = Request(
@@ -102,28 +91,33 @@ class TestSlicingCyclicAxisNegVals:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 20
-        assert [leaf.value for leaf in result.leaves] == [
-            -1.1,
-            -1.0,
-            -0.9,
-            -0.8,
-            -0.7,
-            -0.6,
-            -0.5,
-            -0.4,
-            -0.3,
-            -0.2,
-            -1.1,
-            -1.0,
-            -0.9,
-            -0.8,
-            -0.7,
-            -0.6,
-            -0.5,
-            -0.4,
-            -0.3,
-            -0.2,
+        assert len(result.leaves) == 1
+        assert [(val,) for val in result.leaves[0].values] == [
+            (-0.7,),
+            (-0.6,),
+            (-0.5,),
+            (-0.4,),
+            (-0.3,),
+            (-0.2,),
+            (-1.1,),
+            (-1.0,),
+            (-0.9,),
+            (-0.8,),
+            (-0.7,),
+            (-0.6,),
+            (-0.5,),
+            (-0.4,),
+            (-0.3,),
+            (-0.2,),
+            (-1.1,),
+            (-1.0,),
+            (-0.9,),
+            (-0.8,),
+            (-0.7,),
+            (-0.6,),
+            (-0.5,),
+            (-0.4,),
+            (-0.3,),
         ]
 
     def test_cyclic_float_axis_below_axis_range(self):
@@ -131,8 +125,14 @@ class TestSlicingCyclicAxisNegVals:
             Box(["step", "long"], [0, -0.7], [3, -0.3]), Select("date", ["2000-01-01"]), Select("level", [128])
         )
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 10
-        assert [leaf.value for leaf in result.leaves] == [-0.7, -0.6, -0.5, -0.4, -0.3, -0.7, -0.6, -0.5, -0.4, -0.3]
+        assert len(result.leaves) == 1
+        assert [(val,) for val in result.leaves[0].values] == [
+            (-0.7,),
+            (-0.6,),
+            (-0.5,),
+            (-0.4,),
+            (-0.3,),
+        ]
 
     def test_cyclic_float_axis_below_axis_range_crossing_seam(self):
         request = Request(
@@ -140,26 +140,17 @@ class TestSlicingCyclicAxisNegVals:
         )
         result = self.API.retrieve(request)
         # result.pprint()
-        assert len(result.leaves) == 20
-        assert [leaf.value for leaf in result.leaves] == [
-            -1.0,
-            -0.9,
-            -0.8,
-            -0.7,
-            -0.6,
-            -0.5,
-            -0.4,
-            -0.3,
-            -0.2,
-            -0.1,
-            -1.0,
-            -0.9,
-            -0.8,
-            -0.7,
-            -0.6,
-            -0.5,
-            -0.4,
-            -0.3,
-            -0.2,
-            -0.1,
+        assert len(result.leaves) == 1
+        assert [(val,) for val in result.leaves[0].values] == [
+            (-0.7,),
+            (-0.6,),
+            (-0.5,),
+            (-0.4,),
+            (-0.3,),
+            (-0.2,),
+            (-0.1,),
+            (-1.0,),
+            (-0.9,),
+            (-0.8,),
+            (-0.7,),
         ]

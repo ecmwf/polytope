@@ -4,7 +4,7 @@ import math
 from ..datacube_mappers import DatacubeMapper
 
 
-class HealpixGridMapper(DatacubeMapper):
+class NestedHealpixGridMapper(DatacubeMapper):
     def __init__(self, base_axis, mapped_axes, resolution, local_area=[]):
         # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
@@ -13,6 +13,10 @@ class HealpixGridMapper(DatacubeMapper):
         self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
         self._first_axis_vals = self.first_axis_vals()
         self.compressed_grid_axes = [self._mapped_axes[1]]
+        self.Nside = self._resolution
+        self.k = int(math.log2(self.Nside))
+        self.Npix = 12 * self.Nside * self.Nside
+        self.Ncap = (self.Nside * (self.Nside - 1)) << 1
 
     def first_axis_vals(self):
         rad2deg = 180 / math.pi
@@ -132,4 +136,78 @@ class HealpixGridMapper(DatacubeMapper):
         second_val = [i for i in self.second_axis_vals(first_val) if second_val[0] - tol <= i <= second_val[0] + tol][0]
         second_idx = self.second_axis_vals(first_val).index(second_val)
         healpix_index = self.axes_idx_to_healpix_idx(first_idx, second_idx)
+        # TODO: here do conversion of ring to nested healpix representation before returning
+        healpix_index = self.ring_to_nested(healpix_index)
         return healpix_index
+
+    def div_03(self, a, b):
+        t = 1 if a >= (b << 1) else 0
+        a -= t * (b << 1)
+        return (t << 1) + (1 if a >= b else 0)
+
+    def pll(self, f):
+        pll_values = [1, 3, 5, 7, 0, 2, 4, 6, 1, 3, 5, 7]
+        return pll_values[f]
+
+    def to_nest(self, f, ring, Nring, phi, shift):
+        r = int(((2 + (f >> 2)) << self.k) - ring - 1)
+        p = int(2 * phi - self.pll(f) * Nring - shift - 1)
+        if p >= 2 * self.Nside:
+            p -= 8 * self.Nside
+        i = int((r + p)) >> 1
+        j = int((r - p)) >> 1
+
+        return self.fij_to_nest(f, i, j, self.k)
+
+    def fij_to_nest(self, f, i, j, k):
+        return (f << (2 * k)) + self.nest_encode_bits(i) + (self.nest_encode_bits(j) << 1)
+
+    def nest_encode_bits(self, i):
+        __masks = [
+            0x00000000FFFFFFFF,
+            0x0000FFFF0000FFFF,
+            0x00FF00FF00FF00FF,
+            0x0F0F0F0F0F0F0F0F,
+            0x3333333333333333,
+            0x5555555555555555,
+        ]
+        i = int(i)
+        b = i & __masks[0]
+        b = (b ^ (b << 16)) & __masks[1]
+        b = (b ^ (b << 8)) & __masks[2]
+        b = (b ^ (b << 4)) & __masks[3]
+        b = (b ^ (b << 2)) & __masks[4]
+        b = (b ^ (b << 1)) & __masks[5]
+        return b
+
+    def ring_to_nested(self, idx):
+        if idx < self.Ncap:
+            # North polar cap
+            Nring = (1 + self.int_sqrt(2 * idx + 1)) >> 1
+            phi = 1 + idx - 2 * Nring * (Nring - 1)
+            f = self.div_03(phi - 1, Nring)
+            return self.to_nest(f, Nring, Nring, phi, 0)
+
+        if self.Npix - self.Ncap <= idx:
+            # South polar cap
+            Nring = (1 + self.int_sqrt(2 * self.Npix - 2 * idx - 1)) >> 1
+            phi = 1 + idx + 2 * Nring * (Nring - 1) + 4 * Nring - self.Npix
+            ring = 4 * self.Nside - Nring  # (from South pole)
+            f = self.div_03(phi - 1, Nring) + 8
+            return self.to_nest(f, ring, Nring, phi, 0)
+        else:
+            # Equatorial belt
+            ip = idx - self.Ncap
+            tmp = ip >> (self.k + 2)
+
+            phi = ip - tmp * 4 * self.Nside + 1
+            ring = tmp + self.Nside
+
+            ifm = 1 + ((phi - 1 - ((1 + tmp) >> 1)) >> self.k)
+            ifp = 1 + ((phi - 1 - ((1 - tmp + 2 * self.Nside) >> 1)) >> self.k)
+            f = (ifp | 4) if ifp == ifm else (ifp if ifp < ifm else (ifm + 8))
+
+            return self.to_nest(f, ring, self.Nside, phi, ring & 1)
+
+    def int_sqrt(self, i):
+        return int(math.sqrt(i + 0.5))

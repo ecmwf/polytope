@@ -16,8 +16,16 @@ class TestSlicingEra5Data:
         ds = data.from_source("file", "./tests/data/era5-levels-members.grib")
         array = ds.to_xarray().isel(step=0).t
         self.slicer = HullSlicer()
-        options = {"config": [{"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]}]}
-        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=options)
+        options = {
+            "axis_config": [{"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]}],
+            "compressed_axes_config": ["number", "time", "latitude", "longitude", "step", "isobaricInhPa"],
+        }
+        self.API = Polytope(
+            request={},
+            datacube=array,
+            engine=self.slicer,
+            options=options,
+        )
 
     @pytest.mark.internet
     def test_2D_box(self):
@@ -29,6 +37,6 @@ class TestSlicingEra5Data:
         )
 
         result = self.API.retrieve(request)
-        # result.pprint()
+        result.pprint()
 
-        assert len(result.leaves) == 4 * 1 * 2 * 4 * 11
+        assert len(result.leaves) == 1

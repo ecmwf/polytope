@@ -9,13 +9,11 @@ from .datacube import Datacube
 class XArrayDatacube(Datacube):
     """Xarray arrays are labelled, axes can be defined as strings or integers (e.g. "time" or 0)."""
 
-    def __init__(self, dataarray: xr.DataArray, axis_options=None, datacube_options=None):
-        super().__init__(axis_options, datacube_options)
+    def __init__(self, dataarray: xr.DataArray, axis_options=None, compressed_axes_options=[]):
+        super().__init__(axis_options, compressed_axes_options)
         if axis_options is None:
             axis_options = {}
-        if datacube_options is None:
-            datacube_options = {}
-        self.axis_options = Datacube.create_axes_config(axis_options).config
+        self.axis_options = axis_options
         self.axis_counter = 0
         self._axes = None
         self.dataarray = dataarray
@@ -59,7 +57,7 @@ class XArrayDatacube(Datacube):
             for c in requests.children:
                 self.get(c, leaf_path, axis_counter + 1)
         else:
-            key_value_path = {requests.axis.name: requests.value}
+            key_value_path = {requests.axis.name: requests.values}
             ax = requests.axis
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
@@ -77,9 +75,15 @@ class XArrayDatacube(Datacube):
                     leaf_path_copy = deepcopy(leaf_path)
                     unmapped_path = {}
                     self.refit_path(leaf_path_copy, unmapped_path, leaf_path)
+                    for key in leaf_path_copy:
+                        leaf_path_copy[key] = list(leaf_path_copy[key])
+                    for key in unmapped_path:
+                        if isinstance(unmapped_path[key], tuple):
+                            unmapped_path[key] = list(unmapped_path[key])
                     subxarray = self.dataarray.sel(leaf_path_copy, method="nearest")
                     subxarray = subxarray.sel(unmapped_path)
-                    value = subxarray.item()
+                    # value = subxarray.item()
+                    value = subxarray.values
                     key = subxarray.name
                     requests.result = (key, value)
 
@@ -113,6 +117,12 @@ class XArrayDatacube(Datacube):
                     path_copy.pop(key, None)
 
     def select(self, path, unmapped_path):
+        for key in path:
+            key_value = path[key][0]
+            path[key] = key_value
+        for key in unmapped_path:
+            key_value = unmapped_path[key][0]
+            unmapped_path[key] = key_value
         path_copy = deepcopy(path)
         self.refit_path(path_copy, unmapped_path, path)
         subarray = self.dataarray.sel(path_copy, method="nearest")

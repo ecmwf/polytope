@@ -7,9 +7,14 @@ def lerp(a, b, value):
 
 
 def nearest_pt(pts_list, pt):
-    nearest_pt = pts_list[0]
-    distance = l2_norm(pts_list[0], pt)
-    for new_pt in pts_list[1:]:
+    new_pts_list = []
+    for potential_pt in pts_list:
+        for first_val in potential_pt[0]:
+            for second_val in potential_pt[1]:
+                new_pts_list.append((first_val, second_val))
+    nearest_pt = new_pts_list[0]
+    distance = l2_norm(new_pts_list[0], pt)
+    for new_pt in new_pts_list[1:]:
         new_distance = l2_norm(new_pt, pt)
         if new_distance < distance:
             distance = new_distance

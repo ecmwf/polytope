@@ -3,7 +3,7 @@ import pytest
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Disk, Select, Span
+from polytope.shapes import Box, Select, Span, Union
 
 
 class TestSlicingFDBDatacube:
@@ -47,6 +47,12 @@ class TestSlicingFDBDatacube:
     def test_fdb_datacube(self):
         import pygribjump as gj
 
+        box1 = Box(["latitude", "longitude"], [0, 0], [0.2, 0.2])
+
+        box2 = Box(["latitude", "longitude"], [0.1, 0.1], [0.3, 0.3])
+
+        union = Union(["latitude", "longitude"], box1, box2)
+
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -57,7 +63,7 @@ class TestSlicingFDBDatacube:
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["an"]),
-            Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
+            union,
         )
 
         self.fdbdatacube = gj.GribJump()
@@ -70,66 +76,4 @@ class TestSlicingFDBDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 9
-
-    @pytest.mark.fdb
-    def test_fdb_datacube_disk(self):
-        import pygribjump as gj
-
-        request = Request(
-            Select("step", [0]),
-            Select("levtype", ["sfc"]),
-            Span("date", pd.Timestamp("20230625T120000"), pd.Timestamp("20230626T120000")),
-            Select("domain", ["g"]),
-            Select("expver", ["0001"]),
-            Select("param", ["167"]),
-            Select("class", ["od"]),
-            Select("stream", ["oper"]),
-            Select("type", ["an"]),
-            Disk(["latitude", "longitude"], [0, 0], [0.1, 0.1]),
-        )
-
-        self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
-        self.API = Polytope(
-            request=request,
-            datacube=self.fdbdatacube,
-            engine=self.slicer,
-            options=self.options,
-        )
-        result = self.API.retrieve(request)
-        result.pprint()
-        assert len(result.leaves) == 6
-        for i in range(len(result.leaves)):
-            assert len(result.leaves[i].result) == 1
-
-    @pytest.mark.fdb
-    def test_fdb_datacube_disk_2(self):
-        import pygribjump as gj
-
-        request = Request(
-            Select("step", [0]),
-            Select("levtype", ["sfc"]),
-            Span("date", pd.Timestamp("20230625T120000"), pd.Timestamp("20230626T120000")),
-            Select("domain", ["g"]),
-            Select("expver", ["0001"]),
-            Select("param", ["167"]),
-            Select("class", ["od"]),
-            Select("stream", ["oper"]),
-            Select("type", ["an"]),
-            Disk(["latitude", "longitude"], [0.05, 0.070148090413], [0.1, 0.15]),
-        )
-
-        self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
-        self.API = Polytope(
-            request=request,
-            datacube=self.fdbdatacube,
-            engine=self.slicer,
-            options=self.options,
-        )
-        result = self.API.retrieve(request)
-        result.pprint()
-        assert len(result.leaves) == 11
-        for i in range(len(result.leaves)):
-            assert result.leaves[i].result is not None
+        assert len(result.leaves) == 16

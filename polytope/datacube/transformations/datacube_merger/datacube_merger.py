@@ -51,21 +51,26 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         return self
 
     def unmerge(self, merged_val):
-        merged_val = str(merged_val)
-        first_idx = merged_val.find(self._linkers[0])
-        first_val = merged_val[:first_idx]
-        first_linker_size = len(self._linkers[0])
-        second_linked_size = len(self._linkers[1])
-        second_val = merged_val[first_idx + first_linker_size : -second_linked_size]
+        first_values = []
+        second_values = []
+        for merged_value in merged_val:
+            merged_val = str(merged_value)
+            first_idx = merged_val.find(self._linkers[0])
+            first_val = merged_val[:first_idx]
+            first_linker_size = len(self._linkers[0])
+            second_linked_size = len(self._linkers[1])
+            second_val = merged_val[first_idx + first_linker_size : -second_linked_size]
 
-        # TODO: maybe replacing like this is too specific to time/dates?
-        first_val = str(first_val).replace("-", "")
-        second_val = second_val.replace(":", "")
-        logging.info(
-            f"Unmerged value {merged_val} to values {first_val} on axis {self.name} \
-                     and {second_val} on axis {self._second_axis}"
-        )
-        return (first_val, second_val)
+            # TODO: maybe replacing like this is too specific to time/dates?
+            first_val = str(first_val).replace("-", "")
+            second_val = second_val.replace(":", "")
+            logging.info(
+                f"Unmerged value {merged_val} to values {first_val} on axis {self.name} \
+                        and {second_val} on axis {self._second_axis}"
+            )
+            first_values.append(first_val)
+            second_values.append(second_val)
+        return (tuple(first_values), tuple(second_values))
 
     def change_val_type(self, axis_name, values):
         new_values = pd.to_datetime(values)
@@ -83,3 +88,11 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
             new_key_value_path[self._first_axis] = first_val
             new_key_value_path[self._second_axis] = second_val
         return (new_key_value_path, leaf_path, unwanted_path)
+
+    def unmap_tree_node(self, node, unwanted_path):
+        if node.axis.name == self._first_axis:
+            (new_first_vals, new_second_vals) = self.unmerge(node.values)
+            node.values = new_first_vals
+            # TODO: actually need to give the second axis of the transformation to get the interm axis
+            interm_node = node.add_node_layer_after(self._second_axis, new_second_vals)
+        return (interm_node, unwanted_path)
