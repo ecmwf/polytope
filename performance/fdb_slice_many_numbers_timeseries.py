@@ -40,7 +40,7 @@ options = {
         "class",
         "stream",
         "type",
-        "number"
+        "number",
     ],
     "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "type": "pf"},
 }
