@@ -147,8 +147,16 @@ class Polytope:
     def old_retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
         # self.datacube.check_branching_axes(request)
+        import time
+
+        time0 = time.time()
         request_tree = self.engine.extract(self.datacube, request.polytopes())
+        print("POLYTOPE FIND TREE BY SLICING")
+        print(time.time() - time0)
+        time1 = time.time()
         self.datacube.get(request_tree)
+        print("FDB GET TIME")
+        print(time.time() - time1)
         return request_tree
 
     def retrieve(self, request: Request, method="standard"):
@@ -172,3 +180,6 @@ class Polytope:
         for compressed_axis in compressable_axes:
             if compressed_axis in datacube.compressed_axes:
                 self.compressed_axes.append(compressed_axis)
+        # add the last axis of the grid always (longitude) as a compressed axis
+        k, last_value = _, datacube.axes[k] = datacube.axes.popitem()
+        self.compressed_axes.append(k)
