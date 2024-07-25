@@ -3,7 +3,6 @@ import time
 import pandas as pd
 import pygribjump as gj
 
-from polytope.datacube.backends.fdb import FDBDatacube
 from polytope.polytope import Polytope, Request
 from polytope.shapes import All, Point, Select
 
@@ -70,7 +69,7 @@ request = Request(
 time3 = time.time()
 result = self_API.retrieve(request)
 time4 = time.time()
-print("INTERESTING TIME NOW")
+print("Polytope time")
 print(self_API.time)
 print(time.time() - time1)
 print(time.time() - time2)
