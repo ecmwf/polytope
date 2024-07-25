@@ -209,11 +209,8 @@ class HullSlicer(Engine):
         # Determine list of axes to compress
         self.find_compressed_axes(datacube, polytopes)
 
-        # REMOVE COMPRESSED AXES WHICH ARE IN A UNION
+        # remove compressed axes which are in a union
         self.remove_compressed_axis_in_union(polytopes)
-
-        print("LOOK NOW")
-        print(self.compressed_axes)
 
         # Convert the polytope points to float type to support triangulation and interpolation
         for p in polytopes:
