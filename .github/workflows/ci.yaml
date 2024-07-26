@@ -15,33 +15,46 @@ on:
   release:
     types: [created]
 jobs:
-  qa:
-    name: qa
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-        with:
-          repository: ${{ inputs.repository }}
-          ref: ${{ inputs.ref }}
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ inputs.python_version }}
+  downstream-ci:
+    name: downstream-ci
+    if: ${{ !github.event.pull_request.head.repo.fork && github.event.action != 'labeled' || github.event.label.name == 'approved-for-ci' }}
+    # FIXME: revert to main when ready
+    uses: ecmwf-actions/downstream-ci/.github/workflows/downstream-ci.yml@add-conflator
+    with:
+      conflator: ecmwf/conflator@${{ github.event.pull_request.head.sha || github.sha }}
+      codecov_upload: true
+      python_qa: true
+    secrets: inherit
 
-      - name: Install Python Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install black flake8 isort
-      - name: Check isort
-        run: isort --check .
+  # qa:
+  #   name: qa
+  #   runs-on: ubuntu-20.04
+  #   steps:
+  #     - name: Checkout Repository
+  #       uses: actions/checkout@v3
+  #       with:
+  #         repository: ${{ inputs.repository }}
+  #         ref: ${{ inputs.ref }}
 
-      - name: Check black
-        run: black --check .
+  #     - name: Setup Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: ${{ inputs.python_version }}
 
-      - name: Check flake8
-        run: flake8 .
+  #     - name: Install Python Dependencies
+  #       run: |
+  #         python -m pip install --upgrade pip
+  #         python -m pip install black flake8 isort
+  #     - name: Check isort
+  #       run: isort --check .
+
+  #     - name: Check black
+  #       run: black --check .
+
+  #     - name: Check flake8
+  #       run: flake8 .
+
   setup:
     name: setup
     runs-on: ubuntu-20.04
@@ -88,10 +101,11 @@ jobs:
         run: |
           echo inputs=$(echo "${{ inputs.build_package_inputs || '{}' }}" | yq eval '.' --output-format json --indent 0 -) >> $GITHUB_OUTPUT
           echo inputs-for-ubuntu=$(echo "${{ inputs.build_package_inputs || '{}' }}" | yq eval '. * {"os":"ubuntu-20.04","compiler":"gnu-10","compiler_cc":"gcc-10","compiler_cxx":"g++-10","compiler_fc":"gfortran-10"}' --output-format json --indent 0 -) >> $GITHUB_OUTPUT
+  
   test:
     name: test
     needs:
-      - qa
+      - downstream-ci
       - setup
     strategy:
       fail-fast: false
@@ -138,6 +152,7 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           files: coverage.xml
+
   deploy:
     needs: test
     if: ${{ github.event_name == 'release' }}
