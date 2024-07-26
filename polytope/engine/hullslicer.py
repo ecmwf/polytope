@@ -194,8 +194,6 @@ class HullSlicer(Engine):
         # add the last axis of the grid always (longitude) as a compressed axis
         k, last_value = _, datacube.axes[k] = datacube.axes.popitem()
         self.compressed_axes.append(k)
-        # if len(datacube.coupled_axes) != 0:
-        #     self.compressed_axes.append(datacube.coupled_axes[0][-1])
 
     def remove_compressed_axis_in_union(self, polytopes):
         for p in polytopes:
