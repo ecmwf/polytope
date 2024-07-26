@@ -5,9 +5,6 @@ from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
 
-# import geopandas as gpd
-# import matplotlib.pyplot as plt
-
 
 class TestSlicingFDBDatacube:
     def setup_method(self, method):
