@@ -8,22 +8,44 @@ from polytope.shapes import Box, Select
 
 class TestSlicingFDBDatacube:
     def setup_method(self, method):
-        from polytope.datacube.backends.fdb import FDBDatacube
-
         # Create a dataarray with 3 labelled axes using different index types
         self.options = {
-            "values": {"mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}},
-            "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
-            "step": {"type_change": "int"},
+            "axis_config": [
+                {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
+                {
+                    "axis_name": "date",
+                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
+                },
+                {
+                    "axis_name": "values",
+                    "transformations": [
+                        {"name": "mapper", "type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                    ],
+                },
+                {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
+                {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
+            ],
+            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper", "type": "fc"},
+            "compressed_axes_config": [
+                "longitude",
+                "latitude",
+                "levtype",
+                "step",
+                "date",
+                "domain",
+                "expver",
+                "param",
+                "class",
+                "stream",
+                "type",
+            ],
         }
-        self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper", "type": "fc"}
-        self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
-        self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
 
     # Testing different shapes
     @pytest.mark.fdb
     def test_fdb_datacube(self):
+        import pygribjump as gj
+
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
@@ -36,6 +58,14 @@ class TestSlicingFDBDatacube:
             Select("type", ["fc"]),
             Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
         )
+        self.fdbdatacube = gj.GribJump()
+        self.slicer = HullSlicer()
+        self.API = Polytope(
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            options=self.options,
+        )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 18
+        assert len(result.leaves) == 3
+        assert len(result.leaves[0].result) == 6

@@ -22,48 +22,41 @@
   <a href="https://polytope.readthedocs.io/en/latest/">Documentation</a>
 </p>
 
-Polytope is a library for extracting complex data from datacubes. It provides an API for non-orthogonal access to data, where the stencil used to extract data from the datacube can be any arbitrary n-dimensional polygon (called a *polytope*). This can be used to efficiently extract complex features from a datacube, such as polygon regions or spatio-temporal paths.
+Polytope is a library for extracting complex data from datacubes. It provides an API for non-orthogonal access to data, where the stencil used to extract data from the datacube can be any arbitrary *n*-dimensional polygon (called a *polytope*). This can be used to efficiently extract complex features from a datacube, such as polygon regions or spatio-temporal paths.
 
-Polytope is designed to extend different datacube backends.
-* Xarray dataarrays
-* FDB object stores (coming soon)
+Polytope is designed to extend different datacube backends:
+* XArray dataarrays
+* FDB object stores (through the GribJump software)
 
-Polytope supports datacubes which have branching, non-uniform indexing, and even cyclic axes. If the datacube backend supports byte-addressability and efficient random access (either in-memory or direct from storage), *polytope* can be used to dramatically decrease overall I/O load.
+Polytope supports datacubes which have branching, non-uniform indexing, and even cyclic axes. If the datacube backend supports byte-addressability and efficient random access (either in-memory or direct from storage), **Polytope** can be used to dramatically decrease overall I/O load.
 
-
-| :warning: This project is BETA and will be experimental for the foreseeable future. Interfaces and functionality are likely to change. DO NOT use this software in any project/software that is operational. |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+> [!WARNING]
+> This project is BETA and will be experimental for the foreseeable future. Interfaces and functionality are likely to change, and the project itself may be scrapped. DO NOT use this software in any project/software that is operational.
 
 ## Concept 
 
-Polytope is designed to enable extraction of arbitrary extraction of data from a datacube. Instead of the typical range-based bounding-box approach, Polytope can extract any shape of data from a datacube using a "polytope" (n-dimensional polygon) stencil.
+Polytope is designed to enable extraction of arbitrary extraction of data from a datacube. Instead of the typical range-based bounding-box approach, Polytope can extract any shape of data from a datacube using a "polytope" (*n*-dimensional polygon) stencil.
 
-<!-- <div style="text-align:center"> -->
 <p align="center">
   <img src="./docs/Overview/images_overview/ecmwf_polytope.png" alt="Polytope Concept" width="450"/>
 </p>
-<!-- </div> -->
 
 The Polytope algorithm can for example be used to extract:
 
 - 2D cut-outs, such as country cut-outs, from a datacube
-    <!-- <div style="text-align:center"> -->
     <p align="center">
         <img src="./docs/images/greece.png" alt="Greece cut-out" width="250"/>
     </p>
-    <!-- </div> -->
 
 - timeseries from a datacube
     <p align="center">
         <img src="./docs/images/timeseries.png" alt="Timeseries" width="350"/>
     </p>
-    <!-- </div> -->
 
 - more complicated spatio-temporal paths, such as flight paths, from a datacube
     <p align="center">
         <img src="./docs/images/flight_path.png" alt="Flight path" width="350"/>
     </p>
-    <!-- </div> -->
 
 - and many more high-dimensional shapes in arbitrary dimensions...
 
@@ -93,11 +86,11 @@ Here is a step-by-step example of how to use this software.
    
     We then construct the Polytope object, passing in some additional metadata describing properties of the longitude axis.
     ```Python
-        options = {"longitude": {"Cyclic": [0, 360.0]}}
+        options = {"longitude": {"cyclic": [0, 360.0]}}
 
         from polytope.polytope import Polytope
 
-        p = Polytope(datacube=array, options=options)
+        p = Polytope(datacube=array, axis_options=options)
     ```
 
 2. Next, we create a request shape to extract from the datacube.  
@@ -139,25 +132,12 @@ Here is a step-by-step example of how to use this software.
                                 ↳longitude=1.0
     ```
 
-<!-- # Requirements
-
-Python >= 3.7 (for OrderedDict)
-TODO: populate requirements.txt -->
-
 ## Testing
-
-#### Git Large File Storage
-
-Polytope uses Git Large File Storage (LFS) to store large data files used in its tests and examples. 
-To run the tests and examples, it is thus necessary to install Git LFS, by following instructions provided [here](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage) for example. 
-Once Git LFS is installed, individual data files can be downloaded using the command
-
-    git lfs pull --include="*" --exclude="" 
 
 #### Additional Dependencies
 
 The Polytope tests and examples require additional Python packages compared to the main Polytope algorithm.
-The additional dependencies are provided in the requirements_test.txt and requirements_examples.txt files, which can respectively be found in the examples and tests folders.
+The additional dependencies are provided in the requirements_test.txt and requirements_examples.txt files, which can respectively be found in the tests and examples folders.
 Moreover, Polytope's tests and examples also require the installation of eccodes and GDAL.
 It is possible to install both of these dependencies using either a package manager or manually.
 

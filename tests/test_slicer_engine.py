@@ -2,7 +2,7 @@ import numpy as np
 import xarray as xr
 
 from polytope.datacube.backends.xarray import XArrayDatacube
-from polytope.datacube.index_tree import IndexTree
+from polytope.datacube.tensor_index_tree import TensorIndexTree
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope
 from polytope.shapes import Box
@@ -20,20 +20,26 @@ class TestSlicerComponents:
         )
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer)
+        options = {"compressed_axes_config": ["level", "step"]}
+        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 
     def test_extract(self):
         box = Box(["step", "level"], [3.0, 1.0], [6.0, 3.0])
         polytope = box.polytope()
         request = self.slicer.extract(self.xarraydatacube, polytope)
-        assert request.axis == IndexTree.root
+        assert request.axis == TensorIndexTree.root
         assert request.parent is None
-        assert request.value is None
-        assert len(request.leaves) == 6
+        assert request.values is tuple()
+        request.pprint()
+        assert len(request.leaves) == 2
         assert request.leaves[0].axis.name == "level"
         assert len(request.children) == 2
         assert request.children[0].axis.name == "step"
-        assert request.children[0].value == 3.0
-        assert request.children[1].value == 6.0
+        assert request.children[0].values == (3.0,)
+        assert request.children[1].values == (6.0,)
         for i in range(len(request.leaves)):
-            assert request.leaves[i].value in [1.0, 2.0, 3.0]
+            assert request.leaves[i].values == (
+                1.0,
+                2.0,
+                3.0,
+            )

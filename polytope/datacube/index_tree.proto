@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package index_tree;
+
+message Node {
+    string axis = 1;
+    repeated string value = 2;
+    repeated int64 indexes = 3;
+    repeated double result = 4;
+    repeated int64 size_result = 5;
+    repeated Node children = 6;
+    repeated int64 size_indexes_branch = 7;
+}

@@ -2,7 +2,6 @@ import pytest
 from earthkit import data
 from helper_functions import download_test_data
 
-from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select
@@ -16,13 +15,25 @@ class TestSlicingMultipleTransformationsOneAxis:
         ds = data.from_source("file", "./tests/data/foo.grib")
         self.latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
         self.latlon_array = self.latlon_array.t2m
-        self.xarraydatacube = XArrayDatacube(self.latlon_array)
         self.options = {
-            "values": {"mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}},
-            "longitude": {"cyclic": [0, 360.0]},
+            "axis_config": [
+                {
+                    "axis_name": "values",
+                    "transformations": [
+                        {"name": "mapper", "type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                    ],
+                },
+                {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
+                {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
+            ],
+            "compressed_axes_config": ["longitude", "latitude", "surface", "step", "time", "valid_time", "number"],
         }
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.latlon_array, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(
+            datacube=self.latlon_array,
+            engine=self.slicer,
+            options=self.options,
+        )
 
     @pytest.mark.internet
     def test_merge_axis(self):
@@ -35,6 +46,6 @@ class TestSlicingMultipleTransformationsOneAxis:
             Box(["latitude", "longitude"], [0, 359.8], [0.2, 361.2]),
         )
         result = self.API.retrieve(request)
-        # result.pprint()
-        assert result.leaves[-1].flatten()["longitude"] == 360.0
-        assert result.leaves[0].flatten()["longitude"] == 0.070093457944
+        result.pprint()
+        assert max(result.leaves[-1].flatten()["longitude"]) == 360.0
+        assert min(result.leaves[0].flatten()["longitude"]) == 0.070093457944

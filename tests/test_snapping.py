@@ -1,7 +1,6 @@
 import numpy as np
 import xarray as xr
 
-from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Select
@@ -18,9 +17,9 @@ class TestSlicing3DXarrayDatacube:
                 "step": [1, 3, 5],
             },
         )
-        self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer)
+        options = {"compressed_axes_config": ["level", "step"]}
+        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 
     # Testing different shapes
 
@@ -28,31 +27,31 @@ class TestSlicing3DXarrayDatacube:
         request = Request(Select("level", [2], method="surrounding"), Select("step", [4], method="surrounding"))
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 4
+        assert len(result.leaves) == 1
         for leaf in result.leaves:
             path = leaf.flatten()
-            assert path["level"] in [1, 3]
-            assert path["step"] in [3, 5]
+            assert path["level"] == (1, 3)
+            assert path["step"] == (3, 5)
 
     def test_2D_point_outside_datacube_left(self):
         request = Request(Select("level", [2], method="surrounding"), Select("step", [0], method="surrounding"))
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 2
+        assert len(result.leaves) == 1
         for leaf in result.leaves:
             path = leaf.flatten()
-            assert path["level"] in [1, 3]
-            assert path["step"] == 1
+            assert path["level"] == (1, 3)
+            assert path["step"] == (1,)
 
     def test_2D_point_outside_datacube_right(self):
         request = Request(Select("level", [2], method="surrounding"), Select("step", [6], method="surrounding"))
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 2
+        assert len(result.leaves) == 1
         for leaf in result.leaves:
             path = leaf.flatten()
-            assert path["level"] in [1, 3]
-            assert path["step"] == 5
+            assert path["level"] == (1, 3)
+            assert path["step"] == (5,)
 
     def test_1D_point_outside_datacube_right(self):
         request = Request(Select("level", [1]), Select("step", [6], method="surrounding"))
@@ -61,8 +60,8 @@ class TestSlicing3DXarrayDatacube:
         assert len(result.leaves) == 1
         for leaf in result.leaves:
             path = leaf.flatten()
-            assert path["level"] == 1
-            assert path["step"] == 5
+            assert path["level"] == (1,)
+            assert path["step"] == (5,)
 
     def test_1D_nonexisting_point(self):
         request = Request(Select("level", [2]), Select("step", [6], method="surrounding"))
@@ -85,5 +84,5 @@ class TestSlicing3DXarrayDatacube:
         assert len(result.leaves) == 1
         for leaf in result.leaves:
             path = leaf.flatten()
-            assert path["level"] == 1
-            assert path["step"] == 5
+            assert path["level"] == (1,)
+            assert path["step"] == (5,)

@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Box, Select, Span
@@ -23,13 +22,27 @@ class TestMultipleTransformations:
         )
 
         self.options = {
-            "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
-            "values": {"mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}},
-            "step": {"cyclic": [0, 2]},
+            "axis_config": [
+                {"axis_name": "step", "transformations": [{"name": "cyclic", "type": [0, 2]}]},
+                {
+                    "axis_name": "date",
+                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
+                },
+                {
+                    "axis_name": "values",
+                    "transformations": [
+                        {"name": "mapper", "type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                    ],
+                },
+            ],
+            "compressed_axes_config": ["longitude", "latitude", "step", "date"],
         }
-        self.xarraydatacube = XArrayDatacube(self.array)
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.array, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(
+            datacube=self.array,
+            engine=self.slicer,
+            options=self.options,
+        )
 
     @pytest.mark.skip(reason="Datacube not formatted right.")
     def test_merge_axis(self):

@@ -10,7 +10,7 @@ class DatacubeAxisTypeChange(DatacubeAxisTransformation):
     def __init__(self, name, type_options):
         self.name = name
         self.transformation_options = type_options
-        self.new_type = type_options
+        self.new_type = type_options.type
         self._final_transformation = self.generate_final_transformation()
 
     def generate_final_transformation(self):
@@ -37,6 +37,23 @@ class DatacubeAxisTypeChange(DatacubeAxisTransformation):
     def unwanted_axes(self):
         return []
 
+    def find_modified_indexes(self, indexes, path, datacube, axis):
+        if axis.name == self.name:
+            return self.change_val_type(axis.name, indexes)
+
+    def unmap_path_key(self, key_value_path, leaf_path, unwanted_path, axis):
+        value = key_value_path[axis.name]
+        if axis.name == self.name:
+            unchanged_val = self.make_str(value)
+            key_value_path[axis.name] = unchanged_val
+        return (key_value_path, leaf_path, unwanted_path)
+
+    def unmap_tree_node(self, node, unwanted_path):
+        if node.axis.name == self.name:
+            new_node_vals = self.make_str(node.values)
+            node.values = new_node_vals
+        return (node, unwanted_path)
+
 
 class TypeChangeStrToInt(DatacubeAxisTypeChange):
     def __init__(self, axis_name, new_type):
@@ -47,7 +64,10 @@ class TypeChangeStrToInt(DatacubeAxisTypeChange):
         return int(value)
 
     def make_str(self, value):
-        return str(value)
+        values = []
+        for val in value:
+            values.append(str(val))
+        return tuple(values)
 
 
 _type_to_datacube_type_change_lookup = {"int": "TypeChangeStrToInt"}

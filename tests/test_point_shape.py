@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Point, Select
@@ -20,9 +19,9 @@ class TestSlicing3DXarrayDatacube:
                 "level": range(1, 130),
             },
         )
-        self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer)
+        options = {"compressed_axes_config": ["level", "step", "date"]}
+        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 
     def test_point(self):
         request = Request(Point(["step", "level"], [[3, 10]]), Select("date", ["2000-01-01"]))
@@ -34,15 +33,17 @@ class TestSlicing3DXarrayDatacube:
         request = Request(Point(["step", "level"], [[3, 10], [3, 12]]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 2
+        assert len(result.leaves) == 1
         assert result.leaves[0].axis.name == "level"
 
     def test_point_surrounding_step(self):
         request = Request(Point(["step", "level"], [[2, 10]], method="surrounding"), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 6
+        assert len(result.leaves) == 1
+        assert np.shape(result.leaves[0].result[1]) == (1, 2, 3)
 
     def test_point_surrounding_exact_step(self):
         request = Request(Point(["step", "level"], [[3, 10]], method="surrounding"), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 9
+        assert len(result.leaves) == 1
+        assert np.shape(result.leaves[0].result[1]) == (1, 3, 3)

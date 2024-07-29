@@ -11,8 +11,8 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         self.transformation_options = merge_options
         self.name = name
         self._first_axis = name
-        self._second_axis = merge_options["with"]
-        self._linkers = merge_options["linkers"]
+        self._second_axis = merge_options.other_axis
+        self._linkers = merge_options.linkers
 
     def blocked_axes(self):
         return [self._second_axis]
@@ -33,7 +33,6 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
             first_val = first_ax_vals[i]
             for j in range(len(second_ax_vals)):
                 second_val = second_ax_vals[j]
-                # TODO: check that the first and second val are strings
                 val_to_add = pd.to_datetime("".join([first_val, linkers[0], second_val, linkers[1]]))
                 val_to_add = val_to_add.to_numpy()
                 val_to_add = val_to_add.astype("datetime64[s]")
@@ -52,22 +51,48 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         return self
 
     def unmerge(self, merged_val):
-        merged_val = str(merged_val)
-        first_idx = merged_val.find(self._linkers[0])
-        first_val = merged_val[:first_idx]
-        first_linker_size = len(self._linkers[0])
-        second_linked_size = len(self._linkers[1])
-        second_val = merged_val[first_idx + first_linker_size : -second_linked_size]
+        first_values = []
+        second_values = []
+        for merged_value in merged_val:
+            merged_val = str(merged_value)
+            first_idx = merged_val.find(self._linkers[0])
+            first_val = merged_val[:first_idx]
+            first_linker_size = len(self._linkers[0])
+            second_linked_size = len(self._linkers[1])
+            second_val = merged_val[first_idx + first_linker_size : -second_linked_size]
 
-        # TODO: maybe replacing like this is too specific to time/dates?
-        first_val = str(first_val).replace("-", "")
-        second_val = second_val.replace(":", "")
-        logging.info(
-            f"Unmerged value {merged_val} to values {first_val} on axis {self.name} \
-                     and {second_val} on axis {self._second_axis}"
-        )
-        return (first_val, second_val)
+            # TODO: maybe replacing like this is too specific to time/dates?
+            first_val = str(first_val).replace("-", "")
+            second_val = second_val.replace(":", "")
+            logging.info(
+                f"Unmerged value {merged_val} to values {first_val} on axis {self.name} \
+                        and {second_val} on axis {self._second_axis}"
+            )
+            first_values.append(first_val)
+            second_values.append(second_val)
+        return (tuple(first_values), tuple(second_values))
 
     def change_val_type(self, axis_name, values):
         new_values = pd.to_datetime(values)
         return new_values
+
+    def find_modified_indexes(self, indexes, path, datacube, axis):
+        if axis.name == self._first_axis:
+            return self.merged_values(datacube)
+
+    def unmap_path_key(self, key_value_path, leaf_path, unwanted_path, axis):
+        new_key_value_path = {}
+        value = key_value_path[axis.name]
+        if axis.name == self._first_axis:
+            (first_val, second_val) = self.unmerge(value)
+            new_key_value_path[self._first_axis] = first_val
+            new_key_value_path[self._second_axis] = second_val
+        return (new_key_value_path, leaf_path, unwanted_path)
+
+    def unmap_tree_node(self, node, unwanted_path):
+        if node.axis.name == self._first_axis:
+            (new_first_vals, new_second_vals) = self.unmerge(node.values)
+            node.values = new_first_vals
+            # TODO: actually need to give the second axis of the transformation to get the interm axis
+            interm_node = node.add_node_layer_after(self._second_axis, new_second_vals)
+        return (interm_node, unwanted_path)

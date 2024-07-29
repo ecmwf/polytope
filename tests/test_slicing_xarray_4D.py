@@ -3,8 +3,7 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from polytope.datacube.backends.xarray import XArrayDatacube
-from polytope.datacube.index_tree import IndexTree
+from polytope.datacube.tensor_index_tree import TensorIndexTree
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import (
@@ -34,21 +33,21 @@ class TestSlicing4DXarrayDatacube:
                 "lat": np.around(np.arange(0.0, 10.0, 0.1), 15),
             },
         )
-        self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer)
+        options = {"compressed_axes_config": ["date", "step", "level", "lat"]}
+        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 
     # Testing different shapes
 
     def test_3D_box(self):
         request = Request(Box(["step", "level", "lat"], [3, 10, 5.0], [6, 11, 6.0]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 2 * 2 * 11
+        assert len(result.leaves) == 1
 
     def test_4D_box(self):
         request = Request(Box(["step", "level", "lat", "date"], [3, 10, 5.0, "2000-01-01"], [6, 11, 6.0, "2000-01-02"]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 2 * 2 * 11 * 2
+        assert len(result.leaves) == 1
 
     def test_circle_int(self):
         request = Request(
@@ -132,7 +131,14 @@ class TestSlicing4DXarrayDatacube:
         ellipsoid = Ellipsoid(["step", "level", "lat"], [6, 3, 2.1], [3, 1, 0.1])
         request = Request(ellipsoid, Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 7
+        result.pprint()
+        assert len(result.leaves) == 5
+        assert len(result.leaves[2].values) == 3
+        assert np.size(result.leaves[2].result[1]) == 3
+        for i in range(len(result.leaves)):
+            if i != 2:
+                assert len(result.leaves[i].values) == 1
+                assert np.size(result.leaves[i].result[1]) == 1
 
     # Testing empty shapes
 
@@ -142,7 +148,7 @@ class TestSlicing4DXarrayDatacube:
             Disk(["step", "level"], [5, 3.4], [0.5, 0.2]), Select("date", ["2000-01-01"]), Select("lat", [5.1])
         )
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == IndexTree.root
+        assert result.leaves[0].axis == TensorIndexTree.root
 
     def test_float_box(self):
         # Slices a box with no data inside
@@ -150,7 +156,7 @@ class TestSlicing4DXarrayDatacube:
             Box(["step", "lat"], [10.1, 1.01], [10.3, 1.04]), Select("date", ["2000-01-01"]), Select("level", [10])
         )
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == IndexTree.root
+        assert result.leaves[0].axis == TensorIndexTree.root
 
     def test_path_empty_box(self):
         # Slices the path of a box with no data inside, but gives data because the box is swept over a datacube value
@@ -170,14 +176,14 @@ class TestSlicing4DXarrayDatacube:
             Select("date", ["2000-01-01"]),
         )
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == IndexTree.root
+        assert result.leaves[0].axis == TensorIndexTree.root
 
     def test_ellipsoid_empty(self):
         # Slices an empty ellipsoid which doesn't have any step value
         ellipsoid = Ellipsoid(["step", "level", "lat"], [5, 3, 2.1], [0, 0, 0])
         request = Request(ellipsoid, Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == IndexTree.root
+        assert result.leaves[0].axis == TensorIndexTree.root
 
     # Testing special properties
 
@@ -187,7 +193,9 @@ class TestSlicing4DXarrayDatacube:
             Span("level", 100, 98), Select("step", [3]), Select("lat", [5.5]), Select("date", ["2000-01-01"])
         )
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 3
+        assert len(result.leaves) == 1
+        path = result.leaves[0].flatten()
+        assert path["level"] == (98, 99, 100)
 
     # Testing edge cases
 
@@ -197,25 +205,25 @@ class TestSlicing4DXarrayDatacube:
         request = Request(ellipsoid, Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
-        assert not result.leaves[0].axis == IndexTree.root
+        assert not result.leaves[0].axis == TensorIndexTree.root
 
     def test_flat_box_level(self):
         # Slices a line in the step direction
         request = Request(Select("lat", [6]), Box(["level", "step"], [3, 3], [3, 9]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 3
+        assert len(result.leaves) == 1
 
     def test_flat_box_step(self):
         # Slices a line in the level direction
         request = Request(Select("lat", [6]), Box(["level", "step"], [3, 3], [7, 3]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 5
+        assert len(result.leaves) == 1
 
     def test_flat_disk_nonexisting(self):
         # Slices an empty disk because there is no step level
         request = Request(Disk(["level", "step"], [4, 5], [4, 0]), Select("lat", [6]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == IndexTree.root
+        assert result.leaves[0].axis == TensorIndexTree.root
 
     def test_flat_disk_line(self):
         # Slices a line in the level direction
@@ -233,20 +241,20 @@ class TestSlicing4DXarrayDatacube:
         # Slices an empty disk because there is no step
         request = Request(Disk(["level", "step"], [4, 5], [0, 0.5]), Select("lat", [6]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == IndexTree.root
+        assert result.leaves[0].axis == TensorIndexTree.root
 
     def test_disk_point(self):
         # Slices a point because the origin of the disk is a datacube point
         request = Request(Disk(["level", "step"], [4, 6], [0, 0]), Select("lat", [6]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
-        assert not result.leaves[0].axis == IndexTree.root
+        assert not result.leaves[0].axis == TensorIndexTree.root
 
     def test_empty_disk(self):
         # Slices an empty object because the origin of the disk is not a datacube point
         request = Request(Disk(["level", "step"], [4, 5], [0, 0]), Select("lat", [6]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == IndexTree.root
+        assert result.leaves[0].axis == TensorIndexTree.root
 
     def test_polygon_line(self):
         # Slices a line defined through the polygon shape
@@ -262,14 +270,14 @@ class TestSlicing4DXarrayDatacube:
         request = Request(polygon, Select("lat", [4.3]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
-        assert not result.leaves[0].axis == IndexTree.root
+        assert not result.leaves[0].axis == TensorIndexTree.root
 
     def test_polygon_empty(self):
         # Slices a point which isn't in the datacube (defined through the polygon shape)
         polygon = Polygon(["step", "level"], [[2, 3.1]])
         request = Request(polygon, Select("lat", [4.3]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == IndexTree.root
+        assert result.leaves[0].axis == TensorIndexTree.root
 
     # Test exceptions are returned correctly
 

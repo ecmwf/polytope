@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from polytope.datacube.backends.xarray import XArrayDatacube
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
 from polytope.shapes import Select, Span
@@ -20,15 +19,17 @@ class TestFloatType:
                 "alt": np.arange(0.0, 20.0, 0.1),
             },
         )
-        self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer)
+        options = {"compressed_axes_config": ["lat", "long", "alt"]}
+        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 
     def test_slicing_span(self):
         request = Request(Span("lat", 4.1, 4.3), Select("long", [4.1]), Select("alt", [4.1]))
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 3
+        assert len(result.leaves) == 1
+        path = result.leaves[0].flatten()
+        assert path["lat"] == (4.1, 4.2, 4.3)
 
     def test_slicing_point(self):
         request = Request(Select("lat", [4.1]), Select("long", [4.1]), Select("alt", [4.1]))

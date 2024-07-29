@@ -12,25 +12,48 @@ from polytope.shapes import Box, Select
 
 class TestReducedLatLonGrid:
     def setup_method(self, method):
-        from polytope.datacube.backends.fdb import FDBDatacube
-
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/wave.grib"
         download_test_data(nexus_url, "wave.grib")
         self.options = {
-            "values": {"mapper": {"type": "reduced_ll", "resolution": 1441, "axes": ["latitude", "longitude"]}},
-            "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
-            "step": {"type_change": "int"},
-            "number": {"type_change": "int"},
-            "longitude": {"cyclic": [0, 360]},
+            "axis_config": [
+                {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
+                {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
+                {
+                    "axis_name": "date",
+                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
+                },
+                {
+                    "axis_name": "values",
+                    "transformations": [
+                        {"name": "mapper", "type": "reduced_ll", "resolution": 1441, "axes": ["latitude", "longitude"]}
+                    ],
+                },
+                {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
+            ],
+            "pre_path": {"class": "od", "stream": "wave"},
+            "compressed_axes_config": [
+                "longitude",
+                "latitude",
+                "levtype",
+                "step",
+                "date",
+                "domain",
+                "expver",
+                "param",
+                "class",
+                "stream",
+                "type",
+                "direction",
+                "frequency",
+            ],
         }
-        self.config = {"class": "od", "stream": "wave"}
-        self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
-        self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
 
+    @pytest.mark.skip(reason="wave data grid packing not supported")
     @pytest.mark.internet
     @pytest.mark.fdb
     def test_reduced_ll_grid(self):
+        import pygribjump as gj
+
         request = Request(
             Select("step", [1]),
             Select("date", [pd.Timestamp("20231129T000000")]),
@@ -44,6 +67,13 @@ class TestReducedLatLonGrid:
             Select("levtype", ["sfc"]),
             Select("type", ["fc"]),
             Box(["latitude", "longitude"], [0, 0], [1.2, 1.5]),
+        )
+        self.fdbdatacube = gj.GribJump()
+        self.slicer = HullSlicer()
+        self.API = Polytope(
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            options=self.options,
         )
         result = self.API.retrieve(request)
         result.pprint()
@@ -62,8 +92,10 @@ class TestReducedLatLonGrid:
         leaves = result.leaves
         for i in range(len(leaves)):
             cubepath = leaves[i].flatten()
-            lat = cubepath["latitude"]
-            lon = cubepath["longitude"]
+            tree_result = leaves[i].result[1]
+            lat = cubepath["latitude"][0]
+            lon = cubepath["longitude"][0]
+            tree_result = leaves[i].result[1]
             del cubepath
             lats.append(lat)
             lons.append(lon)
@@ -72,10 +104,12 @@ class TestReducedLatLonGrid:
             eccodes_lon = nearest_points.lon
             eccodes_lats.append(eccodes_lat)
             eccodes_lons.append(eccodes_lon)
+            eccodes_resullt = nearest_points.value
             assert eccodes_lat - tol <= lat
             assert lat <= eccodes_lat + tol
             assert eccodes_lon - tol <= lon
             assert lon <= eccodes_lon + tol
+            assert tree_result == eccodes_resullt
         f.close()
 
         # worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))

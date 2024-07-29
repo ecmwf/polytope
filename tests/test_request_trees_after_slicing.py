@@ -20,15 +20,16 @@ class TestIndexTreesAfterSlicing:
         )
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer)
+        options = {"compressed_axes_config": ["level", "step"]}
+        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 
     def test_path_values(self):
         box = Box(["step", "level"], [3.0, 1.0], [6.0, 3.0])
         polytope = box.polytope()
         request = self.slicer.extract(self.xarraydatacube, polytope)
         datacube_path = request.leaves[0].flatten()
-        # request.pprint()
-        assert datacube_path.values() == tuple([3.0, 1.0])
+        request.pprint()
+        assert datacube_path.values() == tuple([tuple([3.0]), tuple([1.0, 2, 3])])
         assert len(datacube_path.values()) == 2
 
     def test_path_keys(self):
@@ -51,8 +52,9 @@ class TestIndexTreesAfterSlicing:
         polytope = box.polytope()
         request = self.slicer.extract(self.xarraydatacube, polytope)
         path = request.leaves[0].flatten()
-        assert path["step"] == 3.0
-        assert path["level"] == 1.0
+        request.pprint()
+        assert path["step"] == tuple([3.0])
+        assert path["level"] == tuple([1.0, 2, 3])
 
     def test_add_child(self):
         box = Box(["step", "level"], [3.0, 1.0], [6.0, 3.0])
@@ -63,14 +65,14 @@ class TestIndexTreesAfterSlicing:
         # Test adding child
         axis1 = IntDatacubeAxis()
         axis1.name = "lat"
-        request2.create_child(axis1, 4.1)
+        request2.create_child(axis1, 4.1, [])
         assert request2.leaves[0].axis.name == "lat"
-        assert request2.leaves[0].value == 4.1
+        assert request2.leaves[0].values == tuple([4.1])
         axis2 = IntDatacubeAxis()
         axis2.name = "level"
         # Test getting child
-        assert request1.create_child(axis2, 3.0).axis.name == "level"
-        assert request1.create_child(axis2, 3.0).value == 3.0
+        assert request1.create_child(axis2, 3.0, [])[0].axis.name == "level"
+        assert request1.create_child(axis2, 3.0, [])[0].values == tuple([3.0])
 
     def test_pprint(self):
         box = Box(["step", "level"], [3.0, 1.0], [6.0, 3.0])
@@ -91,7 +93,7 @@ class TestIndexTreesAfterSlicing:
         axis1.name = "step"
         axis2.name = "level"
         # Test if remove_branch() also removes longer branches
-        request1 = request.create_child(axis1, 1.0)
-        request2 = request1.create_child(axis2, 0.0)
-        request2.remove_branch()
-        assert request1.is_root()  # removed from original
+        request1 = request.create_child(axis1, 1.0, [])
+        request2 = request1[0].create_child(axis2, 0.0, [])
+        request2[0].remove_branch()
+        assert request1[0].is_root()  # removed from original
