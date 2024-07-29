@@ -140,8 +140,7 @@ jobs:
           files: coverage.xml
       - name: Documentation
         run: |
-          make clean
-          make html
+          make doc
         working-directory: docs
   deploy:
     needs: test
