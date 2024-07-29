@@ -138,11 +138,6 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           files: coverage.xml
-      - name: Documentation
-        run: |
-          python -m pip install -r docs/requirements.txt
-          mkdocs build --clean
-        working-directory: docs
   deploy:
     needs: test
     if: ${{ github.event_name == 'release' }}
