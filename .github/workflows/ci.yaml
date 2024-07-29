@@ -140,7 +140,8 @@ jobs:
           files: coverage.xml
       - name: Documentation
         run: |
-          make doc
+          python -m pip install -r docs/requirements.txt
+          mkdocs build --clean
         working-directory: docs
   deploy:
     needs: test
