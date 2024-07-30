@@ -102,8 +102,6 @@ class FDBDatacube(Datacube):
             request_combis = product(*interm_branch_tuple_values)
 
             # Need to extract the possible requests and add them to the right nodes
-            # complete_list_complete_uncompressed_requests = []
-            # complete_fdb_decoding_info = []
             for combi in request_combis:
                 uncompressed_request = {}
                 for i, key in enumerate(compressed_request[0].keys()):
@@ -286,7 +284,6 @@ class FDBDatacube(Datacube):
                     # If we are here, no data was found for this path in the fdb
                     none_array = [None] * len(n.values)
                     n.result.extend(none_array)
-                    # n.remove_branch()
                 else:
                     interm_request_output_values = request_output_values[0][i][0]
                     n.result.extend(interm_request_output_values)
