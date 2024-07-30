@@ -91,7 +91,7 @@ class HullSlicer(Engine):
                 flattened = {flattened_tuple[0]: flattened_tuple[1]}
 
         values = self.axis_values_between.get((flattened_tuple, ax.name, lower, upper, method), None)
-        if self.axis_values_between.get((flattened_tuple, ax.name, lower, upper, method), None) is None:
+        if values is None:
             values = datacube.get_indices(flattened, ax, lower, upper, method)
             self.axis_values_between[(flattened_tuple, ax.name, lower, upper, method)] = values
         return values
