@@ -56,13 +56,9 @@ class PolytopeOptions(ABC):
             alternative_axes: List[GribJumpAxesConfig] = []
 
         parser = argparse.ArgumentParser(allow_abbrev=False)
-        config_options = Conflator(app_name="polytope", model=Config, cli=False, argparser=parser).load()
-        config_options = Config(
-            axis_config=options.get("axis_config", []),
-            compressed_axes_config=options.get("compressed_axes_config", [""]),
-            pre_path=options.get("pre_path", {}),
-            alternative_axes=options.get("alternative_axes", []),
-        )
+        conflator = Conflator(app_name="polytope", model=Config, cli=False, argparser=parser, **options)
+        config_options = conflator.load()
+
         axis_config = config_options.axis_config
         compressed_axes_config = config_options.compressed_axes_config
         pre_path = config_options.pre_path
