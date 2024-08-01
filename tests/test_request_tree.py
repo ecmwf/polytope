@@ -292,6 +292,19 @@ class TestIndexTree:
         assert root_node.create_child(axis1, 0, [])[0] == child1
         assert root_node.create_child(axis2, (), [])[0].parent == root_node
 
+    def test_eq(self):
+        axis1 = IntDatacubeAxis()
+        axis1.name = "child1"
+        axis2 = IntDatacubeAxis()
+        axis2.name = "child2"
+        child1 = TensorIndexTree(axis=axis1)
+        child2 = TensorIndexTree(axis=axis2)
+        assert not child1 == child2
+        child2.axis.name = "child1"
+        assert child1 == child2
+        child2 = axis1
+        assert not child1 == child2
+
     # def test_to_dict(self):
     #     axis1 = IntDatacubeAxis()
     #     axis2 = IntDatacubeAxis()
