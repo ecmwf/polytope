@@ -55,7 +55,7 @@ class FDBDatacube(Datacube):
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
 
-        logging.info("Polytope created axes for: " + str(self._axes.keys()))
+        logging.info("Polytope created axes for %s", self._axes.keys())
 
     def check_branching_axes(self, request):
         polytopes = request.polytopes()
@@ -85,12 +85,9 @@ class FDBDatacube(Datacube):
         self.get_fdb_requests(requests, fdb_requests, fdb_requests_decoding_info)
 
         # here, loop through the fdb requests and request from gj and directly add to the nodes
-
-        # TODO: here, loop through the fdb requests and request from gj and directly add to the nodes
         complete_list_complete_uncompressed_requests = []
         complete_fdb_decoding_info = []
         for j, compressed_request in enumerate(fdb_requests):
-            # TODO: can we do gj extract outside of this loop?
             uncompressed_request = {}
 
             # Need to determine the possible decompressed requests
@@ -109,7 +106,9 @@ class FDBDatacube(Datacube):
                 complete_uncompressed_request = (uncompressed_request, compressed_request[1])
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
+        logging.debug("The requests we give GribJump are: %s", complete_list_complete_uncompressed_requests)
         output_values = self.gj.extract(complete_list_complete_uncompressed_requests)
+        logging.debug("GribJump outputs: %s", output_values)
         self.assign_fdb_output_to_nodes(output_values, complete_fdb_decoding_info)
 
     def get_fdb_requests(
@@ -124,7 +123,7 @@ class FDBDatacube(Datacube):
 
         # First when request node is root, go to its children
         if requests.axis.name == "root":
-            logging.info("Looking for data for the tree: " + str([leaf.flatten() for leaf in requests.leaves]))
+            logging.info("Looking for data for the tree: %s", [leaf.flatten() for leaf in requests.leaves])
 
             for c in requests.children:
                 self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info)
@@ -162,7 +161,7 @@ class FDBDatacube(Datacube):
                 for j, idx in enumerate(sub_lat_idxs):
                     if idx not in seen_indices:
                         # TODO: need to remove it from the values in the corresponding tree node
-                        # TODO: need to readjust the range we give to gj ... DONE?
+                        # TODO: need to read just the range we give to gj ... DONE?
                         original_fdb_node_range_vals.append(actual_fdb_node[0].values[j])
                         seen_indices.add(idx)
                         new_current_start_idx.append(idx)
@@ -325,6 +324,8 @@ class FDBDatacube(Datacube):
         request_ranges_with_idx = list(enumerate(interm_request_ranges))
         sorted_list = sorted(request_ranges_with_idx, key=lambda x: x[1][0])
         original_indices, sorted_request_ranges = zip(*sorted_list)
+        logging.debug("We sorted the request ranges into: %s", sorted_request_ranges)
+        logging.debug("The sorted and unique leaf node ranges are: %s", new_fdb_node_ranges)
         return (original_indices, sorted_request_ranges, new_fdb_node_ranges)
 
     def datacube_natural_indexes(self, axis, subarray):
