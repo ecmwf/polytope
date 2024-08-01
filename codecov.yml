@@ -1,0 +1,3 @@
+ignore:
+  - "tests"  # ignore tests folder
+  - "polytope/datacube/backends/fdb.py" # ignore fdb backend which we can't test in CI yet
