@@ -81,8 +81,9 @@ class TensorIndexTree(object):
                     for i in range(len(other.values)):
                         other_val = other.values[i]
                         self_val = self.values[i]
-                        if abs(other_val - self_val) > 2 * max(other.axis.tol, self.axis.tol):
-                            return False
+                        if self.axis.can_round:
+                            if abs(other_val - self_val) > 2 * max(other.axis.tol, self.axis.tol):
+                                return False
                     return True
 
     def __lt__(self, other):
