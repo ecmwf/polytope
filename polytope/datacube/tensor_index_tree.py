@@ -213,9 +213,6 @@ class TensorIndexTree(object):
 
     def flatten(self):
         path = DatacubePath()
-        # print("SELF IN FLATTEN")
-        # print(self)
-        # print(self.parent)
         ancestors = self.get_ancestors()
         for ancestor in ancestors:
             path[ancestor.axis.name] = ancestor.values
@@ -223,14 +220,8 @@ class TensorIndexTree(object):
 
     def get_ancestors(self):
         ancestors = []
-        # print("SELF IN GET ANCESTORS")
-        # print(self)
-        # print(self.axis)
         current_node = self
-        # while current_node.axis != TensorIndexTree.root:
         while current_node.axis.name != "root":
             ancestors.append(current_node)
             current_node = current_node.parent
-            # print(current_node)
-            # print(current_node.axis.name == "root")
         return ancestors[::-1]
