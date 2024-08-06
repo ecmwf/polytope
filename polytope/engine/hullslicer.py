@@ -73,10 +73,6 @@ class HullSlicer(Engine):
         tol = ax.tol
         lower = ax.from_float(lower - tol)
         upper = ax.from_float(upper + tol)
-        # print(node)
-        # print("WHAT S THE AXIS")
-        # print(node.axis)
-        # print(node.flatten())
         flattened = node.flatten()
         method = polytope.method
         if method == "nearest":
@@ -113,13 +109,6 @@ class HullSlicer(Engine):
         return remapped_val
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, values, next_nodes, slice_axis_idx):
-        # print(node.children)
-        # if len(values) == 0 and len(node.children) == 0:
-        # print(node)
-        # print(values)
-        # if len(values) == 0:
-        #     node.remove_branch()
-
         for i, value in enumerate(values):
             if i == 0:
                 fvalue = ax.to_float(value)
@@ -164,12 +153,10 @@ class HullSlicer(Engine):
                     if self.ax_is_unsliceable[ax.name]:
                         self._build_unsliceable_child(polytope, ax, node, datacube, [lower], next_nodes, slice_axis_idx)
                     else:
-                        # print("IN BUILD BRANCH")
-                        # print(node)
-                        # print(node.axis)
-                        # print(node.parent)
                         values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
-                        # TODO: HERE, SOMEHOW NEED TO ONLY remove the branches if the values are empty, but only if there are no other possible children left in the tree that we can append and if somehow this happens before and we need to remove, then what do we do??
+                        # NOTE: need to only remove the branches if the values are empty,
+                        # but only if there are no other possible children left in the tree that
+                        # we can append and if somehow this happens before and we need to remove, then what do we do??
                         if i == len(right_unsliced_polytopes) - 1:
                             # we have iterated all polytopes and we can now remove the node if we need to
                             if len(values) == 0 and len(node.children) == 0:
