@@ -81,9 +81,8 @@ class TensorIndexTree(object):
                     for i in range(len(other.values)):
                         other_val = other.values[i]
                         self_val = self.values[i]
-                        if self.axis.can_round:
-                            if abs(other_val - self_val) > 2 * max(other.axis.tol, self.axis.tol):
-                                return False
+                        if abs(other_val - self_val) > 2 * max(other.axis.tol, self.axis.tol):
+                            return False
                     return True
 
     def __lt__(self, other):
@@ -210,6 +209,9 @@ class TensorIndexTree(object):
 
     def flatten(self):
         path = DatacubePath()
+        # print("SELF IN FLATTEN")
+        # print(self)
+        # print(self.parent)
         ancestors = self.get_ancestors()
         for ancestor in ancestors:
             path[ancestor.axis.name] = ancestor.values
@@ -217,8 +219,14 @@ class TensorIndexTree(object):
 
     def get_ancestors(self):
         ancestors = []
+        # print("SELF IN GET ANCESTORS")
+        # print(self)
+        # print(self.axis)
         current_node = self
-        while current_node.axis != TensorIndexTree.root:
+        # while current_node.axis != TensorIndexTree.root:
+        while current_node.axis.name != "root":
             ancestors.append(current_node)
             current_node = current_node.parent
+            # print(current_node)
+            # print(current_node.axis.name == "root")
         return ancestors[::-1]

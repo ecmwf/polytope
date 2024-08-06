@@ -78,6 +78,7 @@ class FDBDatacube(Datacube):
             self._axes.pop(axis_name, None)
 
     def get(self, requests: TensorIndexTree):
+        requests.pprint()
         if len(requests.children) == 0:
             return requests
         fdb_requests = []
