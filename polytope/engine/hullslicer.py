@@ -110,7 +110,7 @@ class HullSlicer(Engine):
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, values, next_nodes, slice_axis_idx):
         for i, value in enumerate(values):
-            if i == 0:
+            if i == 0 or ax.name not in self.compressed_axes:
                 fvalue = ax.to_float(value)
                 new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
                 remapped_val = self.remap_values(ax, value)
@@ -121,19 +121,8 @@ class HullSlicer(Engine):
                     child["unsliced_polytopes"].add(new_polytope)
                 next_nodes.append(child)
             else:
-                if ax.name not in self.compressed_axes:
-                    fvalue = ax.to_float(value)
-                    new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
-                    remapped_val = self.remap_values(ax, value)
-                    (child, next_nodes) = node.create_child(ax, remapped_val, next_nodes)
-                    child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
-                    child["unsliced_polytopes"].remove(polytope)
-                    if new_polytope is not None:
-                        child["unsliced_polytopes"].add(new_polytope)
-                    next_nodes.append(child)
-                else:
-                    remapped_val = self.remap_values(ax, value)
-                    child.add_value(remapped_val)
+                remapped_val = self.remap_values(ax, value)
+                child.add_value(remapped_val)
 
     def _build_branch(self, ax, node, datacube, next_nodes):
         if ax.name not in self.compressed_axes:
