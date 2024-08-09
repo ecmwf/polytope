@@ -161,8 +161,8 @@ class FDBDatacube(Datacube):
                 new_current_start_idx = []
                 for j, idx in enumerate(sub_lat_idxs):
                     if idx not in seen_indices:
-                        # TODO: need to remove it from the values in the corresponding tree node
-                        # TODO: need to read just the range we give to gj ... DONE?
+                        # NOTE: need to remove it from the values in the corresponding tree node
+                        # NOTE: need to read just the range we give to gj
                         original_fdb_node_range_vals.append(actual_fdb_node[0].values[j])
                         seen_indices.add(idx)
                         new_current_start_idx.append(idx)
@@ -187,8 +187,6 @@ class FDBDatacube(Datacube):
 
             second_ax = requests.children[0].children[0].axis
 
-            # TODO: actually, here we should not remap the nearest_pts, we should instead unmap the
-            # found_latlon_pts and then remap them later once we have compared found_latlon_pts and nearest_pts
             nearest_pts = [
                 [lat_val, second_ax._remap_val_to_axis_range(lon_val)]
                 for (lat_val, lon_val) in zip(
