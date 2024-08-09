@@ -34,6 +34,7 @@ class TensorIndexTree(object):
         self.ancestors = []
         self.indexes = []
         self.hidden = False
+        self.labels = []
 
     @property
     def leaves(self):
@@ -107,12 +108,14 @@ class TensorIndexTree(object):
         new_values.append(value)
         self.values = tuple(new_values)
 
-    def create_child(self, axis, value, next_nodes):
+    def create_child(self, axis, value, next_nodes, polytope_label=None):
         node = TensorIndexTree(axis, (value,))
         existing_child = self.find_child(node)
         if not existing_child:
             self.add_child(node)
+            node.labels.append(polytope_label)
             return (node, next_nodes)
+        existing_child.labels.append(polytope_label)
         return (existing_child, next_nodes)
 
     @property
