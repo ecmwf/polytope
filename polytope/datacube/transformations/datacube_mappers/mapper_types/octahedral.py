@@ -15,6 +15,7 @@ class OctahedralGridMapper(DatacubeMapper):
         self._second_axis_spacing = {}
         self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
         self.compressed_grid_axes = [self._mapped_axes[1]]
+        self.md5_hash = md5_hash.get(resolution, None)
 
     def gauss_first_guess(self):
         i = 0
@@ -2750,3 +2751,7 @@ class OctahedralGridMapper(DatacubeMapper):
         (first_idx, second_idx) = self.find_second_axis_idx(first_val, second_val)
         octahedral_index = self.axes_idx_to_octahedral_idx(first_idx, second_idx)
         return octahedral_index
+
+
+# md5 grid hash in form {resolution : hash}
+md5_hash = {}

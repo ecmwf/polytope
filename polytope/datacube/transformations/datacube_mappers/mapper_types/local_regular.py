@@ -23,6 +23,7 @@ class LocalRegularGridMapper(DatacubeMapper):
         self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
         self._first_axis_vals = self.first_axis_vals()
         self.compressed_grid_axes = [self._mapped_axes[1]]
+        self.md5_hash = md5_hash.get(resolution, None)
 
     def first_axis_vals(self):
         first_ax_vals = [self._first_axis_max - i * self._first_deg_increment for i in range(self.first_resolution + 1)]
@@ -68,3 +69,7 @@ class LocalRegularGridMapper(DatacubeMapper):
         second_idx = self.second_axis_vals(first_val).index(second_val)
         final_index = self.axes_idx_to_regular_idx(first_idx, second_idx)
         return final_index
+
+
+# md5 grid hash in form {resolution : hash}
+md5_hash = {}

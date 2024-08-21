@@ -20,6 +20,7 @@ class DatacubeMapper(DatacubeAxisTransformation):
         self._final_mapped_axes = self._final_transformation._mapped_axes
         self._axis_reversed = self._final_transformation._axis_reversed
         self.compressed_grid_axes = self._final_transformation.compressed_grid_axes
+        self.md5_hash = self._final_transformation.md5_hash
 
     def generate_final_transformation(self):
         map_type = _type_to_datacube_mapper_lookup[self.grid_type]
