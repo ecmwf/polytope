@@ -6,7 +6,6 @@ from ..datacube_mappers import DatacubeMapper
 
 class OctahedralGridMapper(DatacubeMapper):
     def __init__(self, base_axis, mapped_axes, resolution, local_area=[]):
-        # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
         self._resolution = resolution
@@ -15,6 +14,9 @@ class OctahedralGridMapper(DatacubeMapper):
         self._second_axis_spacing = {}
         self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
         self.compressed_grid_axes = [self._mapped_axes[1]]
+
+        if local_area != []:
+            raise NotImplementedError("Local area grid not implemented for octahedral grids")
 
     def gauss_first_guess(self):
         i = 0

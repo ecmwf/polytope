@@ -6,7 +6,6 @@ from ..datacube_mappers import DatacubeMapper
 
 class NestedHealpixGridMapper(DatacubeMapper):
     def __init__(self, base_axis, mapped_axes, resolution, local_area=[]):
-        # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
         self._resolution = resolution
@@ -17,6 +16,9 @@ class NestedHealpixGridMapper(DatacubeMapper):
         self.k = int(math.log2(self.Nside))
         self.Npix = 12 * self.Nside * self.Nside
         self.Ncap = (self.Nside * (self.Nside - 1)) << 1
+
+        if local_area != []:
+            raise NotImplementedError("Local area grid not implemented for healpix grids")
 
     def first_axis_vals(self):
         rad2deg = 180 / math.pi

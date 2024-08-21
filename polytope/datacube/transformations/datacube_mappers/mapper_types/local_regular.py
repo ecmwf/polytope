@@ -5,9 +5,12 @@ from ..datacube_mappers import DatacubeMapper
 
 class LocalRegularGridMapper(DatacubeMapper):
     def __init__(self, base_axis, mapped_axes, resolution, local_area=[]):
-        # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
+
+        if local_area == [] or len(local_area) != 4:
+            raise TypeError("Local area grid region not or wrongly specified")
+
         self._first_axis_min = local_area[0]
         self._first_axis_max = local_area[1]
         self._second_axis_min = local_area[2]

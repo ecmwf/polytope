@@ -5,7 +5,6 @@ from ..datacube_mappers import DatacubeMapper
 
 class RegularGridMapper(DatacubeMapper):
     def __init__(self, base_axis, mapped_axes, resolution, local_area=[]):
-        # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
         self._resolution = resolution
@@ -13,6 +12,9 @@ class RegularGridMapper(DatacubeMapper):
         self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
         self._first_axis_vals = self.first_axis_vals()
         self.compressed_grid_axes = [self._mapped_axes[1]]
+
+        if local_area != []:
+            raise TypeError("Use local_regular grid type for local area regular lat-lon grids")
 
     def first_axis_vals(self):
         first_ax_vals = [90 - i * self.deg_increment for i in range(2 * self._resolution)]
