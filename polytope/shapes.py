@@ -351,17 +351,17 @@ class Segment(Shape):
 
         assert shape1.axes() == self.axes()
         assert shape2.axes() == self.axes()
-        # Check that the shapes are not in a union
-        assert not shape1.is_in_union
-        assert not shape2.is_in_union
 
         self.polytopes = []
 
         for polytope1 in shape1.polytope():
             # check that we do not have special "augmented" shapes like Point
             assert polytope1.axes() == shape1.axes()
+            # Check that the shapes are not in a union
+            assert not polytope1.is_in_union
             for polytope2 in shape2.polytope():
                 assert polytope2.axes() == shape2.axes()
+                assert not polytope2.is_in_union
                 assert polytope1.axes() == polytope2.axes()
                 points = polytope1.points
                 points.extend(polytope2.points)

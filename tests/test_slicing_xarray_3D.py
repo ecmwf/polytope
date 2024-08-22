@@ -97,27 +97,21 @@ class TestSlicing3DXarrayDatacube:
         # TODO
         box1 = Box(["level", "step"], [1, 0], [2, 3])
         box2 = Box(["level", "step"], [1, 9], [3, 15])
-        request = Request(Select("date", ["2000-01-03"]),
-                          Segment(["level", "step"], box1, box2)
-                          )
+        request = Request(Select("date", ["2000-01-03"]), Segment(["level", "step"], box1, box2))
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 15
 
         box1 = Box(["level", "step"], [1, 0], [2, 3])
         box2 = Box(["level", "step"], [1, 12], [5, 15])
-        request = Request(Select("date", ["2000-01-03"]),
-                          Segment(["level", "step"], box1, box2)
-                          )
+        request = Request(Select("date", ["2000-01-03"]), Segment(["level", "step"], box1, box2))
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 21
 
         box1 = Box(["level", "step"], [1, 0], [2, 3])
         box2 = Box(["level", "step"], [1, 12], [10, 15])
-        request = Request(Select("date", ["2000-01-03"]),
-                          Segment(["level", "step"], box1, box2)
-                          )
+        request = Request(Select("date", ["2000-01-03"]), Segment(["level", "step"], box1, box2))
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 40
@@ -126,18 +120,14 @@ class TestSlicing3DXarrayDatacube:
         # TODO
         box1 = Box(["level", "step"], [1, 0], [2, 3])
         box2 = Box(["level", "step"], [1, 9], [3, 15])
-        request = Request(Select("date", ["2000-01-03"]),
-                          ShapePath(["level", "step"], box1, box2)
-                          )
+        request = Request(Select("date", ["2000-01-03"]), ShapePath(["level", "step"], box1, box2))
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 15
 
         box2 = Box(["level", "step"], [1, 6], [5, 12])
         box3 = Box(["level", "step"], [1, 12], [7, 15])
-        request = Request(Select("date", ["2000-01-03"]),
-                          ShapePath(["level", "step"], box1, box2, box3)
-                          )
+        request = Request(Select("date", ["2000-01-03"]), ShapePath(["level", "step"], box1, box2, box3))
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 30
