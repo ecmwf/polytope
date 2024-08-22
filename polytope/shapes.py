@@ -394,7 +394,7 @@ class ShapePath(Shape):
         path_segments = []
 
         for i in range(0, len(shapes) - 1):
-            new_segment = Segment(axes, shapes[i], shapes[i+1])
+            new_segment = Segment(axes, shapes[i], shapes[i + 1])
             path_segments.append(new_segment)
 
         self.union = Union(self.axes(), *path_segments)
