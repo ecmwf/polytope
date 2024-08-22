@@ -16,6 +16,8 @@ from polytope.shapes import (
     PathSegment,
     Polygon,
     Select,
+    Segment,
+    ShapePath,
     Span,
     Union,
 )
@@ -64,7 +66,7 @@ class TestSlicing3DXarrayDatacube:
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
 
-    def test_segment(self):
+    def test_span(self):
         request = Request(Span("level", 10, 11), Select("date", ["2000-01-01"]), Select("step", [9]))
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
@@ -90,6 +92,55 @@ class TestSlicing3DXarrayDatacube:
         request = Request(Select("date", ["2000-01-03", "2000-01-04"]), Select("level", [100]), Select("step", [3]))
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
+
+    def test_segment_shape(self):
+        # TODO
+        box1 = Box(["level", "step"], [1, 0], [2, 3])
+        box2 = Box(["level", "step"], [1, 9], [3, 15])
+        request = Request(Select("date", ["2000-01-03"]),
+                          Segment(["level", "step"], box1, box2)
+                          )
+        result = self.API.retrieve(request)
+        result.pprint()
+        assert len(result.leaves) == 15
+
+        box1 = Box(["level", "step"], [1, 0], [2, 3])
+        box2 = Box(["level", "step"], [1, 12], [5, 15])
+        request = Request(Select("date", ["2000-01-03"]),
+                          Segment(["level", "step"], box1, box2)
+                          )
+        result = self.API.retrieve(request)
+        result.pprint()
+        assert len(result.leaves) == 21
+
+        box1 = Box(["level", "step"], [1, 0], [2, 3])
+        box2 = Box(["level", "step"], [1, 12], [10, 15])
+        request = Request(Select("date", ["2000-01-03"]),
+                          Segment(["level", "step"], box1, box2)
+                          )
+        result = self.API.retrieve(request)
+        result.pprint()
+        assert len(result.leaves) == 40
+
+    def test_shape_path_shape(self):
+        # TODO
+        box1 = Box(["level", "step"], [1, 0], [2, 3])
+        box2 = Box(["level", "step"], [1, 9], [3, 15])
+        request = Request(Select("date", ["2000-01-03"]),
+                          ShapePath(["level", "step"], box1, box2)
+                          )
+        result = self.API.retrieve(request)
+        result.pprint()
+        assert len(result.leaves) == 15
+
+        box2 = Box(["level", "step"], [1, 6], [5, 12])
+        box3 = Box(["level", "step"], [1, 12], [7, 15])
+        request = Request(Select("date", ["2000-01-03"]),
+                          ShapePath(["level", "step"], box1, box2, box3)
+                          )
+        result = self.API.retrieve(request)
+        result.pprint()
+        assert len(result.leaves) == 30
 
     def test_disk(self):
         request = Request(Disk(["level", "step"], [6, 6], [3, 3]), Select("date", ["2000-01-01"]))
