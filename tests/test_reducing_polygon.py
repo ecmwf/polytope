@@ -10,15 +10,11 @@ class TestReducedPolygonShape:
 
     def test_reduced_polygon_shape(self):
 
-        # Generate 200 + random points 
-        # points = 
-
+        # Generate 200 + random points
 
         shapefile = gpd.read_file("~/Downloads/World_Seas_IHO_v3/World_Seas_IHO_v3.shp")
         print(shapefile)
         polygons = []
-        mediterranean_seas = ["Adriatic Sea", "Ionian Sea", "Tyrrhenian Sea", "Mediterranean Sea - Eastern Basin", "Aegean Sea", "Balearic (Iberian Sea)", "Mediterranean Sea - Western Basin", "Alboran Sea", "Ligurian Sea"]
-        # mediterranean_seas = ["Mediterranean Sea - Eastern Basin", "Mediterranean Sea - Western Basin"]
         mediterranean_seas = ["Ionian Sea"]
         for i in range(100):
             country = shapefile.iloc[i]
@@ -32,12 +28,11 @@ class TestReducedPolygonShape:
                 else:
                     polygons.append(multi_polygon)
         polygons_list = []
-                    
+
         for polygon in polygons:
             xx, yy = polygon.exterior.coords.xy
             polygon_points = [list(a) for a in zip(xx, yy)]
             polygons_list.append(polygon_points)
-
 
         points = polygons_list[0]
         print(len(points))
@@ -48,8 +43,6 @@ class TestReducedPolygonShape:
             xx, yy = polygon.exterior.coords.xy
             polygon_points = [list(a) for a in zip(xx, yy)]
             polygons_list.append(polygon_points)
-        
-
 
         poly = Polygon(["lat", "lon"], points)
 

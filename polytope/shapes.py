@@ -429,8 +429,6 @@ class Polygon(Shape):
         poly1_points = points[:n]
         poly2_points = points[n:]
 
-        # print(poly1_points)
-
         # Douglas-Peucker on each polyline
         red_points_poly1 = self.douglas_peucker_algo(poly1_points, epsilon)
         red_points_poly2 = self.douglas_peucker_algo(poly2_points, epsilon)
@@ -439,8 +437,6 @@ class Polygon(Shape):
         self._points = reduced_points
 
     def douglas_peucker_algo(self, points, epsilon):
-        # print("HAVE RECURSED?")
-        # print(points)
         max_dist = 0
         index = 0
         end = len(points)
@@ -467,8 +463,6 @@ class Polygon(Shape):
             results.extend(red_sub_polyline1)
             results.extend(red_sub_polyline2)
         else:
-            # print("HERE")
-            # print(points)
             results = [points[0], points[-1]]
         return results
 
@@ -481,7 +475,7 @@ class Polygon(Shape):
 
         if line_points[0][0] != line_points[1][0]:
 
-            a = (line_points[0][1] - line_points[1][1])/ (line_points[0][0] - line_points[1][0])
+            a = (line_points[0][1] - line_points[1][1]) / (line_points[0][0] - line_points[1][0])
             b = line_points[0][1] - a * line_points[0][0]
 
             # Then the coordinates of the projected point on y = ax + b is given by
@@ -490,10 +484,9 @@ class Polygon(Shape):
 
             proj_x = (point[0] + a * point[1] - a*b) / (1 + a**2)
             proj_y = (a * point[0] + (a**2) * point[1] + b) / (1 + a**2)
-        
         else:
             proj_x = line_points[0][0]
             proj_y = point[1]
-        # proj_point = [proj_x, proj_y]
+
         dist = math.sqrt((point[0] - proj_x)**2 + (point[1] - proj_y)**2)
         return dist
