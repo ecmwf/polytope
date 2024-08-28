@@ -376,12 +376,38 @@ class Polygon(Shape):
         for p in points:
             assert len(p) == 2
 
-        self._points = points
-        triangles = tripy.earclip(points)
+        # TODO: if there are too many points which would slow down slicing too much, approximate the polygon shape with
+        # fewer vertices
+        # self._points = points
+
+        if len(self._points) <= 3*10e2:
+            self._points = points
+        else:
+            tol = 1e-2
+            self.reduce_polygon(tol)
+        # triangles = tripy.earclip(points)
+        # self.polytopes = []
+
+        # if len(points) > 0 and len(triangles) == 0:
+        #     self.polytopes = [ConvexPolytope(self.axes(), points)]
+
+        # else:
+        #     for t in triangles:
+        #         tri_points = [list(point) for point in t]
+        #         poly = ConvexPolytope(self.axes(), tri_points)
+        #         poly.add_to_union()
+        #         self.polytopes.append(poly)
+
+    def axes(self):
+        return self._axes
+
+    def polytope(self):
+        # return self.polytopes
+        triangles = tripy.earclip(self._points)
         self.polytopes = []
 
-        if len(points) > 0 and len(triangles) == 0:
-            self.polytopes = [ConvexPolytope(self.axes(), points)]
+        if len(self._points) > 0 and len(triangles) == 0:
+            self.polytopes = [ConvexPolytope(self.axes(), self._points)]
 
         else:
             for t in triangles:
@@ -389,12 +415,69 @@ class Polygon(Shape):
                 poly = ConvexPolytope(self.axes(), tri_points)
                 poly.add_to_union()
                 self.polytopes.append(poly)
-
-    def axes(self):
-        return self._axes
-
-    def polytope(self):
         return self.polytopes
 
     def __repr__(self):
         return f"Polygon in {self._axes} with points {self._points}"
+
+    def reduce_polygon(self, epsilon):
+        # Implement Douglas-Peucker algorithm
+
+        # First need to break down polygon into two polylines
+        n = int(len(self._points)/2)
+        poly1_points = self._points[:n]
+        poly2_points = self._points[n:]
+
+        # Douglas-Peucker on each polyline
+        red_points_poly1 = self.douglas_peucker_algo(poly1_points, epsilon)
+        red_points_poly2 = self.douglas_peucker_algo(poly2_points, epsilon)
+        reduced_points = red_points_poly1
+        reduced_points.extend(red_points_poly2)
+        self._points = reduced_points
+
+    def douglas_peucker_algo(self, points, epsilon):
+        max_dist = 0
+        index = 0
+        end = len(points)
+
+        # find point with largest distance to line between first and last point of polyline
+        for i in range([1, end-1]):
+            line_points = [points[0], points[end-1]]
+            point = points[i]
+            dist = self.perp_dist(point, line_points)
+            if dist > max_dist:
+                max_dist = dist
+                index = i
+
+        # now compare this against the tol and recurse
+        if max_dist > epsilon:
+            # this means that we need to keep the max dist point in the polyline
+            # and so we then need to recurse
+            reduced_points = []
+            sub_polyline1_points = points[: index + 1]  # NOTE we include the max dist point
+            sub_polyline2_points = points[index :] # NOTE: we include the max dist point
+            red_sub_polyline1 = self.douglas_peucker_algo(sub_polyline1_points, epsilon)
+            red_sub_polyline2 = self.douglas_peucker_algo(sub_polyline2_points, epsilon)
+            
+            # TODO
+        pass
+
+    def perp_dist(point, line_points):
+        # project point onto the line
+
+        # find line equation: y = ax + b
+        # where a is the slope = (point1[y] - point2[y])/ (point1[x] - point2[x])
+        # and b is the offset of the line = point1[y] - a* point1[x]
+
+        a = (line_points[0][1] - line_points[1][1])/ (line_points[0][0] - line_points[1][0])
+        b = line_points[0][1] - a* line_points[0][0]
+
+        # Then the coordinates of the projected point on y = ax + b is given by
+        # x = (point[x] + a* point[y] - ab)/ (1 + a^2) and
+        # y = (a* point[x] + a^2 * point[y] + b) / (1 + a^2)
+
+        proj_x = (point[0] + a * point[1] - a*b)/ (1 + a**2)
+        proj_y = (a * point[0] + (a**2) * point[1] + b) / (1 + a**2)
+        proj_point = [proj_x, proj_y]
+        return proj_point
+
