@@ -109,9 +109,6 @@ class HullSlicer(Engine):
         return remapped_val
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, values, next_nodes, slice_axis_idx):
-        if len(values) == 0:
-            node.remove_branch()
-
         for i, value in enumerate(values):
             if i == 0:
                 fvalue = ax.to_float(value)
@@ -140,8 +137,16 @@ class HullSlicer(Engine):
 
     def _build_branch(self, ax, node, datacube, next_nodes):
         if ax.name not in self.compressed_axes:
+            parent_node = node.parent
+            right_unsliced_polytopes = []
             for polytope in node["unsliced_polytopes"]:
                 if ax.name in polytope._axes:
+                    right_unsliced_polytopes.append(polytope)
+            # for polytope in node["unsliced_polytopes"]:
+            for i, polytope in enumerate(right_unsliced_polytopes):
+                node._parent = parent_node
+                # if ax.name in polytope._axes:
+                if True:
                     lower, upper, slice_axis_idx = polytope.extents(ax.name)
                     # here, first check if the axis is an unsliceable axis and directly build node if it is
                     # NOTE: we should have already created the ax_is_unsliceable cache before
@@ -149,13 +154,22 @@ class HullSlicer(Engine):
                         self._build_unsliceable_child(polytope, ax, node, datacube, [lower], next_nodes, slice_axis_idx)
                     else:
                         values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
+                        # NOTE: need to only remove the branches if the values are empty,
+                        # but only if there are no other possible children left in the tree that
+                        # we can append and if somehow this happens before and we need to remove, then what do we do??
+                        if i == len(right_unsliced_polytopes) - 1:
+                            # we have iterated all polytopes and we can now remove the node if we need to
+                            if len(values) == 0 and len(node.children) == 0:
+                                node.remove_branch()
                         self._build_sliceable_child(polytope, ax, node, datacube, values, next_nodes, slice_axis_idx)
         else:
             all_values = []
             all_lowers = []
             first_polytope = False
             first_slice_axis_idx = False
+            parent_node = node.parent
             for polytope in node["unsliced_polytopes"]:
+                node._parent = parent_node
                 if ax.name in polytope._axes:
                     # keep track of the first polytope defined on the given axis
                     if not first_polytope:
@@ -173,6 +187,8 @@ class HullSlicer(Engine):
                     first_polytope, ax, node, datacube, all_lowers, next_nodes, first_slice_axis_idx
                 )
             else:
+                if len(all_values) == 0:
+                    node.remove_branch()
                 self._build_sliceable_child(
                     first_polytope, ax, node, datacube, all_values, next_nodes, first_slice_axis_idx
                 )
