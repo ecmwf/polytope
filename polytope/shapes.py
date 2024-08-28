@@ -379,12 +379,13 @@ class Polygon(Shape):
         # TODO: if there are too many points which would slow down slicing too much, approximate the polygon shape with
         # fewer vertices
         # self._points = points
+        self._points = []
 
-        if len(self._points) <= 3*10e2:
+        if len(points) <= 3*10e2:
             self._points = points
         else:
-            tol = 1e-2
-            self.reduce_polygon(tol)
+            tol = 1e-3  # NOTE: 1e-2 should be sufficient for most grids
+            self.reduce_polygon(points, tol)
         # triangles = tripy.earclip(points)
         # self.polytopes = []
 
@@ -420,13 +421,15 @@ class Polygon(Shape):
     def __repr__(self):
         return f"Polygon in {self._axes} with points {self._points}"
 
-    def reduce_polygon(self, epsilon):
+    def reduce_polygon(self, points, epsilon):
         # Implement Douglas-Peucker algorithm
 
         # First need to break down polygon into two polylines
-        n = int(len(self._points)/2)
-        poly1_points = self._points[:n]
-        poly2_points = self._points[n:]
+        n = int(len(points)/2)
+        poly1_points = points[:n]
+        poly2_points = points[n:]
+
+        # print(poly1_points)
 
         # Douglas-Peucker on each polyline
         red_points_poly1 = self.douglas_peucker_algo(poly1_points, epsilon)
@@ -436,12 +439,16 @@ class Polygon(Shape):
         self._points = reduced_points
 
     def douglas_peucker_algo(self, points, epsilon):
+        # print("HAVE RECURSED?")
+        # print(points)
         max_dist = 0
         index = 0
         end = len(points)
 
+        results = []
+
         # find point with largest distance to line between first and last point of polyline
-        for i in range([1, end-1]):
+        for i in range(1, end-1):
             line_points = [points[0], points[end-1]]
             point = points[i]
             dist = self.perp_dist(point, line_points)
@@ -453,31 +460,40 @@ class Polygon(Shape):
         if max_dist > epsilon:
             # this means that we need to keep the max dist point in the polyline
             # and so we then need to recurse
-            reduced_points = []
             sub_polyline1_points = points[: index + 1]  # NOTE we include the max dist point
-            sub_polyline2_points = points[index :] # NOTE: we include the max dist point
+            sub_polyline2_points = points[index :]  # NOTE: we include the max dist point
             red_sub_polyline1 = self.douglas_peucker_algo(sub_polyline1_points, epsilon)
             red_sub_polyline2 = self.douglas_peucker_algo(sub_polyline2_points, epsilon)
-            
-            # TODO
-        pass
+            results.extend(red_sub_polyline1)
+            results.extend(red_sub_polyline2)
+        else:
+            # print("HERE")
+            # print(points)
+            results = [points[0], points[-1]]
+        return results
 
-    def perp_dist(point, line_points):
+    def perp_dist(self, point, line_points):
         # project point onto the line
 
         # find line equation: y = ax + b
         # where a is the slope = (point1[y] - point2[y])/ (point1[x] - point2[x])
         # and b is the offset of the line = point1[y] - a* point1[x]
 
-        a = (line_points[0][1] - line_points[1][1])/ (line_points[0][0] - line_points[1][0])
-        b = line_points[0][1] - a* line_points[0][0]
+        if line_points[0][0] != line_points[1][0]:
 
-        # Then the coordinates of the projected point on y = ax + b is given by
-        # x = (point[x] + a* point[y] - ab)/ (1 + a^2) and
-        # y = (a* point[x] + a^2 * point[y] + b) / (1 + a^2)
+            a = (line_points[0][1] - line_points[1][1])/ (line_points[0][0] - line_points[1][0])
+            b = line_points[0][1] - a * line_points[0][0]
 
-        proj_x = (point[0] + a * point[1] - a*b)/ (1 + a**2)
-        proj_y = (a * point[0] + (a**2) * point[1] + b) / (1 + a**2)
-        proj_point = [proj_x, proj_y]
-        return proj_point
+            # Then the coordinates of the projected point on y = ax + b is given by
+            # x = (point[x] + a* point[y] - ab)/ (1 + a^2) and
+            # y = (a* point[x] + a^2 * point[y] + b) / (1 + a^2)
 
+            proj_x = (point[0] + a * point[1] - a*b) / (1 + a**2)
+            proj_y = (a * point[0] + (a**2) * point[1] + b) / (1 + a**2)
+        
+        else:
+            proj_x = line_points[0][0]
+            proj_y = point[1]
+        # proj_point = [proj_x, proj_y]
+        dist = math.sqrt((point[0] - proj_x)**2 + (point[1] - proj_y)**2)
+        return dist
