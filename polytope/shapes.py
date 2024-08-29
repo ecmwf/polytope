@@ -384,7 +384,7 @@ class Polygon(Shape):
         if len(points) <= 3*10e2:
             self._points = points
         else:
-            tol = 1e-3  # NOTE: 1e-2 should be sufficient for most grids
+            tol = 1e-2  # NOTE: 1e-2 should be sufficient for most grids
             self.reduce_polygon(points, tol)
         # triangles = tripy.earclip(points)
         # self.polytopes = []
@@ -423,23 +423,32 @@ class Polygon(Shape):
 
     def reduce_polygon(self, points, epsilon):
         # Implement Douglas-Peucker algorithm
-
+        k = 50  # number of polylines we divide the polygon into
         # First need to break down polygon into two polylines
-        n = int(len(points)/2)
-        poly1_points = points[:n]
-        poly2_points = points[n:]
+        n = int(len(points)/k)
+        # poly1_points = points[:n]
+        sub_polys = [points[:n]]
+        for i in range(k-2):
+            sub_polys.append(points[n*(i+1): n*(i+2)])
+        sub_polys.append(points[n*(k-1):])
+        # poly2_points = points[n:]
 
         # Douglas-Peucker on each polyline
-        red_points_poly1 = self.douglas_peucker_algo(poly1_points, epsilon)
-        red_points_poly2 = self.douglas_peucker_algo(poly2_points, epsilon)
-        reduced_points = red_points_poly1
-        reduced_points.extend(red_points_poly2)
+        # red_points_poly1 = self.douglas_peucker_algo(poly1_points, epsilon)
+        # red_points_poly2 = self.douglas_peucker_algo(poly2_points, epsilon)
+        reduced_points = []
+
+        for poly in sub_polys:
+            reduced_points.extend(self.douglas_peucker_algo(poly, epsilon))
+        # reduced_points = red_points_poly1
+        # reduced_points.extend(red_points_poly2)
         self._points = reduced_points
 
     def douglas_peucker_algo(self, points, epsilon):
         max_dist = 0
         index = 0
         end = len(points)
+        # max_point_is_removable = 0
 
         results = []
 
@@ -448,9 +457,13 @@ class Polygon(Shape):
             line_points = [points[0], points[end-1]]
             point = points[i]
             dist = self.perp_dist(point, line_points)
-            if dist > max_dist:
+            point_is_removable = (points[end-1][0]-points[0][0]) * (point[1]-points[0][1]) - (points[end-1][1]-points[0][1]) * (point[0] - points[0][0])
+            if dist > max_dist and point_is_removable >= 0:
                 max_dist = dist
                 index = i
+        
+        # This is negative when we can remove points[index], otherwise we need to keep the point
+        point_is_removable = (points[end-1][0]-points[0][0]) * (points[index][1]-points[0][1]) - (points[end-1][1]-points[0][1]) * (points[index][0] - points[0][0])
 
         # now compare this against the tol and recurse
         if max_dist > epsilon:
@@ -463,7 +476,21 @@ class Polygon(Shape):
             results.extend(red_sub_polyline1)
             results.extend(red_sub_polyline2)
         else:
-            results = [points[0], points[-1]]
+            if point_is_removable <= 0:
+                results = [points[0], points[-1]]
+            else:
+                # we need to keep the point
+                if len(points) > 3:
+                    sub_polyline1_points = points[: index + 1]  # NOTE we include the max dist point
+                    sub_polyline2_points = points[index :]  # NOTE: we include the max dist point
+                    red_sub_polyline1 = self.douglas_peucker_algo(sub_polyline1_points, epsilon)
+                    red_sub_polyline2 = self.douglas_peucker_algo(sub_polyline2_points, epsilon)
+                    results.extend(red_sub_polyline1)
+                    results.extend(red_sub_polyline2)
+                else:
+
+                    results = [points[0], points[index], points[-1]]
+                # results = points
         return results
 
     def perp_dist(self, point, line_points):
