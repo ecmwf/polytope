@@ -12,6 +12,10 @@ class ReducedLatLonMapper(DatacubeMapper):
         self._axis_reversed = {mapped_axes[0]: False, mapped_axes[1]: False}
         self._first_axis_vals = self.first_axis_vals()
         self.compressed_grid_axes = [self._mapped_axes[1]]
+        if self._axis_reversed[mapped_axes[1]]:
+            raise NotImplementedError("Reduced lat-lon grid with second axis in decreasing order is not supported")
+        if self._axis_reversed[mapped_axes[0]]:
+            raise NotImplementedError("Reduced lat-lon grid with first axis in decreasing order is not supported")
 
     def first_axis_vals(self):
         resolution = 180 / (self._resolution - 1)

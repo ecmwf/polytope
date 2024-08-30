@@ -14,6 +14,10 @@ class OctahedralGridMapper(DatacubeMapper):
         self._first_idx_map = self.create_first_idx_map()
         self._second_axis_spacing = {}
         self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
+        if self._axis_reversed[mapped_axes[1]]:
+            raise NotImplementedError("Octahedral grid with second axis in decreasing order is not supported")
+        if not self._axis_reversed[mapped_axes[0]]:
+            raise NotImplementedError("Octahedral grid with first axis in increasing order is not supported")
         self.compressed_grid_axes = [self._mapped_axes[1]]
 
     def gauss_first_guess(self):

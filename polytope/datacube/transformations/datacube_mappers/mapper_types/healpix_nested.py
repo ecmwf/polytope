@@ -17,6 +17,10 @@ class NestedHealpixGridMapper(DatacubeMapper):
         self.k = int(math.log2(self.Nside))
         self.Npix = 12 * self.Nside * self.Nside
         self.Ncap = (self.Nside * (self.Nside - 1)) << 1
+        if self._axis_reversed[mapped_axes[1]]:
+            raise NotImplementedError("Healpix grid with second axis in decreasing order is not supported")
+        if not self._axis_reversed[mapped_axes[0]]:
+            raise NotImplementedError("Healpix grid with first axis in increasing order is not supported")
 
     def first_axis_vals(self):
         rad2deg = 180 / math.pi

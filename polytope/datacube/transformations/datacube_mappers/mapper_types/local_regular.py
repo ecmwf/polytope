@@ -26,6 +26,8 @@ class LocalRegularGridMapper(DatacubeMapper):
             self._axis_reversed = axis_reversed
         self._first_axis_vals = self.first_axis_vals()
         self.compressed_grid_axes = [self._mapped_axes[1]]
+        if self._axis_reversed[mapped_axes[1]]:
+            raise NotImplementedError("Local regular grid with second axis in decreasing order is not supported")
 
     def first_axis_vals(self):
         if self._axis_reversed[self._mapped_axes[0]]:
