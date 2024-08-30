@@ -127,8 +127,6 @@ class Datacube(ABC):
         path = self.fit_path(path)
         indexes = axis.find_indexes(path, self)
 
-        logging.info(f"For axis {axis.name}, available indexes are {indexes}")
-
         idx_between = axis.find_indices_between(indexes, lower, upper, self, method)
 
         logging.info(f"For axis {axis.name} between {lower} and {upper}, found indices {idx_between}")
