@@ -4,7 +4,7 @@ from ..datacube_mappers import DatacubeMapper
 
 
 class ReducedLatLonMapper(DatacubeMapper):
-    def __init__(self, base_axis, mapped_axes, resolution, local_area=[]):
+    def __init__(self, base_axis, mapped_axes, resolution, local_area=[], axis_reversed=None):
         # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis

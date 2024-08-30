@@ -22,6 +22,7 @@ class MapperConfig(TransformationConfig):
     resolution: Union[int, List[int]] = 0
     axes: List[str] = [""]
     local: Optional[List[float]] = None
+    axis_reversed: Optional[Dict[str, bool]] = None
 
 
 class ReverseConfig(TransformationConfig):
@@ -66,7 +67,6 @@ class Config(ConfigModel):
 class PolytopeOptions(ABC):
     @staticmethod
     def get_polytope_options(options):
-
         parser = argparse.ArgumentParser(allow_abbrev=False)
         conflator = Conflator(app_name="polytope", model=Config, cli=False, argparser=parser, **options)
         config_options = conflator.load()
