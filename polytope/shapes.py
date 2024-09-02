@@ -2,6 +2,7 @@ import copy
 import math
 from abc import ABC, abstractmethod
 from typing import List
+import matplotlib.path as mpltPath
 
 import tripy
 
@@ -423,7 +424,7 @@ class Polygon(Shape):
 
     def reduce_polygon(self, points, epsilon):
         # Implement Douglas-Peucker algorithm
-        k = 50  # number of polylines we divide the polygon into
+        k = 2  # number of polylines we divide the polygon into
         # First need to break down polygon into two polylines
         n = int(len(points)/k)
         # poly1_points = points[:n]
@@ -444,53 +445,179 @@ class Polygon(Shape):
         # reduced_points.extend(red_points_poly2)
         self._points = reduced_points
 
-    def douglas_peucker_algo(self, points, epsilon):
+    def douglas_peucker_algo(self, points, epsilon, iter=False):
         max_dist = 0
         index = 0
         end = len(points)
-        # max_point_is_removable = 0
 
         results = []
+        dists = []
+
+        print(len(points))
+        if len(points) == 2:
+            results = points
+            return results
+        if len(points) == 3:
+            results = points
+            return results
 
         # find point with largest distance to line between first and last point of polyline
         for i in range(1, end-1):
+            # print("GOT HERE?")
             line_points = [points[0], points[end-1]]
             point = points[i]
             dist = self.perp_dist(point, line_points)
-            point_is_removable = (points[end-1][0]-points[0][0]) * (point[1]-points[0][1]) - (points[end-1][1]-points[0][1]) * (point[0] - points[0][0])
-            if dist > max_dist and point_is_removable >= 0:
+            dists.append(dist)
+            if dist > max_dist:
                 max_dist = dist
                 index = i
-        
+            if iter:
+                index = int(len(points)/2)
+                
+
+        # print(need_to_iterate_2)
+        print(points)
+        # print(points[: index + 1])
+        # print(points[index:])
+        # assert index != 0
+
+        triangle_base_polygon = [points[0], points[index], points[-1]]
         # This is negative when we can remove points[index], otherwise we need to keep the point
-        point_is_removable = (points[end-1][0]-points[0][0]) * (points[index][1]-points[0][1]) - (points[end-1][1]-points[0][1]) * (points[index][0] - points[0][0])
+        # point_is_removable = (points[end-1][0]-points[0][0]) * (points[index][1]-points[0][1]) - (points[end-1][1]-points[0][1]) * (points[index][0] - points[0][0])
+        # line_midpoint = [(points[end-1][0]+points[0][0])/2, (points[end-1][1]+points[0][1])/2]
+        # line_midpoint = [(points[index-1][0]+points[index][0]+points[index+1][0])/3, (points[index-1][1]+points[index][1]+points[index+1][1])/3]
+        # can remove point if the line_midpoint is outside of the polygon
+        # import matplotlib.path as mpltPath
+        # point_is_removable = mpltPath.Path(base_polygon).contains_point(line_midpoint)
+        points_is_removable_1 = []
+        points_is_removable_2 = []
+        for i in range(1, index):
+            points_is_removable_1.append(mpltPath.Path(triangle_base_polygon).contains_point(points[i]))
+        for i in range(index, end-1):
+            points_is_removable_2.append(mpltPath.Path(triangle_base_polygon).contains_point(points[i]))
+
+        if len(points_is_removable_1) == 0:
+            need_to_iterate_1 = False
+        else:
+            if all(points_is_removable_1):
+                need_to_iterate_1 = False
+            else:
+                need_to_iterate_1 = True
+        if len(points_is_removable_2) == 0:
+            need_to_iterate_2 = False
+        else:
+            if all(points_is_removable_2):
+                need_to_iterate_2 = False
+            else:
+                need_to_iterate_2 = True
+        if len(points[: index + 1]) <=2:
+            need_to_iterate_1 = False
+        if len(points[index:]) <= 2:
+            need_to_iterate_2 = False
+        # if len(points) == 3:
+        #     need_to_iterate_1 = False
+        #     need_to_iterate_2 = False
+
+        print(need_to_iterate_2)
+        print(need_to_iterate_1)
+        # print(points)
+        print(points[: index + 1])
+        print(points[index:])
+
+        # if len(sub_polyline1_points) ==2:
+        #     results = [points[0], points[index]]
+        # if len(sub_polyline2_points) == 2:
+        #     results = [points[index], points[-1]]
 
         # now compare this against the tol and recurse
-        if max_dist > epsilon:
+        if max_dist > epsilon or iter:
             # this means that we need to keep the max dist point in the polyline
             # and so we then need to recurse
             sub_polyline1_points = points[: index + 1]  # NOTE we include the max dist point
             sub_polyline2_points = points[index :]  # NOTE: we include the max dist point
-            red_sub_polyline1 = self.douglas_peucker_algo(sub_polyline1_points, epsilon)
-            red_sub_polyline2 = self.douglas_peucker_algo(sub_polyline2_points, epsilon)
+            # if len(sub_polyline1_points) ==2:
+            #     results = [points[0], points[index]]
+            # if len(sub_polyline2_points) == 2:
+            #     results = [points[index], points[-1]]
+            red_sub_polyline1 = self.douglas_peucker_algo(sub_polyline1_points, epsilon, iter)
+            red_sub_polyline2 = self.douglas_peucker_algo(sub_polyline2_points, epsilon, iter)
             results.extend(red_sub_polyline1)
             results.extend(red_sub_polyline2)
         else:
-            if point_is_removable <= 0:
-                results = [points[0], points[-1]]
-            else:
-                # we need to keep the point
-                if len(points) > 3:
-                    sub_polyline1_points = points[: index + 1]  # NOTE we include the max dist point
-                    sub_polyline2_points = points[index :]  # NOTE: we include the max dist point
-                    red_sub_polyline1 = self.douglas_peucker_algo(sub_polyline1_points, epsilon)
-                    red_sub_polyline2 = self.douglas_peucker_algo(sub_polyline2_points, epsilon)
-                    results.extend(red_sub_polyline1)
-                    results.extend(red_sub_polyline2)
-                else:
+            # if len(points) == 2:
+            #     results = points
+            #     return results
+            # if len(points) == 3:
+            #     results = points
+            #     return results
 
-                    results = [points[0], points[index], points[-1]]
-                # results = points
+            # SEMI GOOD CODE
+            if need_to_iterate_1:
+                sub_polyline1_points = points[: index + 1]  # NOTE we include the max dist point
+                red_sub_polyline1 = self.douglas_peucker_algo(sub_polyline1_points, epsilon, True)
+                results.extend(red_sub_polyline1)
+            else:
+                results.extend([points[0], points[index]])
+            if need_to_iterate_2:
+                sub_polyline2_points = points[index :]  # NOTE: we include the max dist point
+                red_sub_polyline2 = self.douglas_peucker_algo(sub_polyline2_points, epsilon, True)
+                results.extend(red_sub_polyline2)
+            else:
+                results.extend([points[index], points[-1]])
+
+            # if need_to_iterate_1:
+            #     sub_polyline1_points = points[: index + 1]  # NOTE we include the max dist point
+            #     red_sub_polyline1 = self.douglas_peucker_algo(sub_polyline1_points, epsilon, True)
+            #     results.extend(red_sub_polyline1)
+            #     if need_to_iterate_2:
+            #         sub_polyline2_points = points[index :]  # NOTE: we include the max dist point
+            #         red_sub_polyline2 = self.douglas_peucker_algo(sub_polyline2_points, epsilon, True)
+            #         results.extend(red_sub_polyline2)
+            #     else:
+            #         results.extend([points[index], points[-1]])
+            # else:
+            #     results.extend([points[0], points[index]])
+            #     if need_to_iterate_2:
+            #         sub_polyline2_points = points[index :]  # NOTE: we include the max dist point
+            #         red_sub_polyline2 = self.douglas_peucker_algo(sub_polyline2_points, epsilon, True)
+            #         results.extend(red_sub_polyline2)
+            #     else:
+            #         results.extend([points[-1]])
+
+            # vec_x = points[-1][0] - points[0][0]
+            # vec_y = points[-1][1] - points[0][1]
+            # norm = math.sqrt(vec_x**2 + vec_y**2)
+            # if norm != 0:
+            #     min_index = dists.index(min(dists))
+            #     dmin = -dists[min_index]
+            #     vec_rot90 = [-vec_y/norm, vec_x/norm]
+            #     if dmin > 0:
+            #         vec_rot90 = [vec_rot90[0]*dmin, vec_rot90[1]*dmin]
+            #         new_start = [points[0][0] + vec_rot90[0], points[0][1] + vec_rot90[1]]
+            #         new_end = [points[-1][0] + vec_rot90[0], points[-1][1] + vec_rot90[1]]
+            #         results = [new_start, new_end]
+            #     else:
+            #         results = [points[0], points[-1]]
+            # else:
+            #     results = [points[0], [points[-1]]]
+                # if point_is_removable <= 0:
+                #     results = [points[0], points[-1]]
+                # else:
+                # we need to keep the point
+                # if len(points) > 3:
+            #     if True:
+            #         sub_polyline1_points = points[: min_index + 1]  # NOTE we include the max dist point
+            #         sub_polyline2_points = points[min_index :]  # NOTE: we include the max dist point
+            #         red_sub_polyline1 = self.douglas_peucker_algo(sub_polyline1_points, epsilon, base_polygon)
+            #         red_sub_polyline2 = self.douglas_peucker_algo(sub_polyline2_points, epsilon, base_polygon)
+            #         results.extend(red_sub_polyline1)
+            #         results.extend(red_sub_polyline2)
+            #     # else:
+
+            #     #     results = [points[0], points[index], points[-1]]
+            # else:
+            #     results = [points[0], points[-1]]
+            #     # results = points
         return results
 
     def perp_dist(self, point, line_points):
