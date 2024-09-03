@@ -44,7 +44,11 @@ class TestReducedPolygonShape:
             polygon_points = [list(a) for a in zip(xx, yy)]
             polygons_list.append(polygon_points)
 
+        import time
+        time1 = time.time()
         poly = Polygon(["lat", "lon"], points)
+        print("Time taken")
+        print(time.time() - time1)
 
         print(len(poly._points))
         print(len(points))

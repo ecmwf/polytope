@@ -486,6 +486,8 @@ class Polygon(Shape):
         # can remove point if the line_midpoint is outside of the polygon
 
         point_is_removable = []
+        point_is_removable_idx = list(range(1, index))
+        point_is_removable_idx.extend(list(range(index+1, len(points)-1)))
         for i in range(1, index):
             point_is_removable.append(mpltPath.Path(triangle_base_polygon).contains_point(points[i]))
         for i in range(index+1, len(points)-1):
@@ -498,6 +500,8 @@ class Polygon(Shape):
         else:
             need_to_iterate = True
         
+        # TODO: find the point that is not removable that is furthest away from line, note can use dists
+        # point_is_removable.index()
         # if max_dist > epsilon or need_to_iterate:
         if max_dist > epsilon:
             # this means that we need to keep the max dist point in the polyline
@@ -512,7 +516,7 @@ class Polygon(Shape):
             self.extend_without_duplicates(results, red_sub_polyline2)
         else:
             if not need_to_iterate:
-                results = [points[0], points[i], points[-1]]
+                results = [points[0], points[index], points[-1]]
             else:
                 sub_polyline1_points = points[: index + 1]  # NOTE we include the max dist point
                 sub_polyline2_points = points[index :]  # NOTE: we include the max dist point
