@@ -23,6 +23,7 @@ class LocalRegularGridMapper(DatacubeMapper):
         if axis_reversed is None:
             self._axis_reversed = {mapped_axes[0]: False, mapped_axes[1]: False}
         else:
+            assert set(axis_reversed.keys()) == set(mapped_axes)
             self._axis_reversed = axis_reversed
         self._first_axis_vals = self.first_axis_vals()
         self.compressed_grid_axes = [self._mapped_axes[1]]

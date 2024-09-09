@@ -10,7 +10,11 @@ class RegularGridMapper(DatacubeMapper):
         self._base_axis = base_axis
         self._resolution = resolution
         self.deg_increment = 90 / self._resolution
-        self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
+        if axis_reversed is None:
+            self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
+        else:
+            assert set(axis_reversed.keys()) == set(mapped_axes)
+            self._axis_reversed = axis_reversed
         self._first_axis_vals = self.first_axis_vals()
         self.compressed_grid_axes = [self._mapped_axes[1]]
         if self._axis_reversed[mapped_axes[1]]:

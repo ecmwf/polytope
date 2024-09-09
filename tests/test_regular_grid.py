@@ -25,7 +25,13 @@ class TestRegularGrid:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "regular", "resolution": 30, "axes": ["latitude", "longitude"]}
+                        {
+                            "name": "mapper",
+                            "type": "regular",
+                            "resolution": 30,
+                            "axes": ["latitude", "longitude"],
+                            "axis_reversed": {"latitude": True, "longitude": False},
+                        }
                     ],
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
