@@ -5,6 +5,7 @@ from typing import List
 import matplotlib.path as mpltPath
 
 import tripy
+import scipy.spatial
 
 """
 Shapes used for the constructive geometry API of Polytope
@@ -440,10 +441,12 @@ class Polygon(Shape):
         reduced_points = []
 
         for poly in sub_polys:
-            reduced_points.extend(self.douglas_peucker_algo(poly, epsilon))
+            reduced_points.extend(self.variation_douglas_peucker_algo(poly, epsilon))
         # reduced_points = red_points_poly1
         # reduced_points.extend(red_points_poly2)
-        self._points = reduced_points
+        # reduced_points_hull = self.do_convex_hull(reduced_points)
+        reduced_points_hull = reduced_points
+        self._points = reduced_points_hull
 
     def find_max_dist(self, points):
         index = 0
@@ -461,10 +464,63 @@ class Polygon(Shape):
 
         return (max_dist, dists, index)
     
-    def variation_douglas_peucker_algo(self):
+    def variation_douglas_peucker_algo(self, points, epsilon):
         # TODO: what if when the tolerance is small, we take the convex hull of the two semi-triangles points[0], p[1:index], p[index] and p[index], p[index+1:-1], p[-1]
         # Note that this could remove p[0], p[index] and p[-1] so need to ensure that we keep those
-        pass
+        results = []
+
+        # find point with largest distance to line between first and last point of polyline
+        if len(points) < 4:
+            results = points
+            return results
+        
+        max_dist, dists, index = self.find_max_dist(points)
+        line_points = [points[0], points[len(points)-1]]
+
+        if max(dists) == 0:
+            results = line_points
+            return results
+
+        if max_dist > epsilon:
+            # this means that we need to keep the max dist point in the polyline
+            # and so we then need to recurse
+            sub_polyline1_points = points[: index + 1]  # NOTE we include the max dist point
+            sub_polyline2_points = points[index :]  # NOTE: we include the max dist point
+            red_sub_polyline1 = self.variation_douglas_peucker_algo(sub_polyline1_points, epsilon)
+            red_sub_polyline2 = self.variation_douglas_peucker_algo(sub_polyline2_points, epsilon)
+            # results.extend(red_sub_polyline1)
+            # results.extend(red_sub_polyline2)
+            self.extend_without_duplicates(results, red_sub_polyline1)
+            self.extend_without_duplicates(results, red_sub_polyline2)
+        else:
+            left_hull = self.do_convex_hull(points[:index+1])
+            right_hull = self.do_convex_hull(points[index:])
+            # hull = self.do_convex_hull(points)
+            # self.extend_without_duplicates(results, left_hull)
+            # self.extend_without_duplicates(results, right_hull)
+            results.extend(left_hull)
+            results.extend(right_hull)
+            # self.extend_without_duplicates(results, hull)
+            # self.extend_without_duplicates(results, [points[0], points[-1]])
+        return results
+
+    def do_convex_hull(self, intersects):
+        # intersects.append(intersects[0])
+        try:
+            hull = scipy.spatial.ConvexHull(intersects)
+            vertices = hull.vertices
+
+        except scipy.spatial.qhull.QhullError as e:
+            if "less than" or "flat" in str(e):
+                vertices = [0, 1]
+        # return_points = [intersects[0]]
+        return_points = []
+        return_points.extend([intersects[i] for i in vertices])
+        print(vertices)
+        # if len(intersects) - 1 not in vertices:
+        #     return_points.append([intersects[-1]])
+        # return [intersects[i] for i in vertices]
+        return return_points
 
     def douglas_peucker_algo(self, points, epsilon, iter=False):
         results = []
