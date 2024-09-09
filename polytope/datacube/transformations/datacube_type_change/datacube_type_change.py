@@ -26,11 +26,6 @@ class DatacubeAxisTypeChange(DatacubeAxisTransformation):
     def change_val_type(self, axis_name, values):
         return_idx = [self._final_transformation.transform_type(val) for val in values]
         if None in return_idx:
-            print("NOW")
-            print(axis_name)
-            print(return_idx)
-            print("NOW NOW")
-            print(any(return_idx))
             return None
         return_idx.sort()
         return return_idx

@@ -77,12 +77,7 @@ class Datacube(ABC):
         for axis_name in final_axis_names:
             self.fake_axes.append(axis_name)
             # if axis does not yet exist, create it
-            print("FIRST")
-            print(axis_name)
-            print(transformation.change_val_type(axis_name, values))
             if transformation.change_val_type(axis_name, values) is not None:
-                print("HERE?")
-                print(axis_name)
                 # first need to change the values so that we have right type
                 values = transformation.change_val_type(axis_name, values)
                 if self._axes is None or axis_name not in self._axes.keys():
