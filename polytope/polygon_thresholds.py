@@ -5,7 +5,7 @@ def restrict_points(points, Nmax):
 
 
 def area_polygon(points):
-    # Use Green's theorem, see 
+    # Use Green's theorem, see
     # https://stackoverflow.com/questions/256222/which-exception-should-i-raise-on-bad-illegal-argument-combinations-in-python
     return 0.5 * abs(sum(x0*y1 - x1*y0
                          for ((x0, y0), (x1, y1)) in segments(points)))
