@@ -5,13 +5,15 @@ from ..datacube_mappers import DatacubeMapper
 
 class ReducedLatLonMapper(DatacubeMapper):
     def __init__(self, base_axis, mapped_axes, resolution, local_area=[]):
-        # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
         self._resolution = resolution
         self._axis_reversed = {mapped_axes[0]: False, mapped_axes[1]: False}
         self._first_axis_vals = self.first_axis_vals()
         self.compressed_grid_axes = [self._mapped_axes[1]]
+
+        if local_area != []:
+            raise NotImplementedError("Local area grid not implemented for reduce lat-lon grids")
 
     def first_axis_vals(self):
         resolution = 180 / (self._resolution - 1)
