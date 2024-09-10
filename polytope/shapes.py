@@ -493,13 +493,14 @@ class Polygon(Shape):
             self.extend_without_duplicates(results, red_sub_polyline1)
             self.extend_without_duplicates(results, red_sub_polyline2)
         else:
-            left_hull = self.do_convex_hull(points[:index+1])
-            right_hull = self.do_convex_hull(points[index:])
-            # hull = self.do_convex_hull(points)
+            # left_hull = self.do_convex_hull(points[:index+1])
+            # right_hull = self.do_convex_hull(points[index:])
+            hull = self.do_convex_hull(points)
+            results.extend(hull)
             # self.extend_without_duplicates(results, left_hull)
             # self.extend_without_duplicates(results, right_hull)
-            results.extend(left_hull)
-            results.extend(right_hull)
+            # results.extend(left_hull)
+            # results.extend(right_hull)
             # self.extend_without_duplicates(results, hull)
             # self.extend_without_duplicates(results, [points[0], points[-1]])
         return results
@@ -512,11 +513,13 @@ class Polygon(Shape):
 
         except scipy.spatial.qhull.QhullError as e:
             if "less than" or "flat" in str(e):
-                vertices = [0, 1]
+                return intersects
         # return_points = [intersects[0]]
         return_points = []
+        vertices.sort()
         return_points.extend([intersects[i] for i in vertices])
-        print(vertices)
+        # print(vertices)
+        print(return_points)
         # if len(intersects) - 1 not in vertices:
         #     return_points.append([intersects[-1]])
         # return [intersects[i] for i in vertices]
