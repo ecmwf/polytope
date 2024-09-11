@@ -440,8 +440,12 @@ class Polygon(Shape):
         # red_points_poly2 = self.douglas_peucker_algo(poly2_points, epsilon)
         reduced_points = []
 
-        for poly in sub_polys:
-            reduced_points.extend(self.douglas_peucker_algo(poly, epsilon, poly))
+        for i, poly in enumerate(sub_polys):
+            # sub_poly_inside_poly = mpltPath.Path(points).contains_path(mpltPath.Path([poly[0], poly[-1]]))
+            # print("HERE LOOK")
+            # print(sub_poly_inside_poly)
+            # if i == 0:
+            reduced_points.extend(self.douglas_peucker_algo(poly, epsilon, points))
         # reduced_points = red_points_poly1
         # reduced_points.extend(red_points_poly2)
         # reduced_points_hull = self.do_convex_hull(reduced_points)
@@ -524,6 +528,17 @@ class Polygon(Shape):
         #     return_points.append([intersects[-1]])
         # return [intersects[i] for i in vertices]
         return return_points
+    
+
+    def area_polygon(self, points):
+        # Use Green's theorem, see
+        # https://stackoverflow.com/questions/256222/which-exception-should-i-raise-on-bad-illegal-argument-combinations-in-python
+        return 0.5 * abs(sum(x0*y1 - x1*y0
+                            for ((x0, y0), (x1, y1)) in self.segments(points)))
+
+
+    def segments(self, points):
+        return zip(points, points[1:] + [points[0]])
 
     def douglas_peucker_algo(self, points, epsilon, original_poly):
         results = []
@@ -575,8 +590,9 @@ class Polygon(Shape):
         # point_is_removable.index()
         # if max_dist > epsilon or need_to_iterate:
         if max_dist > epsilon:
-            # this means that we need to keep the max dist point in the polyline
-            # and so we then need to recurse
+            # TODO: IDEA: Could compare the area of the bit we would be removing here to only iterate if we'd remove a big area?
+            # NEED NOT KEEP ENTIRE TOPOLOGY? BUT HOW DO WE KNOW WHEN THERE'S AN ARM COMING INTO THE POLYGON?
+            # OR JUST DO SOMETHING LIKE BELOW AFTER ITERATION WHERE WE LOOK WHETHER POINTS CAN BE REMOVED AND THEN ALSO LOOK AT AREA WHICH WOULD BE REMOVED?
             sub_polyline1_points = points[: index + 1]  # NOTE we include the max dist point
             sub_polyline2_points = points[index :]  # NOTE: we include the max dist point
             red_sub_polyline1 = self.douglas_peucker_algo(sub_polyline1_points, epsilon, original_poly)
@@ -585,13 +601,44 @@ class Polygon(Shape):
             # results.extend(red_sub_polyline2)
             self.extend_without_duplicates(results, red_sub_polyline1)
             self.extend_without_duplicates(results, red_sub_polyline2)
+            # removed_area = self.area_polygon(points)
+            # poly_area = self.area_polygon(original_poly)
+            # if removed_area < 0.0001 * poly_area:
+            #     projected_points = [self.projected_point(points[i], [points[0], points[-1]]) for i in range(len(points))]
+            #     projected_points_inside_polygon = [mpltPath.Path(original_poly).contains_point(projected_points[i]) for i in range(len(points))]
+            
+            #     if not any(projected_points_inside_polygon):
+            #         results = [points[0], points[-1]]
+            #     else:
+            #         sub_polyline1_points = points[: index + 1]  # NOTE we include the max dist point
+            #         sub_polyline2_points = points[index :]  # NOTE: we include the max dist point
+            #         red_sub_polyline1 = self.douglas_peucker_algo(sub_polyline1_points, epsilon, original_poly)
+            #         red_sub_polyline2 = self.douglas_peucker_algo(sub_polyline2_points, epsilon, original_poly)
+            #         # results.extend(red_sub_polyline1)
+            #         # results.extend(red_sub_polyline2)
+            #         self.extend_without_duplicates(results, red_sub_polyline1)
+            #         self.extend_without_duplicates(results, red_sub_polyline2)
+            # else:
+            #     # this means that we need to keep the max dist point in the polyline
+            #     # and so we then need to recurse
+                
+            #     sub_polyline1_points = points[: index + 1]  # NOTE we include the max dist point
+            #     sub_polyline2_points = points[index :]  # NOTE: we include the max dist point
+            #     red_sub_polyline1 = self.douglas_peucker_algo(sub_polyline1_points, epsilon, original_poly)
+            #     red_sub_polyline2 = self.douglas_peucker_algo(sub_polyline2_points, epsilon, original_poly)
+            #     # results.extend(red_sub_polyline1)
+            #     # results.extend(red_sub_polyline2)
+            #     self.extend_without_duplicates(results, red_sub_polyline1)
+            #     self.extend_without_duplicates(results, red_sub_polyline2)
         else:
             projected_points = [self.projected_point(points[i], [points[0], points[-1]]) for i in range(len(points))]
             projected_points_inside_polygon = [mpltPath.Path(original_poly).contains_point(projected_points[i]) for i in range(len(points))]
             if all(projected_points_inside_polygon[1:-1]):
                 results = points
-            elif not any(projected_points_inside_polygon):
+                # results = [points[0], points[-1]]
+            elif not any(projected_points_inside_polygon[1:-1]):
                 results = [points[0], points[-1]]
+                # results = points
             else:
                 # sub_polyline1_points = points[: index + 1]  # NOTE we include the max dist point
                 # sub_polyline2_points = points[index :]  # NOTE: we include the max dist point
