@@ -441,7 +441,7 @@ class Polygon(Shape):
         reduced_points = []
 
         for poly in sub_polys:
-            reduced_points.extend(self.variation_douglas_peucker_algo(poly, epsilon))
+            reduced_points.extend(self.douglas_peucker_algo(poly, epsilon, poly))
         # reduced_points = red_points_poly1
         # reduced_points.extend(red_points_poly2)
         # reduced_points_hull = self.do_convex_hull(reduced_points)
@@ -525,7 +525,7 @@ class Polygon(Shape):
         # return [intersects[i] for i in vertices]
         return return_points
 
-    def douglas_peucker_algo(self, points, epsilon, iter=False):
+    def douglas_peucker_algo(self, points, epsilon, original_poly):
         results = []
 
         # print(len(points))
@@ -549,8 +549,8 @@ class Polygon(Shape):
 
         points1_are_not_removable = []
         points2_are_not_removable = []
-        for i in range(1, index):
-            points1_are_not_removable.append(bool(True - mpltPath.Path(triangle_base_polygon).contains_point(points[i])))
+        for i in range(1, index+1):
+            points2_are_not_removable.append(bool(True - mpltPath.Path(triangle_base_polygon).contains_point(points[i])))
         for i in range(index+1, len(points)-1):
             points2_are_not_removable.append(bool(True - mpltPath.Path(triangle_base_polygon).contains_point(points[i])))
         # This is negative when we can remove points[index], otherwise we need to keep the point
@@ -579,23 +579,59 @@ class Polygon(Shape):
             # and so we then need to recurse
             sub_polyline1_points = points[: index + 1]  # NOTE we include the max dist point
             sub_polyline2_points = points[index :]  # NOTE: we include the max dist point
-            red_sub_polyline1 = self.douglas_peucker_algo(sub_polyline1_points, epsilon, iter)
-            red_sub_polyline2 = self.douglas_peucker_algo(sub_polyline2_points, epsilon, iter)
+            red_sub_polyline1 = self.douglas_peucker_algo(sub_polyline1_points, epsilon, original_poly)
+            red_sub_polyline2 = self.douglas_peucker_algo(sub_polyline2_points, epsilon, original_poly)
             # results.extend(red_sub_polyline1)
             # results.extend(red_sub_polyline2)
             self.extend_without_duplicates(results, red_sub_polyline1)
             self.extend_without_duplicates(results, red_sub_polyline2)
         else:
-            if index != 0:
-                new_p1 = self.find_new_p1(points[0], points[index], points[1:index], points1_are_not_removable, points[-1])
+            projected_points = [self.projected_point(points[i], [points[0], points[-1]]) for i in range(len(points))]
+            projected_points_inside_polygon = [mpltPath.Path(original_poly).contains_point(projected_points[i]) for i in range(len(points))]
+            if all(projected_points_inside_polygon[1:-1]):
+                results = points
+            elif not any(projected_points_inside_polygon):
+                results = [points[0], points[-1]]
             else:
-                new_p1 = points[0]
-            if index != len(points):
-                new_p3 = self.find_new_p1(points[-1], points[index], points[index+1:-1], points2_are_not_removable, points[0])
-            else:
-                new_p3 = points[-1]
-            print(new_p3)
-            self.extend_without_duplicates(results, [new_p1, points[index], new_p3])
+                # sub_polyline1_points = points[: index + 1]  # NOTE we include the max dist point
+                # sub_polyline2_points = points[index :]  # NOTE: we include the max dist point
+                # red_sub_polyline1 = self.douglas_peucker_algo(sub_polyline1_points, epsilon, original_poly)
+                # red_sub_polyline2 = self.douglas_peucker_algo(sub_polyline2_points, epsilon, original_poly)
+                # # results.extend(red_sub_polyline1)
+                # # results.extend(red_sub_polyline2)
+                # self.extend_without_duplicates(results, red_sub_polyline1)
+                # self.extend_without_duplicates(results, red_sub_polyline2)
+                # results = points
+                i = 0
+                while i < len(points):
+                    if projected_points_inside_polygon[i]:
+                        results.append(points[i])
+                        i += 1
+                    else:
+                        start_point = i
+                        results.append(points[start_point])
+                        while not projected_points_inside_polygon[i]:
+                            i += 1
+                            if i == len(projected_points_inside_polygon):
+                                results.append(points[-1])
+                                break
+                        # results.append(points[start_point])
+            # new_point = self.find_new_p1(points[-1], points[0], points[1:-1], points2_are_not_removable, [0,0])
+            # max_dist, dists, index = self.find_max_dist([points[0], new_point, points[-1]])
+            # if dists[0]>0.1:
+            #     self.extend_without_duplicates(results, points)
+            # else:
+            #     self.extend_without_duplicates(results, [points[0], new_point, points[-1]])
+            # if index != 0:
+            #     new_p1 = self.find_new_p1(points[0], points[index], points[1:index], points1_are_not_removable, points[-1])
+            # else:
+            #     new_p1 = points[0]
+            # if index != len(points):
+            #     new_p3 = self.find_new_p1(points[-1], points[index], points[index+1:-1], points2_are_not_removable, points[0])
+            # else:
+            #     new_p3 = points[-1]
+            # print(new_p3)
+            # self.extend_without_duplicates(results, [new_p1, points[index], new_p3])
             # if not need_to_iterate:
             #     results = [points[0], points[index], points[-1]]
             # else:
@@ -608,6 +644,23 @@ class Polygon(Shape):
             #     self.extend_without_duplicates(results, red_sub_polyline1)
             #     self.extend_without_duplicates(results, red_sub_polyline2)
         return results
+
+    def projected_point(self, point, line_points):
+        if line_points[0][0] != line_points[1][0]:
+
+            a = (line_points[0][1] - line_points[1][1]) / (line_points[0][0] - line_points[1][0])
+            b = line_points[0][1] - a * line_points[0][0]
+
+            # Then the coordinates of the projected point on y = ax + b is given by
+            # x = (point[x] + a* point[y] - ab)/ (1 + a^2) and
+            # y = (a* point[x] + a^2 * point[y] + b) / (1 + a^2)
+
+            proj_x = (point[0] + a * point[1] - a*b) / (1 + a**2)
+            proj_y = (a * point[0] + (a**2) * point[1] + b) / (1 + a**2)
+        else:
+            proj_x = line_points[0][0]
+            proj_y = point[1]
+        return [proj_x, proj_y]
 
     def extend_without_duplicates(self, points, points_collection):
         for point in points_collection:
@@ -660,11 +713,15 @@ class Polygon(Shape):
         # find the replacement point of p1, p1', between points such that this replacement point has all points under line p1'p2
         if len(points) == 0:
             return p1
-        (max_angle, max_point) = self.find_max_angle_points(p1, p2, points, mask)
-        if max_angle < 1e-8:
+        (max_angle_p1, max_point_p1) = self.find_max_angle_points(p1, p2, points, mask)
+        if max_angle_p1 < 1e-8:
             return p1
-        line_seg1 = [p1, p3]
-        line_seg2 = [p2, max_point]
+        (max_angle_p3, max_point_p3) = self.find_max_angle_points(p2, p1, points, mask)
+        if max_angle_p1 < 1e-8:
+            return p1
+        # line_seg1 = [p1, p3]
+        line_seg1 = [p1, max_point_p3]
+        line_seg2 = [p2, max_point_p1]
         p1p = self.find_intersection(line_seg1, line_seg2)
         return p1p
 
