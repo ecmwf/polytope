@@ -560,14 +560,14 @@ class Polygon(Shape):
         # print(index)
         # print(len(points) -1)
 
-        triangle_base_polygon = [points[0], points[index], points[-1]]
+        # triangle_base_polygon = [points[0], points[index], points[-1]]
 
-        points1_are_not_removable = []
-        points2_are_not_removable = []
-        for i in range(1, index+1):
-            points2_are_not_removable.append(bool(True - mpltPath.Path(triangle_base_polygon).contains_point(points[i])))
-        for i in range(index+1, len(points)-1):
-            points2_are_not_removable.append(bool(True - mpltPath.Path(triangle_base_polygon).contains_point(points[i])))
+        # points1_are_not_removable = []
+        # points2_are_not_removable = []
+        # for i in range(1, index+1):
+        #     points2_are_not_removable.append(bool(True - mpltPath.Path(triangle_base_polygon).contains_point(points[i])))
+        # for i in range(index+1, len(points)-1):
+        #     points2_are_not_removable.append(bool(True - mpltPath.Path(triangle_base_polygon).contains_point(points[i])))
         # This is negative when we can remove points[index], otherwise we need to keep the point
         # can remove point if the line_midpoint is outside of the polygon
 
@@ -632,7 +632,8 @@ class Polygon(Shape):
             #     self.extend_without_duplicates(results, red_sub_polyline2)
         else:
             projected_points = [self.projected_point(points[i], [points[0], points[-1]]) for i in range(len(points))]
-            projected_points_inside_polygon = [mpltPath.Path(original_poly).contains_point(projected_points[i]) for i in range(len(points))]
+            # projected_points_inside_polygon = [mpltPath.Path(original_poly).contains_point(projected_points[i]) for i in range(len(points))]
+            projected_points_inside_polygon = mpltPath.Path(original_poly).contains_points(projected_points)
             if all(projected_points_inside_polygon[1:-1]):
                 results = points
                 # results = [points[0], points[-1]]
