@@ -37,6 +37,7 @@ class TestReducedPolygonShape:
         points = polygons_list[0]
         print(len(points))
 
+
         # Now create a list of x,y points for each polygon
 
         for polygon in polygons:

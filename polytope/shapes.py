@@ -6,6 +6,7 @@ import matplotlib.path as mpltPath
 
 import tripy
 import scipy.spatial
+import numpy as np
 
 """
 Shapes used for the constructive geometry API of Polytope
@@ -444,8 +445,9 @@ class Polygon(Shape):
             # sub_poly_inside_poly = mpltPath.Path(points).contains_path(mpltPath.Path([poly[0], poly[-1]]))
             # print("HERE LOOK")
             # print(sub_poly_inside_poly)
-            # if i == 0:
-            reduced_points.extend(self.douglas_peucker_algo(poly, epsilon, points))
+            if i == 1:
+                poly = poly[2*int(len(poly)/3)+550:2*int(len(poly)/3)+800]
+                reduced_points.extend(self.douglas_peucker_algo(poly, epsilon, points))
         # reduced_points = red_points_poly1
         # reduced_points.extend(red_points_poly2)
         # reduced_points_hull = self.do_convex_hull(reduced_points)
@@ -544,7 +546,7 @@ class Polygon(Shape):
         results = []
 
         # print(len(points))
-        if len(points) < 4:
+        if len(points) < 3:
             results = points
             return results
 
@@ -605,7 +607,7 @@ class Polygon(Shape):
             # poly_area = self.area_polygon(original_poly)
             # if removed_area < 0.0001 * poly_area:
             #     projected_points = [self.projected_point(points[i], [points[0], points[-1]]) for i in range(len(points))]
-            #     projected_points_inside_polygon = [mpltPath.Path(original_poly).contains_point(projected_points[i]) for i in range(len(points))]
+            #     projected_points_inside_polygon = mpltPath.Path(original_poly).contains_points(projected_points)
             
             #     if not any(projected_points_inside_polygon):
             #         results = [points[0], points[-1]]
@@ -635,34 +637,42 @@ class Polygon(Shape):
             # projected_points_inside_polygon = [mpltPath.Path(original_poly).contains_point(projected_points[i]) for i in range(len(points))]
             projected_points_inside_polygon = mpltPath.Path(original_poly).contains_points(projected_points)
             if all(projected_points_inside_polygon[1:-1]):
+                print(projected_points_inside_polygon)
                 results = points
                 # results = [points[0], points[-1]]
             elif not any(projected_points_inside_polygon[1:-1]):
+                # TODO: why in the corner, does it not find that the projected point is inside the polygon?
+                # print(projected_points_inside_polygon)
+                # print(points)
+                # print([points[0], points[-1]])
+                # print(projected_points)
                 results = [points[0], points[-1]]
+                print(results)
                 # results = points
             else:
-                # sub_polyline1_points = points[: index + 1]  # NOTE we include the max dist point
-                # sub_polyline2_points = points[index :]  # NOTE: we include the max dist point
-                # red_sub_polyline1 = self.douglas_peucker_algo(sub_polyline1_points, epsilon, original_poly)
-                # red_sub_polyline2 = self.douglas_peucker_algo(sub_polyline2_points, epsilon, original_poly)
-                # # results.extend(red_sub_polyline1)
-                # # results.extend(red_sub_polyline2)
-                # self.extend_without_duplicates(results, red_sub_polyline1)
-                # self.extend_without_duplicates(results, red_sub_polyline2)
+                sub_polyline1_points = points[: index + 1]  # NOTE we include the max dist point
+                sub_polyline2_points = points[index :]  # NOTE: we include the max dist point
+                red_sub_polyline1 = self.douglas_peucker_algo(sub_polyline1_points, epsilon, original_poly)
+                red_sub_polyline2 = self.douglas_peucker_algo(sub_polyline2_points, epsilon, original_poly)
+                # results.extend(red_sub_polyline1)
+                # results.extend(red_sub_polyline2)
+                self.extend_without_duplicates(results, red_sub_polyline1)
+                self.extend_without_duplicates(results, red_sub_polyline2)
                 # results = points
-                i = 0
-                while i < len(points):
-                    if projected_points_inside_polygon[i]:
-                        results.append(points[i])
-                        i += 1
-                    else:
-                        start_point = i
-                        results.append(points[start_point])
-                        while not projected_points_inside_polygon[i]:
-                            i += 1
-                            if i == len(projected_points_inside_polygon):
-                                results.append(points[-1])
-                                break
+                # i = 0
+                # while i < len(points):
+                #     if projected_points_inside_polygon[i]:
+                #         results.append(points[i])
+                #         i += 1
+                #     else:
+                #         start_point = i
+                #         results.append(points[start_point])
+                #         while not projected_points_inside_polygon[i]:
+                #             i += 1
+                #             # results.append(points[i])
+                #             if i == len(projected_points_inside_polygon):
+                #                 results.append(points[-1])
+                #                 break
                         # results.append(points[start_point])
             # new_point = self.find_new_p1(points[-1], points[0], points[1:-1], points2_are_not_removable, [0,0])
             # max_dist, dists, index = self.find_max_dist([points[0], new_point, points[-1]])
@@ -691,9 +701,13 @@ class Polygon(Shape):
             #     # results.extend(red_sub_polyline2)
             #     self.extend_without_duplicates(results, red_sub_polyline1)
             #     self.extend_without_duplicates(results, red_sub_polyline2)
+            # print("NOW")
+            # proj_1 = self.projected_point([15.651777267507015, 38.128523826513586], [[15.651286363574854, 38.12708604348619],[15.652104734945766, 38.12828767263811]])
+            # print(proj_1)
+            # print(mpltPath.Path(original_poly).contains_point(proj_1))
         return results
 
-    def projected_point(self, point, line_points):
+    def projected_point_old(self, point, line_points):
         if line_points[0][0] != line_points[1][0]:
 
             a = (line_points[0][1] - line_points[1][1]) / (line_points[0][0] - line_points[1][0])
@@ -709,6 +723,38 @@ class Polygon(Shape):
             proj_x = line_points[0][0]
             proj_y = point[1]
         return [proj_x, proj_y]
+    
+    def projected_point(self, point, line_points):
+
+        # x = np.array(point)
+
+        # u = np.array(line_points[0])
+        # v = np.array(line_points[len(line_points)-1])
+
+        # n = v - u
+        # n /= np.linalg.norm(n, 2)
+
+        # P = u + n*np.dot(x - u, n)
+        # return [P[0], P[1]]
+        p1 = np.array(line_points[0])
+        p2 = np.array(line_points[1])
+        p3 = np.array(point)
+        l2 = np.sum((p1-p2)**2)
+
+        # The line extending the segment is parameterized as p1 + t (p2 - p1).
+        # The projection falls where t = [(p3-p1) . (p2-p1)] / |p2-p1|^2
+
+        # if you need the point to project on line extention connecting p1 and p2
+        t = np.sum((p3 - p1) * (p2 - p1)) / l2
+
+        projection = p1 + t * (p2 - p1)
+
+        line_seg = [line_points[1][0]-line_points[0][0], line_points[1][1] - line_points[0][1]]
+        proj_vect = [projection[0]-point[0], projection[1] - point[1]]
+        # print("NOW")
+        # print(line_seg[0] * proj_vect[0] + line_seg[1] * proj_vect[1])
+        return [projection[0], projection[1]]
+        # return [point[0] + 0.1 * proj_vect[0], point[1] + 0.1 * proj_vect[1]]
 
     def extend_without_duplicates(self, points, points_collection):
         for point in points_collection:
