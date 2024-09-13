@@ -445,9 +445,9 @@ class Polygon(Shape):
             # sub_poly_inside_poly = mpltPath.Path(points).contains_path(mpltPath.Path([poly[0], poly[-1]]))
             # print("HERE LOOK")
             # print(sub_poly_inside_poly)
-            if i == 1:
-                poly = poly[2*int(len(poly)/3)+550:2*int(len(poly)/3)+800]
-                reduced_points.extend(self.douglas_peucker_algo(poly, epsilon, points))
+            # if i == 1:
+            #     poly = poly[2*int(len(poly)/3)+550:2*int(len(poly)/3)+800]
+            reduced_points.extend(self.douglas_peucker_algo(poly, epsilon, points))
         # reduced_points = red_points_poly1
         # reduced_points.extend(red_points_poly2)
         # reduced_points_hull = self.do_convex_hull(reduced_points)
@@ -525,7 +525,7 @@ class Polygon(Shape):
         vertices.sort()
         return_points.extend([intersects[i] for i in vertices])
         # print(vertices)
-        print(return_points)
+        # print(return_points)
         # if len(intersects) - 1 not in vertices:
         #     return_points.append([intersects[-1]])
         # return [intersects[i] for i in vertices]
@@ -637,7 +637,7 @@ class Polygon(Shape):
             # projected_points_inside_polygon = [mpltPath.Path(original_poly).contains_point(projected_points[i]) for i in range(len(points))]
             projected_points_inside_polygon = mpltPath.Path(original_poly).contains_points(projected_points)
             if all(projected_points_inside_polygon[1:-1]):
-                print(projected_points_inside_polygon)
+                # print(projected_points_inside_polygon)
                 results = points
                 # results = [points[0], points[-1]]
             elif not any(projected_points_inside_polygon[1:-1]):
@@ -647,7 +647,7 @@ class Polygon(Shape):
                 # print([points[0], points[-1]])
                 # print(projected_points)
                 results = [points[0], points[-1]]
-                print(results)
+                # print(results)
                 # results = points
             else:
                 sub_polyline1_points = points[: index + 1]  # NOTE we include the max dist point
