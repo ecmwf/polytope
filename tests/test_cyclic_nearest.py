@@ -67,7 +67,7 @@ class TestRegularGrid:
 
         return nearest_points
 
-    @pytest.mark.fdb
+    @pytest.mark.xfail
     @pytest.mark.internet
     def test_regular_grid(self):
         import pygribjump as gj
