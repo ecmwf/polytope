@@ -48,7 +48,7 @@ class TestReducedLatLonGrid:
             ],
         }
 
-    @pytest.mark.skip(reason="wave data grid packing not supported")
+    # @pytest.mark.skip(reason="wave data grid packing not supported")
     @pytest.mark.internet
     @pytest.mark.xfail
     def test_reduced_ll_grid(self):
@@ -77,7 +77,12 @@ class TestReducedLatLonGrid:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 130
+        assert len(result.leaves) == 10
+        tot_leaves = 0
+        leaves = result.leaves
+        for leaf in leaves:
+            tot_leaves += len(leaf.result)
+        assert tot_leaves == 130
 
         lats = []
         lons = []
@@ -109,6 +114,8 @@ class TestReducedLatLonGrid:
             assert lat <= eccodes_lat + tol
             assert eccodes_lon - tol <= lon
             assert lon <= eccodes_lon + tol
+            if eccodes_resullt == 9999.0:
+                eccodes_resullt = None
             assert tree_result == eccodes_resullt
         f.close()
 

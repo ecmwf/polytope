@@ -67,8 +67,13 @@ class FDBDatacube(Datacube):
                         self.fdb_coordinates.pop("levelist", None)
         self.fdb_coordinates.pop("quantile", None)
         # TODO: When do these not appear??
-        self.fdb_coordinates.pop("direction", None)
-        self.fdb_coordinates.pop("frequency", None)
+        for polytope in polytopes:
+            for ax in polytope._axes:
+                if ax == "stream":
+                    (upper, lower, idx) = polytope.extents(ax)
+                    if "wave" not in polytope.points[idx]:
+                        self.fdb_coordinates.pop("direction", None)
+                        self.fdb_coordinates.pop("frequency", None)
 
         # NOTE: verify that we also remove the axis object for axes we've removed here
         axes_to_remove = set(self.complete_axes) - set(self.fdb_coordinates.keys())
