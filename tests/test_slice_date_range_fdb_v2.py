@@ -27,7 +27,7 @@ class TestSlicingFDBDatacube:
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
             ],
-            "pre_path": {"class": "ea", "expver": "0001", "levtype": "pl", "stream": "enda"},
+            "pre_path": {"class": "ea", "expver": "0001", "levtype": "pl", "stream": "enda", "type": "an"},
             "compressed_axes_config": [
                 "longitude",
                 "latitude",
@@ -47,7 +47,7 @@ class TestSlicingFDBDatacube:
 
     # Testing different shapes
     @pytest.mark.xfail
-    @pytest.mark.skip(reason="gribjump problem")
+    @pytest.mark.skip(reason="non-operational problem")
     def test_fdb_datacube(self):
         import pygribjump as gj
 
