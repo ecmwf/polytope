@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 from .options import PolytopeOptions
@@ -59,5 +60,7 @@ class Polytope:
         """Higher-level API which takes a request and uses it to slice the datacube"""
         self.datacube.check_branching_axes(request)
         request_tree = self.engine.extract(self.datacube, request.polytopes())
+        logging.info("Sliced polytopes")
         self.datacube.get(request_tree)
+        logging.info("Retrieved data")
         return request_tree

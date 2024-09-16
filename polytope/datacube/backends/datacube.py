@@ -128,7 +128,7 @@ class Datacube(ABC):
         indexes = axis.find_indexes(path, self)
         idx_between = axis.find_indices_between(indexes, lower, upper, self, method)
 
-        logging.info(f"For axis {axis.name} between {lower} and {upper}, found indices {idx_between}")
+        logging.debug(f"For axis {axis.name} between {lower} and {upper}, found indices {idx_between}")
 
         return idx_between
 
