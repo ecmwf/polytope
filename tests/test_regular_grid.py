@@ -95,8 +95,8 @@ class TestRegularGrid:
         tol = 1e-8
         leaves = result.leaves
         for i in range(len(leaves)):
-            right_pl_results = leaves[i].result[len(leaves[i].values) :]
-            result_tree = right_pl_results[0]
+            # right_pl_results = leaves[i].result[len(leaves[i].values) :]
+            # result_tree = right_pl_results[0]
             cubepath = leaves[i].flatten()
             lat = cubepath["latitude"][0]
             lon = cubepath["longitude"][0]
@@ -105,7 +105,7 @@ class TestRegularGrid:
             nearest_points = find_nearest_latlon("./tests/data/era5-levels-members.grib", lat, lon)
             eccodes_lat = nearest_points[0][0]["lat"]
             eccodes_lon = nearest_points[0][0]["lon"]
-            eccodes_value = nearest_points[121][0]["value"]
+            # eccodes_value = nearest_points[121][0]["value"]
             eccodes_lats.append(eccodes_lat)
 
             mapper = RegularGridMapper("base", ["base", "base"], 30)
