@@ -1,4 +1,5 @@
 from typing import List
+import logging
 
 from .options import PolytopeOptions
 from .shapes import ConvexPolytope
@@ -59,7 +60,10 @@ class Polytope:
         """Higher-level API which takes a request and uses it to slice the datacube"""
         if context is None:
             context = {}
+        logging.info("Starting request for %s ", context)
         self.datacube.check_branching_axes(request)
         request_tree = self.engine.extract(self.datacube, request.polytopes())
+        logging.info("Created request tree for %s ", context)
         self.datacube.get(request_tree, context)
+        logging.info("Retrieved data for %s ", context)
         return request_tree
