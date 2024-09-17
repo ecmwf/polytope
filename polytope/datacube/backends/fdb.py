@@ -77,7 +77,9 @@ class FDBDatacube(Datacube):
         for axis_name in axes_to_remove:
             self._axes.pop(axis_name, None)
 
-    def get(self, requests: TensorIndexTree):
+    def get(self, requests: TensorIndexTree, context=None):
+        if context is None:
+            context = {}
         requests.pprint()
         if len(requests.children) == 0:
             return requests
