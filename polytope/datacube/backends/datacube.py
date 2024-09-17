@@ -31,6 +31,7 @@ class Datacube(ABC):
         self.merged_axes = []
         self.unwanted_path = {}
         self.compressed_axes = compressed_axes_options
+        self.grid_md5_hash = None
 
     @abstractmethod
     def get(self, requests: TensorIndexTree, context: Dict) -> Any:
@@ -69,6 +70,7 @@ class Datacube(ABC):
             # TODO: do we use this?? This shouldn't work for a disk in lat/lon on a octahedral or other grid??
             for compressed_grid_axis in transformation.compressed_grid_axes:
                 self.compressed_grid_axes.append(compressed_grid_axis)
+                self.grid_md5_hash = transformation.md5_hash
         if len(final_axis_names) > 1:
             self.coupled_axes.append(final_axis_names)
             for axis in final_axis_names:
