@@ -13,6 +13,7 @@ class HealpixGridMapper(DatacubeMapper):
         self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
         self._first_axis_vals = self.first_axis_vals()
         self.compressed_grid_axes = [self._mapped_axes[1]]
+        self.md5_hash = md5_hash.get(resolution, None)
 
     def first_axis_vals(self):
         rad2deg = 180 / math.pi
@@ -133,3 +134,7 @@ class HealpixGridMapper(DatacubeMapper):
         second_idx = self.second_axis_vals(first_val).index(second_val)
         healpix_index = self.axes_idx_to_healpix_idx(first_idx, second_idx)
         return healpix_index
+
+
+# md5 grid hash in form {resolution : hash}
+md5_hash = {}
