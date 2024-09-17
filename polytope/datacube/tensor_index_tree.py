@@ -109,8 +109,12 @@ class TensorIndexTree(object):
 
     def create_child(self, axis, value, next_nodes):
         node = TensorIndexTree(axis, (value,))
+        # print("CREATED NEW CHILD")
+        # print(node)
         existing_child = self.find_child(node)
         if not existing_child:
+            # print("CREATED NEW CHILD")
+            # print(node)
             self.add_child(node)
             return (node, next_nodes)
         return (existing_child, next_nodes)
@@ -140,6 +144,8 @@ class TensorIndexTree(object):
         if index >= len(self.children):
             return None
         child = self.children[index]
+        print("NOW BEFORE")
+        print(child == node)
         if not child == node:
             return None
         return child

@@ -387,7 +387,7 @@ class Polygon(Shape):
             for t in triangles:
                 tri_points = [list(point) for point in t]
                 poly = ConvexPolytope(self.axes(), tri_points)
-                poly.add_to_union()
+                # poly.add_to_union()
                 self.polytopes.append(poly)
 
     def axes(self):
