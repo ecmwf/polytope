@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Dict
 
 from ...utility.combinatorics import validate_axes
 from ..datacube_axis import DatacubeAxis
@@ -33,7 +33,7 @@ class Datacube(ABC):
         self.compressed_axes = compressed_axes_options
 
     @abstractmethod
-    def get(self, requests: TensorIndexTree) -> Any:
+    def get(self, requests: TensorIndexTree, context: Dict) -> Any:
         """Return data given a set of request trees"""
 
     @property
