@@ -15,15 +15,16 @@ class LocalRegularGridMapper(DatacubeMapper):
         if not isinstance(resolution, list):
             self.first_resolution = resolution
             self.second_resolution = resolution
+            self.md5_hash = md5_hash.get(resolution, None)
         else:
             self.first_resolution = resolution[0]
             self.second_resolution = resolution[1]
+            self.md5_hash = md5_hash.get(tuple(resolution), None)
         self._first_deg_increment = (local_area[1] - local_area[0]) / self.first_resolution
         self._second_deg_increment = (local_area[3] - local_area[2]) / self.second_resolution
         self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
         self._first_axis_vals = self.first_axis_vals()
         self.compressed_grid_axes = [self._mapped_axes[1]]
-        self.md5_hash = md5_hash.get(resolution, None)
 
     def first_axis_vals(self):
         first_ax_vals = [self._first_axis_max - i * self._first_deg_increment for i in range(self.first_resolution + 1)]
