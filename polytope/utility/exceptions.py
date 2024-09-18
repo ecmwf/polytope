@@ -2,7 +2,7 @@ class PolytopeError(Exception):
     pass
 
 
-class AxisOverdefinedError(PolytopeError):
+class AxisOverdefinedError(PolytopeError, KeyError):
     def __init__(self, axis):
         self.axis = axis
         self.message = (
@@ -11,19 +11,19 @@ class AxisOverdefinedError(PolytopeError):
         )
 
 
-class AxisUnderdefinedError(PolytopeError):
+class AxisUnderdefinedError(PolytopeError, KeyError):
     def __init__(self, axis):
         self.axis = axis
         self.message = f"Axis {axis} is underdefined. It does not appear in any input polytope."
 
 
-class AxisNotFoundError(PolytopeError):
+class AxisNotFoundError(PolytopeError, KeyError):
     def __init__(self, axis):
         self.axis = axis
         self.message = f"Axis {axis} does not exist in the datacube."
 
 
-class UnsliceableShapeError(PolytopeError):
+class UnsliceableShapeError(PolytopeError, KeyError):
     def __init__(self, axis):
         self.axis = axis
         self.message = f"Higher-dimensional shape does not support unsliceable axis {axis.name}."
