@@ -77,7 +77,9 @@ class FDBDatacube(Datacube):
         for axis_name in axes_to_remove:
             self._axes.pop(axis_name, None)
 
-    def get(self, requests: TensorIndexTree):
+    def get(self, requests: TensorIndexTree, context=None):
+        if context is None:
+            context = {}
         requests.pprint()
         if len(requests.children) == 0:
             return requests
@@ -104,11 +106,11 @@ class FDBDatacube(Datacube):
                 uncompressed_request = {}
                 for i, key in enumerate(compressed_request[0].keys()):
                     uncompressed_request[key] = combi[i]
-                complete_uncompressed_request = (uncompressed_request, compressed_request[1])
+                complete_uncompressed_request = (uncompressed_request, compressed_request[1], self.grid_md5_hash)
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
         logging.debug("The requests we give GribJump are: %s", complete_list_complete_uncompressed_requests)
-        output_values = self.gj.extract(complete_list_complete_uncompressed_requests)
+        output_values = self.gj.extract(complete_list_complete_uncompressed_requests, context)
         logging.debug("GribJump outputs: %s", output_values)
         self.assign_fdb_output_to_nodes(output_values, complete_fdb_decoding_info)
 
@@ -124,7 +126,7 @@ class FDBDatacube(Datacube):
 
         # First when request node is root, go to its children
         if requests.axis.name == "root":
-            logging.info("Looking for data for the tree: %s", [leaf.flatten() for leaf in requests.leaves])
+            logging.debug("Looking for data for the tree: %s", [leaf.flatten() for leaf in requests.leaves])
 
             for c in requests.children:
                 self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info)
@@ -161,8 +163,8 @@ class FDBDatacube(Datacube):
                 new_current_start_idx = []
                 for j, idx in enumerate(sub_lat_idxs):
                     if idx not in seen_indices:
-                        # TODO: need to remove it from the values in the corresponding tree node
-                        # TODO: need to read just the range we give to gj ... DONE?
+                        # NOTE: need to remove it from the values in the corresponding tree node
+                        # NOTE: need to read just the range we give to gj
                         original_fdb_node_range_vals.append(actual_fdb_node[0].values[j])
                         seen_indices.add(idx)
                         new_current_start_idx.append(idx)
@@ -187,8 +189,6 @@ class FDBDatacube(Datacube):
 
             second_ax = requests.children[0].children[0].axis
 
-            # TODO: actually, here we should not remap the nearest_pts, we should instead unmap the
-            # found_latlon_pts and then remap them later once we have compared found_latlon_pts and nearest_pts
             nearest_pts = [
                 [lat_val, second_ax._remap_val_to_axis_range(lon_val)]
                 for (lat_val, lon_val) in zip(
@@ -325,8 +325,6 @@ class FDBDatacube(Datacube):
         request_ranges_with_idx = list(enumerate(interm_request_ranges))
         sorted_list = sorted(request_ranges_with_idx, key=lambda x: x[1][0])
         original_indices, sorted_request_ranges = zip(*sorted_list)
-        logging.debug("We sorted the request ranges into: %s", sorted_request_ranges)
-        logging.debug("The sorted and unique leaf node ranges are: %s", new_fdb_node_ranges)
         return (original_indices, sorted_request_ranges, new_fdb_node_ranges)
 
     def datacube_natural_indexes(self, axis, subarray):
