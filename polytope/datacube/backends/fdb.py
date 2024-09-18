@@ -110,9 +110,9 @@ class FDBDatacube(Datacube):
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
         logging.debug("The requests we give GribJump are: %s", complete_list_complete_uncompressed_requests)
-        output_values = self.gj.extract(complete_list_complete_uncompressed_requests)
+        output_values = self.gj.extract(complete_list_complete_uncompressed_requests, context)
         logging.debug("GribJump outputs: %s", output_values)
-        self.assign_fdb_output_to_nodes(output_values, complete_fdb_decoding_info, context)
+        self.assign_fdb_output_to_nodes(output_values, complete_fdb_decoding_info)
 
     def get_fdb_requests(
         self,
