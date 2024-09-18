@@ -126,7 +126,7 @@ class FDBDatacube(Datacube):
 
         # First when request node is root, go to its children
         if requests.axis.name == "root":
-            logging.info("Looking for data for the tree: %s", [leaf.flatten() for leaf in requests.leaves])
+            logging.debug("Looking for data for the tree: %s", [leaf.flatten() for leaf in requests.leaves])
 
             for c in requests.children:
                 self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info)
@@ -327,8 +327,6 @@ class FDBDatacube(Datacube):
         request_ranges_with_idx = list(enumerate(interm_request_ranges))
         sorted_list = sorted(request_ranges_with_idx, key=lambda x: x[1][0])
         original_indices, sorted_request_ranges = zip(*sorted_list)
-        logging.debug("We sorted the request ranges into: %s", sorted_request_ranges)
-        logging.debug("The sorted and unique leaf node ranges are: %s", new_fdb_node_ranges)
         return (original_indices, sorted_request_ranges, new_fdb_node_ranges)
 
     def datacube_natural_indexes(self, axis, subarray):
