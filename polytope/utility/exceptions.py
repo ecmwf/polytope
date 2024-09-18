@@ -1,6 +1,7 @@
 class PolytopeError(Exception):
     pass
 
+
 class AxisOverdefinedError(PolytopeError):
     def __init__(self, axis):
         self.axis = axis
