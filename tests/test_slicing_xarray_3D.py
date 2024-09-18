@@ -57,6 +57,7 @@ class TestSlicing3DXarrayDatacube:
         box2 = Box(["step", "level"], [6, 10], [12, 17])
         request = Request(Union(["step", "level"], box1, box2), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
+        result.pprint()
         assert len(result.leaves) == 2
 
     def test_point(self):
@@ -107,10 +108,10 @@ class TestSlicing3DXarrayDatacube:
         # TODO: fix the overlapping branches?
         points = [[1, 0], [3, 0], [2, 3], [3, 6], [1, 6]]
         request = Request(Polygon(["level", "step"], points), Select("date", ["2000-01-01"]))
-        print([poly.__repr__() for poly in Polygon(["level", "step"], points).polytopes])
-        print(Polygon(["level", "step"], points).polytopes[0])
-        print(Polygon(["level", "step"], points).polytopes[1])
-        print(Polygon(["level", "step"], points).polytopes[2])
+        # print([poly.__repr__() for poly in Polygon(["level", "step"], points).polytopes])
+        # print(Polygon(["level", "step"], points).polytopes[0])
+        # print(Polygon(["level", "step"], points).polytopes[1])
+        # print(Polygon(["level", "step"], points).polytopes[2])
         result = self.API.retrieve(request)
         result.pprint()
         self.xarraydatacube.get(result)

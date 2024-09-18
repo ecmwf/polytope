@@ -3,7 +3,7 @@ import pytest
 
 from polytope.engine.hullslicer import HullSlicer
 from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select, Span, Union
+from polytope.shapes import Box, Select, Span, Union, Polygon
 
 
 class TestSlicingFDBDatacube:
@@ -164,3 +164,42 @@ class TestSlicingFDBDatacube:
             total_lons += len(leaf.values)
             total_vals += len(leaf.result)
         assert total_lons == 9
+
+    @pytest.mark.fdb
+    def test_fdb_datacube_polygon_union(self):
+        import pygribjump as gj
+
+        points = [[0.1, 0], [0.3, 0], [0.2, 0.3], [0.3, 0.6], [0.1, 0.6]]
+
+        polygon = Polygon(["latitude", "longitude"], points)
+
+        request = Request(
+            Select("step", [0]),
+            Select("levtype", ["sfc"]),
+            Span("date", pd.Timestamp("20230625T120000"), pd.Timestamp("20230626T120000")),
+            Select("domain", ["g"]),
+            Select("expver", ["0001"]),
+            Select("param", ["167"]),
+            Select("class", ["od"]),
+            Select("stream", ["oper"]),
+            Select("type", ["an"]),
+            polygon,
+        )
+
+        self.fdbdatacube = gj.GribJump()
+        self.slicer = HullSlicer()
+        self.API = Polytope(
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            options=self.options,
+        )
+        result = self.API.retrieve(request)
+        result.pprint()
+        assert len(result.leaves) == 4
+        total_lons = 0
+        total_vals = 0
+        for leaf in result.leaves:
+            total_lons += len(leaf.values)
+            total_vals += len(leaf.result)
+        assert total_lons == 9
+        assert total_vals == 9

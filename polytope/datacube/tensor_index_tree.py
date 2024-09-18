@@ -140,12 +140,16 @@ class TensorIndexTree(object):
         return self.parent is None
 
     def find_child(self, node):
+        # for c in self.children:
+        #     if any(val in c.values for val in node.values):
+        #         return c
+        # return None
         index = self.children.bisect_left(node)
         if index >= len(self.children):
             return None
         child = self.children[index]
-        print("NOW BEFORE")
-        print(child == node)
+        # print("NOW BEFORE")
+        # print(child == node)
         if not child == node:
             return None
         return child
