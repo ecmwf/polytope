@@ -56,11 +56,14 @@ class Polytope:
         """Low-level API which takes a polytope geometry object and uses it to slice the datacube"""
         return self.engine.extract(self.datacube, polytopes)
 
-    def retrieve(self, request: Request, method="standard"):
+    def retrieve(self, request: Request, method="standard", context=None):
         """Higher-level API which takes a request and uses it to slice the datacube"""
+        if context is None:
+            context = {}
+        logging.info("Starting request for %s ", context)
         self.datacube.check_branching_axes(request)
         request_tree = self.engine.extract(self.datacube, request.polytopes())
-        logging.info("Sliced polytopes")
-        self.datacube.get(request_tree)
-        logging.info("Retrieved data")
+        logging.info("Created request tree for %s ", context)
+        self.datacube.get(request_tree, context)
+        logging.info("Retrieved data for %s ", context)
         return request_tree
