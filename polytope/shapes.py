@@ -26,7 +26,7 @@ class ConvexPolytope(Shape):
     def __init__(self, axes, points, method=None, is_orthogonal=False):
         self._axes = list(axes)
         self.is_flat = False
-        if len(self._axes) == 1:
+        if len(self._axes) == 1 and len(points) == 1:
             self.is_flat = True
         self.points = points
         self.method = method
