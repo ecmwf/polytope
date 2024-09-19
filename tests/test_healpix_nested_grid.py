@@ -107,7 +107,7 @@ class TestHealpixNestedGrid:
         }
 
     @pytest.mark.internet
-    @pytest.mark.fdb
+    @pytest.mark.xfail
     @pytest.mark.skip(reason="different fdb schema for climate dt")
     def test_healpix_nested_grid(self):
         import pygribjump as gj
