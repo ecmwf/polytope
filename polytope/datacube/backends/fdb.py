@@ -4,6 +4,7 @@ from copy import deepcopy
 from itertools import product
 
 from ...utility.geometry import nearest_pt
+from ...utility.profiling import timing_fn
 from .datacube import Datacube, TensorIndexTree
 
 
@@ -14,7 +15,7 @@ class FDBDatacube(Datacube):
 
         super().__init__(axis_options, compressed_axes_options)
 
-        logging.info("Created an FDB datacube with options: " + str(axis_options))
+        logging.debug("Created an FDB datacube with options: " + str(axis_options))
 
         self.unwanted_path = {}
         self.axis_options = axis_options
@@ -30,7 +31,7 @@ class FDBDatacube(Datacube):
             for axis_config in alternative_axes:
                 self.fdb_coordinates[axis_config.axis_name] = axis_config.values
 
-        logging.info("Axes returned from GribJump are: " + str(self.fdb_coordinates))
+        logging.debug("Axes returned from GribJump are: " + str(self.fdb_coordinates))
 
         self.fdb_coordinates["values"] = []
         for name, values in self.fdb_coordinates.items():
@@ -55,7 +56,7 @@ class FDBDatacube(Datacube):
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
 
-        logging.info("Polytope created axes for %s", self._axes.keys())
+        logging.debug("Polytope created axes for %s", self._axes.keys())
 
     def check_branching_axes(self, request):
         polytopes = request.polytopes()
@@ -77,10 +78,10 @@ class FDBDatacube(Datacube):
         for axis_name in axes_to_remove:
             self._axes.pop(axis_name, None)
 
+    @timing_fn
     def get(self, requests: TensorIndexTree, context=None):
         if context is None:
             context = {}
-        requests.pprint()
         if len(requests.children) == 0:
             return requests
         fdb_requests = []
