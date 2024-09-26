@@ -4,6 +4,7 @@ from typing import List
 from .options import PolytopeOptions
 from .shapes import ConvexPolytope
 from .utility.exceptions import AxisOverdefinedError
+from .utility.profiling import timing_fn
 
 
 class Request:
@@ -56,6 +57,7 @@ class Polytope:
         """Low-level API which takes a polytope geometry object and uses it to slice the datacube"""
         return self.engine.extract(self.datacube, polytopes)
 
+    @timing_fn
     def retrieve(self, request: Request, method="standard", context=None):
         """Higher-level API which takes a request and uses it to slice the datacube"""
         if context is None:

@@ -12,6 +12,7 @@ from ..shapes import ConvexPolytope
 from ..utility.combinatorics import argmax, argmin, group, tensor_product, unique
 from ..utility.exceptions import UnsliceableShapeError
 from ..utility.geometry import lerp
+from ..utility.profiling import timing_fn
 from .engine import Engine
 
 
@@ -204,6 +205,7 @@ class HullSlicer(Engine):
                     if axis == self.compressed_axes[-1]:
                         self.compressed_axes.remove(axis)
 
+    @timing_fn
     def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
         # Determine list of axes to compress
         self.find_compressed_axes(datacube, polytopes)
