@@ -1,5 +1,5 @@
-import time
 import logging
+import time
 
 
 class benchmark(object):
@@ -23,4 +23,5 @@ def timing_fn(func):
         fn_name = func.__name__
         logging.debug("Time taken for %s is %s seconds", fn_name, time_taken)
         return res
+
     return wrapper
