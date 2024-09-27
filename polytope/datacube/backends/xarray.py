@@ -50,12 +50,14 @@ class XArrayDatacube(Datacube):
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
 
-    def get(self, requests, leaf_path=None, axis_counter=0):
+    def get(self, requests, context=None, leaf_path=None, axis_counter=0):
+        if context is None:
+            context = {}
         if leaf_path is None:
             leaf_path = {}
         if requests.axis.name == "root":
             for c in requests.children:
-                self.get(c, leaf_path, axis_counter + 1)
+                self.get(c, context, leaf_path, axis_counter + 1)
         else:
             key_value_path = {requests.axis.name: requests.values}
             ax = requests.axis
@@ -66,7 +68,7 @@ class XArrayDatacube(Datacube):
             if len(requests.children) != 0:
                 # We are not a leaf and we loop over
                 for c in requests.children:
-                    self.get(c, leaf_path, axis_counter + 1)
+                    self.get(c, context, leaf_path, axis_counter + 1)
             else:
                 if self.axis_counter != axis_counter:
                     requests.remove_branch()
