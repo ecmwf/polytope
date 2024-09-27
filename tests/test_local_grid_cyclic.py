@@ -26,6 +26,7 @@ class TestSlicingFDBDatacube:
                             "resolution": [80, 80],
                             "axes": ["latitude", "longitude"],
                             "local": [-40, 40, -20, 60],
+                            "axis_reversed": {"latitude": True, "longitude": False},
                         }
                     ],
                 },

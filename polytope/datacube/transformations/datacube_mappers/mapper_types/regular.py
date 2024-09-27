@@ -4,19 +4,28 @@ from ..datacube_mappers import DatacubeMapper
 
 
 class RegularGridMapper(DatacubeMapper):
-    def __init__(self, base_axis, mapped_axes, resolution, local_area=[]):
+    def __init__(self, base_axis, mapped_axes, resolution, local_area=[], axis_reversed=None):
         # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
         self._resolution = resolution
         self.deg_increment = 90 / self._resolution
-        self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
+        if axis_reversed is None:
+            self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
+        else:
+            assert set(axis_reversed.keys()) == set(mapped_axes)
+            self._axis_reversed = axis_reversed
         self._first_axis_vals = self.first_axis_vals()
         self.compressed_grid_axes = [self._mapped_axes[1]]
         self.md5_hash = md5_hash.get(resolution, None)
+        if self._axis_reversed[mapped_axes[1]]:
+            raise NotImplementedError("Regular grid with second axis in decreasing order is not supported")
 
     def first_axis_vals(self):
-        first_ax_vals = [90 - i * self.deg_increment for i in range(2 * self._resolution)]
+        if self._axis_reversed[self._mapped_axes[0]]:
+            first_ax_vals = [90 - i * self.deg_increment for i in range(2 * self._resolution)]
+        else:
+            first_ax_vals = [-90 + i * self.deg_increment for i in range(2 * self._resolution)]
         return first_ax_vals
 
     def map_first_axis(self, lower, upper):
