@@ -25,17 +25,3 @@ def timing_fn(func):
         return res
 
     return wrapper
-
-# class SliceCounter():
-#     def __init__(self):
-#         self.counter_per_slice_dim = {}
-    
-
-#     # TODO: can we somehow do a decorator that populates the counter dictio?
-#     # def add_slice(self, func):
-#     #     def wrapper(*arg, **kw):
-#     #         func(self, *arg, **kw)
-
-#     def pprint(self):
-#         # TODO
-#         pass

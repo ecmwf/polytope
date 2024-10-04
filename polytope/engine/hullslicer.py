@@ -1,8 +1,8 @@
+import logging
 import math
 from copy import copy
 from itertools import chain
 from typing import List
-import logging
 
 import scipy.spatial
 
