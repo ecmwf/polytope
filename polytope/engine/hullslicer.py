@@ -2,6 +2,7 @@ import math
 from copy import copy
 from itertools import chain
 from typing import List
+import logging
 
 import scipy.spatial
 
@@ -24,6 +25,7 @@ class HullSlicer(Engine):
         self.sliced_polytopes = {}
         self.remapped_vals = {}
         self.compressed_axes = []
+        self.counter_per_slice_dim = {}
 
     def _unique_continuous_points(self, p: ConvexPolytope, datacube: Datacube):
         for i, ax in enumerate(p._axes):
@@ -113,7 +115,7 @@ class HullSlicer(Engine):
         for i, value in enumerate(values):
             if i == 0 or ax.name not in self.compressed_axes:
                 fvalue = ax.to_float(value)
-                new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
+                new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx, self.counter_per_slice_dim)
                 remapped_val = self.remap_values(ax, value)
                 (child, next_nodes) = node.create_child(ax, remapped_val, next_nodes)
                 child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
@@ -246,6 +248,7 @@ class HullSlicer(Engine):
                 current_nodes = next_nodes
 
             request.merge(r)
+        logging.info("The number of slices per dimension are: %s", self.counter_per_slice_dim)
         return request
 
 
@@ -278,7 +281,16 @@ def _reduce_dimension(intersects, slice_axis_idx):
     return temp_intersects
 
 
-def slice(polytope: ConvexPolytope, axis, value, slice_axis_idx):
+def slice(polytope: ConvexPolytope, axis, value, slice_axis_idx, slice_dim_dict=None):
+    if slice_dim_dict is None:
+        slice_dim_dict = {}
+
+    polytope_dim = len(polytope.points[0])
+    if polytope_dim not in slice_dim_dict.keys():
+        slice_dim_dict[polytope_dim] = 1
+    else:
+        slice_dim_dict[polytope_dim] += 1
+
     if polytope.is_flat:
         if value in chain(*polytope.points):
             intersects = [[value]]

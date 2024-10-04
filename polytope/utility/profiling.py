@@ -21,7 +21,21 @@ def timing_fn(func):
         res = func(*arg, **kw)
         time_taken = time.perf_counter() - t1
         fn_name = func.__name__
-        logging.debug("Time taken for %s is %s seconds", fn_name, time_taken)
+        logging.info("Time taken for %s is %0.7f seconds", fn_name, time_taken)
         return res
 
     return wrapper
+
+# class SliceCounter():
+#     def __init__(self):
+#         self.counter_per_slice_dim = {}
+    
+
+#     # TODO: can we somehow do a decorator that populates the counter dictio?
+#     # def add_slice(self, func):
+#     #     def wrapper(*arg, **kw):
+#     #         func(self, *arg, **kw)
+
+#     def pprint(self):
+#         # TODO
+#         pass

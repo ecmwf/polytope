@@ -2,6 +2,7 @@ import logging
 import operator
 from copy import deepcopy
 from itertools import product
+import time
 
 from ...utility.geometry import nearest_pt
 from ...utility.profiling import timing_fn
@@ -25,7 +26,10 @@ class FDBDatacube(Datacube):
 
         self.gj = gj
         if len(alternative_axes) == 0:
+            time1 = time.perf_counter()
             self.fdb_coordinates = self.gj.axes(partial_request)
+            gj_axes_time = time.perf_counter() - time1
+            logging.info("Time taken for GJ axes call is %0.7f seconds", gj_axes_time)
         else:
             self.fdb_coordinates = {}
             for axis_config in alternative_axes:
@@ -111,7 +115,10 @@ class FDBDatacube(Datacube):
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
         logging.debug("The requests we give GribJump are: %s", complete_list_complete_uncompressed_requests)
+        time1 = time.perf_counter()
         output_values = self.gj.extract(complete_list_complete_uncompressed_requests, context)
+        gj_extract_time = time.perf_counter() - time1
+        logging.info("Time taken for GJ extract call is %0.7f seconds", gj_extract_time)
         logging.debug("GribJump outputs: %s", output_values)
         self.assign_fdb_output_to_nodes(output_values, complete_fdb_decoding_info)
 
