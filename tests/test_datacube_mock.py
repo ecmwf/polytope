@@ -1,7 +1,7 @@
 import pytest
 
-from polytope.datacube.backends.mock import MockDatacube
-from polytope.utility.exceptions import AxisNotFoundError, AxisOverdefinedError
+from polytope_feature.datacube.backends.mock import MockDatacube
+from polytope_feature.utility.exceptions import AxisNotFoundError, AxisOverdefinedError
 
 
 class TestMockDatacube:
