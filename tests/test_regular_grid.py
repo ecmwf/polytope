@@ -2,9 +2,9 @@ import pandas as pd
 import pytest
 from helper_functions import download_test_data, find_nearest_latlon
 
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Disk, Select
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Disk, Select
 
 # import geopandas as gpd
 # import matplotlib.pyplot as plt
@@ -91,7 +91,7 @@ class TestRegularGrid:
         assert len(result.leaves[1].values) == 3
         assert len(result.leaves[2].values) == 1
 
-        from polytope.datacube.transformations.datacube_mappers.mapper_types.regular import (
+        from polytope_feature.datacube.transformations.datacube_mappers.mapper_types.regular import (
             RegularGridMapper,
         )
 
