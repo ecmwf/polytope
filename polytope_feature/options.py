@@ -22,6 +22,7 @@ class MapperConfig(TransformationConfig):
     resolution: Union[int, List[int]] = 0
     axes: List[str] = [""]
     local: Optional[List[float]] = None
+    axis_reversed: Optional[Dict[str, bool]] = None
 
 
 class ReverseConfig(TransformationConfig):
