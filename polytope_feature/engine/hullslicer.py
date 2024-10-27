@@ -202,7 +202,8 @@ class HullSlicer(Engine):
             if p.is_in_union:
                 for axis in p.axes():
                     if axis == self.compressed_axes[-1]:
-                        self.compressed_axes.remove(axis)
+                        # self.compressed_axes.remove(axis)
+                        pass
 
     def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
         # Determine list of axes to compress
