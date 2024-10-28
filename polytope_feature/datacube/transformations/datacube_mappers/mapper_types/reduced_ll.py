@@ -4,7 +4,7 @@ from ..datacube_mappers import DatacubeMapper
 
 
 class ReducedLatLonMapper(DatacubeMapper):
-    def __init__(self, base_axis, mapped_axes, resolution, local_area=[]):
+    def __init__(self, base_axis, mapped_axes, resolution, local_area=[], axis_reversed=None):
         # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
@@ -13,6 +13,10 @@ class ReducedLatLonMapper(DatacubeMapper):
         self._first_axis_vals = self.first_axis_vals()
         self.compressed_grid_axes = [self._mapped_axes[1]]
         self.md5_hash = md5_hash.get(resolution, None)
+        if self._axis_reversed[mapped_axes[1]]:
+            raise NotImplementedError("Reduced lat-lon grid with second axis in decreasing order is not supported")
+        if self._axis_reversed[mapped_axes[0]]:
+            raise NotImplementedError("Reduced lat-lon grid with first axis in decreasing order is not supported")
 
     def first_axis_vals(self):
         resolution = 180 / (self._resolution - 1)
