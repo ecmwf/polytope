@@ -45,7 +45,7 @@ class TestEngineSlicer:
         triangle = Polygon(["x", "y"], [[3, 3], [3, 6], [6, 3]]).polytope()
         result = self.slicer.extract(datacube, triangle)
         result.pprint()
-        assert len(result.leaves) == 10
+        assert len(result.leaves) == 4
         # assert len(result.leaves) == 4
         # total_leaves = 0
         # for leaf in result.leaves:
@@ -57,8 +57,8 @@ class TestEngineSlicer:
         polytopes = Polygon(["x", "y"], [[3, 3], [3, 6], [6, 3]]).polytope()
         result = self.slicer.extract(datacube, polytopes)
         result.pprint()
-        # assert len(result.leaves) == 4
-        assert len(result.leaves) == 10
+        assert len(result.leaves) == 4
+        # assert len(result.leaves) == 10
         polytopes = Box(["x", "y"], lower_corner=[3, 3], upper_corner=[6, 6]).polytope()
         result = self.slicer.extract(datacube, polytopes)
         result.pprint()
