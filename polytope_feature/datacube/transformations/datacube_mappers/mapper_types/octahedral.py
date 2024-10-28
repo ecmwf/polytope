@@ -5,7 +5,7 @@ from ..datacube_mappers import DatacubeMapper
 
 
 class OctahedralGridMapper(DatacubeMapper):
-    def __init__(self, base_axis, mapped_axes, resolution, local_area=[]):
+    def __init__(self, base_axis, mapped_axes, resolution, local_area=[], axis_reversed=None):
         # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
@@ -14,7 +14,12 @@ class OctahedralGridMapper(DatacubeMapper):
         self._first_idx_map = self.create_first_idx_map()
         self._second_axis_spacing = {}
         self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
+        if self._axis_reversed[mapped_axes[1]]:
+            raise NotImplementedError("Octahedral grid with second axis in decreasing order is not supported")
+        if not self._axis_reversed[mapped_axes[0]]:
+            raise NotImplementedError("Octahedral grid with first axis in increasing order is not supported")
         self.compressed_grid_axes = [self._mapped_axes[1]]
+        self.md5_hash = md5_hash.get(resolution, None)
 
     def gauss_first_guess(self):
         i = 0
@@ -2750,3 +2755,9 @@ class OctahedralGridMapper(DatacubeMapper):
         (first_idx, second_idx) = self.find_second_axis_idx(first_val, second_val)
         octahedral_index = self.axes_idx_to_octahedral_idx(first_idx, second_idx)
         return octahedral_index
+
+
+# md5 grid hash in form {resolution : hash}
+md5_hash = {
+    1280: "158db321ae8e773681eeb40e0a3d350f",
+}

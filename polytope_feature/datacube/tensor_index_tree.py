@@ -106,6 +106,7 @@ class TensorIndexTree(object):
     def add_value(self, value):
         new_values = list(self.values)
         new_values.append(value)
+        new_values.sort()
         self.values = tuple(new_values)
 
     def create_child(self, axis, value, next_nodes, polytope_label=None):

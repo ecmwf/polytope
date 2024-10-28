@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Dict
 
 from ...utility.combinatorics import validate_axes
 from ..datacube_axis import DatacubeAxis
@@ -31,9 +31,10 @@ class Datacube(ABC):
         self.merged_axes = []
         self.unwanted_path = {}
         self.compressed_axes = compressed_axes_options
+        self.grid_md5_hash = None
 
     @abstractmethod
-    def get(self, requests: TensorIndexTree) -> Any:
+    def get(self, requests: TensorIndexTree, context: Dict) -> Any:
         """Return data given a set of request trees"""
 
     @property
@@ -69,6 +70,7 @@ class Datacube(ABC):
             # TODO: do we use this?? This shouldn't work for a disk in lat/lon on a octahedral or other grid??
             for compressed_grid_axis in transformation.compressed_grid_axes:
                 self.compressed_grid_axes.append(compressed_grid_axis)
+                self.grid_md5_hash = transformation.md5_hash
         if len(final_axis_names) > 1:
             self.coupled_axes.append(final_axis_names)
             for axis in final_axis_names:
@@ -126,9 +128,10 @@ class Datacube(ABC):
         """
         path = self.fit_path(path)
         indexes = axis.find_indexes(path, self)
+
         idx_between = axis.find_indices_between(indexes, lower, upper, self, method)
 
-        logging.info(f"For axis {axis.name} between {lower} and {upper}, found indices {idx_between}")
+        logging.debug(f"For axis {axis.name} between {lower} and {upper}, found indices {idx_between}")
 
         return idx_between
 

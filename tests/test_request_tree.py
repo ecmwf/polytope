@@ -1,7 +1,7 @@
 from sortedcontainers import SortedList
 
-from polytope.datacube.datacube_axis import IntDatacubeAxis
-from polytope.datacube.tensor_index_tree import TensorIndexTree
+from polytope_feature.datacube.datacube_axis import IntDatacubeAxis
+from polytope_feature.datacube.tensor_index_tree import TensorIndexTree
 
 
 class TestIndexTree:

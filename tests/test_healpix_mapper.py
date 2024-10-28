@@ -2,15 +2,15 @@ import pytest
 from earthkit import data
 from helper_functions import download_test_data, find_nearest_latlon
 
-from polytope.datacube.transformations.datacube_mappers.mapper_types.healpix import (
+from polytope_feature.datacube.transformations.datacube_mappers.mapper_types.healpix import (
     HealpixGridMapper,
 )
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, Select
 
 
-class TestOctahedralGrid:
+class TestHealpixGrid:
     def setup_method(self, method):
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/healpix.grib"
         download_test_data(nexus_url, "healpix.grib")
@@ -69,7 +69,7 @@ class TestOctahedralGrid:
                 eccodes_lon = nearest_points[0][0]["lon"]
                 eccodes_result = nearest_points[0][0]["value"]
 
-                mapper = HealpixGridMapper("base", ["base", "base"], 32)
+                mapper = HealpixGridMapper("base", ["base1", "base2"], 32)
                 assert nearest_points[0][0]["index"] == mapper.unmap((lat,), (lon,))
                 assert eccodes_lat - tol <= lat
                 assert lat <= eccodes_lat + tol

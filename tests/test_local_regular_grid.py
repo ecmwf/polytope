@@ -1,9 +1,9 @@
 import pandas as pd
 import pytest
 
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Point, Select
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Point, Select
 
 
 class TestSlicingFDBDatacube:
@@ -26,6 +26,7 @@ class TestSlicingFDBDatacube:
                             "resolution": [80, 80],
                             "axes": ["latitude", "longitude"],
                             "local": [-40, 40, -20, 60],
+                            "axis_reversed": {"latitude": True, "longitude": False},
                         }
                     ],
                 },

@@ -1,11 +1,11 @@
 import numpy as np
 import xarray as xr
 
-from polytope.datacube.backends.xarray import XArrayDatacube
-from polytope.datacube.tensor_index_tree import TensorIndexTree
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope
-from polytope.shapes import Box
+from polytope_feature.datacube.backends.xarray import XArrayDatacube
+from polytope_feature.datacube.tensor_index_tree import TensorIndexTree
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope
+from polytope_feature.shapes import Box
 
 
 class TestSlicerComponents:

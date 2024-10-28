@@ -1,9 +1,9 @@
 import numpy as np
 import pytest
 
-from polytope import ConvexPolytope
-from polytope.utility.combinatorics import group, tensor_product, validate_axes
-from polytope.utility.exceptions import (
+from polytope_feature import ConvexPolytope
+from polytope_feature.utility.combinatorics import group, tensor_product, validate_axes
+from polytope_feature.utility.exceptions import (
     AxisNotFoundError,
     AxisOverdefinedError,
     AxisUnderdefinedError,
