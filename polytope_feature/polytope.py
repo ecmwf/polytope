@@ -67,6 +67,11 @@ class Polytope:
         request_tree = self.engine.extract(self.datacube, request.polytopes())
         logging.info("Created request tree for %s ", context)
         self.datacube.get(request_tree, context)
-        logging.info("Extracted %s leaves", len(request_tree.leaves))
+        leaves = request_tree.leaves
+        tot_points = 0
+        for leaf in leaves:
+            tot_points += len(leaf.values)
+        logging.info("Extracted %s leaves", len(leaves))
+        logging.info("Extracted %s points", tot_points)
         logging.info("Retrieved data for %s ", context)
         return request_tree

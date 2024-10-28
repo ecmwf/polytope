@@ -3,6 +3,7 @@ import math
 from copy import copy
 from itertools import chain
 from typing import List
+import time
 
 import scipy.spatial
 
@@ -26,6 +27,7 @@ class HullSlicer(Engine):
         self.remapped_vals = {}
         self.compressed_axes = []
         self.counter_per_slice_dim = {}
+        self.total_slicing_time = 0
 
     def _unique_continuous_points(self, p: ConvexPolytope, datacube: Datacube):
         for i, ax in enumerate(p._axes):
@@ -115,7 +117,9 @@ class HullSlicer(Engine):
         for i, value in enumerate(values):
             if i == 0 or ax.name not in self.compressed_axes:
                 fvalue = ax.to_float(value)
+                time0 = time.perf_counter()
                 new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx, self.counter_per_slice_dim)
+                self.total_slicing_time += time.perf_counter() - time0
                 remapped_val = self.remap_values(ax, value)
                 (child, next_nodes) = node.create_child(ax, remapped_val, next_nodes)
                 child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
@@ -249,6 +253,8 @@ class HullSlicer(Engine):
 
             request.merge(r)
         logging.info("The number of slices per dimension are: %s", self.counter_per_slice_dim)
+        # Add slicing time to this
+        logging.info("The total slicing time is: %s", self.total_slicing_time)
         return request
 
 
@@ -308,11 +314,12 @@ def slice(polytope: ConvexPolytope, axis, value, slice_axis_idx, slice_dim_dict=
     axes = copy(polytope._axes)
     axes.remove(axis)
 
+    if len(intersects[0]) == 0:
+        return None
+
     if len(intersects) < len(intersects[0]) + 1:
         return ConvexPolytope(axes, intersects)
     # Compute convex hull (removing interior points)
-    if len(intersects[0]) == 0:
-        return None
     elif len(intersects[0]) == 1:  # qhull doesn't like 1D, do it ourselves
         amin = argmin(intersects)
         amax = argmax(intersects)
