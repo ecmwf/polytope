@@ -292,11 +292,12 @@ def slice(polytope: ConvexPolytope, axis, value, slice_axis_idx, slice_dim_dict=
     if slice_dim_dict is None:
         slice_dim_dict = {}
 
-    polytope_dim = len(polytope.points[0])
-    if polytope_dim not in slice_dim_dict.keys():
-        slice_dim_dict[polytope_dim] = 1
-    else:
-        slice_dim_dict[polytope_dim] += 1
+    if polytope.label == "main":
+        polytope_dim = len(polytope.points[0])
+        if polytope_dim not in slice_dim_dict.keys():
+            slice_dim_dict[polytope_dim] = 1
+        else:
+            slice_dim_dict[polytope_dim] += 1
 
     if polytope.is_flat:
         if value in chain(*polytope.points):

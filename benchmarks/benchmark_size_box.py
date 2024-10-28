@@ -124,7 +124,7 @@ if True:
 
     print("EXTRACTION OF BOXES WITH INCREASING SIZE IN LON AND LAT WITH CENTER [0,0] \n\n")
 
-    boxes = [Box(["longitude", "latitude"], [-0.5, -0.5], [0.5, 0.5]),
+    boxes = [Box(["longitude", "latitude"], [-0.5, -0.5], [0.5, 0.5], label="main"),
             #  Box(["longitude", "latitude"], [-2.5, -2.5], [2.5, 2.5]),
             #  Box(["longitude", "latitude"], [-5, -5], [5, 5]),
             #  Box(["longitude", "latitude"], [-22.5, -22.5], [22.5, 22.5]),
