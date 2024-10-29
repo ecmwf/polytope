@@ -21,6 +21,7 @@ class MapperConfig(TransformationConfig):
     type: str = ""
     resolution: Union[int, List[int]] = 0
     axes: List[str] = [""]
+    md5_hash: Optional[str] = None
     local: Optional[List[float]] = None
     axis_reversed: Optional[Dict[str, bool]] = None
 

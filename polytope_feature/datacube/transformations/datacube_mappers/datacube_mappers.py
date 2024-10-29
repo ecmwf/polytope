@@ -13,6 +13,9 @@ class DatacubeMapper(DatacubeAxisTransformation):
         self.grid_resolution = mapper_options.resolution
         self.grid_axes = mapper_options.axes
         self.local_area = []
+        self.md5_hash = None
+        if mapper_options.md5_hash is not None:
+            self.md5_hash = mapper_options.md5_hash
         if mapper_options.local is not None:
             self.local_area = mapper_options.local
         self._axis_reversed = None
@@ -32,7 +35,9 @@ class DatacubeMapper(DatacubeAxisTransformation):
         )
         constructor = getattr(module, map_type)
         transformation = deepcopy(
-            constructor(self.old_axis, self.grid_axes, self.grid_resolution, self.local_area, self._axis_reversed)
+            constructor(
+                self.old_axis, self.grid_axes, self.grid_resolution, self.md5_hash, self.local_area, self._axis_reversed
+            )
         )
         return transformation
 
