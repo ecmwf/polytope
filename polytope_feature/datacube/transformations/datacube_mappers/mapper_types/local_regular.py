@@ -4,7 +4,7 @@ from ..datacube_mappers import DatacubeMapper
 
 
 class LocalRegularGridMapper(DatacubeMapper):
-    def __init__(self, base_axis, mapped_axes, resolution, local_area=[], axis_reversed=None):
+    def __init__(self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None):
         # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
@@ -15,11 +15,17 @@ class LocalRegularGridMapper(DatacubeMapper):
         if not isinstance(resolution, list):
             self.first_resolution = resolution
             self.second_resolution = resolution
-            self.md5_hash = md5_hash.get(resolution, None)
+            if md5_hash is not None:
+                self.md5_hash = md5_hash
+            else:
+                self.md5_hash = _md5_hash.get(resolution, None)
         else:
             self.first_resolution = resolution[0]
             self.second_resolution = resolution[1]
-            self.md5_hash = md5_hash.get(tuple(resolution), None)
+            if md5_hash is not None:
+                self.md5_hash = md5_hash
+            else:
+                self.md5_hash = _md5_hash.get(tuple(resolution), None)
         self._first_deg_increment = (local_area[1] - local_area[0]) / self.first_resolution
         self._second_deg_increment = (local_area[3] - local_area[2]) / self.second_resolution
         if axis_reversed is None:
@@ -86,4 +92,4 @@ class LocalRegularGridMapper(DatacubeMapper):
 
 
 # md5 grid hash in form {resolution : hash}
-md5_hash = {}
+_md5_hash = {}
