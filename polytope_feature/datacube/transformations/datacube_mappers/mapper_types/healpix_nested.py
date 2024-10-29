@@ -5,7 +5,7 @@ from ..datacube_mappers import DatacubeMapper
 
 
 class NestedHealpixGridMapper(DatacubeMapper):
-    def __init__(self, base_axis, mapped_axes, resolution, local_area=[], axis_reversed=None):
+    def __init__(self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None):
         # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
@@ -17,7 +17,10 @@ class NestedHealpixGridMapper(DatacubeMapper):
         self.k = int(math.log2(self.Nside))
         self.Npix = 12 * self.Nside * self.Nside
         self.Ncap = (self.Nside * (self.Nside - 1)) << 1
-        self.md5_hash = md5_hash.get(resolution, None)
+        if md5_hash is not None:
+            self.md5_hash = md5_hash
+        else:
+            self.md5_hash = _md5_hash.get(resolution, None)
         if self._axis_reversed[mapped_axes[1]]:
             raise NotImplementedError("Healpix grid with second axis in decreasing order is not supported")
         if not self._axis_reversed[mapped_axes[0]]:
@@ -219,4 +222,4 @@ class NestedHealpixGridMapper(DatacubeMapper):
 
 
 # md5 grid hash in form {resolution : hash}
-md5_hash = {}
+_md5_hash = {}

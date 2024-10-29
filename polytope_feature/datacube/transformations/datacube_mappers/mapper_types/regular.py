@@ -4,7 +4,7 @@ from ..datacube_mappers import DatacubeMapper
 
 
 class RegularGridMapper(DatacubeMapper):
-    def __init__(self, base_axis, mapped_axes, resolution, local_area=[], axis_reversed=None):
+    def __init__(self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None):
         # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
@@ -17,7 +17,10 @@ class RegularGridMapper(DatacubeMapper):
             self._axis_reversed = axis_reversed
         self._first_axis_vals = self.first_axis_vals()
         self.compressed_grid_axes = [self._mapped_axes[1]]
-        self.md5_hash = md5_hash.get(resolution, None)
+        if md5_hash is not None:
+            self.md5_hash = md5_hash
+        else:
+            self.md5_hash = _md5_hash.get(resolution, None)
         if self._axis_reversed[mapped_axes[1]]:
             raise NotImplementedError("Regular grid with second axis in decreasing order is not supported")
 
@@ -69,4 +72,4 @@ class RegularGridMapper(DatacubeMapper):
 
 
 # md5 grid hash in form {resolution : hash}
-md5_hash = {}
+_md5_hash = {}
