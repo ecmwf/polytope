@@ -20,12 +20,12 @@ The recommended front-end for Polytope Feature Extraction is Earthkit-data. A gu
 
 For more in-depth information about the various features see the following pages:
 
-- <a href="./Features">Features</a>
-  - <a href="./Features/Timeseries">Timeseries</a>
-  - <a href="./Features/Vertical_Profile">Vertical Profile</a>
-  - <a href="./Features/Polygon">Polygon</a>
-  - <a href="./Features/Bounding_Box">Bounding_Box</a>
-  - <a href="./Features/Trajectory">Trajectory</a>
+- <a href="./Features/feature">Features</a>
+  - <a href="./Features/timeseries">Timeseries</a>
+  - <a href="./Features/vertical_profile">Vertical Profile</a>
+  - <a href="./Features/polygon">Polygon</a>
+  - <a href="./Features/boundingbox">Bounding Box</a>
+  - <a href="./Features/trajectory">Trajectory</a>
 
 A design document on the general principles of how requests can be generated can also be found <a href="./Design_Doc">here</a>.
 

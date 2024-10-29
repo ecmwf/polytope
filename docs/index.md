@@ -47,12 +47,12 @@ For a more in-depth explanation of how Polytope achieves its feature exctraction
 
 # Index
 
-- <a href="./Service/Overview/Overview">Service</a>
-  - <a href="./Service/Overview/Overview">Overview</a>
-  - <a href="./Service/Overview/Overview">Installation</a>
-  - <a href="./Service/Overview/Overview">Quick Start</a>
-  - <a href="./Service/Overview/Overview">Features</a>
-  - <a href="./Service/Overview/Overview">Examples</a>
+- <a href="./Service/">Service</a>
+  - <a href="./Service/Overview">Overview</a>
+  - <a href="./Service/Installation">Installation</a>
+  - <a href="./Service/Quick_Start">Quick Start</a>
+  - <a href="./Service/Features/feature">Features</a>
+  - <a href="./Service/Examples">Examples</a>
 
 - <a href="./Algorithm/Overview/Overview">Algorithm</a>
   - <a href="./Algorithm/Overview/Overview">Overview</a>
