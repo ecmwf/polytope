@@ -37,14 +37,27 @@ Note that Polytope reads only the user-requested data, instead of whole fields. 
 !!! important
     Note that Polytope reads only the user-requested data, instead of whole fields. Importantly, this implies a significant decrease of the I/O usage when reading data from a datacube.
 
+Polytope feature extraction consists of the algorithm itself, and the service that uses the algorithm to extract features from ECMWF datacubes. Details on the service can be found the Polytope service <a href="./Service/Overview/Overview">Overview</a>. While details on the algorithm can be found on the polytope algorithm <a href="./Algorithm/Overview/Overview">Overview</a>.
 
-See <a href="./Overview/Overview">Overview</a> for more information.
-
-To learn more about how to use Polytope, refer to the <a href="./User_Guide/Overview">User Guide</a>. In particular, see the Quickstart page for a step-by-step example of how to use the Polytope software.
-For a more in-depth explanation of how Polytope achieves its feature exctraction, refer to the <a href="./Developer_Guide/Overview">Developer Guide</a>.
+To learn more about how to use Polytope, refer to the <a href="./Service/Quick_Start/Overview">Quick Start</a>. In particular, see the Quickstart page for a step-by-step example of how to use the Polytope software.
+For a more in-depth explanation of how Polytope achieves its feature exctraction, refer to the <a href="./Algorithm/Developer_Guide/Overview">Developer Guide</a>.
 
 !!! Warning
     This project is BETA and will be experimental for the foreseeable future. Interfaces and functionality are likely to change. DO NOT use this software in any project/software that is operational.
+
+# Index
+
+- <a href="./Service/Overview/Overview">Service</a>
+  - <a href="./Service/Overview/Overview">Overview</a>
+  - <a href="./Service/Overview/Overview">Installation</a>
+  - <a href="./Service/Overview/Overview">Quick Start</a>
+  - <a href="./Service/Overview/Overview">Features</a>
+  - <a href="./Service/Overview/Overview">Examples</a>
+
+- <a href="./Algorithm/Overview/Overview">Algorithm</a>
+  - <a href="./Algorithm/Overview/Overview">Overview</a>
+  - <a href="./Algorithm/User_Guide/Getting_started">User Guide</a>
+  - <a href="./Algorithm/Developer_Guide/Overview">Developer Guide</a>
 
     
 # License
