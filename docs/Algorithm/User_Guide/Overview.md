@@ -15,6 +15,8 @@ For a quick guide of how to install and use Polytope, refer to the links below:
 
 - <a href="../Example">Example</a> 
 
+- <a href="../Building_Features">Building Features</a> 
+
 !!!note 
     <!-- For more information about Polytopes' APIs, refer to the [API page](../Developer_Guide/API.md).  -->
     An exhaustive list of all shapes that can currently be requested using Polytope can be found [here](../Developer_Guide/shapes.md).
