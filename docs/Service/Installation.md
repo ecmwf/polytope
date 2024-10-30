@@ -4,7 +4,6 @@ The script automatically places your token in `~/.polytopeapirc` where the clien
 
 Install **earthkit-data** with python3 (>= 3.8) and ``pip`` as follows:
 
-.. code-block:: bash
 
     python3 -m pip install earthkit-data
 
@@ -14,7 +13,6 @@ To use polytope also install its dependencies.
 
 You can install **earthkit-data** with all the optional Polytope packages in one go by using:
 
-.. code-block:: bash
 
     python3 -m pip install earthkit-data[polytope]
 
@@ -36,7 +34,7 @@ python3 -m ipykernel install --user --name=$envname
 
 # Authentication
 
-To access ECMWF data a user needs an ECMWF account. This can be created https://www.ecmwf.int/. Once created a user can find their key at https://api.ecmwf.int/v1/key/. 
+To access ECMWF data a user needs an ECMWF account. This can be created <a href=https://www.ecmwf.int/>https://www.ecmwf.int/</a>. Once created a user can find their key at <a href=https://api.ecmwf.int/v1/key/>https://api.ecmwf.int/v1/key/</a>. 
 
 This should then be placed in their home directory in a file called `~/.polytopeapirc`. Ths file should have the following format:
 
@@ -50,4 +48,4 @@ This should then be placed in their home directory in a file called `~/.polytope
 
 You should now be automatically authenticated when using Polytope Feature Extraction via Earthkit-data.
 
-Once installed and with an api key in place you can follow the <a href="./Quick_Start">Quick Start</a> guide to begin making requests.
+Once installed and with an api key in place you can follow the <a href="../Quick_Start">Quick Start</a> guide to begin making requests.

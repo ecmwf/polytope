@@ -1,7 +1,3 @@
-<h3 align="center">
-<img src="./images/ECMWF_logo.svg.png" width=60%>
-</br>
-
 # Polytope-mars
 
 ## Feature Documentation

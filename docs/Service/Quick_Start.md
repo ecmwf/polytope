@@ -50,9 +50,9 @@ ds.to_xarray()
 
 For more information about each feature see the following pages:
 
-- <a href="./Features/feature">Features</a>
-  - <a href="./Features/timeseries">Timeseries</a>
-  - <a href="./Features/vertical_profile">Vertical Profile</a>
-  - <a href="./Features/polygon">Polygon</a>
-  - <a href="./Features/boundingbox">Bounding Box</a>
-  - <a href="./Features/trajectory">Trajectory</a>
+### <a href="../Features/feature">Features</a>
+  - <a href="../Features/timeseries">Timeseries</a>
+  - <a href="../Features/vertical_profile">Vertical Profile</a>
+  - <a href="../Features/polygon">Polygon</a>
+  - <a href="../Features/boundingbox">Bounding Box</a>
+  - <a href="../Features/trajectory">Trajectory</a>
