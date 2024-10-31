@@ -2,6 +2,12 @@ class PolytopeError(Exception):
     pass
 
 
+class BadRequestError(PolytopeError):
+    def __init__(self, pre_path):
+        self.pre_path = pre_path
+        self.message = f"No data for {pre_path} is available on the FDB."
+
+
 class AxisOverdefinedError(PolytopeError, KeyError):
     def __init__(self, axis):
         self.axis = axis
