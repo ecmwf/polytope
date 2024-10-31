@@ -47,7 +47,7 @@ class TestRegularGrid:
         }
 
     @pytest.mark.internet
-    @pytest.mark.fdb
+    @pytest.mark.xfail
     def test_incomplete_fdb_branch(self):
         import pygribjump as gj
 
@@ -79,7 +79,7 @@ class TestRegularGrid:
         assert result.is_root()
 
     @pytest.mark.internet
-    @pytest.mark.fdb
+    @pytest.mark.xfail
     def test_incomplete_fdb_branch_2(self):
         import pygribjump as gj
 

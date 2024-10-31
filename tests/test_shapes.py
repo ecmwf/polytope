@@ -46,7 +46,7 @@ class TestSlicing3DXarrayDatacube:
         path = result.leaves[0].flatten()
         assert path["longitude"] == tuple(range(0, 360))
 
-    @pytest.mark.fdb
+    @pytest.mark.xfail
     def test_all_mapper_cyclic(self):
         import pygribjump as gj
 

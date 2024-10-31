@@ -43,7 +43,7 @@ class TestSlicingFDBDatacube:
         }
 
     # Testing different shapes
-    @pytest.mark.fdb
+    @pytest.mark.xfail
     @pytest.mark.skip(reason="point and box are not same dimensions")
     def test_fdb_datacube(self):
         import pygribjump as gj
