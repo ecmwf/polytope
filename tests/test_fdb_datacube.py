@@ -120,7 +120,7 @@ class TestSlicingFDBDatacube:
             engine=self.slicer,
             options=self.options,
         )
-        result = self.API.retrieve(request)
+        result = self.API.retrieve(request, context={"a": 1})
         result.pprint()
         assert len(result.leaves) == 1
         assert len(result.leaves[0].result) == 2
