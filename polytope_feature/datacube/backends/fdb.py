@@ -8,9 +8,11 @@ from .datacube import Datacube, TensorIndexTree
 
 
 class FDBDatacube(Datacube):
-    def __init__(self, gj, config=None, axis_options=None, compressed_axes_options=[], alternative_axes=[]):
+    def __init__(self, gj, config=None, axis_options=None, compressed_axes_options=[], alternative_axes=[], context=None):
         if config is None:
             config = {}
+        if context is None:
+            context = {}
 
         super().__init__(axis_options, compressed_axes_options)
 
@@ -24,7 +26,7 @@ class FDBDatacube(Datacube):
 
         self.gj = gj
         if len(alternative_axes) == 0:
-            self.fdb_coordinates = self.gj.axes(partial_request)
+            self.fdb_coordinates = self.gj.axes(partial_request, ctx=context)
         else:
             self.fdb_coordinates = {}
             for axis_config in alternative_axes:

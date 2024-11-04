@@ -39,7 +39,7 @@ class Request:
 
 
 class Polytope:
-    def __init__(self, datacube, engine=None, options=None):
+    def __init__(self, datacube, engine=None, options=None, context=None):
         from .datacube import Datacube
         from .engine import Engine
 
@@ -48,7 +48,9 @@ class Polytope:
 
         axis_options, compressed_axes_options, config, alternative_axes = PolytopeOptions.get_polytope_options(options)
 
-        self.datacube = Datacube.create(datacube, config, axis_options, compressed_axes_options, alternative_axes)
+        self.context = context
+
+        self.datacube = Datacube.create(datacube, config, axis_options, compressed_axes_options, alternative_axes, self.context)
         self.engine = engine if engine is not None else Engine.default()
         self.time = 0
 
@@ -56,14 +58,12 @@ class Polytope:
         """Low-level API which takes a polytope geometry object and uses it to slice the datacube"""
         return self.engine.extract(self.datacube, polytopes)
 
-    def retrieve(self, request: Request, method="standard", context=None):
+    def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
-        if context is None:
-            context = {}
-        logging.info("Starting request for %s ", context)
+        logging.info("Starting request for %s ", self.context)
         self.datacube.check_branching_axes(request)
         request_tree = self.engine.extract(self.datacube, request.polytopes())
-        logging.info("Created request tree for %s ", context)
-        self.datacube.get(request_tree, context)
-        logging.info("Retrieved data for %s ", context)
+        logging.info("Created request tree for %s ", self.context)
+        self.datacube.get(request_tree, self.context)
+        logging.info("Retrieved data for %s ", self.context)
         return request_tree
