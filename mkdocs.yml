@@ -17,9 +17,9 @@ nav:
           - Overview: Service/Overview.md
           - Installation: Service/Installation.md
           - Quick Start: Service/Quick_Start.md
-          - Design Doc: Service/Design_doc.md
           - Features: Service/Features/feature.md
           - Examples: Service/Examples/examples.md
+          - Design Doc: Service/Design_doc.md
     - Algorithm:
           - Overview: Algorithm/Overview/Overview.md
           - Polytope at ECMWF: Algorithm/Overview/Polytope_at_ECMWF.md
@@ -35,3 +35,6 @@ nav:
                 Algorithm/Developer_Guide/API.md
                 # - API levels: Developer_Guide/API.md
                 # - Mid-level Shapes: Developer_Guide/shapes.md
+plugins:
+    - search
+    - mkdocs-jupyter
