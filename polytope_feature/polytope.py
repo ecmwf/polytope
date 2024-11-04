@@ -50,7 +50,9 @@ class Polytope:
 
         self.context = context
 
-        self.datacube = Datacube.create(datacube, config, axis_options, compressed_axes_options, alternative_axes, self.context)
+        self.datacube = Datacube.create(
+            datacube, config, axis_options, compressed_axes_options, alternative_axes, self.context
+        )
         self.engine = engine if engine is not None else Engine.default()
         self.time = 0
 

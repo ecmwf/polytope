@@ -158,7 +158,9 @@ class Datacube(ABC):
         if type(datacube).__name__ == "GribJump":
             from .fdb import FDBDatacube
 
-            fdbdatacube = FDBDatacube(datacube, config, axis_options, compressed_axes_options, alternative_axes, context)
+            fdbdatacube = FDBDatacube(
+                datacube, config, axis_options, compressed_axes_options, alternative_axes, context
+            )
             return fdbdatacube
 
     def check_branching_axes(self, request):
