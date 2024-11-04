@@ -37,9 +37,9 @@ Note that Polytope reads only the user-requested data, instead of whole fields. 
 !!! important
     Note that Polytope reads only the user-requested data, instead of whole fields. Importantly, this implies a significant decrease of the I/O usage when reading data from a datacube.
 
-Polytope feature extraction consists of the algorithm itself, and the service that uses the algorithm to extract features from ECMWF datacubes. Details on the service can be found the Polytope service <a href="./Service/Overview">Overview</a>. While details on the algorithm can be found on the polytope algorithm <a href="./Algorithm/Overview/Overview">Overview</a>.
+Polytope feature extraction consists of the algorithm itself, and the service that uses the algorithm to extract features from ECMWF datacubes. Details on the service can be found in the Polytope service <a href="./Service/Overview">overview</a>, while details on the feature extraction algorithm can be found on the <a href="./Algorithm/Overview/Overview">Polytope algorithm overview</a>.
 
-To learn more about how to use Polytope, refer to the <a href="./Service/Quick_Start">Quick Start</a>. In particular, see the Quickstart page for a step-by-step example of how to use the Polytope software.
+To learn more about how to use Polytope, refer to the <a href="./Service/Quick_Start">Quickstart page</a>. In particular, see the Quickstart page for a step-by-step example of how to use the Polytope software.
 For a more in-depth explanation of how Polytope achieves its feature exctraction, refer to the <a href="./Algorithm/Developer_Guide/Overview">Developer Guide</a>.
 
 !!! Warning
