@@ -39,7 +39,7 @@ Notes:
 
 ### Earthkit-data -->
 
-An example polygon requested via Earthkit-data:
+An example polygon requested via earthkit-data:
 
 ```python
 from polytope_mars.api import PolytopeMars
@@ -70,10 +70,6 @@ This request will return all points contained in `shape` for with forecast date 
 
 `"polytope"` refers to the underlying service being used to return the data. `"emcwf-mars"` is the dataset we are looking to retrieve from. Setting `stream=False` returns all the requested data to us once it is available. `address` points to the endpoint for the polytope server.
 
-Notes: 
-* The data has to exist in the fdb on the polytope server.
-* No config is required to be passed when using this method, it is generated on the server side.
-* Further details on the `from_source` method can be found here: https://earthkit-data.readthedocs.io/en/latest/guide/sources.html
 
 ## Required Fields
 
@@ -86,7 +82,7 @@ For a polygon `type` must be `polygon`.
 
 The values in `points` must correspond to a latitude and a longitude. The first point and last point must also be the same to complete the polygon.
 
-The polygon feature also has a max number of points that can be requested in the perimeter of the polygon, and the max area of the polygon is also constrained based on the vonfig provided.
+The polygon feature also has a max number of points that can be requested in the perimeter of the polygon, and the max area of the polygon is also constrained based on the config provided.
 
 `shape` can also take multiple polygons in a single request in the following form:
 
@@ -127,7 +123,4 @@ The returned values will be:
 * `number: 1, step: 1, Points within shape`
 * `number: 2, step: 0, Points within shape`
 * `number: 2, step: 1, Points within shape`
-
-
-## Optional Fields
 

@@ -2,7 +2,7 @@
 
 Once a user has installed Earthkit-data and has their credentials in place, it is very easy to make a simple request.
 
-An example of a time-series requested via Earthkit-data:
+An example of a time-series requested via earthkit-data:
 
 ```python
 import earthkit.data

@@ -44,7 +44,7 @@ Notes:
 
 ### Earthkit-data -->
 
-An example vertical profile requested via Earthkit-data:
+An example vertical profile requested via earthkit-data:
 
 ```python
 import earthkit.data
@@ -78,11 +78,6 @@ ds = earthkit.data.from_source("polytope", "ecmwf-mars", request, stream=False, 
 The following will return a vertical profile on `2024-10-06 00:00:00` with levels from `0` to `1000` including all levels available in between, for the parameters `164/167/169` at the point given. This data will be returned for each ensemble number requested.
 
 `"polytope"` refers to the underlying service being used to return the data. `"emcwf-mars"` is the dataset we are looking to retrieve from. Setting `stream=False` returns all the requested data to us once it is available. `address` points to the endpoint for the polytope server.
-
-Notes: 
-* The data has to exist in the fdb on the polytope server.
-* No config is required to be passed when using this method, it is generated on the server side.
-* Further details on the `from_source` method can be found here: https://earthkit-data.readthedocs.io/en/latest/guide/sources.html
 
 ## Required Fields
 
@@ -148,7 +143,7 @@ request = {
 
 This is equivalent to the first request presented. 
 
-Atleast one of `range` or `levelist` must be included in the request, but not both. In this case an error will be provided telling the user that `levelist` is overspecified.
+At least one of `range` or `levelist` must be included in the request, but not both. In this case an error will be provided telling the user that `levelist` is overspecified.
 
 Conversely at least one of `range` or `levelist` must be included.
 

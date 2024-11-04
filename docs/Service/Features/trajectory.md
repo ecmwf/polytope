@@ -44,7 +44,7 @@ Notes:
 
 ### Earthkit-data -->
 
-An example trajectory requested via Earthkit-data:
+An example trajectory requested via earthkit-data:
 
 ```python
 import earthkit.data
@@ -80,11 +80,6 @@ The `trajectory` `feature` also contains another field called `padding` with a d
 
 `"polytope"` refers to the underlying service being used to return the data. `"emcwf-mars"` is the dataset we are looking to retrieve from. Setting `stream=False` returns all the requested data to us once it is available. `address` points to the endpoint for the polytope server.
 
-Notes: 
-* The data has to exist in the fdb on the polytope server.
-* No config is required to be passed when using this method, it is generated on the server side.
-* Further details on the `from_source` method can be found here: https://earthkit-data.readthedocs.io/en/latest/guide/sources.html
-
 ## Required Fields
 
 For a trajectory within the `feature` dictionary two fields are required
@@ -101,7 +96,7 @@ The values in `points` can change depending on the `axes`. The default for `axes
 "axes" : ["lat", "long", "level", "step"]
 ```
 
-In this default case a nested list of at least two points with values for `lat`, `long`, `level`, and `step` must be provided. 
+In this default case, a nested list of at least two points with values for `lat`, `long`, `level`, and `step` must be provided. 
 
 Another required field that is within the `feature` dictionary is `padding`. This refers to the radius of the circle swept around the trajectory along which points will be included.
 
@@ -151,6 +146,4 @@ The following points would be returned:
 
 The user does not have to give `step` as the time axis. In the case of a climate dataset `datetime` can also be used.
 
-Combinations such as `"axis" : ['lat', 'step']` will return an error. 
-
-If `step` is included as an `axis` and also in the main body of teh request. An error that the request is overspecified will also be thrown.
+Combinations such as `"axis" : ['lat', 'step']` will return an error if `step` is included as an `axis` and also in the main body of the request. An error that the request is overspecified will also be thrown.

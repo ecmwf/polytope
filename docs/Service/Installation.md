@@ -46,6 +46,6 @@ This should then be placed in their home directory in a file called `~/.polytope
 }
 ```
 
-You should now be automatically authenticated when using Polytope Feature Extraction via Earthkit-data.
+You should now be automatically authenticated when using Polytope feature extraction via earthkit-data.
 
 Once installed and with an api key in place you can follow the <a href="../Quick_Start">Quick Start</a> guide to begin making requests.

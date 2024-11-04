@@ -4,7 +4,7 @@
 
 ### Feature Keyword
 
-Feature extraction expands existing mars requests to include a `feature` keyword that includes a json dictionary taht describes the given feature. This feature is then extracted using the Polytope feature extraction algoithm and only points within the given feature are returned.
+Feature extraction expands existing mars requests to include a `feature` keyword that includes a json dictionary that describes the given feature. This feature is then extracted using the Polytope feature extraction algorithm and only points within the given feature are returned.
 
 ```python
 "feature" : {
@@ -15,7 +15,7 @@ Feature extraction expands existing mars requests to include a `feature` keyword
 
 #### Type
 
-An example of a minimal feature of `type` : `timeseries` can be seen above. A feature dictionary must always contain a `type`. The `type` in this case refers to what feature is being requested, the `type` of feaature requested will then determine the format of the output returned, what other keys can go in the feature and suitable defaults if they are not available. In some cases it may also affect keys outside of the feature dictionary that come from the traditional mars request. For example if `type` : `verticalprofile` and `levtype` : `sfc`, this request wont be sent as a vertical profile expects either `levtype` : `pl/ml`. Other exceptions will be given for each seperate feature `type`.
+An example of a minimal feature of `type` : `timeseries` can be seen above. A feature dictionary must always contain a `type`. The `type` in this case refers to what feature is being requested, the `type` of feaature requested will then determine the format of the output returned, what other keys can go in the feature and suitable defaults if they are not available. In some cases it may also affect keys outside of the feature dictionary that come from the traditional mars request. For example if `type` : `verticalprofile` and `levtype` : `sfc`, this request will not be sent as a vertical profile expects either `levtype` : `pl/ml`. Other exceptions will be given for each separate feature `type`.
 
 The value available for `type` currently are as follows:
 
@@ -34,7 +34,7 @@ A feature dictionary must also contain the requested geometry in some form. For 
 
 #### Axis
 
-A non mandatory field that is available for each feature that isnt present in the above example is `axis`. `axis` determines what field that the data should be enumerated along. In the case of a `timeseries` this will default to `step` meaning the timeseries will be along the `step` axis, however there are other available `axis` such as `datetime`, this would be for climate data which contains no `step` `axis`.
+A non-mandatory field that is available for each feature that is not present in the above example is `axis`. `axis` determines what field that the data should be enumerated along. In the case of a `timeseries` this will default to `step` meaning that the timeseries will be along the `step` axis, however there are other available `axes` such as `datetime`, this would be for climate data which contains no `step` `axis`.
 
 #### Range
 
@@ -48,13 +48,13 @@ A non mandatory field that is available for each feature that isnt present in th
 }
 ```
 
-If this range was included in the above feature dictionary for a `timeseries` it would ask for `step` (due to it being the default axis for timeseries) starting at `0` and ending at `10` with an interval of `2`, the returned steps would be `0,2,4,6,8,10`. Or equivilent to asking for the following in a mars request.
+If this range was included in the above feature dictionary for a `timeseries` it would ask for `step` (due to it being the default axis for timeseries) starting at `0` and ending at `10` with an interval of `2`, the returned steps would be `0,2,4,6,8,10`. This is equivalent to asking for the following in a mars request:
 
 ```python
 "step" : "0/to/10/by/2"
 ```
 
-The above can also be put in the not feature key however it must then be mutually exclusive with `range`. If both or neither are in the request an error is thrown.
+The above can also be put in the body of the request. However it must then be mutually exclusive with `range`. If both or neither are in the request an error is thrown.
 
 `range` can also appear in the following form:
 
@@ -62,18 +62,18 @@ The above can also be put in the not feature key however it must then be mutuall
 "range" : [0,1,4,7,10]
 ```
 
-This will only return the asked steps similar to in a mars request where a user asks for the following:
+This will only return the asked steps similar to in a MARS request where a user asks for the following:
 
 ```python
 "step" : "0/1/4/7/10"
 ```
 
-Again either a `range` within the feature or an explicit `step` within the main body of the request can be used but not both or neither as there is no suitable default value unlike mars.
+Again either a `range` within the feature or an explicit `step` within the main body of the request can be used but not both or neither as there is no suitable default value unlike MARS.
 
 
 ### MARS Fields
 
-The non `feature` elements of the polytope-mars request act similar to the way one would expect when creating a mars request with a few differences.
+The non `feature` elements of the polytope-mars request act similar to the way one would expect when creating a MARS request with a few differences.
 
 * Most fields do not have a default value that will be tried if the field is not in the request.
 * If a user makes a request and data is only available for some of the fields requested an error will be returned. Users will either receive all the data they requested or none.
@@ -152,11 +152,11 @@ request = {
 }
 ```
 
-The above would throw an error that `step` has been over subscribed.
+The above would throw an error that `step` has been over-subscribed.
 
 Ideally an valid mars request should be able to accept a valid `feature` and the polytope-mars request be valid but this may not always be true.
 
-Users can include the `format` key however initally the only value available will be `covjson` or `application/json+covjson`, these will be the default values if `format` is not included. Further formats may be added in the future.
+Users can include the `format` key. However, initally the only value available will be `covjson` or `application/json+covjson`, these will be the default values if `format` is not included. Further formats may be added in the future.
 
 ### Features
 
@@ -164,7 +164,7 @@ The following features will be available for use in polytope-mars.
 
 #### Timeseries
 
-A timeseries request has a `feature` with `type` : `timeseries` and a geomtry in the form of `points` containing a single point with latitude and longitude values. It also requires atleast one time dimension with the default being `step` however `datetime` is also accepted. The following is an example of a timeseries request:
+A timeseries request has a `feature` with `type` : `timeseries` and a geometry in the form of `points` containing a single point with latitude and longitude values. It also requires at least one time dimension with the default being `step`, although `datetime` is also accepted. The following is an example of a timeseries request:
 
 ```python
 request = {
@@ -213,7 +213,7 @@ request = {
 }
 ```
 
-In this case the user is requesting `step` `0-360` on `20241006` for the point `[-9.10, 38.78]`. As the user doesnt specify `interval` all steps between `0-360` that are available. If the datacube is a climate dataset that does not contain step, an error would be thrown as `step` is not in the datacube. In this case the user would have to provide a request like the following:
+In this case the user is requesting `step` `0-360` on `20241006` for the point `[-9.10, 38.78]`. As the user does not specify `interval` all steps between `0-360` that are available. If the datacube is a climate dataset that does not contain step, an error would be thrown as `step` is not in the datacube. In this case the user would have to provide a request like the following:
 
 ```python
 request = {
@@ -308,7 +308,7 @@ request = {
 
 Currently the default for `axes` is `levelist` and is the only valid value for this key. This may change in the future. Users can include this in the request but it is not necessary.
 
-In the above case if a range is provided for a field such as `number` a vertical profile as described above will be provided per `number` or any other range field.
+In the above case if a range is provided for a field such as `number`, a vertical profile as described above will be provided per `number` or any other range field.
 
 CoverageJSON output type: VerticalProfile
 
@@ -471,7 +471,7 @@ Returned coverages as polygons:
 
 Each of these will be an individual coverage with the 3 requested parameters.
 
-The `polygon` feature currently has limits on the size of a returned polygon and the maximum number of points allowed for a requsted polygon.
+The `polygon` feature currently has limits on the size of a returned polygon and the maximum number of points allowed for a requested polygon.
 
 CoverageJSON output type: MultiPoint
 
@@ -481,4 +481,4 @@ CoverageJSON output type: MultiPoint
 CoverageJSON has a number of different output features. Depending on the feature selected the output type will vary.
 
 A coverageCollection is always returned even if there is only a single coverage. 
-A new coverage is created for each ensemble number and depending on the feature type each new date (except in timeseries). The only grouped field is param which will be in the same coverage.
+A new coverage is created for each ensemble number and depending on the feature type each new date (except in timeseries). The only grouped field is `param` which will be in the same coverage.

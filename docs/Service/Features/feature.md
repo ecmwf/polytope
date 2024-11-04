@@ -13,3 +13,11 @@ Follow the links below to see how to request different types of features.
 - [Polygon](polygon.md)
 - [Bounding Box](boundingbox.md)
 - [Trajectory](trajectory.md)
+
+## Notes
+
+Some important notes that hold for all features are that:
+
+* The data has to exist in the fdb on the polytope server.
+* No config is required to be passed when using this method, it is generated on the server side.
+* Further details on the `from_source` method can be found here: https://earthkit-data.readthedocs.io/en/latest/guide/sources.html
