@@ -3,6 +3,7 @@ import operator
 from copy import deepcopy
 from itertools import product
 
+from ...utility.exceptions import BadRequestError
 from ...utility.geometry import nearest_pt
 from .datacube import Datacube, TensorIndexTree
 
@@ -29,6 +30,8 @@ class FDBDatacube(Datacube):
         self.gj = gj
         if len(alternative_axes) == 0:
             self.fdb_coordinates = self.gj.axes(partial_request, ctx=context)
+            if len(self.fdb_coordinates) == 0:
+                raise BadRequestError(partial_request)
         else:
             self.fdb_coordinates = {}
             for axis_config in alternative_axes:
