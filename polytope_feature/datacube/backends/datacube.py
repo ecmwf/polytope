@@ -148,17 +148,19 @@ class Datacube(ABC):
         return path
 
     @staticmethod
-    def create(datacube, config={}, axis_options={}, compressed_axes_options=[], alternative_axes=[]):
+    def create(datacube, config={}, axis_options={}, compressed_axes_options=[], alternative_axes=[], context=None):
         # TODO: get the configs as None for pre-determined value and change them to empty dictionary inside the function
         if type(datacube).__name__ == "DataArray":
             from .xarray import XArrayDatacube
 
-            xadatacube = XArrayDatacube(datacube, axis_options, compressed_axes_options)
+            xadatacube = XArrayDatacube(datacube, axis_options, compressed_axes_options, context)
             return xadatacube
         if type(datacube).__name__ == "GribJump":
             from .fdb import FDBDatacube
 
-            fdbdatacube = FDBDatacube(datacube, config, axis_options, compressed_axes_options, alternative_axes)
+            fdbdatacube = FDBDatacube(
+                datacube, config, axis_options, compressed_axes_options, alternative_axes, context
+            )
             return fdbdatacube
 
     def check_branching_axes(self, request):
