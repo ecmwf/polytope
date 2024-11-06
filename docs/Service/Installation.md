@@ -14,7 +14,7 @@ You can install **earthkit-data** with all the optional Polytope packages in one
 
     python3 -m pip install earthkit-data[polytope]
 
-For further details on earthkit-data installation you can visit this page: https://earthkit-data.readthedocs.io/en/latest/install.html.
+For further details on earthkit-data installation you can visit this page: <a href=https://earthkit-data.readthedocs.io/en/latest/install.html>https://earthkit-data.readthedocs.io/en/latest/install.html</a>.
 
 We recommend to create a conda environment for your earthkit installation. This can be done as follows:
 
