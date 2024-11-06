@@ -73,7 +73,7 @@ This request will return all points contained in `shape` for with forecast date 
 
 ## Required Fields
 
-For a polygon within the `feature` dictionary two fields are required
+For a polygon two fields are required within the `feature` dictionary
 
 * `type`
 * `shape`

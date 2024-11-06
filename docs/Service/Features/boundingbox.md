@@ -73,7 +73,7 @@ This request will return a bounding box with forecast date of `20240930T000000` 
 
 ## Required Fields
 
-For a bounding box within the `feature` dictionary two fields are required
+For a bounding box two fields are required within the `feature` dictionary
 
 * `type`
 * `points`

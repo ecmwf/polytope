@@ -82,7 +82,7 @@ The `trajectory` `feature` also contains another field called `padding` with a d
 
 ## Required Fields
 
-For a trajectory within the `feature` dictionary two fields are required
+For a trajectory two fields are required within the `feature` dictionary 
 
 * `type`
 * `points`

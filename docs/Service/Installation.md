@@ -30,7 +30,7 @@ python3 -m ipykernel install --user --name=$envname
 To access ECMWF data you need an ECMWF account. This can be created <a href=https://www.ecmwf.int/>https://www.ecmwf.int/</a>. Once created, you can find your key at <a href=https://api.ecmwf.int/v1/key/>https://api.ecmwf.int/v1/key/</a>.
 
 **DISCLAIMER**
-> Polytope is currently available for users at the national meteorological services of ECMWF’s Member and Co-operating States.
+> *Polytope is currently available for users at the national meteorological services of ECMWF’s Member and Co-operating States.*
 
 Copy your API key into your home directory, in a file called `~/.polytopeapirc`. Ths file should have the following format:
 
