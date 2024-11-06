@@ -1,7 +1,5 @@
 # Installation
 
-The script automatically places your token in `~/.polytopeapirc` where the client will pick it up. The token is a long-lived ("offline_access") token.
-
 Install **earthkit-data** with python3 (>= 3.8) and ``pip`` as follows:
 
 
