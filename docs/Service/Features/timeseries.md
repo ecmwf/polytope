@@ -75,11 +75,11 @@ ds = earthkit.data.from_source("polytope", "ecmwf-mars", request, stream=False, 
 ```
 The following will return a timeseries starting on `2024-10-06 00:00:00` with steps from `0` to `360` including all steps available in between, for the parameters `164/167/169` at the point given. This data will be returned for each ensemble number requested.
 
-`"polytope"` refers to the underlying service being used to return the data. `"emcwf-mars"` is the dataset we are looking to retrieve from. Setting `stream=False` returns all the requested data to us once it is available. `address` points to the endpoint for the polytope server.
+`"polytope"` refers to the underlying service being used to return the data. `"ecmwf-mars"` is the dataset we are looking to retrieve from. Setting `stream=False` returns all the requested data to us once it is available. `address` points to the endpoint for the polytope server.
 
 ## Required Fields
 
-For a timeseries within the `feature` dictionary three fields are required
+For a timeseries three fields are required within the `feature` dictionary:
 
 * `type`
 * `points`
@@ -87,9 +87,9 @@ For a timeseries within the `feature` dictionary three fields are required
 
 For a timeseries `type` must be `timeseries`.
 
-`points` has to be a nested list with two points corresponding to a latitude and a longitude.
+`points` must be a nested list with two points corresponding to a latitude and a longitude.
 
-`axes` refers to the axes on which to generate the timeseries. In this case the timeseries is generated across `step` based on the inputted `range`. However if the data requested was a climate dataset the `axes` may be `datetime` denoting that the timeseries is generated across that axis.
+`axes` refers to the axes on which to generate the timeseries. In this case the timeseries is generated across `step` based on the feature `range` (see below). However if the data requested was a climate dataset, the `axes` may be `datetime` denoting that the timeseries is generated across that axis.
 
 
 ## Optional Fields

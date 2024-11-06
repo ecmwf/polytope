@@ -1,6 +1,6 @@
 # Quick Start
 
-Once a user has installed Earthkit-data and has their credentials in place, it is very easy to make a simple request.
+Once a user has installed Earthkit-data and has their credentials in place, you can make a simple request.
 
 An example of a time-series requested via earthkit-data:
 
@@ -34,7 +34,7 @@ ds = earthkit.data.from_source("polytope", "ecmwf-mars", request, stream=False, 
 ```
 The following will return a timeseries starting on `2024-10-06 00:00:00` with steps from `0` to `360` including all steps available in between, for the parameters `164/167/169` at the point given. This data will be returned for each ensemble number requested.
 
-`"polytope"` refers to the underlying service being used to return the data. `"emcwf-mars"` is the dataset we are looking to retrieve from. Setting `stream=False` returns all the requested data to us once it is available. `address` points to the endpoint for the polytope server.
+`"polytope"` refers to the underlying service being used to return the data. `"ecmwf-mars"` is the dataset we are looking to retrieve from. Setting `stream=False` returns all the requested data to us once it is available. `address` points to the endpoint for the polytope server.
 
 To view the returned covjson run:
 
@@ -42,7 +42,7 @@ To view the returned covjson run:
 ds._json()
 ```
 
-To convert your covjson into an xarray the following can  be done:
+To convert your covjson into an xarray the following can be done:
 
 ```
 ds.to_xarray()
