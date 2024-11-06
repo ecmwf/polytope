@@ -1,22 +1,15 @@
 # Installation
 
-The script automatically places your token in `~/.polytopeapirc` where the client will pick it up. The token is a long-lived ("offline_access") token.
-
-Install **earthkit-data** with python3 (>= 3.8) and ``pip`` as follows:
-
-
-    python3 -m pip install earthkit-data
-
-The package installed like this is **minimal** supporting only GRIB and NetCDF data and cannot access remote services other than URLs. If you want to use more data types or remote services you need to install the optional Python packages.
-
-To use polytope also install its dependencies.
-
-You can install **earthkit-data** with all the optional Polytope packages in one go by using:
+Install **earthkit-data** with python3 (>= 3.10) and ``pip`` as follows:
 
 
     python3 -m pip install earthkit-data[polytope]
 
-For further details on earthkit-data installation you can visit this page: https://earthkit-data.readthedocs.io/en/latest/install.html.
+Installing like this gives you a **minimal** package which can talk to Polytope. If you want to use more data types or remote services you need to install other optional features of earthkit-data, or just install all of them:
+
+    python3 -m pip install earthkit-data[all]
+
+For further details on earthkit-data installation you can visit this page: <a href=https://earthkit-data.readthedocs.io/en/latest/install.html>https://earthkit-data.readthedocs.io/en/latest/install.html</a>.
 
 We recommend to create a conda environment for your earthkit installation. This can be done as follows:
 
@@ -34,9 +27,12 @@ python3 -m ipykernel install --user --name=$envname
 
 # Authentication
 
-To access ECMWF data a user needs an ECMWF account. This can be created <a href=https://www.ecmwf.int/>https://www.ecmwf.int/</a>. Once created a user can find their key at <a href=https://api.ecmwf.int/v1/key/>https://api.ecmwf.int/v1/key/</a>. 
+To access ECMWF data you need an ECMWF account. This can be created <a href=https://www.ecmwf.int/>https://www.ecmwf.int/</a>. Once created, you can find your key at <a href=https://api.ecmwf.int/v1/key/>https://api.ecmwf.int/v1/key/</a>.
 
-This should then be placed in their home directory in a file called `~/.polytopeapirc`. Ths file should have the following format:
+**DISCLAIMER**
+> *Polytope is currently available for users at the national meteorological services of ECMWF’s Member and Co-operating States.*
+
+Copy your API key into your home directory, in a file called `~/.polytopeapirc`. Ths file should have the following format:
 
 
 ```
@@ -46,6 +42,6 @@ This should then be placed in their home directory in a file called `~/.polytope
 }
 ```
 
-You should now be automatically authenticated when using Polytope Feature Extraction via Earthkit-data.
+You should now be automatically authenticated when using Polytope feature extraction via earthkit-data.
 
-Once installed and with an api key in place you can follow the <a href="../Quick_Start">Quick Start</a> guide to begin making requests.
+After following these steps, go to the <a href="../Quick_Start">Quick Start</a> guide to begin making requests.
