@@ -42,7 +42,7 @@ Notes:
 An example polygon requested via earthkit-data:
 
 ```python
-from polytope_mars.api import PolytopeMars
+import earthkit.data
 
 request = {
     "class" : "od",
@@ -63,7 +63,7 @@ request = {
     "format" : "covjson",
 }
 
-result = PolytopeMars().extract(request)
+ds = earthkit.data.from_source("polytope", "ecmwf-mars", request, stream=False, address='polytope.ecmwf.int')
 ```
 
 This request will return all points contained in `shape` for with forecast date of `20240930T000000` for `step` `0`, ensemble `number` `1` and the three prvoided parameters.
@@ -93,8 +93,6 @@ The polygon feature also has a max number of points that can be requested in the
 User can also request ranges for other keys such as `number`. In this case the polygon cutout will be returned for each of the values requested.
 
 ```python
-from polytope_mars.api import PolytopeMars
-
 request = {
     "class" : "od",
     "stream" : "enfo",
@@ -113,8 +111,6 @@ request = {
 	},
     "format" : "covjson",
 }
-
-result = PolytopeMars().extract(request)
 ```
 
 The returned values will be:

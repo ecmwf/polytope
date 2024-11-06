@@ -1,6 +1,6 @@
 # Installation
 
-Install **earthkit-data** with python3 (>= 3.8) and ``pip`` as follows:
+Install **earthkit-data** with python3 (>= 3.10) and ``pip`` as follows:
 
 
     python3 -m pip install earthkit-data

@@ -104,7 +104,7 @@ For a timeseries `type` must be `timeseries`.
     }
 ```
 
-A timerseries across `step` will start at step `0` and end at step `360` with all steps found in between being included. `range` can also contain `interval`.
+A timeseries across `step` will start at step `0` and end at step `360` with all steps found in between being included. `range` can also contain `interval`.
 
 ```python
     "axes": "step",
