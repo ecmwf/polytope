@@ -15,7 +15,7 @@ Feature extraction expands existing mars requests to include a `feature` keyword
 
 #### Type
 
-An example of a minimal feature of `type` : `timeseries` can be seen above. A feature dictionary must always contain a `type`. The `type` in this case refers to what feature is being requested, the `type` of feaature requested will then determine the format of the output returned, what other keys can go in the feature and suitable defaults if they are not available. In some cases it may also affect keys outside of the feature dictionary that come from the traditional mars request. For example if `type` : `verticalprofile` and `levtype` : `sfc`, this request will not be sent as a vertical profile expects either `levtype` : `pl/ml`. Other exceptions will be given for each separate feature `type`.
+An example of a minimal feature of `type` : `timeseries` can be seen above. A feature dictionary must always contain a `type`. The `type` in this case refers to what feature is being requested, the `type` of feature requested will then determine the format of the output returned, what other keys can go in the feature and suitable defaults if they are not available. In some cases it may also affect keys outside of the feature dictionary that come from the traditional mars request. For example if `type` : `verticalprofile` and `levtype` : `sfc`, this request will not be sent as a vertical profile expects either `levtype` : `pl/ml`. Other exceptions will be given for each separate feature `type`.
 
 The value available for `type` currently are as follows:
 
@@ -156,7 +156,7 @@ The above would throw an error that `step` has been over-subscribed.
 
 Ideally an valid mars request should be able to accept a valid `feature` and the polytope-mars request be valid but this may not always be true.
 
-Users can include the `format` key. However, initally the only value available will be `covjson` or `application/json+covjson`, these will be the default values if `format` is not included. Further formats may be added in the future.
+Users can include the `format` key. However, initially the only value available will be `covjson` or `application/json+covjson`, these will be the default values if `format` is not included. Further formats may be added in the future.
 
 ### Features
 
@@ -252,7 +252,7 @@ CoverageJSON output type: PointSeries
 
 #### Vertical Profile
 
-A vertical profile request has a `feature` with `type` : `verticalprofile` and a geomtry in the form of `points` containing a single point with latitude and longitude values. It also requires a `levtype` that is not `sfc` and a `levelist` in the request or as part of the `feature`. The following is an example of a vertical profile request:
+A vertical profile request has a `feature` with `type` : `verticalprofile` and a geometry in the form of `points` containing a single point with latitude and longitude values. It also requires a `levtype` that is not `sfc` and a `levelist` in the request or as part of the `feature`. The following is an example of a vertical profile request:
 
 ```python
 request = {
@@ -302,7 +302,7 @@ request = {
 }
 ```
 
-`levtype` can either be `ml` or `pl` but atleast one must be present.
+`levtype` can either be `ml` or `pl` but at least one must be present.
 
 `levelist` can either be in the main body of the request or in `range` as described in the `range` section. If no `interval` is provided all values in from `start` to `end` will be requested.
 
@@ -314,7 +314,7 @@ CoverageJSON output type: VerticalProfile
 
 #### Trajectory
 
-A trajectory request has a `feature` with `type` : `trajectory` and a geomtry in the form of `points` containing atleast two points with latitude and longitude, a level value, and a time value if no `axes` is provided. This is because the default `axes` are as follows:
+A trajectory request has a `feature` with `type` : `trajectory` and a geometry in the form of `points` containing at least two points with latitude and longitude, a level value, and a time value if no `axes` is provided. This is because the default `axes` are as follows:
 
 ```python
 "axes" : ["lat", "long", "level", "step"]
@@ -417,7 +417,7 @@ CoverageJSON output type: Trajectory
 
 #### Polygon
 
-A polygon request has a `feature` with `type` : `poylgon` and a geomtry in the form of `shape` containing atleast one list containing three points with latitude and longitude with the first and final point being the same to complete the polygon. The user can provide multiple lists of points forming polygons in the same request. An example of the `polygon` feature is seen below:
+A polygon request has a `feature` with `type` : `poylgon` and a geometry in the form of `shape` containing at least one list containing three points with latitude and longitude with the first and final point being the same to complete the polygon. The user can provide multiple lists of points forming polygons in the same request. An example of the `polygon` feature is seen below:
 
 ```python
 request = {

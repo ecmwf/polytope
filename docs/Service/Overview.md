@@ -10,6 +10,12 @@ Extracting features directly offers two main advantages:
 
 - Reduced post-processing needs for users after extraction, making the data more analysis-ready.
 
+<div style="text-align:center">
+<p style="float: middle; margin: 0 5px 0 0px;">
+    <img src="../../images/polytope_feature.png" alt="Example Cut Out" width="750"/>
+</p>
+</div>
+
 ## Polytope Feature Extraction vs Web MARS
 
 Feature Extraction differs from Web-MARS by allowing users to request specific features rather than only global fields. However, Polytope does also allow users to request global fields by simply omitting the `feature` keyword from the request. 

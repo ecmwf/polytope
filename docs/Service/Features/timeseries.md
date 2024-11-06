@@ -79,7 +79,7 @@ The following will return a timeseries starting on `2024-10-06 00:00:00` with st
 
 ## Required Fields
 
-For a timeseries three fields are required within the `feature` dictionary:
+For a timeseries within the `feature` dictionary three fields are required
 
 * `type`
 * `points`
@@ -87,9 +87,9 @@ For a timeseries three fields are required within the `feature` dictionary:
 
 For a timeseries `type` must be `timeseries`.
 
-`points` must be a nested list with two points corresponding to a latitude and a longitude.
+`points` must be a nested list with a points containing a latitude and a longitude.
 
-`axes` refers to the axes on which to generate the timeseries. In this case the timeseries is generated across `step` based on the feature `range` (see below). However if the data requested was a climate dataset, the `axes` may be `datetime` denoting that the timeseries is generated across that axis.
+`axes` refers to the axes on which to generate the timeseries. In this case the timeseries is generated across `step` based on the inputted `range`. However if the data requested was a climate dataset the `axes` may be `datetime` denoting that the timeseries is generated across that axis.
 
 
 ## Optional Fields

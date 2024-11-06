@@ -58,7 +58,7 @@ request = {
     "step": "0",
     "feature" : {
         "type" : "polygon",
-        "shape" : [[-1, 1], [-1, 0], [0, 1], [-1, 1]],
+        "shape" : [[-1, 1], [-1, 0], [0, 1]],
 	},
     "format" : "covjson",
 }
@@ -68,7 +68,7 @@ ds = earthkit.data.from_source("polytope", "ecmwf-mars", request, stream=False, 
 
 This request will return all points contained in `shape` for with forecast date of `20240930T000000` for `step` `0`, ensemble `number` `1` and the three prvoided parameters.
 
-`"polytope"` refers to the underlying service being used to return the data. `"emcwf-mars"` is the dataset we are looking to retrieve from. Setting `stream=False` returns all the requested data to us once it is available. `address` points to the endpoint for the polytope server.
+`"polytope"` refers to the underlying service being used to return the data. `"ecmwf-mars"` is the dataset we are looking to retrieve from. Setting `stream=False` returns all the requested data to us once it is available. `address` points to the endpoint for the polytope server.
 
 
 ## Required Fields
@@ -80,7 +80,7 @@ For a polygon within the `feature` dictionary two fields are required
 
 For a polygon `type` must be `polygon`.
 
-The values in `points` must correspond to a latitude and a longitude. The first point and last point must also be the same to complete the polygon.
+The values in `points` must correspond to a latitude and a longitude. The first point is assumed to be the last point, however users can also provide the last point in the request to complete the polygon.
 
 The polygon feature also has a max number of points that can be requested in the perimeter of the polygon, and the max area of the polygon is also constrained based on the config provided.
 

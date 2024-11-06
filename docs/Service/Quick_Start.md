@@ -1,6 +1,6 @@
 # Quick Start
 
-Once a user has installed Earthkit-data and has their credentials in place, you can make a simple request.
+Once a user has installed earthkit-data and has their credentials in place, you can make a simple request.
 
 An example of a time-series requested via earthkit-data:
 
@@ -48,11 +48,4 @@ To convert your covjson into an xarray the following can be done:
 ds.to_xarray()
 ```
 
-For more information about each feature see the following pages:
-
-- <a href="../Features/feature">Features</a>
-    - <a href="../Features/timeseries">Timeseries</a>
-    - <a href="../Features/vertical_profile">Vertical Profile</a>
-    - <a href="../Features/polygon">Polygon</a>
-    - <a href="../Features/boundingbox">Bounding Box</a>
-    - <a href="../Features/trajectory">Trajectory</a>
+For more information about each feature see the <a href="../Features/feature">Features</a> page.

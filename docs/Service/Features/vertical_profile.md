@@ -77,7 +77,7 @@ ds = earthkit.data.from_source("polytope", "ecmwf-mars", request, stream=False, 
 ```
 The following will return a vertical profile on `2024-10-06 00:00:00` with levels from `0` to `1000` including all levels available in between, for the parameters `164/167/169` at the point given. This data will be returned for each ensemble number requested.
 
-`"polytope"` refers to the underlying service being used to return the data. `"emcwf-mars"` is the dataset we are looking to retrieve from. Setting `stream=False` returns all the requested data to us once it is available. `address` points to the endpoint for the polytope server.
+`"polytope"` refers to the underlying service being used to return the data. `"ecmwf-mars"` is the dataset we are looking to retrieve from. Setting `stream=False` returns all the requested data to us once it is available. `address` points to the endpoint for the polytope server.
 
 ## Required Fields
 
@@ -93,7 +93,7 @@ For a vertical profile `type` must be `verticalprofile`.
 
 ## Optional Fields
 
-`axes` refers to the axes on which to generate the vertical profile. In this case the vertical profile is generated accross `levelist` based on the inputted `range`. In the vertical profile this field is optional as the default is assumed to be `levelist` if not given.
+`axes` refers to the axes on which to generate the vertical profile. In this case the vertical profile is generated across `levelist` based on the inputted `range`. In the vertical profile this field is optional as the default is assumed to be `levelist` if not given.
 
 `range` is an optional field within `feature`. It refers to the extent of the `axes` on which the vertical profile will be generated. In the above case where:
 
