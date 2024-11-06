@@ -43,7 +43,7 @@ Notes:
 
 ### Earthkit-data -->
 
-An example of a time-series requested via Earthkit-data:
+An example of a time-series requested via earthkit-data:
 
 ```python
 import earthkit.data
@@ -62,7 +62,7 @@ request = {
     "feature" : {
         "type" : "timeseries",
         "points": [[-9.10, 38.78]],
-        "axes": "step",
+        "axis": "step",
         "range" : {
             "start" : 0,
             "end" : 360,
@@ -75,12 +75,7 @@ ds = earthkit.data.from_source("polytope", "ecmwf-mars", request, stream=False, 
 ```
 The following will return a timeseries starting on `2024-10-06 00:00:00` with steps from `0` to `360` including all steps available in between, for the parameters `164/167/169` at the point given. This data will be returned for each ensemble number requested.
 
-`"polytope"` refers to the underlying service being used to return the data. `"emcwf-mars"` is the dataset we are looking to retrieve from. Setting `stream=False` returns all the requested data to us once it is available. `address` points to the endpoint for the polytope server.
-
-Notes: 
-* The data has to exist in the fdb on the polytope server.
-* No config is required to be passed when using this method, it is generated on the server side.
-* Further details on the `from_source` method can be found here: https://earthkit-data.readthedocs.io/en/latest/guide/sources.html
+`"polytope"` refers to the underlying service being used to return the data. `"ecmwf-mars"` is the dataset we are looking to retrieve from. Setting `stream=False` returns all the requested data to us once it is available. `address` points to the endpoint for the polytope server.
 
 ## Required Fields
 
@@ -88,31 +83,31 @@ For a timeseries within the `feature` dictionary three fields are required
 
 * `type`
 * `points`
-* `axes`
+* `axis`
 
 For a timeseries `type` must be `timeseries`.
 
-`points` has to be a nested list with two points corresponding to a latitude and a longitude.
+`points` must be a nested list with a points containing a latitude and a longitude.
 
-`axes` refers to the axes on which to generate the timeseries. In this case the timeseries is generated accross `step` based on the inputted `range`. However if the data requested was a climate dataset the `axes` may be `datetime` denoting that the timeseries is generated accross that axes.
+`axis` refers to the axis on which to generate the timeseries. In this case the timeseries is generated across `step` based on the inputted `range`. However if the data requested was a climate dataset the `axis` may be `datetime` denoting that the timeseries is generated across that axis.
 
 
 ## Optional Fields
 
-`range` is an optional field within `feature`. It refers to the extent of the `axes` on which the timeseries will be generated. In the above case where:
+`range` is an optional field within `feature`. It refers to the extent of the `axis` on which the timeseries will be generated. In the above case where:
 
 ```python
-    "axes": "step",
+    "axis": "step",
     "range" : {
         "start" : 0,
         "end" : 360,
     }
 ```
 
-A timerseries accross `step` will start at step `0` and end at step `360` with all steps found in between being included. `range` can also contain `interval`.
+A timeseries across `step` will start at step `0` and end at step `360` with all steps found in between being included. `range` can also contain `interval`.
 
 ```python
-    "axes": "step",
+    "axis": "step",
     "range" : {
         "start" : 0,
         "end" : 360,
@@ -121,7 +116,7 @@ A timerseries accross `step` will start at step `0` and end at step `360` with a
 ```
 In this case every second step will be returned if it exists.
 
-As `range` is an optional field it can be left out, however there is not a default value. Instead the user has to include the timeseries `axes` in the main body of the request like below:
+As `range` is an optional field it can be left out, however there is not a default value. Instead the user has to include the timeseries `axis` in the main body of the request like below:
 
 ```python
 request = {
@@ -139,7 +134,7 @@ request = {
     "feature" : {
         "type" : "timeseries",
         "points": [[-9.10, 38.78]],
-        "axes": "step",
+        "axis": "step",
     },
     "format": "covjson",
 }
@@ -147,8 +142,6 @@ request = {
 
 This is equivalent to the first request presented. 
 
-Atleast one of `range` or `step` must be included in the request, but not both. In this case an error will be provided telling the user that `step` is overspecified.
+At least one of `range` or `step` must be included in the request, but not both. In this case an error will be provided telling the user that `step` is overspecified.
 
 Conversely at least one of `range` or `step` must be included.
-
-## Alternate Examples
