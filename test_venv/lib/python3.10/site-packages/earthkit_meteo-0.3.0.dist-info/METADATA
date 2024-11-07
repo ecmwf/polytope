@@ -1,0 +1,95 @@
+Metadata-Version: 2.1
+Name: earthkit-meteo
+Version: 0.3.0
+Summary: Meteorological computations
+Author-email: "European Centre for Medium-Range Weather Forecasts (ECMWF)" <software.support@ecmwf.int>
+License: Apache License Version 2.0
+Project-URL: Documentation, https://earthkit-meteo.readthedocs.io/
+Project-URL: Homepage, https://github.com/ecmwf/earthkit-meteo/
+Project-URL: Issues, https://github.com/ecmwf/earthkit-meteo.issues
+Project-URL: Repository, https://github.com/ecmwf/earthkit-meteo/
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: numpy
+Provides-Extra: test
+Requires-Dist: pytest ; extra == 'test'
+Requires-Dist: pytest-cov ; extra == 'test'
+
+# earthkit-meteo
+
+<!--
+[![PyPI pyversions](https://img.shields.io/pypi/pyversions/earthkit-meteo.svg)](https://pypi.python.org/pypi/earthkit-meteo/) -->
+
+**DISCLAIMER**
+This project is **BETA** and will be **Experimental** for the foreseeable future.
+Interfaces and functionality are likely to change, and the project itself may be scrapped.
+**DO NOT** use this software in any project/software that is operational.
+
+**earthkit-meteo** is a Python package providing meteorological computations using **numpy** input and output.
+
+```python
+from earthkit.meteo import thermo
+import numpy as np
+
+t = np.array([264.12, 261.45]) # Kelvins
+p = np.array([850, 850]) * 100. # Pascals
+
+theta = thermo.potential_temperature(t, p)
+```
+
+## Documentation
+
+The documentation can be found at https://earthkit-meteo.readthedocs.io/.
+
+## Install
+
+Install via `pip` with:
+
+```
+$ pip install earthkit-meteo
+```
+
+More details, such as how to install any necessary binaries, can be found  at https://earthkit-meteo.readthedocs.io/en/latest/install.html.
+
+Alternatively, install via `conda` with:
+
+```
+$ conda install earthkit-meteo -c conda-forge
+```
+
+This will bring in some necessary binary dependencies for you.
+
+## License
+
+```
+Copyright 2022, European Centre for Medium Range Weather Forecasts.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+In applying this licence, ECMWF does not waive the privileges and immunities
+granted to it by virtue of its status as an intergovernmental organisation
+nor does it submit to any jurisdiction.
+```

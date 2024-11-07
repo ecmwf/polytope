@@ -1,0 +1,3 @@
+[console_scripts]
+polytope = polytope.cli.cli:cli
+

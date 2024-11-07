@@ -1,0 +1,42 @@
+Metadata-Version: 2.1
+Name: hda
+Version: 2.18
+Summary: API to harmonised data access for DIAS/WEkEO
+Home-page: https://github.com/ecmwf/hda
+Author: ECMWF
+Author-email: software.support@ecmwf.int
+License: Apache 2.0
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
+License-File: LICENSE.txt
+
+# WEkEO HDA API Client
+
+This package provides a fully compliant Python 3 client that can be used to search and download products using the Harmonized Data Access WEkEO API.
+
+HDA is a RESTful interface allowing users to search and download WEkEO datasets.
+
+Documentation about its usage can be found at https://www.wekeo.eu/.
+
+The documentation for this package can be found at: https://hda.readthedocs.io/en/latest/
+
+## Contribution
+Contribute to the development of this client by creating an account on GitHub. You can follow this guidelines for a general overview of the needed steps: https://github.com/firstcontributions/first-contributions.
+
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+
+Please make sure to update this README as appropriate - changes on the interface, version etc.
+
+## Licence
+Please refer to LICENSE.txt

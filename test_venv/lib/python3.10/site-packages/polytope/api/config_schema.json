@@ -1,0 +1,20 @@
+{
+    "type": "object",
+    "properties": {
+        "address": {
+            "type": "string"
+        },
+        "port": {"type": "integer"},
+        "username": {"type": "string"},
+        "key_path": {"type": "string"},
+        "insecure": {"type": "boolean"},
+        "skip_tls": {"type": "boolean"},
+        "quiet": {"type": "boolean"},
+        "verbose": {"type": "boolean"},
+        "log_file": {"type": "string"},
+        "log_level": {"type": "string"},
+        "user_key": {"type": "string"},
+        "user_email": {"type": "string"},
+        "password": {"type": "string"}
+    }
+}

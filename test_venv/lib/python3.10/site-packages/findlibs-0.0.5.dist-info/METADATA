@@ -1,0 +1,33 @@
+Metadata-Version: 2.1
+Name: findlibs
+Version: 0.0.5
+Summary: A packages to search for shared libraries on various platforms
+Home-page: https://github.com/ecmwf/findlibs
+Author: European Centre for Medium-Range Weather Forecasts (ECMWF)
+Author-email: software.support@ecmwf.int
+License: Apache License Version 2.0
+Keywords: tool
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
+License-File: LICENSE
+
+# findlibs
+
+A Python package that search for shared libraries on various platforms.
+
+```python
+import findlibs
+lib = findlibs.find("eccodes")
+
+# If package name differs from library name use:
+lib = findlibs.find(lib_name="odccore", pkg_name="odc")
+```

@@ -1,0 +1,15 @@
+id: near-surface-air-temperature
+
+criteria:
+- {paramId: 167, shortName: 2t}
+- {paramId: 130, shortName: t}
+- {centre: edzw, paramId: 167}
+- {centre: edzw, paramId: 500015}
+- {centre: edzw, paramId: 500016}
+- {standard_name: air_temperature}
+- {standard_name: temp_scrn}
+- {long_name: near-surface air temperature}
+- {long_name: 2 metre temperature}
+- {long_name: Mean 2 metre temperature}
+- {long_name: screen level temperature}
+- {stash_code: 3236}

@@ -1,0 +1,25 @@
+---
+id: mean-sea-level-pressure
+optimal: MEAN_SEA_LEVEL_PRESSURE_IN_HPA
+
+styles:
+
+  MEAN_SEA_LEVEL_PRESSURE_IN_PA:
+    type: Contour
+    line_colors: "#33334d"
+    linewidths: [0.5, 0.5, 0.5, 1]
+    labels: true
+    levels:
+      step: 400
+    units: Pa
+    legend_style: null
+
+  MEAN_SEA_LEVEL_PRESSURE_IN_HPA:
+    type: Contour
+    line_colors: "#33334d"
+    linewidths: [0.5, 0.5, 0.5, 1]
+    labels: true
+    levels:
+      step: 4
+    units: hPa
+    legend_style: null

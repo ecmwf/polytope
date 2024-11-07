@@ -1,0 +1,2 @@
+[earthkit.plots.plugins]
+default = default

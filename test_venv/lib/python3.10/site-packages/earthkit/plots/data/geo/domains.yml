@@ -1,0 +1,66 @@
+# The domain extents defined in this file do not imply the expression of any
+# opinion whatsoever on the part of ECMWF concerning the legal status of any
+# continent, country, territory or area or of its authorities, or concerning the
+# delimitation of its frontiers or boundaries.
+domains:
+  # Domain bounds given as East, West, North, South
+  Europe:
+    bounds: [2502500, 7497500, 752500, 5497500]
+    crs:
+      name: LambertAzimuthalEqualArea
+      central_latitude: 52
+      central_longitude: 10
+      false_easting: 4321000
+      false_northing: 3210000
+
+  Central Europe: [2, 24, 45, 55]
+  Northeast Europe: [15, 40, 45, 72]
+  Northwest Europe: [-25, 15, 45, 72]
+  southeast Europe: [15, 40, 34, 45]
+  Southwest Europe: [-25, 15, 34, 45]
+  Mediterranean: [-8, 36, 28, 44]
+
+  Svalbard: [9, 33, 76, 81]
+
+  Africa: [-22, 54, -37, 40]
+
+  Antarctic:
+    bounds: [-4000000, 4000000, -4000000, 4000000]
+    crs:
+      name: SouthPolarStereo
+
+  Arctic:
+    bounds: [-4000000, 4000000, -4000000, 4000000]
+    crs:
+      name: NorthPolarStereo
+  Asia:
+    bounds: [30, 179, -20, 80]
+    crs:
+      name: PlateCarree
+
+  Oceania: [105, 240, -50, 30]
+
+  North Atlantic: [-50, 35, 32, 72]
+  North America: [-140, -60, 2, 85]
+  South America: [-87, -32, 17, -57]
+  Contiguous United States: [-120, -72, 24, 48]
+
+alternate_names:
+  Contiguous United States: [CONUS]
+  United States: [USA, United States of America]
+  United Kingdom: [UK, GB, Great Britain]
+  Russian Federation: [Russia]
+  Republic of Korea: [South Korea]
+  Dem. Rep. Korea: [North Korea, DPRK]
+
+# Countries whose names are usually prefixed with "the"
+the_countries:
+- Bahamas
+- Contiguous United States
+- Democratic Republic of the Congo
+- Netherlands
+- Philippines
+- United Kingdom
+- United States
+- Czech Republic
+- North Atlantic

@@ -1,0 +1,26 @@
+---
+id: sea-surface-temperature
+optimal: SEA_SURFACE_TEMPERATURE_IN_CELSIUS
+
+styles:
+
+  SEA_SURFACE_TEMPERATURE_IN_CELSIUS:
+    type: Contour
+    colors: Spectral_r
+    extend: both
+    levels: range(-1, 31)
+    units: celsius
+
+  SEA_SURFACE_TEMPERATURE_IN_KELVIN:
+    type: Contour
+    colors: Spectral_r
+    extend: both
+    levels: range(272, 301)
+    units: K
+
+# Clean up labels - default white with black outlihe
+# Default land grey - default ocean very light grey slightly blue
+# Grey square capitals, filled dot for big cities, empty dot for small
+# Capitals in all caps, cities in title case
+# Maximum contrast between countries and pressure levels
+# Time steps - countries white outlines - remove coastlines?

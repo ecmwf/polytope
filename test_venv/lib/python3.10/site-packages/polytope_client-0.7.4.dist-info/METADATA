@@ -1,0 +1,31 @@
+Metadata-Version: 2.1
+Name: polytope-client
+Version: 0.7.4
+Summary: A Python and command-line client to communicate with a Polytope API server.
+Home-page: https://github.com/ecmwf-projects/polytope-client
+Author: ECMWF
+Author-email: software.support@ecmwf.int
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Natural Language :: English
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Requires-Dist: Click
+Requires-Dist: requests
+Requires-Dist: pyyaml
+Requires-Dist: jsonschema
+Requires-Dist: docstring-parser
+Requires-Dist: tqdm
+
+UNKNOWN
+
+

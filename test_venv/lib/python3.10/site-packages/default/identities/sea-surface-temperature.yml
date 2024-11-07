@@ -1,0 +1,7 @@
+id: sea-surface-temperature
+
+criteria:
+- {paramId: 34, shortName: sst}
+- {standard_name: sea_surface_temperature}
+- {standard_name: sea_surface_skin_temperature}
+- {long_name: sea surface temperature}

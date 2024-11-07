@@ -1,0 +1,32 @@
+Metadata-Version: 2.1
+Name: earthkit-plots-default-styles
+Version: 0.0.1
+Summary: Default styles for use with earthkit-plots
+Author-email: "European Centre for Medium-Range Weather Forecasts (ECMWF)" <software.support@ecmwf.int>
+License: Apache License Version 2.0
+Project-URL: Issues, https://github.com/ecmwf/earthkit-plots.issues
+Project-URL: Repository, https://github.com/ecmwf/earthkit-plots-default-styles/
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+
+# earthkit-plots-default-styles
+
+Default styles and layouts for earthkit-plots.
+
+## Installation
+
+```
+pip install earthkit-plots-default-styles
+```

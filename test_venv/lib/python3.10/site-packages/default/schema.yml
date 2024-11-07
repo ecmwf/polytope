@@ -1,0 +1,232 @@
+## EARTHKIT-PLOTS DEFAULT SCHEMA
+
+# *************************************************************************** #
+# * MATPLOTLIB RCPARAMS                                                     * #
+# *************************************************************************** #
+## This is a shortcut for setting the matplotlib style sheet to use, and is
+## equivalent to `matplotlib.pyplot.style.use`.
+## NOTE: Any rcParams set below will override values from the style sheet!
+# style_sheet: default
+
+# The following section contains a YAML representation of matplotlib rcParams.
+# Nested keys in this section map to the matplotlib dot notation when setting
+# rcParams - i.e. `figure.figsize: 7, 7`` can be set with:
+# figure:
+#   figsize: [7, 7]
+# NOTE: only some rcParams can be set using this configuration. If you want
+# more control over matplotlib rcParams, consider using a matplotlib style
+# sheet.
+figure:
+  figsize: [7, 6]
+  dpi: 100
+axes:
+  linewidth: 1
+  edgecolor: "#AAAAAA"
+  grid: true
+  grid.axis: y
+  xmargin: 0.02
+  ymargin: 0.02
+  spines.left: false
+  spines.right: false
+  spines.top: false
+  spines.bottom: false
+  prop_cycle: cycler('color', ['#545FA4', '#EB702D', '#FABC20', '#9aa1cb', '#f6bfa2', '#fde19b'])
+xtick:
+  top: false
+  bottom: false
+ytick:
+  left: false
+  right: false
+grid:
+  color: "#EEEEEE"
+font:
+  family: Roboto
+text:
+  color: "#333333"
+
+# *************************************************************************** #
+# * STYLES                                                                  * #
+# *************************************************************************** #
+# The colormap to use when none is specified or detected
+default_cmap: plasma
+
+# The number of levels to use in default styles
+default_style_levels: 12
+
+# The style library to use for automatic styling
+style_library: default
+
+# If true, will attempt to use automatic stlying whenever no style is passed
+automatic_styles: true
+
+# If true, force the use of the optimal style for a given variable as provided
+# by the style library, forcing unit conversion if necessary
+use_preferred_units: false
+
+# EXPERIMENTAL
+# The lat-lon target resolution when interpolating unstructured data
+interpolate_target_resolution: 1
+
+
+# *************************************************************************** #
+# * QUICKPLOT WORKFLOW                                                      * #
+# *************************************************************************** #
+quickmap_workflow:
+  - coastlines
+  - gridlines
+  - title
+  - legend
+
+quickplot_workflow: []
+
+
+# *************************************************************************** #
+# * GEOSPATIAL                                                              * #
+# *************************************************************************** #
+# If true, pre-process the data before plotting by extracting the target domain.
+# This speeds up plotting when the data has a larger geospatial extent than the
+# target map, but can occasionally result in strange behaviour with less common
+# data preojections.
+crop_domain: true
+
+# The assumed CRS for geospatial visualisation when none is found
+reference_crs: PlateCarree
+
+
+# *************************************************************************** #
+# * DATES & TIMES                                                           * #
+# *************************************************************************** #
+# The default format to use for dates in titles and labels
+date_format: "%Y-%m-%d"
+
+# The default format to use for times in titles and labels
+time_format: "%H:%M"
+
+# EXPERIMENTAL
+# The time zone to use in titles and labels
+# This is highly experimental - most weather and climate datasets do not include
+# any time zone metadata, and the assumption is that any time without a time
+# zone is UTC.
+time_zone: null
+
+
+# *************************************************************************** #
+# * DEFAULT PLOTTING STYLES                                                 * #
+# *************************************************************************** #
+# The following keys can take any valid keyword argument that the corresponding
+# plotting method understands
+line:
+  zorder: 2
+envelope:
+  zorder: 2
+contour:
+  transform_first: true
+contourf:
+  transform_first: true
+point:
+  marker: o
+legend:
+  location: bottom
+  format: "%.4g"
+title:
+  wrap: true
+  horizontalalignment: center
+  fontsize: 12
+barbs:
+  length: 4
+  linewidth: 0.5
+  sizes:
+    spacing: 0.25
+  color: "#555"
+quiver: {}
+scatter:
+  s: 36
+  edgecolors: black
+  missing_values:
+    color: none
+    hatch: ////////
+  linewidths: 0.5
+gridpoints:
+  s: 4
+  marker: .
+  edgecolors: null
+  missing_values: null
+  z: false
+  color: red
+  legend_style: null
+point_cloud:
+  s: 12
+  marker: o
+  edgecolors: null
+boxplot:
+  sym: x
+
+
+# *************************************************************************** #
+# * AUXILLIARY DATA LAYERS STYLES                                           * #
+# *************************************************************************** #
+coastlines:
+  linewidth: 0.75
+  edgecolor: "#555555"
+  facecolor: none
+borders:
+  linestyle: ":"
+  linewidth: 0.5
+  edgecolor: [0.2, 0.2, 0.2]
+  facecolor: none
+countries:
+  linestyle: "-"
+  linewidth: 0.5
+  edgecolor: white
+  facecolor: "#e8e8e8"
+unit_boundaries:
+  linestyle: [0, [5, 8]]
+  linewidth: 0.5
+  edgecolor: [0.3, 0.3, 0.3]
+  facecolor: none
+disputed_boundaries:
+  linestyle: [0, [5, 1]]
+  linewidth: 0.5
+  edgecolor: [0.75, 0.2, 0.2]
+  facecolor: none
+administrative_areas:
+  linestyle: "-"
+  linewidth: 0.25
+  edgecolor: [0.6, 0.6, 0.6]
+  resolution: high  # required for some countries
+  facecolor: none
+roads:
+  linestyle: "-"
+  linewidth: 0.5
+  edgecolor: "#ffcc00"
+  alpha: 0.5
+  facecolor: "none"
+land:
+  zorder: 0
+  color: "#e8e8e8"
+urban_areas:
+  color: "#d1d1d1"
+ocean:
+  color: "#f9f9f9"
+rivers:
+  edgecolor: "#97B6E1"
+lakes:
+  facecolor: "#A5D5F2"
+  edgecolor: "#97B6E1"
+shapes:
+  facecolor: steelblue
+  linewidth: 0.5
+  edgecolor: black
+gridlines:
+  linewidth: 0.5
+  linestyle: "-"
+  color: "#bbb"
+  alpha: 0.8
+  x_inline: false
+  y_inline: false
+  draw_labels: ["bottom", "left"]
+  rotate_labels: false
+  xlabel_style:
+    color: "#777"
+  ylabel_style:
+    color: "#777"
