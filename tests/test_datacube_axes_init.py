@@ -2,10 +2,10 @@ import pytest
 from earthkit import data
 from helper_functions import download_test_data
 
-from polytope.datacube.datacube_axis import FloatDatacubeAxis
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select
+from polytope_feature.datacube.datacube_axis import FloatDatacubeAxis
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, Select
 
 
 class TestInitDatacubeAxes:

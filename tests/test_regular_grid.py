@@ -2,9 +2,9 @@ import pandas as pd
 import pytest
 from helper_functions import download_test_data, find_nearest_latlon
 
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Disk, Select
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Disk, Select
 
 # import geopandas as gpd
 # import matplotlib.pyplot as plt
@@ -25,7 +25,13 @@ class TestRegularGrid:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "regular", "resolution": 30, "axes": ["latitude", "longitude"]}
+                        {
+                            "name": "mapper",
+                            "type": "regular",
+                            "resolution": 30,
+                            "axes": ["latitude", "longitude"],
+                            "axis_reversed": {"latitude": True, "longitude": False},
+                        }
                     ],
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
@@ -85,7 +91,7 @@ class TestRegularGrid:
         assert len(result.leaves[1].values) == 3
         assert len(result.leaves[2].values) == 1
 
-        from polytope.datacube.transformations.datacube_mappers.mapper_types.regular import (
+        from polytope_feature.datacube.transformations.datacube_mappers.mapper_types.regular import (
             RegularGridMapper,
         )
 
@@ -108,7 +114,7 @@ class TestRegularGrid:
             eccodes_value = nearest_points[121][0]["value"]
             eccodes_lats.append(eccodes_lat)
 
-            mapper = RegularGridMapper("base", ["base", "base"], 30)
+            mapper = RegularGridMapper("base", ["base1", "base2"], 30)
             assert nearest_points[121][0]["index"] == mapper.unmap((lat,), (lon,))
 
             assert eccodes_lat - tol <= lat

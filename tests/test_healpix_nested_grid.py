@@ -3,12 +3,12 @@
 import pandas as pd
 import pytest
 
-from polytope.datacube.transformations.datacube_mappers.mapper_types.healpix_nested import (
+from polytope_feature.datacube.transformations.datacube_mappers.mapper_types.healpix_nested import (
     NestedHealpixGridMapper,
 )
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, Select
 
 
 class TestHealpixNestedGrid:
