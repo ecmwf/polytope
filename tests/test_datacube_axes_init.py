@@ -1,5 +1,5 @@
-import pytest
 import earthkit.data as data
+import pytest
 from helper_functions import download_test_data
 
 from polytope_feature.datacube.datacube_axis import FloatDatacubeAxis
