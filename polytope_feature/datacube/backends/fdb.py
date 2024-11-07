@@ -37,7 +37,7 @@ class FDBDatacube(Datacube):
             for axis_config in alternative_axes:
                 self.fdb_coordinates[axis_config.axis_name] = axis_config.values
 
-        for axis, vals in self.fdb_coordinates.keys():
+        for axis, vals in self.fdb_coordinates.items():
             if len(vals) == 1:
                 if vals[0] == "":
                     self.fdb_coordinates.pop(axis)
