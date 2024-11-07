@@ -5,4 +5,4 @@ eccodes
 h5netcdf
 h5py
 earthkit
-earthkit-data == 0.10.3
+earthkit-data
