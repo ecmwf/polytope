@@ -29,13 +29,21 @@ class FDBDatacube(Datacube):
 
         self.gj = gj
         if len(alternative_axes) == 0:
+            logging.info("Find GribJump axes for %s", context)
             self.fdb_coordinates = self.gj.axes(partial_request, ctx=context)
+            logging.info("Retrieved available GribJump axes for %s", context)
             if len(self.fdb_coordinates) == 0:
                 raise BadRequestError(partial_request)
         else:
             self.fdb_coordinates = {}
             for axis_config in alternative_axes:
                 self.fdb_coordinates[axis_config.axis_name] = axis_config.values
+
+        fdb_coordinates_copy = deepcopy(self.fdb_coordinates)
+        for axis, vals in fdb_coordinates_copy.items():
+            if len(vals) == 1:
+                if vals[0] == "":
+                    self.fdb_coordinates.pop(axis)
 
         logging.info("Axes returned from GribJump are: " + str(self.fdb_coordinates))
 
@@ -117,7 +125,9 @@ class FDBDatacube(Datacube):
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
         logging.debug("The requests we give GribJump are: %s", complete_list_complete_uncompressed_requests)
+        logging.info("Requests given to GribJump extract for %s", context)
         output_values = self.gj.extract(complete_list_complete_uncompressed_requests, context)
+        logging.info("Requests extracted from GribJump for %s", context)
         logging.debug("GribJump outputs: %s", output_values)
         self.assign_fdb_output_to_nodes(output_values, complete_fdb_decoding_info)
 
