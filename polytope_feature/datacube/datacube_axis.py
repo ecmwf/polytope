@@ -171,8 +171,8 @@ transformations_order = {key: i for i, key in enumerate(transformations_order)}
 
 
 class IntDatacubeAxis(DatacubeAxis):
-    def __init__(self):
-        self.name = None
+    def __init__(self, name=None):
+        self.name = name
         self.tol = 1e-12
         self.range = None
         # TODO: Maybe here, store transformations as a dico instead

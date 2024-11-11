@@ -288,22 +288,23 @@ class FDBDatacube(Datacube):
         return (current_idx, fdb_range_n)
 
     def assign_fdb_output_to_nodes(self, output_values, fdb_requests_decoding_info):
-        for k in range(len(output_values)):
-            request_output_values = output_values[k]
-            (
-                original_indices,
-                fdb_node_ranges,
-            ) = fdb_requests_decoding_info[k]
+        for k, request_output_values in enumerate(output_values):
+            original_indices, fdb_node_ranges = fdb_requests_decoding_info[k]
+
+            # Precompute sorted nodes to avoid nested indexing in the loop
             sorted_fdb_range_nodes = [fdb_node_ranges[i] for i in original_indices]
-            for i in range(len(sorted_fdb_range_nodes)):
-                n = sorted_fdb_range_nodes[i][0]
-                if len(request_output_values[0]) == 0:
-                    # If we are here, no data was found for this path in the fdb
-                    none_array = [None] * len(n.values)
-                    n.result.extend(none_array)
-                else:
-                    interm_request_output_values = request_output_values[0][i][0]
-                    n.result.extend(interm_request_output_values)
+            request_output_values_first = request_output_values[0]
+
+            if not request_output_values_first:
+                # If no data found, assign None to all nodes at once
+                none_array = [None] * len(sorted_fdb_range_nodes[0][0].values)
+                for node in sorted_fdb_range_nodes:
+                    node[0].result.extend(none_array)
+            else:
+                # Pre-compute request output values for faster access
+                for i, node in enumerate(sorted_fdb_range_nodes):
+                    interm_request_output_values = request_output_values_first[i][0]
+                    node[0].result.extend(interm_request_output_values)
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
         (new_fdb_node_ranges, new_current_start_idx) = self.remove_duplicates_in_request_ranges(

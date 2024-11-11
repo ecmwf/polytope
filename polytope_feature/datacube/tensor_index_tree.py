@@ -146,8 +146,7 @@ class TensorIndexTree(object):
         return child
 
     def add_node_layer_after(self, ax_name, vals):
-        ax = IntDatacubeAxis()
-        ax.name = ax_name
+        ax = IntDatacubeAxis(ax_name)
         interm_node = TensorIndexTree(ax, vals)
         interm_node.children = self.children
         interm_node._parent = self
