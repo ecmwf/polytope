@@ -27,6 +27,7 @@ class TestSlicingFDBDatacube:
                             "axes": ["latitude", "longitude"],
                             "local": [-40, 40, -20, 60],
                             "axis_reversed": {"latitude": True, "longitude": False},
+                            "md5_hash": "47ee1554a9aebbc4f8197f19449bdc0c",
                         }
                     ],
                 },
