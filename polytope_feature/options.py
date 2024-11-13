@@ -68,9 +68,7 @@ class Config(ConfigModel):
 class PolytopeOptions(ABC):
     @staticmethod
     def get_polytope_options(options):
-        parser = argparse.ArgumentParser(allow_abbrev=False)
-        conflator = Conflator(app_name="polytope", model=Config, cli=False, argparser=parser, **options)
-        config_options = conflator.load()
+        config_options = Config.model_validate(options)
 
         axis_config = config_options.axis_config
         compressed_axes_config = config_options.compressed_axes_config
