@@ -1,8 +1,7 @@
-import argparse
 from abc import ABC
 from typing import Dict, List, Literal, Optional, Union
 
-from conflator import ConfigModel, Conflator
+from conflator import ConfigModel
 from pydantic import ConfigDict
 
 
