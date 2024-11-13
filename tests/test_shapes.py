@@ -61,7 +61,13 @@ class TestSlicing3DXarrayDatacube:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                        {
+                            "name": "mapper",
+                            "type": "octahedral",
+                            "resolution": 1280,
+                            "axes": ["latitude", "longitude"],
+                            "md5_hash": "5ea6378bf5e2904f565ef7221da63a09",
+                        }
                     ],
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},

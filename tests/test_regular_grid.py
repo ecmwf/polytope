@@ -31,6 +31,7 @@ class TestRegularGrid:
                             "resolution": 30,
                             "axes": ["latitude", "longitude"],
                             "axis_reversed": {"latitude": True, "longitude": False},
+                            "md5_hash": "15372eaafa9d744000df708d63f69284",
                         }
                     ],
                 },
