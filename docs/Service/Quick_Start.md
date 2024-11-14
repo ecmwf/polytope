@@ -14,7 +14,7 @@ request = {
     "date" : "20241006",
     "time" : "0000",
     "levtype" : "sfc",
-    "expver" : "0079", 
+    "expver" : "0001", 
     "domain" : "g",
     "param" : "164/167/169",
     "number" : "1/to/50",
