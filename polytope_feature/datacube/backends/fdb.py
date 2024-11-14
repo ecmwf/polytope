@@ -95,7 +95,6 @@ class FDBDatacube(Datacube):
     def get(self, requests: TensorIndexTree, context=None):
         if context is None:
             context = {}
-        requests.pprint()
         if len(requests.children) == 0:
             return requests
         fdb_requests = []
@@ -128,7 +127,9 @@ class FDBDatacube(Datacube):
         logging.info("Requests given to GribJump extract for %s", context)
         output_values = self.gj.extract(complete_list_complete_uncompressed_requests, context)
         logging.info("Requests extracted from GribJump for %s", context)
-        logging.debug("GribJump outputs: %s", output_values)
+        if logging.root.level <= logging.DEBUG:
+            printed_output_values = output_values[::100]
+            logging.debug("GribJump outputs: %s", printed_output_values)
         self.assign_fdb_output_to_nodes(output_values, complete_fdb_decoding_info)
 
     def get_fdb_requests(
