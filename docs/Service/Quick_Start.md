@@ -21,7 +21,7 @@ request = {
     "feature" : {
         "type" : "timeseries",
         "points": [[-9.10, 38.78]],
-        "axes": "step",
+        "axis": "step",
         "range" : {
             "start" : 0,
             "end" : 360,
@@ -38,14 +38,34 @@ The following will return a timeseries starting on `2024-10-06 00:00:00` with st
 
 To view the returned covjson run:
 
-```
+```python
 ds._json()
 ```
 
 To convert your covjson into an xarray the following can be done:
 
-```
+```python
 ds.to_xarray()
+```
+
+The following visualisation does not use the latest version of earthkit-plots. To replicate it you need to install the https://github.com/ecmwf/earthkit-plots/tree/feature/ams-meteograms branch
+
+```python
+import ipywidgets as widgets
+import earthkit.plots
+import earthkit.data
+
+TIME_FREQUENCY = "6H"
+
+def f():
+    data = ds
+    chart = earthkit.plots.Chart()
+    chart.box(data, time_frequency=TIME_FREQUENCY)
+    chart.line(data, time_frequency=TIME_FREQUENCY, aggregation="mean", line_color="purple")
+    chart.show()
+
+out = widgets.interactive_output(f, {})
+display(out)
 ```
 
 For more information about each feature see the <a href="../Features/feature">Features</a> page.
