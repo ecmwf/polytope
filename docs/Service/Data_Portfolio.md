@@ -22,4 +22,26 @@ If `levtype` is `pl` or `ml` a `levelist` must be provided:
 
 * `levelist` : `1/to/1000`
 
-`pl` and `ml` also only contain a subset of parameters that are available
+`pl` and `ml` also only contain a subset of parameters that are available in grid point. These are:
+
+* `pl`
+    * `o3`
+    * `clwc`
+    * `q`
+    * `pv`
+    * `ciwc`
+    * `cc`
+* `ml`
+    * `q`
+    * `cat`
+    * `o3`
+    * `clwc`
+    * `ciwc`
+    * `cc`
+    * `cswc`
+    * `crwe`
+    * `ttpha`
+
+For `sfc` most `param`s should be available.
+
+Only data that is contained in the operational FDB can be requested via polytope feature extraction, the FDB usually only contains the last two days of forecasts.
