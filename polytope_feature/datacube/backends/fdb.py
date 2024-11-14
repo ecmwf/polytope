@@ -132,7 +132,7 @@ class FDBDatacube(Datacube):
             output_values = self.gj.extract(complete_list_complete_uncompressed_requests, context)
         except Exception as e:
             if "BadValue: Grid hash mismatch" in str(e):
-                logging.debug("Error is: %s", e)
+                logging.info("Error is: %s", e)
                 raise BadGridError()
             else:
                 raise e
