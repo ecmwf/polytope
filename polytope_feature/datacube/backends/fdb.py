@@ -128,7 +128,7 @@ class FDBDatacube(Datacube):
         output_values = self.gj.extract(complete_list_complete_uncompressed_requests, context)
         logging.info("Requests extracted from GribJump for %s", context)
         if logging.root.level <= logging.DEBUG:
-            printed_output_values = output_values[::100]
+            printed_output_values = output_values[::1000]
             logging.debug("GribJump outputs: %s", printed_output_values)
         self.assign_fdb_output_to_nodes(output_values, complete_fdb_decoding_info)
 
