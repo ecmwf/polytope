@@ -130,7 +130,7 @@ request = {
     "feature" : {
         "type" : "trajectory",
         "points" : [[-1, -1], [0, 0], [-1, -1]],
-        "axis" : ['lat', 'lon']
+        "axes" : ['lat', 'lon']
 	},
 }
 ```
