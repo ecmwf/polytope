@@ -134,6 +134,8 @@ class FDBDatacube(Datacube):
             if "BadValue: Grid hash mismatch" in str(e):
                 logging.debug("Error is: %s", e)
                 raise BadGridError()
+            else:
+                raise e
 
         logging.info("Requests extracted from GribJump for %s", context)
         if logging.root.level <= logging.DEBUG:
