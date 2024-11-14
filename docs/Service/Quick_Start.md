@@ -68,4 +68,10 @@ out = widgets.interactive_output(f, {})
 display(out)
 ```
 
+<div style="text-align:center">
+<p style="float: middle; margin: 0 5px 0 0px;">
+    <img src="../images/timeseries_qs.png" alt="Example Cut Out" width="750"/>
+</p>
+</div>
+
 For more information about each feature see the <a href="../Features/feature">Features</a> page.
