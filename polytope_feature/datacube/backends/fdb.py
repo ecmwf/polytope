@@ -123,7 +123,10 @@ class FDBDatacube(Datacube):
                 complete_uncompressed_request = (uncompressed_request, compressed_request[1], self.grid_md5_hash)
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
-        logging.debug("The requests we give GribJump are: %s", complete_list_complete_uncompressed_requests)
+
+        if logging.root.level <= logging.DEBUG:
+            printed_list_to_gj = complete_list_complete_uncompressed_requests[::1000]
+            logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
         logging.info("Requests given to GribJump extract for %s", context)
         output_values = self.gj.extract(complete_list_complete_uncompressed_requests, context)
         logging.info("Requests extracted from GribJump for %s", context)
@@ -144,7 +147,7 @@ class FDBDatacube(Datacube):
 
         # First when request node is root, go to its children
         if requests.axis.name == "root":
-            logging.debug("Looking for data for the tree: %s", [leaf.flatten() for leaf in requests.leaves])
+            logging.debug("Looking for data for the tree")
 
             for c in requests.children:
                 self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info)
