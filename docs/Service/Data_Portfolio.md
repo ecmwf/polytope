@@ -1,6 +1,6 @@
 # Data Portfolio
 
-Polytope Feature Extraction only has access to data that is stored on an FDB. The dataset currently available via polyope feature extraction is the Operational Forecast. We plan to add Destination Earth Digital Twin data in the future.
+Polytope feature extraction only has access to data that is stored on an FDB. The dataset currently available via Polyope feature extraction is the operational forecast. We plan to add Destination Earth Digital Twin data in the future.
 
 ## Operational Forecast Data
 
@@ -44,6 +44,6 @@ If `levtype` is `pl` or `ml` a `levelist` must be provided:
 
 For `sfc` most `param`s should be available.
 
-Only data that is contained in the operational FDB can be requested via polytope feature extraction, the FDB usually only contains the last two days of forecasts.
+Only data that is contained in the operational FDB can be requested via Polytope feature extraction, the FDB usually only contains the last two days of forecasts.
 
-We sometimes limit the size of requests for area features such as bounding box and polytope to maintain quality of service.
+We sometimes limit the size of requests for area features such as bounding box and polygon to maintain quality of service.
