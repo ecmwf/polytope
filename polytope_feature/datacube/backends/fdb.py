@@ -3,7 +3,7 @@ import operator
 from copy import deepcopy
 from itertools import product
 
-from ...utility.exceptions import BadRequestError
+from ...utility.exceptions import BadGridError, BadRequestError
 from ...utility.geometry import nearest_pt
 from .datacube import Datacube, TensorIndexTree
 
@@ -128,7 +128,13 @@ class FDBDatacube(Datacube):
             printed_list_to_gj = complete_list_complete_uncompressed_requests[::1000]
             logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
         logging.info("Requests given to GribJump extract for %s", context)
-        output_values = self.gj.extract(complete_list_complete_uncompressed_requests, context)
+        try:
+            output_values = self.gj.extract(complete_list_complete_uncompressed_requests, context)
+        except Exception as e:
+            if "BadValue: Grid hash mismatch" in str(e):
+                logging.debug("Error is: %s", e)
+                raise BadGridError()
+
         logging.info("Requests extracted from GribJump for %s", context)
         if logging.root.level <= logging.DEBUG:
             printed_output_values = output_values[::1000]
