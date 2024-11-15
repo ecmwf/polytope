@@ -5,6 +5,10 @@ Install **earthkit-data** with python3 (>= 3.10) and ``pip`` as follows:
 
     python3 -m pip install earthkit-data[polytope]
 
+To use covjson functionality also run:
+
+    python3 -m pip install earthkit-data[covjsonkit]
+
 Installing like this gives you a **minimal** package which can talk to Polytope. If you want to use more data types or remote services you need to install other optional features of earthkit-data, or just install all of them:
 
     python3 -m pip install earthkit-data[all]
