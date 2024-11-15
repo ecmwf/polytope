@@ -48,36 +48,36 @@ For a bounding box, `type` must be `boundingbox`.
 
 ## Optional Fields
 
-`axes` refers to the axes on which to generate the bounding box. As stated above the minimum default `axes` contains `lat` and `lon` meaning if `axes` is not included these values must be provided per point. By default the level is taken from the main body of the request.
+`axes` refers to the axes on which to generate the bounding box. As stated above the minimum default `axes` contains `latitude` and `longitude` meaning if `axes` is not included these values must be provided per point. By default the level is taken from the main body of the request.
 
 However `axes` can also be provided by the user and with a value for level. Such as here:
 
 ```python
-"axes" : ["lat", "long", "level"]
+"axes" : ["latitude", "longitude", "levelist"]
 ```
 
-In this case the user must provide a `lat`, `lon` and `level`. `level` should not be included in the main body of the request in this case. An example can be seen here:
+In this case the user must provide a `latitude`, `longitude` and `levelist`. `levelist` should not be included in the main body of the request in this case. An example can be seen here:
 
 
 ```python
 request = {
-    "class" : "od",
+    "class": "od",
     "stream" : "enfo",
     "type" : "pf",
     "date" : -1,
     "time" : "0000",
+    "levtype" : "pl",
     "expver" : "0001", 
     "domain" : "g",
-    "param" : "164/167/169",
-    "levtype" : "pl",
+    "param" : "203/133",
     "number" : "1",
     "step" : "0",
     "feature" : {
         "type" : "boundingbox",
-        "points" : [[-1, -1, 1000], [1, 1, 500]],
-        "axes" : ["lat", "lon", "level"],
+        "points" : [[-0.1, -0.1, 500], [0.1, 0.1, 1000]],
+        "axes" : ["latitude", "longitude", "levelist"]
 	},
-    "format" : "covjson",
+    "format" : "covjson"
 }
 ```
 
