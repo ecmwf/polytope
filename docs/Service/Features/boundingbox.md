@@ -49,7 +49,7 @@ request = {
     "class" : "od",
     "stream" : "enfo",
     "type" : "pf",
-    "date" : "20240930",
+    "date" : "20241115",  # Note: date must be within the last two days
     "time" : "0000",
     "expver" : "0001", 
     "domain" : "g",

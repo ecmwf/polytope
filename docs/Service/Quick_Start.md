@@ -11,7 +11,7 @@ request = {
     "class": "od",
     "stream" : "enfo",
     "type" : "pf",
-    "date" : "20241006",
+    "date" : "20241115",  # Note: date must be within the last two days
     "time" : "0000",
     "levtype" : "sfc",
     "expver" : "0001", 
@@ -21,7 +21,7 @@ request = {
     "feature" : {
         "type" : "timeseries",
         "points": [[-9.10, 38.78]],
-        "axis": "step",
+        "axes": "step",
         "range" : {
             "start" : 0,
             "end" : 360,
