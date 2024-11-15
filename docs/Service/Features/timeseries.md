@@ -2,61 +2,16 @@
 
 ## Basic Example
 
-<!-- ### Polytope-mars
-
-A basic example of requesting a timeseries using polytope-mars:
-
-```python
-from polytope_mars.api import PolytopeMars
-
-request = {
-    "class": "od",
-    "stream" : "enfo",
-    "type" : "pf",
-    "date" : "20241006",
-    "time" : "0000",
-    "levtype" : "sfc",
-    "expver" : "0079", 
-    "domain" : "g",
-    "param" : "164/167/169",
-    "number" : "1/to/50",
-    "feature" : {
-        "type" : "timeseries",
-        "points": [[-9.10, 38.78]],
-        "axes": "step",
-        "range" : {
-            "start" : 0,
-            "end" : 360,
-        }
-    },
-    "format": "covjson",
-}
-
-result = PolytopeMars().extract(request)
-```
-
-The following will return a timeseries starting on `2024-10-06 00:00:00` with steps from `0` to `360` including all steps available in between, for the parameters `164/167/169` at the point given. This data will be returned for each ensemble number requested.
-
-Notes: 
-* The data has to exist in the data source pointed to in the config.
-* No config is provided via the PolytopeMars interface so a config will be loaded from the default locations. The config can also be passed directly via the interface.
-
-### Earthkit-data -->
-
 An example of a time-series requested via earthkit-data:
 
 ```python
-from datetime import date, timedelta
-
-yesterday = (date.today() -  timedelta(1)).strftime('%Y%m%d')
-
 import earthkit.data
 
 request = {
     "class": "od",
     "stream" : "enfo",
     "type" : "pf",
-    "date" : yesterday,  # Note: date must be within the last two days 
+    "date" : -1,  # Note: date must be within the last two days 
     "time" : "0000",
     "levtype" : "sfc",
     "expver" : "0001", 
@@ -127,7 +82,7 @@ request = {
     "class": "od",
     "stream" : "enfo",
     "type" : "pf",
-    "date" : yesterday,
+    "date" : -1,
     "time" : "0000",
     "levtype" : "sfc",
     "expver" : "0001", 

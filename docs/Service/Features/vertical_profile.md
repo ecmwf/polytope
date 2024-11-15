@@ -47,17 +47,13 @@ Notes:
 An example vertical profile requested via earthkit-data:
 
 ```python
-from datetime import date, timedelta
-
-yesterday = (date.today() -  timedelta(1)).strftime('%Y%m%d')
-
 import earthkit.data
 
 request = {
     "class": "od",
     "stream" : "enfo",
     "type" : "pf",
-    "date" : yesterday,  # Note: date must be within the last two days 
+    "date" : -1,  # Note: date must be within the last two days 
     "time" : "0000",
     "levtype" : "pl",
     "expver" : "0001", 
@@ -85,17 +81,14 @@ The following will return a vertical profile on `2024-10-06 00:00:00` with level
 
 ## Required Fields
 
-For a vertical profile three fields are required within the `feature` dictionary 
+For a vertical profile two fields are required within the `feature` dictionary 
 
 * `type`
 * `points`
-* `axes`
 
 For a vertical profile `type` must be `verticalprofile`.
 
 `points` must be a nested list with two points corresponding to a latitude and a longitude.
-
-The dimension along which we take the vertical profile is `axes`. The only supported axis is currently `levelist`.
 
 
 ## Optional Fields
@@ -131,7 +124,7 @@ request = {
     "class": "od",
     "stream" : "enfo",
     "type" : "pf",
-    "date" : yesterday,
+    "date" : -1,
     "time" : "0000",
     "levtype" : "sfc",
     "expver" : "0001", 
