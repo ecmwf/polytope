@@ -9,6 +9,10 @@ To use covjson functionality also run:
 
     python3 -m pip install earthkit-data[covjsonkit]
 
+To use any of the visualisations, also install earthkit-plots:
+
+    python3 -m pip install earthkit-plots
+
 Installing like this gives you a **minimal** package which can talk to Polytope. If you want to use more data types or remote services you need to install other optional features of earthkit-data, or just install all of them:
 
     python3 -m pip install earthkit-data[all]
