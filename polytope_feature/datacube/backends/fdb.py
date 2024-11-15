@@ -3,7 +3,7 @@ import operator
 from copy import deepcopy
 from itertools import product
 
-from ...utility.exceptions import BadRequestError
+from ...utility.exceptions import BadGridError, BadRequestError
 from ...utility.geometry import nearest_pt
 from .datacube import Datacube, TensorIndexTree
 
@@ -95,7 +95,6 @@ class FDBDatacube(Datacube):
     def get(self, requests: TensorIndexTree, context=None):
         if context is None:
             context = {}
-        requests.pprint()
         if len(requests.children) == 0:
             return requests
         fdb_requests = []
@@ -124,11 +123,24 @@ class FDBDatacube(Datacube):
                 complete_uncompressed_request = (uncompressed_request, compressed_request[1], self.grid_md5_hash)
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
-        logging.debug("The requests we give GribJump are: %s", complete_list_complete_uncompressed_requests)
+
+        if logging.root.level <= logging.DEBUG:
+            printed_list_to_gj = complete_list_complete_uncompressed_requests[::1000]
+            logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
         logging.info("Requests given to GribJump extract for %s", context)
-        output_values = self.gj.extract(complete_list_complete_uncompressed_requests, context)
+        try:
+            output_values = self.gj.extract(complete_list_complete_uncompressed_requests, context)
+        except Exception as e:
+            if "BadValue: Grid hash mismatch" in str(e):
+                logging.info("Error is: %s", e)
+                raise BadGridError()
+            else:
+                raise e
+
         logging.info("Requests extracted from GribJump for %s", context)
-        logging.debug("GribJump outputs: %s", output_values)
+        if logging.root.level <= logging.DEBUG:
+            printed_output_values = output_values[::1000]
+            logging.debug("GribJump outputs: %s", printed_output_values)
         self.assign_fdb_output_to_nodes(output_values, complete_fdb_decoding_info)
 
     def get_fdb_requests(
@@ -143,7 +155,7 @@ class FDBDatacube(Datacube):
 
         # First when request node is root, go to its children
         if requests.axis.name == "root":
-            logging.debug("Looking for data for the tree: %s", [leaf.flatten() for leaf in requests.leaves])
+            logging.debug("Looking for data for the tree")
 
             for c in requests.children:
                 self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info)

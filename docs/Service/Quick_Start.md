@@ -11,10 +11,10 @@ request = {
     "class": "od",
     "stream" : "enfo",
     "type" : "pf",
-    "date" : "20241006",
+    "date" : "20241115",  # Note: date must be within the last two days
     "time" : "0000",
     "levtype" : "sfc",
-    "expver" : "0079", 
+    "expver" : "0001", 
     "domain" : "g",
     "param" : "164/167/169",
     "number" : "1/to/50",
@@ -38,14 +38,40 @@ The following will return a timeseries starting on `2024-10-06 00:00:00` with st
 
 To view the returned covjson run:
 
-```
+```python
 ds._json()
 ```
 
 To convert your covjson into an xarray the following can be done:
 
-```
+```python
 ds.to_xarray()
 ```
+
+The following visualisation does not use the latest version of earthkit-plots. To replicate it you need to install the https://github.com/ecmwf/earthkit-plots/tree/feature/ams-meteograms branch
+
+```python
+import ipywidgets as widgets
+import earthkit.plots
+import earthkit.data
+
+TIME_FREQUENCY = "6H"
+
+def f():
+    data = ds
+    chart = earthkit.plots.Chart()
+    chart.box(data, time_frequency=TIME_FREQUENCY)
+    chart.line(data, time_frequency=TIME_FREQUENCY, aggregation="mean", line_color="purple")
+    chart.show()
+
+out = widgets.interactive_output(f, {})
+display(out)
+```
+
+<div style="text-align:center">
+<p style="float: middle; margin: 0 5px 0 0px;">
+    <img src="../images/timeseries_qs.png" alt="Example Cut Out" width="750"/>
+</p>
+</div>
 
 For more information about each feature see the <a href="../Features/feature">Features</a> page.

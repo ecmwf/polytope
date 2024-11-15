@@ -42,16 +42,20 @@ Notes:
 An example polygon requested via earthkit-data:
 
 ```python
+from datetime import date, timedelta
+
+yesterday = (date.today() -  timedelta(1)).strftime('%Y%m%d')
+
 import earthkit.data
 
 request = {
     "class" : "od",
     "stream" : "enfo",
     "type" : "pf",
-    "date" : "20240930",
+    "date" : yesterday,  # Note: date must be within the last two days
     "time" : "0000",
     "levtype" : "sfc",
-    "expver" : "0079", 
+    "expver" : "0001", 
     "domain" : "g",
     "param" : "164/167/169",
     "number" : "1",
@@ -97,10 +101,10 @@ request = {
     "class" : "od",
     "stream" : "enfo",
     "type" : "pf",
-    "date" : "20240930",
+    "date" : yesterday,
     "time" : "0000",
     "levtype" : "sfc",
-    "expver" : "0079", 
+    "expver" : "0001", 
     "domain" : "g",
     "param" : "164/167/169",
     "number" : "1/2",
