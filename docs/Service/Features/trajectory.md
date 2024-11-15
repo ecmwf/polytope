@@ -8,32 +8,29 @@ An example trajectory requested via earthkit-data:
 import earthkit.data
 
 request = {
-    "class" : "od",
+    "class": "od",
     "stream" : "enfo",
     "type" : "pf",
-    "date" : -1,  # Note: date must be within the last two days
+    "date" : -1,
     "time" : "0000",
+    "levtype" : "sfc",
     "expver" : "0001", 
     "domain" : "g",
-    "param" : "164/167/169",
-    "levtype" : "pl",
+    "param" : "164/166/167/169",
     "number" : "1",
+    "step": "0",
     "feature" : {
         "type" : "trajectory",
-        "points" : [[-1, -1, 1000, 0], [0, 0, 1000,  12], [1, 1, 250, 24]],
+        "points" : [[-0.1, -0.1], [0, 0], [0.1, 0.1]],
         "radius" : 0.1,
+        "axes" :["latitude", "longitude"],
 	},
-    "format" : "covjson",
 }
 
 ds = earthkit.data.from_source("polytope", "ecmwf-mars", request, stream=False, address='polytope.ecmwf.int')
 ```
 
-This request will return a trajectory from yesterday's midnight forecast  for the three requested parameters for the points:
-
-* `lat: -1, lon: -1, pressure level: 1000, step: 0`
-* `lat: 0, lon: 0, pressure level: 1000, step: 12`
-* `lat: 1, lon: 1, pressure level: 250, step: 24`
+This request will return a trajectory from yesterday's midnight forecast  for the three requested parameters for the points along the path gives with a radius of 0.1.
 
 The `trajectory` `feature` also contains another field called `radius`. This is the radius of the circle swept around the trajectory where points within this radius are returned to the user.
 
@@ -49,35 +46,37 @@ For a trajectory two fields are required within the `feature` dictionary
 
 For a trajectory `type` must be `trajectory`.
 
-The values in `points` can change depending on the `axes`. The default for `axes` is:
+The values in `points` can change depending on the `axes`. `axes` can contain the following values:
 
 ```python
-"axes" : ["lat", "lon", "level", "step"]
+"axes" : ["latitude", "longitude", "levelist", "step"]
 ```
 
-In this default case, a nested list of at least two points with values for `lat`, `lon`, `level`, and `step` must be provided. 
+In this default case, a nested list of at least two points with values for `latitude` and `longitude` must be provided. 
 
 Another required field that is within the `feature` dictionary is `radius`. This refers to the radius of the circle swept around the trajectory along which points will be included.
 
 
 ## Optional Fields
 
-`axes` refers to the axes on which to generate the trajectory. As stated above the minimum default `axes` contains `lat`, `lon`, `level`, and `step` meaning if `axes` is not included these values must be provided per point.
+`axes` refers to the axes on which to generate the trajectory. As stated above the minimum default `axes` contains `latitude`, `longitude` meaning if `axes` is not included these values must be provided per point.
 
-However `axes` can also be provided by the user and with less values. The minimum values of `axes` are:
+However `axes` can also be provided by the user and with more values:
 
 ```python
-"axes" : ["lat", "lon"]
+"axes" : ["latitude", "longitude", "levelist", "step"]
 ```
 
-In this case only `lat` and `lon` must be provided in the requested points but a level and time axis must be provided in the main body of the request. These values will be propagated for each set of `lat`, `lon` points. For example in the following request:
+In this case a point must contain a value for each axis.
+<!---
+In this case only `latitude` and `longitude` must be provided in the requested points but a level and time axis must be provided in the main body of the request. These values will be propagated for each set of `latitude`, `longitude` points. For example in the following request:
 
 ```python
 request = {
     "class" : "od",
     "stream" : "enfo",
     "type" : "pf",
-    "date" : yesterday,
+    "date" : -1,
     "time" : "0000",
     "expver" : "0001", 
     "domain" : "g",
@@ -89,7 +88,7 @@ request = {
     "feature" : {
         "type" : "trajectory",
         "points" : [[-1, -1], [0, 0], [-1, -1]],
-        "axes" : ['lat', 'lon']
+        "axes" : ['latitude', 'longitude']
 	},
 }
 ```
@@ -106,3 +105,4 @@ The following points would be returned:
 The user does not have to give `step` as the time axis. In the case of a climate dataset `datetime` can also be used.
 
 Combinations such as `"axis" : ['lat', 'step']` will return an error if `step` is included as an `axis` and also in the main body of the request. An error that the request is overspecified will also be thrown.
+-->

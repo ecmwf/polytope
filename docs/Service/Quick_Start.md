@@ -51,21 +51,16 @@ ds.to_xarray()
 The following visualisation does not use the latest version of earthkit-plots. To replicate it you need to install the https://github.com/ecmwf/earthkit-plots/tree/feature/ams-meteograms branch
 
 ```python
-import ipywidgets as widgets
-import earthkit.plots
-import earthkit.data
+from earthkit.plots.interactive import Chart
 
-TIME_FREQUENCY = "6H"
+TIME_FREQUENCY = "6h"
+QUANTILES = [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1]
 
-def f():
-    data = ds
-    chart = earthkit.plots.Chart()
-    chart.box(data, time_frequency=TIME_FREQUENCY)
-    chart.line(data, time_frequency=TIME_FREQUENCY, aggregation="mean", line_color="purple")
-    chart.show()
-
-out = widgets.interactive_output(f, {})
-display(out)
+chart = Chart()
+chart.title(f"ECMWF ensemble meteogram")
+chart.box(ds, time_frequency=TIME_FREQUENCY, quantiles=QUANTILES)
+chart.line(ds,aggregation='mean', line_color='grey', time_frequency=TIME_FREQUENCY)
+chart.show(renderer="png")  # Replace with chart.show() in an interactive session!
 ```
 
 <div style="text-align:center">

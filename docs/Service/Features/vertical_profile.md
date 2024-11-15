@@ -16,8 +16,8 @@ request = {
     "levtype" : "pl",
     "expver" : "0001", 
     "domain" : "g",
-    "param" : "164/167/169",
-    "number" : "1/to/50",
+    "param" : "203/133",
+    "number" : "1",
     "step" : "0",
     "feature" : {
         "type" : "verticalprofile",
@@ -84,18 +84,18 @@ request = {
     "type" : "pf",
     "date" : -1,
     "time" : "0000",
-    "levtype" : "sfc",
+    "levtype" : "pl",
     "expver" : "0001", 
     "domain" : "g",
-    "param" : "164/167/169",
-    "number" : "1/to/50",
+    "param" : "203/133",
+    "number" : "1",
+    "step" : "0",
     "levelist" : "0/to/1000",
     "feature" : {
-        "type" : "timeseries",
-        "points": [[-9.10, 38.78]],
-        "axes": "levelist",
+        "type" : "verticalprofile",
+        "points": [[38.9, -9.1]],
+        "axes" : "levelist",
     },
-    "format": "covjson",
 }
 ```
 
