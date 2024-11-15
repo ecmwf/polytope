@@ -46,23 +46,27 @@ Notes:
 An example of a time-series requested via earthkit-data:
 
 ```python
+from datetime import date, timedelta
+
+yesterday = (date.today() -  timedelta(1)).strftime('%Y%m%d')
+
 import earthkit.data
 
 request = {
     "class": "od",
     "stream" : "enfo",
     "type" : "pf",
-    "date" : "20241006",
+    "date" : yesterday,  # Note: date must be within the last two days 
     "time" : "0000",
     "levtype" : "sfc",
-    "expver" : "0079", 
+    "expver" : "0001", 
     "domain" : "g",
     "param" : "164/167/169",
     "number" : "1/to/50",
     "feature" : {
         "type" : "timeseries",
         "points": [[-9.10, 38.78]],
-        "axis": "step",
+        "axes": "step",
         "range" : {
             "start" : 0,
             "end" : 360,
@@ -83,21 +87,21 @@ For a timeseries within the `feature` dictionary three fields are required
 
 * `type`
 * `points`
-* `axis`
+* `axes`
 
 For a timeseries `type` must be `timeseries`.
 
 `points` must be a nested list with a points containing a latitude and a longitude.
 
-`axis` refers to the axis on which to generate the timeseries. In this case the timeseries is generated across `step` based on the inputted `range`. However if the data requested was a climate dataset the `axis` may be `datetime` denoting that the timeseries is generated across that axis.
+`axes` refers to the axis on which to generate the timeseries. In this case the timeseries is generated across `step` based on the inputted `range`. However if the data requested was a climate dataset the `axess` may be `datetime` denoting that the timeseries is generated across that axis.
 
 
 ## Optional Fields
 
-`range` is an optional field within `feature`. It refers to the extent of the `axis` on which the timeseries will be generated. In the above case where:
+`range` is an optional field within `feature`. It refers to the extent of the `axes` on which the timeseries will be generated. In the above case where:
 
 ```python
-    "axis": "step",
+    "axes": "step",
     "range" : {
         "start" : 0,
         "end" : 360,
@@ -107,7 +111,7 @@ For a timeseries `type` must be `timeseries`.
 A timeseries across `step` will start at step `0` and end at step `360` with all steps found in between being included. `range` can also contain `interval`.
 
 ```python
-    "axis": "step",
+    "axes": "step",
     "range" : {
         "start" : 0,
         "end" : 360,
@@ -116,17 +120,17 @@ A timeseries across `step` will start at step `0` and end at step `360` with all
 ```
 In this case every second step will be returned if it exists.
 
-As `range` is an optional field it can be left out, however there is not a default value. Instead the user has to include the timeseries `axis` in the main body of the request like below:
+As `range` is an optional field it can be left out, however there is not a default value. Instead the user has to include the timeseries `axes` in the main body of the request like below:
 
 ```python
 request = {
     "class": "od",
     "stream" : "enfo",
     "type" : "pf",
-    "date" : "20241006",
+    "date" : yesterday,
     "time" : "0000",
     "levtype" : "sfc",
-    "expver" : "0079", 
+    "expver" : "0001", 
     "domain" : "g",
     "param" : "164/167/169",
     "number" : "1/to/50",
@@ -134,7 +138,7 @@ request = {
     "feature" : {
         "type" : "timeseries",
         "points": [[-9.10, 38.78]],
-        "axis": "step",
+        "axes": "step",
     },
     "format": "covjson",
 }
