@@ -47,16 +47,20 @@ Notes:
 An example vertical profile requested via earthkit-data:
 
 ```python
+from datetime import date, timedelta
+
+yesterday = (date.today() -  timedelta(1)).strftime('%Y%m%d')
+
 import earthkit.data
 
 request = {
     "class": "od",
     "stream" : "enfo",
     "type" : "pf",
-    "date" : "20241006",
+    "date" : yesterday,  # Note: date must be within the last two days 
     "time" : "0000",
     "levtype" : "pl",
-    "expver" : "0079", 
+    "expver" : "0001", 
     "domain" : "g",
     "param" : "164/167/169",
     "number" : "1/to/50",
@@ -64,7 +68,7 @@ request = {
     "feature" : {
         "type" : "verticalprofile",
         "points": [[-9.10, 38.78]],
-        "axis": "levelist",
+        "axes": "levelist",
         "range" : {
             "start" : 0,
             "end" : 1000,
@@ -93,12 +97,12 @@ For a vertical profile `type` must be `verticalprofile`.
 
 ## Optional Fields
 
-`axis` refers to the axis on which to generate the vertical profile. In this case the vertical profile is generated across `levelist` based on the inputted `range`. In the vertical profile this field is optional as the default is assumed to be `levelist` if not given.
+`axes` refers to the axis on which to generate the vertical profile. In this case the vertical profile is generated across `levelist` based on the inputted `range`. In the vertical profile this field is optional as the default is assumed to be `levelist` if not given.
 
-`range` is an optional field within `feature`. It refers to the extent of the `axis` on which the vertical profile will be generated. In the above case where:
+`range` is an optional field within `feature`. It refers to the extent of the `axes` on which the vertical profile will be generated. In the above case where:
 
 ```python
-    "axis": "levelist",
+    "axes": "levelist",
     "range" : {
         "start" : 0,
         "end" : 1000,
@@ -108,7 +112,7 @@ For a vertical profile `type` must be `verticalprofile`.
 A vertical profile across `levelist` will start at level `0` and end at level `1000` with all levels found in between being included. `range` can also contain `interval`.
 
 ```python
-    "axis": "levelist",
+    "axes": "levelist",
     "range" : {
         "start" : 0,
         "end" : 1000,
@@ -117,17 +121,17 @@ A vertical profile across `levelist` will start at level `0` and end at level `1
 ```
 In this case every second level will be returned if it exists.
 
-As `range` is an optional field it can be left out, however there is not a default value. Instead the user has to include the vertical profile `axis` in the main body of the request like below:
+As `range` is an optional field it can be left out, however there is not a default value. Instead the user has to include the vertical profile `axes` in the main body of the request like below:
 
 ```python
 request = {
     "class": "od",
     "stream" : "enfo",
     "type" : "pf",
-    "date" : "20241006",
+    "date" : yesterday,
     "time" : "0000",
     "levtype" : "sfc",
-    "expver" : "0079", 
+    "expver" : "0001", 
     "domain" : "g",
     "param" : "164/167/169",
     "number" : "1/to/50",
@@ -135,7 +139,7 @@ request = {
     "feature" : {
         "type" : "timeseries",
         "points": [[-9.10, 38.78]],
-        "axis": "levelist",
+        "axes": "levelist",
     },
     "format": "covjson",
 }

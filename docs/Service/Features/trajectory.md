@@ -47,15 +47,19 @@ Notes:
 An example trajectory requested via earthkit-data:
 
 ```python
+from datetime import date, timedelta
+
+yesterday = (date.today() -  timedelta(1)).strftime('%Y%m%d')
+
 import earthkit.data
 
 request = {
     "class" : "od",
     "stream" : "enfo",
     "type" : "pf",
-    "date" : "20240930",
+    "date" : yesterday,  # Note: date must be within the last two days
     "time" : "0000",
-    "expver" : "0079", 
+    "expver" : "0001", 
     "domain" : "g",
     "param" : "164/167/169",
     "levtype" : "pl",
@@ -76,7 +80,7 @@ This request will return a trajectory with forecast date of `20240930T000000` fo
 * `lat: 0, lon: 0, pressure level: 1000, step: 12`
 * `lat: 1, lon: 1, pressure level: 250, step: 24`
 
-The `trajectory` `feature` also contains another field called `padding` with a default of 1. This is the radius of the circle swept around the trajectory where points within this radius are returned to the user.
+The `trajectory` `feature` also contains another field called `radius` with a default of 1. This is the radius of the circle swept around the trajectory where points within this radius are returned to the user.
 
 `"polytope"` refers to the underlying service being used to return the data. `"ecmwf-mars"` is the dataset we are looking to retrieve from. Setting `stream=False` returns all the requested data to us once it is available. `address` points to the endpoint for the polytope server.
 
@@ -86,7 +90,7 @@ For a trajectory two fields are required within the `feature` dictionary
 
 * `type`
 * `points`
-* `padding`
+* `radius`
 
 For a trajectory `type` must be `trajectory`.
 
@@ -98,7 +102,7 @@ The values in `points` can change depending on the `axes`. The default for `axes
 
 In this default case, a nested list of at least two points with values for `lat`, `lon`, `level`, and `step` must be provided. 
 
-Another required field that is within the `feature` dictionary is `padding`. This refers to the radius of the circle swept around the trajectory along which points will be included.
+Another required field that is within the `feature` dictionary is `radius`. This refers to the radius of the circle swept around the trajectory along which points will be included.
 
 
 ## Optional Fields
@@ -118,9 +122,9 @@ request = {
     "class" : "od",
     "stream" : "enfo",
     "type" : "pf",
-    "date" : "20240930",
+    "date" : yesterday,
     "time" : "0000",
-    "expver" : "0079", 
+    "expver" : "0001", 
     "domain" : "g",
     "param" : "164/167/169",
     "levtype" : "pl",
@@ -130,7 +134,7 @@ request = {
     "feature" : {
         "type" : "trajectory",
         "points" : [[-1, -1], [0, 0], [-1, -1]],
-        "axis" : ['lat', 'lon']
+        "axes" : ['lat', 'lon']
 	},
 }
 ```
