@@ -89,10 +89,13 @@ For a vertical profile three fields are required within the `feature` dictionary
 
 * `type`
 * `points`
+* `axes`
 
 For a vertical profile `type` must be `verticalprofile`.
 
 `points` must be a nested list with two points corresponding to a latitude and a longitude.
+
+The dimension along which we take the vertical profile is `axes`. The only supported axis is currently `levelist`.
 
 
 ## Optional Fields
