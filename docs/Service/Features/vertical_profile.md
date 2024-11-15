@@ -1,48 +1,6 @@
 # Vertical Profile
 
 ## Basic Example
-<!-- 
-### Polytope-mars
-
-A basic example of requesting a vertical profile using polytope-mars:
-
-```python
-from polytope_mars.api import PolytopeMars
-
-request = {
-    "class": "od",
-    "stream" : "enfo",
-    "type" : "pf",
-    "date" : "20241006",
-    "time" : "0000",
-    "levtype" : "pl",
-    "expver" : "0079", 
-    "domain" : "g",
-    "param" : "164/167/169",
-    "number" : "1/to/50",
-    "step" : "0",
-    "feature" : {
-        "type" : "verticalprofile",
-        "points": [[-9.10, 38.78]],
-        "axes": "levelist",
-        "range" : {
-            "start" : 0,
-            "end" : 1000,
-        }
-    },
-    "format": "covjson",
-}
-
-result = PolytopeMars().extract(request)
-```
-
-The following will return a vertical profile on `2024-10-06 00:00:00` with levels from `0` to `1000` including all levels available in between, for the parameters `164/167/169` at the point given. This data will be returned for each ensemble number requested.
-
-Notes: 
-* The data has to exist in the data source pointed to in the config.
-* No config is provided via the PolytopeMars interface so a config will be loaded from the default locations. The config can also be passed directly via the interface.
-
-### Earthkit-data -->
 
 An example vertical profile requested via earthkit-data:
 
@@ -75,7 +33,7 @@ request = {
 
 ds = earthkit.data.from_source("polytope", "ecmwf-mars", request, stream=False, address='polytope.ecmwf.int')
 ```
-The following will return a vertical profile on `2024-10-06 00:00:00` with levels from `0` to `1000` including all levels available in between, for the parameters `164/167/169` at the point given. This data will be returned for each ensemble number requested.
+The following will return a vertical profile from yesterday's midnight forecast with levels from `0` to `1000` including all levels available in between, for the parameters `164/167/169` at the point given. This data will be returned for each ensemble number requested.
 
 `"polytope"` refers to the underlying service being used to return the data. `"ecmwf-mars"` is the dataset we are looking to retrieve from. Setting `stream=False` returns all the requested data to us once it is available. `address` points to the endpoint for the polytope server.
 
