@@ -67,6 +67,7 @@ request = {
     "feature" : {
         "type" : "trajectory",
         "points" : [[-1, -1, 1000, 0], [0, 0, 1000,  12], [1, 1, 250, 24]],
+        "radius" : 0.1,
 	},
     "format" : "covjson",
 }
@@ -80,7 +81,7 @@ This request will return a trajectory with forecast date of `20240930T000000` fo
 * `lat: 0, lon: 0, pressure level: 1000, step: 12`
 * `lat: 1, lon: 1, pressure level: 250, step: 24`
 
-The `trajectory` `feature` also contains another field called `radius` with a default of 1. This is the radius of the circle swept around the trajectory where points within this radius are returned to the user.
+The `trajectory` `feature` also contains another field called `radius`. This is the radius of the circle swept around the trajectory where points within this radius are returned to the user.
 
 `"polytope"` refers to the underlying service being used to return the data. `"ecmwf-mars"` is the dataset we are looking to retrieve from. Setting `stream=False` returns all the requested data to us once it is available. `address` points to the endpoint for the polytope server.
 
