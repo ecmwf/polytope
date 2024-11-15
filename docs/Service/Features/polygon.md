@@ -2,57 +2,16 @@
 
 ## Basic Example
 
-<!-- ### Polytope-mars
-
-A basic example of requesting a polygon using polytope-mars:
-
-```python
-from polytope_mars.api import PolytopeMars
-
-request = {
-    "class" : "od",
-    "stream" : "enfo",
-    "type" : "pf",
-    "date" : "20240930",
-    "time" : "0000",
-    "levtype" : "sfc",
-    "expver" : "0079", 
-    "domain" : "g",
-    "param" : "164/167/169",
-    "number" : "1",
-    "step": "0",
-    "feature" : {
-        "type" : "polygon",
-        "shape" : [[-1, 1], [-1, 0], [0, 1], [-1, 1]],
-	},
-    "format" : "covjson",
-}
-
-result = PolytopeMars().extract(request)
-```
-
-This request will return all points contained in `shape` for with forecast date of `20240930T000000` for `step` `0`, ensemble `number` `1` and the three prvoided parameters.
-
-Notes: 
-* The data has to exist in the data source pointed to in the config.
-* No config is provided via the PolytopeMars interface so a config will be loaded from the default locations. The config can also be passed directly via the interface.
-
-### Earthkit-data -->
-
 An example polygon requested via earthkit-data:
 
 ```python
-from datetime import date, timedelta
-
-yesterday = (date.today() -  timedelta(1)).strftime('%Y%m%d')
-
 import earthkit.data
 
 request = {
     "class" : "od",
     "stream" : "enfo",
     "type" : "pf",
-    "date" : yesterday,  # Note: date must be within the last two days
+    "date" : -1,  # Note: date must be within the last two days
     "time" : "0000",
     "levtype" : "sfc",
     "expver" : "0001", 
@@ -70,7 +29,7 @@ request = {
 ds = earthkit.data.from_source("polytope", "ecmwf-mars", request, stream=False, address='polytope.ecmwf.int')
 ```
 
-This request will return all points contained in `shape` for with forecast date of `20240930T000000` for `step` `0`, ensemble `number` `1` and the three prvoided parameters.
+This request will return all points contained in `shape` from yesterday's midnight forecast for `step` `0`, ensemble `number` `1` and the three provided parameters.
 
 `"polytope"` refers to the underlying service being used to return the data. `"ecmwf-mars"` is the dataset we are looking to retrieve from. Setting `stream=False` returns all the requested data to us once it is available. `address` points to the endpoint for the polytope server.
 
@@ -101,7 +60,7 @@ request = {
     "class" : "od",
     "stream" : "enfo",
     "type" : "pf",
-    "date" : yesterday,
+    "date" : -1,
     "time" : "0000",
     "levtype" : "sfc",
     "expver" : "0001", 

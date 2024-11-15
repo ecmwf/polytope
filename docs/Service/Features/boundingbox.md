@@ -2,58 +2,16 @@
 
 ## Basic Example
 
-<!-- ### Polytope-mars
-
-A basic example of requesting a trajectory using polytope-mars:
-
-```python
-from polytope_mars.api import PolytopeMars
-
-request = {
-    "class" : "od",
-    "stream" : "enfo",
-    "type" : "pf",
-    "date" : "20240930",
-    "time" : "0000",
-    "expver" : "0079", 
-    "domain" : "g",
-    "param" : "164/167/169",
-    "levtype" : "pl",
-    "number" : "1",
-    "feature" : {
-        "type" : "boundingbox",
-        "points" : [[-1, -1], [1, 1]],
-	},
-    "format" : "covjson",
-}
-
-result = PolytopeMars().extract(request)
-```
-
-This request will return a bounding box with forecast date of `20240930T000000` for the three requested parameters for the points within a bounding box with top left coordinate at latitude -1 and longitude -1, and bottom right point at latitude 1 and longitude 1.
-
-
-
-Notes: 
-* The data has to exist in the data source pointed to in the config.
-* No config is provided via the PolytopeMars interface so a config will be loaded from the default locations. The config can also be passed directly via the interface.
-
-### Earthkit-data -->
-
 An example bounding box requested via earthkit-data:
 
 ```python
-from datetime import date, timedelta
-
-yesterday = (date.today() -  timedelta(1)).strftime('%Y%m%d')
-
 import earthkit.data
 
 request = {
     "class" : "od",
     "stream" : "enfo",
     "type" : "pf",
-    "date" : yesterday,  # Note: date must be within the last two days
+    "date" : -1,  # Note: date must be within the last two days
     "time" : "0000",
     "expver" : "0001", 
     "domain" : "g",
@@ -71,19 +29,19 @@ request = {
 ds = earthkit.data.from_source("polytope", "ecmwf-mars", request, stream=False, address='polytope.ecmwf.int')
 ```
 
-This request will return a bounding box with forecast date of `20240930T000000` for the three requested parameters for the points within a bounding box with top left coordinate at latitude -1 and longitude -1, and bottom right point at latitude 1 and longitude 1.
+This request will return a bounding box from yesterday's midnight forecast for the three requested parameters for the points within a bounding box with top left coordinate at latitude -1 and longitude -1, and bottom right point at latitude 1 and longitude 1.
 
 `"polytope"` refers to the underlying service being used to return the data. `"ecmwf-mars"` is the dataset we are looking to retrieve from. Setting `stream=False` returns all the requested data to us once it is available. `address` points to the endpoint for the polytope server.
 
 
 ## Required Fields
 
-For a bounding box two fields are required within the `feature` dictionary
+For a bounding box, two fields are required within the `feature` dictionary
 
 * `type`
 * `points`
 
-For a bounding box `type` must be `boundingbox`.
+For a bounding box, `type` must be `boundingbox`.
 
 `points` must contain two points, the first corresponding to the top left of the requested box, and the second corresponding to the bottom right coordinate. By default they should only contain a latitude and longitude. However as seen below this can be changed with the `axes` key.
 
@@ -106,7 +64,7 @@ request = {
     "class" : "od",
     "stream" : "enfo",
     "type" : "pf",
-    "date" : yesterday,
+    "date" : -1,
     "time" : "0000",
     "expver" : "0001", 
     "domain" : "g",
