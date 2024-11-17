@@ -9,9 +9,10 @@ from ..datacube.backends.datacube import Datacube
 from ..datacube.datacube_axis import UnsliceableDatacubeAxis
 from ..datacube.tensor_index_tree import TensorIndexTree
 from ..shapes import ConvexPolytope
-from ..utility.combinatorics import argmax, argmin, group, tensor_product, unique
+from ..utility.combinatorics import group, tensor_product
 from ..utility.exceptions import UnsliceableShapeError
 from ..utility.geometry import lerp
+from ..utility.list_tools import argmax, argmin, unique
 from .engine import Engine
 
 
