@@ -1,5 +1,6 @@
 import copy
 import math
+import warnings
 from abc import ABC, abstractmethod
 from typing import List
 
@@ -67,6 +68,8 @@ class Select(Shape):
     def __init__(self, axis, values, method=None):
         self.axis = axis
         self.values = unique(values)
+        if len(self.values) != len(values):
+            warnings.warn("Duplicate request values were removed")
         self.method = method
 
     def axes(self):
