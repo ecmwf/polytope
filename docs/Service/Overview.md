@@ -12,13 +12,13 @@ Extracting features directly offers two main advantages:
 
 <div style="text-align:center">
 <p style="float: middle; margin: 0 5px 0 0px;">
-    <img src="../../images/polytope_feature.png" alt="Example Cut Out" width="750"/>
+    <img src="../../images/polytope_feature.png" alt="Example Features" width="750"/>
 </p>
 </div>
 
 ## Polytope Feature Extraction vs Web MARS
 
-Feature Extraction differs from Web-MARS by allowing users to request specific features rather than only global fields. However, Polytope does also allow users to request global fields by simply omitting the `feature` keyword from the request. 
+Feature extraction differs from Web-MARS by allowing users to request specific features rather than only global fields. However, Polytope does also allow users to request global fields by simply omitting the `feature` keyword from the request. 
 
 Both Polytope and Web-MARS are integrated into the earthkit ecosystem allowing users to request and retrieve data using either service. Earthkit tools for mapping, plotting, regridding, and transforming are available for working with both whole fields and specific features.
 
@@ -37,4 +37,6 @@ For more in-depth information about the various features see the following pages
 
 <!-- A design document on the general principles of how requests can be generated can also be found <a href="../Design_Doc">here</a>. -->
 
-A set of example notebooks can also be found in the <a href="../Examples/index">Examples</a> page along with some examples of integration with other Earthkit libraries.
+A set of example notebooks can also be found in the <a href="../Examples/index">Examples</a> page along with some examples of integration with other earthkit libraries.
+
+A <a href="../Data_Portfolio">Data Portfolio</a> containing information on what data we provide is also available.

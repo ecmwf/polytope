@@ -48,7 +48,7 @@ To convert your covjson into an xarray the following can be done:
 ds.to_xarray()
 ```
 
-The following visualisation does not use the latest version of earthkit-plots. To replicate it you need to install the https://github.com/ecmwf/earthkit-plots/tree/feature/ams-meteograms branch
+The following visualisation can be created using the latest version of earthkit-plots.
 
 ```python
 from earthkit.plots.interactive import Chart
@@ -65,7 +65,7 @@ chart.show(renderer="png")  # Replace with chart.show() in an interactive sessio
 
 <div style="text-align:center">
 <p style="float: middle; margin: 0 5px 0 0px;">
-    <img src="../images/timeseries_qs.png" alt="Example Cut Out" width="750"/>
+    <img src="../../images/timeseries_qs.png" alt="Example Meteogram" width="750"/>
 </p>
 </div>
 

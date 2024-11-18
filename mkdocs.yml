@@ -24,6 +24,7 @@ nav:
                 - Bounding Box: Service/Features/boundingbox.md
                 - Trajectory: Service/Features/trajectory.md
           - Examples: Service/Examples/examples.md
+          - Data Portfolio: Service/Data_Portfolio.md
           # - Design Doc: Service/Design_doc.md
     - Algorithm:
           - Overview: Algorithm/Overview/Overview.md
