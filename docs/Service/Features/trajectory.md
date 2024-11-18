@@ -30,15 +30,15 @@ request = {
 ds = earthkit.data.from_source("polytope", "ecmwf-mars", request, stream=False, address='polytope.ecmwf.int')
 ```
 
-This request will return a trajectory from yesterday's midnight forecast  for the three requested parameters for the points along the path gives with a radius of 0.1.
+This request will return a trajectory from yesterday's midnight forecast  for the three requested parameters for the points contained in a circle of radius `0.1` along the path given.
 
-The `trajectory` `feature` also contains another field called `inflation`. This is the inflation of the shape swept around the trajectory where points within this inflation are returned to the user. In this case as a `inflate` is not given the defualt is `round` meaning that the `inflation` acts as a radius around a circle.
+The `trajectory` `feature` also contains another field called `inflation`. This is the inflation of the shape swept around the trajectory where points within this inflation are returned to the user. In this case as an `inflate` value is not given the defualt is `round` meaning that the `inflation` acts as a radius around a circle.
 
 `"polytope"` refers to the underlying service being used to return the data. `"ecmwf-mars"` is the dataset we are looking to retrieve from. Setting `stream=False` returns all the requested data to us once it is available. `address` points to the endpoint for the polytope server.
 
 ## Required Fields
 
-For a trajectory two fields are required within the `feature` dictionary 
+For a trajectory three fields are required within the `feature` dictionary 
 
 * `type`
 * `points`
@@ -56,7 +56,9 @@ In this default case, a nested list of at least two points with values for `lati
 
 Another required field that is within the `feature` dictionary is `inflation`. This refers to the inflation of the shape swept around the trajectory along which points will be included.
 
-By the default the shape swept around the trajectory is `round` but this can be overridden using the `inflate` keyword below.
+`inflation` can be either a single value or a list of values. If a single value this will be the inflation along each `axes`. If a list of a values, each value will correspond to the inflation of the corresponding `axes` axis.
+
+By default the shape swept around the trajectory is `round` but this can be overridden using the `inflate` keyword below.
 
 
 ## Optional Fields
@@ -70,6 +72,34 @@ However `axes` can also be provided by the user and with more values:
 ```
 
 In this case a point must contain a value for each axis.
+
+`inflate` determines the shape that will be swept along the trajectory, by default the value is `round` whihc corresponds to a circle in 2D and a sphere in 3D. The other value available is `box`. This sweeps and n dimensional box along the trajectory depending on the `axes` specified. 
+
+```python
+request = {
+    "class": "od",
+    "stream" : "enfo",
+    "type" : "pf",
+    "date" : -1,
+    "time" : "0000",
+    "levtype" : "sfc",
+    "expver" : "0001", 
+    "domain" : "g",
+    "param" : "164/166/167",
+    "number" : "1",
+    "step": "0",
+    "feature" : {
+        "type" : "trajectory",
+        "points" : [[-0.1, -0.1], [0, 0], [0.1, 0.1]],
+        "inflation" : [0.1, 0.2],
+        "inflate" : 'box',
+        "axes" :["latitude", "longitude"],
+	},
+}
+```
+
+This request returns the same as the first request, however sweeping a box of size `0.1` in the `latitude` direction and `0.2` in the `longitude` direction.
+
 <!---
 In this case only `latitude` and `longitude` must be provided in the requested points but a level and time axis must be provided in the main body of the request. These values will be propagated for each set of `latitude`, `longitude` points. For example in the following request:
 
