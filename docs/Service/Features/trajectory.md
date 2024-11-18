@@ -30,9 +30,9 @@ request = {
 ds = earthkit.data.from_source("polytope", "ecmwf-mars", request, stream=False, address='polytope.ecmwf.int')
 ```
 
-This request will return a trajectory from yesterday's midnight forecast  for the three requested parameters for the points contained in a circle of radius `0.1` along the path given.
+This request will return a trajectory from yesterday's midnight forecast  for the three requested parameters for the points contained in a circle of radius `0.1` along the given path.
 
-The `trajectory` `feature` also contains another field called `inflation`. This is the inflation of the shape swept around the trajectory where points within this inflation are returned to the user. In this case as an `inflate` value is not given the defualt is `round` meaning that the `inflation` acts as a radius around a circle.
+The `trajectory` `feature` also contains another field called `inflation`. This is the inflation of the shape swept around the trajectory where points within this inflation are returned to the user. In this case, as an `inflate` value is not given, the default is `round`, meaning that the `inflation` acts as a radius around a circle.
 
 `"polytope"` refers to the underlying service being used to return the data. `"ecmwf-mars"` is the dataset we are looking to retrieve from. Setting `stream=False` returns all the requested data to us once it is available. `address` points to the endpoint for the polytope server.
 
@@ -44,7 +44,7 @@ For a trajectory three fields are required within the `feature` dictionary
 * `points`
 * `inflation`
 
-For a trajectory `type` must be `trajectory`.
+For a trajectory, `type` must be `trajectory`.
 
 The values in `points` can change depending on the `axes`. `axes` can contain the following values:
 
@@ -56,14 +56,14 @@ In this default case, a nested list of at least two points with values for `lati
 
 Another required field that is within the `feature` dictionary is `inflation`. This refers to the inflation of the shape swept around the trajectory along which points will be included.
 
-`inflation` can be either a single value or a list of values. If a single value this will be the inflation along each `axes`. If a list of a values, each value will correspond to the inflation of the corresponding `axes` axis.
+`inflation` can be either a single value or a list of values. If it is a single value, this will be the inflation along each of the `axes`. If it is a list of a values, each value will correspond to the inflation of the corresponding `axes` axis.
 
 By default the shape swept around the trajectory is `round` but this can be overridden using the `inflate` keyword below.
 
 
 ## Optional Fields
 
-`axes` refers to the axes on which to generate the trajectory. As stated above the minimum default `axes` contains `latitude`, `longitude` meaning if `axes` is not included these values must be provided per point.
+`axes` refers to the axes on which to generate the trajectory. As stated above, the minimum default `axes` contains `latitude`, `longitude` meaning if `axes` is not included these values must be provided per point.
 
 However `axes` can also be provided by the user and with more values:
 
@@ -73,7 +73,7 @@ However `axes` can also be provided by the user and with more values:
 
 In this case a point must contain a value for each axis.
 
-`inflate` determines the shape that will be swept along the trajectory, by default the value is `round` whihc corresponds to a circle in 2D and a sphere in 3D. The other value available is `box`. This sweeps and n dimensional box along the trajectory depending on the `axes` specified. 
+`inflate` determines the shape that will be swept along the trajectory, by default the value is `round` which corresponds to a circle in 2D and a sphere in 3D. The other value available is `box`. This sweeps an n-dimensional box along the trajectory depending on the specified `axes`. 
 
 ```python
 request = {
@@ -98,7 +98,7 @@ request = {
 }
 ```
 
-This request returns the same as the first request, however sweeping a box of size `0.1` in the `latitude` direction and `0.2` in the `longitude` direction.
+This request returns the same as the first request, but sweeping a box of size `0.1` in the `latitude` direction and `0.2` in the `longitude` direction.
 
 <!---
 In this case only `latitude` and `longitude` must be provided in the requested points but a level and time axis must be provided in the main body of the request. These values will be propagated for each set of `latitude`, `longitude` points. For example in the following request:
