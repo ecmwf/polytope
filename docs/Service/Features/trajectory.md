@@ -16,13 +16,13 @@ request = {
     "levtype" : "sfc",
     "expver" : "0001", 
     "domain" : "g",
-    "param" : "164/166/167/169",
+    "param" : "164/166/167",
     "number" : "1",
     "step": "0",
     "feature" : {
         "type" : "trajectory",
         "points" : [[-0.1, -0.1], [0, 0], [0.1, 0.1]],
-        "radius" : 0.1,
+        "inflation" : 0.1,
         "axes" :["latitude", "longitude"],
 	},
 }
@@ -32,7 +32,7 @@ ds = earthkit.data.from_source("polytope", "ecmwf-mars", request, stream=False, 
 
 This request will return a trajectory from yesterday's midnight forecast  for the three requested parameters for the points along the path gives with a radius of 0.1.
 
-The `trajectory` `feature` also contains another field called `radius`. This is the radius of the circle swept around the trajectory where points within this radius are returned to the user.
+The `trajectory` `feature` also contains another field called `inflation`. This is the inflation of the shape swept around the trajectory where points within this inflation are returned to the user. In this case as a `inflate` is not given the defualt is `round` meaning that the `inflation` acts as a radius around a circle.
 
 `"polytope"` refers to the underlying service being used to return the data. `"ecmwf-mars"` is the dataset we are looking to retrieve from. Setting `stream=False` returns all the requested data to us once it is available. `address` points to the endpoint for the polytope server.
 
@@ -42,7 +42,7 @@ For a trajectory two fields are required within the `feature` dictionary
 
 * `type`
 * `points`
-* `radius`
+* `inflation`
 
 For a trajectory `type` must be `trajectory`.
 
@@ -54,7 +54,9 @@ The values in `points` can change depending on the `axes`. `axes` can contain th
 
 In this default case, a nested list of at least two points with values for `latitude` and `longitude` must be provided. 
 
-Another required field that is within the `feature` dictionary is `radius`. This refers to the radius of the circle swept around the trajectory along which points will be included.
+Another required field that is within the `feature` dictionary is `inflation`. This refers to the inflation of the shape swept around the trajectory along which points will be included.
+
+By the default the shape swept around the trajectory is `round` but this can be overridden using the `inflate` keyword below.
 
 
 ## Optional Fields
