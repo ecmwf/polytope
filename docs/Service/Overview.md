@@ -12,7 +12,7 @@ Extracting features directly offers two main advantages:
 
 <div style="text-align:center">
 <p style="float: middle; margin: 0 5px 0 0px;">
-    <img src="../../images/polytope_feature.png" alt="Example Cut Out" width="750"/>
+    <img src="../../images/polytope_feature.png" alt="Example Features" width="750"/>
 </p>
 </div>
 
@@ -38,3 +38,5 @@ For more in-depth information about the various features see the following pages
 <!-- A design document on the general principles of how requests can be generated can also be found <a href="../Design_Doc">here</a>. -->
 
 A set of example notebooks can also be found in the <a href="../Examples/index">Examples</a> page along with some examples of integration with other Earthkit libraries.
+
+A <a href="../Data_Portfolio">Data Portfolio</a> containing infomration on what data we provide is also available.
