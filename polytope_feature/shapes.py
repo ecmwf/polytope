@@ -1,9 +1,12 @@
 import copy
 import math
+import warnings
 from abc import ABC, abstractmethod
 from typing import List
 
 import tripy
+
+from .utility.list_tools import unique
 
 """
 Shapes used for the constructive geometry API of Polytope
@@ -60,11 +63,13 @@ class ConvexPolytope(Shape):
 
 # This is the only shape which can slice on axes without a discretizer or interpolator
 class Select(Shape):
-    """Matches several discrete value"""
+    """Matches several discrete values"""
 
     def __init__(self, axis, values, method=None):
         self.axis = axis
-        self.values = values
+        self.values = unique(values)
+        if len(self.values) != len(values):
+            warnings.warn("Duplicate request values were removed")
         self.method = method
 
     def axes(self):

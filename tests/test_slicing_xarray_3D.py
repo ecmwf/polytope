@@ -249,3 +249,11 @@ class TestSlicing3DXarrayDatacube:
         result = self.API.retrieve(request)
         paths = [r.flatten().values() for r in result.leaves]
         assert ((pd.Timestamp("2000-01-01 00:00:00"),), (3,), (1,)) in paths
+
+    def test_duplicate_values_select(self):
+        request = Request(Select("step", [3, 3]), Select("level", [1]), Select("date", ["2000-01-01"]))
+        result = self.API.retrieve(request)
+        result.pprint()
+        assert len(result.leaves) == 1
+        path = result.leaves[0].flatten()["step"]
+        assert len(path) == 1
