@@ -1,7 +1,7 @@
 import math
 from copy import deepcopy
 
-from ....utility.combinatorics import unique
+from ....utility.list_tools import unique
 from ..datacube_transformations import DatacubeAxisTransformation
 
 
