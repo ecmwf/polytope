@@ -42,8 +42,10 @@ If `levtype` is `pl` or `ml` a `levelist` must be provided:
     * `crwe`
     * `ttpha`
 
-For `sfc` most `param`s should be available.
+For `sfc` most `params` will be available but not all.
 
 Only data that is contained in the operational FDB can be requested via Polytope feature extraction, the FDB usually only contains the last two days of forecasts.
 
 We sometimes limit the size of requests for area features such as bounding box and polygon to maintain quality of service.
+
+Access to operational data is limited by our release schedule.
