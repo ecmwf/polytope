@@ -30,9 +30,8 @@ request = {
 ds = earthkit.data.from_source("polytope", "ecmwf-mars", request, stream=False, address='polytope.ecmwf.int')
 ```
 
-This request will return a trajectory from yesterday's midnight forecast  for the three requested parameters for the points contained in a circle of radius `0.1` along the given path.
 
-The `trajectory` `feature` also contains another field called `inflation`. This is the inflation of the shape swept around the trajectory where points within this inflation are returned to the user. In this case, as an `inflate` value is not given, the default is `round`, meaning that the `inflation` acts as a radius around a circle.
+The `trajectory` `feature` contains another field called `inflation`. This is the inflation of the shape swept around the trajectory where points within this inflation are returned to the user. In this example above, as an `inflate` value is not given, the default is `round`, meaning that the `inflation` acts as a radius around a circle. This request will thus return a trajectory from yesterday's midnight forecast  for the three requested parameters for the points contained in a circle of radius `0.1` along the given path.
 
 `"polytope"` refers to the underlying service being used to return the data. `"ecmwf-mars"` is the dataset we are looking to retrieve from. Setting `stream=False` returns all the requested data to us once it is available. `address` points to the endpoint for the polytope server.
 
