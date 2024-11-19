@@ -65,7 +65,7 @@ chart.show(renderer="png")  # Replace with chart.show() in an interactive sessio
 
 <div style="text-align:center">
 <p style="float: middle; margin: 0 5px 0 0px;">
-    <img src="../../images/timeseries_qs.png" alt="Example Meteogram" width="750"/>
+    <img src="../../images/timeseries_example.png" alt="Example Meteogram" width="750"/>
 </p>
 </div>
 
