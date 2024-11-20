@@ -120,18 +120,18 @@ class TensorIndexTree(object):
     def parent(self):
         return self._parent
 
-    @parent.setter
-    def set_parent(self, node):
-        if self.parent is not None:
-            self.parent.children.remove(self)
-        self._parent = node
-        self._parent.children.add(self)
+    # @parent.setter
+    # def set_parent(self, node):
+    #     if self.parent is not None:
+    #         self.parent.children.remove(self)
+    #     self._parent = node
+    #     self._parent.children.add(self)
 
-    def get_root(self):
-        node = self
-        while node.parent is not None:
-            node = node.parent
-        return node
+    # def get_root(self):
+    #     node = self
+    #     while node.parent is not None:
+    #         node = node.parent
+    #     return node
 
     def is_root(self):
         return self.parent is None
@@ -155,11 +155,11 @@ class TensorIndexTree(object):
         self.children.add(interm_node)
         return interm_node
 
-    def delete_non_index_nodes(self, index_vals):
-        grandparent = self._parent._parent
-        grandparent.indexes.extend(index_vals)
-        self.remove_branch()
-        return grandparent
+    # def delete_non_index_nodes(self, index_vals):
+    #     grandparent = self._parent._parent
+    #     grandparent.indexes.extend(index_vals)
+    #     self.remove_branch()
+    #     return grandparent
 
     def hide_non_index_nodes(self, index_vals):
         grandparent = self._parent._parent
