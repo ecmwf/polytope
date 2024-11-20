@@ -108,6 +108,12 @@ class TensorIndexTree(object):
         new_values.sort()
         self.values = tuple(new_values)
 
+    def add_values(self, values):
+        new_values = list(self.values)
+        new_values.extend(values)
+        new_values.sort()
+        self.values = tuple(new_values)
+
     def create_child(self, axis, value, next_nodes):
         node = TensorIndexTree(axis, (value,))
         existing_child = self.find_child(node)

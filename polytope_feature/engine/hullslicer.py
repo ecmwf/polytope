@@ -97,7 +97,7 @@ class HullSlicer(Engine):
             self.axis_values_between[(flattened_tuple, ax.name, lower, upper, method)] = values
         return values
 
-    def remap_values(self, ax, value):
+    def remap_value(self, ax, value):
         remapped_val = self.remapped_vals.get((value, ax.name), None)
         if remapped_val is None:
             remapped_val = value
@@ -108,6 +108,12 @@ class HullSlicer(Engine):
                 remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
             self.remapped_vals[(value, ax.name)] = remapped_val
         return remapped_val
+
+    def remap_values(self, ax, values):
+        if not isinstance(values, List):
+            return self.remap_value(ax, values)
+        remapped_vals = [self.remap_value(ax, val) for val in values]
+        return remapped_vals
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, values, next_nodes, slice_axis_idx):
         for i, value in enumerate(values):
@@ -122,8 +128,9 @@ class HullSlicer(Engine):
                     child["unsliced_polytopes"].add(new_polytope)
                 next_nodes.append(child)
             else:
-                remapped_val = self.remap_values(ax, value)
-                child.add_value(remapped_val)
+                remapped_val = self.remap_values(ax, values[1:])
+                child.add_values(remapped_val)
+                break
 
     def _build_branch(self, ax, node, datacube, next_nodes):
         if ax.name not in self.compressed_axes:
