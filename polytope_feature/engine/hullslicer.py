@@ -127,13 +127,11 @@ class HullSlicer(Engine):
 
     def _build_branch(self, ax, node, datacube, next_nodes):
         if ax.name not in self.compressed_axes:
-            parent_node = node.parent
             right_unsliced_polytopes = []
             for polytope in node["unsliced_polytopes"]:
                 if ax.name in polytope._axes:
                     right_unsliced_polytopes.append(polytope)
             for i, polytope in enumerate(right_unsliced_polytopes):
-                node._parent = parent_node
                 lower, upper, slice_axis_idx = polytope.extents(ax.name)
                 # here, first check if the axis is an unsliceable axis and directly build node if it is
                 # NOTE: we should have already created the ax_is_unsliceable cache before
@@ -154,9 +152,7 @@ class HullSlicer(Engine):
             all_lowers = []
             first_polytope = False
             first_slice_axis_idx = False
-            parent_node = node.parent
             for polytope in node["unsliced_polytopes"]:
-                node._parent = parent_node
                 if ax.name in polytope._axes:
                     # keep track of the first polytope defined on the given axis
                     if not first_polytope:
