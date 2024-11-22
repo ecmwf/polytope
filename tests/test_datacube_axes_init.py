@@ -14,7 +14,7 @@ class TestInitDatacubeAxes:
         download_test_data(nexus_url, "foo.grib")
 
         ds = data.from_source("file", "./tests/data/foo.grib")
-        latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
+        latlon_array = ds.to_xarray(engine="cfgrib").isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
         latlon_array = latlon_array.t2m
         self.options = {
             "axis_config": [
