@@ -5,3 +5,4 @@
 * <a href="../vertical_profile_example">Vertical Profile</a>
 * <a href="../boundingbox_example">Bounding Box</a>
 * <a href="../trajectory_example">Trajectory</a>
+* <a href="../country_example">Country Cut-Out</a>

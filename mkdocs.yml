@@ -24,6 +24,12 @@ nav:
                 - Bounding Box: Service/Features/boundingbox.md
                 - Trajectory: Service/Features/trajectory.md
           - Examples: Service/Examples/examples.md
+                - Time Series: Service/Examples/timeseries_example.md
+                - Vertical Profile: Service/Examples/vertical_profile_example.md
+                - Polygon: Service/Examples/polygon_example.md
+                - Bounding Box: Service/Examples/boundingbox_example.md
+                - Trajectory: Service/Examples/trajectory_example.md
+                - Country Cut-Out: Service/Examples/country_example.md
           - Data Portfolio: Service/Data_Portfolio.md
           # - Design Doc: Service/Design_doc.md
     - Algorithm:
