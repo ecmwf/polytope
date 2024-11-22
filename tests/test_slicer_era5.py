@@ -14,7 +14,7 @@ class TestSlicingEra5Data:
         download_test_data(nexus_url, "era5-levels-members.grib")
 
         ds = data.from_source("file", "./tests/data/era5-levels-members.grib")
-        array = ds.to_xarray().isel(step=0).t
+        array = ds.to_xarray(engine="cfgrib").isel(step=0).t
         self.slicer = HullSlicer()
         options = {
             "axis_config": [{"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]}],
