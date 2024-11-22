@@ -16,7 +16,7 @@ class TestHealpixGrid:
         download_test_data(nexus_url, "healpix.grib")
 
         ds = data.from_source("file", "./tests/data/healpix.grib")
-        self.latlon_array = ds.to_xarray().isel(step=0).isel(time=0).isel(isobaricInhPa=0).z
+        self.latlon_array = ds.to_xarray(engine="cfgrib").isel(step=0).isel(time=0).isel(isobaricInhPa=0).z
         self.options = {
             "axis_config": [
                 {
