@@ -29,7 +29,7 @@ request = {
 ds = earthkit.data.from_source("polytope", "ecmwf-mars", request, stream=False, address='polytope.ecmwf.int')
 ```
 
-This request will return all points contained in `shape` from yesterday's midnight forecast for `step` `0`, ensemble `number` `1` and the three provided parameters.
+This request will return all points contained in `shape` from yesterday's 00Z forecast for `step` `0`, ensemble `number` `1` and the three provided parameters.
 
 `"polytope"` refers to the underlying service being used to return the data. `"ecmwf-mars"` is the dataset we are looking to retrieve from. Setting `stream=False` returns all the requested data to us once it is available. `address` points to the endpoint for the polytope server.
 

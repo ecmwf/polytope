@@ -37,6 +37,6 @@ For more in-depth information about the various features see the following pages
 
 <!-- A design document on the general principles of how requests can be generated can also be found <a href="../Design_Doc">here</a>. -->
 
-A set of example notebooks can also be found in the <a href="../Examples/index">Examples</a> page along with some examples of integration with other earthkit libraries.
+A set of example notebooks can also be found in the <a href="../Examples/examples">Examples</a> page along with some examples of integration with other earthkit libraries.
 
 A <a href="../Data_Portfolio">Data Portfolio</a> containing information on what data we provide is also available.

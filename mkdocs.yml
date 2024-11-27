@@ -18,6 +18,7 @@ nav:
           - Installation: Service/Installation.md
           - Quick Start: Service/Quick_Start.md
           - Features:
+                - Overview: Services/Features/feature.md
                 - Time Series: Service/Features/timeseries.md
                 - Vertical Profile: Service/Features/vertical_profile.md
                 - Polygon: Service/Features/polygon.md
