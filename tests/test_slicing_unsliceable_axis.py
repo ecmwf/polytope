@@ -3,10 +3,10 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select
-from polytope.utility.exceptions import UnsliceableShapeError
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, Select
+from polytope_feature.utility.exceptions import UnsliceableShapeError
 
 
 class TestSlicingUnsliceableAxis:

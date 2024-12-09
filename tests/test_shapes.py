@@ -3,9 +3,9 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import All, Select, Span
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import All, Select, Span
 
 
 class TestSlicing3DXarrayDatacube:
@@ -61,7 +61,13 @@ class TestSlicing3DXarrayDatacube:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                        {
+                            "name": "mapper",
+                            "type": "octahedral",
+                            "resolution": 1280,
+                            "axes": ["latitude", "longitude"],
+                            "md5_hash": "5ea6378bf5e2904f565ef7221da63a09",
+                        }
                     ],
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},

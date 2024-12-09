@@ -3,10 +3,10 @@ import time
 import pandas as pd
 import pytest
 
-from polytope.datacube.tree_encoding import decode_tree, encode_tree
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import All, Box, Select
+from polytope_feature.datacube.tree_encoding import decode_tree, encode_tree
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import All, Box, Select
 
 
 class TestSlicingFDBDatacube:
@@ -47,7 +47,7 @@ class TestSlicingFDBDatacube:
         }
 
     # Testing different shapes
-    # @pytest.mark.skip(reason="optimisation test")
+    @pytest.mark.skip(reason="optimisation test")
     @pytest.mark.fdb
     def test_fdb_datacube(self):
         import pygribjump as gj
