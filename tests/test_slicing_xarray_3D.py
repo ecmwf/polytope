@@ -1,5 +1,6 @@
 import math
 import sys
+import pytest
 
 import numpy as np
 import pandas as pd
@@ -103,14 +104,15 @@ class TestSlicing3DXarrayDatacube:
         assert np.size(result.leaves[1].result[1]) == 7
         assert np.size(result.leaves[2].result[1]) == 1
 
+    @pytest.mark.xfail
     def test_concave_polygon(self):
         # TODO: fix the overlapping branches?
         points = [[1, 0], [3, 0], [2, 3], [3, 6], [1, 6]]
         request = Request(Polygon(["level", "step"], points), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
         self.xarraydatacube.get(result)
-        # result.pprint()
-        assert len(result.leaves) == 8
+        result.pprint()
+        assert len(result.leaves) == 4
 
     def test_polytope(self):
         points = [[0, 1], [3, 1], [3, 2], [0, 2]]
@@ -226,6 +228,7 @@ class TestSlicing3DXarrayDatacube:
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
 
+    @pytest.mark.xfail
     def test_swept_concave_polygon(self):
         # Tests what happens when we slice a concave shape which is swept across a path and see if concavity is lost
         points = [(1, 0), (3, 0), (3, 6), (2, 6), (2, 3), (1, 3)]

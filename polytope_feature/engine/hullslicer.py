@@ -115,6 +115,8 @@ class HullSlicer(Engine):
                 fvalue = ax.to_float(value)
                 new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
                 remapped_val = self.remap_values(ax, value)
+                # is_last_axis = ax==list(datacube.axes.values())[-1]
+                # print(ax==list(datacube.axes.values())[-1])
                 (child, next_nodes) = node.create_child(ax, remapped_val, next_nodes)
                 child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
                 child["unsliced_polytopes"].remove(polytope)
@@ -203,14 +205,15 @@ class HullSlicer(Engine):
             if p.is_in_union:
                 for axis in p.axes():
                     if axis == self.compressed_axes[-1]:
-                        self.compressed_axes.remove(axis)
+                        # self.compressed_axes.remove(axis)
+                        pass
 
     def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
         # Determine list of axes to compress
         self.find_compressed_axes(datacube, polytopes)
 
         # remove compressed axes which are in a union
-        self.remove_compressed_axis_in_union(polytopes)
+        # self.remove_compressed_axis_in_union(polytopes)
 
         # Convert the polytope points to float type to support triangulation and interpolation
         for p in polytopes:
@@ -224,7 +227,6 @@ class HullSlicer(Engine):
         # NOTE: could optimise here if we know combinations will always be for one request.
         # Then we do not need to create a new index tree and merge it to request, but can just
         # directly work on request and return it...
-
         for c in combinations:
             r = TensorIndexTree()
             new_c = []
