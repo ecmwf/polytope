@@ -25,6 +25,8 @@ class DatacubeAxisTypeChange(DatacubeAxisTransformation):
 
     def change_val_type(self, axis_name, values):
         return_idx = [self._final_transformation.transform_type(val) for val in values]
+        if None in return_idx:
+            return None
         return_idx.sort()
         return return_idx
 
@@ -61,7 +63,10 @@ class TypeChangeStrToInt(DatacubeAxisTypeChange):
         self._new_type = new_type
 
     def transform_type(self, value):
-        return int(value)
+        try:
+            return int(value)
+        except ValueError:
+            return None
 
     def make_str(self, value):
         values = []
