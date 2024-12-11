@@ -79,19 +79,23 @@ class Datacube(ABC):
         for axis_name in final_axis_names:
             self.fake_axes.append(axis_name)
             # if axis does not yet exist, create it
+            if transformation.change_val_type(axis_name, values) is not None:
+                # first need to change the values so that we have right type
+                values = transformation.change_val_type(axis_name, values)
+                if self._axes is None or axis_name not in self._axes.keys():
+                    DatacubeAxis.create_standard(axis_name, values, self)
+                # add transformation tag to axis, as well as transformation options for later
+                setattr(self._axes[axis_name], has_transform[transformation_type_key.name], True)
+                # where has_transform is a factory inside datacube_transformations to set the has_transform, is_cyclic
+                # etc axis properties add the specific transformation handled here to the relevant axes
+                # Modify the axis to update with the tag
 
-            # first need to change the values so that we have right type
-            values = transformation.change_val_type(axis_name, values)
-            if self._axes is None or axis_name not in self._axes.keys():
-                DatacubeAxis.create_standard(axis_name, values, self)
-            # add transformation tag to axis, as well as transformation options for later
-            setattr(self._axes[axis_name], has_transform[transformation_type_key.name], True)  # where has_transform is
-            # a factory inside datacube_transformations to set the has_transform, is_cyclic etc axis properties
-            # add the specific transformation handled here to the relevant axes
-            # Modify the axis to update with the tag
-
-            if transformation not in self._axes[axis_name].transformations:  # Avoids duplicates being stored
-                self._axes[axis_name].transformations.append(transformation)
+                if transformation not in self._axes[axis_name].transformations:  # Avoids duplicates being stored
+                    self._axes[axis_name].transformations.append(transformation)
+            else:
+                # Means we have an unsliceable axis since we couln't transform values to desired type
+                if self._axes is None or axis_name not in self._axes.keys():
+                    DatacubeAxis.create_standard(axis_name, values, self)
 
     def _add_all_transformation_axes(self, options, name, values):
         for transformation_type_key in options.transformations:
