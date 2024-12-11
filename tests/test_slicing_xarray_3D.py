@@ -1,9 +1,9 @@
 import math
 import sys
-import pytest
 
 import numpy as np
 import pandas as pd
+import pytest
 import xarray as xr
 
 from polytope_feature.datacube.backends.xarray import XArrayDatacube

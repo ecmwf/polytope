@@ -186,7 +186,7 @@ class TestSlicingFDBDatacube:
         for i in range(len(leaves)):
             total_leaves += len(leaves[i].values)
         assert total_leaves == 9
-    
+
     @pytest.mark.fdb
     def test_fdb_datacube_box_union_disk_overlap(self):
         import pygribjump as gj
