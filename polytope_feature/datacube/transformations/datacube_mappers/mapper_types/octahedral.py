@@ -1,3 +1,4 @@
+import logging
 import math
 
 from .....utility.list_tools import bisect_left_cmp, bisect_right_cmp
@@ -7783,6 +7784,7 @@ class OctahedralGridMapper(DatacubeMapper):
         if self._resolution == 1280:
             return self.get_precomputed_values_N1280()
         else:
+            logging.info("Calculating grid. Not using a pre-computed grid.")
             precision = 1.0e-14
             nval = self._resolution * 2
             rad2deg = 180 / math.pi
