@@ -2763,4 +2763,5 @@ class OctahedralGridMapper(DatacubeMapper):
 # md5 grid hash in form {resolution : hash}
 _md5_hash = {
     1280: "158db321ae8e773681eeb40e0a3d350f",
+    2560: "b46ef646819838ead0a38749197e17a9",
 }
