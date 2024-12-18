@@ -2,7 +2,7 @@ import re
 import json
 from pathlib import Path
 
-from qubed_compressed_trees import CompressedTree
+from qubed_compressed_tree import CompressedTree
 
 import os
 
@@ -15,13 +15,15 @@ def load_tree():
     return tree
 
 
+tree = load_tree()
+
+
 def get_next_axis(tree):
     # TODO: need to find the next axis
     next_key_val_pairs = list(tree.keys())
     next_axes = []
     for key_val_pair in next_key_val_pairs:
         key, vals = re.split(r'[=]', key_val_pair)
-        vals = re.split(r'[,]', vals)
         if key not in next_axes:
             next_axes.append(key)
     return next_axes
@@ -61,11 +63,42 @@ def subtree(tree, axis, val):
     return subtree
 
 
+# def get_all_axes(tree, axes=[]):
+#     # TODO: need to find the next axis
+#     next_key_val_pairs = list(tree.keys())
+#     next_axes = []
+#     for key_val_pair in next_key_val_pairs:
+#         key, vals = re.split(r'[=]', key_val_pair)
+#         if key not in next_axes:
+#             next_axes.append(key)
+#     return next_axes
+
+def get_all_axes(tree, axes=[]):
+    tree_keys = list(tree.keys())
+    if len(tree_keys) != 0:
+        for key in tree_keys:
+            axis, vals = re.split(r"[=]", key)
+            if axis not in axes:
+                axes.append(axis)
+            subtree = tree[key]
+            get_all_axes(subtree, axes)
+    # else:
+    #     return axes
+
+
+def get_axes(tree):
+    axes = []
+    get_all_axes(tree, axes)
+    return axes
+
+
 new_tree = subtree(subtree(tree, "class", "d1"), "dataset", "extremes-dt")
 
+print(new_tree)
 print(list(new_tree.keys()))
 
 print(get_next_ax_vals(new_tree, "expver"))
+print(get_axes(new_tree))
 
 
 # TODO: need to determine ax_vals for the current tree, and also select
