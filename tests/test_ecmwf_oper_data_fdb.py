@@ -1,8 +1,9 @@
 import pandas as pd
 import pytest
 
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Point, Select, Span
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, Point, Select, Span
 
 
 class TestSlicingFDBDatacube:
@@ -59,13 +60,13 @@ class TestSlicingFDBDatacube:
         )
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(
-            request=request,
             datacube=self.fdbdatacube,
             options=self.options,
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 9
+        assert len(result.leaves) == 3
+        assert len(result.leaves[0].result) == 3
 
     @pytest.mark.fdb
     def test_fdb_datacube_point(self):
@@ -85,14 +86,14 @@ class TestSlicingFDBDatacube:
         )
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(
-            request=request,
             datacube=self.fdbdatacube,
             options=self.options,
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 6
+        assert len(result.leaves) == 3
         assert set(result.leaves[0].flatten()["step"]) == set((0, 1))
+        assert len(result.leaves[0].result) == 4
 
     @pytest.mark.fdb
     def test_fdb_datacube_point_v2(self):
@@ -112,14 +113,13 @@ class TestSlicingFDBDatacube:
         )
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(
-            request=request,
             datacube=self.fdbdatacube,
             options=self.options,
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 6
-        assert len(result.leaves[0].result) == 2
+        assert len(result.leaves) == 3
+        assert len(result.leaves[0].result) == 4
 
     @pytest.mark.fdb
     def test_fdb_datacube_point_step_not_compressed(self):
@@ -169,10 +169,10 @@ class TestSlicingFDBDatacube:
         )
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(
-            request=request,
             datacube=self.fdbdatacube,
             options=self.options,
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 12
+        assert len(result.leaves) == 6
+        assert len(result.leaves[0].result) == 2

@@ -1,10 +1,10 @@
+import earthkit.data as data
 import pytest
-from earthkit import data
 from helper_functions import download_test_data
 
-from polytope.datacube.datacube_axis import FloatDatacubeAxis
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select
+from polytope_feature.datacube.datacube_axis import FloatDatacubeAxis
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, Select
 
 
 class TestInitDatacubeAxes:
@@ -13,7 +13,7 @@ class TestInitDatacubeAxes:
         download_test_data(nexus_url, "foo.grib")
 
         ds = data.from_source("file", "./tests/data/foo.grib")
-        latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
+        latlon_array = ds.to_xarray(engine="cfgrib").isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
         latlon_array = latlon_array.t2m
         self.options = {
             "axis_config": [
@@ -41,7 +41,6 @@ class TestInitDatacubeAxes:
             ],
         }
         self.API = Polytope(
-            request={},
             datacube=latlon_array,
             options=self.options,
         )
@@ -103,7 +102,7 @@ class TestInitDatacubeAxes:
         )
         assert path == {}
         assert unmapped_path == {"latitude": (89.94618771566562,)}
-        assert path_key == {"values": 0}
+        assert path_key == {"values": [0]}
         assert lat_ax.find_indices_between([89.94618771566562, 89.87647835333229], 89.87, 90, self.datacube, 0) == [
             89.94618771566562,
             89.87647835333229,
@@ -120,4 +119,5 @@ class TestInitDatacubeAxes:
             Select("valid_time", ["2023-06-25T12:00:00"]),
         )
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 9
+        result.pprint()
+        assert len(result.leaves) == 3

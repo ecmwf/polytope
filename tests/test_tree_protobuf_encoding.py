@@ -1,16 +1,15 @@
-import pandas as pd
 import pytest
 
-from polytope.datacube.backends.mock import MockDatacube
-from polytope.datacube.datacube_axis import (
+from polytope_feature.datacube.backends.mock import MockDatacube
+from polytope_feature.datacube.datacube_axis import (
     FloatDatacubeAxis,
     IntDatacubeAxis,
     PandasTimedeltaDatacubeAxis,
     PandasTimestampDatacubeAxis,
     UnsliceableDatacubeAxis,
 )
-from polytope.datacube.tensor_index_tree import TensorIndexTree
-from polytope.datacube.tree_encoding import decode_tree, encode_tree
+from polytope_feature.datacube.tensor_index_tree import TensorIndexTree
+from polytope_feature.datacube.tree_encoding import decode_tree, encode_tree
 
 
 class TestEncoder:
@@ -50,27 +49,14 @@ class TestEncoder:
     def test_encoding(self):
         import pygribjump as gj
 
-        from polytope.polytope import Polytope, Request
-        from polytope.shapes import Box, Select
+        from polytope_feature.engine.hullslicer import HullSlicer
+        from polytope_feature.polytope import Polytope
 
-        request = Request(
-            Select("step", [0]),
-            Select("levtype", ["sfc"]),
-            Select("date", [pd.Timestamp("20230625T120000")]),
-            Select("domain", ["g"]),
-            Select("expver", ["0001"]),
-            Select("param", ["167"]),
-            Select("class", ["od"]),
-            Select("stream", ["oper"]),
-            Select("type", ["an"]),
-            Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
-        )
         self.options = {
             "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
         }
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(
-            request=request,
             datacube=self.fdbdatacube,
             options=self.options,
         )

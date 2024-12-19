@@ -20,4 +20,4 @@ docs:
 	mkdocs build
 	mkdocs serve
 
-.PHONY: init test
+.PHONY: init test docs

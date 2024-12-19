@@ -2,8 +2,9 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, Select
 
 
 class TestSlicing3DXarrayDatacube:
@@ -27,7 +28,6 @@ class TestSlicing3DXarrayDatacube:
             "compressed_axes_config": ["long", "level", "step", "date"],
         }
         self.API = Polytope(
-            request={},
             datacube=array,
             options=options,
         )
@@ -41,7 +41,7 @@ class TestSlicing3DXarrayDatacube:
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 1
-        assert [leaf.values for leaf in result.leaves] == [(0.9, 1.0, 0.1, 0.2)]
+        assert [leaf.values for leaf in result.leaves] == [(0.1, 0.2, 0.9, 1.0)]
 
     def test_cyclic_float_surrounding(self):
         request = Request(

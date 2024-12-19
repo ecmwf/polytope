@@ -3,9 +3,10 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select
-from polytope.utility.exceptions import UnsliceableShapeError
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, Select
+from polytope_feature.utility.exceptions import UnsliceableShapeError
 
 
 class TestSlicingUnsliceableAxis:
@@ -17,7 +18,7 @@ class TestSlicingUnsliceableAxis:
             coords={"date": pd.date_range("2000-01-01", "2000-01-03", 3), "variable": ["a"], "level": range(1, 130)},
         )
         options = {"compressed_axes_config": ["date", "variable", "level"]}
-        self.API = Polytope(request={}, datacube=array, options=options)
+        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 
     # Testing different shapes
 

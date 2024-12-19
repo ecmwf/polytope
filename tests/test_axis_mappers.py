@@ -1,13 +1,13 @@
 import pandas as pd
 
-from polytope.datacube.datacube_axis import (
+from polytope_feature.datacube.datacube_axis import (
     DatacubeAxisCyclic,
     FloatDatacubeAxis,
     IntDatacubeAxis,
     PandasTimedeltaDatacubeAxis,
     PandasTimestampDatacubeAxis,
 )
-from polytope.options import PolytopeOptions
+from polytope_feature.options import PolytopeOptions
 
 
 class TestAxisMappers:

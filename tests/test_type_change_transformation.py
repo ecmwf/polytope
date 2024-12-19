@@ -1,8 +1,9 @@
 import numpy as np
 import xarray as xr
 
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Select
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Select
 
 
 class TestTypeChangeTransformation:
@@ -20,7 +21,8 @@ class TestTypeChangeTransformation:
             "axis_config": [{"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]}],
             "compressed_axes_config": ["step"],
         }
-        self.API = Polytope(request={}, datacube=array, options=options)
+        self.slicer = HullSlicer()
+        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 
     def test_merge_axis(self):
         request = Request(Select("step", [0]))

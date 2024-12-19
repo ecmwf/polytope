@@ -2,8 +2,9 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, Select
 
 
 class TestSlicingCyclic:
@@ -27,7 +28,6 @@ class TestSlicingCyclic:
             "compressed_axes_config": ["long", "level", "step", "date"],
         }
         self.API = Polytope(
-            request={},
             datacube=array,
             options=self.options,
         )
@@ -42,9 +42,6 @@ class TestSlicingCyclic:
         assert len(result.leaves) == 1
         result.pprint()
         assert [(val,) for val in result.leaves[0].values] == [
-            (0.8,),
-            (0.9,),
-            (1.0,),
             (0.1,),
             (0.2,),
             (0.3,),
@@ -52,6 +49,9 @@ class TestSlicingCyclic:
             (0.5,),
             (0.6,),
             (0.7,),
+            (0.8,),
+            (0.9,),
+            (1.0,),
         ]
 
     def test_cyclic_float_axis_across_seam_repeated(self):
@@ -84,26 +84,26 @@ class TestSlicingCyclic:
         assert len(result.leaves) == 1
         assert [(val,) for val in result.leaves[0].values] == [
             (0.0,),
+            (0.0,),
+            (0.1,),
             (0.1,),
             (0.2,),
+            (0.2,),
+            (0.3,),
             (0.3,),
             (0.4,),
+            (0.4,),
+            (0.5,),
             (0.5,),
             (0.6,),
+            (0.6,),
+            (0.7,),
             (0.7,),
             (0.8,),
+            (0.8,),
+            (0.9,),
             (0.9,),
             (1.0,),
-            (0.1,),
-            (0.2,),
-            (0.3,),
-            (0.4,),
-            (0.5,),
-            (0.6,),
-            (0.7,),
-            (0.8,),
-            (0.9,),
-            (0.0,),
         ]
 
     def test_cyclic_float_axis_inside_cyclic_range(self):
@@ -149,31 +149,31 @@ class TestSlicingCyclic:
         # result.pprint()
         assert len(result.leaves) == 1
         assert [(val,) for val in result.leaves[0].values] == [
-            (0.3,),
-            (0.4,),
-            (0.5,),
-            (0.6,),
-            (0.7,),
-            (0.8,),
-            (0.9,),
-            (1.0,),
-            (0.1,),
-            (0.2,),
-            (0.3,),
-            (0.4,),
-            (0.5,),
-            (0.6,),
-            (0.7,),
-            (0.8,),
-            (0.9,),
             (0.0,),
             (0.1,),
+            (0.1,),
+            (0.2,),
             (0.2,),
             (0.3,),
+            (0.3,),
+            (0.3,),
+            (0.4,),
+            (0.4,),
             (0.4,),
             (0.5,),
+            (0.5,),
+            (0.5,),
+            (0.6,),
+            (0.6,),
             (0.6,),
             (0.7,),
+            (0.7,),
+            (0.7,),
+            (0.8,),
+            (0.8,),
+            (0.9,),
+            (0.9,),
+            (1.0,),
         ]
 
     def test_cyclic_float_axis_below_axis_range(self):
@@ -199,6 +199,10 @@ class TestSlicingCyclic:
         # result.pprint()
         assert len(result.leaves) == 1
         assert [(val,) for val in result.leaves[0].values] == [
+            (0.0,),
+            (0.1,),
+            (0.2,),
+            (0.3,),
             (0.3,),
             (0.4,),
             (0.5,),
@@ -206,10 +210,6 @@ class TestSlicingCyclic:
             (0.7,),
             (0.8,),
             (0.9,),
-            (0.0,),
-            (0.1,),
-            (0.2,),
-            (0.3,),
         ]
 
     def test_cyclic_float_axis_reversed(self):

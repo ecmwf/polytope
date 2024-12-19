@@ -1,7 +1,7 @@
 import pytest
 
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, ConvexPolytope
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, ConvexPolytope
 
 
 class TestQuadTreeSlicer:
@@ -46,7 +46,6 @@ class TestQuadTreeSlicer:
         points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
         polytope = Box(["latitude", "longitude"], [1, 1], [20, 30]).polytope()[0]
         self.API = Polytope(
-            request=Request(polytope),
             datacube=self.fdbdatacube,
             options=self.options,
             engine_options={"latitude": "quadtree", "longitude": "quadtree"},
@@ -59,7 +58,6 @@ class TestQuadTreeSlicer:
         points = [[10, 10], [80, 10], [-5, 5], [5, 50], [5, 10], [50, 10], [2, 10], [15, 15]]
         polytope = ConvexPolytope(["latitude", "longitude"], [[-10, 1], [20, 1], [5, 20]])
         self.API = Polytope(
-            request=Request(polytope),
             datacube=self.fdbdatacube,
             options=self.options,
             engine_options={"latitude": "quadtree", "longitude": "quadtree"},

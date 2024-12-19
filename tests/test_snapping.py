@@ -1,8 +1,9 @@
 import numpy as np
 import xarray as xr
 
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Select
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Select
 
 
 class TestSlicing3DXarrayDatacube:
@@ -17,7 +18,7 @@ class TestSlicing3DXarrayDatacube:
             },
         )
         options = {"compressed_axes_config": ["level", "step"]}
-        self.API = Polytope(request={}, datacube=array, options=options)
+        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 
     # Testing different shapes
 

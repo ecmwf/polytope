@@ -1,7 +1,8 @@
 import xarray as xr
 
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Select
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Select
 
 
 class TestSlicing3DXarrayDatacube:
@@ -19,7 +20,8 @@ class TestSlicing3DXarrayDatacube:
             "axis_config": [{"axis_name": "long", "transformations": [{"name": "cyclic", "range": [0, 1.0]}]}],
             "compressed_axes_config": ["long"],
         }
-        self.API = Polytope(request={}, datacube=array, options=options)
+        self.slicer = HullSlicer()
+        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 
     # Testing different shapes
 
@@ -28,7 +30,7 @@ class TestSlicing3DXarrayDatacube:
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 1
-        assert result.leaves[0].flatten()["long"] == (0.5, 0.0)
+        assert result.leaves[0].flatten()["long"] == (0.0, 0.5)
         assert result.leaves[0].result[0] is None
-        assert result.leaves[0].result[1][0] == 1
-        assert result.leaves[0].result[1][1] == 0
+        assert result.leaves[0].result[1][0] == 0
+        assert result.leaves[0].result[1][1] == 1

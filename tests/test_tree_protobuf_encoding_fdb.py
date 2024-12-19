@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from polytope.datacube.tree_encoding import decode_tree, encode_tree
+from polytope_feature.datacube.tree_encoding import decode_tree, encode_tree
 
 
 class TestEncoder:
@@ -12,8 +12,9 @@ class TestEncoder:
     def test_encoding(self):
         import pygribjump as gj
 
-        from polytope.polytope import Polytope, Request
-        from polytope.shapes import Box, Select
+        from polytope_feature.engine.hullslicer import HullSlicer
+        from polytope_feature.polytope import Polytope, Request
+        from polytope_feature.shapes import Box, Select
 
         request = Request(
             Select("step", [0]),
@@ -61,12 +62,14 @@ class TestEncoder:
         }
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(
-            request=request,
             datacube=self.fdbdatacube,
             options=self.options,
         )
         result = self.API.retrieve(request)
         result.pprint()
+        assert len(result.leaves) == 3
+        assert len(result.leaves[0].result) == 3
+
         fdb_datacube = self.API.datacube
         fdb_datacube.prep_tree_encoding(result)
         encoded_bytes = encode_tree(result)
@@ -74,4 +77,4 @@ class TestEncoder:
         decoded_tree = decode_tree(fdb_datacube, encoded_bytes)
         decoded_tree.pprint()
         assert decoded_tree.leaves[0].result_size == [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-        assert decoded_tree.leaves[0].indexes_size == [3, 3, 3]
+        assert decoded_tree.leaves[0].indexes_size == [1, 1, 1]

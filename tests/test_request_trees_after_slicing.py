@@ -1,10 +1,11 @@
 import numpy as np
 import xarray as xr
 
-from polytope.datacube.backends.xarray import XArrayDatacube
-from polytope.datacube.datacube_axis import IntDatacubeAxis
-from polytope.polytope import Polytope
-from polytope.shapes import Box
+from polytope_feature.datacube.backends.xarray import XArrayDatacube
+from polytope_feature.datacube.datacube_axis import IntDatacubeAxis
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope
+from polytope_feature.shapes import Box
 
 
 class TestIndexTreesAfterSlicing:
@@ -19,7 +20,7 @@ class TestIndexTreesAfterSlicing:
         )
         self.xarraydatacube = XArrayDatacube(array)
         options = {"compressed_axes_config": ["level", "step"]}
-        self.API = Polytope(request={}, datacube=array, options=options)
+        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 
     def test_path_values(self):
         box = Box(["step", "level"], [3.0, 1.0], [6.0, 3.0])
@@ -27,8 +28,8 @@ class TestIndexTreesAfterSlicing:
         # request = self.slicer.extract(self.xarraydatacube, polytope)
         request = self.API.slice(self.xarraydatacube, polytope)
         datacube_path = request.leaves[0].flatten()
-        # request.pprint()
-        assert datacube_path.values() == tuple([tuple([3.0]), tuple([1.0])])
+        request.pprint()
+        assert datacube_path.values() == tuple([tuple([3.0]), tuple([1.0, 2, 3])])
         assert len(datacube_path.values()) == 2
 
     def test_path_keys(self):
@@ -54,8 +55,9 @@ class TestIndexTreesAfterSlicing:
         # request = self.slicer.extract(self.xarraydatacube, polytope)
         request = self.API.slice(self.xarraydatacube, polytope)
         path = request.leaves[0].flatten()
+        request.pprint()
         assert path["step"] == tuple([3.0])
-        assert path["level"] == tuple([1.0])
+        assert path["level"] == tuple([1.0, 2, 3])
 
     def test_add_child(self):
         box = Box(["step", "level"], [3.0, 1.0], [6.0, 3.0])

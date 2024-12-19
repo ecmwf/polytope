@@ -1,7 +1,7 @@
 import pytest
 
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box
 
 
 class TestQuadTreeSlicer:

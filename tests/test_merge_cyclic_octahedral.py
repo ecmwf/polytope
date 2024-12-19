@@ -2,9 +2,9 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select, Span
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, Select, Span
 
 
 class TestMultipleTransformations:
@@ -39,7 +39,6 @@ class TestMultipleTransformations:
         }
         self.slicer = HullSlicer()
         self.API = Polytope(
-            request={},
             datacube=self.array,
             engine=self.slicer,
             options=self.options,

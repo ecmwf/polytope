@@ -1,4 +1,4 @@
-import polytope.datacube.index_tree_pb2 as pb2
+import polytope_feature.datacube.index_tree_pb2 as pb2
 
 
 class TestTreeProtobuf:

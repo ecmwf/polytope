@@ -3,8 +3,9 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from polytope.polytope import Polytope, Request
-from polytope.shapes import All, Select, Span
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import All, Select, Span
 
 
 class TestSlicing3DXarrayDatacube:
@@ -25,7 +26,6 @@ class TestSlicing3DXarrayDatacube:
             "compressed_axes_config": ["date", "step", "level", "longitude"],
         }
         self.API = Polytope(
-            request={},
             datacube=array,
             options=self.options,
         )
@@ -59,7 +59,13 @@ class TestSlicing3DXarrayDatacube:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                        {
+                            "name": "mapper",
+                            "type": "octahedral",
+                            "resolution": 1280,
+                            "axes": ["latitude", "longitude"],
+                            "md5_hash": "5ea6378bf5e2904f565ef7221da63a09",
+                        }
                     ],
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
@@ -82,11 +88,12 @@ class TestSlicing3DXarrayDatacube:
             Span("latitude", 89.9, 90),
             All("longitude"),
         )
-        self.API = Polytope(request=request, datacube=self.fdbdatacube, options=self.options)
+        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, options=self.options)
         result = self.API.retrieve(request)
-        # result.pprint()
-        assert len(result.leaves) == 20
-        assert tuple([leaf.flatten()["longitude"][0] for leaf in result.leaves]) == (
+        result.pprint()
+        assert len(result.leaves) == 1
+        assert len(result.leaves[0].result) == 20
+        assert result.leaves[0].values == (
             0.0,
             18.0,
             36.0,

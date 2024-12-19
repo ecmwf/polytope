@@ -1,4 +1,4 @@
-from polytope.datacube.transformations.datacube_mappers.mapper_types.octahedral import (
+from polytope_feature.datacube.transformations.datacube_mappers.mapper_types.octahedral import (
     OctahedralGridMapper,
 )
 

@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 
 __version__ = re.search(
     r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
-    io.open("polytope/version.py", encoding="utf_8_sig").read(),
+    io.open("polytope_feature/version.py", encoding="utf_8_sig").read(),
 ).group(1)
 
 with open("requirements.txt") as f:
