@@ -7,7 +7,7 @@ from ...utility.exceptions import BadGridError, BadRequestError
 from ...utility.geometry import nearest_pt
 from .datacube import Datacube, TensorIndexTree
 
-from additional_qubed_operations import load_tree, get_next_ax_vals, find_subtree, get_axes
+from .additional_qubed_operations import load_tree, get_next_ax_vals, find_subtree, get_axes, get_fdb_coordinates
 
 
 class FDBDatacube(Datacube):
@@ -35,26 +35,27 @@ class FDBDatacube(Datacube):
         self.fdb_tree = load_tree()
 
         # TODO: instead of creating the datacube statically, will need to create dynamically the axes as we slice
-        # if len(alternative_axes) == 0:
-        #     logging.info("Find GribJump axes for %s", context)
-        #     self.fdb_coordinates = self.gj.axes(partial_request, ctx=context)
-        #     logging.info("Retrieved available GribJump axes for %s", context)
-        #     if len(self.fdb_coordinates) == 0:
-        #         raise BadRequestError(partial_request)
-        # else:
-        #     self.fdb_coordinates = {}
-        #     for axis_config in alternative_axes:
-        #         self.fdb_coordinates[axis_config.axis_name] = axis_config.values
+        if len(alternative_axes) == 0:
+            logging.info("Find GribJump axes for %s", context)
+            # self.fdb_coordinates = self.gj.axes(partial_request, ctx=context)
+            self.fdb_coordinates = get_fdb_coordinates(self.fdb_tree)
+            logging.info("Retrieved available GribJump axes for %s", context)
+            if len(self.fdb_coordinates) == 0:
+                raise BadRequestError(partial_request)
+        else:
+            self.fdb_coordinates = {}
+            for axis_config in alternative_axes:
+                self.fdb_coordinates[axis_config.axis_name] = axis_config.values
 
-        # fdb_coordinates_copy = deepcopy(self.fdb_coordinates)
-        # for axis, vals in fdb_coordinates_copy.items():
-        #     if len(vals) == 1:
-        #         if vals[0] == "":
-        #             self.fdb_coordinates.pop(axis)
+        fdb_coordinates_copy = deepcopy(self.fdb_coordinates)
+        for axis, vals in fdb_coordinates_copy.items():
+            if len(vals) == 1:
+                if vals[0] == "":
+                    self.fdb_coordinates.pop(axis)
 
         # logging.info("Axes returned from GribJump are: " + str(self.fdb_coordinates))
 
-        self.fdb_coordinates = {}
+        # self.fdb_coordinates = {}
         self.fdb_coordinates["values"] = []
 
         for name, values in self.fdb_coordinates.items():
@@ -80,6 +81,9 @@ class FDBDatacube(Datacube):
                 self._check_and_add_axes(options, name, val)
 
         logging.info("Polytope created axes for %s", self._axes.keys())
+
+    def check_and_create_axis(self):
+        pass
 
     def check_branching_axes(self, request):
         polytopes = request.polytopes()

@@ -2,7 +2,7 @@ import re
 import json
 from pathlib import Path
 
-from qubed_compressed_tree import CompressedTree
+from .qubed_compressed_tree import CompressedTree
 
 import os
 
@@ -61,6 +61,31 @@ def subtree(tree, axis, val):
     tree_key = axis + "=" + val
     subtree = tree[tree_key]
     return subtree
+
+
+def get_fdb_coordinates_(tree, coordinates=None):
+    if coordinates is None:
+        coordinates = {}
+
+    tree_keys = list(tree.keys())
+    if len(tree_keys) != 0:
+        for key in tree_keys:
+            axis, vals = re.split(r"[=]", key)
+            new_vals = re.split(r'[,]', vals)
+
+            if axis not in coordinates:
+                coordinates[axis] = new_vals
+            else:
+                coordinates[axis].extend(new_vals)
+
+            subtree = tree[key]
+            get_fdb_coordinates_(subtree, coordinates)
+
+
+def get_fdb_coordinates(tree):
+    coordinates = {}
+    get_fdb_coordinates_(tree, coordinates)
+    return coordinates
 
 
 # def get_all_axes(tree, axes=[]):
