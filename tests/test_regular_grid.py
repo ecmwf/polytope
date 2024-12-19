@@ -2,8 +2,8 @@ import pandas as pd
 import pytest
 from helper_functions import download_test_data, find_nearest_latlon
 
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Disk, Select
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Disk, Select
 
 # import geopandas as gpd
 # import matplotlib.pyplot as plt
@@ -77,7 +77,7 @@ class TestRegularGrid:
         result.pprint()
         assert len(result.leaves) == 5
 
-        from polytope.datacube.transformations.datacube_mappers.mapper_types.regular import (
+        from polytope_feature.datacube.transformations.datacube_mappers.mapper_types.regular import (
             RegularGridMapper,
         )
 

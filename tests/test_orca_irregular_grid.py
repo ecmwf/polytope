@@ -6,8 +6,8 @@ import pytest
 import xarray as xr
 from helper_functions import find_nearest_latlon
 
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, Select
 
 
 class TestQuadTreeSlicer:

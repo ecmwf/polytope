@@ -2,8 +2,8 @@ import pandas as pd
 import pytest
 from helper_functions import download_test_data
 
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Select
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Select
 
 
 class TestRegularGrid:

@@ -2,9 +2,9 @@ import time
 
 import pandas as pd
 
-from polytope.datacube.backends.fdb import FDBDatacube
-from polytope.polytope import Polytope, Request
-from polytope.shapes import All, Point, Select
+from polytope_feature.datacube.backends.fdb import FDBDatacube
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import All, Point, Select
 
 time1 = time.time()
 # Create a dataarray with 3 labelled axes using different index types

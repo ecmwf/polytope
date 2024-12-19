@@ -1,7 +1,7 @@
 import xarray as xr
 
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Select
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Select
 
 
 class TestSlicing3DXarrayDatacube:

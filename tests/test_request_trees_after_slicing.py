@@ -1,10 +1,10 @@
 import numpy as np
 import xarray as xr
 
-from polytope.datacube.backends.xarray import XArrayDatacube
-from polytope.datacube.datacube_axis import IntDatacubeAxis
-from polytope.polytope import Polytope
-from polytope.shapes import Box
+from polytope_feature.datacube.backends.xarray import XArrayDatacube
+from polytope_feature.datacube.datacube_axis import IntDatacubeAxis
+from polytope_feature.polytope import Polytope
+from polytope_feature.shapes import Box
 
 
 class TestIndexTreesAfterSlicing:

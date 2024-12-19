@@ -6,8 +6,8 @@ import pytest
 from earthkit import data
 from helper_functions import download_test_data
 
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, Select
 
 
 class TestSlicingEra5Data:

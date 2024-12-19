@@ -2,11 +2,11 @@ import pytest
 from earthkit import data
 from helper_functions import download_test_data, find_nearest_latlon
 
-from polytope.datacube.transformations.datacube_mappers.mapper_types.healpix import (
+from polytope_feature.datacube.transformations.datacube_mappers.mapper_types.healpix import (
     HealpixGridMapper,
 )
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, Select
 
 
 class TestOctahedralGrid:

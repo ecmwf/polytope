@@ -1,8 +1,8 @@
 import pandas as pd
 import pytest
 
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Disk, Select, Span
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, Disk, Select, Span
 
 
 class TestSlicingFDBDatacube:

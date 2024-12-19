@@ -1,16 +1,16 @@
 import pandas as pd
 import pytest
 
-from polytope.datacube.backends.mock import MockDatacube
-from polytope.datacube.datacube_axis import (
+from polytope_feature.datacube.backends.mock import MockDatacube
+from polytope_feature.datacube.datacube_axis import (
     FloatDatacubeAxis,
     IntDatacubeAxis,
     PandasTimedeltaDatacubeAxis,
     PandasTimestampDatacubeAxis,
     UnsliceableDatacubeAxis,
 )
-from polytope.datacube.tensor_index_tree import TensorIndexTree
-from polytope.datacube.tree_encoding import decode_tree, encode_tree
+from polytope_feature.datacube.tensor_index_tree import TensorIndexTree
+from polytope_feature.datacube.tree_encoding import decode_tree, encode_tree
 
 
 class TestEncoder:
@@ -50,8 +50,8 @@ class TestEncoder:
     def test_encoding(self):
         import pygribjump as gj
 
-        from polytope.polytope import Polytope, Request
-        from polytope.shapes import Box, Select
+        from polytope_feature.polytope import Polytope, Request
+        from polytope_feature.shapes import Box, Select
 
         request = Request(
             Select("step", [0]),

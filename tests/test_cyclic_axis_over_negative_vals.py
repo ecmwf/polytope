@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, Select
 
 
 class TestSlicingCyclicAxisNegVals:
