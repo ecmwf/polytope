@@ -180,6 +180,10 @@ If this software is useful in your work, please consider citing our [paper](http
 
 > Leuridan, M., Hawkes, J., Smart, S., Danovaro, E., and Quintino, T., “Polytope: An Algorithm for Efficient Feature Extraction on Hypercubes”, <i>arXiv e-prints</i>, 2023. doi:10.48550/arXiv.2306.11553.
 
+Other papers in preparation include: 
+
+> Performance Analysis of an Efficient Algorithm for Feature Extraction from Large Scale Meteorological Data Stores
+
 ## Acknowledgements
 
 Past and current funding and support for **Polytope** is listed in the adjoining [Acknowledgements](./ACKNOWLEDGEMENTS.rst).
