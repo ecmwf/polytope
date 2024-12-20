@@ -182,7 +182,7 @@ If this software is useful in your work, please consider citing our [paper](http
 
 Other papers in preparation include: 
 
-> Performance Analysis of an Efficient Algorithm for Feature Extraction from Large Scale Meteorological Data Stores
+> Leuridan, M., Bradley, C., Hawkes, J., Quintino, T., and Schultz, M., "Performance Analysis of an Efficient Algorithm for Feature Extraction from Large Scale Meteorological Data Stores".
 
 ## Acknowledgements
 
