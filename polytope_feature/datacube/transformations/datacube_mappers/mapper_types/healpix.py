@@ -5,7 +5,7 @@ from ..datacube_mappers import DatacubeMapper
 
 
 class HealpixGridMapper(DatacubeMapper):
-    def __init__(self, base_axis, mapped_axes, resolution, local_area=[]):
+    def __init__(self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None):
         # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
@@ -13,6 +13,14 @@ class HealpixGridMapper(DatacubeMapper):
         self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
         self._first_axis_vals = self.first_axis_vals()
         self.compressed_grid_axes = [self._mapped_axes[1]]
+        if md5_hash is not None:
+            self.md5_hash = md5_hash
+        else:
+            self.md5_hash = _md5_hash.get(resolution, None)
+        if self._axis_reversed[mapped_axes[1]]:
+            raise NotImplementedError("Healpix grid with second axis in decreasing order is not supported")
+        if not self._axis_reversed[mapped_axes[0]]:
+            raise NotImplementedError("Healpix grid with first axis in increasing order is not supported")
 
     def first_axis_vals(self):
         rad2deg = 180 / math.pi
@@ -133,3 +141,7 @@ class HealpixGridMapper(DatacubeMapper):
         second_idx = self.second_axis_vals(first_val).index(second_val)
         healpix_index = self.axes_idx_to_healpix_idx(first_idx, second_idx)
         return healpix_index
+
+
+# md5 grid hash in form {resolution : hash}
+_md5_hash = {}

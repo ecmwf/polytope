@@ -1,7 +1,7 @@
 # Example
 Here is a step-by-step example of how to use the Polytope software.
 
-1. In this example, we first specify the data which will be in our Xarray datacube. Note that the data here comes from the GRIB file called "winds.grib", which is 3-dimensional with dimensions: step, latitude and longitude.
+1. In this example, we first specify the data which will be in our XArray datacube. Note that the data here comes from the GRIB file called "winds.grib", which is 3-dimensional with dimensions: step, latitude and longitude.
 
         import xarray as xr
 

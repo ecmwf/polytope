@@ -1,3 +1,6 @@
+import itertools
+
+
 def bisect_left_cmp(arr, val, cmp):
     left = -1
     r = len(arr)
@@ -20,3 +23,19 @@ def bisect_right_cmp(arr, val, cmp):
         else:
             r = e
     return r
+
+
+def unique(points):
+    points.sort()
+    points = [k for k, _ in itertools.groupby(points)]
+    return points
+
+
+def argmin(points):
+    amin = min(range(len(points)), key=points.__getitem__)
+    return amin
+
+
+def argmax(points):
+    amax = max(range(len(points)), key=points.__getitem__)
+    return amax

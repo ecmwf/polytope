@@ -20,7 +20,7 @@ class TestQuadTreeSlicer:
             "oceanModelLayer": "hullslicer",
             "valid_time": "hullslicer",
         }
-        self.arr = xr.open_dataset("../../Downloads/Reference_eORCA12_U_to_HEALPix_32.grib", engine="cfgrib").avg_uo
+        self.arr = xr.open_dataset("../../Downloads/Reference_eORCA12_U_to_HEALPix_32.grib", engine="cfgrib")
         self.latitudes = self.arr.latitude.values
         self.longitudes = self.arr.longitude.values
         self.points = list(zip(self.latitudes, self.longitudes))

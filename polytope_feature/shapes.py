@@ -1,9 +1,12 @@
 import copy
 import math
+import warnings
 from abc import ABC, abstractmethod
 from typing import List
 
 import tripy
+
+from .utility.list_tools import unique
 
 """
 Shapes used for the constructive geometry API of Polytope
@@ -26,7 +29,7 @@ class ConvexPolytope(Shape):
     def __init__(self, axes, points, method=None, is_orthogonal=False):
         self._axes = list(axes)
         self.is_flat = False
-        if len(self._axes) == 1:
+        if len(self._axes) == 1 and len(points) == 1:
             self.is_flat = True
         self.points = points
         self.method = method
@@ -60,11 +63,13 @@ class ConvexPolytope(Shape):
 
 # This is the only shape which can slice on axes without a discretizer or interpolator
 class Select(Shape):
-    """Matches several discrete value"""
+    """Matches several discrete values"""
 
     def __init__(self, axis, values, method=None):
         self.axis = axis
-        self.values = values
+        self.values = unique(values)
+        if len(self.values) != len(values):
+            warnings.warn("Duplicate request values were removed")
         self.method = method
 
     def axes(self):
@@ -293,7 +298,9 @@ class PathSegment(Shape):
             for p in polytope.points:
                 points.append([a + b for a, b in zip(p, start)])
                 points.append([a + b for a, b in zip(p, end)])
-            self.polytopes.append(ConvexPolytope(self.axes(), points))
+            poly = ConvexPolytope(self.axes(), points)
+            poly.add_to_union()
+            self.polytopes.append(poly)
 
     def axes(self):
         return self._axes
@@ -384,7 +391,9 @@ class Polygon(Shape):
         else:
             for t in triangles:
                 tri_points = [list(point) for point in t]
-                self.polytopes.append(ConvexPolytope(self.axes(), tri_points))
+                poly = ConvexPolytope(self.axes(), tri_points)
+                poly.add_to_union()
+                self.polytopes.append(poly)
 
     def axes(self):
         return self._axes

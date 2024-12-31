@@ -13,20 +13,32 @@ class DatacubeMapper(DatacubeAxisTransformation):
         self.grid_resolution = mapper_options.resolution
         self.grid_axes = mapper_options.axes
         self.local_area = []
+        self.md5_hash = None
+        if mapper_options.md5_hash is not None:
+            self.md5_hash = mapper_options.md5_hash
         if mapper_options.local is not None:
             self.local_area = mapper_options.local
+        self._axis_reversed = None
+        if mapper_options.axis_reversed is not None:
+            self._axis_reversed = mapper_options.axis_reversed
         self.old_axis = name
         self._final_transformation = self.generate_final_transformation()
         self._final_mapped_axes = self._final_transformation._mapped_axes
         self._axis_reversed = self._final_transformation._axis_reversed
         self.compressed_grid_axes = self._final_transformation.compressed_grid_axes
+        self.md5_hash = self._final_transformation.md5_hash
 
     def generate_final_transformation(self):
         map_type = _type_to_datacube_mapper_lookup[self.grid_type]
         module = import_module(
-            "polytope_feature.datacube.transformations.datacube_mappers.mapper_types." + self.grid_type)
+            "polytope_feature.datacube.transformations.datacube_mappers.mapper_types." + self.grid_type
+        )
         constructor = getattr(module, map_type)
-        transformation = deepcopy(constructor(self.old_axis, self.grid_axes, self.grid_resolution, self.local_area))
+        transformation = deepcopy(
+            constructor(
+                self.old_axis, self.grid_axes, self.grid_resolution, self.md5_hash, self.local_area, self._axis_reversed
+            )
+        )
         return transformation
 
     def blocked_axes(self):
@@ -94,7 +106,15 @@ class DatacubeMapper(DatacubeAxisTransformation):
         if axis.name == self._mapped_axes()[1]:
             first_val = unwanted_path[self._mapped_axes()[0]]
             unmapped_idx = leaf_path.get("index", None)
-            unmapped_idx = self.unmap(first_val, value, unmapped_idx)
+            if unmapped_idx is not None and len(unmapped_idx) > 0:
+                # for val in value:
+                #     unmapped_idx.append(self.unmap(first_val, (val,)))
+                unmapped_idx = list(unmapped_idx)
+            else:
+                unmapped_idx = []
+                for val in value:
+                    unmapped_idx.append(self.unmap(first_val, (val,)))
+            # unmapped_idx = self.unmap(first_val, value, unmapped_idx)
             leaf_path.pop(self._mapped_axes()[0], None)
             key_value_path.pop(axis.name)
             key_value_path[self.old_axis] = unmapped_idx

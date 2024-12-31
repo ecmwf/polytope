@@ -61,12 +61,15 @@ class TestEncoder:
         }
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(
-            request=request,
+            request,
             datacube=self.fdbdatacube,
             options=self.options,
         )
         result = self.API.retrieve(request)
         result.pprint()
+        assert len(result.leaves) == 3
+        assert len(result.leaves[0].result) == 3
+
         fdb_datacube = self.API.datacube
         fdb_datacube.prep_tree_encoding(result)
         encoded_bytes = encode_tree(result)
@@ -74,4 +77,4 @@ class TestEncoder:
         decoded_tree = decode_tree(fdb_datacube, encoded_bytes)
         decoded_tree.pprint()
         assert decoded_tree.leaves[0].result_size == [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-        assert decoded_tree.leaves[0].indexes_size == [3, 3, 3]
+        assert decoded_tree.leaves[0].indexes_size == [1, 1, 1]

@@ -31,14 +31,14 @@ Polytope is designed to extend different datacube backends:
 Polytope supports datacubes which have branching, non-uniform indexing, and even cyclic axes. If the datacube backend supports byte-addressability and efficient random access (either in-memory or direct from storage), **Polytope** can be used to dramatically decrease overall I/O load.
 
 > [!WARNING]
-> This project is BETA and will be experimental for the forseable future. Interfaces and functionality are likely to change, and the project itself may be scrapped. DO NOT use this software in any project/software that is operational.
+> This project is BETA and will be experimental for the foreseeable future. Interfaces and functionality are likely to change, and the project itself may be scrapped. DO NOT use this software in any project/software that is operational.
 
 ## Concept 
 
 Polytope is designed to enable extraction of arbitrary extraction of data from a datacube. Instead of the typical range-based bounding-box approach, Polytope can extract any shape of data from a datacube using a "polytope" (*n*-dimensional polygon) stencil.
 
 <p align="center">
-  <img src="./docs/Overview/images_overview/ecmwf_polytope.png" alt="Polytope Concept" width="450"/>
+  <img src="./docs/Algorithm/Overview/images_overview/ecmwf_polytope.png" alt="Polytope Concept" width="450"/>
 </p>
 
 The Polytope algorithm can for example be used to extract:

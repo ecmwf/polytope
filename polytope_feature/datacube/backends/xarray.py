@@ -10,7 +10,7 @@ class XArrayDatacube(Datacube):
     """Xarray arrays are labelled, axes can be defined as strings or integers (e.g. "time" or 0)."""
 
     def __init__(
-        self, dataarray: xr.DataArray, axis_options=None, compressed_axes_options=[], point_cloud_options=None
+        self, dataarray: xr.DataArray, axis_options=None, compressed_axes_options=[], point_cloud_options=None, context=None
     ):
         super().__init__(axis_options, compressed_axes_options)
         if axis_options is None:
@@ -58,12 +58,12 @@ class XArrayDatacube(Datacube):
         if self.has_point_cloud:
             return self.has_point_cloud
 
-    def get(self, requests, leaf_path=None, axis_counter=0):
+    def get(self, requests, context=None, leaf_path=None, axis_counter=0):
         if leaf_path is None:
             leaf_path = {}
         if requests.axis.name == "root":
             for c in requests.children:
-                self.get(c, leaf_path, axis_counter + 1)
+                self.get(c, context, leaf_path, axis_counter + 1)
         else:
             key_value_path = {requests.axis.name: requests.values}
             ax = requests.axis
@@ -76,7 +76,7 @@ class XArrayDatacube(Datacube):
                 for c in requests.children:
                     if axis_counter == self.axis_counter - 1:
                         leaf_path["index"] = c.indexes
-                    self.get(c, leaf_path, axis_counter + 1)
+                    self.get(c, context, leaf_path, axis_counter + 1)
             else:
                 if self.axis_counter != axis_counter:
                     requests.remove_branch()
@@ -84,9 +84,7 @@ class XArrayDatacube(Datacube):
                     # We are at a leaf and need to assign value to it
                     leaf_path_copy = deepcopy(leaf_path)
                     unmapped_path = {}
-                    print(leaf_path_copy)
                     self.refit_path(leaf_path_copy, unmapped_path, leaf_path)
-                    print(leaf_path_copy)
                     for key in leaf_path_copy:
                         if isinstance(leaf_path_copy[key], tuple):
                             leaf_path_copy[key] = list(leaf_path_copy[key])
@@ -95,7 +93,6 @@ class XArrayDatacube(Datacube):
                             unmapped_path[key] = list(unmapped_path[key])
                     subxarray = self.dataarray.sel(leaf_path_copy, method="nearest")
                     subxarray = subxarray.sel(unmapped_path)
-                    # value = subxarray.item()
                     value = subxarray.values
                     key = subxarray.name
                     requests.result = (key, value)

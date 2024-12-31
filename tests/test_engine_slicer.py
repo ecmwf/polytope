@@ -1,6 +1,7 @@
 from polytope_feature.datacube.backends.mock import MockDatacube
-from polytope_feature.polytope import Polytope
+from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.shapes import Box, Polygon
+from polytope_feature.polytope import Polytope
 
 
 class TestEngineSlicer:

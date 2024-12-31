@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
+from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
 
@@ -26,6 +27,7 @@ class TestSlicingCyclicAxisNegVals:
             ],
             "compressed_axes_config": ["long", "level", "step", "date"],
         }
+        self.slicer = HullSlicer()
         self.API = Polytope(request={}, datacube=array, options=options)
 
     # Testing different shapes
@@ -38,7 +40,6 @@ class TestSlicingCyclicAxisNegVals:
         result.pprint()
         assert len(result.leaves) == 1
         assert [(val,) for val in result.leaves[0].values] == [
-            (-0.2,),
             (-1.1,),
             (-1.0,),
             (-0.9,),
@@ -48,6 +49,7 @@ class TestSlicingCyclicAxisNegVals:
             (-0.5,),
             (-0.4,),
             (-0.3,),
+            (-0.2,),
         ]
 
     def test_cyclic_float_axis_inside_cyclic_range(self):
@@ -91,31 +93,31 @@ class TestSlicingCyclicAxisNegVals:
         result.pprint()
         assert len(result.leaves) == 1
         assert [(val,) for val in result.leaves[0].values] == [
-            (-0.7,),
-            (-0.6,),
-            (-0.5,),
-            (-0.4,),
-            (-0.3,),
-            (-0.2,),
+            (-1.1,),
             (-1.1,),
             (-1.0,),
-            (-0.9,),
-            (-0.8,),
-            (-0.7,),
-            (-0.6,),
-            (-0.5,),
-            (-0.4,),
-            (-0.3,),
-            (-0.2,),
-            (-1.1,),
             (-1.0,),
             (-0.9,),
+            (-0.9,),
+            (-0.8,),
             (-0.8,),
             (-0.7,),
+            (-0.7,),
+            (-0.7,),
+            (-0.6,),
+            (-0.6,),
             (-0.6,),
             (-0.5,),
+            (-0.5,),
+            (-0.5,),
+            (-0.4,),
+            (-0.4,),
             (-0.4,),
             (-0.3,),
+            (-0.3,),
+            (-0.3,),
+            (-0.2,),
+            (-0.2,),
         ]
 
     def test_cyclic_float_axis_below_axis_range(self):
@@ -140,6 +142,10 @@ class TestSlicingCyclicAxisNegVals:
         # result.pprint()
         assert len(result.leaves) == 1
         assert [(val,) for val in result.leaves[0].values] == [
+            (-1.0,),
+            (-0.9,),
+            (-0.8,),
+            (-0.7,),
             (-0.7,),
             (-0.6,),
             (-0.5,),
@@ -147,8 +153,4 @@ class TestSlicingCyclicAxisNegVals:
             (-0.3,),
             (-0.2,),
             (-0.1,),
-            (-1.0,),
-            (-0.9,),
-            (-0.8,),
-            (-0.7,),
         ]

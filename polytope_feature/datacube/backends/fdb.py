@@ -1,7 +1,9 @@
 import logging
+import operator
 from copy import deepcopy
 from itertools import product
 
+from ...utility.exceptions import BadGridError, BadRequestError
 from ...utility.geometry import nearest_pt
 from .datacube import Datacube, TensorIndexTree
 
@@ -16,9 +18,12 @@ class FDBDatacube(Datacube):
         compressed_axes_options=[],
         point_cloud_options=None,
         alternative_axes=[],
+        context=None
     ):
         if config is None:
             config = {}
+        if context is None:
+            context = {}
 
         super().__init__(axis_options, compressed_axes_options)
 
@@ -33,14 +38,21 @@ class FDBDatacube(Datacube):
 
         self.gj = gj
         if len(alternative_axes) == 0:
-            self.fdb_coordinates = self.gj.axes(partial_request)
-            self.check_branching_axes(request)
+            logging.info("Find GribJump axes for %s", context)
+            self.fdb_coordinates = self.gj.axes(partial_request, ctx=context)
+            logging.info("Retrieved available GribJump axes for %s", context)
+            if len(self.fdb_coordinates) == 0:
+                raise BadRequestError(partial_request)
         else:
             self.fdb_coordinates = {}
             for axis_config in alternative_axes:
                 self.fdb_coordinates[axis_config.axis_name] = axis_config.values
 
-        # self.check_branching_axes(request)
+        fdb_coordinates_copy = deepcopy(self.fdb_coordinates)
+        for axis, vals in fdb_coordinates_copy.items():
+            if len(vals) == 1:
+                if vals[0] == "":
+                    self.fdb_coordinates.pop(axis)
 
         logging.info("Axes returned from GribJump are: " + str(self.fdb_coordinates))
 
@@ -87,55 +99,77 @@ class FDBDatacube(Datacube):
         self.fdb_coordinates.pop("direction", None)
         self.fdb_coordinates.pop("frequency", None)
 
-    def get(self, requests: TensorIndexTree):
+        # NOTE: verify that we also remove the axis object for axes we've removed here
+        axes_to_remove = set(self.complete_axes) - set(self.fdb_coordinates.keys())
+
+        # Remove the keys from self._axes
+        for axis_name in axes_to_remove:
+            self._axes.pop(axis_name, None)
+
+    def get(self, requests: TensorIndexTree, context=None):
+        if context is None:
+            context = {}
         if len(requests.children) == 0:
             return requests
         fdb_requests = []
         fdb_requests_decoding_info = []
         self.get_fdb_requests(requests, fdb_requests, fdb_requests_decoding_info)
 
-        # TODO: note that this doesn't exactly work as intended, it's just going to retrieve value from gribjump that
-        # corresponds to first value in the compressed tuples
-
-        # TODO: here, loop through the fdb requests and request from gj and directly add to the nodes
+        # here, loop through the fdb requests and request from gj and directly add to the nodes
         complete_list_complete_uncompressed_requests = []
         complete_fdb_decoding_info = []
         for j, compressed_request in enumerate(fdb_requests):
-            # TODO: can we do gj extract outside of this loop?
             uncompressed_request = {}
 
             # Need to determine the possible decompressed requests
 
             # find the possible combinations of compressed indices
-
             interm_branch_tuple_values = []
             for key in compressed_request[0].keys():
-                # remove the tuple of the request when we ask the fdb
                 interm_branch_tuple_values.append(compressed_request[0][key])
             request_combis = product(*interm_branch_tuple_values)
 
             # Need to extract the possible requests and add them to the right nodes
-            # complete_list_complete_uncompressed_requests = []
-            # complete_fdb_decoding_info = []
             for combi in request_combis:
                 uncompressed_request = {}
                 for i, key in enumerate(compressed_request[0].keys()):
                     uncompressed_request[key] = combi[i]
-                complete_uncompressed_request = (uncompressed_request, compressed_request[1])
+                complete_uncompressed_request = (uncompressed_request, compressed_request[1], self.grid_md5_hash)
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
-        output_values = self.gj.extract(complete_list_complete_uncompressed_requests)
+
+        if logging.root.level <= logging.DEBUG:
+            printed_list_to_gj = complete_list_complete_uncompressed_requests[::1000]
+            logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
+        logging.info("Requests given to GribJump extract for %s", context)
+        try:
+            output_values = self.gj.extract(complete_list_complete_uncompressed_requests, context)
+        except Exception as e:
+            if "BadValue: Grid hash mismatch" in str(e):
+                logging.info("Error is: %s", e)
+                raise BadGridError()
+            else:
+                raise e
+
+        logging.info("Requests extracted from GribJump for %s", context)
+        if logging.root.level <= logging.DEBUG:
+            printed_output_values = output_values[::1000]
+            logging.debug("GribJump outputs: %s", printed_output_values)
         self.assign_fdb_output_to_nodes(output_values, complete_fdb_decoding_info)
 
     def get_fdb_requests(
-        self, requests: TensorIndexTree, fdb_requests=[], fdb_requests_decoding_info=[], leaf_path=None
+        self,
+        requests: TensorIndexTree,
+        fdb_requests=[],
+        fdb_requests_decoding_info=[],
+        leaf_path=None,
     ):
         if leaf_path is None:
             leaf_path = {}
 
         # First when request node is root, go to its children
         if requests.axis.name == "root":
-            logging.info("Looking for data for the tree: " + str([leaf.flatten() for leaf in requests.leaves]))
+            logging.debug("Looking for data for the tree")
 
             for c in requests.children:
                 self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info)
@@ -149,38 +183,55 @@ class FDBDatacube(Datacube):
             leaf_path.update(key_value_path)
             if len(requests.children[0].children[0].children) == 0:
                 # find the fdb_requests and associated nodes to which to add results
-
-                (path, range_lengths, current_start_idxs, fdb_node_ranges, lat_length) = self.get_2nd_last_values(
-                    requests, leaf_path
-                )
-                (original_indices, sorted_request_ranges) = self.sort_fdb_request_ranges(
-                    range_lengths, current_start_idxs, lat_length
-                )
-                fdb_requests.append(tuple((path, sorted_request_ranges)))
-                fdb_requests_decoding_info.append(
-                    tuple((original_indices, fdb_node_ranges, lat_length, range_lengths, current_start_idxs))
-                )
+                (path, current_start_idxs, fdb_node_ranges, lat_length) = self.get_2nd_last_values(requests, leaf_path)
+                (
+                    original_indices,
+                    sorted_request_ranges,
+                    fdb_node_ranges,
+                ) = self.sort_fdb_request_ranges(current_start_idxs, lat_length, fdb_node_ranges)
+                fdb_requests.append((path, sorted_request_ranges))
+                fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
 
             # Otherwise remap the path for this key and iterate again over children
             else:
                 for c in requests.children:
                     self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path)
 
-    def get_2nd_last_values(self, requests, leaf_path=None):
-        if leaf_path is None:
-            leaf_path = {}
-        # In this function, we recursively loop over the last two layers of the tree and store the indices of the
-        # request ranges in those layers
+    def remove_duplicates_in_request_ranges(self, fdb_node_ranges, current_start_idxs):
+        seen_indices = set()
+        for i, idxs_list in enumerate(current_start_idxs):
+            for k, sub_lat_idxs in enumerate(idxs_list):
+                actual_fdb_node = fdb_node_ranges[i][k]
+                original_fdb_node_range_vals = []
+                new_current_start_idx = []
+                for j, idx in enumerate(sub_lat_idxs):
+                    if idx not in seen_indices:
+                        # NOTE: need to remove it from the values in the corresponding tree node
+                        # NOTE: need to read just the range we give to gj
+                        original_fdb_node_range_vals.append(actual_fdb_node[0].values[j])
+                        seen_indices.add(idx)
+                        new_current_start_idx.append(idx)
+                if original_fdb_node_range_vals != []:
+                    actual_fdb_node[0].values = tuple(original_fdb_node_range_vals)
+                else:
+                    # there are no values on this node anymore so can remove it
+                    actual_fdb_node[0].remove_branch()
+                if len(new_current_start_idx) == 0:
+                    current_start_idxs[i].pop(k)
+                else:
+                    current_start_idxs[i][k] = new_current_start_idx
+        return (fdb_node_ranges, current_start_idxs)
 
-        # Find nearest point first before retrieving
+    def nearest_lat_lon_search(self, requests):
         if len(self.nearest_search) != 0:
             first_ax_name = requests.children[0].axis.name
             second_ax_name = requests.children[0].children[0].axis.name
-            # TODO: throw error if first_ax_name or second_ax_name not in self.nearest_search.keys()
+
+            if first_ax_name not in self.nearest_search.keys() or second_ax_name not in self.nearest_search.keys():
+                raise Exception("nearest point search axes are wrong")
+
             second_ax = requests.children[0].children[0].axis
 
-            # TODO: actually, here we should not remap the nearest_pts, we should instead unmap the
-            # found_latlon_pts and then remap them later once we have compared found_latlon_pts and nearest_pts
             nearest_pts = [
                 [lat_val, second_ax._remap_val_to_axis_range(lon_val)]
                 for (lat_val, lon_val) in zip(
@@ -216,17 +267,21 @@ class FDBDatacube(Datacube):
                             if value not in possible_lons:
                                 lon_child.remove_compressed_branch(value)
 
+    def get_2nd_last_values(self, requests, leaf_path=None):
+        if leaf_path is None:
+            leaf_path = {}
+        # In this function, we recursively loop over the last two layers of the tree and store the indices of the
+        # request ranges in those layers
+        self.nearest_lat_lon_search(requests)
+
         lat_length = len(requests.children)
-        range_lengths = [False] * lat_length
         current_start_idxs = [False] * lat_length
         fdb_node_ranges = [False] * lat_length
         for i in range(len(requests.children)):
             lat_child = requests.children[i]
             lon_length = len(lat_child.children)
-            range_lengths[i] = [0] * lon_length
             current_start_idxs[i] = [None] * lon_length
             fdb_node_ranges[i] = [[TensorIndexTree.root for y in range(lon_length)] for x in range(lon_length)]
-            range_length = deepcopy(range_lengths[i])
             current_start_idx = deepcopy(current_start_idxs[i])
             fdb_range_nodes = deepcopy(fdb_node_ranges[i])
             key_value_path = {lat_child.axis.name: lat_child.values}
@@ -237,22 +292,19 @@ class FDBDatacube(Datacube):
                 key_value_path, leaf_path, self.unwanted_path
             )
             leaf_path.update(key_value_path)
-            # print("THE LAYER BEFORE NOW")
-            # print(leaf_path)
-            # print(key_value_path)
-            (range_lengths[i], current_start_idxs[i], fdb_node_ranges[i]) = self.get_last_layer_before_leaf(
-                lat_child, leaf_path, range_length, current_start_idx, fdb_range_nodes
+            (current_start_idxs[i], fdb_node_ranges[i]) = self.get_last_layer_before_leaf(
+                lat_child, leaf_path, current_start_idx, fdb_range_nodes
             )
 
         leaf_path_copy = deepcopy(leaf_path)
         leaf_path_copy.pop("values", None)
         leaf_path_copy.pop("index")
-        return (leaf_path_copy, range_lengths, current_start_idxs, fdb_node_ranges, lat_length)
+        return (leaf_path_copy, current_start_idxs, fdb_node_ranges, lat_length)
 
-    def get_last_layer_before_leaf(self, requests, leaf_path, range_l, current_idx, fdb_range_n):
-        i = 0
-        for c in requests.children:
-            fdb_range_n_i = fdb_range_n[i]
+    def get_last_layer_before_leaf(self, requests, leaf_path, current_idx, fdb_range_n):
+        current_idx = [[] for i in range(len(requests.children))]
+        fdb_range_n = [[] for i in range(len(requests.children))]
+        for i, c in enumerate(requests.children):
             # now c are the leaves of the initial tree
             key_value_path = {c.axis.name: c.values}
             # print("LOOK NOW")
@@ -263,35 +315,10 @@ class FDBDatacube(Datacube):
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
-            # print("AFTER UNMAPPING")
-            # print(leaf_path)
-            leaf_path.update(key_value_path)
-            # print("LAST LEAF")
-            # print(leaf_path)
-            last_idx = key_value_path["values"]
-            print("LAST IDX HERE")
-            print(last_idx)
-            if current_idx[i] is None:
-                range_l[i] = 1
-                current_idx[i] = last_idx
-                fdb_range_n_i[range_l[i] - 1] = c
-            else:
-                if last_idx == current_idx[i] + range_l[i]:
-                    range_l[i] += 1
-                    fdb_range_n_i[range_l[i] - 1] = c
-                else:
-                    key_value_path = {c.axis.name: c.values}
-                    ax = c.axis
-                    (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
-                        key_value_path, leaf_path, self.unwanted_path
-                    )
-                    leaf_path.update(key_value_path)
-                    i += 1
-                    current_start_idx = key_value_path["values"]
-                    current_idx[i] = current_start_idx
-                    range_l[i] = 1
-                    fdb_range_n[i][range_l[i] - 1] = c
-        return (range_l, current_idx, fdb_range_n)
+            # TODO: change this to accommodate non consecutive indexes being compressed too
+            current_idx[i].extend(key_value_path["values"])
+            fdb_range_n[i].append(c)
+        return (current_idx, fdb_range_n)
 
     def assign_fdb_output_to_nodes(self, output_values, fdb_requests_decoding_info):
         for k in range(len(output_values)):
@@ -299,35 +326,56 @@ class FDBDatacube(Datacube):
             (
                 original_indices,
                 fdb_node_ranges,
-                lat_length,
-                range_lengths,
-                current_start_idxs,
             ) = fdb_requests_decoding_info[k]
-            new_fdb_range_nodes = []
-            new_range_lengths = []
-            for j in range(lat_length):
-                for i in range(len(range_lengths[j])):
-                    if current_start_idxs[j][i] is not None:
-                        new_fdb_range_nodes.append(fdb_node_ranges[j][i])
-                        new_range_lengths.append(range_lengths[j][i])
-            sorted_fdb_range_nodes = [new_fdb_range_nodes[i] for i in original_indices]
-            sorted_range_lengths = [new_range_lengths[i] for i in original_indices]
+            sorted_fdb_range_nodes = [fdb_node_ranges[i] for i in original_indices]
             for i in range(len(sorted_fdb_range_nodes)):
-                for j in range(sorted_range_lengths[i]):
-                    n = sorted_fdb_range_nodes[i][j]
-                    n.result.append(request_output_values[0][i][0][j])
+                n = sorted_fdb_range_nodes[i][0]
+                if len(request_output_values[0]) == 0:
+                    # If we are here, no data was found for this path in the fdb
+                    none_array = [None] * len(n.values)
+                    n.result.extend(none_array)
+                else:
+                    interm_request_output_values = request_output_values[0][i][0]
+                    n.result.extend(interm_request_output_values)
 
-    def sort_fdb_request_ranges(self, range_lengths, current_start_idx, lat_length):
+    def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
+        (new_fdb_node_ranges, new_current_start_idx) = self.remove_duplicates_in_request_ranges(
+            fdb_node_ranges, current_start_idx
+        )
         interm_request_ranges = []
+        # TODO: modify the start indexes to have as many arrays as the request ranges
+        new_fdb_node_ranges = []
         for i in range(lat_length):
-            for j in range(len(range_lengths[i])):
-                if current_start_idx[i][j] is not None:
-                    current_request_ranges = (current_start_idx[i][j], current_start_idx[i][j] + range_lengths[i][j])
+            interm_fdb_nodes = fdb_node_ranges[i]
+            old_interm_start_idx = current_start_idx[i]
+            for j in range(len(old_interm_start_idx)):
+                # TODO: if we sorted the cyclic values in increasing order on the tree too,
+                # then we wouldn't have to sort here?
+                sorted_list = sorted(enumerate(old_interm_start_idx[j]), key=lambda x: x[1])
+                original_indices_idx, interm_start_idx = zip(*sorted_list)
+                for interm_fdb_nodes_obj in interm_fdb_nodes[j]:
+                    interm_fdb_nodes_obj.values = tuple([interm_fdb_nodes_obj.values[k] for k in original_indices_idx])
+                if abs(interm_start_idx[-1] + 1 - interm_start_idx[0]) <= len(interm_start_idx):
+                    current_request_ranges = (interm_start_idx[0], interm_start_idx[-1] + 1)
                     interm_request_ranges.append(current_request_ranges)
+                    new_fdb_node_ranges.append(interm_fdb_nodes[j])
+                else:
+                    jumps = list(map(operator.sub, interm_start_idx[1:], interm_start_idx[:-1]))
+                    last_idx = 0
+                    for k, jump in enumerate(jumps):
+                        if jump > 1:
+                            current_request_ranges = (interm_start_idx[last_idx], interm_start_idx[k] + 1)
+                            new_fdb_node_ranges.append(interm_fdb_nodes[j])
+                            last_idx = k + 1
+                            interm_request_ranges.append(current_request_ranges)
+                        if k == len(interm_start_idx) - 2:
+                            current_request_ranges = (interm_start_idx[last_idx], interm_start_idx[-1] + 1)
+                            interm_request_ranges.append(current_request_ranges)
+                            new_fdb_node_ranges.append(interm_fdb_nodes[j])
         request_ranges_with_idx = list(enumerate(interm_request_ranges))
         sorted_list = sorted(request_ranges_with_idx, key=lambda x: x[1][0])
         original_indices, sorted_request_ranges = zip(*sorted_list)
-        return (original_indices, sorted_request_ranges)
+        return (original_indices, sorted_request_ranges, new_fdb_node_ranges)
 
     def datacube_natural_indexes(self, axis, subarray):
         indexes = subarray.get(axis.name, None)

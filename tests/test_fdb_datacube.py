@@ -63,17 +63,18 @@ class TestSlicingFDBDatacube:
         )
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(
-            request=request,
+            request,
             datacube=self.fdbdatacube,
             options=self.options,
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 9
-        assert result.leaves[1].flatten()["longitude"][0] == 0.070093457944
-        assert result.leaves[4].flatten()["longitude"][0] == 0.070148090413
-        assert result.leaves[7].flatten()["longitude"][0] == 0.070202808112
-        assert result.leaves[0].result == [297.9250183105469]
+        assert len(result.leaves) == 3
+        assert len(result.leaves[0].result) == 3
+        assert result.leaves[0].flatten()["longitude"][1] == 0.070093457944
+        assert result.leaves[1].flatten()["longitude"][1] == 0.070148090413
+        assert result.leaves[2].flatten()["longitude"][1] == 0.070202808112
+        assert result.leaves[0].result[0] == 297.9250183105469
 
         # lats = []
         # lons = []
@@ -112,12 +113,12 @@ class TestSlicingFDBDatacube:
         )
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(
-            request=request,
+            request,
             datacube=self.fdbdatacube,
             options=self.options,
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 2
-        assert result.leaves[0].flatten()["longitude"] == (0.0,)
-        assert result.leaves[1].flatten()["longitude"] == (0.070093457944,)
+        assert len(result.leaves) == 1
+        assert len(result.leaves[0].result) == 2
+        assert result.leaves[0].flatten()["longitude"] == (0.0, 0.070093457944)

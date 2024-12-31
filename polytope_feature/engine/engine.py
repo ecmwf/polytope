@@ -1,10 +1,24 @@
 from abc import abstractmethod
+from ..datacube.datacube_axis import UnsliceableDatacubeAxis
 from typing import List
 
 from ..datacube.backends.datacube import Datacube
-from ..datacube.datacube_axis import UnsliceableDatacubeAxis
 from ..datacube.tensor_index_tree import TensorIndexTree
 from ..shapes import ConvexPolytope
+
+
+# class Engine:
+#     def __init__(self):
+#         pass
+
+#     def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]) -> TensorIndexTree:
+#         pass
+
+#     @staticmethod
+#     def default():
+#         from .hullslicer import HullSlicer
+
+#         return HullSlicer()
 
 
 class Engine:
@@ -12,6 +26,7 @@ class Engine:
         if engine_options is None:
             engine_options = {}
         self.engine_options = engine_options
+        self.ax_is_unsliceable = {}
 
         self.axis_values_between = {}
         self.sliced_polytopes = {}
@@ -38,5 +53,5 @@ class Engine:
         return HullSlicer()
 
     @abstractmethod
-    def _build_branch(self, ax, node, datacube, next_nodes):
+    def _build_branch(self, ax, node, datacube, next_nodes, api):
         pass

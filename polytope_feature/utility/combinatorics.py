@@ -46,19 +46,3 @@ def validate_axes(actual_axes, test_axes):
         raise AxisNotFoundError(ax)
 
     return True
-
-
-def unique(points):
-    points.sort()
-    points = [k for k, _ in itertools.groupby(points)]
-    return points
-
-
-def argmin(points):
-    amin = min(range(len(points)), key=points.__getitem__)
-    return amin
-
-
-def argmax(points):
-    amax = max(range(len(points)), key=points.__getitem__)
-    return amax

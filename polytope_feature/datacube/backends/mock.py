@@ -24,10 +24,12 @@ class MockDatacube(Datacube):
             self.stride[k] = stride_cumulative
             stride_cumulative *= self.dimensions[k]
 
-    def get(self, requests: TensorIndexTree):
+    def get(self, requests: TensorIndexTree, context=None):
         # Takes in a datacube and verifies the leaves of the tree are complete
         # (ie it found values for all datacube axis)
 
+        if context is None:
+            context = {}
         for r in requests.leaves:
             path = r.flatten()
             if len(path.items()) == len(self.dimensions.items()):

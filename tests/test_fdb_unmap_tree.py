@@ -4,9 +4,6 @@ import pytest
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
 
-# import geopandas as gpd
-# import matplotlib.pyplot as plt
-
 
 class TestSlicingFDBDatacube:
     def setup_method(self, method):
@@ -63,7 +60,7 @@ class TestSlicingFDBDatacube:
         )
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(
-            request=request,
+            request,
             datacube=self.fdbdatacube,
             options=self.options,
         )

@@ -76,8 +76,17 @@ class TensorIndexTree(object):
                 if isinstance(self.axis, UnsliceableDatacubeAxis):
                     return False
                 else:
-                    if len(other.values) != len(self.values) or other.values != self.values:
+                    if len(other.values) != len(self.values):
                         return False
+                    for i in range(len(other.values)):
+                        other_val = other.values[i]
+                        self_val = self.values[i]
+                        if self.axis.can_round:
+                            if abs(other_val - self_val) > 2 * max(other.axis.tol, self.axis.tol):
+                                return False
+                        else:
+                            if other_val != self_val:
+                                return False
                     return True
 
     def __lt__(self, other):
@@ -96,6 +105,7 @@ class TensorIndexTree(object):
     def add_value(self, value):
         new_values = list(self.values)
         new_values.append(value)
+        new_values.sort()
         self.values = tuple(new_values)
 
     def create_child(self, axis, value, next_nodes):
@@ -210,7 +220,7 @@ class TensorIndexTree(object):
     def get_ancestors(self):
         ancestors = []
         current_node = self
-        while current_node.axis != TensorIndexTree.root:
+        while current_node.axis.name != "root":
             ancestors.append(current_node)
             current_node = current_node.parent
         return ancestors[::-1]

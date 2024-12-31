@@ -2,6 +2,7 @@ import pandas as pd
 import pytest
 from helper_functions import download_test_data, find_nearest_latlon
 
+from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Disk, Select
 
@@ -24,7 +25,14 @@ class TestRegularGrid:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "regular", "resolution": 30, "axes": ["latitude", "longitude"]}
+                        {
+                            "name": "mapper",
+                            "type": "regular",
+                            "resolution": 30,
+                            "axes": ["latitude", "longitude"],
+                            "axis_reversed": {"latitude": True, "longitude": False},
+                            "md5_hash": "15372eaafa9d744000df708d63f69284",
+                        }
                     ],
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
@@ -69,13 +77,19 @@ class TestRegularGrid:
         )
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(
-            request=request,
+            request,
             datacube=self.fdbdatacube,
             options=self.options,
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 5
+        assert len(result.leaves) == 3
+        assert len(result.leaves[0].result) == 2
+        assert len(result.leaves[1].result) == 6
+        assert len(result.leaves[2].result) == 2
+        assert len(result.leaves[0].values) == 1
+        assert len(result.leaves[1].values) == 3
+        assert len(result.leaves[2].values) == 1
 
         from polytope_feature.datacube.transformations.datacube_mappers.mapper_types.regular import (
             RegularGridMapper,
@@ -87,7 +101,8 @@ class TestRegularGrid:
         tol = 1e-8
         leaves = result.leaves
         for i in range(len(leaves)):
-            result_tree = leaves[i].result[1]
+            right_pl_results = leaves[i].result[len(leaves[i].values):]
+            result_tree = right_pl_results[0]
             cubepath = leaves[i].flatten()
             lat = cubepath["latitude"][0]
             lon = cubepath["longitude"][0]
@@ -99,7 +114,7 @@ class TestRegularGrid:
             eccodes_value = nearest_points[121][0]["value"]
             eccodes_lats.append(eccodes_lat)
 
-            mapper = RegularGridMapper("base", ["base", "base"], 30)
+            mapper = RegularGridMapper("base", ["base1", "base2"], 30)
             assert nearest_points[121][0]["index"] == mapper.unmap((lat,), (lon,))
 
             assert eccodes_lat - tol <= lat
@@ -116,4 +131,4 @@ class TestRegularGrid:
         # plt.colorbar(label="Temperature")
         # plt.show()
 
-        assert len(eccodes_lats) == 5
+        assert len(eccodes_lats) == 3

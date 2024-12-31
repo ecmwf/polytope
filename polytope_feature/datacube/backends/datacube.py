@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Dict
 
 from ...utility.combinatorics import validate_axes
 from ..datacube_axis import DatacubeAxis
@@ -31,9 +31,10 @@ class Datacube(ABC):
         self.merged_axes = []
         self.unwanted_path = {}
         self.compressed_axes = compressed_axes_options
+        self.grid_md5_hash = None
 
     @abstractmethod
-    def get(self, requests: TensorIndexTree) -> Any:
+    def get(self, requests: TensorIndexTree, context: Dict) -> Any:
         """Return data given a set of request trees"""
 
     @property
@@ -69,27 +70,32 @@ class Datacube(ABC):
             # TODO: do we use this?? This shouldn't work for a disk in lat/lon on a octahedral or other grid??
             for compressed_grid_axis in transformation.compressed_grid_axes:
                 self.compressed_grid_axes.append(compressed_grid_axis)
+                self.grid_md5_hash = transformation.md5_hash
         if len(final_axis_names) > 1:
             self.coupled_axes.append(final_axis_names)
             for axis in final_axis_names:
-                if axis in self.compressed_axes:
+                if axis in self.compressed_axes and axis != final_axis_names[-1]:
                     self.compressed_axes.remove(axis)
         for axis_name in final_axis_names:
             self.fake_axes.append(axis_name)
             # if axis does not yet exist, create it
+            if transformation.change_val_type(axis_name, values) is not None:
+                # first need to change the values so that we have right type
+                values = transformation.change_val_type(axis_name, values)
+                if self._axes is None or axis_name not in self._axes.keys():
+                    DatacubeAxis.create_standard(axis_name, values, self)
+                # add transformation tag to axis, as well as transformation options for later
+                setattr(self._axes[axis_name], has_transform[transformation_type_key.name], True)
+                # where has_transform is a factory inside datacube_transformations to set the has_transform, is_cyclic
+                # etc axis properties add the specific transformation handled here to the relevant axes
+                # Modify the axis to update with the tag
 
-            # first need to change the values so that we have right type
-            values = transformation.change_val_type(axis_name, values)
-            if self._axes is None or axis_name not in self._axes.keys():
-                DatacubeAxis.create_standard(axis_name, values, self)
-            # add transformation tag to axis, as well as transformation options for later
-            setattr(self._axes[axis_name], has_transform[transformation_type_key.name], True)  # where has_transform is
-            # a factory inside datacube_transformations to set the has_transform, is_cyclic etc axis properties
-            # add the specific transformation handled here to the relevant axes
-            # Modify the axis to update with the tag
-
-            if transformation not in self._axes[axis_name].transformations:  # Avoids duplicates being stored
-                self._axes[axis_name].transformations.append(transformation)
+                if transformation not in self._axes[axis_name].transformations:  # Avoids duplicates being stored
+                    self._axes[axis_name].transformations.append(transformation)
+            else:
+                # Means we have an unsliceable axis since we couln't transform values to desired type
+                if self._axes is None or axis_name not in self._axes.keys():
+                    DatacubeAxis.create_standard(axis_name, values, self)
 
     def _add_all_transformation_axes(self, options, name, values):
         for transformation_type_key in options.transformations:
@@ -126,9 +132,10 @@ class Datacube(ABC):
         """
         path = self.fit_path(path)
         indexes = axis.find_indexes(path, self)
+
         idx_between = axis.find_indices_between(indexes, lower, upper, self, method)
 
-        logging.info(f"For axis {axis.name} between {lower} and {upper}, found indices {idx_between}")
+        logging.debug(f"For axis {axis.name} between {lower} and {upper}, found indices {idx_between}")
 
         return idx_between
 
@@ -153,24 +160,27 @@ class Datacube(ABC):
         compressed_axes_options=[],
         point_cloud_options=None,
         alternative_axes=[],
+        context=None,
     ):
         # TODO: get the configs as None for pre-determined value and change them to empty dictionary inside the function
         if type(datacube).__name__ == "DataArray":
             from .xarray import XArrayDatacube
 
             xadatacube = XArrayDatacube(
-                datacube, axis_options, compressed_axes_options, point_cloud_options=point_cloud_options
-            )
+                datacube, axis_options, compressed_axes_options, point_cloud_options, context)
             return xadatacube
         if type(datacube).__name__ == "GribJump":
             from .fdb import FDBDatacube
 
             fdbdatacube = FDBDatacube(
-                datacube, request, config, axis_options, compressed_axes_options, point_cloud_options, alternative_axes
+                datacube, request, config, axis_options, compressed_axes_options, point_cloud_options, alternative_axes, context
             )
             return fdbdatacube
-        else:
+        if type(datacube).__name__ == "MockDatacube":
             return datacube
+
+    def check_branching_axes(self, request):
+        pass
 
     @abstractmethod
     def find_point_cloud(self):

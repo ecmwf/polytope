@@ -5,7 +5,7 @@ from ..datacube_mappers import DatacubeMapper
 
 
 class NestedHealpixGridMapper(DatacubeMapper):
-    def __init__(self, base_axis, mapped_axes, resolution, local_area=[]):
+    def __init__(self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None):
         # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
@@ -17,6 +17,14 @@ class NestedHealpixGridMapper(DatacubeMapper):
         self.k = int(math.log2(self.Nside))
         self.Npix = 12 * self.Nside * self.Nside
         self.Ncap = (self.Nside * (self.Nside - 1)) << 1
+        if md5_hash is not None:
+            self.md5_hash = md5_hash
+        else:
+            self.md5_hash = _md5_hash.get(resolution, None)
+        if self._axis_reversed[mapped_axes[1]]:
+            raise NotImplementedError("Healpix grid with second axis in decreasing order is not supported")
+        if not self._axis_reversed[mapped_axes[0]]:
+            raise NotImplementedError("Healpix grid with first axis in increasing order is not supported")
 
     def first_axis_vals(self):
         rad2deg = 180 / math.pi
@@ -129,7 +137,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
             else:
                 return idx
 
-    def unmap(self, first_val, second_val):
+    def unmap(self, first_val, second_val, unmapped_idx=None):
         tol = 1e-8
         first_value = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
         first_idx = self._first_axis_vals.index(first_value)
@@ -211,3 +219,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
 
     def int_sqrt(self, i):
         return int(math.sqrt(i + 0.5))
+
+
+# md5 grid hash in form {resolution : hash}
+_md5_hash = {}

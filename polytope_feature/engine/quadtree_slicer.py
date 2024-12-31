@@ -46,19 +46,19 @@ class QuadTreeSlicer(Engine):
         polygon_points = self.quad_tree.query_polygon(polytope)
         return polygon_points
 
-    def _build_branch(self, ax, node, datacube, next_nodes, engine):
+    def _build_branch(self, ax, node, datacube, next_nodes, api):
         for polytope in node["unsliced_polytopes"]:
             if ax.name in polytope._axes:
                 # here, first check if the axis is an unsliceable axis and directly build node if it is
 
                 # NOTE: here, we only have sliceable children, since the unsliceable children are handled by the
                 # hullslicer engine? IS THIS TRUE?
-                self._build_sliceable_child(polytope, ax, node, datacube, next_nodes)
+                self._build_sliceable_child(polytope, ax, node, datacube, next_nodes, api)
                 # TODO: what does this function actually return and what should it return?
                 # It just modifies the next_nodes?
         del node["unsliced_polytopes"]
 
-    def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes):
+    def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes, api):
         extracted_points = self.extract_single(datacube, polytope)
         # TODO: add the sliced points as node to the tree and update the next_nodes
         if len(extracted_points) == 0:
