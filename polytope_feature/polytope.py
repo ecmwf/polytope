@@ -144,6 +144,8 @@ class Polytope:
 
         self.find_compressed_axes(datacube, polytopes)
 
+        self.remove_compressed_axis_in_union(polytopes)
+
         # Convert the polytope points to float type to support triangulation and interpolation
         for p in polytopes:
             self._unique_continuous_points(p, datacube)
@@ -212,3 +214,10 @@ class Polytope:
 
         k, last_value = _, datacube.axes[k] = datacube.axes.popitem()
         self.compressed_axes.append(k)
+
+    def remove_compressed_axis_in_union(self, polytopes):
+        for p in polytopes:
+            if p.is_in_union:
+                for axis in p.axes():
+                    if axis == self.compressed_axes[-1]:
+                        self.compressed_axes.remove(axis)

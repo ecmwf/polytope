@@ -1,7 +1,6 @@
 import pandas as pd
 import pytest
 
-from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Point, Select
 
@@ -199,7 +198,6 @@ class TestSlicingFDBDatacube:
             options=self.options,
         )
         result = self.API.retrieve(request)
-        # result.pprint_2()
         assert len(result.leaves) == 1
         assert result.leaves[0].values == (359.929906542056,)
         assert result.leaves[0].axis.name == "longitude"

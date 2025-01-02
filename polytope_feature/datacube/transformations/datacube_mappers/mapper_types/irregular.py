@@ -21,4 +21,5 @@ class IrregularGridMapper(DatacubeMapper):
 
 
 _md5_hash = {
+    0: "None",
 }

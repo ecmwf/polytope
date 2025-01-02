@@ -35,7 +35,8 @@ class TestPolytopeExtract:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "irregular", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                        {"name": "mapper", "type": "irregular", "axes": [
+                            "latitude", "longitude"], "md5_hash": "158db321ae8e773681eeb40e0a3d350f"}
                     ],
                 },
             ],

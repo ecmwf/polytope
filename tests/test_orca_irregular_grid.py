@@ -3,7 +3,7 @@
 import numpy as np
 import pandas as pd
 import pytest
-import xarray as xr
+from earthkit import data
 from helper_functions import find_nearest_latlon
 
 from polytope_feature.polytope import Polytope, Request
@@ -20,7 +20,10 @@ class TestQuadTreeSlicer:
             "oceanModelLayer": "hullslicer",
             "valid_time": "hullslicer",
         }
-        self.arr = xr.open_dataset("../../Downloads/Reference_eORCA12_U_to_HEALPix_32.grib", engine="cfgrib")
+
+        ds = data.from_source("file", "../../Downloads/Reference_eORCA12_U_to_HEALPix_32.grib")
+        self.arr = ds.to_xarray(engine="cfgrib").avg_uox
+
         self.latitudes = self.arr.latitude.values
         self.longitudes = self.arr.longitude.values
         self.points = list(zip(self.latitudes, self.longitudes))
@@ -34,9 +37,6 @@ class TestQuadTreeSlicer:
                 },
             ],
         }
-        print(self.arr)
-        # self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"}
-        # self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options, point_cloud_options=self.points)
 
     @pytest.mark.fdb
     def test_quad_tree_slicer_extract(self):
@@ -44,7 +44,6 @@ class TestQuadTreeSlicer:
             Select("step", [np.timedelta64(0, "ns")]),
             Select("oceanModelLayer", [65.0]),
             Select("time", [pd.Timestamp("2017-09-06T00:00:00.000000000")]),
-            Select("valid_time", [pd.Timestamp("2017-09-06T00:00:00.000000000")]),
             Box(["latitude", "longitude"], [65, 270], [75, 300]),
         )
 

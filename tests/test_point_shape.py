@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Point, Select
 

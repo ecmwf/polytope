@@ -21,7 +21,7 @@ class PolytopeOptions(ABC):
         class MapperConfig(TransformationConfig):
             name: Literal["mapper"]
             type: str = ""
-            resolution: Union[int, List[int]] = 0
+            resolution: Optional[Union[int, List[int]]] = 0
             axes: List[str] = [""]
             local: Optional[List[float]] = None
 

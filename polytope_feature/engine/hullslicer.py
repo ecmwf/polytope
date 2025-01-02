@@ -91,8 +91,6 @@ class HullSlicer(Engine):
         return remapped_val
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, values, next_nodes, slice_axis_idx, api):
-        if len(values) == 0:
-            node.remove_branch()
 
         for i, value in enumerate(values):
             if i == 0 or ax.name not in api.compressed_axes:
@@ -183,12 +181,12 @@ class HullSlicer(Engine):
     #     k, last_value = _, datacube.axes[k] = datacube.axes.popitem()
     #     self.compressed_axes.append(k)
 
-    def remove_compressed_axis_in_union(self, polytopes):
-        for p in polytopes:
-            if p.is_in_union:
-                for axis in p.axes():
-                    if axis == self.compressed_axes[-1]:
-                        self.compressed_axes.remove(axis)
+    # def remove_compressed_axis_in_union(self, polytopes):
+    #     for p in polytopes:
+    #         if p.is_in_union:
+    #             for axis in p.axes():
+    #                 if axis == self.compressed_axes[-1]:
+    #                     self.compressed_axes.remove(axis)
 
     # def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
     #     # Determine list of axes to compress
