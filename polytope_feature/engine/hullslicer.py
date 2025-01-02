@@ -88,7 +88,6 @@ class HullSlicer(Engine):
         return remapped_val
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, values, next_nodes, slice_axis_idx, api):
-
         for i, value in enumerate(values):
             if i == 0 or ax.name not in api.compressed_axes:
                 fvalue = ax.to_float(value)
@@ -127,8 +126,7 @@ class HullSlicer(Engine):
                         # we have iterated all polytopes and we can now remove the node if we need to
                         if len(values) == 0 and len(node.children) == 0:
                             node.remove_branch()
-                    self._build_sliceable_child(polytope, ax, node, datacube, values,
-                                                next_nodes, slice_axis_idx, api)
+                    self._build_sliceable_child(polytope, ax, node, datacube, values, next_nodes, slice_axis_idx, api)
         else:
             all_values = []
             all_lowers = []

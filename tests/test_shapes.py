@@ -25,7 +25,6 @@ class TestSlicing3DXarrayDatacube:
             "compressed_axes_config": ["date", "step", "level", "longitude"],
         }
         self.API = Polytope(
-            request={},
             datacube=array,
             options=self.options,
         )
@@ -88,7 +87,7 @@ class TestSlicing3DXarrayDatacube:
             Span("latitude", 89.9, 90),
             All("longitude"),
         )
-        self.API = Polytope(request, datacube=self.fdbdatacube, options=self.options)
+        self.API = Polytope(datacube=self.fdbdatacube, options=self.options)
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 1

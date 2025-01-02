@@ -12,13 +12,12 @@ class FDBDatacube(Datacube):
     def __init__(
         self,
         gj,
-        request,
         config=None,
         axis_options=None,
         compressed_axes_options=[],
         point_cloud_options=None,
         alternative_axes=[],
-        context=None
+        context=None,
     ):
         if config is None:
             config = {}

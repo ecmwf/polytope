@@ -35,8 +35,12 @@ class TestPolytopeExtract:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "irregular", "axes": [
-                            "latitude", "longitude"], "md5_hash": "158db321ae8e773681eeb40e0a3d350f"}
+                        {
+                            "name": "mapper",
+                            "type": "irregular",
+                            "axes": ["latitude", "longitude"],
+                            "md5_hash": "158db321ae8e773681eeb40e0a3d350f",
+                        }
                     ],
                 },
             ],
@@ -75,7 +79,6 @@ class TestPolytopeExtract:
         )
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(
-            request=request,
             datacube=self.fdbdatacube,
             options=self.options,
             engine_options=self.engine_options,

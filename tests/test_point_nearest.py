@@ -60,7 +60,6 @@ class TestSlicingFDBDatacube:
         )
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(
-            request={},
             datacube=self.fdbdatacube,
             options=self.options,
         )
@@ -85,7 +84,6 @@ class TestSlicingFDBDatacube:
         )
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(
-            request={},
             datacube=self.fdbdatacube,
             options=self.options,
         )
@@ -111,7 +109,6 @@ class TestSlicingFDBDatacube:
         )
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(
-            request=request,
             datacube=self.fdbdatacube,
             options=self.options,
         )
@@ -137,7 +134,6 @@ class TestSlicingFDBDatacube:
         )
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(
-            request,
             datacube=self.fdbdatacube,
             options=self.options,
         )
@@ -165,7 +161,6 @@ class TestSlicingFDBDatacube:
         )
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(
-            request,
             datacube=self.fdbdatacube,
             options=self.options,
         )
@@ -193,7 +188,6 @@ class TestSlicingFDBDatacube:
         )
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(
-            request,
             datacube=self.fdbdatacube,
             options=self.options,
         )

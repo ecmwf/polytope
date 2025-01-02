@@ -6,17 +6,6 @@ from polytope_feature.shapes import Box
 
 class TestQuadTreeSlicer:
     def setup_method(self, method):
-        # from polytope.datacube.backends.fdb import FDBDatacube
-
-        # self.options = {
-        #     "values": {"mapper": {"type": "regular", "resolution": 30, "axes": ["latitude", "longitude"]}},
-        #     "date": {"merge": {"with": "time", "linkers": ["T", "00"]}},
-        #     "step": {"type_change": "int"},
-        #     "number": {"type_change": "int"},
-        #     "longitude": {"cyclic": [0, 360]},
-        # }
-        # self.config = {"class": "ea", "expver": "0001", "levtype": "pl"}
-        # self.datacube = FDBDatacube(self.config, axis_options=self.options)
         import pygribjump as gj
 
         self.options = {
@@ -49,7 +38,6 @@ class TestQuadTreeSlicer:
             ],
             "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
         }
-        # self.datacube = FDBDatacube(self.config, axis_options=self.options)
         self.fdbdatacube = gj.GribJump()
 
     @pytest.mark.fdb

@@ -3,7 +3,6 @@ import pytest
 from earthkit import data
 from helper_functions import download_test_data
 
-from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
 
@@ -15,13 +14,11 @@ class TestSlicingEra5Data:
 
         ds = data.from_source("file", "./tests/data/era5-levels-members.grib")
         array = ds.to_xarray(engine="cfgrib").isel(step=0).t
-        self.slicer = HullSlicer()
         options = {
             "axis_config": [{"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]}],
             "compressed_axes_config": ["number", "time", "latitude", "longitude", "step", "isobaricInhPa"],
         }
         self.API = Polytope(
-            request={},
             datacube=array,
             options=options,
         )

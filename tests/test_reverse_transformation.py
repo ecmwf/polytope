@@ -21,7 +21,7 @@ class TestSlicingReverseTransformation:
             "compressed_axes_config": ["lat"],
         }
         self.slicer = HullSlicer()
-        self.API = Polytope(request={}, datacube=array, options=options)
+        self.API = Polytope(datacube=array, options=options)
 
     def test_reverse_transformation(self):
         request = Request(Select("lat", [1, 2, 3]))

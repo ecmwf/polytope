@@ -10,8 +10,12 @@ class XArrayDatacube(Datacube):
     """Xarray arrays are labelled, axes can be defined as strings or integers (e.g. "time" or 0)."""
 
     def __init__(
-        self, dataarray: xr.DataArray, axis_options=None, compressed_axes_options=[], point_cloud_options=None,
-        context=None
+        self,
+        dataarray: xr.DataArray,
+        axis_options=None,
+        compressed_axes_options=[],
+        point_cloud_options=None,
+        context=None,
     ):
         super().__init__(axis_options, compressed_axes_options)
         if axis_options is None:

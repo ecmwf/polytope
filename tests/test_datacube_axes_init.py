@@ -41,7 +41,6 @@ class TestInitDatacubeAxes:
             ],
         }
         self.API = Polytope(
-            request={},
             datacube=latlon_array,
             options=self.options,
         )

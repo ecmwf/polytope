@@ -153,7 +153,6 @@ class Datacube(ABC):
 
     @staticmethod
     def create(
-        request,
         datacube,
         config={},
         axis_options={},
@@ -166,15 +165,19 @@ class Datacube(ABC):
         if type(datacube).__name__ == "DataArray":
             from .xarray import XArrayDatacube
 
-            xadatacube = XArrayDatacube(
-                datacube, axis_options, compressed_axes_options, point_cloud_options, context)
+            xadatacube = XArrayDatacube(datacube, axis_options, compressed_axes_options, point_cloud_options, context)
             return xadatacube
         if type(datacube).__name__ == "GribJump":
             from .fdb import FDBDatacube
 
             fdbdatacube = FDBDatacube(
-                datacube, request, config, axis_options, compressed_axes_options, point_cloud_options, alternative_axes,
-                context
+                datacube,
+                config,
+                axis_options,
+                compressed_axes_options,
+                point_cloud_options,
+                alternative_axes,
+                context,
             )
             return fdbdatacube
         if type(datacube).__name__ == "MockDatacube":

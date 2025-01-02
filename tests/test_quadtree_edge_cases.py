@@ -1,12 +1,11 @@
 import pytest
 
-from polytope_feature.polytope import Polytope, Request
+from polytope_feature.polytope import Polytope
 from polytope_feature.shapes import Box
 
 
 class TestQuadTreeSlicer:
     def setup_method(self, method):
-        # from polytope.datacube.backends.fdb import FDBDatacube
         import pygribjump as gj
 
         self.options = {
@@ -39,7 +38,6 @@ class TestQuadTreeSlicer:
             ],
             "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
         }
-        # self.datacube = FDBDatacube(self.config, axis_options=self.options)
         self.fdbdatacube = gj.GribJump()
 
     @pytest.mark.fdb
@@ -47,7 +45,6 @@ class TestQuadTreeSlicer:
         points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10], [0.035149384216, 0.0]]
         polytope = Box(["latitude", "longitude"], [0, 0], [15, 15]).polytope()[0]
         self.API = Polytope(
-            request=Request(polytope),
             datacube=self.fdbdatacube,
             options=self.options,
             engine_options={"latitude": "quadtree", "longitude": "quadtree"},

@@ -19,12 +19,11 @@ class TestIndexTreesAfterSlicing:
         )
         self.xarraydatacube = XArrayDatacube(array)
         options = {"compressed_axes_config": ["level", "step"]}
-        self.API = Polytope(request={}, datacube=array, options=options)
+        self.API = Polytope(datacube=array, options=options)
 
     def test_path_values(self):
         box = Box(["step", "level"], [3.0, 1.0], [6.0, 3.0])
         polytope = box.polytope()
-        # request = self.slicer.extract(self.xarraydatacube, polytope)
         request = self.API.slice(self.xarraydatacube, polytope)
         datacube_path = request.leaves[0].flatten()
         request.pprint()
@@ -34,7 +33,6 @@ class TestIndexTreesAfterSlicing:
     def test_path_keys(self):
         box = Box(["step", "level"], [3.0, 1.0], [6.0, 3.0])
         polytope = box.polytope()
-        # request = self.slicer.extract(self.xarraydatacube, polytope)
         request = self.API.slice(self.xarraydatacube, polytope)
         datacube_path = request.leaves[0].flatten()
         assert datacube_path.keys()[0] == "step"
@@ -43,7 +41,6 @@ class TestIndexTreesAfterSlicing:
     def test_path_pprint(self):
         box = Box(["step", "level"], [3.0, 1.0], [6.0, 3.0])
         polytope = box.polytope()
-        # request = self.slicer.extract(self.xarraydatacube, polytope)
         request = self.API.slice(self.xarraydatacube, polytope)
         datacube_path = request.leaves[0].flatten()
         datacube_path.pprint()
@@ -51,7 +48,6 @@ class TestIndexTreesAfterSlicing:
     def test_flatten(self):
         box = Box(["step", "level"], [3.0, 1.0], [6.0, 3.0])
         polytope = box.polytope()
-        # request = self.slicer.extract(self.xarraydatacube, polytope)
         request = self.API.slice(self.xarraydatacube, polytope)
         path = request.leaves[0].flatten()
         request.pprint()
@@ -61,7 +57,6 @@ class TestIndexTreesAfterSlicing:
     def test_add_child(self):
         box = Box(["step", "level"], [3.0, 1.0], [6.0, 3.0])
         polytope = box.polytope()
-        # request = self.slicer.extract(self.xarraydatacube, polytope)
         request = self.API.slice(self.xarraydatacube, polytope)
         request1 = request.leaves[0]
         request2 = request.leaves[0]
@@ -80,14 +75,12 @@ class TestIndexTreesAfterSlicing:
     def test_pprint(self):
         box = Box(["step", "level"], [3.0, 1.0], [6.0, 3.0])
         polytope = box.polytope()
-        # request = self.slicer.extract(self.xarraydatacube, polytope)
         request = self.API.slice(self.xarraydatacube, polytope)
         request.pprint()
 
     def test_remove_branch(self):
         box = Box(["step", "level"], [3.0, 1.0], [6.0, 3.0])
         polytope = box.polytope()
-        # request = self.slicer.extract(self.xarraydatacube, polytope)
         request = self.API.slice(self.xarraydatacube, polytope)
         prev_request_size = len(request.leaves)
         request.leaves[0].remove_branch()

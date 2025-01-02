@@ -47,7 +47,6 @@ class Request:
 class Polytope:
     def __init__(
         self,
-        request,
         datacube,
         options=None,
         engine_options=None,
@@ -66,14 +65,13 @@ class Polytope:
 
         axis_options, compressed_axes_options, config, alternative_axes = PolytopeOptions.get_polytope_options(options)
         self.datacube = Datacube.create(
-            request,
             datacube,
             config,
             axis_options,
             compressed_axes_options,
             point_cloud_options,
             alternative_axes,
-            self.context
+            self.context,
         )
         if engine_options == {}:
             for ax_name in self.datacube._axes.keys():

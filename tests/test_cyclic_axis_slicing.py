@@ -27,7 +27,6 @@ class TestSlicingCyclic:
             "compressed_axes_config": ["long", "level", "step", "date"],
         }
         self.API = Polytope(
-            request={},
             datacube=array,
             options=self.options,
         )

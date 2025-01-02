@@ -3,13 +3,12 @@ import pytest
 from polytope_feature.datacube.quad_tree import QuadNode
 from polytope_feature.engine.quadtree_slicer import QuadTreeSlicer
 from polytope_feature.engine.slicing_tools import slice_in_two
-from polytope_feature.polytope import Polytope, Request
+from polytope_feature.polytope import Polytope
 from polytope_feature.shapes import Box, ConvexPolytope
 
 
 class TestQuadTreeSlicer:
     def setup_method(self, method):
-        # from polytope.datacube.backends.fdb import FDBDatacube
         import pygribjump as gj
 
         self.options = {
@@ -42,17 +41,7 @@ class TestQuadTreeSlicer:
             ],
             "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
         }
-        # self.datacube = FDBDatacube(self.config, axis_options=self.options)
         self.fdbdatacube = gj.GribJump()
-        # self.slicer = HullSlicer()
-        # self.API = Polytope(
-        #     request=request,
-        #     datacube=self.fdbdatacube,
-        #     engine=self.slicer,
-        #     options=self.options,
-        #     engine_options=self.engine_options,
-        #     point_cloud_options=self.quadtree_points
-        # )
 
     @pytest.mark.fdb
     def test_quad_tree_slicer(self):
@@ -124,7 +113,6 @@ class TestQuadTreeSlicer:
         points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
         polytope = Box(["latitude", "longitude"], [1, 1], [20, 30]).polytope()[0]
         self.API = Polytope(
-            request=Request(polytope),
             datacube=self.fdbdatacube,
             options=self.options,
             engine_options={"latitude": "quadtree", "longitude": "quadtree"},
@@ -157,7 +145,6 @@ class TestQuadTreeSlicer:
         time0 = time.time()
         polytope = Box(["latitude", "longitude"], [1, 1], [20, 30]).polytope()[0]
         self.API = Polytope(
-            request=Request(polytope),
             datacube=self.fdbdatacube,
             options=self.options,
             engine_options={"latitude": "quadtree", "longitude": "quadtree"},
