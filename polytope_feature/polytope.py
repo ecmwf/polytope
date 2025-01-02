@@ -1,16 +1,15 @@
-from .utility.combinatorics import group, tensor_product
-from .utility.list_tools import unique
-from .engine.quadtree_slicer import QuadTreeSlicer
-from .engine.hullslicer import HullSlicer
-from .datacube.tensor_index_tree import TensorIndexTree
-from .datacube.datacube_axis import UnsliceableDatacubeAxis
-from .datacube.backends.datacube import Datacube
-import logging
 from typing import List
 
+from .datacube.backends.datacube import Datacube
+from .datacube.datacube_axis import UnsliceableDatacubeAxis
+from .datacube.tensor_index_tree import TensorIndexTree
+from .engine.hullslicer import HullSlicer
+from .engine.quadtree_slicer import QuadTreeSlicer
 from .options import PolytopeOptions
 from .shapes import ConvexPolytope
+from .utility.combinatorics import group, tensor_product
 from .utility.exceptions import AxisOverdefinedError
+from .utility.list_tools import unique
 
 
 class Request:
@@ -43,39 +42,6 @@ class Request:
         for shape in self.shapes:
             return_str += shape.__repr__() + "\n"
         return return_str
-
-
-# class Polytope:
-#     def __init__(self, datacube, engine=None, options=None, context=None):
-#         from .datacube import Datacube
-#         from .engine import Engine
-
-#         if options is None:
-#             options = {}
-
-#         axis_options, compressed_axes_options, config, alternative_axes = PolytopeOptions.get_polytope_options(options)
-
-#         self.context = context
-
-#         self.datacube = Datacube.create(
-#             datacube, config, axis_options, compressed_axes_options, alternative_axes, self.context
-#         )
-#         self.engine = engine if engine is not None else Engine.default()
-#         self.time = 0
-
-#     def slice(self, polytopes: List[ConvexPolytope]):
-#         """Low-level API which takes a polytope geometry object and uses it to slice the datacube"""
-#         return self.engine.extract(self.datacube, polytopes)
-
-#     def retrieve(self, request: Request, method="standard"):
-#         """Higher-level API which takes a request and uses it to slice the datacube"""
-#         logging.info("Starting request for %s ", self.context)
-#         self.datacube.check_branching_axes(request)
-#         request_tree = self.engine.extract(self.datacube, request.polytopes())
-#         logging.info("Created request tree for %s ", self.context)
-#         self.datacube.get(request_tree, self.context)
-#         logging.info("Retrieved data for %s ", self.context)
-#         return request_tree
 
 
 class Polytope:

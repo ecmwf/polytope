@@ -3,7 +3,6 @@ import pytest
 from helper_functions import download_test_data
 
 from polytope_feature.datacube.datacube_axis import FloatDatacubeAxis
-from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
 

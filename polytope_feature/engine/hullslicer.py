@@ -5,13 +5,10 @@ from itertools import chain
 import scipy.spatial
 
 from ..shapes import ConvexPolytope
-from ..utility.combinatorics import group, tensor_product
 from ..utility.exceptions import UnsliceableShapeError
 from ..utility.geometry import lerp
-from ..utility.list_tools import argmax, argmin, unique
+from ..utility.list_tools import argmax, argmin
 from .engine import Engine
-from ..datacube.backends.datacube import Datacube
-from typing import List
 
 
 class HullSlicer(Engine):

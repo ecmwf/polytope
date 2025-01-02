@@ -2,7 +2,6 @@ import pytest
 from earthkit import data
 from helper_functions import download_test_data, find_nearest_latlon
 
-from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
 

@@ -173,7 +173,8 @@ class Datacube(ABC):
             from .fdb import FDBDatacube
 
             fdbdatacube = FDBDatacube(
-                datacube, request, config, axis_options, compressed_axes_options, point_cloud_options, alternative_axes, context
+                datacube, request, config, axis_options, compressed_axes_options, point_cloud_options, alternative_axes,
+                context
             )
             return fdbdatacube
         if type(datacube).__name__ == "MockDatacube":

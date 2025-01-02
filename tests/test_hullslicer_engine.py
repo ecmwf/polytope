@@ -3,7 +3,6 @@ import xarray as xr
 
 from polytope_feature.datacube.backends.xarray import XArrayDatacube
 from polytope_feature.datacube.tensor_index_tree import TensorIndexTree
-from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.polytope import Polytope
 from polytope_feature.shapes import Box
 

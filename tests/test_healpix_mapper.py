@@ -5,7 +5,6 @@ from helper_functions import download_test_data, find_nearest_latlon
 from polytope_feature.datacube.transformations.datacube_mappers.mapper_types.healpix import (
     HealpixGridMapper,
 )
-from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
 
