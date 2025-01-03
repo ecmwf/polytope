@@ -85,6 +85,9 @@ def get_fdb_coordinates_(tree, coordinates=None):
 def get_fdb_coordinates(tree):
     coordinates = {}
     get_fdb_coordinates_(tree, coordinates)
+    for key in coordinates:
+        coordinates[key] = list(set(coordinates[key]))
+    print(coordinates)
     return coordinates
 
 
