@@ -52,7 +52,7 @@ class TestSlicingFDBDatacube:
         request = Request(
             Select("step", ["2"]),
             Select("levtype", ["sfc"]),
-            Select("date", [pd.Timestamp("20241015T000000")]),
+            Select("date", [pd.Timestamp("20240806T000000")]),
             Select("expver", ["0001"]),
             Select("param", ["167"]),
             Select("class", ["d1"]),

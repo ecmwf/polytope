@@ -25,14 +25,18 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
 
     def merged_values(self, datacube):
         first_ax_vals = datacube.ax_vals(self.name)
+        print("WHAT ARE FIRST AX VALS?")
+        print(first_ax_vals)
         second_ax_name = self._second_axis
         second_ax_vals = datacube.ax_vals(second_ax_name)
+        print(second_ax_vals)
         linkers = self._linkers
         merged_values = []
         for i in range(len(first_ax_vals)):
             first_val = first_ax_vals[i]
             for j in range(len(second_ax_vals)):
                 second_val = second_ax_vals[j]
+                print("".join([first_val, linkers[0], second_val, linkers[1]]))
                 val_to_add = pd.to_datetime("".join([first_val, linkers[0], second_val, linkers[1]]))
                 val_to_add = val_to_add.to_numpy()
                 val_to_add = val_to_add.astype("datetime64[s]")
@@ -59,7 +63,7 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
             first_val = merged_val[:first_idx]
             first_linker_size = len(self._linkers[0])
             second_linked_size = len(self._linkers[1])
-            second_val = merged_val[first_idx + first_linker_size : -second_linked_size]
+            second_val = merged_val[first_idx + first_linker_size: -second_linked_size]
 
             # TODO: maybe replacing like this is too specific to time/dates?
             first_val = str(first_val).replace("-", "")

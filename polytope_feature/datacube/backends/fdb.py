@@ -7,7 +7,7 @@ from ...utility.exceptions import BadGridError, BadRequestError
 from ...utility.geometry import nearest_pt
 from .datacube import Datacube, TensorIndexTree
 
-from .additional_qubed_operations import load_tree, get_next_ax_vals, find_subtree, get_axes, get_fdb_coordinates
+from .additional_qubed_operations import load_tree, get_next_ax_vals, find_subtree, get_axes, get_fdb_coordinates, select_subtree
 
 
 class FDBDatacube(Datacube):
@@ -374,6 +374,15 @@ class FDBDatacube(Datacube):
         return indexes
 
     def select(self, path, unmapped_path):
+        # TODO: find subtree and then update the fdb_coordinates accordingly by removing
+        # non-existing axes and updating possible values list
+        self.fdb_tree = select_subtree(self.fdb_tree, path)
+        print("HERE")
+        print(path)
+        self.fdb_coordinates = get_fdb_coordinates(self.fdb_tree)
+        print("NEW FDB COORDS")
+        print(self.fdb_coordinates)
+        # TODO: need to merge the values for the merged axes
         return self.fdb_coordinates
 
     def ax_vals(self, name):

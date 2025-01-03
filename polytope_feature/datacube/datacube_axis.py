@@ -128,8 +128,14 @@ class DatacubeAxis(ABC):
                 indexes_between = indexes[start:end]
                 indexes_between_ranges.extend(indexes_between)
             else:
+                print("HERE NOW HERE")
                 lower_idx = bisect.bisect_left(indexes, low)
                 upper_idx = bisect.bisect_right(indexes, up)
+                print(low)
+                print(lower_idx)
+                print(indexes[lower_idx])
+                print(upper_idx)
+                print(len(indexes))
                 indexes_between = indexes[lower_idx:upper_idx]
                 indexes_between_ranges.extend(indexes_between)
         return indexes_between_ranges
@@ -137,9 +143,11 @@ class DatacubeAxis(ABC):
     def find_indices_between(self, indexes_ranges, low, up, datacube, method=None):
         indexes_between_ranges = self.find_standard_indices_between(indexes_ranges, low, up, datacube, method)
         for transformation in self.transformations[::-1]:
+            print(transformation)
             indexes_between_ranges = transformation.find_indices_between(
                 indexes_ranges, low, up, datacube, method, indexes_between_ranges, self
             )
+            print(indexes_between_ranges)
         return indexes_between_ranges
 
     @staticmethod

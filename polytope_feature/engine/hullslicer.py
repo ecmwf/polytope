@@ -141,6 +141,9 @@ class HullSlicer(Engine):
                     self._build_unsliceable_child(polytope, ax, node, datacube, [lower], next_nodes, slice_axis_idx)
                 else:
                     values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
+                    print("NOW LOOK")
+                    print(ax.name)
+                    print(values)
                     # NOTE: need to only remove the branches if the values are empty,
                     # but only if there are no other possible children left in the tree that
                     # we can append and if somehow this happens before and we need to remove, then what do we do??
