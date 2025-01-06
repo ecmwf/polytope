@@ -56,14 +56,15 @@ class Polytope:
         self.engine = engine if engine is not None else Engine.default()
         self.time = 0
 
-    def slice(self, polytopes: List[ConvexPolytope]):
+    def slice(self, request: Request):
         """Low-level API which takes a polytope geometry object and uses it to slice the datacube"""
-        return self.engine.extract(self.datacube, polytopes)
+        self.datacube.check_branching_axes(request)
+        return self.engine.extract(self.datacube, request.polytopes())
 
     def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
         logging.info("Starting request for %s ", self.context)
-        self.datacube.check_branching_axes(request)
+        # self.datacube.check_branching_axes(request)
         request_tree = self.engine.extract(self.datacube, request.polytopes())
         logging.info("Created request tree for %s ", self.context)
         self.datacube.get(request_tree, self.context)

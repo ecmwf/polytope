@@ -42,13 +42,13 @@ def get_next_ax_vals(tree, ax_name):
 
 def find_subtree(tree, axis, val):
     next_key_vals_pairs = list(tree.keys())
+    if len(next_key_vals_pairs) == 0:
+        return {}
     for key_val_pair in next_key_vals_pairs:
         key, vals = re.split(r"[=]", key_val_pair)
         new_vals = re.split(r'[,]', vals)
-        print(key)
-        print(new_vals)
         if axis == "latitude":
-            return None
+            return {}
         if axis == key and val in new_vals:
             subtree = tree[key_val_pair]
             return subtree
@@ -72,17 +72,17 @@ def find_subtree(tree, axis, val):
 #     return None
 
 
-def select_subtree(tree, path):
+def select_subtree(tree, path_axis, path_val):
     # TODO: what happens if path_val is compressed and not all compressed values are in the same qubed subtree?
-    if len(list(path)) == 0:
-        return tree
-    path_axis = list(path)[-1]
-    # path_val = path[path_axis]
-    path_val = path[path_axis][0]
+    # if len(list(path)) == 0:
+    #     return tree
+    # path_axis = list(path)[-1]
+    # # path_val = path[path_axis]
+    # path_val = path[path_axis][0]
     print("NOW")
     print(path_val)
     tree = find_subtree(tree, path_axis, path_val)
-    print(path)
+    # print(path)
     print(tree)
     return tree
 

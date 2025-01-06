@@ -133,7 +133,7 @@ class DatacubeAxis(ABC):
                 upper_idx = bisect.bisect_right(indexes, up)
                 print(low)
                 print(lower_idx)
-                print(indexes[lower_idx])
+                # print(indexes[lower_idx])
                 print(upper_idx)
                 print(len(indexes))
                 indexes_between = indexes[lower_idx:upper_idx]

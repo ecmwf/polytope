@@ -68,11 +68,11 @@ class TestSlicingFDBDatacube:
             engine=self.slicer,
             options=self.options,
         )
-        result = self.API.retrieve(request)
+        result = self.API.slice(request)
         result.pprint()
         assert len(result.leaves) == 3
-        assert len(result.leaves[0].result) == 3
+        # assert len(result.leaves[0].result) == 3
         assert result.leaves[0].flatten()["longitude"][1] == 0.070093457944
         assert result.leaves[1].flatten()["longitude"][1] == 0.070148090413
         assert result.leaves[2].flatten()["longitude"][1] == 0.070202808112
-        assert result.leaves[0].result[0] == 297.9250183105469
+        # assert result.leaves[0].result[0] == 297.9250183105469

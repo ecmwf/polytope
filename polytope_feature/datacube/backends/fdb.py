@@ -376,7 +376,23 @@ class FDBDatacube(Datacube):
     def select(self, path, unmapped_path):
         # TODO: find subtree and then update the fdb_coordinates accordingly by removing
         # non-existing axes and updating possible values list
-        self.fdb_tree = select_subtree(self.fdb_tree, path)
+
+        if len(path.keys()) != 0:
+            axis_name = list(path)[-1]
+            axis_val = path[axis_name][0]
+            key_value_path = {axis_name: (axis_val,)}
+            # ax = requests.axis
+            ax = self._axes[axis_name]
+            (key_value_path, path, self.unwanted_path) = ax.unmap_path_key(
+                key_value_path, path, self.unwanted_path
+            )
+            path.update(key_value_path)
+
+            for key in key_value_path:
+                val = key_value_path[key][0]
+                self.fdb_tree = select_subtree(self.fdb_tree, key, val)
+
+        # self.fdb_tree = select_subtree(self.fdb_tree, path)
         print("HERE")
         print(path)
         self.fdb_coordinates = get_fdb_coordinates(self.fdb_tree)
