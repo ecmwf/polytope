@@ -3,7 +3,7 @@ import pytest
 
 from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.polytope import Polytope, Request
-from polytope_feature.shapes import Box, Select, Span
+from polytope_feature.shapes import Box, Select
 
 # import geopandas as gpd
 # import matplotlib.pyplot as plt

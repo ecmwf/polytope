@@ -5,9 +5,8 @@ from itertools import product
 
 from ...utility.exceptions import BadGridError, BadRequestError
 from ...utility.geometry import nearest_pt
+from .additional_qubed_operations import get_fdb_coordinates, load_tree, select_subtree
 from .datacube import Datacube, TensorIndexTree
-
-from .additional_qubed_operations import load_tree, get_next_ax_vals, find_subtree, get_axes, get_fdb_coordinates, select_subtree
 
 
 class FDBDatacube(Datacube):

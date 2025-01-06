@@ -1,8 +1,6 @@
 import logging
-from typing import List
 
 from .options import PolytopeOptions
-from .shapes import ConvexPolytope
 from .utility.exceptions import AxisOverdefinedError
 
 
