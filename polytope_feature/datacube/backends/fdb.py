@@ -285,8 +285,6 @@ class FDBDatacube(Datacube):
             fdb_range_nodes = deepcopy(fdb_node_ranges[i])
             key_value_path = {lat_child.axis.name: lat_child.values}
             ax = lat_child.axis
-            print("ABOVE CHILD LAYER BEFORE UNMAP")
-            print(leaf_path)
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
@@ -306,9 +304,6 @@ class FDBDatacube(Datacube):
         for i, c in enumerate(requests.children):
             # now c are the leaves of the initial tree
             key_value_path = {c.axis.name: c.values}
-            # print("LOOK NOW")
-            # print(leaf_path)
-            # print(key_value_path)
             leaf_path["index"] = c.indexes
             ax = c.axis
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(

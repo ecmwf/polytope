@@ -136,9 +136,6 @@ class Polytope:
                 engine = self.find_engine(ax)
                 next_nodes = []
                 interm_next_nodes = []
-                print(current_nodes)
-                print("AND NEXT NODES")
-                print(next_nodes)
                 for node in current_nodes:
                     engine._build_branch(ax, node, datacube, interm_next_nodes, self)
                     next_nodes.extend(interm_next_nodes)

@@ -49,8 +49,6 @@ class QuadTreeSlicer(Engine):
         # need to find points of the datacube contained within the polytope
         # We do this by intersecting the datacube point cloud quad tree with the polytope here
         polygon_points = self.quad_tree.query_polygon(polytope)
-        print("HERE")
-        print(polygon_points)
         return polygon_points
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):
@@ -66,7 +64,6 @@ class QuadTreeSlicer(Engine):
         del node["unsliced_polytopes"]
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes, api):
-        print("ARE USING QUADTREE SLICER")
         extracted_points = self.extract_single(datacube, polytope)
         # TODO: add the sliced points as node to the tree and update the next_nodes
         if len(extracted_points) == 0:
