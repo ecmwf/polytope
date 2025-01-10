@@ -13,10 +13,10 @@ site
 *.grib
 *.gif
 *.html
+*.req
+.mypy_cache
 example_eo
 example_mri
-.mypy_cache
-*.req
 polytope_python.egg-info
 new_test_venv_polytope
 new_venv_polytope
@@ -26,3 +26,9 @@ new_updated_numpy_venv
 newest-polytope-venv
 serializedTree
 new_polytope_venv
+
+newest-polytope-venv
+*.pstats
+*.profile
+new_polytope_venv
+*.json

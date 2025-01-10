@@ -18,7 +18,7 @@ class CyclicConfig(TransformationConfig):
 class MapperConfig(TransformationConfig):
     name: Literal["mapper"]
     type: str = ""
-    resolution: Union[int, List[int]] = 0
+    resolution: Optional[Union[int, List[int]]] = 0
     axes: List[str] = [""]
     md5_hash: Optional[str] = None
     local: Optional[List[float]] = None
@@ -61,7 +61,7 @@ class Config(ConfigModel):
     axis_config: List[AxisConfig] = []
     compressed_axes_config: List[str] = [""]
     pre_path: Optional[Dict[str, path_subclasses_union]] = {}
-    alternative_axes: List[GribJumpAxesConfig] = []
+    alternative_axes: Optional[List[GribJumpAxesConfig]] = []
 
 
 class PolytopeOptions(ABC):

@@ -3,13 +3,12 @@ import time
 import pandas as pd
 import pygribjump as gj
 
-from polytope.polytope import Polytope, Request
-from polytope.shapes import All, Point, Select
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import All, Point, Select
 
 time1 = time.time()
 # Create a dataarray with 3 labelled axes using different index types
 
-# config = {"class": "od", "expver": "0001", "levtype": "sfc", "type": "pf"}
 options = {
     "axis_config": [
         {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
@@ -62,7 +61,6 @@ request = Request(
     Select("class", ["od"]),
     Select("stream", ["enfo"]),
     Select("type", ["pf"]),
-    # Select("latitude", [0.035149384216], method="surrounding"),
     Point(["latitude", "longitude"], [[0.04, 0]], method="surrounding"),
     All("number"),
 )

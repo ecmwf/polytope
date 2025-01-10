@@ -152,20 +152,40 @@ class Datacube(ABC):
         return path
 
     @staticmethod
-    def create(datacube, config={}, axis_options={}, compressed_axes_options=[], alternative_axes=[], context=None):
+    def create(
+        datacube,
+        config={},
+        axis_options={},
+        compressed_axes_options=[],
+        point_cloud_options=None,
+        alternative_axes=[],
+        context=None,
+    ):
         # TODO: get the configs as None for pre-determined value and change them to empty dictionary inside the function
         if type(datacube).__name__ == "DataArray":
             from .xarray import XArrayDatacube
 
-            xadatacube = XArrayDatacube(datacube, axis_options, compressed_axes_options, context)
+            xadatacube = XArrayDatacube(datacube, axis_options, compressed_axes_options, point_cloud_options, context)
             return xadatacube
         if type(datacube).__name__ == "GribJump":
             from .fdb import FDBDatacube
 
             fdbdatacube = FDBDatacube(
-                datacube, config, axis_options, compressed_axes_options, alternative_axes, context
+                datacube,
+                config,
+                axis_options,
+                compressed_axes_options,
+                point_cloud_options,
+                alternative_axes,
+                context,
             )
             return fdbdatacube
+        if type(datacube).__name__ == "MockDatacube":
+            return datacube
 
     def check_branching_axes(self, request):
+        pass
+
+    @abstractmethod
+    def find_point_cloud(self):
         pass
