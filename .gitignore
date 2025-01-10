@@ -31,3 +31,4 @@ newest-polytope-venv
 *.pstats
 *.profile
 new_polytope_venv
+*.json

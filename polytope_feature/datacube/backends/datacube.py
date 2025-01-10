@@ -143,6 +143,7 @@ class Datacube(ABC):
         """
         Get the type mapper for a subaxis of the datacube given by label
         """
+        print(self._axes)
         return self._axes[axis]
 
     def remap_path(self, path: DatacubePath):

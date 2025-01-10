@@ -105,7 +105,6 @@ class Polytope:
 
     def slice(self, datacube, polytopes: List[ConvexPolytope]):
         """Low-level API which takes a polytope geometry object and uses it to slice the datacube"""
-
         self.find_compressed_axes(datacube, polytopes)
 
         self.remove_compressed_axis_in_union(polytopes)
@@ -137,6 +136,9 @@ class Polytope:
                 engine = self.find_engine(ax)
                 next_nodes = []
                 interm_next_nodes = []
+                print(current_nodes)
+                print("AND NEXT NODES")
+                print(next_nodes)
                 for node in current_nodes:
                     engine._build_branch(ax, node, datacube, interm_next_nodes, self)
                     next_nodes.extend(interm_next_nodes)
