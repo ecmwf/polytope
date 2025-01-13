@@ -182,5 +182,6 @@ class Polytope:
         for p in polytopes:
             if p.is_in_union:
                 for axis in p.axes():
-                    if axis == self.compressed_axes[-1]:
-                        self.compressed_axes.remove(axis)
+                    if axis in self.compressed_axes:
+                        if axis == self.compressed_axes[-1]:
+                            self.compressed_axes.remove(axis)
