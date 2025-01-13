@@ -33,7 +33,9 @@ class TestQuadTreeSlicer:
         ds = data.from_source(
             "file", "../../Downloads/icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2")
 
-        grid = xr.open_dataset("../../Downloads/icon_grid_0026_R03B07_G.nc", engine="netcdf4")
+        # grid = xr.open_dataset("../../Downloads/icon_grid_0026_R03B07_G.nc", engine="netcdf4")
+        grid_file_name = "../../Downloads/icon_extpar_0026_R03B07_G_20231113_tiles.nc"
+        grid = xr.open_dataset(grid_file_name, engine="netcdf4")
 
         print(time.time()-time_now)
         self.arr = ds.to_xarray(engine="cfgrib").t2m
@@ -128,7 +130,7 @@ class TestQuadTreeSlicer:
             Select("heightAboveGround", [2.0]),
             Select("step", [datetime.timedelta(days=0)]),
             # Select("time_counter", [pd.Timestamp("1979-02-15")]),
-            Box(["latitude", "longitude"], [0, 0], [10, 10]),
+            Box(["latitude", "longitude"], [0, 0], [0.005, 0.01]),
         )
 
         self.API = Polytope(
