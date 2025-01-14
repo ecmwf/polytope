@@ -108,6 +108,15 @@ class TensorIndexTree(object):
         new_values.sort()
         self.values = tuple(new_values)
 
+    def create_compressed_child(self, axis, value, next_nodes):
+        # TODO: what if we remove the next nodes here?
+        node = TensorIndexTree(axis, value)
+        existing_child = self.find_child(node)
+        if not existing_child:
+            self.add_child(node)
+            return (node, next_nodes)
+        return (existing_child, next_nodes)
+
     def create_child(self, axis, value, next_nodes):
         # TODO: what if we remove the next nodes here?
         node = TensorIndexTree(axis, (value,))

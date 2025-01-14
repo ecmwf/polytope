@@ -106,7 +106,7 @@ class TestQuadTreeSlicer:
         request = Request(
             Select("deptht", [0.5058], method="nearest"),
             # Select("time_counter", [pd.Timestamp("1979-02-15")]),
-            Box(["latitude", "longitude"], [-80, 50], [-50, 80]),
+            Box(["latitude", "longitude"], [-550, 50], [-50, 55]),
         )
 
         self.API = Polytope(

@@ -1,6 +1,6 @@
 from copy import copy
 
-from ..datacube.datacube_axis import IntDatacubeAxis
+from ..datacube.datacube_axis import IntDatacubeAxis, FloatDatacubeAxis
 from ..datacube.quad_tree import QuadTree
 from ..datacube.tensor_index_tree import TensorIndexTree
 from .engine import Engine
@@ -69,22 +69,39 @@ class QuadTreeSlicer(Engine):
         if len(extracted_points) == 0:
             node.remove_branch()
 
+        # TODO: is there a nicer way to get this axis that does not depend on knowing
+        # the axis name in advance?
+        lon_ax = datacube._axes["longitude"]
+
+        combined_lat_lon_ax = FloatDatacubeAxis()
+        combined_lat_lon_ax.name = ax.name + "/" + lon_ax.name
+
+        print(len(extracted_points))
+
         for point in extracted_points:
             # convert to float for slicing
             value = point.index
             lat_val = point.item[0]
             lon_val = point.item[1]
-            lat_ax = ax
+            combined_val = (lat_val, lon_val)
+            # print(combined_val)
 
-            # TODO: is there a nicer way to get this axis that does not depend on knowing
-            # the axis name in advance?
-            lon_ax = datacube._axes["longitude"]
+            # # TODO: is there a nicer way to get this axis that does not depend on knowing
+            # # the axis name in advance?
+            # lon_ax = datacube._axes["longitude"]
 
             # store the native type
-            (child, _) = node.create_child(lat_ax, lat_val, [])
-            (grand_child, _) = child.create_child(lon_ax, lon_val, [])
+            (child, _) = node.create_compressed_child(lon_ax, combined_val, [])
+
             # NOTE: the index of the point is stashed in the branches' result
-            grand_child.indexes = [value]
-            grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
-            grand_child["unsliced_polytopes"].remove(polytope)
+            child.indexes = [value]
+            child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
+            child["unsliced_polytopes"].remove(polytope)
+
+            # (child, _) = node.create_child(ax, lat_val, [])
+            # (grand_child, _) = child.create_child(lon_ax, lon_val, [])
+            # # NOTE: the index of the point is stashed in the branches' result
+            # grand_child.indexes = [value]
+            # grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
+            # grand_child["unsliced_polytopes"].remove(polytope)
         # TODO: but now what happens to the second axis in the point cloud?? Do we create a second node for it??

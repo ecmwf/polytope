@@ -7,6 +7,7 @@ from earthkit import data
 import xarray as xr
 from helper_functions import find_nearest_latlon
 import time
+import math
 # import iris
 
 from polytope_feature.polytope import Polytope, Request
@@ -42,9 +43,9 @@ class TestQuadTreeSlicer:
         # print("AND GRID")
         # print(grid.clon.values)
         # print(len(grid.clon))
-        self.longitudes = grid.clon.values
-        self.latitudes = grid.clat.values
-        print(grid)
+        self.longitudes = [val * 180 / math.pi for val in grid.clon.values]
+        self.latitudes = [val * 180/math.pi for val in grid.clat.values]
+        # print(self.latitudes)
 
         # self.arr = ds.votemper
 
@@ -155,8 +156,10 @@ class TestQuadTreeSlicer:
         leaves = result.leaves
         for i in range(len(leaves)):
             cubepath = leaves[i].flatten()
-            lat = cubepath["latitude"][0]
-            lon = cubepath["longitude"][0]
+            lat = cubepath["longitude"][0]
+            lon = cubepath["longitude"][1]
+            # lat = cubepath["latitude"][0]
+            # lon = cubepath["longitude"][0]
             lats.append(lat)
             lons.append(lon)
 
