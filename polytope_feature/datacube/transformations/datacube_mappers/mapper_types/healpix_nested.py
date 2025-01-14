@@ -222,6 +222,8 @@ class NestedHealpixGridMapper(DatacubeMapper):
 
 
 # md5 grid hash in form {resolution : hash}
-_md5_hash = {1024: "cbda19e48d4d7e5e22641154878b9b22",
-             512: "9533855ee8e38314e19aaa0434c310da",
-             128: "f3dfeb7a5bbbdd13a20d10fdb3797c71"}
+_md5_hash = {
+    1024: "cbda19e48d4d7e5e22641154878b9b22",
+    512: "9533855ee8e38314e19aaa0434c310da",
+    128: "f3dfeb7a5bbbdd13a20d10fdb3797c71",
+}
