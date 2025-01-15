@@ -24,19 +24,15 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         return self._first_axis
 
     def merged_values(self, datacube):
-        first_ax_vals = datacube.ax_vals(self.name)
+        first_ax_vals = np.array(datacube.ax_vals(self.name))
         second_ax_name = self._second_axis
-        second_ax_vals = datacube.ax_vals(second_ax_name)
+        second_ax_vals = np.array(datacube.ax_vals(second_ax_name))
         linkers = self._linkers
-        merged_values = []
-        for i in range(len(first_ax_vals)):
-            first_val = first_ax_vals[i]
-            for j in range(len(second_ax_vals)):
-                second_val = second_ax_vals[j]
-                val_to_add = pd.to_datetime("".join([first_val, linkers[0], second_val, linkers[1]]))
-                val_to_add = val_to_add.to_numpy()
-                val_to_add = val_to_add.astype("datetime64[s]")
-                merged_values.append(val_to_add)
+        first_grid, second_grid = np.meshgrid(first_ax_vals, second_ax_vals, indexing="ij")
+        combined_strings = np.char.add(
+            np.char.add(first_grid.ravel(), linkers[0]), np.char.add(second_grid.ravel(), linkers[1])
+        )
+        merged_values = pd.to_datetime(combined_strings).to_numpy().astype("datetime64[s]")
         merged_values = np.array(merged_values)
         logging.info(
             f"Merged values {first_ax_vals} on axis {self.name} and \
