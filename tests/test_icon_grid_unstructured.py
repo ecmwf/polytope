@@ -11,6 +11,7 @@ import time
 
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
+import math
 
 
 class TestQuadTreeSlicer:
@@ -42,8 +43,8 @@ class TestQuadTreeSlicer:
         # print("AND GRID")
         # print(grid.clon.values)
         # print(len(grid.clon))
-        self.longitudes = grid.clon.values
-        self.latitudes = grid.clat.values
+        self.longitudes = grid.clon.values * 180 / math.pi
+        self.latitudes = grid.clat.values * 180 / math.pi
         print(grid)
 
         # self.arr = ds.votemper

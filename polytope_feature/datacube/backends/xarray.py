@@ -98,9 +98,20 @@ class XArrayDatacube(Datacube):
                             unmapped_path[key] = list(unmapped_path[key])
                     subxarray = self.dataarray.sel(leaf_path_copy, method="nearest")
                     subxarray = subxarray.sel(unmapped_path)
-                    value = subxarray.values
-                    key = subxarray.name
-                    requests.result = (key, value)
+
+                    # TODO: the unmapped path here stored each index individually one by one...
+                    # If we went a level higher and "compressed" all lat/lon values and asked for them at once, then it would be much faster here
+                    print("LEAF PATH")
+                    print(leaf_path_copy)
+                    print(unmapped_path)
+                    # # TODO: is it just extracting the values that is so slow??
+                    # value = subxarray.values
+                    # key = subxarray.name
+                    # requests.result = (key, value)
+
+    def merge_last_two_layers_in_get(self):
+        # create list of indexes and associated paths
+        pass
 
     def datacube_natural_indexes(self, axis, subarray):
         if axis.name in self.complete_axes:

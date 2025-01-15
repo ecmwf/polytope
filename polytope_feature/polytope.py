@@ -158,8 +158,15 @@ class Polytope:
 
     def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
+        import time
+        time1 = time.time()
         request_tree = self.slice(self.datacube, request.polytopes())
+        print("TIME TO SLICE AND FIND TREE TO EXTRACT")
+        print(time.time() - time1)
+        time2 = time.time()
         self.datacube.get(request_tree)
+        print("TIME TO EXTRACT DATA")
+        print(time.time() - time2)
         return request_tree
 
     def find_compressed_axes(self, datacube, polytopes):
