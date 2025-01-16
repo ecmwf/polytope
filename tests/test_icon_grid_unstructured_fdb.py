@@ -9,6 +9,7 @@ from earthkit import data
 import xarray as xr
 from helper_functions import find_nearest_latlon
 import time
+import math
 # import iris
 import os
 
@@ -39,8 +40,8 @@ class TestQuadTreeSlicer:
         print(time.time()-time_now)
         self.arr = ds.to_xarray(engine="cfgrib").t2m
 
-        self.longitudes = grid.clon.values
-        self.latitudes = grid.clat.values
+        self.longitudes = grid.clon.values * 180/math.pi
+        self.latitudes = grid.clat.values * 180/math.pi
 
         self.points = list(zip(self.latitudes, self.longitudes))
         print((min(self.latitudes), max(self.latitudes), min(self.longitudes), max(self.longitudes)))
@@ -55,7 +56,8 @@ class TestQuadTreeSlicer:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "irregular", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                        {"name": "mapper", "type": "irregular", "resolution": 0, "axes": [
+                            "latitude", "longitude"], "md5_hash": "f68071a8ac9bae4e965822afb963c04f"}
                     ],
                 },
             ],
