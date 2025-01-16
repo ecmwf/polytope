@@ -7,7 +7,7 @@ from ..datacube_transformations import DatacubeAxisTransformation
 class DatacubeAxisTypeChange(DatacubeAxisTransformation):
     # The transformation here will be to point the old axes to the new cyclic axes
 
-    def __init__(self, name, type_options):
+    def __init__(self, name, type_options, datacube=None):
         self.name = name
         self.transformation_options = type_options
         self.new_type = type_options.type

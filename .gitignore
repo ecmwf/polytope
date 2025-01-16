@@ -26,3 +26,4 @@ new_updated_numpy_venv
 newest-polytope-venv
 serializedTree
 new_polytope_venv
+*.json
