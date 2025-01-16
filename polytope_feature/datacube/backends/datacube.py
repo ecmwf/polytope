@@ -48,11 +48,8 @@ class Datacube(ABC):
     def _create_axes(self, name, values, transformation_type_key, transformation_options):
         # first check what the final axes are for this axis name given transformations
         transformation_options = transformation_type_key
-        final_axis_names = DatacubeAxisTransformation.get_final_axes(
-            name, transformation_type_key.name, transformation_options
-        )
-        transformation = DatacubeAxisTransformation.create_transform(
-            name, transformation_type_key.name, transformation_options
+        (final_axis_names, transformation) = DatacubeAxisTransformation.get_final_axes(
+            name, transformation_type_key.name, transformation_options, self
         )
 
         # do not compress merged axes
