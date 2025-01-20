@@ -69,7 +69,7 @@ class DatacubeMapper(DatacubeAxisTransformation):
         pass
 
     def first_axis_vals(self):
-        return self._final_transformation.first_axis_vals()
+        return self._final_transformation._first_axis_vals
 
     def second_axis_vals(self, first_val):
         return self._final_transformation.second_axis_vals(first_val)
