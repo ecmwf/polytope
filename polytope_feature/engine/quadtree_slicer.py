@@ -11,12 +11,13 @@ class QuadTreeSlicer(Engine):
         # here need to construct quadtree, which is specific to datacube
         # NOTE: should this be inside of the datacube instead that we create the quadtree?
         import time
+
         quad_tree = QuadTree()
         print("START BUILDING QUAD TREE")
         time0 = time.time()
         quad_tree.build_point_tree(points)
         print("FINISH BUILDING QUAD TREE")
-        print(time.time()-time0)
+        print(time.time() - time0)
         self.quad_tree = quad_tree
 
     # method to slice polygon against quadtree
