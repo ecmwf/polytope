@@ -11,7 +11,6 @@ from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select, Polygon, ConvexPolytope
 
 import os
-os.environ["FDB_HOME"] = "/Users/male/git/fdb-new-home"
 
 # slicer_type = "quadtree"
 file_name = "../../Downloads/icon_grid_0026_R03B07_G.nc"
