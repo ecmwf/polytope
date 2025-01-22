@@ -399,6 +399,8 @@ class Polygon(Shape):
         return self._axes
 
     def polytope(self):
+        print("NUM POLYTOPES")
+        print(len(self.polytopes))
         return self.polytopes
 
     def __repr__(self):
