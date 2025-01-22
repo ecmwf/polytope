@@ -109,7 +109,7 @@ class Polytope:
             for j, val in enumerate(p.points):
                 p.points[j][i] = mapper.to_float(mapper.parse(p.points[j][i]))
         # Remove duplicate points
-        unique(p.points)
+        # unique(p.points)
 
     def slice(self, datacube, polytopes: List[ConvexPolytope]):
         """Low-level API which takes a polytope geometry object and uses it to slice the datacube"""

@@ -11,6 +11,7 @@ from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select, Polygon, ConvexPolytope
 
 import os
+os.environ["FDB_HOME"] = "/Users/male/git/fdb-new-home"
 
 # slicer_type = "quadtree"
 file_name = "../../Downloads/icon_grid_0026_R03B07_G.nc"
@@ -81,13 +82,13 @@ def set_up_slicing(slicer_type, file_name):
 # )
 
 
-request = Request(
-    Select("date", [pd.Timestamp("20250110T0000")]),
-    Select("step", [0]),
-    Select("param", ["167"]),
-    Select("levtype", ["sfc"]),
-    Polygon(["latitude", "longitude"], [[0, 0], [0, 20], [20, 20], [20, 0]]),
-)
+# request = Request(
+#     Select("date", [pd.Timestamp("20250110T0000")]),
+#     Select("step", [0]),
+#     Select("param", ["167"]),
+#     Select("levtype", ["sfc"]),
+#     Polygon(["latitude", "longitude"], [[0, 0], [0, 20], [20, 20], [20, 0]]),
+# )
 
 # request = Request(
 #     Select("date", [pd.Timestamp("20250110T0000")]),
@@ -113,6 +114,30 @@ request = Request(
 #     Select("levtype", ["sfc"]),
 #     ConvexPolytope(["latitude", "longitude"], [[0, 0], [0, 10], [10, 10], [10, 0]]),
 # )
+
+# request = Request(
+#     Select("date", [pd.Timestamp("20250110T0000")]),
+#     Select("step", [0]),
+#     Select("param", ["167"]),
+#     Select("levtype", ["sfc"]),
+#     ConvexPolytope(["latitude", "longitude"], [[0, 0], [0, 5], [5, 5], [5, 0]]),
+# )
+
+# request = Request(
+#     Select("date", [pd.Timestamp("20250110T0000")]),
+#     Select("step", [0]),
+#     Select("param", ["167"]),
+#     Select("levtype", ["sfc"]),
+#     ConvexPolytope(["latitude", "longitude"], [[0, 0], [0, 15], [15, 15], [15, 0]]),
+# )
+
+request = Request(
+    Select("date", [pd.Timestamp("20250110T0000")]),
+    Select("step", [0]),
+    Select("param", ["167"]),
+    Select("levtype", ["sfc"]),
+    ConvexPolytope(["latitude", "longitude"], [[0, 0], [0, 20], [20, 20], [20, 0]]),
+)
 
 
 print("\n\n")
