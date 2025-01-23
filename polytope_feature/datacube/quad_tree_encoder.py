@@ -5,6 +5,9 @@ from . import quad_tree_pb2 as pb2
 from .quad_tree import QuadTree, QuadNode
 
 
+# Encoding
+
+
 def encode_tree(tree: QuadTree):
     node = pb2.QuadTree()
 
@@ -63,3 +66,55 @@ def encode_quad_node(quad_node: QuadNode):
 def write_encoded_tree_to_file(tree_bytes, filename):
     with open(filename, "wb") as fs:
         fs.write(tree_bytes)
+
+
+# Decoding
+
+def decode_quad_node(pb2_quad_node):
+    node = QuadNode(pb2_quad_node.item, pb2_quad_node.index)
+    return node
+
+
+def decode_quad_tree(bytearray):
+    node = pb2.QuadTree()
+    node.ParseFromString(bytearray)
+
+    tree = QuadTree(node.center[0], node.center[1], node.size, node.depth)
+
+    for n in node.nodes:
+        decoded_node = decode_quad_node(n)
+        tree.nodes.append(decoded_node)
+
+    decode_child(node, tree)
+
+    return tree
+
+
+def decode_child(node, tree):
+
+    for child in node.children:
+        sub_tree = QuadTree(child.center[0], child.center[1], child.size, child.depth)
+
+        pass
+    # TODO
+    '''
+    if len(node.children) == 0:
+        tree.result = node.result
+        tree.result_size = node.size_result
+        tree.indexes = node.indexes
+        tree.indexes_size = node.size_indexes_branch
+    for child in node.children:
+        if child.axis in datacube._axes.keys():
+            child_axis = datacube._axes[child.axis]
+            child_vals = tuple(child.value)
+            child_node = TensorIndexTree(child_axis, child_vals)
+            tree.add_child(child_node)
+            decode_child(child, child_node, datacube)
+        else:
+            grandchild_axis = datacube._axes[child.children[0].axis]
+            for c in child.children:
+                grandchild_vals = tuple(c.value)
+                grandchild_node = TensorIndexTree(grandchild_axis, grandchild_vals)
+                tree.add_child(grandchild_node)
+                decode_child(c, grandchild_node, datacube)
+    '''
