@@ -73,49 +73,35 @@ def set_up_slicing(slicer_type, file_name):
     return API
 
 
-print("FOR [[0,0], [20,20]] BOX \n\n")
+# print("FOR [[0,0], [20,20]] BOX \n\n")
 
-request = Request(
-    Select("date", [pd.Timestamp("20250110T0000")]),
-    Select("step", [0]),
-    Select("param", ["167"]),
-    Select("levtype", ["sfc"]),
-    ConvexPolytope(["latitude", "longitude"], [[0, 0], [0, 20], [20, 20], [20, 0]]),
-)
+# request = Request(
+#     Select("date", [pd.Timestamp("20250110T0000")]),
+#     Select("step", [0]),
+#     Select("param", ["167"]),
+#     Select("levtype", ["sfc"]),
+#     ConvexPolytope(["latitude", "longitude"], [[0, 0], [0, 20], [20, 20], [20, 0]]),
+# )
+
+
+# print("\n\n")
+# print("##################################################")
+# print("TIMES USING QUADTREE SLICER \n\n")
+# print("##################################################")
+
+
+# API = set_up_slicing("quadtree", file_name)
+
+# time0 = time.time()
+# result = API.retrieve(request)
+# time1 = time.time()
+
+# print("TIME TAKEN TO EXTRACT")
+# print(time1 - time0)
+# print(len(result.leaves))
 
 
 print("\n\n")
-print("##################################################")
-print("TIMES USING QUADTREE SLICER \n\n")
-print("##################################################")
-
-
-API = set_up_slicing("quadtree", file_name)
-
-time0 = time.time()
-result = API.retrieve(request)
-time1 = time.time()
-
-print("TIME TAKEN TO EXTRACT")
-print(time1 - time0)
-print(len(result.leaves))
-
-
-print("\n\n")
-print("##################################################")
-print("TIMES USING OPTIMISED POINT IN POLYGON SLICER \n\n")
-print("##################################################")
-
-
-API = set_up_slicing("optimised_point_in_polygon", file_name)
-
-time0 = time.time()
-result = API.retrieve(request)
-time1 = time.time()
-
-print("TIME TAKEN TO EXTRACT")
-print(time1 - time0)
-print(len(result.leaves))
 
 
 print("\n\n")
@@ -150,21 +136,6 @@ print(len(result.leaves))
 
 
 print("\n\n")
-print("##################################################")
-print("TIMES USING OPTIMISED POINT IN POLYGON SLICER \n\n")
-print("##################################################")
-
-
-API = set_up_slicing("optimised_point_in_polygon", file_name)
-
-time0 = time.time()
-result = API.retrieve(request)
-time1 = time.time()
-
-print("TIME TAKEN TO EXTRACT")
-print(time1 - time0)
-print(len(result.leaves))
-
 print("\n\n")
 
 
@@ -197,17 +168,3 @@ print(len(result.leaves))
 
 
 print("\n\n")
-print("##################################################")
-print("TIMES USING OPTIMISED POINT IN POLYGON SLICER \n\n")
-print("##################################################")
-
-
-API = set_up_slicing("optimised_point_in_polygon", file_name)
-
-time0 = time.time()
-result = API.retrieve(request)
-time1 = time.time()
-
-print("TIME TAKEN TO EXTRACT")
-print(time1 - time0)
-print(len(result.leaves))
