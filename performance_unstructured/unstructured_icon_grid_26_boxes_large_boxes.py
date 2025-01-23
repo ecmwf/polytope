@@ -73,113 +73,14 @@ def set_up_slicing(slicer_type, file_name):
     return API
 
 
-# TODO: here, compute circles with the same bounding box as the boxes to compare?
-
-def find_circle_points(num_points, centre, radius):
-
-    expanded_radius = _expansion_to_circumscribe_circle(num_points)
-    points = _points_on_circle(num_points, expanded_radius)
-
-    for i in range(0, len(points)):
-        x = centre[0] + points[i][0] * radius[0]
-        y = centre[1] + points[i][1] * radius[1]
-        points[i] = [x, y]
-    return points
-
-
-def _points_on_circle(n, r):
-    return [[math.cos(2 * math.pi / n * x) * r, math.sin(2 * math.pi / n * x) * r] for x in range(0, n)]
-
-
-def _expansion_to_circumscribe_circle(n):
-    half_angle_between_segments = math.pi / n
-    return 1 / math.cos(half_angle_between_segments)
-
-
-num_points = 3
-
-# Disk with bounding box [[0,0], [10,10]]
-
-# center = [5, 5]
-
-# radius = [5, 5]
-
-# points = find_circle_points(num_points, center, radius)
-
-# request = Request(
-#     Select("date", [pd.Timestamp("20250110T0000")]),
-#     Select("step", [0]),
-#     Select("param", ["167"]),
-#     Select("levtype", ["sfc"]),
-#     ConvexPolytope(["latitude", "longitude"], points),
-# )
-
-
-# Disk with bounding box [[0,0], [15,15]]
-
-# center = [7.5, 7.5]
-
-# radius = [7.5, 7.5]
-
-# points = find_circle_points(num_points, center, radius)
-
-# request = Request(
-#     Select("date", [pd.Timestamp("20250110T0000")]),
-#     Select("step", [0]),
-#     Select("param", ["167"]),
-#     Select("levtype", ["sfc"]),
-#     ConvexPolytope(["latitude", "longitude"], points),
-# )
-
-
-# Disk with bounding box [[0,0], [20,20]]
-
-# center = [10, 10]
-
-# radius = [10, 10]
-
-# points = find_circle_points(num_points, center, radius)
-
-# request = Request(
-#     Select("date", [pd.Timestamp("20250110T0000")]),
-#     Select("step", [0]),
-#     Select("param", ["167"]),
-#     Select("levtype", ["sfc"]),
-#     ConvexPolytope(["latitude", "longitude"], points),
-# )
-
-
-# Disk with bounding box [[0,0], [5,5]]
-
-# center = [2.5, 2.5]
-
-# radius = [2.5, 2.5]
-
-# points = find_circle_points(num_points, center, radius)
-
-# request = Request(
-#     Select("date", [pd.Timestamp("20250110T0000")]),
-#     Select("step", [0]),
-#     Select("param", ["167"]),
-#     Select("levtype", ["sfc"]),
-#     ConvexPolytope(["latitude", "longitude"], points),
-# )
-
-
-# Disk with bounding box [[0,0], [5,5]] but in many polygons
-
-center = [2.5, 2.5]
-
-radius = [2.5, 2.5]
-
-points = find_circle_points(num_points, center, radius)
+print("FOR [[0,0], [20,20]] BOX \n\n")
 
 request = Request(
     Select("date", [pd.Timestamp("20250110T0000")]),
     Select("step", [0]),
     Select("param", ["167"]),
     Select("levtype", ["sfc"]),
-    Polygon(["latitude", "longitude"], points),
+    ConvexPolytope(["latitude", "longitude"], [[0, 0], [0, 20], [20, 20], [20, 0]]),
 )
 
 
@@ -202,11 +103,89 @@ print(len(result.leaves))
 
 print("\n\n")
 print("##################################################")
-print("TIMES USING POINT IN POLYGON SLICER \n\n")
+print("TIMES USING OPTIMISED POINT IN POLYGON SLICER \n\n")
 print("##################################################")
 
 
-API = set_up_slicing("point_in_polygon", file_name)
+API = set_up_slicing("optimised_point_in_polygon", file_name)
+
+time0 = time.time()
+result = API.retrieve(request)
+time1 = time.time()
+
+print("TIME TAKEN TO EXTRACT")
+print(time1 - time0)
+print(len(result.leaves))
+
+
+print("\n\n")
+
+
+print("FOR [[0,0], [30,30]] BOX \n\n")
+
+request = Request(
+    Select("date", [pd.Timestamp("20250110T0000")]),
+    Select("step", [0]),
+    Select("param", ["167"]),
+    Select("levtype", ["sfc"]),
+    ConvexPolytope(["latitude", "longitude"], [[0, 0], [0, 30], [30, 30], [30, 0]]),
+)
+
+
+print("\n\n")
+print("##################################################")
+print("TIMES USING QUADTREE SLICER \n\n")
+print("##################################################")
+
+
+API = set_up_slicing("quadtree", file_name)
+
+time0 = time.time()
+result = API.retrieve(request)
+time1 = time.time()
+
+print("TIME TAKEN TO EXTRACT")
+print(time1 - time0)
+print(len(result.leaves))
+
+
+print("\n\n")
+print("##################################################")
+print("TIMES USING OPTIMISED POINT IN POLYGON SLICER \n\n")
+print("##################################################")
+
+
+API = set_up_slicing("optimised_point_in_polygon", file_name)
+
+time0 = time.time()
+result = API.retrieve(request)
+time1 = time.time()
+
+print("TIME TAKEN TO EXTRACT")
+print(time1 - time0)
+print(len(result.leaves))
+
+print("\n\n")
+
+
+print("FOR [[0,0], [40,40]] BOX \n\n")
+
+request = Request(
+    Select("date", [pd.Timestamp("20250110T0000")]),
+    Select("step", [0]),
+    Select("param", ["167"]),
+    Select("levtype", ["sfc"]),
+    ConvexPolytope(["latitude", "longitude"], [[0, 0], [0, 40], [40, 40], [40, 0]]),
+)
+
+
+print("\n\n")
+print("##################################################")
+print("TIMES USING QUADTREE SLICER \n\n")
+print("##################################################")
+
+
+API = set_up_slicing("quadtree", file_name)
 
 time0 = time.time()
 result = API.retrieve(request)
