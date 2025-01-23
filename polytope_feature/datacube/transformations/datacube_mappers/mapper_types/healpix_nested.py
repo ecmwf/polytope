@@ -81,8 +81,9 @@ class NestedHealpixGridMapper(DatacubeMapper):
             Nj = self.HEALPix_nj(i)
             step = 360.0 / Nj
             start = (
-                step / 2.0 if i < self._resolution or 3 * self._resolution -
-                1 < i or (i + self._resolution) % 2 else 0.0
+                step / 2.0
+                if i < self._resolution or 3 * self._resolution - 1 < i or (i + self._resolution) % 2
+                else 0.0
             )
 
             longitudes = [start + n * step for n in range(Nj)]
