@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package quad_tree;
+
+
+message QuadNode {
+    repeated double item = 1;
+    int64 index = 2;
+}
+
+message QuadTree (
+    repeated QuadNode nodes = 1;
+    repeated QuadTree children = 2;
+    repeated double center = 3;
+    repeated double size = 4;
+    int64 depth = 5;
+)
