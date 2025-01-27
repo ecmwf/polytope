@@ -23,7 +23,7 @@ class ReducedLatLonMapper(DatacubeMapper):
 
     def first_axis_vals(self):
         resolution = 180 / (self._resolution - 1)
-        vals = [-90 + i * resolution for i in range(self._resolution)]
+        vals = [round(90 - i * resolution, 12) for i in range(self._resolution)]
         return vals
 
     def map_first_axis(self, lower, upper):
@@ -5088,7 +5088,7 @@ class ReducedLatLonMapper(DatacubeMapper):
             second_spacing = 360 / Ny
             return [i * second_spacing for i in range(Ny)]
         else:
-            raise ValueError("Requested longitude vvalue is not within reduced latitude-longitude grid bounds")
+            raise ValueError("Requested latitude value is not within reduced latitude-longitude grid bounds")
 
     def map_second_axis(self, first_val, lower, upper):
         axis_lines = self.second_axis_vals(first_val)
