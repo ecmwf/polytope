@@ -312,10 +312,10 @@ def request_disk(num_sides):
     return request
 
 
-n_sides = 256
+n_sides = 1024
 
 API_structured = set_up_slicing_structured()
-API_unstructured = set_up_slicing_unstructured(file_name)
+# API_unstructured = set_up_slicing_unstructured(file_name)
 
 request_ = request_disk(n_sides)
 
@@ -341,16 +341,16 @@ for leaf in leaves:
 print(tot_num)
 result.pprint()
 
-time2 = time.time()
+# time2 = time.time()
 
-print("\n\n")
-result = API_unstructured.retrieve(request_)
-print("##################################################")
-print("TIME TO RETRIEVE WITH UNSTRUCTURED SLICER")
-print("##################################################")
-print("TIME TO RETRIEVE")
-print(time.time() - time2)
+# print("\n\n")
+# result = API_unstructured.retrieve(request_)
+# print("##################################################")
+# print("TIME TO RETRIEVE WITH UNSTRUCTURED SLICER")
+# print("##################################################")
+# print("TIME TO RETRIEVE")
+# print(time.time() - time2)
 
-print("NUM LEAVES")
-print(len(result.leaves))
-result.pprint()
+# print("NUM LEAVES")
+# print(len(result.leaves))
+# result.pprint()

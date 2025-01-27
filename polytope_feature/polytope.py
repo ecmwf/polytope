@@ -183,8 +183,8 @@ class Polytope:
             if compressed_axis in datacube.compressed_axes:
                 self.compressed_axes.append(compressed_axis)
 
-        k, last_value = _, datacube.axes[k] = datacube.axes.popitem()
-        self.compressed_axes.append(k)
+        # k, last_value = _, datacube.axes[k] = datacube.axes.popitem()
+        # self.compressed_axes.append(k)
 
     def remove_compressed_axis_in_union(self, polytopes):
         for p in polytopes:
