@@ -136,7 +136,7 @@ request = Request(
     Select("step", [0]),
     Select("param", ["167"]),
     Select("levtype", ["sfc"]),
-    ConvexPolytope(["latitude", "longitude"], [[0, 0], [0, 20], [20, 20], [20, 0]]),
+    ConvexPolytope(["latitude", "longitude"], [[0, 0], [0, 5], [5, 5], [5, 0]]),
 )
 
 

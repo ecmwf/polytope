@@ -96,11 +96,11 @@ def _expansion_to_circumscribe_circle(n):
     return 1 / math.cos(half_angle_between_segments)
 
 
-num_points = 3
+num_points = 32
 
 # Disk with bounding box [[0,0], [10,10]]
 
-# center = [5, 5]
+# center = [6, 6]
 
 # radius = [5, 5]
 
@@ -117,7 +117,7 @@ num_points = 3
 
 # Disk with bounding box [[0,0], [15,15]]
 
-# center = [7.5, 7.5]
+# center = [8.5, 8.5]
 
 # radius = [7.5, 7.5]
 
@@ -134,24 +134,24 @@ num_points = 3
 
 # Disk with bounding box [[0,0], [20,20]]
 
-# center = [10, 10]
+center = [11, 11]
 
-# radius = [10, 10]
+radius = [10, 10]
 
-# points = find_circle_points(num_points, center, radius)
+points = find_circle_points(num_points, center, radius)
 
-# request = Request(
-#     Select("date", [pd.Timestamp("20250110T0000")]),
-#     Select("step", [0]),
-#     Select("param", ["167"]),
-#     Select("levtype", ["sfc"]),
-#     ConvexPolytope(["latitude", "longitude"], points),
-# )
+request = Request(
+    Select("date", [pd.Timestamp("20250110T0000")]),
+    Select("step", [0]),
+    Select("param", ["167"]),
+    Select("levtype", ["sfc"]),
+    ConvexPolytope(["latitude", "longitude"], points),
+)
 
 
 # Disk with bounding box [[0,0], [5,5]]
 
-# center = [2.5, 2.5]
+# center = [3.5, 3.5]
 
 # radius = [2.5, 2.5]
 
@@ -168,19 +168,19 @@ num_points = 3
 
 # Disk with bounding box [[0,0], [5,5]] but in many polygons
 
-center = [2.5, 2.5]
+# center = [3.5, 3.5]
 
-radius = [2.5, 2.5]
+# radius = [2.5, 2.5]
 
-points = find_circle_points(num_points, center, radius)
+# points = find_circle_points(num_points, center, radius)
 
-request = Request(
-    Select("date", [pd.Timestamp("20250110T0000")]),
-    Select("step", [0]),
-    Select("param", ["167"]),
-    Select("levtype", ["sfc"]),
-    Polygon(["latitude", "longitude"], points),
-)
+# request = Request(
+#     Select("date", [pd.Timestamp("20250110T0000")]),
+#     Select("step", [0]),
+#     Select("param", ["167"]),
+#     Select("levtype", ["sfc"]),
+#     Polygon(["latitude", "longitude"], points),
+# )
 
 
 print("\n\n")
