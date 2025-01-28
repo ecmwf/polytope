@@ -134,19 +134,19 @@ num_points = 32
 
 # Disk with bounding box [[0,0], [20,20]]
 
-center = [11, 11]
+# center = [11, 11]
 
-radius = [10, 10]
+# radius = [10, 10]
 
-points = find_circle_points(num_points, center, radius)
+# points = find_circle_points(num_points, center, radius)
 
-request = Request(
-    Select("date", [pd.Timestamp("20250110T0000")]),
-    Select("step", [0]),
-    Select("param", ["167"]),
-    Select("levtype", ["sfc"]),
-    ConvexPolytope(["latitude", "longitude"], points),
-)
+# request = Request(
+#     Select("date", [pd.Timestamp("20250110T0000")]),
+#     Select("step", [0]),
+#     Select("param", ["167"]),
+#     Select("levtype", ["sfc"]),
+#     ConvexPolytope(["latitude", "longitude"], points),
+# )
 
 
 # Disk with bounding box [[0,0], [5,5]]
@@ -168,19 +168,19 @@ request = Request(
 
 # Disk with bounding box [[0,0], [5,5]] but in many polygons
 
-# center = [3.5, 3.5]
+center = [3.5, 3.5]
 
-# radius = [2.5, 2.5]
+radius = [2.5, 2.5]
 
-# points = find_circle_points(num_points, center, radius)
+points = find_circle_points(num_points, center, radius)
 
-# request = Request(
-#     Select("date", [pd.Timestamp("20250110T0000")]),
-#     Select("step", [0]),
-#     Select("param", ["167"]),
-#     Select("levtype", ["sfc"]),
-#     Polygon(["latitude", "longitude"], points),
-# )
+request = Request(
+    Select("date", [pd.Timestamp("20250110T0000")]),
+    Select("step", [0]),
+    Select("param", ["167"]),
+    Select("levtype", ["sfc"]),
+    Polygon(["latitude", "longitude"], points),
+)
 
 
 print("\n\n")
