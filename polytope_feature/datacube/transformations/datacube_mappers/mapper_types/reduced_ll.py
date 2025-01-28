@@ -23,14 +23,9 @@ class ReducedLatLonMapper(DatacubeMapper):
 
     def first_axis_vals(self):
         start_lat = 90
-        end_lat = -90
         if self._resolution == 3601:
             start_lat = 89.973092
-            # end_lat = -89.9731
-        # resolution = 180 / (self._resolution - 1)
-        # vals = [round(90 - i * resolution, 12) for i in range(self._resolution)]
         resolution = 180 / (self._resolution - 1)
-        # resolution = (start_lat - end_lat) / (self._resolution - 1)
         vals = [round(start_lat - i * resolution, 12) for i in range(self._resolution)]
         return vals
 
