@@ -22,8 +22,15 @@ class ReducedLatLonMapper(DatacubeMapper):
             raise NotImplementedError("Reduced lat-lon grid with first axis in decreasing order is not supported")
 
     def first_axis_vals(self):
-        resolution = 180 / (self._resolution - 1)
-        vals = [round(90 - i * resolution, 12) for i in range(self._resolution)]
+        start_lat = 90
+        end_lat = -90
+        if self._resolution == 3601:
+            start_lat = 89.9731
+            end_lat = -89.9731
+        # resolution = 180 / (self._resolution - 1)
+        # vals = [round(90 - i * resolution, 12) for i in range(self._resolution)]
+        resolution = (start_lat - end_lat) / (self._resolution - 1)
+        vals = [round(start_lat - i * resolution, 12) for i in range(self._resolution)]
         return vals
 
     def map_first_axis(self, lower, upper):
