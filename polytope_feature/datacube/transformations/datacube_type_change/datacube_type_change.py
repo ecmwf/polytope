@@ -1,5 +1,6 @@
 from copy import deepcopy
 from importlib import import_module
+import pandas as pd
 
 from ..datacube_transformations import DatacubeAxisTransformation
 
@@ -75,4 +76,46 @@ class TypeChangeStrToInt(DatacubeAxisTypeChange):
         return tuple(values)
 
 
-_type_to_datacube_type_change_lookup = {"int": "TypeChangeStrToInt"}
+class TypeChangeStrToTimestamp(DatacubeAxisTypeChange):
+    def __init__(self, axis_name, new_type):
+        self.axis_name = axis_name
+        self._new_type = new_type
+
+    def transform_type(self, value):
+        try:
+            return pd.Timestamp(value)
+        except ValueError:
+            return None
+
+    def make_str(self, value):
+        values = []
+        for val in value:
+            values.append(val.strftime('%Y%m%d'))
+        return tuple(values)
+
+
+class TypeChangeStrToTimedelta(DatacubeAxisTypeChange):
+    def __init__(self, axis_name, new_type):
+        self.axis_name = axis_name
+        self._new_type = new_type
+
+    def transform_type(self, value):
+        try:
+            hours = int(value[:2])
+            mins = int(value[2:])
+            return pd.Timedelta(hours=hours, minutes=mins)
+        except ValueError:
+            return None
+
+    def make_str(self, value):
+        values = []
+        for val in value:
+            hours = int(val.total_seconds() // 3600)
+            mins = int((val.total_seconds() % 3600) // 60)
+            values.append(f"{hours:02d}{mins:02d}")
+        return tuple(values)
+
+
+_type_to_datacube_type_change_lookup = {"int": "TypeChangeStrToInt",
+                                        "date": "TypeChangeStrToTimestamp",
+                                        "time": "TypeChangeStrToTimedelta"}
