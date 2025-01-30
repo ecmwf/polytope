@@ -91,7 +91,7 @@ class TypeChangeStrToTimestamp(DatacubeAxisTypeChange):
     def make_str(self, value):
         values = []
         for val in value:
-            values.append(val.strftime('%Y%m%d'))
+            values.append(val.strftime("%Y%m%d"))
         return tuple(values)
 
 
@@ -117,6 +117,8 @@ class TypeChangeStrToTimedelta(DatacubeAxisTypeChange):
         return tuple(values)
 
 
-_type_to_datacube_type_change_lookup = {"int": "TypeChangeStrToInt",
-                                        "date": "TypeChangeStrToTimestamp",
-                                        "time": "TypeChangeStrToTimedelta"}
+_type_to_datacube_type_change_lookup = {
+    "int": "TypeChangeStrToInt",
+    "date": "TypeChangeStrToTimestamp",
+    "time": "TypeChangeStrToTimedelta",
+}
