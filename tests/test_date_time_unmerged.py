@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 
 from polytope_feature.polytope import Polytope, Request
-from polytope_feature.shapes import Box, Select
+from polytope_feature.shapes import Box, Select, Span
 
 
 class TestSlicingFDBDatacube:
@@ -46,8 +46,10 @@ class TestSlicingFDBDatacube:
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
-            Select("date", [pd.Timestamp("20240118")]),
+            # Select("date", [pd.Timestamp("20240118")]),
             Select("time", [pd.Timedelta("00:00:00")]),
+            # Span("time", [pd.Timedelta("00:00:00")]),
+            Span("date", pd.Timestamp("20240118"), pd.Timestamp("20240119")),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
             Select("param", ["167"]),
