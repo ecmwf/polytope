@@ -145,22 +145,31 @@ class DatacubeAxis(ABC):
 
     @staticmethod
     def create_standard(name, values, datacube):
-        print(name)
-        print(values)
-        print(type(values[0]))
-        if type(values[0]) == xr.core.variable.Variable:
+        # print(name)
+        # print(values)
+        # print(type(values[0]))
+        try:
+            if type(values[0]) == xr.core.variable.Variable:
+                values = np.array(values)
+                DatacubeAxis.check_axis_type_xr(name, values)
+                if datacube._axes is None:
+                    datacube._axes = {name: deepcopy(_type_to_axis_lookup[values.dtype.type])}
+                else:
+                    datacube._axes[name] = deepcopy(_type_to_axis_lookup[values.dtype.type])
+            else:
+                DatacubeAxis.check_axis_type(name, values)
+                if datacube._axes is None:
+                    datacube._axes = {name: deepcopy(_type_to_axis_lookup[type(values[0])])}
+                else:
+                    datacube._axes[name] = deepcopy(_type_to_axis_lookup[type(values[0])])
+        except IndexError:
             values = np.array(values)
             DatacubeAxis.check_axis_type_xr(name, values)
             if datacube._axes is None:
                 datacube._axes = {name: deepcopy(_type_to_axis_lookup[values.dtype.type])}
             else:
                 datacube._axes[name] = deepcopy(_type_to_axis_lookup[values.dtype.type])
-        else:
-            DatacubeAxis.check_axis_type(name, values)
-            if datacube._axes is None:
-                datacube._axes = {name: deepcopy(_type_to_axis_lookup[type(values[0])])}
-            else:
-                datacube._axes[name] = deepcopy(_type_to_axis_lookup[type(values[0])])
+
         datacube._axes[name].name = name
         datacube.axis_counter += 1
 
