@@ -1,6 +1,5 @@
 from . import quad_tree_pb2 as pb2
-from .quad_tree import QuadTree, QuadNode
-
+from .quad_tree import QuadNode, QuadTree
 
 # Encoding
 

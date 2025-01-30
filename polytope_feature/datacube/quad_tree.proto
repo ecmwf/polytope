@@ -8,10 +8,10 @@ message QuadNode {
     int64 index = 2;
 }
 
-message QuadTree (
+message QuadTree {
     repeated QuadNode nodes = 1;
     repeated QuadTree children = 2;
     repeated double center = 3;
     repeated double size = 4;
     int64 depth = 5;
-)
+}
