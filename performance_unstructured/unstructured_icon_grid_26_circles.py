@@ -96,7 +96,7 @@ def _expansion_to_circumscribe_circle(n):
     return 1 / math.cos(half_angle_between_segments)
 
 
-num_points = 32
+num_points = 256
 
 # Disk with bounding box [[0,0], [10,10]]
 
