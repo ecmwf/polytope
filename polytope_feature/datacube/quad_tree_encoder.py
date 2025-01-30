@@ -1,6 +1,3 @@
-import math
-from copy import deepcopy
-
 from . import quad_tree_pb2 as pb2
 from .quad_tree import QuadTree, QuadNode
 
@@ -94,27 +91,9 @@ def decode_child(node, tree):
 
     for child in node.children:
         sub_tree = QuadTree(child.center[0], child.center[1], child.size, child.depth)
-
-        pass
-    # TODO
-    '''
+        tree.children.append(sub_tree)
+        decode_child(child, sub_tree)
     if len(node.children) == 0:
-        tree.result = node.result
-        tree.result_size = node.size_result
-        tree.indexes = node.indexes
-        tree.indexes_size = node.size_indexes_branch
-    for child in node.children:
-        if child.axis in datacube._axes.keys():
-            child_axis = datacube._axes[child.axis]
-            child_vals = tuple(child.value)
-            child_node = TensorIndexTree(child_axis, child_vals)
-            tree.add_child(child_node)
-            decode_child(child, child_node, datacube)
-        else:
-            grandchild_axis = datacube._axes[child.children[0].axis]
-            for c in child.children:
-                grandchild_vals = tuple(c.value)
-                grandchild_node = TensorIndexTree(grandchild_axis, grandchild_vals)
-                tree.add_child(grandchild_node)
-                decode_child(c, grandchild_node, datacube)
-    '''
+        for quad_node in node.nodes:
+            final_node = QuadNode(quad_node.item, quad_node.index)
+            tree.nodes.append(final_node)
