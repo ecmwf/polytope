@@ -102,6 +102,9 @@
 #     with open(filename, "rb") as fs:
 
 
+# NOTE : WORKING CODE
+
+
 from . import quad_tree_pb2 as pb2
 from .quad_tree import QuadNode, QuadTree
 
@@ -192,3 +195,83 @@ def decode_qtree_child(coded_qtree):
 def read_encoded_qtree_from_file(filename):
     with open(filename, "rb") as fs:
         return fs.read()
+
+
+# NOTE: supposedly optimised code
+
+# from . import quad_tree_pb2 as pb2
+# from .quad_tree import QuadNode, QuadTree
+
+
+# def encode_qtree(qtree: QuadTree) -> bytes:
+#     """Encodes a QuadTree into a Protobuf binary string."""
+#     coded_qtree = pb2.QuadTree()
+#     coded_qtree.size.extend(qtree.size)
+#     coded_qtree.center.extend(qtree.center)
+
+#     # Efficiently encode nodes
+#     coded_qtree.nodes.extend(encode_quad_node(qnode) for qnode in qtree.nodes)
+
+#     # Efficiently encode children using a stack-based approach to avoid deep recursion
+#     stack = [(qtree, coded_qtree.children)]
+#     while stack:
+#         parent_qtree, coded_children = stack.pop()
+#         for child in parent_qtree.children:
+#             coded_child = pb2.QuadTree()
+#             coded_child.size.extend(child.size)
+#             coded_child.center.extend(child.center)
+#             coded_child.nodes.extend(encode_quad_node(qnode) for qnode in child.nodes)
+#             coded_children.append(coded_child)
+#             stack.append((child, coded_child.children))  # Push to process later
+
+#     return coded_qtree.SerializeToString()
+
+
+# def encode_quad_node(qnode: QuadNode) -> pb2.QuadNode:
+#     """Encodes a QuadNode."""
+#     return pb2.QuadNode(item=qnode.item, index=qnode.index)
+
+
+# def write_encoded_qtree_to_file(qtree_bytes: bytes, filename: str):
+#     """Writes the encoded QuadTree bytes to a file."""
+#     with open(filename, "wb") as fs:
+#         fs.write(qtree_bytes)
+
+
+# def decode_qtree(bytearray: bytes) -> QuadTree:
+#     """Decodes a Protobuf binary string into a QuadTree object."""
+#     coded_qtree = pb2.QuadTree()
+#     coded_qtree.ParseFromString(bytearray)
+
+#     qtree = QuadTree(
+#         size=list(coded_qtree.size),
+#         x=coded_qtree.center[0],
+#         y=coded_qtree.center[1],
+#         # nodes=[QuadNode(list(cn.item), cn.index) for cn in coded_qtree.nodes],
+#         # children=[]
+#     )
+#     qtree.nodes = [QuadNode(list(cn.item), cn.index) for cn in coded_qtree.nodes]
+
+#     # Iterative decoding to avoid recursion overhead
+#     stack = [(qtree, coded_qtree.children)]
+#     while stack:
+#         parent_qtree, coded_children = stack.pop()
+#         for coded_child in coded_children:
+#             child_qtree = QuadTree(
+#                 size=list(coded_child.size),
+#                 x=coded_child.center[0],
+#                 y=coded_child.center[1],
+#                 # nodes=[QuadNode(list(cn.item), cn.index) for cn in coded_child.nodes],
+#                 # children=[]
+#             )
+#             child_qtree.nodes = [QuadNode(list(cn.item), cn.index) for cn in coded_child.nodes]
+#             parent_qtree.children.append(child_qtree)
+#             stack.append((child_qtree, coded_child.children))  # Push children for processing
+
+#     return qtree
+
+
+# def read_encoded_qtree_from_file(filename: str) -> bytes:
+#     """Reads encoded QuadTree bytes from a file."""
+#     with open(filename, "rb") as fs:
+#         return fs.read()

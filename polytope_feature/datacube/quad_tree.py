@@ -38,17 +38,20 @@ class QuadTree:
         self.nodes = []
         self.children = []
         self.center = (x, y)
-        self.size = tuple(size)
+        # self.size = tuple(size)
         self.depth = depth
         self.node_items = set()
+
+    def _size(self):
+        return [180/2**(self.depth), 90/2**(self.depth)]
 
     def quadrant_rectangle_points(self):
         return set(
             [
-                (self.center[0] + (self.size[0]), self.center[1] + (self.size[1])),
-                (self.center[0] + (self.size[0]), self.center[1] - (self.size[1])),
-                (self.center[0] - (self.size[0]), self.center[1] + (self.size[1])),
-                (self.center[0] - (self.size[0]), self.center[1] - (self.size[1])),
+                (self.center[0] + (self._size()[0]), self.center[1] + (self._size()[1])),
+                (self.center[0] + (self._size()[0]), self.center[1] - (self._size()[1])),
+                (self.center[0] - (self._size()[0]), self.center[1] + (self._size()[1])),
+                (self.center[0] - (self._size()[0]), self.center[1] - (self._size()[1])),
             ]
         )
 
@@ -67,13 +70,13 @@ class QuadTree:
             print(
                 "\t" * (self.depth + 1)
                 + "\u21b3"
-                + str(child.center[0] - child.size[0])
+                + str(child.center[0] - child._size()[0])
                 + " , "
-                + str(child.center[1] - child.size[1])
+                + str(child.center[1] - child._size()[1])
                 + " , "
-                + str(child.center[0] + child.size[0])
+                + str(child.center[0] + child._size()[0])
                 + " , "
-                + str(child.center[1] + child.size[1])
+                + str(child.center[1] + child._size()[1])
             )
             child.pprint()
 
@@ -106,7 +109,7 @@ class QuadTree:
                 self.children[3].insert(item, index)
 
     def split(self):
-        half_size = [s / 2 for s in self.size]
+        half_size = [s / 2 for s in self._size()]
         x_center, y_center = self.center[0], self.center[1]
         hx, hy = half_size
 
