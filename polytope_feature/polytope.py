@@ -11,6 +11,8 @@ from .utility.combinatorics import group, tensor_product
 from .utility.exceptions import AxisOverdefinedError
 from .utility.list_tools import unique
 
+from .datacube.transformations.datacube_mappers.datacube_mappers import DatacubeMapper
+
 
 class Request:
     """Encapsulates a request for data"""
@@ -80,13 +82,47 @@ class Polytope:
         self.engines = self.create_engines()
         self.ax_is_unsliceable = {}
 
+    def find_grid_hash(self):
+        # grid_hash = None
+        # for option in self.axis_options:
+        #     # TODO
+        #     if option["axis_name"] == "values":
+        #         grid_hash =
+        #     pass
+
+        # TODO: find axis which has the quadtree slicer engine
+        quadtree_axis_name = None
+        grid_hash = None
+
+        for ax in self.engine_options:
+            if self.engine_options[ax] == "quadtree":
+                quadtree_axis_name = ax
+                break
+
+        # TODO: find corresponding datacube axis
+
+        quadtree_axis = self.datacube._axes[quadtree_axis_name]
+
+        # TODO: find the relevant transformation for the mapping inside of the transformations for this axis
+
+        for transformation in quadtree_axis.transformations:
+            if isinstance(transformation, DatacubeMapper):
+                grid_hash = transformation.md5_hash
+
+        # TODO: get the md5_hash of this mapping transformation
+        if grid_hash is None:
+            raise ValueError("Did not specify a grid transformation for the unstructured grid")
+
+        return grid_hash
+
     def create_engines(self):
         engines = {}
         engine_types = set(self.engine_options.values())
         if "quadtree" in engine_types:
             # TODO: need to get the corresponding point cloud from the datacube
             quadtree_points = self.datacube.find_point_cloud()
-            engines["quadtree"] = QuadTreeSlicer(quadtree_points)
+            grid_hash = self.find_grid_hash()
+            engines["quadtree"] = QuadTreeSlicer(grid_hash, quadtree_points)
         if "hullslicer" in engine_types:
             engines["hullslicer"] = HullSlicer()
         return engines

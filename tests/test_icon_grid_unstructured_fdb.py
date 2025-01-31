@@ -13,6 +13,8 @@ import math
 # import iris
 import os
 
+os.environ["FDB_HOME"] = "/Users/male/git/fdb-new-home"
+
 
 class TestQuadTreeSlicer:
     def setup_method(self, method):
