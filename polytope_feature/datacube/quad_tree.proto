@@ -13,5 +13,4 @@ message QuadTree {
     repeated QuadTree children = 2;
     repeated double center = 3;
     repeated double size = 4;
-    int64 depth = 5;
 }

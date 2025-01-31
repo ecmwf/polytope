@@ -5,16 +5,19 @@ from ..datacube.quad_tree import QuadTree
 from ..datacube.tensor_index_tree import TensorIndexTree
 from .engine import Engine
 
+from ..datacube.transformations.datacube_mappers.mapper_types.unstructured_grids_quadtrees.quadtree_finding_tools import find_quadtree
+
 
 class QuadTreeSlicer(Engine):
-    def __init__(self, points):
+    def __init__(self, grid_hash, points):
         # here need to construct quadtree, which is specific to datacube
         # NOTE: should this be inside of the datacube instead that we create the quadtree?
         import time
-        quad_tree = QuadTree()
+        # quad_tree = QuadTree()
         print("START BUILDING QUAD TREE")
         time0 = time.time()
-        quad_tree.build_point_tree(points)
+        quad_tree = find_quadtree(grid_hash, points)
+        # quad_tree.build_point_tree(points)
         print("FINISH BUILDING QUAD TREE")
         print(time.time()-time0)
         self.quad_tree = quad_tree
