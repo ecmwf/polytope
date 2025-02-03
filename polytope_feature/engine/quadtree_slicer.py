@@ -4,12 +4,14 @@ from ..datacube.datacube_axis import IntDatacubeAxis
 from ..datacube.quad_tree import QuadTree
 from ..datacube.tensor_index_tree import TensorIndexTree
 from .engine import Engine
+from ..datacube.transformations.datacube_mappers import DatacubeMapper
 
 
 class QuadTreeSlicer(Engine):
     def __init__(self, points):
         # here need to construct quadtree, which is specific to datacube
         # NOTE: should this be inside of the datacube instead that we create the quadtree?
+        super().__init__()
         import time
         quad_tree = QuadTree()
         print("START BUILDING QUAD TREE")
@@ -18,30 +20,31 @@ class QuadTreeSlicer(Engine):
         print("FINISH BUILDING QUAD TREE")
         print(time.time()-time0)
         self.quad_tree = quad_tree
+        self.second_axis = None
 
-    # method to slice polygon against quadtree
-    def extract(self, datacube, polytopes):
-        # need to find the points to extract within the polytopes (polygons here in 2D)
-        request = TensorIndexTree()
-        extracted_points = []
-        for polytope in polytopes:
-            assert len(polytope._axes) == 2
-            extracted_points.extend(self.extract_single(datacube, polytope))
+    # # method to slice polygon against quadtree
+    # def extract(self, datacube, polytopes):
+    #     # need to find the points to extract within the polytopes (polygons here in 2D)
+    #     request = TensorIndexTree()
+    #     extracted_points = []
+    #     for polytope in polytopes:
+    #         assert len(polytope._axes) == 2
+    #         extracted_points.extend(self.extract_single(datacube, polytope))
 
-        # what data format do we return extracted points as? Append those points to the index tree?
+    #     # what data format do we return extracted points as? Append those points to the index tree?
 
-        # NOTE: for now, we return the indices of the points in the point cloud, instead of lat/lon
-        for point in extracted_points:
-            # append each found leaf to the tree
-            idx = point.index
-            values_axis = IntDatacubeAxis()
-            values_axis.name = "values"
-            result = point.item
-            # TODO: make finding the axes objects nicer?
-            (child, _) = request.create_child(values_axis, idx, [])
-            child.result = result
+    #     # NOTE: for now, we return the indices of the points in the point cloud, instead of lat/lon
+    #     for point in extracted_points:
+    #         # append each found leaf to the tree
+    #         idx = point.index
+    #         values_axis = IntDatacubeAxis()
+    #         values_axis.name = "values"
+    #         result = point.item
+    #         # TODO: make finding the axes objects nicer?
+    #         (child, _) = request.create_child(values_axis, idx, [])
+    #         child.result = result
 
-        return request
+    #     return request
 
     def extract_single(self, datacube, polytope):
         # extract a single polygon
@@ -63,26 +66,51 @@ class QuadTreeSlicer(Engine):
                 # It just modifies the next_nodes?
         del node["unsliced_polytopes"]
 
+    def break_up_polytope(self, polytope):
+        # TODO: slice polytope along all axes of it that are potentially cyclic
+        pass
+
     def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes, api):
         extracted_points = self.extract_single(datacube, polytope)
         # TODO: add the sliced points as node to the tree and update the next_nodes
         if len(extracted_points) == 0:
             node.remove_branch()
 
+        lat_ax = ax
+
+        if not self.second_axis:
+            for transform in ax.transformations:
+                if isinstance(transform, DatacubeMapper):
+                    self.second_axis = datacube._axes[transform.grid_axes[1]]
+
         for point in extracted_points:
             # convert to float for slicing
             value = point.index
             lat_val = point.item[0]
             lon_val = point.item[1]
-            lat_ax = ax
+            # lat_ax = ax
 
             # TODO: is there a nicer way to get this axis that does not depend on knowing
             # the axis name in advance?
-            lon_ax = datacube._axes["longitude"]
+
+            # lon_ax = None
+            # NOTE: test to try to find the right second axis
+            # if not self.second_axis:
+            #     for transform in ax.transformations:
+            #         if isinstance(transform, DatacubeMapper):
+            #             self.second_axis = datacube._axes[transform.grid_axes[1]]
+            # lon_ax = datacube._axes["longitude"]
+
+            # remapped_lat_val = self.remap_values(lat_ax, lat_val)
+            # remapped_lon_val = self.remap_values(self.second_axis, lon_val)
+            # print(lon_val)
+            # print(remapped_lon_val)
+
+            # TODO: need to remap the values before we add them to the tree here
 
             # store the native type
             (child, _) = node.create_child(lat_ax, lat_val, [])
-            (grand_child, _) = child.create_child(lon_ax, lon_val, [])
+            (grand_child, _) = child.create_child(self.second_axis, lon_val, [])
             # NOTE: the index of the point is stashed in the branches' result
             grand_child.indexes = [value]
             grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])

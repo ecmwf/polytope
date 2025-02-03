@@ -118,14 +118,18 @@ class TestQuadTreeSlicer:
             engine_options={"latitude": "quadtree", "longitude": "quadtree"},
             point_cloud_options=points,
         )
-        tree = self.API.engines["quadtree"].extract(self.API.datacube, [polytope])
-        assert len(tree.leaves) == 3
-        tree.pprint()
+        tree = self.API.engines["quadtree"].extract_single(self.API.datacube, polytope)
+        # tree = self.API.slice(self.API.datacube, [polytope])
+        # assert len(tree.leaves) == 3
+        assert len(tree) == 3
+        # tree.pprint()
         points = [[10, 10], [80, 10], [-5, 5], [5, 50], [5, 10], [50, 10], [2, 10], [15, 15]]
         polytope = ConvexPolytope(["latitude", "longitude"], [[-10, 1], [20, 1], [5, 20]])
-        tree = self.API.engines["quadtree"].extract(self.API.datacube, [polytope])
-        assert len(tree.leaves) == 4
-        tree.pprint()
+        tree = self.API.engines["quadtree"].extract_single(self.API.datacube, polytope)
+        # tree = self.API.slice(self.API.datacube, [polytope])
+        # assert len(tree.leaves) == 4
+        assert len(tree) == 4
+        # tree.pprint()
 
     # @pytest.mark.skip("performance test")
     @pytest.mark.fdb
@@ -152,8 +156,9 @@ class TestQuadTreeSlicer:
         )
         print(time.time() - time0)
         time1 = time.time()
-        tree = self.API.engines["quadtree"].extract(self.API.datacube, [polytope])
+        tree = self.API.engines["quadtree"].extract_single(self.API.datacube, polytope)
         print(time.time() - time1)  # = 5.919436931610107
-        print(len(tree.leaves))  # = 55100
+        # print(len(tree.leaves))  # = 55100
+        print(len(tree))  # = 55100
         # NOTE: maybe for 2D qhull here, scipy is not the fastest
         # but use shewchuk's triangle algo: https://www.cs.cmu.edu/~quake/triangle.html?

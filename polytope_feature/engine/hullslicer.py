@@ -75,17 +75,17 @@ class HullSlicer(Engine):
             self.axis_values_between[(flattened_tuple, ax.name, lower, upper, method)] = values
         return values
 
-    def remap_values(self, ax, value):
-        remapped_val = self.remapped_vals.get((value, ax.name), None)
-        if remapped_val is None:
-            remapped_val = value
-            if ax.is_cyclic:
-                remapped_val_interm = ax.remap([value, value])[0]
-                remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
-            if ax.can_round:
-                remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
-            self.remapped_vals[(value, ax.name)] = remapped_val
-        return remapped_val
+    # def remap_values(self, ax, value):
+    #     remapped_val = self.remapped_vals.get((value, ax.name), None)
+    #     if remapped_val is None:
+    #         remapped_val = value
+    #         if ax.is_cyclic:
+    #             remapped_val_interm = ax.remap([value, value])[0]
+    #             remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
+    #         if ax.can_round:
+    #             remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
+    #         self.remapped_vals[(value, ax.name)] = remapped_val
+    #     return remapped_val
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, values, next_nodes, slice_axis_idx, api):
         for i, value in enumerate(values):

@@ -3,6 +3,7 @@ from copy import deepcopy
 
 from ....utility.list_tools import unique
 from ..datacube_transformations import DatacubeAxisTransformation
+from ....engine.slicing_tools import slice_in_two
 
 
 class DatacubeAxisCyclic(DatacubeAxisTransformation):
@@ -27,6 +28,33 @@ class DatacubeAxisCyclic(DatacubeAxisTransformation):
 
     def unwanted_axes(self):
         return []
+
+    def remap_polytope(self, axis, polytope):
+        # TODO
+        # Find extents of the polytope on that axis
+        lower, upper, slice_axis_idx = polytope.extents(axis.name)
+        polytope_range = [lower, upper]
+
+        # Find intervals within this range
+        intervals = self.to_intervals(polytope_range, [], axis)
+
+        slice_vals = []
+
+        for interval in intervals[:-1]:
+            slice_vals.append(interval[1])
+
+        # Successively slice the polytope on each of the slice vals
+        sliced_polys = self.slice_polytope([polytope], slice_vals, slice_axis_idx)
+        return sliced_polys
+
+    def slice_polytope(self, polytope_list, slice_vals, slice_axis_idx):
+        for slice_val in slice_vals:
+            polytope_to_slice = polytope_list[-1]
+            left_sliced_poly, right_sliced_poly = slice_in_two(polytope_to_slice, slice_val, slice_axis_idx)
+            polytope_list = polytope_list[:-1]
+            polytope_list.append(left_sliced_poly)
+            polytope_list.append(right_sliced_poly)
+        return polytope_list
 
     def update_range(self, axis):
         axis.range = self.range
