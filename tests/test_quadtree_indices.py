@@ -52,7 +52,13 @@ class TestQuadTreeSlicer:
         )
         tree = self.API.engines["quadtree"].extract_single(self.API.datacube, polytope)
         assert len(tree) == 3
-        assert set([leaf.index for leaf in tree]) == set([0, 3, 4,])
+        assert set([leaf.index for leaf in tree]) == set(
+            [
+                0,
+                3,
+                4,
+            ]
+        )
         # tree.pprint()
         points = [[10, 10], [80, 10], [-5, 5], [5, 50], [5, 10], [50, 10], [2, 10], [15, 15]]
         polytope = ConvexPolytope(["latitude", "longitude"], [[-10, 1], [20, 1], [5, 20]])
@@ -64,5 +70,12 @@ class TestQuadTreeSlicer:
         )
         tree = self.API.engines["quadtree"].extract_single(self.API.datacube, polytope)
         assert len(tree) == 4
-        assert set([leaf.index for leaf in tree]) == set([0, 2, 4, 6,])
+        assert set([leaf.index for leaf in tree]) == set(
+            [
+                0,
+                2,
+                4,
+                6,
+            ]
+        )
         # tree.pprint()

@@ -1,15 +1,8 @@
-import math
 from copy import copy
-from itertools import chain
 
-import scipy.spatial
-
-from ..shapes import ConvexPolytope
 from ..utility.exceptions import UnsliceableShapeError
-from ..utility.geometry import lerp
-from ..utility.list_tools import argmax, argmin
-from .engine import Engine
 from ..utility.slicing_tools import slice
+from .engine import Engine
 
 
 class HullSlicer(Engine):
@@ -75,18 +68,6 @@ class HullSlicer(Engine):
             values = datacube.get_indices(flattened, ax, lower, upper, method)
             self.axis_values_between[(flattened_tuple, ax.name, lower, upper, method)] = values
         return values
-
-    # def remap_values(self, ax, value):
-    #     remapped_val = self.remapped_vals.get((value, ax.name), None)
-    #     if remapped_val is None:
-    #         remapped_val = value
-    #         if ax.is_cyclic:
-    #             remapped_val_interm = ax.remap([value, value])[0]
-    #             remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
-    #         if ax.can_round:
-    #             remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
-    #         self.remapped_vals[(value, ax.name)] = remapped_val
-    #     return remapped_val
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, values, next_nodes, slice_axis_idx, api):
         for i, value in enumerate(values):
@@ -160,137 +141,3 @@ class HullSlicer(Engine):
                 )
 
         del node["unsliced_polytopes"]
-
-    # def find_compressed_axes(self, datacube, polytopes):
-    #     # First determine compressable axes from input polytopes
-    #     compressable_axes = []
-    #     for polytope in polytopes:
-    #         if polytope.is_orthogonal:
-    #             for ax in polytope.axes():
-    #                 compressable_axes.append(ax)
-    #     # Cross check this list with list of compressable axis from datacube
-    #     # (should not include any merged or coupled axes)
-    #     for compressed_axis in compressable_axes:
-    #         if compressed_axis in datacube.compressed_axes:
-    #             self.compressed_axes.append(compressed_axis)
-    #     # add the last axis of the grid always (longitude) as a compressed axis
-    #     k, last_value = _, datacube.axes[k] = datacube.axes.popitem()
-    #     self.compressed_axes.append(k)
-
-    # def remove_compressed_axis_in_union(self, polytopes):
-    #     for p in polytopes:
-    #         if p.is_in_union:
-    #             for axis in p.axes():
-    #                 if axis == self.compressed_axes[-1]:
-    #                     self.compressed_axes.remove(axis)
-
-    # def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
-    #     # Determine list of axes to compress
-    #     self.find_compressed_axes(datacube, polytopes)
-
-    #     # remove compressed axes which are in a union
-    #     self.remove_compressed_axis_in_union(polytopes)
-
-    #     # Convert the polytope points to float type to support triangulation and interpolation
-    #     for p in polytopes:
-    #         self._unique_continuous_points(p, datacube)
-
-    #     groups, input_axes = group(polytopes)
-    #     datacube.validate(input_axes)
-    #     request = TensorIndexTree()
-    #     combinations = tensor_product(groups)
-
-    #     # NOTE: could optimise here if we know combinations will always be for one request.
-    #     # Then we do not need to create a new index tree and merge it to request, but can just
-    #     # directly work on request and return it...
-
-    #     for c in combinations:
-    #         r = TensorIndexTree()
-    #         new_c = []
-    #         for combi in c:
-    #             if isinstance(combi, list):
-    #                 new_c.extend(combi)
-    #             else:
-    #                 new_c.append(combi)
-    #         r["unsliced_polytopes"] = set(new_c)
-    #         current_nodes = [r]
-    #         for ax in datacube.axes.values():
-    #             next_nodes = []
-    #             interm_next_nodes = []
-    #             for node in current_nodes:
-    #                 self._build_branch(ax, node, datacube, interm_next_nodes)
-    #                 next_nodes.extend(interm_next_nodes)
-    #                 interm_next_nodes = []
-    #             current_nodes = next_nodes
-
-    #         request.merge(r)
-    #     return request
-
-
-# def _find_intersects(polytope, slice_axis_idx, value):
-#     intersects = []
-#     # Find all points above and below slice axis
-#     above_slice = [p for p in polytope.points if p[slice_axis_idx] >= value]
-#     below_slice = [p for p in polytope.points if p[slice_axis_idx] <= value]
-
-#     # Get the intersection of every pair above and below, this will create excess interior points
-#     for a in above_slice:
-#         for b in below_slice:
-#             # edge is incident with slice plane, don't need these points
-#             if a[slice_axis_idx] == b[slice_axis_idx]:
-#                 intersects.append(b)
-#                 continue
-
-#             # Linearly interpolate all coordinates of two points (a,b) of the polytope
-#             interp_coeff = (value - b[slice_axis_idx]) / (a[slice_axis_idx] - b[slice_axis_idx])
-#             intersect = lerp(a, b, interp_coeff)
-#             intersects.append(intersect)
-#     return intersects
-
-
-# def _reduce_dimension(intersects, slice_axis_idx):
-#     temp_intersects = []
-#     for point in intersects:
-#         point = [p for i, p in enumerate(point) if i != slice_axis_idx]
-#         temp_intersects.append(point)
-#     return temp_intersects
-
-
-# def slice(polytope: ConvexPolytope, axis, value, slice_axis_idx):
-#     # TODO: maybe these functions should go in the slicing tools?
-#     if polytope.is_flat:
-#         if value in chain(*polytope.points):
-#             intersects = [[value]]
-#         else:
-#             return None
-#     else:
-#         intersects = _find_intersects(polytope, slice_axis_idx, value)
-
-#     if len(intersects) == 0:
-#         return None
-
-#     # Reduce dimension of intersection points, removing slice axis
-#     intersects = _reduce_dimension(intersects, slice_axis_idx)
-
-#     axes = copy(polytope._axes)
-#     axes.remove(axis)
-
-#     if len(intersects) < len(intersects[0]) + 1:
-#         return ConvexPolytope(axes, intersects)
-#     # Compute convex hull (removing interior points)
-#     if len(intersects[0]) == 0:
-#         return None
-#     elif len(intersects[0]) == 1:  # qhull doesn't like 1D, do it ourselves
-#         amin = argmin(intersects)
-#         amax = argmax(intersects)
-#         vertices = [amin, amax]
-#     else:
-#         try:
-#             hull = scipy.spatial.ConvexHull(intersects)
-#             vertices = hull.vertices
-
-#         except scipy.spatial.qhull.QhullError as e:
-#             if "less than" or "flat" in str(e):
-#                 return ConvexPolytope(axes, intersects)
-#     # Sliced result is simply the convex hull
-#     return ConvexPolytope(axes, [intersects[i] for i in vertices])

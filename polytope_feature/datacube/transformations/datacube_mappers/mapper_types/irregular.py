@@ -20,5 +20,4 @@ class IrregularGridMapper(DatacubeMapper):
         return unmapped_idx[0]
 
 
-_md5_hash = {
-}
+_md5_hash = {}

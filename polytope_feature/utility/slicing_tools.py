@@ -1,16 +1,12 @@
-import scipy
-
-from ..shapes import ConvexPolytope
-
 from copy import copy
 from itertools import chain
 
+import scipy
 import scipy.spatial
 
 from ..shapes import ConvexPolytope
 from .geometry import lerp
 from .list_tools import argmax, argmin
-# from ..engine.hullslicer import _find_intersects
 
 
 def slice_in_two(polytope: ConvexPolytope, value, slice_axis_idx):

@@ -1,3 +1,4 @@
+import math
 from abc import abstractmethod
 from typing import List
 
@@ -5,7 +6,6 @@ from ..datacube.backends.datacube import Datacube
 from ..datacube.datacube_axis import UnsliceableDatacubeAxis
 from ..datacube.tensor_index_tree import TensorIndexTree
 from ..shapes import ConvexPolytope
-import math
 
 
 class Engine:

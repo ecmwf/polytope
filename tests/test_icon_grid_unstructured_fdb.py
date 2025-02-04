@@ -10,6 +10,7 @@ import xarray as xr
 from helper_functions import find_nearest_latlon
 import time
 import math
+
 # import iris
 import os
 
@@ -32,16 +33,15 @@ class TestQuadTreeSlicer:
 
         # grid = xr.open_dataset("../../Downloads/icon_grid_0047_R19B07_L.nc", engine="netcdf4")
 
-        ds = data.from_source(
-            "file", "../../Downloads/icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2")
+        ds = data.from_source("file", "../../Downloads/icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2")
 
         grid = xr.open_dataset("../../Downloads/icon_grid_0026_R03B07_G.nc", engine="netcdf4")
 
-        print(time.time()-time_now)
+        print(time.time() - time_now)
         self.arr = ds.to_xarray(engine="cfgrib").t2m
 
-        self.longitudes = grid.clon.values * 180/math.pi
-        self.latitudes = grid.clat.values * 180/math.pi
+        self.longitudes = grid.clon.values * 180 / math.pi
+        self.latitudes = grid.clat.values * 180 / math.pi
 
         self.points = list(zip(self.latitudes, self.longitudes))
         print((min(self.latitudes), max(self.latitudes), min(self.longitudes), max(self.longitudes)))
@@ -56,8 +56,13 @@ class TestQuadTreeSlicer:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "irregular", "resolution": 0, "axes": [
-                            "latitude", "longitude"], "md5_hash": "f68071a8ac9bae4e965822afb963c04f"}
+                        {
+                            "name": "mapper",
+                            "type": "irregular",
+                            "resolution": 0,
+                            "axes": ["latitude", "longitude"],
+                            "md5_hash": "f68071a8ac9bae4e965822afb963c04f",
+                        }
                     ],
                 },
             ],
@@ -69,6 +74,7 @@ class TestQuadTreeSlicer:
     def test_quad_tree_slicer_extract(self):
         import datetime
         import pygribjump as gj
+
         request = Request(
             # Select("deptht", [0.5058], method="nearest"),
             Select("date", [pd.Timestamp("20250110T0000")]),
