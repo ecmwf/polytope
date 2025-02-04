@@ -1,18 +1,20 @@
-from polytope_feature.shapes import Box, Select
-from polytope_feature.polytope import Polytope, Request
+import math
+
+# import iris
+import os
+import time
+
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
-from earthkit import data
 import xarray as xr
+from earthkit import data
 from helper_functions import find_nearest_latlon
-import time
-import math
 
-# import iris
-import os
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, Select
 
 
 class TestQuadTreeSlicer:
@@ -73,6 +75,7 @@ class TestQuadTreeSlicer:
     @pytest.mark.fdb
     def test_quad_tree_slicer_extract(self):
         import datetime
+
         import pygribjump as gj
 
         request = Request(
