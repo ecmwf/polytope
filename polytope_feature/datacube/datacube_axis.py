@@ -100,6 +100,11 @@ class DatacubeAxis(ABC):
             value = transformation._remap_val_to_axis_range(value, self)
         return value
 
+    def remap_polytopes(self, polytopes):
+        for transformation in self.transformations[::-1]:
+            polytopes = transformation.remap_polytopes(self, polytopes)
+        return polytopes
+
     def find_standard_indices_between(self, indexes, low, up, datacube, method=None):
         indexes_between_ranges = []
 

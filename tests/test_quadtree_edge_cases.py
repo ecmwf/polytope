@@ -50,7 +50,7 @@ class TestQuadTreeSlicer:
             engine_options={"latitude": "quadtree", "longitude": "quadtree"},
             point_cloud_options=points,
         )
-        tree = self.API.engines["quadtree"].extract(self.API.datacube, [polytope])
-        tree.pprint()
-        assert len(tree.leaves) == 3
-        assert set([leaf.flatten()["values"] for leaf in tree.leaves]) == set([(0,), (4,), (6,)])
+        tree = self.API.engines["quadtree"].extract_single(self.API.datacube, polytope)
+        # tree.pprint()
+        assert len(tree) == 3
+        assert set([leaf.index for leaf in tree]) == set([0, 4, 6])
