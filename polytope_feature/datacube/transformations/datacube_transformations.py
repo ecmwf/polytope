@@ -70,8 +70,8 @@ class DatacubeAxisTransformation(ABC):
     def to_intervals(self, range, intervals, axis):
         return intervals
 
-    def remap_polytope(self, polytope):
-        return [polytope]
+    def remap_polytopes(self, axis, polytopes):
+        return polytopes
 
 
 _type_to_datacube_transformation_lookup = {

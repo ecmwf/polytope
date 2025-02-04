@@ -66,53 +66,68 @@ class QuadTreeSlicer(Engine):
                 # It just modifies the next_nodes?
         del node["unsliced_polytopes"]
 
-    def break_up_polytope(self, polytope):
+    def break_up_polytope(self, datacube, polytope):
         # TODO: slice polytope along all axes of it that are potentially cyclic
-        pass
+        new_polytopes = [polytope]
+        for ax in polytope.axes():
+            axis = datacube._axes[ax]
+            if axis.is_cyclic:
+                new_polytopes = axis.remap_polytopes(new_polytopes)
+        return new_polytopes
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes, api):
-        extracted_points = self.extract_single(datacube, polytope)
-        # TODO: add the sliced points as node to the tree and update the next_nodes
-        if len(extracted_points) == 0:
-            node.remove_branch()
-
-        lat_ax = ax
+        pre_sliced_polytopes = self.break_up_polytope(datacube, polytope)
 
         if not self.second_axis:
             for transform in ax.transformations:
                 if isinstance(transform, DatacubeMapper):
                     self.second_axis = datacube._axes[transform.grid_axes[1]]
 
-        for point in extracted_points:
-            # convert to float for slicing
-            value = point.index
-            lat_val = point.item[0]
-            lon_val = point.item[1]
-            # lat_ax = ax
+        node["unsliced_polytopes"].remove(polytope)
 
-            # TODO: is there a nicer way to get this axis that does not depend on knowing
-            # the axis name in advance?
+        for poly in pre_sliced_polytopes:
+            node["unsliced_polytopes"].add(poly)
 
-            # lon_ax = None
-            # NOTE: test to try to find the right second axis
-            # if not self.second_axis:
-            #     for transform in ax.transformations:
-            #         if isinstance(transform, DatacubeMapper):
-            #             self.second_axis = datacube._axes[transform.grid_axes[1]]
-            # lon_ax = datacube._axes["longitude"]
+            print("HERE NOW LOOK")
+            print(len(pre_sliced_polytopes))
+            print(pre_sliced_polytopes)
+            print(poly.points)
 
-            # remapped_lat_val = self.remap_values(lat_ax, lat_val)
-            # remapped_lon_val = self.remap_values(self.second_axis, lon_val)
-            # print(lon_val)
-            # print(remapped_lon_val)
+            extracted_points = self.extract_single(datacube, poly)
+            # TODO: add the sliced points as node to the tree and update the next_nodes
+            if len(extracted_points) == 0:
+                node.remove_branch()
 
-            # TODO: need to remap the values before we add them to the tree here
+            for point in extracted_points:
+                # convert to float for slicing
+                value = point.index
+                lat_val = point.item[0]
+                lon_val = point.item[1]
+                # lat_ax = ax
 
-            # store the native type
-            (child, _) = node.create_child(lat_ax, lat_val, [])
-            (grand_child, _) = child.create_child(self.second_axis, lon_val, [])
-            # NOTE: the index of the point is stashed in the branches' result
-            grand_child.indexes = [value]
-            grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
-            grand_child["unsliced_polytopes"].remove(polytope)
-        # TODO: but now what happens to the second axis in the point cloud?? Do we create a second node for it??
+                # TODO: is there a nicer way to get this axis that does not depend on knowing
+                # the axis name in advance?
+
+                # lon_ax = None
+                # NOTE: test to try to find the right second axis
+                # if not self.second_axis:
+                #     for transform in ax.transformations:
+                #         if isinstance(transform, DatacubeMapper):
+                #             self.second_axis = datacube._axes[transform.grid_axes[1]]
+                # lon_ax = datacube._axes["longitude"]
+
+                # remapped_lat_val = self.remap_values(lat_ax, lat_val)
+                # remapped_lon_val = self.remap_values(self.second_axis, lon_val)
+                # print(lon_val)
+                # print(remapped_lon_val)
+
+                # TODO: need to remap the values before we add them to the tree here
+
+                # store the native type
+                (child, _) = node.create_child(ax, lat_val, [])
+                (grand_child, _) = child.create_child(self.second_axis, lon_val, [])
+                # NOTE: the index of the point is stashed in the branches' result
+                grand_child.indexes = [value]
+                grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
+                grand_child["unsliced_polytopes"].remove(poly)
+            # TODO: but now what happens to the second axis in the point cloud?? Do we create a second node for it??

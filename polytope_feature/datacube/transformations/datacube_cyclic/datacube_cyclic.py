@@ -3,7 +3,7 @@ from copy import deepcopy
 
 from ....utility.list_tools import unique
 from ..datacube_transformations import DatacubeAxisTransformation
-from ....engine.slicing_tools import slice_in_two
+from ....utility.slicing_tools import slice_in_two
 
 
 class DatacubeAxisCyclic(DatacubeAxisTransformation):
@@ -29,23 +29,36 @@ class DatacubeAxisCyclic(DatacubeAxisTransformation):
     def unwanted_axes(self):
         return []
 
-    def remap_polytope(self, axis, polytope):
+    def remap_polytopes(self, axis, polytopes):
         # TODO
         # Find extents of the polytope on that axis
-        lower, upper, slice_axis_idx = polytope.extents(axis.name)
-        polytope_range = [lower, upper]
+        all_sliced_polys = []
+        for polytope in polytopes:
+            lower, upper, slice_axis_idx = polytope.extents(axis.name)
+            polytope_range = [lower, upper]
 
-        # Find intervals within this range
-        intervals = self.to_intervals(polytope_range, [], axis)
+            # Find intervals within this range
+            intervals = self.to_intervals(polytope_range, [], axis)
 
-        slice_vals = []
+            slice_vals = []
 
-        for interval in intervals[:-1]:
-            slice_vals.append(interval[1])
+            print("WHAT ARE THE SLICE VALS?")
 
-        # Successively slice the polytope on each of the slice vals
-        sliced_polys = self.slice_polytope([polytope], slice_vals, slice_axis_idx)
-        return sliced_polys
+            for interval in intervals[:-1]:
+                slice_vals.append(interval[1])
+
+            print(slice_vals)
+
+            # Successively slice the polytope on each of the slice vals
+            sliced_polys = self.slice_polytope([polytope], slice_vals, slice_axis_idx)
+            all_sliced_polys.extend(sliced_polys)
+        all_sliced_polys = [poly for poly in all_sliced_polys if poly is not None]
+
+        # TODO: remap the right axis points of each of the polytopes to cyclic axis range
+        for poly in all_sliced_polys:
+            for point in poly.points:
+                point[slice_axis_idx] = self._remap_val_to_axis_range(point[slice_axis_idx], axis)
+        return all_sliced_polys
 
     def slice_polytope(self, polytope_list, slice_vals, slice_axis_idx):
         for slice_val in slice_vals:

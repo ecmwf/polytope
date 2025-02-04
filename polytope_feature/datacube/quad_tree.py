@@ -1,5 +1,5 @@
-from ..engine.hullslicer import slice
-from ..engine.slicing_tools import slice_in_two
+# from ..engine.hullslicer import slice
+from ..utility.slicing_tools import slice_in_two, slice
 
 """
 
