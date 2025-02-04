@@ -60,7 +60,7 @@ class TestQuadTreeSlicer:
         time1 = time.time()
         print("TIME TAKEN TO EXTRACT")
         print(time1 - time0)
-        print(len(result.leaves))
+        assert len(result.leaves) == 27
         result.pprint()
 
         lats = []

@@ -4,9 +4,6 @@
 # import iris
 import math
 
-# from helper_functions import find_nearest_latlon
-import time
-
 import pandas as pd
 import pytest
 import xarray as xr
@@ -14,6 +11,8 @@ from earthkit import data
 
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
+
+# from helper_functions import find_nearest_latlon
 
 
 class TestQuadTreeSlicer:
@@ -60,14 +59,11 @@ class TestQuadTreeSlicer:
             Select("time", [pd.Timestamp("2025-01-10")]),
             Select("heightAboveGround", [2.0]),
             Select("step", [datetime.timedelta(days=0)]),
-            Box(["latitude", "longitude"], [0, 0], [5, 5]),
+            Box(["latitude", "longitude"], [0, 0], [1, 5]),
         )
 
-        time0 = time.time()
         result = self.API.retrieve(request)
-        time1 = time.time()
-        print("TIME TAKEN TO EXTRACT")
-        print(time1 - time0)
+        assert len(result.leaves) == 345
         result.pprint()
 
         # lats = []
@@ -117,12 +113,8 @@ class TestQuadTreeSlicer:
             Box(["latitude", "longitude"], [0, 190], [1, 195]),
         )
 
-        time0 = time.time()
         result = self.API.retrieve(request)
-        time1 = time.time()
-        print("TIME TAKEN TO EXTRACT")
-        print(time1 - time0)
-        print(len(result.leaves))
+        assert len(result.leaves) == 346
         result.pprint()
         leaves = result.leaves
         for i in range(len(leaves)):
