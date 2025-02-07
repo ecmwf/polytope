@@ -4,9 +4,12 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::time::Instant;
 use std::mem;
+use pyo3::prelude::*;
 
 
 #[derive(Debug)]
+#[derive(Clone)]
+#[pyclass]
 struct QuadTreeNode {
     points: Option<Vec<QuadPoint>>,
     children: Vec<QuadTreeNode>,
@@ -16,24 +19,30 @@ struct QuadTreeNode {
 }
 
 #[derive(Debug)]
+#[derive(Clone)]
+#[pyclass]
 struct QuadPoint {
     item: (f64, f64),
     index: i64,
 }
 
 
+#[pymethods]
 impl QuadPoint {
+    #[new]
     fn new(item: (f64, f64), index: i64) -> Self {
         Self {item, index}
     }
 }
 
 
+#[pymethods]
 impl QuadTreeNode {
 
     const MAX: i32 = 3;
     const MAX_DEPTH: i32 = 20;
 
+    #[new]
     fn new(x: f64, y: f64, size: Option<(f64, f64)>, depth: Option<i32>) -> Self {
         Self {
             points: Some(Vec::new()),
@@ -41,6 +50,12 @@ impl QuadTreeNode {
             center: (x,y),
             size: size.unwrap_or((180.0, 90.0)),
             depth: depth.unwrap_or(0),
+        }
+    }
+
+    fn build_point_tree(&mut self, points: Vec<(f64, f64)>) {
+        for (index, p) in points.iter().enumerate(){
+            self.insert(p, index.try_into().unwrap());
         }
     }
 
@@ -58,11 +73,44 @@ impl QuadTreeNode {
         rect_points
     }
 
-    fn build_point_tree(&mut self, points: Vec<(f64, f64)>) {
-        for (index, p) in points.iter().enumerate(){
-            self.insert(p, index.try_into().unwrap());
-        }
-    }
+    // fn find_nodes_in<'a>(&'a self, results: &mut Option<Vec<&'a QuadPoint>>) {
+    //     // Ensure results is initialized
+    //     results.get_or_insert_with(Vec::new);
+    
+    //     // Recursively search in children
+    //     for child in &self.children {
+    //         child.find_nodes_in(results); // Pass mutable reference
+    //     }
+    
+    //     // Add current node's points to results
+    //     if let Some(vec) = results.as_mut() {
+    //         if let Some(points) = &self.points {
+    //             vec.extend(points.iter());
+    //         }
+    //     }
+    // }
+}
+
+impl QuadTreeNode {
+    // fn quadrant_rectangle_points(&self) -> Vec<(f64, f64)> {
+    //     let (cx, cy) = self.center;
+    //     let (sx, sy) = self.size;
+
+    //     let mut rect_points: Vec<(f64, f64)> = Vec::new();
+
+    //     rect_points.push((cx + sx, cy + sy));
+    //     rect_points.push((cx + sx, cy - sy));
+    //     rect_points.push((cx - sx, cy + sy));
+    //     rect_points.push((cx - sx, cy - sy));
+
+    //     rect_points
+    // }
+
+    // fn build_point_tree(&mut self, points: Vec<(f64, f64)>) {
+    //     for (index, p) in points.iter().enumerate(){
+    //         self.insert(p, index.try_into().unwrap());
+    //     }
+    // }
 
     fn get_node_items(&self) -> Vec<&(f64, f64)> {
         let mut node_items: Vec<&(f64, f64)> = vec![];
@@ -180,6 +228,13 @@ impl QuadTreeNode {
         total_size
     }
 
+}
+
+#[pymodule]
+fn quadtree(_py: Python, m: &PyModule) -> PyResult<()> {
+    m.add_class::<QuadPoint>()?;
+    m.add_class::<QuadTreeNode>()?;
+    Ok(())
 }
 
 
