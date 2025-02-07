@@ -772,7 +772,7 @@ class ReducedGaussianGridMapper(DatacubeMapper):
         return return_vals
 
     def lon_spacing(self):
-        # TODO
+        # TODO: too many values
         if self._resolution == 320:
             return [
                 18,
