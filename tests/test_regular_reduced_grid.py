@@ -83,7 +83,7 @@ class TestSlicingFDBDatacube:
         lons = []
         eccodes_lats = []
         eccodes_lons = []
-        tol = 1e-6
+        tol = 1e-12
         f = open("tests/data/aifs_data_from_fdb.grib", "rb")
         messages = []
         message = codes_grib_new_from_file(f)
