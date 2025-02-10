@@ -88,7 +88,7 @@ Here is a step-by-step example of how to use this software.
     ```Python
         options = {"longitude": {"cyclic": [0, 360.0]}}
 
-        from polytope.polytope import Polytope
+        from polytope_feature.polytope import Polytope
 
         p = Polytope(datacube=array, axis_options=options)
     ```
@@ -97,7 +97,7 @@ Here is a step-by-step example of how to use this software.
   In this example, we want to extract a simple 2D box in latitude and longitude at step 0. We thus create the two relevant shapes we need to build this 3-dimensional object,
     ```Python
         import numpy as np
-        from polytope.shapes import Box, Select
+        from polytope_feature.shapes import Box, Select
 
         box = Box(["latitude", "longitude"], [0, 0], [1, 1])
         step_point = Select("step", [np.timedelta64(0, "s")])
@@ -105,7 +105,7 @@ Here is a step-by-step example of how to use this software.
 
     which we then incorporate into a Polytope request.
     ```Python
-        from polytope.polytope import Request
+        from polytope_feature.polytope import Request
 
         request = Request(box, step_point)
     ```
