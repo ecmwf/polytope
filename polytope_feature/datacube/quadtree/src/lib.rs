@@ -22,7 +22,9 @@ struct QuadTreeNode {
 #[derive(Clone)]
 #[pyclass]
 struct QuadPoint {
+    #[pyo3(get, set)]
     item: (f64, f64),
+    #[pyo3(get, set)]
     index: i64,
 }
 
@@ -89,6 +91,12 @@ impl QuadTreeNode {
     //         }
     //     }
     // }
+
+    fn find_nodes_in(&self) -> Vec<QuadPoint> {
+        let mut results = Vec::new();
+        self.collect_points(&mut results);
+        results
+    }
 }
 
 impl QuadTreeNode {
@@ -192,20 +200,33 @@ impl QuadTreeNode {
         }
     }
 
-    fn find_nodes_in<'a>(&'a self, results: &mut Option<Vec<&'a QuadPoint>>) {
-        // Ensure results is initialized
-        results.get_or_insert_with(Vec::new);
+    // fn find_nodes_in<'a>(&'a self, results: &mut Option<Vec<&'a QuadPoint>>) {
+    //     // Ensure results is initialized
+    //     results.get_or_insert_with(Vec::new);
     
-        // Recursively search in children
-        for child in &self.children {
-            child.find_nodes_in(results); // Pass mutable reference
+    //     // Recursively search in children
+    //     for child in &self.children {
+    //         child.find_nodes_in(results); // Pass mutable reference
+    //     }
+    
+    //     // Add current node's points to results
+    //     if let Some(vec) = results.as_mut() {
+    //         if let Some(points) = &self.points {
+    //             vec.extend(points.iter());
+    //         }
+    //     }
+    // }
+
+    /// **Recursive helper function (not exposed to Python)**
+    fn collect_points(&self, results: &mut Vec<QuadPoint>) {
+        if let Some(points) = &self.points {
+            for point in points {
+                results.push(point.clone()); // Clone values instead of using references
+            }
         }
     
-        // Add current node's points to results
-        if let Some(vec) = results.as_mut() {
-            if let Some(points) = &self.points {
-                vec.extend(points.iter());
-            }
+        for child in &self.children {
+            child.collect_points(results);
         }
     }
 
