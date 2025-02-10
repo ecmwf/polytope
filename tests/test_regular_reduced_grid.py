@@ -21,8 +21,12 @@ class TestSlicingFDBDatacube:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "reduced_gaussian",
-                            "resolution": 320, "axes": ["latitude", "longitude"]}
+                        {
+                            "name": "mapper",
+                            "type": "reduced_gaussian",
+                            "resolution": 320,
+                            "axes": ["latitude", "longitude"],
+                        }
                     ],
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
