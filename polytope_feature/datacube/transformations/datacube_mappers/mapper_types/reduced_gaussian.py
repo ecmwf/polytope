@@ -1,4 +1,3 @@
-import bisect
 import logging
 import math
 
