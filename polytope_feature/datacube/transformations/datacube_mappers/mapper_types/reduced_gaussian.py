@@ -13,7 +13,6 @@ class ReducedGaussianGridMapper(DatacubeMapper):
         self._base_axis = base_axis
         self._resolution = resolution
         self._first_axis_vals = self.first_axis_vals()
-        self._first_idx_map = self.create_first_idx_map()
         self._second_axis_spacing = {}
         self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
         if self._axis_reversed[mapped_axes[1]]:
@@ -1432,19 +1431,28 @@ class ReducedGaussianGridMapper(DatacubeMapper):
                 idx += second_idx
                 return idx
 
-    def find_second_idx(self, first_val, second_val):
-        tol = 1e-10
-        second_axis_vals = self.second_axis_vals(first_val)
-        second_idx = bisect.bisect_left(second_axis_vals, second_val - tol)
-        return second_idx
+    # def find_second_idx(self, first_val, second_val):
+    #     tol = 1e-10
+    #     second_axis_vals = self.second_axis_vals(first_val)
+    #     second_idx = bisect.bisect_left(second_axis_vals, second_val[0] - tol)
+    #     return second_idx
+
+    # def unmap(self, first_val, second_val):
+    #     (first_idx, second_idx) = self.find_second_idx(first_val, second_val)
+    #     octahedral_index = self.axes_idx_to_reduced_gaussian_idx(first_idx, second_idx)
+    #     return octahedral_index
 
     def unmap(self, first_val, second_val):
-        (first_idx, second_idx) = self.find_second_idx(first_val, second_val)
-        octahedral_index = self.axes_idx_to_reduced_gaussian_idx(first_idx, second_idx)
-        return octahedral_index
+        tol = 1e-8
+        first_value = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
+        first_idx = self._first_axis_vals.index(first_value)
+        second_val = [i for i in self.second_axis_vals(first_val) if second_val[0] - tol <= i <= second_val[0] + tol][0]
+        second_idx = self.second_axis_vals(first_val).index(second_val)
+        reduced_gaussian_index = self.axes_idx_to_reduced_gaussian_idx(first_idx, second_idx)
+        return reduced_gaussian_index
 
 
 # md5 grid hash in form {resolution : hash}
 _md5_hash = {
-    320: ".",
+    320: "158db321ae8e773681eeb40e0a3d350f",
 }

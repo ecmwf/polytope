@@ -70,13 +70,18 @@ class TestSlicingFDBDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 3
+        leaves = result.leaves
+        assert len(leaves) == 18
+        tot_leaves = 0
+        for leaf in leaves:
+            tot_leaves += len(leaf.result)
+        assert tot_leaves == 324
         lats = []
         lons = []
         eccodes_lats = []
         eccodes_lons = []
-        tol = 1e-4
-        f = open("~/Downloads/aifs_data.grib", "rb")
+        tol = 1e-6
+        f = open("tests/data/aifs_data_from_fdb.grib", "rb")
         messages = []
         message = codes_grib_new_from_file(f)
         messages.append(message)
@@ -84,17 +89,17 @@ class TestSlicingFDBDatacube:
         leaves = result.leaves
         for i in range(len(leaves)):
             cubepath = leaves[i].flatten()
-            lat = cubepath["latitude"]
-            lon = cubepath["longitude"]
-            del cubepath
-            lats.append(lat)
-            lons.append(lon)
-            nearest_points = codes_grib_find_nearest(message, lat, lon)[0]
-            eccodes_lat = nearest_points.lat
-            eccodes_lon = nearest_points.lon
-            eccodes_lats.append(eccodes_lat)
-            eccodes_lons.append(eccodes_lon)
-            assert eccodes_lat - tol <= lat
-            assert lat <= eccodes_lat + tol
-            assert eccodes_lon - tol <= lon
-            assert lon <= eccodes_lon + tol
+            lat = cubepath["latitude"][0]
+            lons_ = cubepath["longitude"]
+            for lon in lons_:
+                lats.append(lat)
+                lons.append(lon)
+                nearest_points = codes_grib_find_nearest(message, lat, lon)[0]
+                eccodes_lat = nearest_points.lat
+                eccodes_lon = nearest_points.lon
+                eccodes_lats.append(eccodes_lat)
+                eccodes_lons.append(eccodes_lon)
+                assert eccodes_lat - tol <= lat
+                assert lat <= eccodes_lat + tol
+                assert eccodes_lon - tol <= lon
+                assert lon <= eccodes_lon + tol
