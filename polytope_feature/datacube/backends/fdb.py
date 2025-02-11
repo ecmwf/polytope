@@ -81,13 +81,6 @@ class FDBDatacube(Datacube):
                     (upper, lower, idx) = polytope.extents(ax)
                     if "sfc" in polytope.points[idx]:
                         self.fdb_coordinates.pop("levelist", None)
-                # if ax == "stream":
-                #     (upper, lower, idx) = polytope.extents(ax)
-                #     if "wave" in polytope.points[idx]:
-                #         if len(polytope.points[idx]) > 1:
-                #             raise ValueError(
-                #                 "Please request stream wave separately from data on other streams.")  # noqa: E501
-                #         self.fdb_coordinates.pop("levtype", None)
 
                 if ax == "param":
                     (upper, lower, idx) = polytope.extents(ax)
