@@ -31,6 +31,7 @@ class FDBDatacube(Datacube):
         if len(alternative_axes) == 0:
             logging.info("Find GribJump axes for %s", context)
             self.fdb_coordinates = self.gj.axes(partial_request, ctx=context)
+            print(self.fdb_coordinates)
             logging.info("Retrieved available GribJump axes for %s", context)
             if len(self.fdb_coordinates) == 0:
                 raise BadRequestError(partial_request)
@@ -80,10 +81,25 @@ class FDBDatacube(Datacube):
                     (upper, lower, idx) = polytope.extents(ax)
                     if "sfc" in polytope.points[idx]:
                         self.fdb_coordinates.pop("levelist", None)
+                # if ax == "stream":
+                #     (upper, lower, idx) = polytope.extents(ax)
+                #     if "wave" in polytope.points[idx]:
+                #         if len(polytope.points[idx]) > 1:
+                #             raise ValueError(
+                #                 "Please request stream wave separately from data on other streams.")  # noqa: E501
+                #         self.fdb_coordinates.pop("levtype", None)
+
+                if ax == "param":
+                    (upper, lower, idx) = polytope.extents(ax)
+                    if "140251" not in polytope.points[idx]:
+                        self.fdb_coordinates.pop("direction", None)
+                        self.fdb_coordinates.pop("frequency", None)
+                    else:
+                        # special param with direction and frequency
+                        if len(polytope.points[idx]) > 1:
+                            raise ValueError(
+                                "Param 251 is part of a special branching of the datacube. Please request it separately.")  # noqa: E501
         self.fdb_coordinates.pop("quantile", None)
-        # TODO: When do these not appear??
-        self.fdb_coordinates.pop("direction", None)
-        self.fdb_coordinates.pop("frequency", None)
 
         # NOTE: verify that we also remove the axis object for axes we've removed here
         axes_to_remove = set(self.complete_axes) - set(self.fdb_coordinates.keys())
@@ -129,6 +145,7 @@ class FDBDatacube(Datacube):
             logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
         logging.info("Requests given to GribJump extract for %s", context)
         try:
+            print(complete_list_complete_uncompressed_requests)
             output_values = self.gj.extract(complete_list_complete_uncompressed_requests, context)
         except Exception as e:
             if "BadValue: Grid hash mismatch" in str(e):
