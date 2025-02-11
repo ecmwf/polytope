@@ -5,6 +5,7 @@ use std::convert::TryFrom;
 use std::time::Instant;
 use std::mem;
 use pyo3::prelude::*;
+use pyo3::types::PyList;
 
 
 #[derive(Debug)]
@@ -13,6 +14,8 @@ use pyo3::prelude::*;
 struct QuadTreeNode {
     points: Option<Vec<QuadPoint>>,
     children: Vec<QuadTreeNode>,
+
+    #[pyo3(get, set)]
     center: (f64, f64),
     size: (f64, f64),
     depth: i32,
@@ -73,6 +76,42 @@ impl QuadTreeNode {
         rect_points.push((cx - sx, cy - sy));
 
         rect_points
+    }
+
+    #[getter]
+    fn children(&self, py: Python) -> Py<PyList> {
+        let py_list = PyList::empty(py);
+        for child in &self.children {
+            // py_list.append(child.clone()).unwrap();
+            let py_child = PyCell::new(py, child.clone()).unwrap();
+            py_list.append(py_child).unwrap();
+        }
+        py_list.into()
+    }
+
+
+
+    // #[getter]
+    // fn points(&self, py: Python) -> Py<PyList> {
+    //     let py_list = PyList::empty(py);
+    //     for point in &self.points {
+    //         // py_list.append(child.clone()).unwrap();
+    //         let py_point= PyCell::new(py, point.clone()).unwrap();
+    //         py_list.append(py_point).unwrap();
+    //     }
+    //     py_list.into()
+    // }
+
+    #[getter]
+    fn points(&self, py: Python) -> Py<PyList> {
+        let py_list = PyList::empty(py);
+        if let Some(ref pts) = self.points {
+            for point in pts {
+                let py_point = PyCell::new(py, point.clone()).unwrap();
+                py_list.append(py_point).unwrap();
+            }
+        }
+        py_list.into()
     }
 
     // fn find_nodes_in<'a>(&'a self, results: &mut Option<Vec<&'a QuadPoint>>) {

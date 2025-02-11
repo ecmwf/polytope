@@ -1,4 +1,4 @@
-from polytope_feature.shapes import Box, Select
+from polytope_feature.shapes import Box, Select, Point
 from polytope_feature.polytope import Polytope, Request
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -12,6 +12,8 @@ import time
 import math
 # import iris
 import os
+
+os.environ["FDB_HOME"] = "/Users/male/git/fdb-new-home"
 
 
 class TestQuadTreeSlicer:
