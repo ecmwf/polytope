@@ -9,10 +9,6 @@ from polytope_feature.shapes import Box, Select
 
 class TestHealpixGrid:
     def setup_method(self, method):
-        import pygribjump as gj
-
-        self.fdb_datacube = gj.GribJump()
-
         self.options = {
             "axis_config": [
                 {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
@@ -47,14 +43,18 @@ class TestHealpixGrid:
             ],
         }
         self.slicer = HullSlicer()
+
+    @pytest.mark.internet
+    def test_healpix_grid(self):
+        import pygribjump as gj
+
+        self.fdb_datacube = gj.GribJump()
         self.API = Polytope(
             datacube=self.fdb_datacube,
             engine=self.slicer,
             options=self.options,
         )
 
-    @pytest.mark.internet
-    def test_healpix_grid(self):
         request = Request(
             Select("step", [1]),
             Select("date", [pd.Timestamp("20250201T000000")]),
