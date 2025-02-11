@@ -1,15 +1,14 @@
+import pandas as pd
 import pytest
 from helper_functions import find_nearest_latlon
 
 from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
-import pandas as pd
 
 
 class TestHealpixGrid:
     def setup_method(self, method):
-
         import pygribjump as gj
 
         self.fdb_datacube = gj.GribJump()
@@ -56,7 +55,6 @@ class TestHealpixGrid:
 
     @pytest.mark.internet
     def test_healpix_grid(self):
-
         request = Request(
             Select("step", [1]),
             Select("date", [pd.Timestamp("20250201T000000")]),
@@ -69,7 +67,7 @@ class TestHealpixGrid:
             Select("direction", ["1"]),
             Select("frequency", ["1"]),
             Box(["latitude", "longitude"], [1, 1], [2, 2]),
-            Select("levtype", ["sfc"])
+            Select("levtype", ["sfc"]),
         )
         result = self.API.retrieve(request)
         result.pprint()

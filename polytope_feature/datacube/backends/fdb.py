@@ -91,7 +91,8 @@ class FDBDatacube(Datacube):
                         # special param with direction and frequency
                         if len(polytope.points[idx]) > 1:
                             raise ValueError(
-                                "Param 251 is part of a special branching of the datacube. Please request it separately.")  # noqa: E501
+                                "Param 251 is part of a special branching of the datacube. Please request it separately."
+                            )  # noqa: E501
         self.fdb_coordinates.pop("quantile", None)
 
         # NOTE: verify that we also remove the axis object for axes we've removed here
