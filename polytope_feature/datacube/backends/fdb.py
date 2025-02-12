@@ -31,7 +31,6 @@ class FDBDatacube(Datacube):
         if len(alternative_axes) == 0:
             logging.info("Find GribJump axes for %s", context)
             self.fdb_coordinates = self.gj.axes(partial_request, ctx=context)
-            print(self.fdb_coordinates)
             logging.info("Retrieved available GribJump axes for %s", context)
             if len(self.fdb_coordinates) == 0:
                 raise BadRequestError(partial_request)
@@ -139,7 +138,6 @@ class FDBDatacube(Datacube):
             logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
         logging.info("Requests given to GribJump extract for %s", context)
         try:
-            print(complete_list_complete_uncompressed_requests)
             output_values = self.gj.extract(complete_list_complete_uncompressed_requests, context)
         except Exception as e:
             if "BadValue: Grid hash mismatch" in str(e):
