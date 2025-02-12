@@ -110,4 +110,4 @@ Conversely at least one of `range` or `step` must be included.
 
 ## Note:
 
-Previously the `axes` keyword was used for `time_axis`. We still allow this behaviour to satisfy backwards compatability with previous requests.
+Previously the `axes` keyword was used for `time_axis`. We still allow this behavior to satisfy backwards compatibility with previous requests.
