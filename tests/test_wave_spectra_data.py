@@ -7,7 +7,7 @@ from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
 
 
-class TestHealpixGrid:
+class TestWaveData:
     def setup_method(self, method):
         self.options = {
             "axis_config": [
@@ -44,7 +44,7 @@ class TestHealpixGrid:
         }
         self.slicer = HullSlicer()
 
-    @pytest.mark.internet
+    @pytest.mark.fdb
     def test_healpix_grid(self):
         import pygribjump as gj
 
