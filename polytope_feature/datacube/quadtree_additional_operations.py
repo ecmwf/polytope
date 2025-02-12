@@ -32,8 +32,25 @@ def query_polygon(node: QuadTreeNode, polygon, results=None):
             for node in node.find_nodes_in():
                 results.add(node)
         else:
-            children = node.children
-            if len(children) > 0:
+            # TODO: DO NOT COPY THE CHILDREN INTO A LIST FROM RUST, INSTEAD IMPLEMENT A GETITEM EQUIVALENT AND ITER THROUGH THE RUST OBJECT DIRECTLY
+            # children = node.children
+            # if len(children) > 0:
+            #     # first slice vertically
+            #     left_polygon, right_polygon = slice_in_two(polygon, node.center[0], 0)
+
+            #     # then slice horizontally
+            #     # ie need to slice the left and right polygons each in two to have the 4 quadrant polygons
+
+            #     q1_polygon, q2_polygon = slice_in_two(left_polygon, node.center[1], 1)
+            #     q3_polygon, q4_polygon = slice_in_two(right_polygon, node.center[1], 1)
+
+            #     # now query these 4 polygons further down the quadtree
+            #     query_polygon(children[0], q1_polygon, results)
+            #     query_polygon(children[1], q2_polygon, results)
+            #     query_polygon(children[2], q3_polygon, results)
+            #     query_polygon(children[3], q4_polygon, results)
+
+            if len(node) > 0:
                 # first slice vertically
                 left_polygon, right_polygon = slice_in_two(polygon, node.center[0], 0)
 
@@ -44,10 +61,10 @@ def query_polygon(node: QuadTreeNode, polygon, results=None):
                 q3_polygon, q4_polygon = slice_in_two(right_polygon, node.center[1], 1)
 
                 # now query these 4 polygons further down the quadtree
-                query_polygon(children[0], q1_polygon, results)
-                query_polygon(children[1], q2_polygon, results)
-                query_polygon(children[2], q3_polygon, results)
-                query_polygon(children[3], q4_polygon, results)
+                query_polygon(node[0], q1_polygon, results)
+                query_polygon(node[1], q2_polygon, results)
+                query_polygon(node[2], q3_polygon, results)
+                query_polygon(node[3], q4_polygon, results)
 
             results.update(node for node in node.points if is_contained_in(node, polygon))
 
