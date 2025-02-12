@@ -1,10 +1,10 @@
 # Data Portfolio
 
-Polytope feature extraction only has access to data that is stored on an FDB. The dataset currently available via Polyope feature extraction is the operational forecast.
+Polytope feature extraction only has access to data that is stored on an FDB. The datasets currently available via Polyope feature extraction are the operational ECMWF forecast, as well as the data produced by the Destination Earth Extremes and Climate digital twins.
 
 ## Operational Forecast Data
 
-The following values available for each field specified are:
+The following key value pairs are available via Polytope:
 
 * `class` : `od`
 * `stream` : `enfo` `oper`
@@ -18,7 +18,7 @@ If `type` is `enfo`:
 
 * `number` : `0/to/50`
 
-If `levtype` is `pl` or `ml` a `levelist` must be provided:
+If `levtype` is `pl` or `ml`, a `levelist` must be provided:
 
 * `levelist` : `1/to/1000`
 
@@ -42,9 +42,9 @@ If `levtype` is `pl` or `ml` a `levelist` must be provided:
     * `crwe`
     * `ttpha`
 
-For `sfc` most `params` will be available but not all.
+For `sfc`, most `params` will be available but not all.
 
-Only data that is contained in the operational FDB can be requested via Polytope feature extraction, the FDB usually only contains the last two days of forecasts.
+Only data that is contained in the operational FDB can be requested via Polytope feature extraction. The FDB usually only contains the last two days of forecasts.
 
 We sometimes limit the size of requests for area features such as bounding box and polygon to maintain quality of service.
 
@@ -56,7 +56,7 @@ Access to operational data is limited by our release schedule.
 The following values available for each field specified are:
 
 * `class` : `d1`
-* `dataste` : `extremes-dt`
+* `dataset` : `extremes-dt`
 * `stream` : `oper` `wave`
 * `type` : `fc`
 * `levtype` : `sfc` `pl` `hl`
@@ -64,11 +64,11 @@ The following values available for each field specified are:
 * `domain` : `g`
 * `step` : `0/to/96`
 
-If `levtype` is `pl` a `levelist` must be provided:
+If `levtype` is `pl`, a `levelist` must be provided:
 
 * `levelist` : `1/to/1000`
 
-If `levtype` is `hl` a `levelist` must be provided:
+If `levtype` is `hl`, a `levelist` must be provided:
 
 * `levtype` : `100`
 
@@ -103,7 +103,7 @@ Only Extremes-DT data from the past 15 days can be accessed by users.
 The following values available for each field specified are:
 
 * `class` : `d1`
-* `dataste` : `climate-dt`
+* `dataset` : `climate-dt`
 * `activity` : `ScenarioMIP` `story-nudging` `CMIP6`
 * `model`: `IFS-NEMO`,
 * `generation` : `1`,
@@ -116,12 +116,12 @@ The following values available for each field specified are:
 * `expver` : `0001`
 * `domain` : `g`
 
-If `levtype` is `pl` a `levelist` must be provided:
+If `levtype` is `pl`, a `levelist` must be provided:
 
 * `levelist` : `1/to/1000`
 
-`pl` is currently being scanned and new parameters will come online as time passes. This is also the case for `o2d`.
+`pl` is currently being scanned and new parameters will become available as time passes. This is also the case for `o2d`.
 
-For `sfc` most `params` are available.
+For `sfc`, most `params` are available.
 
-Currently for `date` between `2020` and `2050` is available.
+Currently, only data for `dates` between `2020` and `2050` is available.
