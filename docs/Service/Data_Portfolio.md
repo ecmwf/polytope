@@ -108,7 +108,7 @@ The following values available for each field specified are:
 * `model`: `IFS-NEMO`,
 * `generation` : `1`,
 * `realization`: `1`,
-* `resolution`: `standard/high`,
+* `resolution`: `standard` `high`,
 * `time`: `0000/to/2300`,
 * `stream` : `clte` 
 * `type` : `fc`
