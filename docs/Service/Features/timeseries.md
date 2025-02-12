@@ -21,7 +21,7 @@ request = {
     "feature" : {
         "type" : "timeseries",
         "points": [[-9.10, 38.78]],
-        "time_axes": "step",
+        "time_axis": "step",
         "range" : {
             "start" : 0,
             "end" : 360,
