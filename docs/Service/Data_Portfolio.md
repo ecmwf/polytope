@@ -105,11 +105,11 @@ The following values available for each field specified are:
 * `class` : `d1`
 * `dataset` : `climate-dt`
 * `activity` : `ScenarioMIP` `story-nudging` `CMIP6`
-* `model`: `IFS-NEMO`,
-* `generation` : `1`,
-* `realization`: `1`,
-* `resolution`: `standard` `high`,
-* `time`: `0000/to/2300`,
+* `model`: `IFS-NEMO`
+* `generation` : `1`
+* `realization`: `1`
+* `resolution`: `standard` `high`
+* `time`: `0000/to/2300`
 * `stream` : `clte` 
 * `type` : `fc`
 * `levtype` : `sfc` `pl` `o2d`
