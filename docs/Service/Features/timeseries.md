@@ -21,11 +21,12 @@ request = {
     "feature" : {
         "type" : "timeseries",
         "points": [[-9.10, 38.78]],
-        "axes": "step",
+        "time_axes": "step",
         "range" : {
             "start" : 0,
             "end" : 360,
         }
+        "axes" : ["latitude", "longitude"]
     },
     "format": "covjson",
 }
@@ -42,18 +43,18 @@ For a timeseries within the `feature` dictionary three fields are required
 
 * `type`
 * `points`
-* `axes`
+* `time_axis`
 
 For a timeseries `type` must be `timeseries`.
 
 `points` must be a nested list with a points containing a latitude and a longitude.
 
-`axes` refers to the axis on which to generate the timeseries. In this case the timeseries is generated across `step` based on the inputted `range`. However if the data requested was a climate dataset the `axess` may be `datetime` denoting that the timeseries is generated across that axis.
+`time_axis` refers to the axis on which to generate the timeseries. In this case the timeseries is generated across `step` based on the inputted `range`. However if the data requested was a climate dataset the `time_axis` may be `datetime` denoting that the timeseries is generated across that axis.
 
 
 ## Optional Fields
 
-`range` is an optional field within `feature`. It refers to the extent of the `axes` on which the timeseries will be generated. In the above case where:
+`range` is an optional field within `feature`. It refers to the extent of the `time_axis` on which the timeseries will be generated. In the above case where:
 
 ```python
     "axes": "step",
@@ -75,7 +76,7 @@ A timeseries across `step` will start at step `0` and end at step `360` with all
 ```
 In this case every second step will be returned if it exists.
 
-As `range` is an optional field it can be left out, however there is not a default value. Instead the user has to include the timeseries `axes` in the main body of the request like below:
+As `range` is an optional field it can be left out, however there is not a default value. Instead the user has to include the timeseries `time_axis` in the main body of the request like below:
 
 ```python
 request = {
@@ -93,7 +94,7 @@ request = {
     "feature" : {
         "type" : "timeseries",
         "points": [[-9.10, 38.78]],
-        "axes": "step",
+        "time_axes": "step",
     },
     "format": "covjson",
 }
@@ -104,3 +105,9 @@ This is equivalent to the first request presented.
 At least one of `range` or `step` must be included in the request, but not both. In this case an error will be provided telling the user that `step` is overspecified.
 
 Conversely at least one of `range` or `step` must be included.
+
+`axes` can also be provided which defines the spatial `axes` on which the request is made. For example if the user provides points in the order `longitude`, `latitude` they can add `axes` : `["longitude", "latitude"]`.
+
+## Note:
+
+Previously the `axes` keyword was used for `time_axis`. We still allow this behaviour to satisfy backwards compatability with previous requests.
