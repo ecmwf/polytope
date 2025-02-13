@@ -220,6 +220,8 @@ class FDBDatacube(Datacube):
         return (fdb_node_ranges, current_start_idxs)
 
     def nearest_lat_lon_search(self, requests):
+        print("WHAT NEAREST SERACH POINTS ARE WE LOOKING FOR")
+        print(self.nearest_search)
         if len(self.nearest_search) != 0:
             first_ax_name = requests.children[0].axis.name
             second_ax_name = requests.children[0].children[0].axis.name
@@ -228,6 +230,13 @@ class FDBDatacube(Datacube):
                 raise Exception("nearest point search axes are wrong")
 
             second_ax = requests.children[0].children[0].axis
+            print("LOOK NOW")
+            print([
+                [lat_val, second_ax._remap_val_to_axis_range(lon_val)]
+                for (lat_val, lon_val) in zip(
+                    self.nearest_search[first_ax_name][0], self.nearest_search[second_ax_name][0]
+                )
+            ])
 
             nearest_pts = [
                 [lat_val, second_ax._remap_val_to_axis_range(lon_val)]
