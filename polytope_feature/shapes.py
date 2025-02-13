@@ -61,6 +61,22 @@ class ConvexPolytope(Shape):
         return [self]
 
 
+class Product(Shape):
+    """Shape that takes two polytopes and 'multiplies' them together to obtain higher-dimensional shape"""
+
+    def __init__(self, *polytopes):
+        # TODO
+        pass
+
+    def axes(self):
+        # TODO
+        pass
+
+    def polytopes(self):
+        # TODO
+        pass
+
+
 # This is the only shape which can slice on axes without a discretizer or interpolator
 class Select(Shape):
     """Matches several discrete values"""
@@ -94,8 +110,11 @@ class Point(Shape):
             assert len(self.values) == 1
         for i in range(len(axes)):
             polytope_points = [v[i] for v in self.values]
+            # self.polytopes.extend(
+            #     [ConvexPolytope([axes[i]], [[point]], self.method, is_orthogonal=True) for point in polytope_points]
+            # )
             self.polytopes.extend(
-                [ConvexPolytope([axes[i]], [[point]], self.method, is_orthogonal=True) for point in polytope_points]
+                [ConvexPolytope([axes[i]], [[point]], self.method, is_orthogonal=False) for point in polytope_points]
             )
 
     def axes(self):
