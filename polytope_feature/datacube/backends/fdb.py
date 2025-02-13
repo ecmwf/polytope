@@ -80,10 +80,21 @@ class FDBDatacube(Datacube):
                     (upper, lower, idx) = polytope.extents(ax)
                     if "sfc" in polytope.points[idx]:
                         self.fdb_coordinates.pop("levelist", None)
+
+                if ax == "param":
+                    (upper, lower, idx) = polytope.extents(ax)
+                    if "140251" not in polytope.points[idx]:
+                        self.fdb_coordinates.pop("direction", None)
+                        self.fdb_coordinates.pop("frequency", None)
+                    else:
+                        # special param with direction and frequency
+                        if len(polytope.points[idx]) > 1:
+                            raise ValueError(
+                                "Param 251 is part of a special branching of the datacube. Please request it separately."  # noqa: E501
+                            )
         self.fdb_coordinates.pop("quantile", None)
-        # TODO: When do these not appear??
-        self.fdb_coordinates.pop("direction", None)
-        self.fdb_coordinates.pop("frequency", None)
+        self.fdb_coordinates.pop("year", None)
+        self.fdb_coordinates.pop("month", None)
 
         # NOTE: verify that we also remove the axis object for axes we've removed here
         axes_to_remove = set(self.complete_axes) - set(self.fdb_coordinates.keys())
