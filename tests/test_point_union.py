@@ -59,7 +59,13 @@ class TestSlicingFDBDatacube:
             Select("type", ["an"]),
             Union(["latitude", "longitude"],
                   Point(["latitude", "longitude"], [[20, 20]], method="nearest"),
-                  Point(["latitude", "longitude"], [[0, 0]], method="nearest")),
+                  Point(["latitude", "longitude"], [[0, 0]], method="nearest"),
+                  Point(["latitude", "longitude"], [[0, 20]], method="nearest"),
+                  Point(["latitude", "longitude"], [[25, 30]], method="nearest"),
+                  Point(["latitude", "longitude"], [[-30, 90]], method="nearest"),
+                  Point(["latitude", "longitude"], [[-60, -30]], method="nearest"),
+                  Point(["latitude", "longitude"], [[-15, -45]], method="nearest"),
+                  Point(["latitude", "longitude"], [[20, 0]], method="nearest")),
         )
 
         self.fdbdatacube = gj.GribJump()
@@ -71,3 +77,64 @@ class TestSlicingFDBDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
+        assert len(result.leaves) == 8
+
+    @pytest.mark.fdb
+    def test_fdb_datacube_surrounding(self):
+        import pygribjump as gj
+
+        request = Request(
+            Select("step", [0]),
+            Select("levtype", ["sfc"]),
+            Span("date", pd.Timestamp("20230625T120000"), pd.Timestamp("20230626T120000")),
+            Select("domain", ["g"]),
+            Select("expver", ["0001"]),
+            Select("param", ["167"]),
+            Select("class", ["od"]),
+            Select("stream", ["oper"]),
+            Select("type", ["an"]),
+            Union(["latitude", "longitude"],
+                  Point(["latitude", "longitude"], [[25, 30]], method="surrounding"),
+                  Point(["latitude", "longitude"], [[-15, -45]], method="surrounding"))
+        )
+
+        self.fdbdatacube = gj.GribJump()
+        self.slicer = HullSlicer()
+        self.API = Polytope(
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            options=self.options,
+        )
+        result = self.API.retrieve(request)
+        result.pprint()
+        assert len(result.leaves) == 9
+
+    # @pytest.mark.fdb
+    # def test_fdb_datacube_mix_methods(self):
+    #     import pygribjump as gj
+
+    #     request = Request(
+    #         Select("step", [0]),
+    #         Select("levtype", ["sfc"]),
+    #         Span("date", pd.Timestamp("20230625T120000"), pd.Timestamp("20230626T120000")),
+    #         Select("domain", ["g"]),
+    #         Select("expver", ["0001"]),
+    #         Select("param", ["167"]),
+    #         Select("class", ["od"]),
+    #         Select("stream", ["oper"]),
+    #         Select("type", ["an"]),
+    #         Union(["latitude", "longitude"],
+    #               Point(["latitude", "longitude"], [[25, 30]], method="nearest"),
+    #               Point(["latitude", "longitude"], [[-15, -45]], method="surrounding"))
+    #     )
+
+    #     self.fdbdatacube = gj.GribJump()
+    #     self.slicer = HullSlicer()
+    #     self.API = Polytope(
+    #         datacube=self.fdbdatacube,
+    #         engine=self.slicer,
+    #         options=self.options,
+    #     )
+    #     result = self.API.retrieve(request)
+    #     result.pprint()
+    #     assert len(result.leaves) == 6

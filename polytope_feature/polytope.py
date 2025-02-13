@@ -64,6 +64,18 @@ class Polytope:
         """Higher-level API which takes a request and uses it to slice the datacube"""
         logging.info("Starting request for %s ", self.context)
         self.datacube.check_branching_axes(request)
+        for polytope in request.polytopes():
+            method = polytope.method
+            if method == "nearest":
+                if self.datacube.nearest_search.get(polytope.axes()[0], None) is None:
+                    self.datacube.nearest_search[polytope.axes()[0]] = polytope.values
+                else:
+                    self.datacube.nearest_search[polytope.axes()[0]].append(polytope.values[0])
+                # if self.datacube.nearest_search.get(ax.name, None) is None:
+                #     datacube.nearest_search[ax.name] = polytope.points
+                # else:
+                #     datacube.nearest_search[ax.name][0].append(polytope.points[0][0])
+                pass
         request_tree = self.engine.extract(self.datacube, request.polytopes())
         logging.info("Created request tree for %s ", self.context)
         self.datacube.get(request_tree, self.context)

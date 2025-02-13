@@ -76,11 +76,11 @@ class HullSlicer(Engine):
         upper = ax.from_float(upper + tol)
         flattened = node.flatten()
         method = polytope.method
-        if method == "nearest":
-            # if datacube.nearest_search.get(ax.name, None) is None:
-            datacube.nearest_search[ax.name] = polytope.points
-            # else:
-            #     datacube.nearest_search[ax.name][0].append(polytope.points[0][0])
+        # if method == "nearest":
+        #     if datacube.nearest_search.get(ax.name, None) is None:
+        #         datacube.nearest_search[ax.name] = polytope.points
+        #     else:
+        #         datacube.nearest_search[ax.name][0].append(polytope.points[0][0])
 
         # NOTE: caching
         # Create a coupled_axes list inside of datacube and add to it during axis formation, then here
@@ -217,6 +217,13 @@ class HullSlicer(Engine):
 
         # Convert the polytope points to float type to support triangulation and interpolation
         for p in polytopes:
+            # method = p.method
+            # if method == "nearest":
+            #     if datacube.nearest_search.get(p.axes()[0], None) is None:
+            #         datacube.nearest_search[ax.name] = p.points
+            #     else:
+            #         datacube.nearest_search[ax.name][0].append(polytope.points[0][0])
+
             if isinstance(p, Product):
                 for poly in p.polytope():
                     self._unique_continuous_points(poly, datacube)
@@ -246,6 +253,13 @@ class HullSlicer(Engine):
             for poly in new_c:
                 if isinstance(poly, Product):
                     final_polys.extend(poly.polytope())
+                    # method = poly.method
+                    # if method == "nearest":
+                    #     # TODO: add the points to the datacube nearest search
+                    #     # datacube.nearest_search[] = poly.points
+                    #     print(poly.axes())
+                    #     print(poly.points)
+                    #     pass
                 else:
                     final_polys.append(poly)
             # r["unsliced_polytopes"] = set(new_c)

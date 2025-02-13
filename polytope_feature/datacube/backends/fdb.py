@@ -226,33 +226,52 @@ class FDBDatacube(Datacube):
             first_ax_name = requests.children[0].axis.name
             second_ax_name = requests.children[0].children[0].axis.name
 
-            if first_ax_name not in self.nearest_search.keys() or second_ax_name not in self.nearest_search.keys():
+            # if first_ax_name not in self.nearest_search.keys() or second_ax_name not in self.nearest_search.keys():
+            #     raise Exception("nearest point search axes are wrong")
+            axes_in_nearest_search = [first_ax_name not in self.nearest_search.keys(
+            ), second_ax_name not in self.nearest_search.keys()]
+            # if first_ax_name not in self.nearest_search.keys() or second_ax_name not in self.nearest_search.keys():
+            # print(axes_in_nearest_search)
+            # print(all(axes_in_nearest_search))
+            # # if any(axes_in_nearest_search):
+            if all(not item for item in axes_in_nearest_search):
                 raise Exception("nearest point search axes are wrong")
 
             second_ax = requests.children[0].children[0].axis
-            print("LOOK NOW")
-            print([
-                [lat_val, second_ax._remap_val_to_axis_range(lon_val)]
-                for (lat_val, lon_val) in zip(
-                    self.nearest_search[first_ax_name][0], self.nearest_search[second_ax_name][0]
-                )
-            ])
+            # print("LOOK NOW")
+            # print([
+            #     [lat_val, second_ax._remap_val_to_axis_range(lon_val)]
+            #     for (lat_val, lon_val) in zip(
+            #         self.nearest_search[first_ax_name][0], self.nearest_search[second_ax_name][0]
+            #     )
+            # ])
 
-            nearest_pts = [
-                [lat_val, second_ax._remap_val_to_axis_range(lon_val)]
-                for (lat_val, lon_val) in zip(
-                    self.nearest_search[first_ax_name][0], self.nearest_search[second_ax_name][0]
-                )
-            ]
+            # nearest_pts = [
+            #     [lat_val, second_ax._remap_val_to_axis_range(lon_val)]
+            #     for (lat_val, lon_val) in zip(
+            #         self.nearest_search[first_ax_name][0], self.nearest_search[second_ax_name][0]
+            #     )
+            # ]
+            nearest_pts = self.nearest_search.get(first_ax_name, None)
+            if nearest_pts is None:
+                nearest_pts = self.nearest_search[second_ax_name]
+
+            transformed_nearest_pts = []
+            for point in nearest_pts:
+                transformed_nearest_pts.append([point[0], second_ax._remap_val_to_axis_range(point[1])])
+            print("LOOK NOW")
+            print(transformed_nearest_pts)
 
             found_latlon_pts = []
             for lat_child in requests.children:
                 for lon_child in lat_child.children:
                     found_latlon_pts.append([lat_child.values, lon_child.values])
+            print("AND THE ACTUAL POINTS THAT ARE IN THE TREE")
+            print(found_latlon_pts)
 
             # now find the nearest lat lon to the points requested
             nearest_latlons = []
-            for pt in nearest_pts:
+            for pt in transformed_nearest_pts:
                 nearest_latlon = nearest_pt(found_latlon_pts, pt)
                 nearest_latlons.append(nearest_latlon)
 

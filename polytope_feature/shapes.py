@@ -64,7 +64,7 @@ class ConvexPolytope(Shape):
 class Product(Shape):
     """Shape that takes two polytopes and 'multiplies' them together to obtain higher-dimensional shape"""
 
-    def __init__(self, *polytopes):
+    def __init__(self, *polytopes, method, value):
         # TODO
         all_axes = []
         for poly in polytopes:
@@ -78,6 +78,8 @@ class Product(Shape):
             self._polytopes.extend(poly.polytope())
 
         self.is_in_union = False
+        self.method = method
+        self.values = value
 
         self.is_orthogonal = False
 
@@ -152,7 +154,7 @@ class Point(Shape):
             #         [ConvexPolytope([self._axes[i]], [[point]], self.method, is_orthogonal=False)
             #          for point in polytope_points]
             #     )
-            polytopes.append(Product(*poly_to_mult))
+            polytopes.append(Product(*poly_to_mult, method=self.method, value=[point]))
         self.polytopes = polytopes
 
         return self.polytopes
