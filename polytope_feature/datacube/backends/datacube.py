@@ -140,7 +140,10 @@ class Datacube(ABC):
         """
         Get the type mapper for a subaxis of the datacube given by label
         """
-        return self._axes[axis]
+        ax = self._axes.get(axis, None)
+        if ax is None:
+            raise KeyError("The datacube does not contain a {} axis", axis)
+        return ax
 
     def remap_path(self, path: DatacubePath):
         for key in path:
