@@ -17,6 +17,7 @@ class QuadTreeSlicer(Engine):
         print("START BUILDING QUAD TREE")
         time0 = time.time()
         quad_tree.build_point_tree(points)
+        self.points = points
         print("FINISH BUILDING QUAD TREE")
         print(time.time()-time0)
         self.quad_tree = quad_tree
@@ -50,7 +51,7 @@ class QuadTreeSlicer(Engine):
 
         # need to find points of the datacube contained within the polytope
         # We do this by intersecting the datacube point cloud quad tree with the polytope here
-        polygon_points = query_polygon(self.quad_tree, polytope)
+        polygon_points = query_polygon(self.points, self.quad_tree, polytope)
         return polygon_points
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):

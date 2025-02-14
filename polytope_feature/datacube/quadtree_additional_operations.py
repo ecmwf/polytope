@@ -1,11 +1,11 @@
 from ..engine.hullslicer import slice
 from ..engine.slicing_tools import slice_in_two
-from quadtree import QuadTreeNode, QuadPoint
+from quadtree import QuadTreeNode
 
 
-def is_contained_in(point: QuadPoint, polygon):
+def is_contained_in(point, polygon):
     # implement method to check if the node point is inside the polygon
-    node_x, node_y = point.item
+    node_x, node_y = point
 
     sliced_vertical_polygon = slice(polygon, polygon._axes[0], node_x, 0)
     if sliced_vertical_polygon:
@@ -15,7 +15,7 @@ def is_contained_in(point: QuadPoint, polygon):
     return False
 
 
-def query_polygon(node: QuadTreeNode, polygon, results=None):
+def query_polygon(quadtree_points, node: QuadTreeNode, polygon, results=None):
     # intersect quad tree with a 2D polygon
     if results is None:
         results = set()
@@ -33,24 +33,8 @@ def query_polygon(node: QuadTreeNode, polygon, results=None):
                 results.add(node)
         else:
             # TODO: DO NOT COPY THE CHILDREN INTO A LIST FROM RUST, INSTEAD IMPLEMENT A GETITEM EQUIVALENT AND ITER THROUGH THE RUST OBJECT DIRECTLY
-            # children = node.children
-            # if len(children) > 0:
-            #     # first slice vertically
-            #     left_polygon, right_polygon = slice_in_two(polygon, node.center[0], 0)
-
-            #     # then slice horizontally
-            #     # ie need to slice the left and right polygons each in two to have the 4 quadrant polygons
-
-            #     q1_polygon, q2_polygon = slice_in_two(left_polygon, node.center[1], 1)
-            #     q3_polygon, q4_polygon = slice_in_two(right_polygon, node.center[1], 1)
-
-            #     # now query these 4 polygons further down the quadtree
-            #     query_polygon(children[0], q1_polygon, results)
-            #     query_polygon(children[1], q2_polygon, results)
-            #     query_polygon(children[2], q3_polygon, results)
-            #     query_polygon(children[3], q4_polygon, results)
-
-            if len(node) > 0:
+            children = node.children
+            if len(children) > 0:
                 # first slice vertically
                 left_polygon, right_polygon = slice_in_two(polygon, node.center[0], 0)
 
@@ -61,11 +45,28 @@ def query_polygon(node: QuadTreeNode, polygon, results=None):
                 q3_polygon, q4_polygon = slice_in_two(right_polygon, node.center[1], 1)
 
                 # now query these 4 polygons further down the quadtree
-                query_polygon(node[0], q1_polygon, results)
-                query_polygon(node[1], q2_polygon, results)
-                query_polygon(node[2], q3_polygon, results)
-                query_polygon(node[3], q4_polygon, results)
+                query_polygon(children[0], q1_polygon, results)
+                query_polygon(children[1], q2_polygon, results)
+                query_polygon(children[2], q3_polygon, results)
+                query_polygon(children[3], q4_polygon, results)
 
-            results.update(node for node in node.points if is_contained_in(node, polygon))
+            # if len(node) > 0:
+            #     # first slice vertically
+            #     left_polygon, right_polygon = slice_in_two(polygon, node.center[0], 0)
+
+            #     # then slice horizontally
+            #     # ie need to slice the left and right polygons each in two to have the 4 quadrant polygons
+
+            #     q1_polygon, q2_polygon = slice_in_two(left_polygon, node.center[1], 1)
+            #     q3_polygon, q4_polygon = slice_in_two(right_polygon, node.center[1], 1)
+
+            #     # now query these 4 polygons further down the quadtree
+            #     query_polygon(node[0], q1_polygon, results)
+            #     query_polygon(node[1], q2_polygon, results)
+            #     query_polygon(node[2], q3_polygon, results)
+            #     query_polygon(node[3], q4_polygon, results)
+
+            results.update(quadtree_points[node]
+                           for node in node.points if is_contained_in(quadtree_points[node], polygon))
 
         return results

@@ -26,18 +26,18 @@ struct QuadTreeNode {
 
 #[derive(Debug)]
 #[derive(Clone)]
-#[pyclass]
+// #[pyclass]
 struct QuadPoint {
-    #[pyo3(get, set)]
+    // #[pyo3(get, set)]
     item: (f64, f64),
-    #[pyo3(get, set)]
+    // #[pyo3(get, set)]
     index: i64,
 }
 
 
-#[pymethods]
+// #[pymethods]
 impl QuadPoint {
-    #[new]
+    // #[new]
     fn new(item: (f64, f64), index: i64) -> Self {
         Self {item, index}
     }
@@ -87,18 +87,31 @@ impl QuadTreeNode {
     }
 
     #[getter]
+    fn children(&self, py: Python) -> Py<PyList> {
+        let py_list = PyList::empty(py);
+        for child in &self.children {
+            // py_list.append(child.clone()).unwrap();
+            let py_child = PyCell::new(py, child.clone()).unwrap();
+            py_list.append(py_child).unwrap();
+        }
+        py_list.into()
+    }
+
+
+    #[getter]
     fn points(&self, py: Python) -> Py<PyList> {
         let py_list = PyList::empty(py);
         if let Some(ref pts) = self.points {
             for point in pts {
-                let py_point = PyCell::new(py, point.clone()).unwrap();
-                py_list.append(py_point).unwrap();
+                // let py_point = PyCell::new(py, point.clone()).unwrap();
+                // py_list.append(py_point).unwrap();
+                py_list.append(point.index);
             }
         }
         py_list.into()
     }
 
-    fn find_nodes_in(&self) -> Vec<QuadPoint> {
+    fn find_nodes_in(&self) -> Vec<i64> {
         let mut results = Vec::new();
         self.collect_points(&mut results);
         results
@@ -184,10 +197,10 @@ impl QuadTreeNode {
 
 
     /// **Recursive helper function (not exposed to Python)**
-    fn collect_points(&self, results: &mut Vec<QuadPoint>) {
+    fn collect_points(&self, results: &mut Vec<i64>) {
         if let Some(points) = &self.points {
             for point in points {
-                results.push(point.clone()); // Clone values instead of using references
+                results.push(point.index); // Clone values instead of using references
             }
         }
     
@@ -219,7 +232,7 @@ impl QuadTreeNode {
 
 #[pymodule]
 fn quadtree(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_class::<QuadPoint>()?;
+    // m.add_class::<QuadPoint>()?;
     m.add_class::<QuadTreeNode>()?;
     Ok(())
 }
