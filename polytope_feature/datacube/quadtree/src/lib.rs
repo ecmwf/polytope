@@ -7,7 +7,6 @@ use std::mem;
 use pyo3::prelude::*;   // Do not use * for importing here
 use pyo3::types::PyList;
 use pyo3::exceptions::PyIndexError;
-// use pyo3::types::PyCell;
 use pyo3::types::PyIterator;
 
 
@@ -41,25 +40,6 @@ impl QuadPoint {
     #[new]
     fn new(item: (f64, f64), index: i64) -> Self {
         Self {item, index}
-    }
-}
-
-struct ChildrenIterator<'a> {
-    children: &'a [QuadTreeNode], // A slice to iterate over the children
-    index: usize,                 // The current index in the children vector
-}
-
-impl<'a> Iterator for ChildrenIterator<'a> {
-    type Item = &'a QuadTreeNode;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.index < self.children.len() {
-            let item = &self.children[self.index];
-            self.index += 1;
-            Some(item)
-        } else {
-            None
-        }
     }
 }
 
@@ -101,133 +81,10 @@ impl QuadTreeNode {
         rect_points
     }
 
-    // #[getter]
-    fn __iter__(this: &PyCell<Self>) -> PyResult<Py<PyIterator>> {
-        let iterator = this.borrow().children_iter(); // Get the iterator
-        Ok(PyIterator::new(this.py(), iterator)) // Return a PyIterator to Python
-    }
-
-    
-    // fn __iter__(this: &PyCell<Self>) -> PyResult<ChildrenIterator<'_>> {
-    //     // This returns an iterator over the children
-    //     Ok(this.borrow().children_iter()) // Borrow to access children
-    // }
-
-    // #[getter]
-    // fn children(&self, py: Python) -> Py<PyList> {
-    //     let py_list = PyList::empty(py);
-    //     for child in &self.children {
-    //         // py_list.append(child.clone()).unwrap();
-    //         let py_child = PyCell::new(py, child.clone()).unwrap();
-    //         py_list.append(py_child).unwrap();
-    //     }
-    //     py_list.into()
-    // }
-
-
-
-    // fn __getitem__(&self, index: isize) -> PyResult<QuadTreeNode>  {
-    //     let len = self.children.len() as isize;
-        
-    //     // Support negative indexing (Python-style)
-    //     let idx = if index < 0 { len + index } else { index };
-        
-    //     // Check bounds and return result
-    //     // self.children.get(idx as usize)
-    //     //     .ok_or_else(|| PyIndexError::new_err("Child index out of bounds"))
-    //     self.children
-    //         .get(idx as usize)
-    //         .cloned()
-    //         // .map(|child| Py::new(py, child))
-    //         .ok_or_else(|| PyIndexError::new_err("Child index out of bounds"))
-    // }
-
-
-    // fn __getitem__<'py>(this: &'py PyCell<Self>, index: isize) -> PyResult<PyRef<'py, QuadTreeNode>> {
-    //     let len = this.borrow().children.len() as isize;
-    //     let idx = if index < 0 { len + index } else { index };
-    
-    //     // Borrow the `children` safely and get a reference to the child
-    //     let child = this
-    //         .borrow() // Borrow the QuadTreeNode
-    //         .children
-    //         .get(idx as usize)
-    //         .ok_or_else(|| PyIndexError::new_err("Child index out of bounds"))?;
-    
-    //     // Return a borrowed reference to the child inside the PyCell
-    //     Ok(PyRef::new(this.py(), child)) // Borrow the reference without cloning
-    // }
-    
-
-    // fn __getitem__<'py>(this: &'py PyCell<Self>, index: isize) -> PyResult<&'py PyCell<QuadTreeNode>> {
-    //     let len = this.borrow().children.len() as isize;
-
-    //     // Support negative indexing
-    //     let idx = if index < 0 { len + index } else { index };
-
-    //     // Get the child node or return an IndexError
-    //     let child = this.borrow()
-    //         .children
-    //         .get(idx as usize)
-    //         .ok_or_else(|| PyIndexError::new_err("Child index out of bounds"))?;
-        
-    //     PyCell::new(this.py(), child)
-    //         // .map(|child| PyCell::new(this.py(), child)).unwrap()
-    //         // .transpose()
-    //         // .ok_or_else(|_| PyIndexError::new_err("Child index out of bounds"))
-    // }
-
-    // fn __getitem__<'py>(this: &'py PyCell<Self>, index: isize) -> PyResult<&'py PyCell<QuadTreeNode>> {
-    //     let len = this.borrow().children.len() as isize;
-    
-    //     // Handle negative indexing
-    //     let idx = if index < 0 { len + index } else { index };
-    
-    //     // Safely access the child node or return an IndexError
-    //     let child = this
-    //         .borrow()
-    //         .children
-    //         .get(idx as usize)
-    //         .ok_or_else(|| PyIndexError::new_err("Child index out of bounds"))?;
-    
-    //     // Return a borrowed reference to the child inside the PyCell
-    //     Ok(PyCell::from_borrowed(this.py(), child))
-    // }
-
-    // fn __getitem__<'py>(this: &'py PyCell<Self>, index: isize) -> PyResult<&'py PyCell<QuadTreeNode>> {
-    //     let len = this.borrow().children.len() as isize;
-    
-    //     // Handle negative indexing
-    //     let idx = if index < 0 { len + index } else { index };
-    
-    //     // Get the child node, or return an IndexError
-    //     let child = this
-    //         .borrow() // Borrow the QuadTreeNode to access the children
-    //         .children
-    //         .get(idx as usize)
-    //         .ok_or_else(|| PyIndexError::new_err("Child index out of bounds"))?;
-    
-    //     // Borrow the child and return it as a reference to PyCell
-    //     Ok(this.py().borrow::<PyCell<QuadTreeNode>>(child))
-    // }
-
     /// Return the length of the vector
     fn __len__(&self) -> usize {
         self.children.len()
     }
-
-
-
-    // #[getter]
-    // fn points(&self, py: Python) -> Py<PyList> {
-    //     let py_list = PyList::empty(py);
-    //     for point in &self.points {
-    //         // py_list.append(child.clone()).unwrap();
-    //         let py_point= PyCell::new(py, point.clone()).unwrap();
-    //         py_list.append(py_point).unwrap();
-    //     }
-    //     py_list.into()
-    // }
 
     #[getter]
     fn points(&self, py: Python) -> Py<PyList> {
@@ -241,23 +98,6 @@ impl QuadTreeNode {
         py_list.into()
     }
 
-    // fn find_nodes_in<'a>(&'a self, results: &mut Option<Vec<&'a QuadPoint>>) {
-    //     // Ensure results is initialized
-    //     results.get_or_insert_with(Vec::new);
-    
-    //     // Recursively search in children
-    //     for child in &self.children {
-    //         child.find_nodes_in(results); // Pass mutable reference
-    //     }
-    
-    //     // Add current node's points to results
-    //     if let Some(vec) = results.as_mut() {
-    //         if let Some(points) = &self.points {
-    //             vec.extend(points.iter());
-    //         }
-    //     }
-    // }
-
     fn find_nodes_in(&self) -> Vec<QuadPoint> {
         let mut results = Vec::new();
         self.collect_points(&mut results);
@@ -266,32 +106,6 @@ impl QuadTreeNode {
 }
 
 impl QuadTreeNode {
-
-    pub fn children_iter(&self) -> ChildrenIterator {
-        ChildrenIterator {
-            children: &self.children,
-            index: 0,
-        }
-    }
-    // fn quadrant_rectangle_points(&self) -> Vec<(f64, f64)> {
-    //     let (cx, cy) = self.center;
-    //     let (sx, sy) = self.size;
-
-    //     let mut rect_points: Vec<(f64, f64)> = Vec::new();
-
-    //     rect_points.push((cx + sx, cy + sy));
-    //     rect_points.push((cx + sx, cy - sy));
-    //     rect_points.push((cx - sx, cy + sy));
-    //     rect_points.push((cx - sx, cy - sy));
-
-    //     rect_points
-    // }
-
-    // fn build_point_tree(&mut self, points: Vec<(f64, f64)>) {
-    //     for (index, p) in points.iter().enumerate(){
-    //         self.insert(p, index.try_into().unwrap());
-    //     }
-    // }
 
     fn get_node_items(&self) -> Vec<&(f64, f64)> {
         let mut node_items: Vec<&(f64, f64)> = vec![];
@@ -304,18 +118,13 @@ impl QuadTreeNode {
     }
 
     fn insert(&mut self, item: &(f64, f64), index: i64) {
-        // println!("HERE");
         if self.children.is_empty() {
-            // println!("NOW");
             let mut node = QuadPoint::new(*item, index);
-            // let node_items: Vec<&(f64, f64)> = self.get_node_items();
             let mut node_items: Vec<&(f64, f64)> = vec![];
             if let Some(points) = self.points.as_mut() {
                 for point in &mut *points {
                     node_items.push(&point.item);
                 }
-            // }
-            // if let Some(points) = self.points.as_mut() {
                 if !node_items.contains(&item) {
                     points.push(node);
                 }
@@ -373,22 +182,6 @@ impl QuadTreeNode {
         }
     }
 
-    // fn find_nodes_in<'a>(&'a self, results: &mut Option<Vec<&'a QuadPoint>>) {
-    //     // Ensure results is initialized
-    //     results.get_or_insert_with(Vec::new);
-    
-    //     // Recursively search in children
-    //     for child in &self.children {
-    //         child.find_nodes_in(results); // Pass mutable reference
-    //     }
-    
-    //     // Add current node's points to results
-    //     if let Some(vec) = results.as_mut() {
-    //         if let Some(points) = &self.points {
-    //             vec.extend(points.iter());
-    //         }
-    //     }
-    // }
 
     /// **Recursive helper function (not exposed to Python)**
     fn collect_points(&self, results: &mut Vec<QuadPoint>) {
@@ -440,12 +233,6 @@ fn main() {
         println!("{}", points.len());
         println!("{:?}", points[0].item);
     }
-
-    // let point_cloud: Vec<(f64, f64)> = 
-    // let n = 10000; // Number of points
-    // let point_cloud: Vec<(f64, f64)> = (0..n)
-    //     .map(|i| (i as f64 * 0.1, i as f64 * 0.2)) // Example function
-    //     .collect();
 
     let dx = 0.1;
     let dy= 0.25;
