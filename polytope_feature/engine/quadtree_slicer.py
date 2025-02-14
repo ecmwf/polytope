@@ -74,9 +74,12 @@ class QuadTreeSlicer(Engine):
 
         for point in extracted_points:
             # convert to float for slicing
-            value = point.index
-            lat_val = point.item[0]
-            lon_val = point.item[1]
+            # value = point.index
+            # lat_val = point.item[0]
+            # lon_val = point.item[1]
+            value = point[0]
+            lat_val = point[1][0]
+            lon_val = point[1][1]
             lat_ax = ax
 
             # TODO: is there a nicer way to get this axis that does not depend on knowing

@@ -45,10 +45,10 @@ def query_polygon(quadtree_points, node: QuadTreeNode, polygon, results=None):
                 q3_polygon, q4_polygon = slice_in_two(right_polygon, node.center[1], 1)
 
                 # now query these 4 polygons further down the quadtree
-                query_polygon(children[0], q1_polygon, results)
-                query_polygon(children[1], q2_polygon, results)
-                query_polygon(children[2], q3_polygon, results)
-                query_polygon(children[3], q4_polygon, results)
+                query_polygon(quadtree_points, children[0], q1_polygon, results)
+                query_polygon(quadtree_points, children[1], q2_polygon, results)
+                query_polygon(quadtree_points, children[2], q3_polygon, results)
+                query_polygon(quadtree_points, children[3], q4_polygon, results)
 
             # if len(node) > 0:
             #     # first slice vertically
@@ -66,7 +66,7 @@ def query_polygon(quadtree_points, node: QuadTreeNode, polygon, results=None):
             #     query_polygon(node[2], q3_polygon, results)
             #     query_polygon(node[3], q4_polygon, results)
 
-            results.update(quadtree_points[node]
+            results.update((node, quadtree_points[node])
                            for node in node.points if is_contained_in(quadtree_points[node], polygon))
 
         return results
