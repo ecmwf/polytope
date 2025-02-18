@@ -83,8 +83,10 @@ impl QuadTree {
         })
     }
 
-
-    fn build_point_tree(&mut self, points: Vec<(f64, f64)>){
+    fn build_point_tree(&mut self, points: Vec<(f64, f64)>) {
+        for (index, p) in points.iter().enumerate(){
+            self.insert(p, index.try_into().unwrap(), 0);
+        }
     }
 
     fn quadrant_rectangle_points(&self, node_idx: usize) -> PyResult<Vec<(f64, f64)>> {
@@ -99,11 +101,199 @@ impl QuadTree {
         ])
     }
 
+    fn find_nodes_in(&self, node_idx: usize) -> Vec<i64> {
+        let mut results = Vec::new();
+        self.collect_points(&mut results, node_idx);
+        results
+    }
+
+    fn get_children_idxs(&self, index: usize) -> Vec<usize> {
+        let nodes = self.nodes.lock().unwrap(); // Lock the mutex to access the nodes
+
+        // Safely get the node at the given index and access its children
+        let node_child_idxs = match nodes.get(index) {
+            Some(node) => &node.children,
+            None => return vec![], // If index is out of bounds, return an empty vector
+        };
+
+        node_child_idxs.to_vec()
+    }
+
+
+    fn get_point_idxs(&self, node_idx: usize) -> Vec<i64> {
+        let nodes = self.nodes.lock().unwrap();
+
+        let mut point_indexes = vec![];
+
+        if let Some(n) = nodes.get(node_idx) {
+            // NOTE: only push if point items aren't already in the node points
+            if let Some(points) = &n.points {
+                for point in points {
+                    point_indexes.push(point.index);
+                }
+            }
+        }
+        point_indexes
+    }
+
 }
 
 
 impl QuadTree {
-    
+
+    const MAX: i32 = 3;
+    const MAX_DEPTH: i32 = 20;
+
+    fn get_depth(&self, index: usize) -> i32 {
+        let nodes = self.nodes.lock().unwrap();
+        nodes.get(index).map(|n| n.depth).expect("Index exists in QuadTree arena")
+    }
+
+    fn get_points_length(&self, index: usize) -> usize{
+        let nodes = self.nodes.lock().unwrap();
+        if let Some(n) = nodes.get(index) {
+            let point_count = n.points.as_ref().map_or(0, |v| v.len());
+            point_count
+        } else {
+            panic!("Index exists in QuadTree arena");
+        }
+    }
+
+
+    fn add_point_to_node(&self, index: usize, point: QuadPoint, item: &(f64, f64)) {
+        let mut nodes = self.nodes.lock().unwrap();
+        if let Some(n) = nodes.get_mut(index) {
+            // NOTE: only push if point items aren't already in the node points
+            if let Some(points) = &mut n.points {
+                let mut node_items: Vec<&(f64, f64)> = vec![];
+                for pt in &mut *points {
+                    node_items.push(&pt.item);
+                }
+                if !node_items.contains(&item) {
+                    points.push(point);
+                }
+            }
+            else {
+                n.points = Some(vec![point]);
+            }
+        }
+    }
+
+    fn insert(&mut self, item: &(f64, f64), pt_index: i64, node_idx: usize) {
+        let node_children = self.get_children_idxs(node_idx);
+        if node_children.len() == 0 {
+            let mut node = QuadPoint::new(*item, pt_index);
+            self.add_point_to_node(node_idx, node, item);
+            if self.get_points_length(node_idx) > Self::MAX.try_into().unwrap() && self.get_depth(node_idx) < Self::MAX_DEPTH {
+                self.split(node_idx);
+            }
+        }
+        else {
+            self.insert_into_children(item, pt_index, node_idx);
+        }
+    }
+
+
+
+    fn insert_into_children(&mut self, item: &(f64, f64), pt_index: i64, node_idx: usize) {
+        let (x, y) = *item;
+        let (cx, cy) = self.get_center(node_idx).unwrap();
+        let child_idxs = self.get_children_idxs(node_idx);
+
+        if x <= cx {
+            if y <= cy {
+                self.insert(item, pt_index, child_idxs[0]);
+            }
+            if y >= cy {
+                self.insert(item, pt_index, child_idxs[1]);
+            }
+        }
+        if x >= cx {
+            if y <= cy {
+                self.insert(item, pt_index, child_idxs[2]);
+            }
+            if y >= cy {
+                self.insert(item, pt_index, child_idxs[3]);
+            }
+        }
+    }
+
+    fn add_child(&mut self, node_idx: usize, center: (f64, f64), size: (f64, f64), depth: i32) {
+        let child_idx = self.create_node( center, size, depth);
+        let mut nodes = self.nodes.lock().unwrap();
+        if let Some(n) = nodes.get_mut(node_idx) {
+            n.children.push(child_idx);
+        }
+    }
+
+
+    fn split(&mut self, node_idx: usize) {
+        let (w, h) = self.get_size(node_idx).unwrap();
+        let hx: f64 = w/2.0;
+        let hy: f64 = h/2.0;
+        let (x_center, y_center) = self.get_center(node_idx).unwrap();
+        let node_depth = self.get_depth(node_idx);
+        let new_centers: Vec<(f64, f64)> = vec![
+            (x_center - hx, y_center - hy),
+            (x_center - hx, y_center + hy),
+            (x_center + hx, y_center - hy),
+            (x_center + hx, y_center + hy),
+        ];
+
+        for center in new_centers {
+            self.add_child(node_idx, center, (hx, hy), node_depth + 1);
+        }
+
+        // Lock nodes
+        let mut nodes = self.nodes.lock().unwrap();
+            
+        // Get the node reference
+        let points = nodes.get_mut(node_idx).and_then(|n| n.points.take());
+        
+        // Drop the lock by ending the scope
+        drop(nodes);
+        
+        // Now, safely mutate `self`
+        if let Some(mut points) = points {
+            for node in points.iter() {
+                self.insert_into_children(&node.item, node.index, node_idx);
+            }
+        }
+    }
+
+    fn collect_points(&self, results: &mut Vec<i64>, node_idx: usize) {
+        let mut nodes = self.nodes.lock().unwrap();
+
+        if let Some(n) = nodes.get_mut(node_idx) {
+            // NOTE: only push if point items aren't already in the node points
+            if let Some(points) = &mut n.points {
+                for point in points {
+                    results.push(point.index);
+                }
+            }
+        }
+
+        let child_idxs = self.get_children_idxs(node_idx);
+
+        for child_idx in child_idxs {
+            self.collect_points(results, child_idx);
+        }
+    }
+
+
+    fn get_node_items(&self, node_idx: usize) -> Vec<(f64, f64)> {
+        let mut node_items: Vec<(f64, f64)> = vec![];
+        let mut nodes = self.nodes.lock().unwrap();
+        if let Some(n) = nodes.get(node_idx) {
+            // NOTE: only push if point items aren't already in the node points
+            if let Some(points) = &n.points {
+                for point in points {
+                    node_items.push(point.item);
+                }
+            }
+        }
+        node_items
+    }
 }
 
 
@@ -115,145 +305,4 @@ fn quadtree(_py: Python, m: &PyModule) -> PyResult<()> {
     Ok(())
 }
 
-
-
-
-
-
-
-
-
-
-
-
-// fn build_point_tree(&mut self, points: Vec<(f64, f64)>) {
-//     for (index, p) in points.iter().enumerate(){
-//         self.insert(p, index.try_into().unwrap());
-//     }
-// }
-
-
-// #[getter]
-// fn children(&self, py: Python) -> Py<PyList> {
-//     let py_list = PyList::empty(py);
-//     for child in &self.children {
-//         // py_list.append(child.clone()).unwrap();
-//         // let py_child = PyCell::new(py, child.clone()).unwrap();
-//         let py_child = unsafe {PyCell::new(py, child).unwrap().into();};
-//         py_list.append(py_child).unwrap();
-//     }
-//     py_list.into()
-// }
-
-
-// #[getter]
-// fn points(&self, py: Python) -> Py<PyList> {
-//     let py_list = PyList::empty(py);
-//     if let Some(ref pts) = self.points {
-//         for point in pts {
-//             // let py_point = PyCell::new(py, point.clone()).unwrap();
-//             // py_list.append(py_point).unwrap();
-//             py_list.append(point.index);
-//         }
-//     }
-//     py_list.into()
-// }
-
-// fn find_nodes_in(&self) -> Vec<i64> {
-//     let mut results = Vec::new();
-//     self.collect_points(&mut results);
-//     results
-// }
-// }
-
-// impl QuadTreeNode {
-
-// fn get_node_items(&self) -> Vec<&(f64, f64)> {
-//     let mut node_items: Vec<&(f64, f64)> = vec![];
-//     if let Some(points) = &self.points {
-//         for point in points {
-//             node_items.push(&point.item);
-//         }
-//     }
-//     node_items
-// }
-
-// fn insert(&mut self, item: &(f64, f64), index: i64) {
-//     if self.children.is_empty() {
-//         let mut node = QuadPoint::new(*item, index);
-//         let mut node_items: Vec<&(f64, f64)> = vec![];
-//         if let Some(points) = self.points.as_mut() {
-//             for point in &mut *points {
-//                 node_items.push(&point.item);
-//             }
-//             if !node_items.contains(&item) {
-//                 points.push(node);
-//             }
-//             if i32::try_from(points.len()).unwrap() > Self::MAX && self.depth < Self::MAX_DEPTH {
-//                 self.split();
-//             }
-//         }
-//     }
-//     else {
-//         self.insert_into_children(item, index);
-//     }
-// }
-
-// fn insert_into_children(&mut self, item: &(f64, f64), index: i64) {
-//     let (x, y) = *item;
-//     let (cx, cy) = self.center;
-
-//     if x <= cx {
-//         if y <= cy {
-//             self.children[0].insert(item, index);
-//         }
-//         if y >= cy {
-//             self.children[1].insert(item, index);
-//         }
-//     }
-//     if x >= cx {
-//         if y <= cy {
-//             self.children[2].insert(item, index);
-//         }
-//         if y >= cy {
-//             self.children[3].insert(item, index);
-//         }
-//     }
-// }
-
-// fn split(&mut self) {
-
-//     let (w, h) = self.size;
-//     let hx: f64 = w/2.0;
-//     let hy: f64 = h/2.0;
-//     let (x_center, y_center) = self.center;
-//     let new_centers: Vec<(f64, f64)> = vec![
-//         (x_center - hx, y_center - hy),
-//         (x_center - hx, y_center + hy),
-//         (x_center + hx, y_center - hy),
-//         (x_center + hx, y_center + hy),
-//     ];
-
-//     self.children = new_centers.into_iter().map(|(x, y)| QuadTreeNode::new(x, y, Some((hx, hy)), Some(self.depth + 1))).collect();
-
-//     if let Some(points) = self.points.take() {
-//         for node in points {
-//             self.insert_into_children(&node.item, node.index);
-//         }
-//     }
-// }
-
-
-// /// **Recursive helper function (not exposed to Python)**
-// fn collect_points(&self, results: &mut Vec<i64>) {
-//     if let Some(points) = &self.points {
-//         for point in points {
-//             results.push(point.index); // Clone values instead of using references
-//         }
-//     }
-
-//     for child in &self.children {
-//         child.collect_points(results);
-//     }
-// }
 
