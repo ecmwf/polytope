@@ -36,7 +36,7 @@ struct QuadTreeNode {
 #[derive(Debug)]
 #[pyclass]
 struct QuadTree {
-    nodes: Arc<Mutex<Vec<QuadTreeNode>>>,
+    nodes: Vec<QuadTreeNode>,
 }
 
 #[pymethods]
@@ -44,12 +44,12 @@ impl QuadTree {
     #[new]
     fn new() -> Self {
         QuadTree {
-            nodes: Arc::new(Mutex::new(Vec::new())),
+            nodes: Vec::new(),
         }
     }
 
-    fn create_node(&self, center: (f64, f64), size: (f64, f64), depth: i32) -> usize {
-        let mut nodes = self.nodes.lock().unwrap();
+    fn create_node(&mut self, center: (f64, f64), size: (f64, f64), depth: i32) -> usize {
+        let mut nodes = &mut self.nodes;
         let index = nodes.len();
         nodes.push(QuadTreeNode {
             points: None,
@@ -63,14 +63,14 @@ impl QuadTree {
 
     /// Get the center of a node
     fn get_center(&self, index: usize) -> PyResult<(f64, f64)> {
-        let nodes = self.nodes.lock().unwrap();
+        let nodes = &self.nodes;
         nodes.get(index).map(|n| n.center).ok_or_else(|| {
             pyo3::exceptions::PyIndexError::new_err("Invalid node index")
         })
     }
 
     fn get_size(&self, index: usize) -> PyResult<(f64, f64)> {
-        let nodes = self.nodes.lock().unwrap();
+        let nodes = &self.nodes;
         nodes.get(index).map(|n| n.size).ok_or_else(|| {
             pyo3::exceptions::PyIndexError::new_err("Invalid node index")
         })
@@ -95,14 +95,14 @@ impl QuadTree {
         ])
     }
 
-    fn find_nodes_in(&self, node_idx: usize) -> Vec<i64> {
+    fn find_nodes_in(&mut self, node_idx: usize) -> Vec<i64> {
         let mut results = Vec::new();
         self.collect_points(&mut results, node_idx);
         results
     }
 
     fn get_children_idxs(&self, index: usize) -> Vec<usize> {
-        let nodes = self.nodes.lock().unwrap(); // Lock the mutex to access the nodes
+        let nodes = &self.nodes; // Lock the mutex to access the nodes
 
         // Safely get the node at the given index and access its children
         let node_child_idxs = match nodes.get(index) {
@@ -115,7 +115,7 @@ impl QuadTree {
 
 
     fn get_point_idxs(&self, node_idx: usize) -> Vec<i64> {
-        let nodes = self.nodes.lock().unwrap();
+        let nodes = &self.nodes;
 
         let mut point_indexes = vec![];
 
@@ -139,12 +139,12 @@ impl QuadTree {
     const MAX_DEPTH: i32 = 20;
 
     fn get_depth(&self, index: usize) -> i32 {
-        let nodes = self.nodes.lock().unwrap();
+        let nodes = &self.nodes;
         nodes.get(index).map(|n| n.depth).expect("Index exists in QuadTree arena")
     }
 
     fn get_points_length(&self, index: usize) -> usize{
-        let nodes = self.nodes.lock().unwrap();
+        let nodes = &self.nodes;
         if let Some(n) = nodes.get(index) {
             let point_count = n.points.as_ref().map_or(0, |v| v.len());
             point_count
@@ -154,8 +154,8 @@ impl QuadTree {
     }
 
 
-    fn add_point_to_node(&self, index: usize, point: QuadPoint, item: &(f64, f64)) {
-        let mut nodes = self.nodes.lock().unwrap();
+    fn add_point_to_node(&mut self, index: usize, point: QuadPoint, item: &(f64, f64)) {
+        let mut nodes = &mut self.nodes;
         if let Some(n) = nodes.get_mut(index) {
             // NOTE: only push if point items aren't already in the node points
             if let Some(points) = &mut n.points {
@@ -214,7 +214,7 @@ impl QuadTree {
 
     fn add_child(&mut self, node_idx: usize, center: (f64, f64), size: (f64, f64), depth: i32) {
         let child_idx = self.create_node( center, size, depth);
-        let mut nodes = self.nodes.lock().unwrap();
+        let mut nodes = &mut self.nodes;
         if let Some(n) = nodes.get_mut(node_idx) {
             n.children.push(child_idx);
         }
@@ -239,7 +239,7 @@ impl QuadTree {
         }
 
         // Lock nodes
-        let mut nodes = self.nodes.lock().unwrap();
+        let mut nodes = &mut self.nodes;
             
         // Get the node reference
         let points = nodes.get_mut(node_idx).and_then(|n| n.points.take());
@@ -255,8 +255,8 @@ impl QuadTree {
         }
     }
 
-    fn collect_points(&self, results: &mut Vec<i64>, node_idx: usize) {
-        let mut nodes = self.nodes.lock().unwrap();
+    fn collect_points(&mut self, results: &mut Vec<i64>, node_idx: usize) {
+        let mut nodes = &mut self.nodes;
 
         if let Some(n) = nodes.get_mut(node_idx) {
             // NOTE: only push if point items aren't already in the node points
@@ -277,7 +277,7 @@ impl QuadTree {
 
     fn get_node_items(&self, node_idx: usize) -> Vec<(f64, f64)> {
         let mut node_items: Vec<(f64, f64)> = vec![];
-        let nodes = self.nodes.lock().unwrap();
+        let nodes = &self.nodes;
         if let Some(n) = nodes.get(node_idx) {
             // NOTE: only push if point items aren't already in the node points
             if let Some(points) = &n.points {
