@@ -273,45 +273,81 @@ impl QuadTree {
 
     fn add_child(&mut self, node_idx: usize, center: (f64, f64), size: (f64, f64), depth: i32) {
         let child_idx = self.create_node( center, size, depth);
-        let mut nodes = &mut self.nodes;
-        if let Some(n) = nodes.get_mut(node_idx) {
+        if let Some(n) = self.nodes.get_mut(node_idx) {
             n.children.push(child_idx);
         }
     }
 
 
+    // fn split(&mut self, node_idx: usize) {
+    //     let (w, h) = self.get_size(node_idx).unwrap();
+    //     let hx: f64 = w/2.0;
+    //     let hy: f64 = h/2.0;
+    //     let (x_center, y_center) = self.get_center(node_idx).unwrap();
+    //     let node_depth = self.get_depth(node_idx);
+    //     let new_centers: Vec<(f64, f64)> = vec![
+    //         (x_center - hx, y_center - hy),
+    //         (x_center - hx, y_center + hy),
+    //         (x_center + hx, y_center - hy),
+    //         (x_center + hx, y_center + hy),
+    //     ];
+
+    //     for center in new_centers {
+    //         self.add_child(node_idx, center, (hx, hy), node_depth + 1);
+    //     }
+
+    //     // Lock nodes
+    //     let mut nodes = &mut self.nodes;
+            
+    //     // Get the node reference
+    //     let points = nodes.get_mut(node_idx).and_then(|n| n.points.take());
+        
+    //     // Drop the lock by ending the scope
+    //     drop(nodes);
+        
+    //     // Now, safely mutate `self`
+    //     if let Some(points) = points {
+    //         for node in points.iter() {
+    //             self.insert_into_children(&node.item, node.index, node_idx);
+    //         }
+    //     }
+    // }
+
     fn split(&mut self, node_idx: usize) {
+        // if let (Some((w, h)), Some((x_center, y_center)), Some(node_depth)) = (
+        //     self.get_size(node_idx),
+        //     self.get_center(node_idx),
+        //     self.get_depth(node_idx),
+        // ) {
+        
         let (w, h) = self.get_size(node_idx).unwrap();
-        let hx: f64 = w/2.0;
-        let hy: f64 = h/2.0;
         let (x_center, y_center) = self.get_center(node_idx).unwrap();
         let node_depth = self.get_depth(node_idx);
-        let new_centers: Vec<(f64, f64)> = vec![
+
+        let (hx, hy) = (w * 0.5, h * 0.5);
+    
+        let new_centers = [
             (x_center - hx, y_center - hy),
             (x_center - hx, y_center + hy),
             (x_center + hx, y_center - hy),
             (x_center + hx, y_center + hy),
         ];
-
-        for center in new_centers {
+    
+        // Add children
+        for &center in &new_centers {
             self.add_child(node_idx, center, (hx, hy), node_depth + 1);
         }
-
-        // Lock nodes
-        let mut nodes = &mut self.nodes;
-            
-        // Get the node reference
-        let points = nodes.get_mut(node_idx).and_then(|n| n.points.take());
-        
-        // Drop the lock by ending the scope
-        drop(nodes);
-        
-        // Now, safely mutate `self`
+    
+        // Minimize locking scope
+        let points = self.nodes.get_mut(node_idx).and_then(|n| n.points.take());
+    
+        // Process points outside the lock
         if let Some(points) = points {
-            for node in points.iter() {
+            for node in points {
                 self.insert_into_children(&node.item, node.index, node_idx);
             }
         }
+        // }
     }
 
     fn collect_points(&mut self, results: &mut Vec<usize>, node_idx: usize) {
