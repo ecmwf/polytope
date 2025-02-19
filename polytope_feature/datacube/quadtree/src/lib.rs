@@ -48,19 +48,6 @@ impl QuadTree {
         }
     }
 
-    // fn create_node(&mut self, center: (f64, f64), size: (f64, f64), depth: i32) -> usize {
-    //     let mut nodes = &mut self.nodes;
-    //     let index = nodes.len();
-    //     nodes.push(QuadTreeNode {
-    //         points: None,
-    //         children: Vec::new(),
-    //         center,
-    //         size,
-    //         depth,
-    //     });
-    //     index
-    // }
-
     /// Get the center of a node
     fn get_center(&self, index: usize) -> PyResult<(f64, f64)> {
         let nodes = &self.nodes;
@@ -69,18 +56,9 @@ impl QuadTree {
         })
     }
 
-    // fn get_size(&self, index: usize) -> PyResult<(f64, f64)> {
-    //     let nodes = &self.nodes;
-    //     nodes.get(index).map(|n| n.size).ok_or_else(|| {
-    //         pyo3::exceptions::PyIndexError::new_err("Invalid node index")
-    //     })
-    // }
 
     fn build_point_tree(&mut self, points: Vec<(f64, f64)>) {
         self.create_node((0.0,0.0), (180.0, 90.0), 0);
-        // for (index, p) in points.iter().enumerate(){
-        //     self.insert(p, index.try_into().unwrap(), 0);
-        // }
         points.into_iter().enumerate().for_each(|(index, p)| {
             self.insert(&p, index, 0);
         });
@@ -105,35 +83,14 @@ impl QuadTree {
     }
 
     fn get_children_idxs(&self, index: usize) -> Vec<usize> {
-        let nodes = &self.nodes; // Lock the mutex to access the nodes
-
-        // Safely get the node at the given index and access its children
-        let node_child_idxs = match nodes.get(index) {
-            Some(node) => &node.children,
-            None => return vec![], // If index is out of bounds, return an empty vector
-        };
-
-        node_child_idxs.to_vec()
+        self.nodes.get(index).map_or_else(Vec::new, |node| node.children.clone())
     }
-
 
     fn get_point_idxs(&self, node_idx: usize) -> Vec<usize> {
-        let nodes = &self.nodes;
-
-        let mut point_indexes = vec![];
-
-        if let Some(n) = nodes.get(node_idx) {
-            // NOTE: only push if point items aren't already in the node points
-            if let Some(points) = &n.points {
-                for point in points {
-                    point_indexes.push(point.index);
-                }
-            }
-        }
-        point_indexes
+        self.nodes.get(node_idx)
+            .and_then(|n| n.points.as_ref()) // Get points if node exists
+            .map_or_else(Vec::new, |points| points.iter().map(|p| p.index).collect())
     }
-    
-
 }
 
 
@@ -178,40 +135,6 @@ impl QuadTree {
         })
     }
 
-
-    // fn add_point_to_node(&mut self, index: usize, point: QuadPoint, item: &(f64, f64)) {
-    //     let mut nodes = &mut self.nodes;
-    //     if let Some(n) = nodes.get_mut(index) {
-    //         // NOTE: only push if point items aren't already in the node points
-    //         if let Some(points) = &mut n.points {
-    //             let mut node_items: Vec<&(f64, f64)> = vec![];
-    //             for pt in &mut *points {
-    //                 node_items.push(&pt.item);
-    //             }
-    //             if !node_items.contains(&item) {
-    //                 points.push(point);
-    //             }
-    //         }
-    //         else {
-    //             n.points = Some(vec![point]);
-    //         }
-    //     }
-    // }
-
-    // fn insert(&mut self, item: &(f64, f64), pt_index: usize, node_idx: usize) {
-    //     let node_children = self.get_children_idxs(node_idx);
-    //     if node_children.len() == 0 {
-    //         let node = QuadPoint::new(*item, pt_index);
-    //         self.add_point_to_node(node_idx, node, item);
-    //         if self.get_points_length(node_idx) > Self::MAX.try_into().unwrap() && self.get_depth(node_idx) < Self::MAX_DEPTH {
-    //             self.split(node_idx);
-    //         }
-    //     }
-    //     else {
-    //         self.insert_into_children(item, pt_index, node_idx);
-    //     }
-    // }
-
     fn add_point_to_node(&mut self, index: usize, point: QuadPoint, item: &(f64, f64)) {
         if let Some(n) = self.nodes.get_mut(index) {
             // If the node already has points, check for duplicates
@@ -244,8 +167,6 @@ impl QuadTree {
             self.insert_into_children(item, pt_index, node_idx);
         }
     }
-    
-
 
 
     fn insert_into_children(&mut self, item: &(f64, f64), pt_index: usize, node_idx: usize) {
@@ -278,48 +199,7 @@ impl QuadTree {
         }
     }
 
-
-    // fn split(&mut self, node_idx: usize) {
-    //     let (w, h) = self.get_size(node_idx).unwrap();
-    //     let hx: f64 = w/2.0;
-    //     let hy: f64 = h/2.0;
-    //     let (x_center, y_center) = self.get_center(node_idx).unwrap();
-    //     let node_depth = self.get_depth(node_idx);
-    //     let new_centers: Vec<(f64, f64)> = vec![
-    //         (x_center - hx, y_center - hy),
-    //         (x_center - hx, y_center + hy),
-    //         (x_center + hx, y_center - hy),
-    //         (x_center + hx, y_center + hy),
-    //     ];
-
-    //     for center in new_centers {
-    //         self.add_child(node_idx, center, (hx, hy), node_depth + 1);
-    //     }
-
-    //     // Lock nodes
-    //     let mut nodes = &mut self.nodes;
-            
-    //     // Get the node reference
-    //     let points = nodes.get_mut(node_idx).and_then(|n| n.points.take());
-        
-    //     // Drop the lock by ending the scope
-    //     drop(nodes);
-        
-    //     // Now, safely mutate `self`
-    //     if let Some(points) = points {
-    //         for node in points.iter() {
-    //             self.insert_into_children(&node.item, node.index, node_idx);
-    //         }
-    //     }
-    // }
-
     fn split(&mut self, node_idx: usize) {
-        // if let (Some((w, h)), Some((x_center, y_center)), Some(node_depth)) = (
-        //     self.get_size(node_idx),
-        //     self.get_center(node_idx),
-        //     self.get_depth(node_idx),
-        // ) {
-        
         let (w, h) = self.get_size(node_idx).unwrap();
         let (x_center, y_center) = self.get_center(node_idx).unwrap();
         let node_depth = self.get_depth(node_idx);
@@ -347,42 +227,63 @@ impl QuadTree {
                 self.insert_into_children(&node.item, node.index, node_idx);
             }
         }
-        // }
     }
+
+    // fn collect_points(&mut self, results: &mut Vec<usize>, node_idx: usize) {
+    //     let mut nodes = &mut self.nodes;
+
+    //     if let Some(n) = nodes.get_mut(node_idx) {
+    //         // NOTE: only push if point items aren't already in the node points
+    //         if let Some(points) = &mut n.points {
+    //             for point in points {
+    //                 results.push(point.index);
+    //             }
+    //         }
+    //     }
+    //     let child_idxs = self.get_children_idxs(node_idx);
+    //     for child_idx in child_idxs {
+    //         self.collect_points(results, child_idx);
+    //     }
+    // }
+
 
     fn collect_points(&mut self, results: &mut Vec<usize>, node_idx: usize) {
-        let mut nodes = &mut self.nodes;
-
-        if let Some(n) = nodes.get_mut(node_idx) {
-            // NOTE: only push if point items aren't already in the node points
-            if let Some(points) = &mut n.points {
-                for point in points {
-                    results.push(point.index);
+        // Lock the nodes once and avoid locking multiple times
+        let nodes = &self.nodes;
+    
+        // Start by collecting the points of the current node
+        if let Some(n) = nodes.get(node_idx) {
+            if let Some(points) = &n.points {
+                results.extend(points.iter().map(|point| point.index)); // Use extend for more efficient pushing
+            }
+        }
+    
+        // Collect points from child nodes
+        let mut stack = Vec::new(); // Use a stack to avoid recursion overhead
+        stack.push(node_idx); // Start from the current node
+    
+        while let Some(current_node_idx) = stack.pop() {
+            let child_idxs = self.get_children_idxs(current_node_idx);
+            for child_idx in child_idxs {
+                stack.push(child_idx); // Add children to stack for later processing
+            }
+    
+            // Collect points of the child node
+            if let Some(n) = nodes.get(current_node_idx) {
+                if let Some(points) = &n.points {
+                    results.extend(points.iter().map(|point| point.index)); // Efficiently extend the result
                 }
             }
         }
-
-        let child_idxs = self.get_children_idxs(node_idx);
-
-        for child_idx in child_idxs {
-            self.collect_points(results, child_idx);
-        }
     }
-
 
     fn get_node_items(&self, node_idx: usize) -> Vec<(f64, f64)> {
-        let mut node_items: Vec<(f64, f64)> = vec![];
         let nodes = &self.nodes;
-        if let Some(n) = nodes.get(node_idx) {
-            // NOTE: only push if point items aren't already in the node points
-            if let Some(points) = &n.points {
-                for point in points {
-                    node_items.push(point.item);
-                }
-            }
-        }
-        node_items
+        nodes.get(node_idx)
+            .and_then(|n| n.points.as_ref()) // Get `points` only if node exists
+            .map_or_else(Vec::new, |points| points.iter().map(|p| p.item).collect())
     }
+    
 }
 
 
