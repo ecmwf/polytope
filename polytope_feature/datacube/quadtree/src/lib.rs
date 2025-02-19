@@ -48,18 +48,18 @@ impl QuadTree {
         }
     }
 
-    fn create_node(&mut self, center: (f64, f64), size: (f64, f64), depth: i32) -> usize {
-        let mut nodes = &mut self.nodes;
-        let index = nodes.len();
-        nodes.push(QuadTreeNode {
-            points: None,
-            children: Vec::new(),
-            center,
-            size,
-            depth,
-        });
-        index
-    }
+    // fn create_node(&mut self, center: (f64, f64), size: (f64, f64), depth: i32) -> usize {
+    //     let mut nodes = &mut self.nodes;
+    //     let index = nodes.len();
+    //     nodes.push(QuadTreeNode {
+    //         points: None,
+    //         children: Vec::new(),
+    //         center,
+    //         size,
+    //         depth,
+    //     });
+    //     index
+    // }
 
     /// Get the center of a node
     fn get_center(&self, index: usize) -> PyResult<(f64, f64)> {
@@ -69,12 +69,12 @@ impl QuadTree {
         })
     }
 
-    fn get_size(&self, index: usize) -> PyResult<(f64, f64)> {
-        let nodes = &self.nodes;
-        nodes.get(index).map(|n| n.size).ok_or_else(|| {
-            pyo3::exceptions::PyIndexError::new_err("Invalid node index")
-        })
-    }
+    // fn get_size(&self, index: usize) -> PyResult<(f64, f64)> {
+    //     let nodes = &self.nodes;
+    //     nodes.get(index).map(|n| n.size).ok_or_else(|| {
+    //         pyo3::exceptions::PyIndexError::new_err("Invalid node index")
+    //     })
+    // }
 
     fn build_point_tree(&mut self, points: Vec<(f64, f64)>) {
         self.create_node((0.0,0.0), (180.0, 90.0), 0);
@@ -138,6 +138,20 @@ impl QuadTree {
     const MAX: i32 = 3;
     const MAX_DEPTH: i32 = 20;
 
+
+    fn create_node(&mut self, center: (f64, f64), size: (f64, f64), depth: i32) -> usize {
+        let mut nodes = &mut self.nodes;
+        let index = nodes.len();
+        nodes.push(QuadTreeNode {
+            points: None,
+            children: Vec::new(),
+            center,
+            size,
+            depth,
+        });
+        index
+    }
+
     fn get_depth(&self, index: usize) -> i32 {
         let nodes = &self.nodes;
         nodes.get(index).map(|n| n.depth).expect("Index exists in QuadTree arena")
@@ -151,6 +165,13 @@ impl QuadTree {
         } else {
             panic!("Index exists in QuadTree arena");
         }
+    }
+
+    fn get_size(&self, index: usize) -> PyResult<(f64, f64)> {
+        let nodes = &self.nodes;
+        nodes.get(index).map(|n| n.size).ok_or_else(|| {
+            pyo3::exceptions::PyIndexError::new_err("Invalid node index")
+        })
     }
 
 
