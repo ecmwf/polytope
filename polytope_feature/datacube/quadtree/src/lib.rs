@@ -1,13 +1,6 @@
 #![allow(dead_code)]
 
-use std::collections::HashMap;
-use std::convert::TryFrom;
-use std::time::Instant;
-use std::mem;
 use pyo3::prelude::*;   // Do not use * for importing here
-use pyo3::types::PyList;
-use pyo3::exceptions::PyIndexError;
-use pyo3::types::PyIterator;
 
 use std::sync::{Arc, Mutex};
 
@@ -84,6 +77,7 @@ impl QuadTree {
     }
 
     fn build_point_tree(&mut self, points: Vec<(f64, f64)>) {
+        self.create_node((0.0,0.0), (180.0, 90.0), 0);
         for (index, p) in points.iter().enumerate(){
             self.insert(p, index.try_into().unwrap(), 0);
         }
@@ -182,7 +176,7 @@ impl QuadTree {
     fn insert(&mut self, item: &(f64, f64), pt_index: i64, node_idx: usize) {
         let node_children = self.get_children_idxs(node_idx);
         if node_children.len() == 0 {
-            let mut node = QuadPoint::new(*item, pt_index);
+            let node = QuadPoint::new(*item, pt_index);
             self.add_point_to_node(node_idx, node, item);
             if self.get_points_length(node_idx) > Self::MAX.try_into().unwrap() && self.get_depth(node_idx) < Self::MAX_DEPTH {
                 self.split(node_idx);
@@ -254,7 +248,7 @@ impl QuadTree {
         drop(nodes);
         
         // Now, safely mutate `self`
-        if let Some(mut points) = points {
+        if let Some(points) = points {
             for node in points.iter() {
                 self.insert_into_children(&node.item, node.index, node_idx);
             }
@@ -283,7 +277,7 @@ impl QuadTree {
 
     fn get_node_items(&self, node_idx: usize) -> Vec<(f64, f64)> {
         let mut node_items: Vec<(f64, f64)> = vec![];
-        let mut nodes = self.nodes.lock().unwrap();
+        let nodes = self.nodes.lock().unwrap();
         if let Some(n) = nodes.get(node_idx) {
             // NOTE: only push if point items aren't already in the node points
             if let Some(points) = &n.points {

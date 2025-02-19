@@ -1,6 +1,6 @@
 from ..engine.hullslicer import slice
 from ..engine.slicing_tools import slice_in_two
-from quadtree import QuadTreeNode
+from quadtree import QuadTree
 
 
 def is_contained_in(point, polygon):
@@ -15,7 +15,7 @@ def is_contained_in(point, polygon):
     return False
 
 
-def query_polygon(quadtree_points, node: QuadTreeNode, polygon, results=None):
+def query_polygon(quadtree_points, quadtree: QuadTree, node_idx, polygon, results=None):
     # intersect quad tree with a 2D polygon
     if results is None:
         results = set()
@@ -28,27 +28,28 @@ def query_polygon(quadtree_points, node: QuadTreeNode, polygon, results=None):
         polygon_points = set([tuple(point) for point in polygon.points])
         # TODO: are these the right points which we are comparing, ie the points on the polygon
         # and the points on the rectangle quadrant?
-        if polygon_points == node.quadrant_rectangle_points():
-            for node in node.find_nodes_in():
+        if polygon_points == quadtree.quadrant_rectangle_points(node_idx):
+            for node in quadtree.find_nodes_in(node_idx):
                 results.add(node)
         else:
             # TODO: DO NOT COPY THE CHILDREN INTO A LIST FROM RUST, INSTEAD IMPLEMENT A GETITEM EQUIVALENT AND ITER THROUGH THE RUST OBJECT DIRECTLY
-            children = node.children
-            if len(children) > 0:
+            # children = node.children
+            children_idxs = quadtree.get_children_idxs(node_idx)
+            if len(children_idxs) > 0:
                 # first slice vertically
-                left_polygon, right_polygon = slice_in_two(polygon, node.center[0], 0)
+                left_polygon, right_polygon = slice_in_two(polygon, quadtree.get_center(node_idx)[0], 0)
 
                 # then slice horizontally
                 # ie need to slice the left and right polygons each in two to have the 4 quadrant polygons
 
-                q1_polygon, q2_polygon = slice_in_two(left_polygon, node.center[1], 1)
-                q3_polygon, q4_polygon = slice_in_two(right_polygon, node.center[1], 1)
+                q1_polygon, q2_polygon = slice_in_two(left_polygon, quadtree.get_center(node_idx)[1], 1)
+                q3_polygon, q4_polygon = slice_in_two(right_polygon, quadtree.get_center(node_idx)[1], 1)
 
                 # now query these 4 polygons further down the quadtree
-                query_polygon(quadtree_points, children[0], q1_polygon, results)
-                query_polygon(quadtree_points, children[1], q2_polygon, results)
-                query_polygon(quadtree_points, children[2], q3_polygon, results)
-                query_polygon(quadtree_points, children[3], q4_polygon, results)
+                query_polygon(quadtree_points, quadtree, children_idxs[0], q1_polygon, results)
+                query_polygon(quadtree_points, quadtree, children_idxs[1], q2_polygon, results)
+                query_polygon(quadtree_points, quadtree, children_idxs[2], q3_polygon, results)
+                query_polygon(quadtree_points, quadtree, children_idxs[3], q4_polygon, results)
 
             # if len(node) > 0:
             #     # first slice vertically
@@ -67,6 +68,6 @@ def query_polygon(quadtree_points, node: QuadTreeNode, polygon, results=None):
             #     query_polygon(node[3], q4_polygon, results)
 
             results.update((node, quadtree_points[node])
-                           for node in node.points if is_contained_in(quadtree_points[node], polygon))
+                           for node in quadtree.get_point_idxs(node_idx) if is_contained_in(quadtree_points[node], polygon))
 
         return results
