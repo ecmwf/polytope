@@ -5,6 +5,7 @@ from polytope_feature.engine.quadtree_slicer import QuadTreeSlicer
 from polytope_feature.engine.slicing_tools import slice_in_two
 from polytope_feature.polytope import Polytope
 from polytope_feature.shapes import Box, ConvexPolytope
+from polytope_feature.datacube.quadtree_additional_operations import query_polygon
 
 
 class TestQuadTreeSlicer:
@@ -47,7 +48,7 @@ class TestQuadTreeSlicer:
     def test_quad_tree_slicer(self):
         points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
         slicer = QuadTreeSlicer(points)
-        slicer.quad_tree.pprint()
+        # slicer.quad_tree.pprint()
         pass
 
     @pytest.mark.fdb
@@ -55,20 +56,22 @@ class TestQuadTreeSlicer:
         points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
         slicer = QuadTreeSlicer(points)
         polytope = Box(["lat", "lon"], [1, 1], [20, 30]).polytope()[0]
-        results = slicer.quad_tree.query_polygon(polytope)
+        # results = slicer.quad_tree.query_polygon(polytope)
+        results = query_polygon(points, slicer.quad_tree, 0, polytope, results=None)
         assert len(results) == 3
-        assert (10, 10) in [node.item for node in results]
-        assert (5, 10) in [node.item for node in results]
-        assert (5, 20) in [node.item for node in results]
+        assert (10, 10) in [slicer.points[node] for node in results]
+        assert (5, 10) in [slicer.points[node] for node in results]
+        assert (5, 20) in [slicer.points[node] for node in results]
         points = [[10, 10], [80, 10], [-5, 5], [5, 50], [5, 10], [50, 10], [2, 10], [15, 15]]
         slicer = QuadTreeSlicer(points)
         polytope = ConvexPolytope(["lat", "lon"], [[-10, 1], [20, 1], [5, 20]])
-        results = slicer.quad_tree.query_polygon(polytope)
+        # results = slicer.quad_tree.query_polygon(polytope)
+        results = query_polygon(points, slicer.quad_tree, 0, polytope, results=None)
         assert len(results) == 4
-        assert (-5, 5) in [node.item for node in results]
-        assert (5, 10) in [node.item for node in results]
-        assert (10, 10) in [node.item for node in results]
-        assert (2, 10) in [node.item for node in results]
+        assert (-5, 5) in [slicer.points[node] for node in results]
+        assert (5, 10) in [slicer.points[node] for node in results]
+        assert (10, 10) in [slicer.points[node] for node in results]
+        assert (2, 10) in [slicer.points[node] for node in results]
 
     @pytest.mark.fdb
     def test_slice_in_two_vertically(self):
@@ -120,12 +123,12 @@ class TestQuadTreeSlicer:
         )
         tree = self.API.engines["quadtree"].extract(self.API.datacube, [polytope])
         assert len(tree.leaves) == 3
-        tree.pprint()
+        # tree.pprint()
         points = [[10, 10], [80, 10], [-5, 5], [5, 50], [5, 10], [50, 10], [2, 10], [15, 15]]
         polytope = ConvexPolytope(["latitude", "longitude"], [[-10, 1], [20, 1], [5, 20]])
         tree = self.API.engines["quadtree"].extract(self.API.datacube, [polytope])
         assert len(tree.leaves) == 4
-        tree.pprint()
+        # tree.pprint()
 
     # @pytest.mark.skip("performance test")
     @pytest.mark.fdb

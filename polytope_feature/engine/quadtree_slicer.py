@@ -6,6 +6,7 @@ from quadtree import QuadTree
 from ..datacube.quadtree_additional_operations import query_polygon
 from ..datacube.tensor_index_tree import TensorIndexTree
 from .engine import Engine
+import numpy as np
 
 
 class QuadTreeSlicer(Engine):
@@ -16,6 +17,7 @@ class QuadTreeSlicer(Engine):
         quad_tree = QuadTree()
         print("START BUILDING QUAD TREE")
         time0 = time.time()
+        points = [tuple(point) for point in points]
         quad_tree.build_point_tree(points)
         self.points = points
         print("FINISH BUILDING QUAD TREE")
@@ -36,10 +38,10 @@ class QuadTreeSlicer(Engine):
         # NOTE: for now, we return the indices of the points in the point cloud, instead of lat/lon
         for point in extracted_points:
             # append each found leaf to the tree
-            idx = point.index
+            idx = point
             values_axis = IntDatacubeAxis()
             values_axis.name = "values"
-            result = point.item
+            result = self.points[idx]
             # TODO: make finding the axes objects nicer?
             (child, _) = request.create_child(values_axis, idx, [])
             child.result = result
@@ -72,19 +74,13 @@ class QuadTreeSlicer(Engine):
         if len(extracted_points) == 0:
             node.remove_branch()
 
-        for point in extracted_points:
-            # convert to float for slicing
-            # value = point.index
-            # lat_val = point.item[0]
-            # lon_val = point.item[1]
-            value = point[0]
-            lat_val = point[1][0]
-            lon_val = point[1][1]
-            lat_ax = ax
+        lat_ax = ax
+        lon_ax = datacube._axes["longitude"]
 
-            # TODO: is there a nicer way to get this axis that does not depend on knowing
-            # the axis name in advance?
-            lon_ax = datacube._axes["longitude"]
+        for value in extracted_points:
+            # convert to float for slicing
+            lat_val = self.points[value][0]
+            lon_val = self.points[value][1]
 
             # store the native type
             (child, _) = node.create_child(lat_ax, lat_val, [])
