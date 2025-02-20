@@ -8,7 +8,7 @@ import scipy.spatial
 from ..datacube.backends.datacube import Datacube
 from ..datacube.datacube_axis import UnsliceableDatacubeAxis
 from ..datacube.tensor_index_tree import TensorIndexTree
-from ..shapes import ConvexPolytope
+from ..shapes import ConvexPolytope, Product
 from ..utility.combinatorics import group, tensor_product
 from ..utility.exceptions import UnsliceableShapeError
 from ..utility.geometry import lerp
@@ -76,8 +76,6 @@ class HullSlicer(Engine):
         upper = ax.from_float(upper + tol)
         flattened = node.flatten()
         method = polytope.method
-        if method == "nearest":
-            datacube.nearest_search[ax.name] = polytope.points
 
         # NOTE: caching
         # Create a coupled_axes list inside of datacube and add to it during axis formation, then here
@@ -214,7 +212,11 @@ class HullSlicer(Engine):
 
         # Convert the polytope points to float type to support triangulation and interpolation
         for p in polytopes:
-            self._unique_continuous_points(p, datacube)
+            if isinstance(p, Product):
+                for poly in p.polytope():
+                    self._unique_continuous_points(poly, datacube)
+            else:
+                self._unique_continuous_points(p, datacube)
 
         groups, input_axes = group(polytopes)
         datacube.validate(input_axes)
@@ -233,7 +235,16 @@ class HullSlicer(Engine):
                     new_c.extend(combi)
                 else:
                     new_c.append(combi)
-            r["unsliced_polytopes"] = set(new_c)
+            # NOTE TODO: here some of the polys in new_c can be a Product shape instead of a ConvexPolytope
+            # -> need to go through the polytopes in new_c and replace the Products with their sub-ConvexPolytopes
+            final_polys = []
+            for poly in new_c:
+                if isinstance(poly, Product):
+                    final_polys.extend(poly.polytope())
+                else:
+                    final_polys.append(poly)
+            # r["unsliced_polytopes"] = set(new_c)
+            r["unsliced_polytopes"] = set(final_polys)
             current_nodes = [r]
             for ax in datacube.axes.values():
                 next_nodes = []
