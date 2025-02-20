@@ -56,7 +56,7 @@ class HullSlicer(Engine):
 
             if datacube_has_index:
                 if i == 0:
-                    (child, next_nodes) = node.create_child(ax, lower, next_nodes)
+                    (child, next_nodes) = node.create_child(ax, lower, next_nodes, polytope.label)
                     child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
                     child["unsliced_polytopes"].remove(polytope)
                     next_nodes.append(child)
@@ -115,7 +115,8 @@ class HullSlicer(Engine):
                 fvalue = ax.to_float(value)
                 new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
                 remapped_val = self.remap_values(ax, value)
-                (child, next_nodes) = node.create_child(ax, remapped_val, next_nodes)
+                polytope_label = polytope.label
+                (child, next_nodes) = node.create_child(ax, remapped_val, next_nodes, polytope_label)
                 child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
                 child["unsliced_polytopes"].remove(polytope)
                 if new_polytope is not None:
@@ -296,7 +297,7 @@ def slice(polytope: ConvexPolytope, axis, value, slice_axis_idx):
     axes.remove(axis)
 
     if len(intersects) < len(intersects[0]) + 1:
-        return ConvexPolytope(axes, intersects)
+        return ConvexPolytope(axes, intersects, label=polytope.label)
     # Compute convex hull (removing interior points)
     if len(intersects[0]) == 0:
         return None
@@ -311,6 +312,6 @@ def slice(polytope: ConvexPolytope, axis, value, slice_axis_idx):
 
         except scipy.spatial.qhull.QhullError as e:
             if "less than" or "flat" in str(e):
-                return ConvexPolytope(axes, intersects)
+                return ConvexPolytope(axes, intersects, label=polytope.label)
     # Sliced result is simply the convex hull
-    return ConvexPolytope(axes, [intersects[i] for i in vertices])
+    return ConvexPolytope(axes, [intersects[i] for i in vertices], label=polytope.label)
