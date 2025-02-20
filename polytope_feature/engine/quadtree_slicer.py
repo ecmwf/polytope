@@ -1,12 +1,14 @@
 from copy import copy
 
-from ..datacube.datacube_axis import IntDatacubeAxis
+import numpy as np
+
 # from ..datacube.quad_tree import QuadTree
 from quadtree import QuadTree
+
+from ..datacube.datacube_axis import IntDatacubeAxis
 from ..datacube.quadtree_additional_operations import query_polygon
 from ..datacube.tensor_index_tree import TensorIndexTree
 from .engine import Engine
-import numpy as np
 
 
 class QuadTreeSlicer(Engine):
@@ -14,6 +16,7 @@ class QuadTreeSlicer(Engine):
         # here need to construct quadtree, which is specific to datacube
         # NOTE: should this be inside of the datacube instead that we create the quadtree?
         import time
+
         quad_tree = QuadTree()
         print("START BUILDING QUAD TREE")
         time0 = time.time()
@@ -21,7 +24,7 @@ class QuadTreeSlicer(Engine):
         quad_tree.build_point_tree(points)
         self.points = points
         print("FINISH BUILDING QUAD TREE")
-        print(time.time()-time0)
+        print(time.time() - time0)
         self.quad_tree = quad_tree
 
     # method to slice polygon against quadtree

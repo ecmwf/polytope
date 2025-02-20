@@ -1,6 +1,7 @@
+from quadtree import QuadTree
+
 from ..engine.hullslicer import slice
 from ..engine.slicing_tools import slice_in_two
-from quadtree import QuadTree
 
 
 def is_contained_in(point, polygon):
@@ -50,11 +51,7 @@ def query_polygon(quadtree_points, quadtree: QuadTree, node_idx, polygon, result
                 query_polygon(quadtree_points, quadtree, children_idxs[2], q3_polygon, results)
                 query_polygon(quadtree_points, quadtree, children_idxs[3], q4_polygon, results)
 
-            # results.update((node, quadtree_points[node])
-            #                for node in quadtree.get_point_idxs(node_idx) if is_contained_in(quadtree_points[node], polygon))
-            results.update(node
-                           for node in quadtree.get_point_idxs(node_idx) if is_contained_in(quadtree_points[node], polygon))
-            # results.update((node, (0, 0))
-            #                for node in quadtree.get_point_idxs(node_idx) if is_contained_in(quadtree_points[node], polygon))
-
+            results.update(
+                node for node in quadtree.get_point_idxs(node_idx) if is_contained_in(quadtree_points[node], polygon)
+            )
         return results

@@ -1,16 +1,19 @@
+import time
+
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
-from earthkit import data
 import xarray as xr
+from earthkit import data
 from helper_functions import find_nearest_latlon
-import time
-# import iris
 
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
+
+# import iris
+
 
 
 class TestQuadTreeSlicer:
@@ -27,7 +30,7 @@ class TestQuadTreeSlicer:
 
         ds = xr.open_dataset("../../Downloads/votemper_ORAS5_1m_197902_grid_T_02.nc", engine="netcdf4")
 
-        print(time.time()-time_now)
+        print(time.time() - time_now)
         # self.arr = ds.to_xarray(engine="cfgrib").avg_uox
         self.arr = ds.votemper
 

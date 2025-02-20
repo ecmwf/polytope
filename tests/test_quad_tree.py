@@ -1,11 +1,11 @@
 import pytest
 
 from polytope_feature.datacube.quad_tree import QuadNode
+from polytope_feature.datacube.quadtree_additional_operations import query_polygon
 from polytope_feature.engine.quadtree_slicer import QuadTreeSlicer
 from polytope_feature.engine.slicing_tools import slice_in_two
 from polytope_feature.polytope import Polytope
 from polytope_feature.shapes import Box, ConvexPolytope
-from polytope_feature.datacube.quadtree_additional_operations import query_polygon
 
 
 class TestQuadTreeSlicer:

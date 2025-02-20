@@ -1,17 +1,20 @@
-from polytope_feature.shapes import Box, Select, Point
-from polytope_feature.polytope import Polytope, Request
+import math
+
+# import iris
+import os
+import time
+
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
-from earthkit import data
 import xarray as xr
+from earthkit import data
 from helper_functions import find_nearest_latlon
-import time
-import math
-# import iris
-import os
+
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, Point, Select
 
 os.environ["FDB_HOME"] = "/Users/male/git/fdb-new-home"
 
@@ -34,16 +37,15 @@ class TestQuadTreeSlicer:
 
         # grid = xr.open_dataset("../../Downloads/icon_grid_0047_R19B07_L.nc", engine="netcdf4")
 
-        ds = data.from_source(
-            "file", "../../Downloads/icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2")
+        ds = data.from_source("file", "../../Downloads/icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2")
 
         grid = xr.open_dataset("../../Downloads/icon_grid_0026_R03B07_G.nc", engine="netcdf4")
 
-        print(time.time()-time_now)
+        print(time.time() - time_now)
         self.arr = ds.to_xarray(engine="cfgrib").t2m
 
-        self.longitudes = grid.clon.values * 180/math.pi
-        self.latitudes = grid.clat.values * 180/math.pi
+        self.longitudes = grid.clon.values * 180 / math.pi
+        self.latitudes = grid.clat.values * 180 / math.pi
 
         self.points = list(zip(self.latitudes, self.longitudes))
         print((min(self.latitudes), max(self.latitudes), min(self.longitudes), max(self.longitudes)))
@@ -58,8 +60,13 @@ class TestQuadTreeSlicer:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "irregular", "resolution": 0, "axes": [
-                            "latitude", "longitude"], "md5_hash": "f68071a8ac9bae4e965822afb963c04f"}
+                        {
+                            "name": "mapper",
+                            "type": "irregular",
+                            "resolution": 0,
+                            "axes": ["latitude", "longitude"],
+                            "md5_hash": "f68071a8ac9bae4e965822afb963c04f",
+                        }
                     ],
                 },
             ],
@@ -70,7 +77,9 @@ class TestQuadTreeSlicer:
     @pytest.mark.fdb
     def test_quad_tree_slicer_extract(self):
         import datetime
+
         import pygribjump as gj
+
         request = Request(
             # Select("deptht", [0.5058], method="nearest"),
             Select("date", [pd.Timestamp("20250110T0000")]),
@@ -80,7 +89,7 @@ class TestQuadTreeSlicer:
             Select("param", ["167"]),
             Select("levtype", ["sfc"]),
             # Select("time_counter", [pd.Timestamp("1979-02-15")]),
-            Box(["latitude", "longitude"], [0, 0], [10, 10]),
+            Box(["latitude", "longitude"], [0, 0], [80, 80]),
         )
 
         self.fdbdatacube = gj.GribJump()

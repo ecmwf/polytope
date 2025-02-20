@@ -1,17 +1,20 @@
+import math
+import time
+
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
-from earthkit import data
 import xarray as xr
+from earthkit import data
 from helper_functions import find_nearest_latlon
-import time
-import math
-# import iris
 
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
+
+# import iris
+
 
 
 class TestQuadTreeSlicer:
@@ -31,20 +34,19 @@ class TestQuadTreeSlicer:
 
         # grid = xr.open_dataset("../../Downloads/icon_grid_0047_R19B07_L.nc", engine="netcdf4")
 
-        ds = data.from_source(
-            "file", "../../Downloads/icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2")
+        ds = data.from_source("file", "../../Downloads/icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2")
 
         grid = xr.open_dataset("../../Downloads/icon_grid_0026_R03B07_G.nc", engine="netcdf4")
 
-        print(time.time()-time_now)
+        print(time.time() - time_now)
         self.arr = ds.to_xarray(engine="cfgrib").t2m
 
         print(self.arr)
         # print("AND GRID")
         # print(grid.clon.values)
         # print(len(grid.clon))
-        self.longitudes = grid.clon.values * 180/math.pi
-        self.latitudes = grid.clat.values * 180/math.pi
+        self.longitudes = grid.clon.values * 180 / math.pi
+        self.latitudes = grid.clat.values * 180 / math.pi
         print(grid)
 
         # self.arr = ds.votemper
@@ -123,6 +125,7 @@ class TestQuadTreeSlicer:
     @pytest.mark.fdb
     def test_quad_tree_slicer_extract(self):
         import datetime
+
         request = Request(
             # Select("deptht", [0.5058], method="nearest"),
             Select("time", [pd.Timestamp("2025-01-10")]),
