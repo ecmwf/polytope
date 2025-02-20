@@ -126,34 +126,18 @@ class Point(Shape):
         self.values = values
         self.method = method
         assert len(values) == 1
-        # self.polytopes = []
-        # if method == "nearest":
-        #     assert len(self.values) == 1
-        # for i in range(len(axes)):
-        #     polytope_points = [v[i] for v in self.values]
-        #     self.polytopes.extend(
-        #         [ConvexPolytope([axes[i]], [[point]], self.method, is_orthogonal=True) for point in polytope_points]
-        #     )
 
     def axes(self):
         return self._axes
 
     def polytope(self):
         # TODO: change this to use the Product instead and return a Product here of the two 1D selects
-        # return self.polytopes
 
         polytopes = []
-
         for point in self.values:
             poly_to_mult = []
             for i in range(len(self._axes)):
-                poly_to_mult.append(ConvexPolytope([self._axes[i]], [[point[i]]], self.method, is_orthogonal=False))
-            # for i in range(len(self._axes)):
-            #     polytope_points = [v[i] for v in self.values]
-            #     polytopes.extend(
-            #         [ConvexPolytope([self._axes[i]], [[point]], self.method, is_orthogonal=False)
-            #          for point in polytope_points]
-            #     )
+                poly_to_mult.append(ConvexPolytope([self._axes[i]], [[point[i]]], self.method, is_orthogonal=True))
             polytopes.append(Product(*poly_to_mult, method=self.method, value=[point]))
         self.polytopes = polytopes
 

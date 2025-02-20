@@ -107,7 +107,11 @@ class TestSlicingFDBDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 9
+        assert len(result.leaves) == 4
+        tot_leaves = 0
+        for leaf in result.leaves:
+            tot_leaves += len(leaf.result)
+        assert tot_leaves == 9
 
     # @pytest.mark.fdb
     # def test_fdb_datacube_mix_methods(self):
