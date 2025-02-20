@@ -212,7 +212,6 @@ class HullSlicer(Engine):
 
         # Convert the polytope points to float type to support triangulation and interpolation
         for p in polytopes:
-
             if isinstance(p, Product):
                 for poly in p.polytope():
                     self._unique_continuous_points(poly, datacube)

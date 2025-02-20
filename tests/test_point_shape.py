@@ -31,10 +31,10 @@ class TestSlicing3DXarrayDatacube:
 
     def test_multiple_points(self):
         # request = Request(Point(["step", "level"], [[3, 10], [3, 12]]), Select("date", ["2000-01-01"]))
-        request = Request(Union(["step", "level"],
-                                Point(["step", "level"], [[3, 10]]),
-                                Point(["step", "level"], [[3, 12]])),
-                          Select("date", ["2000-01-01"]))
+        request = Request(
+            Union(["step", "level"], Point(["step", "level"], [[3, 10]]), Point(["step", "level"], [[3, 12]])),
+            Select("date", ["2000-01-01"]),
+        )
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 2

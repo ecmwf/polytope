@@ -57,15 +57,17 @@ class TestSlicingFDBDatacube:
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["an"]),
-            Union(["latitude", "longitude"],
-                  Point(["latitude", "longitude"], [[20, 20]], method="nearest"),
-                  Point(["latitude", "longitude"], [[0, 0]], method="nearest"),
-                  Point(["latitude", "longitude"], [[0, 20]], method="nearest"),
-                  Point(["latitude", "longitude"], [[25, 30]], method="nearest"),
-                  Point(["latitude", "longitude"], [[-30, 90]], method="nearest"),
-                  Point(["latitude", "longitude"], [[-60, -30]], method="nearest"),
-                  Point(["latitude", "longitude"], [[-15, -45]], method="nearest"),
-                  Point(["latitude", "longitude"], [[20, 0]], method="nearest")),
+            Union(
+                ["latitude", "longitude"],
+                Point(["latitude", "longitude"], [[20, 20]], method="nearest"),
+                Point(["latitude", "longitude"], [[0, 0]], method="nearest"),
+                Point(["latitude", "longitude"], [[0, 20]], method="nearest"),
+                Point(["latitude", "longitude"], [[25, 30]], method="nearest"),
+                Point(["latitude", "longitude"], [[-30, 90]], method="nearest"),
+                Point(["latitude", "longitude"], [[-60, -30]], method="nearest"),
+                Point(["latitude", "longitude"], [[-15, -45]], method="nearest"),
+                Point(["latitude", "longitude"], [[20, 0]], method="nearest"),
+            ),
         )
 
         self.fdbdatacube = gj.GribJump()
@@ -93,9 +95,11 @@ class TestSlicingFDBDatacube:
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["an"]),
-            Union(["latitude", "longitude"],
-                  Point(["latitude", "longitude"], [[25, 30]], method="surrounding"),
-                  Point(["latitude", "longitude"], [[-15, -45]], method="surrounding"))
+            Union(
+                ["latitude", "longitude"],
+                Point(["latitude", "longitude"], [[25, 30]], method="surrounding"),
+                Point(["latitude", "longitude"], [[-15, -45]], method="surrounding"),
+            ),
         )
 
         self.fdbdatacube = gj.GribJump()

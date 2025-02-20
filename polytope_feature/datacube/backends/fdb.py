@@ -224,8 +224,10 @@ class FDBDatacube(Datacube):
             first_ax_name = requests.children[0].axis.name
             second_ax_name = requests.children[0].children[0].axis.name
 
-            axes_in_nearest_search = [first_ax_name not in self.nearest_search.keys(
-            ), second_ax_name not in self.nearest_search.keys()]
+            axes_in_nearest_search = [
+                first_ax_name not in self.nearest_search.keys(),
+                second_ax_name not in self.nearest_search.keys(),
+            ]
 
             if all(not item for item in axes_in_nearest_search):
                 raise Exception("nearest point search axes are wrong")
