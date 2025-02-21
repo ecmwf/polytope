@@ -20,6 +20,7 @@ example_mri
 polytope_python.egg-info
 new_test_venv_polytope
 new_venv_polytope
+new_polytope_venv
 polytope_venv
 polytope_venv_latest
 new_updated_numpy_venv
