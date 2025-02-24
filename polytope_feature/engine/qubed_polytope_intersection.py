@@ -36,6 +36,11 @@ class QubedSlicing(Engine):
     def extract(self, datacube, polytopes: List[ConvexPolytope]):
         combinations = self.create_request_polys(polytopes)
 
+        request = Qube.empty()
+
+        for c in combinations:
+            r = Qube.empty()
+
         # TODO: replace all the TensorIndexTrees with Qube trees
 
         # request = TensorIndexTree()
