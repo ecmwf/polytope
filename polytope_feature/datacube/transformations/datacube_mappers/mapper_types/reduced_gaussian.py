@@ -1455,5 +1455,5 @@ class ReducedGaussianGridMapper(DatacubeMapper):
 
 # md5 grid hash in form {resolution : hash}
 _md5_hash = {
-    320: "158db321ae8e773681eeb40e0a3d350f",
+    320: "00c7b107673deb45f968637b661ea25b",
 }
