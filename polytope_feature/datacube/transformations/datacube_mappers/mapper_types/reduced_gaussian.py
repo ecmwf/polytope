@@ -1425,7 +1425,7 @@ class ReducedGaussianGridMapper(DatacubeMapper):
     def axes_idx_to_reduced_gaussian_idx(self, first_idx, second_idx):
         Ny_array = self.lon_spacing()
         idx = 0
-        for i in range(self._resolution):
+        for i in range(len(Ny_array)):
             if i != first_idx:
                 idx += Ny_array[i]
             else:
