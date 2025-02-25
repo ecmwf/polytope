@@ -33,30 +33,64 @@ q = Qube.from_dict({
 #                 lower, upper, slice_axis_idx = polytope.extents(q.key)
 
 
+# def slice(q: Qube, request: dict) -> 'Qube':
+#     def _slice(q: Qube, r: dict) -> Iterator[Qube]:
+#         for child in q.children:
+#             requested_values = r.get(child.key, [])
+#             found_values = [v for v in requested_values if v in child.values]
+#             if not found_values:
+#                 continue
+#             truncated_request = {k: v for k, v in r.items() if k != child.key}
+#             children = list(_slice(child, truncated_request))
+
+#             # If this node used to have children, i.e was not a leaf node,
+#             # but as a result of filtering now has no children
+#             # then filter it out.
+#             if child.children and not children:
+#                 continue
+
+#             yield Qube.make(
+#                 key=child.key,
+#                 values=QEnum(found_values),
+#                 metadata=child.metadata,
+#                 children=children,
+#             )
+
+#     return Qube.root_node(list(_slice(q, request)))
+
 def slice(q: Qube, request: dict) -> 'Qube':
-    def _slice(q: Qube, r: dict) -> Iterator[Qube]:
+    def _slice(q: Qube, r: dict) -> list[Qube]:
+        result = []
         for child in q.children:
             requested_values = r.get(child.key, [])
             found_values = [v for v in requested_values if v in child.values]
             if not found_values:
                 continue
             truncated_request = {k: v for k, v in r.items() if k != child.key}
-            children = list(_slice(child, truncated_request))
+            children = _slice(child, truncated_request)
 
-            # If this node used to have children, i.e was not a leaf node,
-            # but as a result of filtering now has no children
-            # then filter it out.
+            # If this node used to have children but now has none due to filtering, skip it.
             if child.children and not children:
                 continue
 
-            yield Qube.make(
-                key=child.key,
-                values=QEnum(found_values),
-                metadata=child.metadata,
-                children=children,
-            )
+            if len(found_values) > 1:
+                result.extend([Qube.make(
+                    key=child.key,
+                    values=QEnum(val),
+                    metadata=child.metadata,
+                    children=children,
+                ) for val in found_values])
+            else:
+                result.extend([Qube.make(
+                    key=child.key,
+                    values=QEnum(found_values),
+                    metadata=child.metadata,
+                    children=children
+                )])
 
-    return Qube.root_node(list(_slice(q, request)))
+        return result
+
+    return Qube.root_node(_slice(q, request))
 
 
 request = {
@@ -67,81 +101,139 @@ request = {
 
 
 print(q)
-# q = slice(q, request)
+q = slice(q, request)
 
-# print(q)
+print(q)
 
 # new_q = Qube.from_dict({
 #     "expver=0001": {"param=1/2/3/4/5": {"level=0/1/2": {}}},
 #     "expver=0001": {"param=1": {"level=3/4": {}}, "param=2": {"level=3/4": {}}},
 # }).compress()
 
-new_q = Qube.from_dict({
-    "expver=0001": {"param=1/2/3/4/5": {"level=0/1/2": {}}, "param=1": {"level=3/4": {}}, "param=2": {"level=3/4": {}}},
-    # "expver=0001": {"param=1": {"level=3/4": {}}, "param=2": {"level=3/4": {}}},
-}).compress()
+# new_q = Qube.from_dict({
+#     "expver=0001": {"param=1/2/3/4/5": {"level=0/1/2": {}}, "param=1": {"level=3/4": {}}, "param=2": {"level=3/4": {}}},
+#     # "expver=0001": {"param=1": {"level=3/4": {}}, "param=2": {"level=3/4": {}}},
+# }).compress()
 
-print("HERE")
-print(new_q)
+# print("HERE")
+# print(new_q)
 
-print(new_q["expver", "0001"].children)
+# print(new_q["expver", "0001"].children)
 
 
-def modified_slice(q: Qube, request: dict) -> 'Qube':
-    def _slice(q: Qube, r: dict) -> Iterator[Qube]:
+# def modified_slice(q: Qube, request: dict) -> 'Qube':
+#     def _slice(q: Qube, r: dict) -> Iterator[Qube]:
+#         for child in q.children:
+#             requested_values = r.get(child.key, [])
+#             found_values = [v for v in requested_values if v in child.values]
+#             if not found_values:
+#                 continue
+#             print("HERE")
+#             print(r.items())
+#             for k, v in r.items():
+#                 if k == "param":
+#                     children = []
+#                     if "1" in found_values:
+#                         truncated_request = {"level": "2"}
+#                         children.extend(list(_slice(child, truncated_request)))
+#                     if "2" in found_values:
+#                         truncated_request = {"level": ["1", "2", "3"]}
+#                         children.extend(list(_slice(child, truncated_request)))
+#                     if "3" in found_values:
+#                         truncated_request = {"level": "2"}
+#                         children.extend(list(_slice(child, truncated_request)))
+#                 else:
+#                     truncated_request = {k: v for k, v in r.items() if k != child.key}
+#                     children = list(_slice(child, truncated_request))
+
+#             # If this node used to have children, i.e was not a leaf node,
+#             # but as a result of filtering now has no children
+#             # then filter it out.
+#             if child.children and not children:
+#                 continue
+
+#             # for child in children:
+#             #     yield Qube.make(
+#             #         key=child.key,
+#             #         values=QEnum(found_values),
+#             #         metadata=child.metadata,
+#             #         children=list(child),
+#             #     )
+#             print("WHAT NODES DID WE CREATE?")
+#             print(Qube.make(
+#                 key=child.key,
+#                 values=QEnum(found_values),
+#                 metadata=child.metadata,
+#                 children=children,
+#             ))
+#             yield Qube.make(
+#                 key=child.key,
+#                 values=QEnum(found_values),
+#                 metadata=child.metadata,
+#                 children=children,
+#             )
+
+#     return Qube.root_node(list(_slice(q, request)))
+
+
+# print(modified_slice(new_q, request={
+#     "expver": ["0001"],
+#     "param": ["1", "2", "3"],
+# }))
+
+
+def actual_slice(q: Qube, polytopes_to_slice) -> 'Qube':
+
+    def find_polytopes_on_axis(q: Qube, polytopes):
+        polytopes_on_axis = []
+        axis_name = q.key
+        for poly in polytopes:
+            if axis_name in poly._axes:
+                polytopes_on_axis.append(poly)
+        return polytopes_on_axis
+
+    def _slice(q: Qube, polytopes) -> list[Qube]:
+        result = []
         for child in q.children:
+            # TODO: find polytopes which are defined on axis child.key
+            polytopes_on_axis = find_polytopes_on_axis(child, polytopes)
+            # TODO: for each polytope:
+            for poly in polytopes_on_axis:
+                # TODO: find extents of polytope on child.key
+                lower, upper, slice_axis_idx = poly.extents(child.key)
+                # TODO: find values on child that are within extents
+                found_vals = [v for v in child.values if lower <= v <= upper]
+                # TODO: slice polytope along each value on child and keep resulting polytopes in memory
+
+                # TODO: remove polytope from the polytope list and append the sliced polytopes
+                # TODO: with these new polytopes, recurse and create children etc...
+                pass
             requested_values = r.get(child.key, [])
             found_values = [v for v in requested_values if v in child.values]
             if not found_values:
                 continue
-            print("HERE")
-            print(r.items())
-            for k, v in r.items():
-                if k == "param":
-                    if "1" in v:
-                        truncated_request = {"level": "2"}
-                        children = list(_slice(child, truncated_request))
-                    if "2" in v:
-                        truncated_request = {"level": ["1", "2", "3"]}
-                        children = list(_slice(child, truncated_request))
-                    if "3" in v:
-                        truncated_request = {"level": "2"}
-                        children = list(_slice(child, truncated_request))
-                else:
-                    truncated_request = {k: v for k, v in r.items() if k != child.key}
-                    children = list(_slice(child, truncated_request))
+            truncated_request = {k: v for k, v in r.items() if k != child.key}
+            children = _slice(child, truncated_request)
 
-            # If this node used to have children, i.e was not a leaf node,
-            # but as a result of filtering now has no children
-            # then filter it out.
+            # If this node used to have children but now has none due to filtering, skip it.
             if child.children and not children:
                 continue
 
-            # for child in children:
-            #     yield Qube.make(
-            #         key=child.key,
-            #         values=QEnum(found_values),
-            #         metadata=child.metadata,
-            #         children=list(child),
-            #     )
-            print("WHAT NODES DID WE CREATE?")
-            print(Qube.make(
-                key=child.key,
-                values=QEnum(found_values),
-                metadata=child.metadata,
-                children=children,
-            ))
-            yield Qube.make(
-                key=child.key,
-                values=QEnum(found_values),
-                metadata=child.metadata,
-                children=children,
-            )
+            if len(found_values) > 1:
+                result.extend([Qube.make(
+                    key=child.key,
+                    values=QEnum(val),
+                    metadata=child.metadata,
+                    children=children,
+                ) for val in found_values])
+            else:
+                result.extend([Qube.make(
+                    key=child.key,
+                    values=QEnum(found_values),
+                    metadata=child.metadata,
+                    children=children
+                )])
 
-    return Qube.root_node(list(_slice(q, request)))
+        return result
 
-
-print(modified_slice(new_q, request={
-    "expver": ["0001"],
-    "param": ["1", "2", "3"],
-}))
+    return Qube.root_node(_slice(q, polytopes_to_slice))
