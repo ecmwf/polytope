@@ -142,7 +142,7 @@ If `levtype` is `pl` or `ml`, a `levelist` must be provided:
 
 * `levelist` : `1/to/1000`
 
-Only data that is contained in the open data FDB can be requested via Polytope feature extraction. The FDB usually only contains the last two-four days of forecasts.
+Only data that is contained in the open data FDB can be requested via Polytope feature extraction. The FDB usually only contains the last three-five days of forecasts.
 
 We sometimes limit the size of requests for area features such as bounding box and polygon to maintain quality of service.
 
