@@ -133,6 +133,7 @@ The following key value pairs are available via Polytope:
 * `class` : `ai`
 * `stream` : `oper`
 * `type` : `fc`
+* `model` : `aifs-single`
 * `levtype` : `sfc` `pl` `ml`
 * `expver` : `0001`
 * `domain` : `g`
