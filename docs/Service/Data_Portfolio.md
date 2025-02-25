@@ -125,3 +125,26 @@ If `levtype` is `pl`, a `levelist` must be provided:
 For `sfc`, most `params` are available.
 
 Currently, only data for `dates` between `2020` and `2050` is available.
+
+## Open Data
+
+The following key value pairs are available via Polytope:
+
+* `class` : `ai`
+* `stream` : `oper`
+* `type` : `fc`
+* `model` : `aifs-single`
+* `levtype` : `sfc` `pl` `ml`
+* `expver` : `0001`
+* `domain` : `g`
+* `step` : `0/to/360` (All steps may not be available between `0` and `360`)
+
+If `levtype` is `pl` or `ml`, a `levelist` must be provided:
+
+* `levelist` : `1/to/1000`
+
+Only data that is contained in the open data FDB can be requested via Polytope feature extraction. The FDB usually only contains the last three-five days of forecasts.
+
+We sometimes limit the size of requests for area features such as bounding box and polygon to maintain quality of service.
+
+Access to open data is limited by our release schedule.
