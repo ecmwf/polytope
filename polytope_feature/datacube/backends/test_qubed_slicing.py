@@ -1,6 +1,8 @@
 from qubed import Qube
 from qubed.value_types import QEnum
 from typing import Iterator
+from ...engine.hullslicer import slice
+from copy import deepcopy
 # from ...shapes import ConvexPolytope
 
 q = Qube.from_dict({
@@ -192,48 +194,91 @@ def actual_slice(q: Qube, polytopes_to_slice) -> 'Qube':
                 polytopes_on_axis.append(poly)
         return polytopes_on_axis
 
+    def _axes_compressed():
+        return {}
+
     def _slice(q: Qube, polytopes) -> list[Qube]:
         result = []
         for child in q.children:
-            # TODO: find polytopes which are defined on axis child.key
+            # find polytopes which are defined on axis child.key
             polytopes_on_axis = find_polytopes_on_axis(child, polytopes)
-            # TODO: for each polytope:
+            # for each polytope:
             for poly in polytopes_on_axis:
-                # TODO: find extents of polytope on child.key
+                # find extents of polytope on child.key
                 lower, upper, slice_axis_idx = poly.extents(child.key)
-                # TODO: find values on child that are within extents
+                # find values on child that are within extents
                 found_vals = [v for v in child.values if lower <= v <= upper]
-                # TODO: slice polytope along each value on child and keep resulting polytopes in memory
+                # slice polytope along each value on child and keep resulting polytopes in memory
+                sliced_polys = []
+                for val in found_vals:
+                    # slice polytope along the value and add sliced polytope to list of polytopes in memory
+                    sliced_poly = slice(poly, child.key, val, slice_axis_idx)
+                    sliced_polys.append(sliced_poly)
 
-                # TODO: remove polytope from the polytope list and append the sliced polytopes
-                # TODO: with these new polytopes, recurse and create children etc...
-                pass
-            requested_values = r.get(child.key, [])
-            found_values = [v for v in requested_values if v in child.values]
-            if not found_values:
-                continue
-            truncated_request = {k: v for k, v in r.items() if k != child.key}
-            children = _slice(child, truncated_request)
-
-            # If this node used to have children but now has none due to filtering, skip it.
-            if child.children and not children:
-                continue
-
-            if len(found_values) > 1:
-                result.extend([Qube.make(
-                    key=child.key,
-                    values=QEnum(val),
-                    metadata=child.metadata,
-                    children=children,
-                ) for val in found_values])
-            else:
-                result.extend([Qube.make(
-                    key=child.key,
-                    values=QEnum(found_values),
-                    metadata=child.metadata,
-                    children=children
-                )])
+                # decide if axis should be compressed or not according to polytope
+                axis_compressed = _axes_compressed.get(child.key, False)
+                # if it's not compressed, need to separate into different nodes to append to the tree
+                if not axis_compressed and len(found_vals) > 1:
+                    for i, found_val in enumerate(found_vals):
+                        child_polytopes = deepcopy(polytopes)
+                        child_polytopes.remove(poly)
+                        child_polytopes.append(sliced_polys[i])
+                        children = _slice(child, child_polytopes)
+                        # If this node used to have children but now has none due to filtering, skip it.
+                        if child.children and not children:
+                            continue
+                        # TODO: add the child_polytopes to the child.metadata/ ie change child.metadata here before passing
+                        qube_node = Qube.make(key=child.key,
+                                              values=QEnum(found_val),
+                                              metadata=child.metadata,
+                                              children=children)
+                        result.append(qube_node)
+                else:
+                    # if it's compressed, then can add all found values in a single node
+                    child_polytopes = deepcopy(polytopes)
+                    child_polytopes.remove(poly)
+                    child_polytopes.extend(sliced_polys)
+                    # create children
+                    children = _slice(child, child_polytopes)
+                    # If this node used to have children but now has none due to filtering, skip it.
+                    if child.children and not children:
+                        continue
+                    # TODO: add the child_polytopes to the child.metadata/ ie change child.metadata here before passing
+                    result.extend([Qube.make(
+                        key=child.key,
+                        values=QEnum(found_vals),
+                        metadata=child.metadata,
+                        children=children
+                    )])
 
         return result
 
     return Qube.root_node(_slice(q, polytopes_to_slice))
+
+
+# TODO: OLD CODE TO MODIFY
+    # requested_values = r.get(child.key, [])
+    # found_values = [v for v in requested_values if v in child.values]
+    # if not found_values:
+    #     continue
+    # truncated_request = {k: v for k, v in r.items() if k != child.key}
+    # children = _slice(child, truncated_request)
+
+    # # If this node used to have children but now has none due to filtering, skip it.
+    # if child.children and not children:
+    #     continue
+
+    # if len(found_values) > 1:
+    #     result.extend([Qube.make(
+    #         key=child.key,
+    #         values=QEnum(val),
+    #         metadata=child.metadata,
+    #         children=children,
+    #     ) for val in found_values])
+    # else:
+    #     result.extend([Qube.make(
+    #         key=child.key,
+    #         values=QEnum(found_values),
+    #         metadata=child.metadata,
+    #         children=children
+    #     )])

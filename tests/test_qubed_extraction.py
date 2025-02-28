@@ -50,7 +50,7 @@ datacube_axes = {"param": UnsliceableDatacubeAxis(),
 
 # TODO: start iterating fdb_tree and creating a new request tree
 
-print(fdb_tree.)
+# print(fdb_tree.)
 
 
 # Select("step", [0]),
