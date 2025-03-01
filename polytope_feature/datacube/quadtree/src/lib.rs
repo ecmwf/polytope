@@ -64,11 +64,12 @@ impl QuadTree {
         });
     }
 
-    fn quadrant_rectangle_points(&self, node_idx: usize) -> PyResult<Vec<(f64, f64)>> {
+    // fn quadrant_rectangle_points(&self, node_idx: usize) -> PyResult<Vec<(f64, f64)>> {
+    fn quadrant_rectangle_points(&self, node_idx: usize) -> PyResult<[(f64, f64); 4]> {
         let (cx, cy) = self.get_center(node_idx)?; // Propagate error if get_center fails
         let (sx, sy) = self.get_size(node_idx)?;   // Propagate error if get_size fails
     
-        Ok(vec![
+        Ok([
             (cx + sx, cy + sy),
             (cx + sx, cy - sy),
             (cx - sx, cy + sy),
@@ -83,7 +84,8 @@ impl QuadTree {
     }
 
     fn get_children_idxs(&self, index: usize) -> Vec<usize> {
-        self.nodes.get(index).map_or_else(Vec::new, |node| node.children.clone())
+        // self.nodes.get(index).map_or_else(Vec::new, |node| node.children.clone())
+        self.nodes.get(index).map_or_else(Vec::new, |node| node.children.to_vec())
     }
 
     fn get_point_idxs(&self, node_idx: usize) -> Vec<usize> {
@@ -97,6 +99,7 @@ impl QuadTree {
 impl QuadTree {
 
     const MAX: usize = 3;
+    // const MAX: usize = 10;
     const MAX_DEPTH: i32 = 20;
 
 
