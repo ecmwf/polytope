@@ -31,12 +31,16 @@ def query_polygon(quadtree_points, quadtree: QuadTree, node_idx, polygon, result
         # and the points on the rectangle quadrant?
         # print(polygon_points)
         # print(quadtree.quadrant_rectangle_points(node_idx))
-        quadrant_points = set(quadtree.quadrant_rectangle_points(node_idx))
+        # quadrant_points = set(quadtree.quadrant_rectangle_points(node_idx))
         # if list(polygon_points) == quadtree.quadrant_rectangle_points(node_idx):
-        if polygon_points == quadrant_points:
+        # if polygon_points == quadrant_points:
+        if list(polygon_points) == quadtree.quadrant_rectangle_points(node_idx):
             # for node in quadtree.find_nodes_in(node_idx):
             #     results.add(node)
-            results.update(quadrant_points)
+            results.update(quadtree.find_nodes_in(node_idx))
+
+            # print(quadrant_points)
+            # results.update(quadrant_points)
             # print("HERE")
             # results.extend(quadtree.find_nodes_in(node_idx))
         else:
