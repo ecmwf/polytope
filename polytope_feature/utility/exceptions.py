@@ -42,4 +42,6 @@ class BadGridError(PolytopeError, ValueError):
 
 class GribJumpNoIndexError(PolytopeError, ValueError):
     def __init__(self):
-        self.message = "GribJump index for this data is not yet available."
+        self.message = (
+            "Feature extraction cannot be performed on this data because no GribJump index has been generated."
+        )
