@@ -38,3 +38,8 @@ class UnsliceableShapeError(PolytopeError, KeyError):
 class BadGridError(PolytopeError, ValueError):
     def __init__(self):
         self.message = "Data on this grid is not supported by Polytope."
+
+
+class GribJumpNoIndexError(PolytopeError, ValueError):
+    def __init__(self):
+        self.message = "GribJump index for this data was not yet written."

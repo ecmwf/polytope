@@ -3,7 +3,7 @@ import operator
 from copy import deepcopy
 from itertools import product
 
-from ...utility.exceptions import BadGridError, BadRequestError
+from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
 from ...utility.geometry import nearest_pt
 from .datacube import Datacube, TensorIndexTree
 
@@ -145,6 +145,9 @@ class FDBDatacube(Datacube):
             if "BadValue: Grid hash mismatch" in str(e):
                 logging.info("Error is: %s", e)
                 raise BadGridError()
+            if "Missing JumpInfo" in str(e):
+                logging.info("Error is: %s", e)
+                raise GribJumpNoIndexError()
             else:
                 raise e
 
