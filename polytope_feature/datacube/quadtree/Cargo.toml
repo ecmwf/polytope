@@ -8,3 +8,6 @@ pyo3 = { version = "0.20", features = ["extension-module"] }
 
 [lib]
 crate-type = ["cdylib"]
+
+[profile.release]
+debug=true

@@ -30,8 +30,9 @@ def query_polygon(quadtree_points, quadtree: QuadTree, node_idx, polygon, result
         # TODO: are these the right points which we are comparing, ie the points on the polygon
         # and the points on the rectangle quadrant?
         if polygon_points == quadtree.quadrant_rectangle_points(node_idx):
-            for node in quadtree.find_nodes_in(node_idx):
-                results.add(node)
+            # for node in quadtree.find_nodes_in(node_idx):
+            #     results.add(node)
+            results.extend(quadtree.find_nodes_in(node_idx))
         else:
             children_idxs = quadtree.get_children_idxs(node_idx)
             if len(children_idxs) > 0:

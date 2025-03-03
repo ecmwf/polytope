@@ -134,7 +134,6 @@ class FDBDatacube(Datacube):
                 for i, key in enumerate(compressed_request[0].keys()):
                     uncompressed_request[key] = combi[i]
                 complete_uncompressed_request = (uncompressed_request, compressed_request[1], self.grid_md5_hash)
-                print(self.grid_md5_hash)
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
 
