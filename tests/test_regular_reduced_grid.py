@@ -10,6 +10,8 @@ from polytope_feature.shapes import Box, Select
 class TestSlicingFDBDatacube:
     def setup_method(self, method):
         # Create a dataarray with 3 labelled axes using different index types
+        # TODO: This uses the wrong fdb/schema/data so the hash for the grid is wrong
+        # BUT the validation against eccodes is OK because the GRIB file is the same grid as Polytope returns
         self.options = {
             "axis_config": [
                 {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
@@ -25,6 +27,7 @@ class TestSlicingFDBDatacube:
                             "type": "reduced_gaussian",
                             "resolution": 320,
                             "axes": ["latitude", "longitude"],
+                            "md5_hash": "158db321ae8e773681eeb40e0a3d350f",
                         }
                     ],
                 },
