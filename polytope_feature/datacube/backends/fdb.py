@@ -32,7 +32,7 @@ class FDBDatacube(Datacube):
             logging.info("Find GribJump axes for %s", context)
             self.fdb_coordinates = self.gj.axes(partial_request, ctx=context)
             logging.info("Retrieved available GribJump axes for %s", context)
-            if len(self.fdb_coordinates) == 0:
+            if len(self.fdb_coordinates) == 0 or set(partial_request) > set(self.fdb_coordinates):
                 raise BadRequestError(partial_request)
         else:
             self.fdb_coordinates = {}
