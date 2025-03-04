@@ -4,7 +4,7 @@ import xarray as xr
 
 from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.polytope import Polytope, Request
-from polytope_feature.shapes import Point, Select
+from polytope_feature.shapes import Point, Select, Union
 
 
 class TestSlicing3DXarrayDatacube:
@@ -30,20 +30,26 @@ class TestSlicing3DXarrayDatacube:
         assert result.leaves[0].axis.name == "level"
 
     def test_multiple_points(self):
-        request = Request(Point(["step", "level"], [[3, 10], [3, 12]]), Select("date", ["2000-01-01"]))
+        # request = Request(Point(["step", "level"], [[3, 10], [3, 12]]), Select("date", ["2000-01-01"]))
+        request = Request(
+            Union(["step", "level"], Point(["step", "level"], [[3, 10]]), Point(["step", "level"], [[3, 12]])),
+            Select("date", ["2000-01-01"]),
+        )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 1
+        assert len(result.leaves) == 2
         assert result.leaves[0].axis.name == "level"
 
     def test_point_surrounding_step(self):
         request = Request(Point(["step", "level"], [[2, 10]], method="surrounding"), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
+        result.pprint()
         assert len(result.leaves) == 1
         assert np.shape(result.leaves[0].result[1]) == (1, 2, 3)
 
     def test_point_surrounding_exact_step(self):
         request = Request(Point(["step", "level"], [[3, 10]], method="surrounding"), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
+        result.pprint()
         assert len(result.leaves) == 1
         assert np.shape(result.leaves[0].result[1]) == (1, 3, 3)
