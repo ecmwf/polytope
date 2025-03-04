@@ -14,7 +14,7 @@ from earthkit import data
 from helper_functions import find_nearest_latlon
 
 from polytope_feature.polytope import Polytope, Request
-from polytope_feature.shapes import Box, Point, Select
+from polytope_feature.shapes import Box, Point, Select, Polygon
 
 os.environ["FDB_HOME"] = "/Users/male/git/fdb-new-home"
 
@@ -80,6 +80,9 @@ class TestQuadTreeSlicer:
 
         import pygribjump as gj
 
+        tri_side = 80
+        triangle = Polygon(["latitude", "longitude"], [[0, tri_side], [0, 0], [tri_side, 0]])
+
         request = Request(
             # Select("deptht", [0.5058], method="nearest"),
             Select("date", [pd.Timestamp("20250110T0000")]),
@@ -89,7 +92,8 @@ class TestQuadTreeSlicer:
             Select("param", ["167"]),
             Select("levtype", ["sfc"]),
             # Select("time_counter", [pd.Timestamp("1979-02-15")]),
-            Box(["latitude", "longitude"], [0, 0], [80, 80]),
+            # Box(["latitude", "longitude"], [0, 0], [5, 5]),
+            triangle,
         )
 
         self.fdbdatacube = gj.GribJump()
