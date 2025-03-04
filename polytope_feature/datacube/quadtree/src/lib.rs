@@ -70,10 +70,10 @@ impl QuadTree {
         let (sx, sy) = self.get_size(node_idx)?;   // Propagate error if get_size fails
     
         Ok([
-            (cx + sx, cy + sy),
-            (cx + sx, cy - sy),
-            (cx - sx, cy + sy),
             (cx - sx, cy - sy),
+            (cx - sx, cy + sy),
+            (cx + sx, cy - sy),
+            (cx + sx, cy + sy),
         ])
     }
 

@@ -29,20 +29,8 @@ def query_polygon(quadtree_points, quadtree: QuadTree, node_idx, polygon, result
         polygon_points = {tuple(point) for point in polygon.points}
         # TODO: are these the right points which we are comparing, ie the points on the polygon
         # and the points on the rectangle quadrant?
-        # print(polygon_points)
-        # print(quadtree.quadrant_rectangle_points(node_idx))
-        # quadrant_points = set(quadtree.quadrant_rectangle_points(node_idx))
-        # if list(polygon_points) == quadtree.quadrant_rectangle_points(node_idx):
-        # if polygon_points == quadrant_points:
-        if list(polygon_points) == quadtree.quadrant_rectangle_points(node_idx):
-            # for node in quadtree.find_nodes_in(node_idx):
-            #     results.add(node)
+        if sorted(list(polygon_points)) == quadtree.quadrant_rectangle_points(node_idx):
             results.update(quadtree.find_nodes_in(node_idx))
-
-            # print(quadrant_points)
-            # results.update(quadrant_points)
-            # print("HERE")
-            # results.extend(quadtree.find_nodes_in(node_idx))
         else:
             children_idxs = quadtree.get_children_idxs(node_idx)
             if len(children_idxs) > 0:
@@ -61,6 +49,8 @@ def query_polygon(quadtree_points, quadtree: QuadTree, node_idx, polygon, result
                 query_polygon(quadtree_points, quadtree, children_idxs[1], q2_polygon, results)
                 query_polygon(quadtree_points, quadtree, children_idxs[2], q3_polygon, results)
                 query_polygon(quadtree_points, quadtree, children_idxs[3], q4_polygon, results)
+
+            # TODO: try optimisation: take bbox of polygon and quickly remove the results that are not in bbox already
 
             results.update(
                 node for node in quadtree.get_point_idxs(node_idx) if is_contained_in(quadtree_points[node], polygon)
