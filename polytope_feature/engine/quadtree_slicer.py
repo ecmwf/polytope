@@ -22,6 +22,9 @@ class QuadTreeSlicer(Engine):
         time0 = time.time()
         points = [tuple(point) for point in points]
         quad_tree.build_point_tree(points)
+
+        print("SIZE OF THE QUAD TREE IS")
+        print(quad_tree.sizeof())
         self.points = points
         print("FINISH BUILDING QUAD TREE")
         print(time.time() - time0)

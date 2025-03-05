@@ -5,6 +5,9 @@ use pyo3::prelude::*;   // Do not use * for importing here
 use std::sync::{Arc, Mutex};
 
 
+
+// TODO: can we not replace this QuadPoint by just the index of the point in the list potentially?
+
 #[derive(Debug)]
 #[derive(Clone)]
 struct QuadPoint {
@@ -17,6 +20,11 @@ impl QuadPoint {
     fn new(item: (f64, f64), index: usize) -> Self {
         Self {item, index}
     }
+
+    fn sizeof(&self) -> usize {
+        let size = size_of::<Self>();
+        size
+    }
 }
 
 #[derive(Debug)]
@@ -24,12 +32,28 @@ impl QuadPoint {
 #[pyclass]
 struct QuadTreeNode {
     points: Option<Vec<QuadPoint>>,
+    // points: Option<Vec<usize>>,
     children: Vec<usize>,
 
     #[pyo3(get, set)]
     center: (f64, f64),
     size: (f64, f64),
     depth: i32,
+}
+
+impl QuadTreeNode {
+    fn sizeof(&self) -> usize {
+        let mut size = size_of::<Self>(); // Base struct size
+        // Dynamically allocated memory for points
+        if let Some(points) = &self.points {
+            let points_size: usize = points.capacity() * size_of::<QuadPoint>();
+            size += points_size;
+        }
+        // Dynamically allocated memory for children
+        let children_size = self.children.capacity() * size_of::<usize>();
+        size += children_size;
+        size
+    }
 }
 
 
@@ -46,6 +70,19 @@ impl QuadTree {
         QuadTree {
             nodes: Vec::new(),
         }
+    }
+
+    fn sizeof(&self) -> usize {
+        let mut size = size_of::<Self>(); // Base struct size (Vec metadata)
+        // Memory allocated for `nodes` (Vec<QuadTreeNode>)
+        let nodes_size: usize = self.nodes.capacity() * size_of::<QuadTreeNode>();
+        size += nodes_size;
+        // Sum sizes of each QuadTreeNode (including their allocated memory)
+        for (i, node) in self.nodes.iter().enumerate() {
+            let node_size = node.sizeof();
+            size += node_size;
+        }
+        size
     }
 
     /// Get the center of a node
