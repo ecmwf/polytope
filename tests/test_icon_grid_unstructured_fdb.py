@@ -81,7 +81,7 @@ class TestQuadTreeSlicer:
         import pygribjump as gj
 
         tri_side = 80
-        triangle = Polygon(["latitude", "longitude"], [[0, tri_side], [0, 0], [tri_side, 0]])
+        # triangle = Polygon(["latitude", "longitude"], [[0, tri_side], [0, 0], [tri_side, 0]])
 
         request = Request(
             # Select("deptht", [0.5058], method="nearest"),
@@ -93,7 +93,8 @@ class TestQuadTreeSlicer:
             Select("levtype", ["sfc"]),
             # Select("time_counter", [pd.Timestamp("1979-02-15")]),
             # Box(["latitude", "longitude"], [0, 0], [5, 5]),
-            triangle,
+            Box(["latitude", "longitude"], [0, 0], [80, 80]),
+            # triangle,
         )
 
         self.fdbdatacube = gj.GribJump()
