@@ -46,11 +46,12 @@ impl QuadTreeNode {
         let mut size = size_of::<Self>(); // Base struct size
         // Dynamically allocated memory for points
         if let Some(points) = &self.points {
-            let points_size: usize = points.capacity() * size_of::<usize>();
+            // let points_size: usize = points.capacity() * size_of::<usize>();
+            let points_size: usize = points.len() * size_of::<usize>();
             size += points_size;
         }
         // Dynamically allocated memory for children
-        let children_size = self.children.capacity() * size_of::<usize>();
+        let children_size = self.children.len() * size_of::<usize>();
         size += children_size;
         size
     }
@@ -75,7 +76,7 @@ impl QuadTree {
     fn sizeof(&self) -> usize {
         let mut size = size_of::<Self>(); // Base struct size (Vec metadata)
         // Memory allocated for `nodes` (Vec<QuadTreeNode>)
-        let nodes_size: usize = self.nodes.capacity() * size_of::<QuadTreeNode>();
+        let nodes_size: usize = self.nodes.len() * size_of::<QuadTreeNode>();
         size += nodes_size;
         // Sum sizes of each QuadTreeNode (including their allocated memory)
         for (i, node) in self.nodes.iter().enumerate() {
@@ -205,6 +206,8 @@ impl QuadTree {
     
             if points_len > Self::MAX && depth < Self::MAX_DEPTH {
                 self.split(node_idx, pts_ref);
+                // TODO: here, can remove the points attribute of the node with node_idx
+                self.nodes[node_idx].points = None;
             }
         } else {
             self.insert_into_children(pt_index, node_idx, pts_ref);
@@ -340,3 +343,186 @@ fn quadtree(_py: Python, m: &PyModule) -> PyResult<()> {
 }
 
 
+// RESTRICTED TO 2D POINTS FOR NOW
+fn _find_intersects(polytope_points: &Vec<(f64, f64)>, slice_axis_idx: usize, value: f64) -> Vec<(f64, f64)>{
+    let mut intersects: Vec<(f64, f64)> = vec![];
+    let above_slice: Vec<(f64, f64)> = polytope_points
+    .iter()
+    .filter(|(x, y)| {
+        let value_to_compare = if slice_axis_idx == 0 { *x } else { *y };
+        value_to_compare >= value
+    })
+    .cloned() // Convert `&(f64, f64)` to `(f64, f64)`
+    .collect();
+
+    let below_slice: Vec<(f64, f64)> = polytope_points
+    .iter()
+    .filter(|(x, y)| {
+        let value_to_compare = if slice_axis_idx == 0 { *x } else { *y };
+        value_to_compare <= value
+    })
+    .cloned() // Convert `&(f64, f64)` to `(f64, f64)`
+    .collect();
+
+
+    for a in &above_slice {
+        for b in &below_slice {
+            // Edge is incident with the slice plane, store b in intersects
+            if a.0 == b.0 && slice_axis_idx == 0 || a.1 == b.1 && slice_axis_idx == 1 {
+                intersects.push(*b);
+                continue;
+            }
+            let interp_coeff = (value - if slice_axis_idx == 0 { b.0 } else { b.1 }) 
+                            / (if slice_axis_idx == 0 { a.0 - b.0 } else { a.1 - b.1 });
+
+            let intersect = lerp(*a, *b, interp_coeff);
+            intersects.push(intersect);
+        }
+    }
+    intersects
+}
+
+
+fn lerp(a: (f64, f64), b: (f64, f64), t: f64) -> (f64, f64) {
+    (
+        a.0 + t * (b.0 - a.0), // Linear interpolation for x
+        a.1 + t * (b.1 - a.1), // Linear interpolation for y
+    )
+}
+
+
+fn polygon_extents(polytope_points: &Vec<(f64, f64)>, slice_axis_idx: usize) -> (f64, f64){
+    // let extents: (f64, f64) = 
+    let (min_val, max_val) = polytope_points.into_iter().fold(
+        (f64::INFINITY, f64::NEG_INFINITY), // Start with extreme values
+        |(min, max), &(x, y)| {
+            let value = if slice_axis_idx == 0 { x } else { y }; // Select the correct axis
+            (min.min(value), max.max(value)) // Update min and max
+        },
+    );
+    (min_val, max_val)
+}
+
+
+fn slice_in_two(polytope_points: Option<Vec<(f64, f64)>>, value: f64, slice_axis_idx: usize)-> (Option<Vec<(f64, f64)>>, Option<Vec<(f64, f64)>>){
+    if polytope_points.is_none() {
+        return (None, None)
+    }
+    else {
+        // TODO: still to implement, placeholder
+        let polytope_points_ref = polytope_points.as_ref().unwrap();
+        let (x_lower, x_upper) = polygon_extents(polytope_points_ref, slice_axis_idx);
+        let intersects = _find_intersects(polytope_points_ref, slice_axis_idx, value);
+
+        if intersects.len() == 0 {
+            if x_upper <= value {
+                let left_polygon: Option<Vec<(f64, f64)>> = polytope_points;
+                let right_polygon: Option<Vec<(f64, f64)>> = None;
+            }
+            if value < x_lower {
+                let right_polygon: Option<Vec<(f64, f64)>> = polytope_points;
+                let left_polygon: Option<Vec<(f64, f64)>> = None;
+            }
+        }
+        else {
+
+        }
+
+
+        //         else:
+        //             left_points = [p for p in polytope.points if p[slice_axis_idx] <= value]
+        //             right_points = [p for p in polytope.points if p[slice_axis_idx] >= value]
+        //             left_points.extend(intersects)
+        //             right_points.extend(intersects)
+        //             # find left polygon
+        //             try:
+        //                 hull = scipy.spatial.ConvexHull(left_points)
+        //                 vertices = hull.vertices
+        //             except scipy.spatial.qhull.QhullError as e:
+        //                 if "less than" or "is flat" in str(e):
+        //                     # NOTE: this happens when we slice a polygon that has a border which coincides with the quadrant
+        //                     # line and we slice this additional border with the quadrant line again.
+        //                     # This is not actually a polygon we want to consider so we ignore it
+        //                     vertices = None
+
+        //             if vertices is not None:
+        //                 left_polygon = ConvexPolytope(polytope._axes, [left_points[i] for i in vertices])
+        //             else:
+        //                 left_polygon = None
+
+        //             try:
+        //                 hull = scipy.spatial.ConvexHull(right_points)
+        //                 vertices = hull.vertices
+        //             except scipy.spatial.qhull.QhullError as e:
+        //                 # NOTE: this happens when we slice a polygon that has a border which coincides with the quadrant
+        //                 # line and we slice this additional border with the quadrant line again.
+        //                 # This is not actually a polygon we want to consider so we ignore it
+        //                 if "less than" or "is flat" in str(e):
+        //                     vertices = None
+
+        //             if vertices is not None:
+        //                 right_polygon = ConvexPolytope(polytope._axes, [right_points[i] for i in vertices])
+        //             else:
+        //                 right_polygon = None
+
+        //         return (left_polygon, right_polygon)
+        (None, None)
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// THIS SHOULD BE A QUADTREE METHOD
+// def query_polygon(quadtree_points, quadtree: QuadTree, node_idx, polygon, results=None):
+//     # intersect quad tree with a 2D polygon
+//     if results is None:
+//         results = set()
+
+//     # intersect the children with the polygon
+//     # TODO: here, we create None polygons... think about how to handle them
+//     if polygon is None:
+//         return results
+//     else:
+//         polygon_points = {tuple(point) for point in polygon.points}
+//         # TODO: are these the right points which we are comparing, ie the points on the polygon
+//         # and the points on the rectangle quadrant?
+//         if sorted(list(polygon_points)) == quadtree.quadrant_rectangle_points(node_idx):
+//             results.update(quadtree.find_nodes_in(node_idx))
+//         else:
+//             children_idxs = quadtree.get_children_idxs(node_idx)
+//             if len(children_idxs) > 0:
+//                 # first slice vertically
+//                 quadtree_center = quadtree.get_center(node_idx)
+//                 left_polygon, right_polygon = slice_in_two(polygon, quadtree_center[0], 0)
+
+//                 # then slice horizontally
+//                 # ie need to slice the left and right polygons each in two to have the 4 quadrant polygons
+
+//                 q1_polygon, q2_polygon = slice_in_two(left_polygon, quadtree_center[1], 1)
+//                 q3_polygon, q4_polygon = slice_in_two(right_polygon, quadtree_center[1], 1)
+
+//                 # now query these 4 polygons further down the quadtree
+//                 query_polygon(quadtree_points, quadtree, children_idxs[0], q1_polygon, results)
+//                 query_polygon(quadtree_points, quadtree, children_idxs[1], q2_polygon, results)
+//                 query_polygon(quadtree_points, quadtree, children_idxs[2], q3_polygon, results)
+//                 query_polygon(quadtree_points, quadtree, children_idxs[3], q4_polygon, results)
+
+//             # TODO: try optimisation: take bbox of polygon and quickly remove the results that are not in bbox already
+
+//             results.update(
+//                 node for node in quadtree.get_point_idxs(node_idx) if is_contained_in(quadtree_points[node], polygon)
+//             )
+//         return results
