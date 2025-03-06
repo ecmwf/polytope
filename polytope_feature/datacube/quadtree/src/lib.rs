@@ -8,31 +8,31 @@ use std::sync::{Arc, Mutex};
 
 // TODO: can we not replace this QuadPoint by just the index of the point in the list potentially?
 
-#[derive(Debug)]
-#[derive(Clone)]
-struct QuadPoint {
-    item: (f64, f64),
-    index: usize,
-}
+// #[derive(Debug)]
+// #[derive(Clone)]
+// struct QuadPoint {
+//     item: (f64, f64),
+//     index: usize,
+// }
 
 
-impl QuadPoint {
-    fn new(item: (f64, f64), index: usize) -> Self {
-        Self {item, index}
-    }
+// impl QuadPoint {
+//     fn new(item: (f64, f64), index: usize) -> Self {
+//         Self {item, index}
+//     }
 
-    fn sizeof(&self) -> usize {
-        let size = size_of::<Self>();
-        size
-    }
-}
+//     fn sizeof(&self) -> usize {
+//         let size = size_of::<Self>();
+//         size
+//     }
+// }
 
 #[derive(Debug)]
 #[derive(Clone)]
 #[pyclass]
 struct QuadTreeNode {
-    points: Option<Vec<QuadPoint>>,
-    // points: Option<Vec<usize>>,
+    // points: Option<Vec<QuadPoint>>,
+    points: Option<Vec<usize>>,
     children: Vec<usize>,
 
     #[pyo3(get, set)]
@@ -46,7 +46,7 @@ impl QuadTreeNode {
         let mut size = size_of::<Self>(); // Base struct size
         // Dynamically allocated memory for points
         if let Some(points) = &self.points {
-            let points_size: usize = points.capacity() * size_of::<QuadPoint>();
+            let points_size: usize = points.capacity() * size_of::<usize>();
             size += points_size;
         }
         // Dynamically allocated memory for children
@@ -96,8 +96,11 @@ impl QuadTree {
 
     fn build_point_tree(&mut self, points: Vec<(f64, f64)>) {
         self.create_node((0.0,0.0), (180.0, 90.0), 0);
-        points.into_iter().enumerate().for_each(|(index, p)| {
-            self.insert(&p, index, 0);
+        // points.into_iter().enumerate().for_each(|(index, p)| {
+        //     self.insert(index, 0, &points);
+        // });
+        points.iter().enumerate().for_each(|(index, p)| {
+            self.insert(index, 0, &points);
         });
     }
 
@@ -128,7 +131,7 @@ impl QuadTree {
     fn get_point_idxs(&self, node_idx: usize) -> Vec<usize> {
         self.nodes.get(node_idx)
             .and_then(|n| n.points.as_ref()) // Get points if node exists
-            .map_or_else(Vec::new, |points| points.iter().map(|p| p.index).collect())
+            .map_or_else(Vec::new, |points| points.iter().map(|p| *p).collect())
     }
 }
 
@@ -175,59 +178,60 @@ impl QuadTree {
         })
     }
 
-    fn add_point_to_node(&mut self, index: usize, point: QuadPoint, item: &(f64, f64)) {
+    fn add_point_to_node(&mut self, index: usize, point_idx: usize) {
         if let Some(n) = self.nodes.get_mut(index) {
             // If the node already has points, check for duplicates
             if let Some(ref mut points) = n.points {
-                if !points.iter().any(|pt| pt.item == *item) {
-                    points.push(point);
+                if !points.iter().any(|pt| *pt == point_idx) {
+                    points.push(point_idx);
                 }
             } 
             // If there are no points yet, initialize the vector
             else {
-                n.points = Some(vec![point]);
+                n.points = Some(vec![point_idx]);
             }
         }
     }
     
-    fn insert(&mut self, item: &(f64, f64), pt_index: usize, node_idx: usize) {
+    fn insert(&mut self, pt_index: usize, node_idx: usize, pts_ref: &Vec<(f64, f64)>) {
         // Avoid allocating a new vector, check children directly
         if self.nodes[node_idx].children.is_empty() {
-            let node = QuadPoint::new(*item, pt_index);
-            self.add_point_to_node(node_idx, node, item);
+            // let node = QuadPoint::new(*item, pt_index);
+            self.add_point_to_node(node_idx, pt_index);
     
             // Avoid multiple calls to `self.get_points_length(node_idx)`
             let points_len = self.get_points_length(node_idx);
             let depth = self.get_depth(node_idx);
     
             if points_len > Self::MAX && depth < Self::MAX_DEPTH {
-                self.split(node_idx);
+                self.split(node_idx, pts_ref);
             }
         } else {
-            self.insert_into_children(item, pt_index, node_idx);
+            self.insert_into_children(pt_index, node_idx, pts_ref);
         }
     }
 
 
-    fn insert_into_children(&mut self, item: &(f64, f64), pt_index: usize, node_idx: usize) {
-        let (x, y) = *item;
+    fn insert_into_children(&mut self, pt_index: usize, node_idx: usize, pts_ref: &Vec<(f64, f64)>) {
+        // let (x, y) = *item;
+        let (x,y) = pts_ref.get(pt_index).unwrap();
         let (cx, cy) = self.get_center(node_idx).unwrap();
         let child_idxs = self.get_children_idxs(node_idx);
 
-        if x <= cx {
-            if y <= cy {
-                self.insert(item, pt_index, child_idxs[0]);
+        if *x <= cx {
+            if *y <= cy {
+                self.insert(pt_index, child_idxs[0], pts_ref);
             }
-            if y >= cy {
-                self.insert(item, pt_index, child_idxs[1]);
+            if *y >= cy {
+                self.insert(pt_index, child_idxs[1], pts_ref);
             }
         }
-        if x >= cx {
-            if y <= cy {
-                self.insert(item, pt_index, child_idxs[2]);
+        if *x >= cx {
+            if *y <= cy {
+                self.insert(pt_index, child_idxs[2], pts_ref);
             }
-            if y >= cy {
-                self.insert(item, pt_index, child_idxs[3]);
+            if *y >= cy {
+                self.insert(pt_index, child_idxs[3], pts_ref);
             }
         }
     }
@@ -239,7 +243,7 @@ impl QuadTree {
         }
     }
 
-    fn split(&mut self, node_idx: usize) {
+    fn split(&mut self, node_idx: usize, pts_ref: &Vec<(f64, f64)>) {
         let (w, h) = self.get_size(node_idx).unwrap();
         let (x_center, y_center) = self.get_center(node_idx).unwrap();
         let node_depth = self.get_depth(node_idx);
@@ -264,7 +268,7 @@ impl QuadTree {
         // Process points outside the lock
         if let Some(points) = points {
             for node in points {
-                self.insert_into_children(&node.item, node.index, node_idx);
+                self.insert_into_children(node, node_idx, pts_ref);
             }
         }
     }
@@ -294,7 +298,7 @@ impl QuadTree {
         // Start by collecting the points of the current node
         if let Some(n) = nodes.get(node_idx) {
             if let Some(points) = &n.points {
-                results.extend(points.iter().map(|point| point.index)); // Use extend for more efficient pushing
+                results.extend(points.iter().map(|point| point)); // Use extend for more efficient pushing
             }
         }
     
@@ -311,17 +315,17 @@ impl QuadTree {
             // Collect points of the child node
             if let Some(n) = nodes.get(current_node_idx) {
                 if let Some(points) = &n.points {
-                    results.extend(points.iter().map(|point| point.index)); // Efficiently extend the result
+                    results.extend(points.iter().map(|point| point)); // Efficiently extend the result
                 }
             }
         }
     }
 
-    fn get_node_items(&self, node_idx: usize) -> Vec<(f64, f64)> {
+    fn get_node_items(&self, node_idx: usize) -> Vec<usize> {
         let nodes = &self.nodes;
         nodes.get(node_idx)
             .and_then(|n| n.points.as_ref()) // Get `points` only if node exists
-            .map_or_else(Vec::new, |points| points.iter().map(|p| p.item).collect())
+            .map_or_else(Vec::new, |points| points.iter().map(|p| *p).collect())
     }
     
 }
