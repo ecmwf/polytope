@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 pyo3 = { version = "0.20", features = ["extension-module"] }
+qhull = "0.4"
 
 [lib]
 crate-type = ["cdylib"]

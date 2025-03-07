@@ -419,30 +419,39 @@ fn slice_in_two(polytope_points: Option<Vec<(f64, f64)>>, value: f64, slice_axis
                 let left_polygon: Option<Vec<(f64, f64)>> = polytope_points;
                 let right_polygon: Option<Vec<(f64, f64)>> = None;
             }
-            if value < x_lower {
+            else if value < x_lower {
                 let right_polygon: Option<Vec<(f64, f64)>> = polytope_points;
                 let left_polygon: Option<Vec<(f64, f64)>> = None;
             }
         }
         else {
-
+            let mut left_points: Vec<(f64, f64)> = polytope_points.clone().unwrap()
+                .iter()
+                .filter(|(x, y)| {
+                    let value_to_compare = if slice_axis_idx == 0 { *x } else { *y };
+                    value_to_compare <= value
+                })
+                .cloned() // Convert `&(f64, f64)` to `(f64, f64)`
+                .collect();
+            let mut right_points: Vec<(f64, f64)> = polytope_points.clone().unwrap()
+                .iter()
+                .filter(|(x, y)| {
+                    let value_to_compare = if slice_axis_idx == 0 { *x } else { *y };
+                    value_to_compare >= value
+                })
+                .cloned() // Convert `&(f64, f64)` to `(f64, f64)`
+                .collect();
+            left_points.extend(intersects.clone());
+            right_points.extend(intersects.clone());
         }
 
 
         //         else:
-        //             left_points = [p for p in polytope.points if p[slice_axis_idx] <= value]
-        //             right_points = [p for p in polytope.points if p[slice_axis_idx] >= value]
-        //             left_points.extend(intersects)
-        //             right_points.extend(intersects)
-        //             # find left polygon
         //             try:
         //                 hull = scipy.spatial.ConvexHull(left_points)
         //                 vertices = hull.vertices
         //             except scipy.spatial.qhull.QhullError as e:
         //                 if "less than" or "is flat" in str(e):
-        //                     # NOTE: this happens when we slice a polygon that has a border which coincides with the quadrant
-        //                     # line and we slice this additional border with the quadrant line again.
-        //                     # This is not actually a polygon we want to consider so we ignore it
         //                     vertices = None
 
         //             if vertices is not None:
@@ -454,9 +463,6 @@ fn slice_in_two(polytope_points: Option<Vec<(f64, f64)>>, value: f64, slice_axis
         //                 hull = scipy.spatial.ConvexHull(right_points)
         //                 vertices = hull.vertices
         //             except scipy.spatial.qhull.QhullError as e:
-        //                 # NOTE: this happens when we slice a polygon that has a border which coincides with the quadrant
-        //                 # line and we slice this additional border with the quadrant line again.
-        //                 # This is not actually a polygon we want to consider so we ignore it
         //                 if "less than" or "is flat" in str(e):
         //                     vertices = None
 
@@ -473,6 +479,111 @@ fn slice_in_two(polytope_points: Option<Vec<(f64, f64)>>, value: f64, slice_axis
 
 
 
+// QHULL FUNCTIONS/TEST
+fn try_qhull_functions(){
+    let points: Vec<(f64, f64)> = vec![
+        (0.0, 0.0),
+        (1.0, 0.0),
+        (0.5, 0.0),
+        (0.0, 1.0),
+    ];
+
+    // Convert Vec<(f64, f64)> into Vec<[f64; 2]>
+    let converted: Vec<[f64; 2]> = points.clone()
+        .into_iter()
+        .map(|(x, y)| [x, y]) // Convert tuple into fixed-size array
+        .collect();
+    
+    // let qh_result = Qh::builder()
+    // .compute(true)
+    // .build_from_iter([
+    //     // [0.25, 0.25],
+    //     [0.0, 0.0],
+    //     [1.0, 0.0],
+    //     [0.5, 0.0],
+    //     [0.0, 1.0],
+    //     // [0.5, 0.5],
+    //     // [3.0, 0.1]
+    // ]);
+
+    let qh_result = Qh::builder()
+    .compute(true)
+    .build_from_iter(converted);
+
+
+    match qh_result {
+        Ok(qh) => {
+            println!("Convex hull computed successfully!");
+            // let mut all_qhull_vertices: Vec<(f64, f64)> = Vec::new();
+            // for simplex in qh.simplices() {
+            //     let vertices = simplex
+            //         .vertices().unwrap()
+            //         .iter()
+            //         .map(|v| v.index(&qh).unwrap())
+            //         .collect::<Vec<_>>();
+        
+            //     // println!("{:?}", vertices);
+        
+            //     // let vertices = simplex
+            //     //     .vertices();
+            //     all_qhull_vertices.append(&mut vertices);
+            //     println!("{:?}", vertices);
+            // }
+            
+            let mut all_qhull_vertices: Vec<usize> = Vec::new();
+            let mut all_qhull_vertices_: HashSet<usize> = HashSet::new();
+            for simplex in qh.simplices() {
+                let vertices = simplex
+                    .vertices()
+                    .unwrap()
+                    .iter()
+                    .map(|v| v.index(&qh).unwrap())
+                    .collect::<Vec<_>>();
+                
+                for vertex in &vertices {
+                    if all_qhull_vertices_.insert(*vertex) { // `insert()` returns false if already present
+                        all_qhull_vertices.push(*vertex);
+                    }
+                }
+                println!("{:?}", vertices);
+            }
+            println!("{:?}", all_qhull_vertices);
+
+            let mut actual_qhull_points: Vec<(f64, f64)> = Vec::new();
+
+            // TODO: push the points to a vector of the points
+            for idx in all_qhull_vertices {
+                // actual_qhull_points.push(points.get(idx))
+                if let Some(point) = points.get(idx) {
+                    actual_qhull_points.push(*point); // Dereference the reference to get the value
+                }
+            }
+
+            println!("{:?}", actual_qhull_points);
+
+
+
+            // let vertices = qh.vertices(); // Get convex hull vertices
+            // let convex_hull_vertices: Vec<[f64; 2]> = vertices
+            //     .iter()
+            //     .map(|&i| points[i]) // Map indices to actual points
+            //     .collect();
+            // println!("Convex hull vertices: {:?}", convex_hull_vertices);
+        }
+        Err(e) => {
+            let error_msg = e.to_string(); // Convert the error to a string
+
+            if error_msg.contains("is flat") {
+                println!("Had flat error message and handled it");
+            } else {
+                println!("Unhandled error: {}", error_msg);
+            }
+            // println!("Error computing convex hull: {}", e);
+
+            // Handle the error, maybe return early or set a fallback value
+        }
+    }
+}
 
 
 
