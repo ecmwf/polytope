@@ -4,6 +4,9 @@ use pyo3::prelude::*;   // Do not use * for importing here
 
 use std::sync::{Arc, Mutex};
 
+use qhull::Qh;
+use std::collections::HashSet;
+
 
 
 // TODO: can we not replace this QuadPoint by just the index of the point in the list potentially?
@@ -477,6 +480,83 @@ fn slice_in_two(polytope_points: Option<Vec<(f64, f64)>>, value: f64, slice_axis
 }
 
 
+fn change_points_for_qhull(points: Vec<(f64, f64)>) -> Vec<[f64; 2]> {
+    let converted: Vec<[f64; 2]> = points.clone()
+        .into_iter()
+        .map(|(x, y)| [x, y]) // Convert tuple into fixed-size array
+        .collect();
+    converted
+}
+
+
+use std::fmt;
+
+#[derive(Debug)]
+enum QhullError {
+    FlatError,
+    OtherError(String),
+}
+
+impl fmt::Display for QhullError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            QhullError::FlatError => write!(f, "QHull error: flat or invalid geometry"),
+            QhullError::OtherError(msg) => write!(f, "QHull error: {}", msg),
+        }
+    }
+}
+
+
+fn find_qhull_points(points: Vec<(f64, f64)>) -> Result<Option<Vec<(f64, f64)>>, QhullError> {
+
+    let converted = change_points_for_qhull(points.clone());
+    let qh_result = Qh::builder()
+    .compute(true)
+    .build_from_iter(converted);
+
+
+    match qh_result {
+        Ok(qh) => {
+            let mut all_qhull_vertices: Vec<usize> = Vec::new();
+            let mut all_qhull_vertices_: HashSet<usize> = HashSet::new();
+            for simplex in qh.simplices() {
+                let vertices = simplex
+                    .vertices()
+                    .unwrap()
+                    .iter()
+                    .map(|v| v.index(&qh).unwrap())
+                    .collect::<Vec<_>>();
+                
+                for vertex in &vertices {
+                    if all_qhull_vertices_.insert(*vertex) {
+                        all_qhull_vertices.push(*vertex);
+                    }
+                }
+            }
+
+            let mut actual_qhull_points: Vec<(f64, f64)> = Vec::new();
+
+            for idx in all_qhull_vertices {
+                if let Some(point) = points.get(idx) {
+                    actual_qhull_points.push(*point);
+                }
+            }
+
+            Ok(Some(actual_qhull_points))
+        }
+        Err(e) => {
+            let error_msg = e.to_string(); // Convert the error to a string
+
+            if error_msg.contains("is flat") || error_msg.contains("less than"){
+                Ok(None)
+            } else {
+                println!("QHull Error: {}", error_msg);
+                return Err(QhullError::OtherError("QHull Error".to_string()));
+            }
+        }
+    }
+}
+ 
 
 
 // QHULL FUNCTIONS/TEST
