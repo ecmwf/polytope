@@ -6,6 +6,8 @@ use std::sync::{Arc, Mutex};
 
 use qhull::Qh;
 use std::collections::HashSet;
+use std::error::Error;
+use pyo3::exceptions::PyRuntimeError;
 
 
 
@@ -109,11 +111,11 @@ impl QuadTree {
     }
 
     // fn quadrant_rectangle_points(&self, node_idx: usize) -> PyResult<Vec<(f64, f64)>> {
-    fn quadrant_rectangle_points(&self, node_idx: usize) -> PyResult<[(f64, f64); 4]> {
+    fn quadrant_rectangle_points(&self, node_idx: usize) -> PyResult<Vec<(f64, f64)>> {
         let (cx, cy) = self.get_center(node_idx)?; // Propagate error if get_center fails
         let (sx, sy) = self.get_size(node_idx)?;   // Propagate error if get_size fails
     
-        Ok([
+        Ok(vec![
             (cx - sx, cy - sy),
             (cx - sx, cy + sy),
             (cx + sx, cy - sy),
@@ -137,6 +139,20 @@ impl QuadTree {
             .and_then(|n| n.points.as_ref()) // Get points if node exists
             .map_or_else(Vec::new, |points| points.iter().map(|p| *p).collect())
     }
+
+
+
+    fn query_polygon(&mut self, quadtree_points: Vec<(f64, f64)>, node_idx: usize, polygon_points: Option<Vec<(f64, f64)>>)  -> PyResult<HashSet<usize>> {
+        // Simulating a function that returns a Result
+        let mut results: HashSet<usize> = HashSet::new();
+
+        let query_result: Result<(), Box<dyn Error>> = self._query_polygon(quadtree_points, node_idx, polygon_points, &mut results);
+
+        query_result.map_err(|e| PyErr::new::<PyRuntimeError, _>(e.to_string()))?;
+
+        Ok(results)
+    }
+
 }
 
 
@@ -333,6 +349,44 @@ impl QuadTree {
             .and_then(|n| n.points.as_ref()) // Get `points` only if node exists
             .map_or_else(Vec::new, |points| points.iter().map(|p| *p).collect())
     }
+
+
+    // fn query_polygon(&mut self, quadtree_points: Vec<(f64, f64)>, node_idx: usize, polygon_points: Option<Vec<(f64, f64)>>) -> Result<HashSet<usize>, Box<dyn std::error::Error>>{
+    //     let mut results: HashSet<usize> = HashSet::new();
+    //     self._query_polygon(quadtree_points, node_idx, polygon_points, &mut results);
+    //     Ok(results)
+    // }
+
+    fn _query_polygon(&mut self, quadtree_points: Vec<(f64, f64)>, node_idx: usize, polygon_points: Option<Vec<(f64, f64)>>, results: &mut HashSet<usize>) -> Result<(), Box<dyn std::error::Error>>{
+        if !polygon_points.is_none() {
+            let mut points = polygon_points.clone().unwrap();
+            points.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+            if points == self.quadrant_rectangle_points(node_idx)? {
+                results.extend(self.find_nodes_in(node_idx));
+            }
+            else {
+                let children_idxs = self.get_children_idxs(node_idx);
+                if children_idxs.len() > 0 {
+                    let quadtree_center = self.get_center(node_idx)?;
+                    let (left_polygon, right_polygon) = slice_in_two(polygon_points, quadtree_center.0, 0)?;
+                    let (q1_polygon, q2_polygon) = slice_in_two(left_polygon, quadtree_center.1, 1)?;
+                    let (q3_polygon, q4_polygon) = slice_in_two(right_polygon, quadtree_center.1, 1)?;
+
+                    self._query_polygon(quadtree_points.clone(), children_idxs[0], q1_polygon, results);
+                    self._query_polygon(quadtree_points.clone(), children_idxs[1], q2_polygon, results);
+                    self._query_polygon(quadtree_points.clone(), children_idxs[2], q3_polygon, results);
+                    self._query_polygon(quadtree_points.clone(), children_idxs[3], q4_polygon, results);
+                }
+                // TODO: try optimisation: take bbox of polygon and quickly remove the results that are not in bbox already
+
+                // TODO: add to results
+                // results.update(
+                //  node for node in quadtree.get_point_idxs(node_idx) if is_contained_in(quadtree_points[node], polygon)
+                // )
+            }
+        }
+        Ok(())
+    }
     
 }
 
@@ -407,9 +461,9 @@ fn polygon_extents(polytope_points: &Vec<(f64, f64)>, slice_axis_idx: usize) -> 
 }
 
 
-fn slice_in_two(polytope_points: Option<Vec<(f64, f64)>>, value: f64, slice_axis_idx: usize)-> (Option<Vec<(f64, f64)>>, Option<Vec<(f64, f64)>>){
+fn slice_in_two(polytope_points: Option<Vec<(f64, f64)>>, value: f64, slice_axis_idx: usize)-> Result<(Option<Vec<(f64, f64)>>, Option<Vec<(f64, f64)>>), QhullError>{
     if polytope_points.is_none() {
-        return (None, None)
+        return Ok((None, None))
     }
     else {
         // TODO: still to implement, placeholder
@@ -421,10 +475,16 @@ fn slice_in_two(polytope_points: Option<Vec<(f64, f64)>>, value: f64, slice_axis
             if x_upper <= value {
                 let left_polygon: Option<Vec<(f64, f64)>> = polytope_points;
                 let right_polygon: Option<Vec<(f64, f64)>> = None;
+                return Ok((left_polygon, right_polygon))
             }
             else if value < x_lower {
                 let right_polygon: Option<Vec<(f64, f64)>> = polytope_points;
                 let left_polygon: Option<Vec<(f64, f64)>> = None;
+                return Ok((left_polygon, right_polygon))
+            }
+            else {
+                // Will never be here
+                return Ok((None, None))
             }
         }
         else {
@@ -446,36 +506,12 @@ fn slice_in_two(polytope_points: Option<Vec<(f64, f64)>>, value: f64, slice_axis
                 .collect();
             left_points.extend(intersects.clone());
             right_points.extend(intersects.clone());
+
+            let left_polygon = find_qhull_points(left_points)?;
+            let right_polygon = find_qhull_points(right_points)?;
+
+            return Ok((left_polygon, right_polygon))
         }
-
-
-        //         else:
-        //             try:
-        //                 hull = scipy.spatial.ConvexHull(left_points)
-        //                 vertices = hull.vertices
-        //             except scipy.spatial.qhull.QhullError as e:
-        //                 if "less than" or "is flat" in str(e):
-        //                     vertices = None
-
-        //             if vertices is not None:
-        //                 left_polygon = ConvexPolytope(polytope._axes, [left_points[i] for i in vertices])
-        //             else:
-        //                 left_polygon = None
-
-        //             try:
-        //                 hull = scipy.spatial.ConvexHull(right_points)
-        //                 vertices = hull.vertices
-        //             except scipy.spatial.qhull.QhullError as e:
-        //                 if "less than" or "is flat" in str(e):
-        //                     vertices = None
-
-        //             if vertices is not None:
-        //                 right_polygon = ConvexPolytope(polytope._axes, [right_points[i] for i in vertices])
-        //             else:
-        //                 right_polygon = None
-
-        //         return (left_polygon, right_polygon)
-        (None, None)
     }
 }
 
@@ -505,6 +541,8 @@ impl fmt::Display for QhullError {
         }
     }
 }
+
+impl Error for QhullError {}
 
 
 fn find_qhull_points(points: Vec<(f64, f64)>) -> Result<Option<Vec<(f64, f64)>>, QhullError> {
@@ -556,164 +594,4 @@ fn find_qhull_points(points: Vec<(f64, f64)>) -> Result<Option<Vec<(f64, f64)>>,
         }
     }
 }
- 
 
-
-// QHULL FUNCTIONS/TEST
-fn try_qhull_functions(){
-    let points: Vec<(f64, f64)> = vec![
-        (0.0, 0.0),
-        (1.0, 0.0),
-        (0.5, 0.0),
-        (0.0, 1.0),
-    ];
-
-    // Convert Vec<(f64, f64)> into Vec<[f64; 2]>
-    let converted: Vec<[f64; 2]> = points.clone()
-        .into_iter()
-        .map(|(x, y)| [x, y]) // Convert tuple into fixed-size array
-        .collect();
-    
-    // let qh_result = Qh::builder()
-    // .compute(true)
-    // .build_from_iter([
-    //     // [0.25, 0.25],
-    //     [0.0, 0.0],
-    //     [1.0, 0.0],
-    //     [0.5, 0.0],
-    //     [0.0, 1.0],
-    //     // [0.5, 0.5],
-    //     // [3.0, 0.1]
-    // ]);
-
-    let qh_result = Qh::builder()
-    .compute(true)
-    .build_from_iter(converted);
-
-
-    match qh_result {
-        Ok(qh) => {
-            println!("Convex hull computed successfully!");
-            // let mut all_qhull_vertices: Vec<(f64, f64)> = Vec::new();
-            // for simplex in qh.simplices() {
-            //     let vertices = simplex
-            //         .vertices().unwrap()
-            //         .iter()
-            //         .map(|v| v.index(&qh).unwrap())
-            //         .collect::<Vec<_>>();
-        
-            //     // println!("{:?}", vertices);
-        
-            //     // let vertices = simplex
-            //     //     .vertices();
-            //     all_qhull_vertices.append(&mut vertices);
-            //     println!("{:?}", vertices);
-            // }
-            
-            let mut all_qhull_vertices: Vec<usize> = Vec::new();
-            let mut all_qhull_vertices_: HashSet<usize> = HashSet::new();
-            for simplex in qh.simplices() {
-                let vertices = simplex
-                    .vertices()
-                    .unwrap()
-                    .iter()
-                    .map(|v| v.index(&qh).unwrap())
-                    .collect::<Vec<_>>();
-                
-                for vertex in &vertices {
-                    if all_qhull_vertices_.insert(*vertex) { // `insert()` returns false if already present
-                        all_qhull_vertices.push(*vertex);
-                    }
-                }
-                println!("{:?}", vertices);
-            }
-            println!("{:?}", all_qhull_vertices);
-
-            let mut actual_qhull_points: Vec<(f64, f64)> = Vec::new();
-
-            // TODO: push the points to a vector of the points
-            for idx in all_qhull_vertices {
-                // actual_qhull_points.push(points.get(idx))
-                if let Some(point) = points.get(idx) {
-                    actual_qhull_points.push(*point); // Dereference the reference to get the value
-                }
-            }
-
-            println!("{:?}", actual_qhull_points);
-
-
-
-            // let vertices = qh.vertices(); // Get convex hull vertices
-            // let convex_hull_vertices: Vec<[f64; 2]> = vertices
-            //     .iter()
-            //     .map(|&i| points[i]) // Map indices to actual points
-            //     .collect();
-            // println!("Convex hull vertices: {:?}", convex_hull_vertices);
-        }
-        Err(e) => {
-            let error_msg = e.to_string(); // Convert the error to a string
-
-            if error_msg.contains("is flat") {
-                println!("Had flat error message and handled it");
-            } else {
-                println!("Unhandled error: {}", error_msg);
-            }
-            // println!("Error computing convex hull: {}", e);
-
-            // Handle the error, maybe return early or set a fallback value
-        }
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-// THIS SHOULD BE A QUADTREE METHOD
-// def query_polygon(quadtree_points, quadtree: QuadTree, node_idx, polygon, results=None):
-//     # intersect quad tree with a 2D polygon
-//     if results is None:
-//         results = set()
-
-//     # intersect the children with the polygon
-//     # TODO: here, we create None polygons... think about how to handle them
-//     if polygon is None:
-//         return results
-//     else:
-//         polygon_points = {tuple(point) for point in polygon.points}
-//         # TODO: are these the right points which we are comparing, ie the points on the polygon
-//         # and the points on the rectangle quadrant?
-//         if sorted(list(polygon_points)) == quadtree.quadrant_rectangle_points(node_idx):
-//             results.update(quadtree.find_nodes_in(node_idx))
-//         else:
-//             children_idxs = quadtree.get_children_idxs(node_idx)
-//             if len(children_idxs) > 0:
-//                 # first slice vertically
-//                 quadtree_center = quadtree.get_center(node_idx)
-//                 left_polygon, right_polygon = slice_in_two(polygon, quadtree_center[0], 0)
-
-//                 # then slice horizontally
-//                 # ie need to slice the left and right polygons each in two to have the 4 quadrant polygons
-
-//                 q1_polygon, q2_polygon = slice_in_two(left_polygon, quadtree_center[1], 1)
-//                 q3_polygon, q4_polygon = slice_in_two(right_polygon, quadtree_center[1], 1)
-
-//                 # now query these 4 polygons further down the quadtree
-//                 query_polygon(quadtree_points, quadtree, children_idxs[0], q1_polygon, results)
-//                 query_polygon(quadtree_points, quadtree, children_idxs[1], q2_polygon, results)
-//                 query_polygon(quadtree_points, quadtree, children_idxs[2], q3_polygon, results)
-//                 query_polygon(quadtree_points, quadtree, children_idxs[3], q4_polygon, results)
-
-//             # TODO: try optimisation: take bbox of polygon and quickly remove the results that are not in bbox already
-
-//             results.update(
-//                 node for node in quadtree.get_point_idxs(node_idx) if is_contained_in(quadtree_points[node], polygon)
-//             )
-//         return results
