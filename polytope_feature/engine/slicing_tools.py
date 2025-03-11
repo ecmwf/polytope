@@ -5,6 +5,7 @@ from .hullslicer import _find_intersects
 
 
 def slice_in_two(polytope: ConvexPolytope, value, slice_axis_idx):
+    # print(value)
     if polytope is None:
         return (None, None)
     else:

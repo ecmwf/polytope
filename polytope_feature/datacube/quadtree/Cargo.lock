@@ -334,8 +334,7 @@ dependencies = [
 [[package]]
 name = "qhull"
 version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5cc8b36d9c4b5a9ed4ed495318cabd5024e13d65419bb3de8b2a3da3907a014a"
+source = "git+https://github.com/LucaCiucci/qhull-rs#0c3bcadceb0f9106e779c87e738f418282236a9c"
 dependencies = [
  "qhull-sys",
  "thiserror",
@@ -344,8 +343,7 @@ dependencies = [
 [[package]]
 name = "qhull-sys"
 version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4696d373a738018e5e0c72a63d3a676ba660d2503df3ada3e8cef84ca7f9a51e"
+source = "git+https://github.com/LucaCiucci/qhull-rs#0c3bcadceb0f9106e779c87e738f418282236a9c"
 dependencies = [
  "bindgen",
  "cc",

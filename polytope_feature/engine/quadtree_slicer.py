@@ -7,6 +7,7 @@ from quadtree import QuadTree
 
 from ..datacube.datacube_axis import IntDatacubeAxis
 from ..datacube.quadtree_additional_operations import query_polygon
+# from quadtree import query_polygon
 from ..datacube.tensor_index_tree import TensorIndexTree
 from .engine import Engine
 
@@ -59,7 +60,9 @@ class QuadTreeSlicer(Engine):
 
         # need to find points of the datacube contained within the polytope
         # We do this by intersecting the datacube point cloud quad tree with the polytope here
-        polygon_points = query_polygon(self.points, self.quad_tree, 0, polytope)
+        # polygon_points = query_polygon(self.points, self.quad_tree, 0, polytope)
+        polytope_points = [tuple(point) for point in polytope.points]
+        polygon_points = self.quad_tree.query_polygon(self.points, 0, polytope_points)
         return polygon_points
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):

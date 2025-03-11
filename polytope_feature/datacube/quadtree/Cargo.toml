@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 pyo3 = { version = "0.20", features = ["extension-module"] }
-qhull = "0.4"
+qhull = { git = "https://github.com/LucaCiucci/qhull-rs" }
 
 [lib]
 crate-type = ["cdylib"]
