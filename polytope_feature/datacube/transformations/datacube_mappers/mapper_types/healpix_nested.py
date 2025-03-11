@@ -14,9 +14,11 @@ class NestedHealpixGridMapper(DatacubeMapper):
         self._first_axis_vals = self.first_axis_vals()
         self.compressed_grid_axes = [self._mapped_axes[1]]
         self.Nside = self._resolution
+        self._cached_longitudes = {}
         self.k = int(math.log2(self.Nside))
         self.Npix = 12 * self.Nside * self.Nside
         self.Ncap = (self.Nside * (self.Nside - 1)) << 1
+        self._healpix_longitudes = {}
         if md5_hash is not None:
             self.md5_hash = md5_hash
         else:
@@ -58,7 +60,9 @@ class NestedHealpixGridMapper(DatacubeMapper):
         return values
 
     def second_axis_vals_from_idx(self, first_val_idx):
-        values = self.HEALPix_longitudes(first_val_idx)
+        if first_val_idx not in self._healpix_longitudes:
+            self._healpix_longitudes[first_val_idx] = self.HEALPix_longitudes(first_val_idx)
+        values = self._healpix_longitudes[first_val_idx]
         return values
 
     def HEALPix_nj(self, i):
@@ -74,14 +78,18 @@ class NestedHealpixGridMapper(DatacubeMapper):
             return self.HEALPix_nj(ni - 1 - i)
 
     def HEALPix_longitudes(self, i):
-        Nj = self.HEALPix_nj(i)
-        step = 360.0 / Nj
-        start = (
-            step / 2.0 if i < self._resolution or 3 * self._resolution - 1 < i or (i + self._resolution) % 2 else 0.0
-        )
+        if i in self._cached_longitudes:
+            return self._cached_longitudes[i]
+        else:
+            Nj = self.HEALPix_nj(i)
+            step = 360.0 / Nj
+            start = (
+                step / 2.0 if i < self._resolution or 3 * self._resolution -
+                1 < i or (i + self._resolution) % 2 else 0.0
+            )
 
-        longitudes = [start + n * step for n in range(Nj)]
-
+            longitudes = [start + n * step for n in range(Nj)]
+            self._cached_longitudes[i] = longitudes
         return longitudes
 
     def map_second_axis(self, first_val, lower, upper):
@@ -139,14 +147,21 @@ class NestedHealpixGridMapper(DatacubeMapper):
 
     def unmap(self, first_val, second_val):
         tol = 1e-8
-        first_value = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
-        first_idx = self._first_axis_vals.index(first_value)
-        second_val = [i for i in self.second_axis_vals(first_val) if second_val[0] - tol <= i <= second_val[0] + tol][0]
-        second_idx = self.second_axis_vals(first_val).index(second_val)
+        first_idx = next(
+            (i for i, val in enumerate(self._first_axis_vals) if first_val[0] - tol <= val <= first_val[0] + tol),
+            None
+        )
+        if first_idx is None:
+            return None
+        second_axis_vals = self.second_axis_vals_from_idx(first_idx)
+        second_idx = next(
+            (i for i, val in enumerate(second_axis_vals) if second_val[0] - tol <= val <= second_val[0] + tol),
+            None
+        )
+        if second_idx is None:
+            return None
         healpix_index = self.axes_idx_to_healpix_idx(first_idx, second_idx)
-        # TODO: here do conversion of ring to nested healpix representation before returning
-        healpix_index = self.ring_to_nested(healpix_index)
-        return healpix_index
+        return self.ring_to_nested(healpix_index)
 
     def div_03(self, a, b):
         t = 1 if a >= (b << 1) else 0
