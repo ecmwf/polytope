@@ -5,6 +5,7 @@ from typing import Any, List
 
 import numpy as np
 import pandas as pd
+import xarray as xr
 
 from .transformations.datacube_cyclic.datacube_cyclic import DatacubeAxisCyclic
 from .transformations.datacube_mappers.datacube_mappers import DatacubeMapper
@@ -143,21 +144,38 @@ class DatacubeAxis(ABC):
         return indexes_between_ranges
 
     @staticmethod
-    def create_standard(name, values, datacube):
-        values = np.array(values)
-        DatacubeAxis.check_axis_type(name, values)
-        if datacube._axes is None:
-            datacube._axes = {name: deepcopy(_type_to_axis_lookup[values.dtype.type])}
+    def values_type(values):
+        type_ = None
+        if isinstance(values, xr.core.variable.IndexVariable) or isinstance(values, xr.core.variable.Variable):
+            # If we have some xarray variable, transform them to actual variable type
+            values = np.array(values)
+            type_ = values.dtype.type
         else:
-            datacube._axes[name] = deepcopy(_type_to_axis_lookup[values.dtype.type])
+            if len(values) == 0:
+                # If we have no values (newly created axis), default to a float
+                values = np.array(values)
+                type_ = values.dtype.type
+            else:
+                type_ = type(values[0])
+        return type_
+
+    @staticmethod
+    def create_standard(name, values, datacube):
+        val_type = DatacubeAxis.values_type(values)
+
+        DatacubeAxis.check_axis_type(name, val_type)
+        if datacube._axes is None:
+            datacube._axes = {name: deepcopy(_type_to_axis_lookup[val_type])}
+        else:
+            datacube._axes[name] = deepcopy(_type_to_axis_lookup[val_type])
+
         datacube._axes[name].name = name
         datacube.axis_counter += 1
 
     @staticmethod
-    def check_axis_type(name, values):
-        # NOTE: The values here need to be a numpy array which has a dtype attribute
-        if values.dtype.type not in _type_to_axis_lookup:
-            raise ValueError(f"Could not create a mapper for index type {values.dtype.type} for axis {name}")
+    def check_axis_type(name, val_type):
+        if val_type not in _type_to_axis_lookup:
+            raise ValueError(f"Could not create a mapper for index type {val_type} for axis {name}")
 
 
 transformations_order = [
@@ -302,10 +320,13 @@ _type_to_axis_lookup = {
     np.int64: IntDatacubeAxis(),
     np.datetime64: PandasTimestampDatacubeAxis(),
     np.timedelta64: PandasTimedeltaDatacubeAxis(),
+    pd.Timedelta: PandasTimedeltaDatacubeAxis(),
     np.float64: FloatDatacubeAxis(),
     np.float32: FloatDatacubeAxis(),
     np.int32: IntDatacubeAxis(),
     np.str_: UnsliceableDatacubeAxis(),
     str: UnsliceableDatacubeAxis(),
     np.object_: UnsliceableDatacubeAxis(),
+    int: IntDatacubeAxis(),
+    float: FloatDatacubeAxis(),
 }

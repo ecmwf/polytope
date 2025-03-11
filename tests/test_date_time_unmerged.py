@@ -1,9 +1,8 @@
 import pandas as pd
 import pytest
 
-from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.polytope import Polytope, Request
-from polytope_feature.shapes import Box, Select
+from polytope_feature.shapes import Box, Select, Span
 
 
 class TestSlicingFDBDatacube:
@@ -12,11 +11,8 @@ class TestSlicingFDBDatacube:
         self.options = {
             "axis_config": [
                 {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
-                {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
-                {
-                    "axis_name": "date",
-                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
-                },
+                {"axis_name": "date", "transformations": [{"name": "type_change", "type": "date"}]},
+                {"axis_name": "time", "transformations": [{"name": "type_change", "type": "time"}]},
                 {
                     "axis_name": "values",
                     "transformations": [
@@ -26,6 +22,7 @@ class TestSlicingFDBDatacube:
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
             ],
+            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper", "type": "fc"},
             "compressed_axes_config": [
                 "longitude",
                 "latitude",
@@ -39,7 +36,6 @@ class TestSlicingFDBDatacube:
                 "stream",
                 "type",
             ],
-            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
         }
 
     # Testing different shapes
@@ -50,36 +46,24 @@ class TestSlicingFDBDatacube:
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
-            Select("date", [pd.Timestamp("20230625T120000")]),
+            # Select("date", [pd.Timestamp("20240118")]),
+            Select("time", [pd.Timedelta("00:00:00")]),
+            # Span("time", [pd.Timedelta("00:00:00")]),
+            Span("date", pd.Timestamp("20240118"), pd.Timestamp("20240119")),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
             Select("param", ["167"]),
             Select("class", ["od"]),
             Select("stream", ["oper"]),
-            Select("type", ["an"]),
+            Select("type", ["fc"]),
             Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
-        self.API.datacube.prep_tree_encoding(result)
         result.pprint()
-        for leaf in result.leaves:
-            assert leaf.hidden
-            assert leaf._parent.hidden
-            assert leaf._parent._parent.indexes == [
-                [3294704],
-                [3294705],
-                [3294706],
-                [3289572],
-                [3289573],
-                [3289574],
-                [3284444],
-                [3284445],
-                [3284446],
-            ]
+        assert len(result.leaves) == 3
+        assert len(result.leaves[0].result) == 3
