@@ -118,33 +118,6 @@ class NestedHealpixGridMapper(DatacubeMapper):
                 idx += second_idx
                 return idx
 
-    def find_second_idx(self, first_val, second_val):
-        tol = 1e-10
-        second_axis_vals = self.second_axis_vals(first_val)
-        second_idx = bisect.bisect_left(second_axis_vals, second_val - tol)
-        return second_idx
-
-    def unmap_first_val_to_start_line_idx(self, first_val):
-        tol = 1e-8
-        first_val = [i for i in self._first_axis_vals if first_val - tol <= i <= first_val + tol][0]
-        first_idx = self._first_axis_vals.index(first_val)
-        idx = 0
-        for i in range(self._resolution - 1):
-            if i != first_idx:
-                idx += 4 * (i + 1)
-            else:
-                return idx
-        for i in range(self._resolution - 1, 3 * self._resolution):
-            if i != first_idx:
-                idx += 4 * self._resolution
-            else:
-                return idx
-        for i in range(3 * self._resolution, 4 * self._resolution - 1):
-            if i != first_idx:
-                idx += 4 * (4 * self._resolution - 1 - i + 1)
-            else:
-                return idx
-
     def unmap(self, first_val, second_val):
         tol = 1e-8
         first_idx = next(
