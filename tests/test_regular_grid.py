@@ -102,7 +102,7 @@ class TestRegularGrid:
         tol = 1e-8
         leaves = result.leaves
         for i in range(len(leaves)):
-            right_pl_results = leaves[i].result[len(leaves[i].values) :]
+            right_pl_results = leaves[i].result[len(leaves[i].values):]
             result_tree = right_pl_results[0]
             cubepath = leaves[i].flatten()
             lat = cubepath["latitude"][0]
@@ -116,7 +116,7 @@ class TestRegularGrid:
             eccodes_lats.append(eccodes_lat)
 
             mapper = RegularGridMapper("base", ["base1", "base2"], 30)
-            assert nearest_points[121][0]["index"] == mapper.unmap((lat,), (lon,))
+            assert nearest_points[121][0]["index"] == mapper.unmap((lat,), (lon,))[0]
 
             assert eccodes_lat - tol <= lat
             assert lat <= eccodes_lat + tol

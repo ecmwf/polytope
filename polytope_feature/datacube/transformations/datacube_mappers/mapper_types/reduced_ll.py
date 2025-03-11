@@ -5114,14 +5114,17 @@ class ReducedLatLonMapper(DatacubeMapper):
         second_idx = bisect.bisect_left(second_axis_vals, second_val - tol)
         return second_idx
 
-    def unmap(self, first_val, second_val):
+    def unmap(self, first_val, second_vals):
         tol = 1e-8
         first_value = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
         first_idx = self._first_axis_vals.index(first_value)
-        second_val = [i for i in self.second_axis_vals(first_val) if second_val[0] - tol <= i <= second_val[0] + tol][0]
-        second_idx = self.second_axis_vals(first_val).index(second_val)
-        reduced_ll_index = self.axes_idx_to_reduced_ll_idx(first_idx, second_idx)
-        return reduced_ll_index
+        return_idxs = []
+        for second_val in second_vals:
+            second_val = [i for i in self.second_axis_vals(first_val) if second_val - tol <= i <= second_val + tol][0]
+            second_idx = self.second_axis_vals(first_val).index(second_val)
+            reduced_ll_index = self.axes_idx_to_reduced_ll_idx(first_idx, second_idx)
+            return_idxs.append(reduced_ll_index)
+        return return_idxs
 
 
 # md5 grid hash in form {resolution : hash}

@@ -1,4 +1,3 @@
-import bisect
 import math
 
 from ..datacube_mappers import DatacubeMapper
@@ -118,7 +117,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
                 idx += second_idx
                 return idx
 
-    def unmap(self, first_val, second_val):
+    def unmap(self, first_val, second_vals):
         tol = 1e-8
         first_idx = next(
             (i for i, val in enumerate(self._first_axis_vals) if first_val[0] - tol <= val <= first_val[0] + tol),
@@ -127,14 +126,18 @@ class NestedHealpixGridMapper(DatacubeMapper):
         if first_idx is None:
             return None
         second_axis_vals = self.second_axis_vals_from_idx(first_idx)
-        second_idx = next(
-            (i for i, val in enumerate(second_axis_vals) if second_val[0] - tol <= val <= second_val[0] + tol),
-            None
-        )
-        if second_idx is None:
-            return None
-        healpix_index = self.axes_idx_to_healpix_idx(first_idx, second_idx)
-        return self.ring_to_nested(healpix_index)
+
+        return_idxs = []
+        for second_val in second_vals:
+            second_idx = next(
+                (i for i, val in enumerate(second_axis_vals) if second_val - tol <= val <= second_val + tol),
+                None
+            )
+            if second_idx is None:
+                return None
+            healpix_index = self.axes_idx_to_healpix_idx(first_idx, second_idx)
+            return_idxs.append(healpix_index)
+        return return_idxs
 
     def div_03(self, a, b):
         t = 1 if a >= (b << 1) else 0
