@@ -116,7 +116,7 @@ class TestRegularGrid:
             eccodes_lats.append(eccodes_lat)
 
             mapper = RegularGridMapper("base", ["base1", "base2"], 30)
-            assert nearest_points[121][0]["index"] == mapper.unmap((lat,), (lon,))
+            assert nearest_points[121][0]["index"] == mapper.unmap((lat,), (lon,))[0]
 
             assert eccodes_lat - tol <= lat
             assert lat <= eccodes_lat + tol

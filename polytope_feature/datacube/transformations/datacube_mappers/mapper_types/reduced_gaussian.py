@@ -1432,25 +1432,17 @@ class ReducedGaussianGridMapper(DatacubeMapper):
                 idx += second_idx
                 return idx
 
-    # def find_second_idx(self, first_val, second_val):
-    #     tol = 1e-10
-    #     second_axis_vals = self.second_axis_vals(first_val)
-    #     second_idx = bisect.bisect_left(second_axis_vals, second_val[0] - tol)
-    #     return second_idx
-
-    # def unmap(self, first_val, second_val):
-    #     (first_idx, second_idx) = self.find_second_idx(first_val, second_val)
-    #     octahedral_index = self.axes_idx_to_reduced_gaussian_idx(first_idx, second_idx)
-    #     return octahedral_index
-
-    def unmap(self, first_val, second_val):
+    def unmap(self, first_val, second_vals):
         tol = 1e-8
         first_value = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
         first_idx = self._first_axis_vals.index(first_value)
-        second_val = [i for i in self.second_axis_vals(first_val) if second_val[0] - tol <= i <= second_val[0] + tol][0]
-        second_idx = self.second_axis_vals(first_val).index(second_val)
-        reduced_gaussian_index = self.axes_idx_to_reduced_gaussian_idx(first_idx, second_idx)
-        return reduced_gaussian_index
+        return_idxs = []
+        for second_val in second_vals:
+            second_val = [i for i in self.second_axis_vals(first_val) if second_val - tol <= i <= second_val + tol][0]
+            second_idx = self.second_axis_vals(first_val).index(second_val)
+            reduced_gaussian_index = self.axes_idx_to_reduced_gaussian_idx(first_idx, second_idx)
+            return_idxs.append(reduced_gaussian_index)
+        return return_idxs
 
 
 # md5 grid hash in form {resolution : hash}
