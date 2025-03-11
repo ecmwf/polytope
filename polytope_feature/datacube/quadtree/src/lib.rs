@@ -93,12 +93,12 @@ impl QuadTree {
     }
 
     // /// Get the center of a node
-    // fn get_center(&self, index: usize) -> PyResult<(f64, f64)> {
-    //     let nodes = &self.nodes;
-    //     nodes.get(index).map(|n| n.center).ok_or_else(|| {
-    //         pyo3::exceptions::PyIndexError::new_err("Invalid node index")
-    //     })
-    // }
+    fn get_center(&self, index: usize) -> PyResult<(f64, f64)> {
+        let nodes = &self.nodes;
+        nodes.get(index).map(|n| n.center).ok_or_else(|| {
+            pyo3::exceptions::PyIndexError::new_err("Invalid node index")
+        })
+    }
 
 
     fn build_point_tree(&mut self, points: Vec<(f64, f64)>) {
@@ -111,7 +111,7 @@ impl QuadTree {
         });
     }
 
-    // fn quadrant_rectangle_points(&self, node_idx: usize) -> PyResult<Vec<(f64, f64)>> {
+
     fn quadrant_rectangle_points(&self, node_idx: usize) -> PyResult<Vec<(f64, f64)>> {
         let (cx, cy) = self.get_center(node_idx)?; // Propagate error if get_center fails
         let (sx, sy) = self.get_size(node_idx)?;   // Propagate error if get_size fails
@@ -124,22 +124,22 @@ impl QuadTree {
         ])
     }
 
-    // fn find_nodes_in(&mut self, node_idx: usize) -> Vec<usize> {
-    //     let mut results = Vec::new();
-    //     self.collect_points(&mut results, node_idx);
-    //     results
-    // }
+    fn find_nodes_in(&mut self, node_idx: usize) -> Vec<usize> {
+        let mut results = Vec::new();
+        self.collect_points(&mut results, node_idx);
+        results
+    }
 
-    // fn get_children_idxs(&self, index: usize) -> Vec<usize> {
-    //     // self.nodes.get(index).map_or_else(Vec::new, |node| node.children.clone())
-    //     self.nodes.get(index).map_or_else(Vec::new, |node| node.children.to_vec())
-    // }
+    fn get_children_idxs(&self, index: usize) -> Vec<usize> {
+        // self.nodes.get(index).map_or_else(Vec::new, |node| node.children.clone())
+        self.nodes.get(index).map_or_else(Vec::new, |node| node.children.to_vec())
+    }
 
-    // fn get_point_idxs(&self, node_idx: usize) -> Vec<usize> {
-    //     self.nodes.get(node_idx)
-    //         .and_then(|n| n.points.as_ref()) // Get points if node exists
-    //         .map_or_else(Vec::new, |points| points.iter().map(|p| *p).collect())
-    // }
+    fn get_point_idxs(&self, node_idx: usize) -> Vec<usize> {
+        self.nodes.get(node_idx)
+            .and_then(|n| n.points.as_ref()) // Get points if node exists
+            .map_or_else(Vec::new, |points| points.iter().map(|p| *p).collect())
+    }
 
 
 
@@ -163,30 +163,43 @@ impl QuadTree {
     // const MAX: usize = 10;
     const MAX_DEPTH: i32 = 20;
 
-    /// Get the center of a node
-    fn get_center(&self, index: usize) -> PyResult<(f64, f64)> {
-        let nodes = &self.nodes;
-        nodes.get(index).map(|n| n.center).ok_or_else(|| {
-            pyo3::exceptions::PyIndexError::new_err("Invalid node index")
-        })
-    }
+    // // fn quadrant_rectangle_points(&self, node_idx: usize) -> PyResult<Vec<(f64, f64)>> {
+    // fn quadrant_rectangle_points(&self, node_idx: usize) -> PyResult<Vec<(f64, f64)>> {
+    //     let (cx, cy) = self.get_center(node_idx)?; // Propagate error if get_center fails
+    //     let (sx, sy) = self.get_size(node_idx)?;   // Propagate error if get_size fails
+        
+    //     Ok(vec![
+    //         (cx - sx, cy - sy),
+    //         (cx - sx, cy + sy),
+    //         (cx + sx, cy - sy),
+    //         (cx + sx, cy + sy),
+    //     ])
+    // }
 
-    fn find_nodes_in(&mut self, node_idx: usize) -> Vec<usize> {
-        let mut results = Vec::new();
-        self.collect_points(&mut results, node_idx);
-        results
-    }
+    // /// Get the center of a node
+    // fn get_center(&self, index: usize) -> PyResult<(f64, f64)> {
+    //     let nodes = &self.nodes;
+    //     nodes.get(index).map(|n| n.center).ok_or_else(|| {
+    //         pyo3::exceptions::PyIndexError::new_err("Invalid node index")
+    //     })
+    // }
 
-    fn get_children_idxs(&self, index: usize) -> Vec<usize> {
-        // self.nodes.get(index).map_or_else(Vec::new, |node| node.children.clone())
-        self.nodes.get(index).map_or_else(Vec::new, |node| node.children.to_vec())
-    }
+    // fn find_nodes_in(&mut self, node_idx: usize) -> Vec<usize> {
+    //     let mut results = Vec::new();
+    //     self.collect_points(&mut results, node_idx);
+    //     results
+    // }
 
-    fn get_point_idxs(&self, node_idx: usize) -> Vec<usize> {
-        self.nodes.get(node_idx)
-            .and_then(|n| n.points.as_ref()) // Get points if node exists
-            .map_or_else(Vec::new, |points| points.iter().map(|p| *p).collect())
-    }
+    // fn get_children_idxs(&self, index: usize) -> Vec<usize> {
+    //     // self.nodes.get(index).map_or_else(Vec::new, |node| node.children.clone())
+    //     self.nodes.get(index).map_or_else(Vec::new, |node| node.children.to_vec())
+    // }
+
+    // fn get_point_idxs(&self, node_idx: usize) -> Vec<usize> {
+    //     self.nodes.get(node_idx)
+    //         .and_then(|n| n.points.as_ref()) // Get points if node exists
+    //         .map_or_else(Vec::new, |points| points.iter().map(|p| *p).collect())
+    // }
 
 
     fn create_node(&mut self, center: (f64, f64), size: (f64, f64), depth: i32) -> usize {
@@ -383,14 +396,15 @@ impl QuadTree {
     //     Ok(results)
     // }
 
-    fn _query_polygon(&mut self, quadtree_points: &Vec<(f64, f64)>, node_idx: usize, polygon_points: Option<Vec<(f64, f64)>>, results: &mut HashSet<usize>) -> Result<(), Box<dyn std::error::Error>>{
-        if !polygon_points.is_none() {
-            let mut points = polygon_points.clone().unwrap();
+    fn _query_polygon(&mut self, quadtree_points: &Vec<(f64, f64)>, node_idx: usize, mut polygon_points: Option<Vec<(f64, f64)>>, results: &mut HashSet<usize>) -> Result<(), Box<dyn std::error::Error>>{
+        if let Some(points) = polygon_points.as_mut() {
+        // if !polygon_points.is_none() {
+        //     let mut points = polygon_points.clone().unwrap();
             points.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
             // println!("HERE");
             // println!("{:?}", points);
             // println!{"{:?}", self.quadrant_rectangle_points(node_idx)?};
-            if points == self.quadrant_rectangle_points(node_idx)? {
+            if *points == self.quadrant_rectangle_points(node_idx)? {
                 // println!("WERE EVER HERE IN SHORTCUT?");
                 results.extend(self.find_nodes_in(node_idx));
                 // println!("{:?}", results);
@@ -484,7 +498,7 @@ fn _find_intersects(polytope_points: &Vec<(f64, f64)>, slice_axis_idx: usize, va
         let value_to_compare = if slice_axis_idx == 0 { *x } else { *y };
         value_to_compare >= value
     })
-    .cloned() // Convert `&(f64, f64)` to `(f64, f64)`
+    .copied() // Convert `&(f64, f64)` to `(f64, f64)`
     .collect();
 
     let below_slice: Vec<(f64, f64)> = polytope_points
@@ -493,7 +507,7 @@ fn _find_intersects(polytope_points: &Vec<(f64, f64)>, slice_axis_idx: usize, va
         let value_to_compare = if slice_axis_idx == 0 { *x } else { *y };
         value_to_compare <= value
     })
-    .cloned() // Convert `&(f64, f64)` to `(f64, f64)`
+    .copied() // Convert `&(f64, f64)` to `(f64, f64)`
     .collect();
 
 
@@ -576,40 +590,71 @@ fn slice_in_two(polytope_points: Option<Vec<(f64, f64)>>, value: f64, slice_axis
             }
         }
         else {
-            let mut left_points: Vec<(f64, f64)> = polytope_points.clone().unwrap()
-                .iter()
-                .filter(|(x, y)| {
-                    let value_to_compare = if slice_axis_idx == 0 { *x } else { *y };
-                    value_to_compare <= value
-                })
-                .cloned() // Convert `&(f64, f64)` to `(f64, f64)`
-                .collect();
-            let mut right_points: Vec<(f64, f64)> = polytope_points.clone().unwrap()
-                .iter()
-                .filter(|(x, y)| {
-                    let value_to_compare = if slice_axis_idx == 0 { *x } else { *y };
-                    value_to_compare >= value
-                })
-                .cloned() // Convert `&(f64, f64)` to `(f64, f64)`
-                .collect();
-            left_points.extend(intersects.clone());
-            right_points.extend(intersects.clone());
+            // let mut left_points: Vec<(f64, f64)> = polytope_points.clone().unwrap()
+            //     .iter()
+            //     .filter(|(x, y)| {
+            //         let value_to_compare = if slice_axis_idx == 0 { *x } else { *y };
+            //         value_to_compare <= value
+            //     })
+            //     .cloned() // Convert `&(f64, f64)` to `(f64, f64)`
+            //     .collect();
+            // let mut right_points: Vec<(f64, f64)> = polytope_points.clone().unwrap()
+            //     .iter()
+            //     .filter(|(x, y)| {
+            //         let value_to_compare = if slice_axis_idx == 0 { *x } else { *y };
+            //         value_to_compare >= value
+            //     })
+            //     .cloned() // Convert `&(f64, f64)` to `(f64, f64)`
+            //     .collect();
+            // left_points.extend(intersects.clone());
+            // right_points.extend(intersects.clone());
+            if let Some(polytope_points) = polytope_points.as_ref() {
+                let left_points: Vec<(f64, f64)> = polytope_points
+                    .iter()
+                    .filter(|(x, y)| {
+                        let value_to_compare = if slice_axis_idx == 0 { *x } else { *y };
+                        value_to_compare <= value
+                    })
+                    .copied() // Avoids cloning, since (f64, f64) implements Copy
+                    .collect();
+            
+                let right_points: Vec<(f64, f64)> = polytope_points
+                    .iter()
+                    .filter(|(x, y)| {
+                        let value_to_compare = if slice_axis_idx == 0 { *x } else { *y };
+                        value_to_compare >= value
+                    })
+                    .copied()
+                    .collect();
+            
+                let mut left_points = left_points; // Rebind if mutation is necessary
+                let mut right_points = right_points;
+                
+                left_points.extend(&intersects);  // Use reference to avoid cloning
+                right_points.extend(&intersects);
 
-            let left_polygon = find_qhull_points(left_points)?;
-            let right_polygon = find_qhull_points(right_points)?;
+                let left_polygon = find_qhull_points(left_points)?;
+                let right_polygon = find_qhull_points(right_points)?;
+                return Ok((left_polygon, right_polygon))
+            }
 
-            return Ok((left_polygon, right_polygon))
+            // let left_polygon = find_qhull_points(left_points)?;
+            // let right_polygon = find_qhull_points(right_points)?;
+
+            // return Ok((left_polygon, right_polygon))
+            return Ok((None, None))
         }
     }
 }
 
 
-fn change_points_for_qhull(points: Vec<(f64, f64)>) -> Vec<[f64; 2]> {
-    let converted: Vec<[f64; 2]> = points.clone()
-        .into_iter()
-        .map(|(x, y)| [x, y]) // Convert tuple into fixed-size array
-        .collect();
-    converted
+fn change_points_for_qhull(points: &Vec<(f64, f64)>) -> Vec<[f64; 2]> {
+    // let converted: Vec<[f64; 2]> = points.clone()
+    //     .into_iter()
+    //     .map(|(x, y)| [x, y]) // Convert tuple into fixed-size array
+    //     .collect();
+    // converted
+    points.into_iter().map(|&(x, y)| [x, y]).collect()
 }
 
 
@@ -635,7 +680,7 @@ impl Error for QhullError {}
 
 fn find_qhull_points(points: Vec<(f64, f64)>) -> Result<Option<Vec<(f64, f64)>>, QhullError> {
 
-    let converted = change_points_for_qhull(points.clone());
+    let converted = change_points_for_qhull(&points);
     let qh_result = Qh::builder()
     .compute(true)
     .build_from_iter(converted);

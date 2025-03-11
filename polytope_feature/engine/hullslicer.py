@@ -243,9 +243,9 @@ def _find_intersects(polytope, slice_axis_idx, value):
             # Linearly interpolate all coordinates of two points (a,b) of the polytope
             interp_coeff = (value - b[slice_axis_idx]) / (a[slice_axis_idx] - b[slice_axis_idx])
             intersect = lerp(a, b, interp_coeff)
-            print("HERE NOW LOOK")
-            print(intersect)
-            print(value)
+            # print("HERE NOW LOOK")
+            # print(intersect)
+            # print(value)
             intersects.append(intersect)
     return intersects
 
