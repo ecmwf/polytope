@@ -1438,8 +1438,7 @@ class ReducedGaussianGridMapper(DatacubeMapper):
         first_idx = self._first_axis_vals.index(first_value)
         return_idxs = []
         for second_val in second_vals:
-            second_val = [i for i in self.second_axis_vals(
-                first_val) if second_val - tol <= i <= second_val + tol][0]
+            second_val = [i for i in self.second_axis_vals(first_val) if second_val - tol <= i <= second_val + tol][0]
             second_idx = self.second_axis_vals(first_val).index(second_val)
             reduced_gaussian_index = self.axes_idx_to_reduced_gaussian_idx(first_idx, second_idx)
             return_idxs.append(reduced_gaussian_index)

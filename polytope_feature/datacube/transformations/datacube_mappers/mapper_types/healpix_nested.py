@@ -83,8 +83,9 @@ class NestedHealpixGridMapper(DatacubeMapper):
             Nj = self.HEALPix_nj(i)
             step = 360.0 / Nj
             start = (
-                step / 2.0 if i < self._resolution or 3 * self._resolution -
-                1 < i or (i + self._resolution) % 2 else 0.0
+                step / 2.0
+                if i < self._resolution or 3 * self._resolution - 1 < i or (i + self._resolution) % 2
+                else 0.0
             )
 
             longitudes = [start + n * step for n in range(Nj)]
@@ -120,8 +121,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
     def unmap(self, first_val, second_vals):
         tol = 1e-8
         first_idx = next(
-            (i for i, val in enumerate(self._first_axis_vals) if first_val[0] - tol <= val <= first_val[0] + tol),
-            None
+            (i for i, val in enumerate(self._first_axis_vals) if first_val[0] - tol <= val <= first_val[0] + tol), None
         )
         if first_idx is None:
             return None
@@ -130,8 +130,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
         return_idxs = []
         for second_val in second_vals:
             second_idx = next(
-                (i for i, val in enumerate(second_axis_vals) if second_val - tol <= val <= second_val + tol),
-                None
+                (i for i, val in enumerate(second_axis_vals) if second_val - tol <= val <= second_val + tol), None
             )
             if second_idx is None:
                 return None
