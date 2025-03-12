@@ -6,6 +6,8 @@ edition = "2021"
 [dependencies]
 pyo3 = { version = "0.20", features = ["extension-module"] }
 qhull = { path = "../../../../qhull-rs" }
+rayon = "1.8"
 
 [lib]
 crate-type = ["cdylib"]
+
