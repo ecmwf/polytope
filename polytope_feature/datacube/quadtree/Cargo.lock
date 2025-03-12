@@ -334,7 +334,6 @@ dependencies = [
 [[package]]
 name = "qhull"
 version = "0.4.0"
-source = "git+https://github.com/LucaCiucci/qhull-rs#0c3bcadceb0f9106e779c87e738f418282236a9c"
 dependencies = [
  "qhull-sys",
  "thiserror",
@@ -343,7 +342,6 @@ dependencies = [
 [[package]]
 name = "qhull-sys"
 version = "0.4.0"
-source = "git+https://github.com/LucaCiucci/qhull-rs#0c3bcadceb0f9106e779c87e738f418282236a9c"
 dependencies = [
  "bindgen",
  "cc",
