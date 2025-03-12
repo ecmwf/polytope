@@ -2,7 +2,7 @@
 
 use pyo3::prelude::*;   // Do not use * for importing here
 
-use std::sync::{Arc, Mutex};
+// use std::sync::{Arc, Mutex};
 
 use qhull::Qh;
 use std::collections::HashSet;
@@ -66,7 +66,7 @@ impl QuadTree {
         let nodes_size: usize = self.nodes.len() * size_of::<QuadTreeNode>();
         size += nodes_size;
         // Sum sizes of each QuadTreeNode (including their allocated memory)
-        for (i, node) in self.nodes.iter().enumerate() {
+        for (_i, node) in self.nodes.iter().enumerate() {
             let node_size = node.sizeof();
             size += node_size;
         }
@@ -75,7 +75,7 @@ impl QuadTree {
 
     fn build_point_tree(&mut self, points: Vec<(f64, f64)>) {
         self.create_node((0.0,0.0), (180.0, 90.0), 0);
-        points.iter().enumerate().for_each(|(index, p)| {
+        points.iter().enumerate().for_each(|(index, _p)| {
             self.insert(index, 0, &points);
         });
     }
@@ -174,7 +174,7 @@ impl QuadTree {
 
 
     fn create_node(&mut self, center: (f64, f64), size: (f64, f64), depth: i32) -> usize {
-        let mut nodes = &mut self.nodes;
+        let nodes = &mut self.nodes;
         let index = nodes.len();
         nodes.push(QuadTreeNode {
             points: None,
@@ -377,10 +377,10 @@ impl QuadTree {
         &mut self,
         quadtree_points: &Vec<(f64, f64)>,
         node_idx: usize,
-        mut polygon_points: Option<&mut Vec<(f64, f64)>>,
+        polygon_points: Option<&mut Vec<(f64, f64)>>,
         results: &mut HashSet<usize>,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        if let Some(mut points) = polygon_points {
+        if let Some(points) = polygon_points {
             // Sort points only once
             points.sort_unstable_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
     
@@ -391,9 +391,9 @@ impl QuadTree {
                 if !children_idxs.is_empty() {
                     let quadtree_center = self.get_center(node_idx)?;
     
-                    let (left_polygon, right_polygon) = slice_in_two(Some(points.to_vec()), quadtree_center.0, 0)?;
-                    let (q1_polygon, q2_polygon) = slice_in_two(left_polygon, quadtree_center.1, 1)?;
-                    let (q3_polygon, q4_polygon) = slice_in_two(right_polygon, quadtree_center.1, 1)?;
+                    let (left_polygon, right_polygon) = slice_in_two(Some(points), quadtree_center.0, 0)?;
+                    let (q1_polygon, q2_polygon) = slice_in_two(left_polygon.as_ref(), quadtree_center.1, 1)?;
+                    let (q3_polygon, q4_polygon) = slice_in_two(right_polygon.as_ref(), quadtree_center.1, 1)?;
 
                     if let Some(mut poly) = q1_polygon {
                         self._query_polygon(quadtree_points, children_idxs[0], Some(poly.as_mut()), results)?;
@@ -624,7 +624,7 @@ fn polygon_extents(polytope_points: &Vec<(f64, f64)>, slice_axis_idx: usize) -> 
 // }
 
 fn slice_in_two(
-    polytope_points: Option<Vec<(f64, f64)>>,
+    polytope_points: Option<&Vec<(f64, f64)>>,
     value: f64,
     slice_axis_idx: usize,
 ) -> Result<(Option<Vec<(f64, f64)>>, Option<Vec<(f64, f64)>>), QhullError> {
@@ -637,9 +637,9 @@ fn slice_in_two(
         // If no intersections, directly handle the boundary cases
         if intersects.is_empty() {
             return Ok(if x_upper <= value {
-                (Some(polytope_points), None)
+                (Some(polytope_points.clone()), None)
             } else if value < x_lower {
-                (None, Some(polytope_points))
+                (None, Some(polytope_points.clone()))
             } else {
                 (None, None) // Should never happen
             });
@@ -649,7 +649,7 @@ fn slice_in_two(
         let mut left_points = Vec::with_capacity(polytope_points.len());
         let mut right_points = Vec::with_capacity(polytope_points.len());
 
-        for &(x, y) in &polytope_points {
+        for &(x, y) in polytope_points {
             let value_to_compare = if slice_axis_idx == 0 { x } else { y };
             if value_to_compare <= value {
                 left_points.push((x, y));
