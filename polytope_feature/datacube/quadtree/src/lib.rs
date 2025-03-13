@@ -425,6 +425,16 @@ impl QuadTree {
                     for (polygon, &child_idx) in children.iter_mut().filter_map(|(p, c)| p.as_mut().zip(*c)) {
                         self._query_polygon(quadtree_points, child_idx, Some(polygon), results)?;
                     }
+                    // let mut filtered_children: Vec<(&mut Vec<(f64, f64)>, usize)> = children
+                    //     .iter_mut()
+                    //     // .filter_map(|(p, c)| p.as_mut().map(|p| (p, *c)))
+                    //     .filter_map(|(p, c)| p.as_mut().and_then(|p| c.map(|&c| (p, c)))) // ✅ Correct
+                    //     .collect();
+
+                    // for (polygon, child_idx) in filtered_children {
+                    //     self._query_polygon(quadtree_points, child_idx, Some(polygon), results)?;
+                    // }
+
                 } else {
                     let filtered_nodes = self
                         .get_point_idxs(node_idx)
