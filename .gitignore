@@ -34,3 +34,5 @@ new_polytope_venv
 *.json
 polytope_feature/datacube/quadtree/target
 venv_python3_11
+*.txt
+tests/.DS_Store
