@@ -9,6 +9,8 @@ use std::collections::HashSet;
 use std::error::Error;
 use pyo3::exceptions::PyRuntimeError;
 
+use std::cmp::Ordering::Equal;
+
 // TODO: look at rust built in arena
 
 
@@ -468,7 +470,7 @@ fn _find_intersects(polytope_points: &Vec<(f64, f64)>, slice_axis_idx: usize, va
     let mut intersects: Vec<(f64, f64)> = vec![];
     let above_slice: Vec<(f64, f64)> = polytope_points
     .iter()
-    .copy(|(x, y)| {
+    .filter(|(x, y)| {
         let value_to_compare = if slice_axis_idx == 0 { *x } else { *y };
         value_to_compare >= value
     })
@@ -682,9 +684,18 @@ fn slice_in_two(
 //     points.into_iter().map(|&(x, y)| [x, y]).collect()
 // }
 
+// fn change_points_for_qhull(points: &[(f64, f64)]) -> Vec<[f64; 2]> {
+//     points.iter().map(|&(x, y)| [x, y]).collect()
+// }
+
 fn change_points_for_qhull(points: &[(f64, f64)]) -> Vec<[f64; 2]> {
-    points.iter().map(|&(x, y)| [x, y]).collect()
+    let mut result = Vec::with_capacity(points.len()); // Preallocate
+    for &(x, y) in points {
+        result.push([x, y]);
+    }
+    result
 }
+
 
 
 
@@ -707,6 +718,70 @@ impl fmt::Display for QhullError {
 
 impl Error for QhullError {}
 
+fn sort_by_min_angle(pts: &[(f64, f64)], min: &(f64, f64)) -> Vec<(f64, f64)> {
+    let mut points: Vec<(f64, f64, (f64, f64))> = pts
+        .iter()
+        .map(|x| {
+            (
+                (x.1 - min.1).atan2(x.0 - min.0),
+                // angle
+                (x.1 - min.1).hypot(x.0 - min.0),
+                // distance (we want the closest to be first)
+                *x,
+            )
+        })
+        .collect();
+    points.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
+    points.into_iter().map(|x| x.2).collect()
+}
+
+// calculates the z coordinate of the vector product of vectors ab and ac
+fn calc_z_coord_vector_product(a: &(f64, f64), b: &(f64, f64), c: &(f64, f64)) -> f64 {
+    (b.0 - a.0) * (c.1 - a.1) - (c.0 - a.0) * (b.1 - a.1)
+}
+
+/*
+    If three points are aligned and are part of the convex hull then the three are kept.
+    If one doesn't want to keep those points, it is easy to iterate the answer and remove them.
+
+    The first point is the one with the lowest y-coordinate and the lowest x-coordinate.
+    Points are then given counter-clockwise, and the closest one is given first if needed.
+*/
+pub fn convex_hull_graham(pts: &[(f64, f64)]) -> Vec<(f64, f64)> {
+    if pts.is_empty() {
+        return vec![];
+    }
+
+    let mut stack: Vec<(f64, f64)> = vec![];
+    let min = pts
+        .iter()
+        .min_by(|a, b| {
+            let ord = a.1.partial_cmp(&b.1).unwrap_or(Equal);
+            match ord {
+                Equal => a.0.partial_cmp(&b.0).unwrap_or(Equal),
+                o => o,
+            }
+        })
+        .unwrap();
+    let points = sort_by_min_angle(pts, min);
+
+    if points.len() <= 3 {
+        return points;
+    }
+
+    for point in points {
+        while stack.len() > 1
+            && calc_z_coord_vector_product(&stack[stack.len() - 2], &stack[stack.len() - 1], &point)
+                < 0.
+        {
+            stack.pop();
+        }
+        stack.push(point);
+    }
+
+    stack
+}
+
 
 fn find_qhull_points(points: &Vec<(f64, f64)>) -> Result<Option<Vec<(f64, f64)>>, QhullError> {
 
@@ -717,31 +792,91 @@ fn find_qhull_points(points: &Vec<(f64, f64)>) -> Result<Option<Vec<(f64, f64)>>
 
     match qh_result {
         Ok(qh) => {
-            let mut all_qhull_vertices: Vec<usize> = Vec::new();
-            let mut all_qhull_vertices_: HashSet<usize> = HashSet::new();
+            let num_vertices = qh.num_vertices(); // Get total number of vertices
+            let mut all_qhull_vertices_: HashSet<usize> = HashSet::with_capacity(num_vertices); 
+            let mut all_qhull_vertices: Vec<usize> = Vec::with_capacity(num_vertices); 
+
+            // Process each simplex only once
             for simplex in qh.simplices() {
-                let vertices = simplex
-                    .vertices()
-                    .unwrap()
-                    .iter()
-                    .map(|v| v.index(&qh).unwrap())
-                    .collect::<Vec<_>>();
-                
-                for vertex in &vertices {
-                    if all_qhull_vertices_.insert(*vertex) {
-                        all_qhull_vertices.push(*vertex);
+                for v in simplex.vertices().unwrap().iter() {
+                    if let Some(index) = v.index(&qh) {
+                        if all_qhull_vertices_.insert(index) { 
+                            all_qhull_vertices.push(index);
+                        }
                     }
                 }
             }
 
-            let mut actual_qhull_points: Vec<(f64, f64)> = Vec::new();
+            // Allocate memory for final points
+            let mut actual_qhull_points: Vec<(f64, f64)> = Vec::with_capacity(all_qhull_vertices.len());
 
-            for idx in all_qhull_vertices {
-                if let Some(point) = points.get(idx) {
-                    actual_qhull_points.push(*point);
+            // Fetch actual points
+            for &idx in &all_qhull_vertices {
+                if let Some(&point) = points.get(idx) { 
+                    actual_qhull_points.push(point);
                 }
             }
+
             Ok(Some(actual_qhull_points))
+            // let mut all_qhull_vertices: Vec<usize> = Vec::new();
+            // let mut all_qhull_vertices_: HashSet<usize> = HashSet::new();
+            // // for simplex in qh.simplices() {
+            // //     let vertices = simplex
+            // //         .vertices()
+            // //         .unwrap()
+            // //         .iter()
+            // //         .map(|v| v.index(&qh).unwrap())
+            // //         .collect::<Vec<_>>();
+                
+            // //     for vertex in &vertices {
+            // //         if all_qhull_vertices_.insert(*vertex) {
+            // //             all_qhull_vertices.push(*vertex);
+            // //         }
+            // //     }
+            // // }
+            // for simplex in qh.simplices() {
+            //     for v in simplex.vertices().unwrap().iter() {
+            //         if let Some(index) = v.index(&qh) {
+            //             if all_qhull_vertices_.insert(index) {
+            //                 all_qhull_vertices.push(index);
+            //             }
+            //         }
+            //     }
+            // }
+
+            // // let vertices = qh.vertices().map(|v| v.index(&qh)).collect::<Vec<_>>();
+            // // for vertex in vertices {
+            // //     if all_qhull_vertices_.insert(vertex.unwrap()) { // `insert()` returns false if already present
+            // //         all_qhull_vertices.push(vertex.unwrap());
+            // //     }
+            // // }
+
+            // // for v in qh.vertices() {
+            // //     if let Some(index) = v.index(&qh) {  // Avoid calling `unwrap()`
+            // //         // if all_qhull_vertices_.insert(index) { // Insert only if unique
+            // //         //     all_qhull_vertices.push(index);
+            // //         // }
+            // //         all_qhull_vertices.push(index);
+            // //     }
+            // // }
+
+            // // let num_vertices = qh.num_vertices();  // If available, use it to preallocate
+            // // let mut all_qhull_vertices: Vec<usize> = Vec::with_capacity(num_vertices); // Preallocate
+
+            // // for v in qh.vertices() {
+            // //     if let Some(index) = v.index(&qh) {  // Avoid calling `unwrap()`
+            // //         all_qhull_vertices.push(index);
+            // //     }
+            // // }
+
+            // let mut actual_qhull_points: Vec<(f64, f64)> = Vec::new();
+
+            // for idx in all_qhull_vertices {
+            //     if let Some(point) = points.get(idx) {
+            //         actual_qhull_points.push(*point);
+            //     }
+            // }
+            // Ok(Some(actual_qhull_points))
         }
         Err(e) => {
             let error_msg = e.to_string(); // Convert the error to a string

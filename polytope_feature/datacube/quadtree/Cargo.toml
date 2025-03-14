@@ -11,3 +11,6 @@ rayon = "1.8"
 [lib]
 crate-type = ["cdylib"]
 
+[profile.release]
+debug = true
+
