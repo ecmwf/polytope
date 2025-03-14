@@ -9,6 +9,8 @@ use std::collections::HashSet;
 use std::error::Error;
 use pyo3::exceptions::PyRuntimeError;
 
+// TODO: look at rust built in arena
+
 
 
 
@@ -466,7 +468,7 @@ fn _find_intersects(polytope_points: &Vec<(f64, f64)>, slice_axis_idx: usize, va
     let mut intersects: Vec<(f64, f64)> = vec![];
     let above_slice: Vec<(f64, f64)> = polytope_points
     .iter()
-    .filter(|(x, y)| {
+    .copy(|(x, y)| {
         let value_to_compare = if slice_axis_idx == 0 { *x } else { *y };
         value_to_compare >= value
     })
