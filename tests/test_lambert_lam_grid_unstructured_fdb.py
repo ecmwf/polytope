@@ -53,6 +53,8 @@ class TestQuadTreeSlicer:
 
         self.points = list(zip(self.latitudes, self.longitudes))
         print((min(self.latitudes), max(self.latitudes), min(self.longitudes), max(self.longitudes)))
+        # print(self.points)
+        # print([point for point in self.points if 44 <= point[0] <= 87 and 4 <= point[1] <= 7])
         print("FINISH SETTING UP POINTS")
         self.options = {
             "axis_config": [
@@ -96,7 +98,7 @@ class TestQuadTreeSlicer:
             Select("levtype", ["sfc"]),
             # Select("time_counter", [pd.Timestamp("1979-02-15")]),
             # Box(["latitude", "longitude"], [0, 0], [5, 5]),
-            Box(["latitude", "longitude"], [0, 0], [80, 80]),
+            Box(["latitude", "longitude"], [44, 5.5], [44.5, 6.5]),
             # triangle,
         )
 
@@ -149,7 +151,18 @@ class TestQuadTreeSlicer:
         fig, ax = plt.subplots(figsize=(12, 6))
         worldmap.plot(color="darkgrey", ax=ax)
 
+        # self.longitudes = [lon-360 if lon > 360 else lon for lon in self.longitudes]
+        new_lons = []
+        for lon in self.longitudes:
+            if lon > 180:
+                print("HERE")
+                new_lons.append(lon-360)
+            else:
+                new_lons.append(lon)
+        self.longitudes = new_lons
+
+        plt.scatter(self.longitudes, self.latitudes, s=14, color="blue")
         plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
-        plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
+        # plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
         plt.colorbar(label="Temperature")
         plt.show()
