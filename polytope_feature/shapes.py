@@ -68,8 +68,10 @@ class Product(Shape):
         # TODO
         all_axes = []
         for poly in polytopes:
-            all_axes.extend(poly.axes())
-        self._axes = list(set(all_axes))
+            for ax in poly.axes():
+                if ax not in all_axes:
+                    all_axes.append(ax)
+        self._axes = all_axes
         # Check there weren't any duplicates in the polytopes' axes
         assert len(self._axes) == len(all_axes)
 

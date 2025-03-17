@@ -236,9 +236,12 @@ class FDBDatacube(Datacube):
                 raise Exception("nearest point search axes are wrong")
 
             second_ax = requests.children[0].children[0].axis
-            nearest_pts = self.nearest_search.get(first_ax_name, None)
+
+            nearest_pts = self.nearest_search.get((first_ax_name, second_ax_name), None)
             if nearest_pts is None:
-                nearest_pts = self.nearest_search[second_ax_name]
+                nearest_pts = self.nearest_search.get((second_ax_name, first_ax_name), None)
+                for i, pt in enumerate(nearest_pts):
+                    nearest_pts[i] = [pt[1], pt[0]]
 
             transformed_nearest_pts = []
             for point in nearest_pts:
