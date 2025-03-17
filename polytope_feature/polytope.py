@@ -67,10 +67,10 @@ class Polytope:
         for polytope in request.polytopes():
             method = polytope.method
             if method == "nearest":
-                if self.datacube.nearest_search.get(polytope.axes()[0], None) is None:
-                    self.datacube.nearest_search[polytope.axes()[0]] = polytope.values
+                if self.datacube.nearest_search.get(tuple(polytope.axes()), None) is None:
+                    self.datacube.nearest_search[tuple(polytope.axes())] = polytope.values
                 else:
-                    self.datacube.nearest_search[polytope.axes()[0]].append(polytope.values[0])
+                    self.datacube.nearest_search[tuple(polytope.axes())].append(polytope.values[0])
         request_tree = self.engine.extract(self.datacube, request.polytopes())
         logging.info("Created request tree for %s ", self.context)
         self.datacube.get(request_tree, self.context)
