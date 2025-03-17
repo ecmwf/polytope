@@ -7,21 +7,26 @@ from quadtree import QuadTree
 
 from ..datacube.datacube_axis import IntDatacubeAxis
 from ..datacube.quadtree_additional_operations import query_polygon
+# from quadtree import query_polygon
 from ..datacube.tensor_index_tree import TensorIndexTree
 from .engine import Engine
+import time
 
 
 class QuadTreeSlicer(Engine):
     def __init__(self, points):
         # here need to construct quadtree, which is specific to datacube
         # NOTE: should this be inside of the datacube instead that we create the quadtree?
-        import time
+        # import time
 
         quad_tree = QuadTree()
         print("START BUILDING QUAD TREE")
         time0 = time.time()
         points = [tuple(point) for point in points]
         quad_tree.build_point_tree(points)
+
+        print("SIZE OF THE QUAD TREE IS")
+        print(quad_tree.sizeof())
         self.points = points
         print("FINISH BUILDING QUAD TREE")
         print(time.time() - time0)
@@ -53,10 +58,14 @@ class QuadTreeSlicer(Engine):
 
     def extract_single(self, datacube, polytope):
         # extract a single polygon
-
+        time1 = time.time()
         # need to find points of the datacube contained within the polytope
         # We do this by intersecting the datacube point cloud quad tree with the polytope here
-        polygon_points = query_polygon(self.points, self.quad_tree, 0, polytope)
+        # polygon_points = query_polygon(self.points, self.quad_tree, 0, polytope)
+        polytope_points = [tuple(point) for point in polytope.points]
+        polygon_points = self.quad_tree.query_polygon(self.points, 0, polytope_points)
+        print("RUST QUERY POLYOGN TIME")
+        print(time.time() - time1)
         return polygon_points
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):
