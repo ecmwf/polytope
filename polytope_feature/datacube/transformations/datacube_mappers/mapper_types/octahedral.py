@@ -1,7 +1,7 @@
 import logging
 import math
 
-from .....utility.list_tools import bisect_left_cmp, bisect_right_cmp
+from .....utility.list_tools import bisect_left_cmp
 from ..datacube_mappers import DatacubeMapper
 
 
@@ -7809,13 +7809,6 @@ class OctahedralGridMapper(DatacubeMapper):
                 new_vals[nval - 1 - jval] = -new_vals[jval]
             return new_vals
 
-    def map_first_axis(self, lower, upper):
-        axis_lines = self._first_axis_vals
-        end_idx = bisect_left_cmp(axis_lines, lower, cmp=lambda x, y: x > y) + 1
-        start_idx = bisect_right_cmp(axis_lines, upper, cmp=lambda x, y: x > y)
-        return_vals = axis_lines[start_idx:end_idx]
-        return return_vals
-
     def second_axis_vals(self, first_val):
         first_axis_vals = self._first_axis_vals
         tol = 1e-10
@@ -7839,13 +7832,6 @@ class OctahedralGridMapper(DatacubeMapper):
         npoints = 4 * first_idx + 16
         second_axis_spacing = 360 / npoints
         return (second_axis_spacing, _first_idx + 1)
-
-    def map_second_axis(self, first_val, lower, upper):
-        second_axis_spacing, first_idx = self.second_axis_spacing(first_val)
-        start_idx = int(lower / second_axis_spacing)
-        end_idx = int(upper / second_axis_spacing) + 1
-        return_vals = [i * second_axis_spacing for i in range(start_idx, end_idx)]
-        return return_vals
 
     def axes_idx_to_octahedral_idx(self, first_idx, second_idx):
         # NOTE: for now this takes ~2e-4s per point, so taking significant time -> for 20k points, takes 4s

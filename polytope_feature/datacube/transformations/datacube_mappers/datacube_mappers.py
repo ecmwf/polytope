@@ -74,11 +74,11 @@ class DatacubeMapper(DatacubeAxisTransformation):
     def second_axis_vals(self, first_val):
         return self._final_transformation.second_axis_vals(first_val)
 
-    def map_first_axis(self, lower, upper):
-        return self._final_transformation.map_first_axis(lower, upper)
+    # def map_first_axis(self, lower, upper):
+    #     return self._final_transformation.map_first_axis(lower, upper)
 
-    def map_second_axis(self, first_val, lower, upper):
-        return self._final_transformation.map_second_axis(first_val, lower, upper)
+    # def map_second_axis(self, first_val, lower, upper):
+    #     return self._final_transformation.map_second_axis(first_val, lower, upper)
 
     def find_second_idx(self, first_val, second_val):
         return self._final_transformation.find_second_idx(first_val, second_val)

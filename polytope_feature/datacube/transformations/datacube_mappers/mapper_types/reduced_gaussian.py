@@ -1,7 +1,6 @@
 import logging
 import math
 
-from .....utility.list_tools import bisect_left_cmp, bisect_right_cmp
 from ..datacube_mappers import DatacubeMapper
 
 
@@ -761,13 +760,6 @@ class ReducedGaussianGridMapper(DatacubeMapper):
                 new_vals[jval] = math.asin(root) * rad2deg
                 new_vals[nval - 1 - jval] = -new_vals[jval]
             return new_vals
-
-    def map_first_axis(self, lower, upper):
-        axis_lines = self._first_axis_vals
-        end_idx = bisect_left_cmp(axis_lines, lower, cmp=lambda x, y: x > y) + 1
-        start_idx = bisect_right_cmp(axis_lines, upper, cmp=lambda x, y: x > y)
-        return_vals = axis_lines[start_idx:end_idx]
-        return return_vals
 
     def lon_spacing(self):
         if self._resolution == 320:

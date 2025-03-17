@@ -41,18 +41,6 @@ class TestMapper:
         ]
         assert len(octahedral_mapper.first_axis_vals()) == 640 * 2
 
-    def test_map_first_axis(self):
-        mapped_axes = ["lat", "lon"]
-        base_axis = "base"
-        resolution = 1280
-        octahedral_mapper = OctahedralGridMapper(base_axis, mapped_axes, resolution)
-        assert octahedral_mapper.map_first_axis(89.7, 89.96) == [
-            89.94618771566562,
-            89.87647835333229,
-            89.80635731954224,
-            89.73614327160958,
-        ]
-
     def test_second_axis_vals(self):
         mapped_axes = ["lat", "lon"]
         base_axis = "base"
@@ -64,13 +52,6 @@ class TestMapper:
         assert len(octahedral_mapper.second_axis_vals((89.94618771566562,))) == 20
         assert len(octahedral_mapper.second_axis_vals((89.87647835333229,))) == 24
         assert len(octahedral_mapper.second_axis_vals((0.035149384215604956,))) == 5136
-
-    def test_map_second_axis(self):
-        mapped_axes = ["lat", "lon"]
-        base_axis = "base"
-        resolution = 1280
-        octahedral_mapper = OctahedralGridMapper(base_axis, mapped_axes, resolution)
-        assert octahedral_mapper.map_second_axis((89.94618771566562,), 0, 90) == [0, 18, 36, 54, 72, 90]
 
     def test_axes_idx_to_octahedral_idx(self):
         mapped_axes = ["lat", "lon"]

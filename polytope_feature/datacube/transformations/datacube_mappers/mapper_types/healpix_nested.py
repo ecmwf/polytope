@@ -1,4 +1,5 @@
 import math
+import numpy as np
 
 from ..datacube_mappers import DatacubeMapper
 
@@ -11,6 +12,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
         self._resolution = resolution
         self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
         self._first_axis_vals = self.first_axis_vals()
+        self._first_axis_vals_np_rounded = np.round(np.array(self._first_axis_vals), decimals=8)
         self.compressed_grid_axes = [self._mapped_axes[1]]
         self.Nside = self._resolution
         self._cached_longitudes = {}
@@ -45,29 +47,15 @@ class NestedHealpixGridMapper(DatacubeMapper):
         vals[2 * self._resolution - 1] = 0
         return vals
 
-    def map_first_axis(self, lower, upper):
-        axis_lines = self._first_axis_vals
-        return_vals = [val for val in axis_lines if lower <= val <= upper]
-        return return_vals
-
-    def second_axis_vals(self, first_val):
-        tol = 1e-8
-        first_val = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
-        idx = self._first_axis_vals.index(first_val)
-
-        values = self.HEALPix_longitudes(idx)
-        return values
-
     def second_axis_vals_from_idx(self, first_val_idx):
         if first_val_idx not in self._healpix_longitudes:
-            self._healpix_longitudes[first_val_idx] = self.HEALPix_longitudes(first_val_idx)
+            rounded_longitudes = np.round(np.array(self.HEALPix_longitudes(first_val_idx)), decimals=8)
+            self._healpix_longitudes[first_val_idx] = rounded_longitudes
         values = self._healpix_longitudes[first_val_idx]
         return values
 
     def HEALPix_nj(self, i):
-        assert self._resolution > 0
         ni = 4 * self._resolution - 1
-        assert i < ni
 
         if i < self._resolution:
             return 4 * (i + 1)
@@ -92,51 +80,73 @@ class NestedHealpixGridMapper(DatacubeMapper):
             self._cached_longitudes[i] = longitudes
         return longitudes
 
-    def map_second_axis(self, first_val, lower, upper):
-        axis_lines = self.second_axis_vals(first_val)
-        return_vals = [val for val in axis_lines if lower <= val <= upper]
-        return return_vals
-
     def axes_idx_to_healpix_idx(self, first_idx, second_idx):
-        idx = 0
-        for i in range(self._resolution - 1):
-            if i != first_idx:
-                idx += 4 * (i + 1)
-            else:
-                idx += second_idx
-                return idx
-        for i in range(self._resolution - 1, 3 * self._resolution):
-            if i != first_idx:
-                idx += 4 * self._resolution
-            else:
-                idx += second_idx
-                return idx
-        for i in range(3 * self._resolution, 4 * self._resolution - 1):
-            if i != first_idx:
-                idx += 4 * (4 * self._resolution - 1 - i + 1)
-            else:
-                idx += second_idx
-                return idx
+        res = self._resolution
+
+        # Directly compute index without unnecessary loops
+        if first_idx < res - 1:
+            return sum(4 * (i + 1) for i in range(first_idx)) + second_idx
+        elif first_idx < 3 * res:
+            return sum(4 * (i + 1) for i in range(res - 1)) + (first_idx - (res - 1)) * (4 * res) + second_idx
+        else:
+            return (sum(4 * (i + 1) for i in range(res - 1)) +
+                    (2 * res) * (4 * res) +
+                    sum(4 * (4 * res - 1 - i + 1) for i in range(3 * res, first_idx)) +
+                    second_idx)
+
+    # def unmap(self, first_val, second_vals):
+    #     tol = 1e-8
+    #     first_idx = next(
+    #         (i for i, val in enumerate(self._first_axis_vals) if first_val[0] - tol <= val <= first_val[0] + tol), None
+    #     )
+    #     if first_idx is None:
+    #         return None
+    #     second_axis_vals = self.second_axis_vals_from_idx(first_idx)
+
+    #     return_idxs = []
+    #     for second_val in second_vals:
+    #         second_idx = next(
+    #             (i for i, val in enumerate(second_axis_vals) if second_val - tol <= val <= second_val + tol), None
+    #         )
+    #         if second_idx is None:
+    #             return None
+    #         healpix_index = self.axes_idx_to_healpix_idx(first_idx, second_idx)
+    #         return_idxs.append(healpix_index)
+    #     return return_idxs
 
     def unmap(self, first_val, second_vals):
-        tol = 1e-8
-        first_idx = next(
-            (i for i, val in enumerate(self._first_axis_vals) if first_val[0] - tol <= val <= first_val[0] + tol), None
-        )
-        if first_idx is None:
-            return None
-        second_axis_vals = self.second_axis_vals_from_idx(first_idx)
 
-        return_idxs = []
-        for second_val in second_vals:
-            second_idx = next(
-                (i for i, val in enumerate(second_axis_vals) if second_val - tol <= val <= second_val + tol), None
-            )
-            if second_idx is None:
-                return None
-            healpix_index = self.axes_idx_to_healpix_idx(first_idx, second_idx)
-            return_idxs.append(healpix_index)
-        return return_idxs
+        # Convert to NumPy array for fast computation
+
+        # Fast binary search instead of slow linear search
+        idx = np.searchsorted(self._first_axis_vals_np_rounded, -np.round(first_val[0], decimals=8))
+
+        # Check tolerance manually since `searchsorted` gives exact index, not range
+        if idx >= len(self._first_axis_vals_np_rounded):
+            return None
+
+        second_axis_vals = np.round(np.array(self.second_axis_vals_from_idx(idx)), decimals=8)
+
+        # Vectorized search for second_idx
+        second_vals = np.round(np.array(second_vals), decimals=8)
+
+        # second_idxs = []
+
+        # for second_val in second_vals:
+        #     second_idx = np.searchsorted(second_axis_vals, second_val)
+        #     if second_idx >= len(second_axis_vals):
+        #         return None
+        #     second_idxs.append(second_idx)
+        second_idxs = np.searchsorted(second_axis_vals, second_vals)
+
+        # Validate indices with a mask (instead of returning None early)
+        valid_mask = (second_idxs < len(second_axis_vals))
+
+        # If any invalid index exists, return None
+        if not np.all(valid_mask):
+            return None
+
+        return [self.axes_idx_to_healpix_idx(idx, sec_idx) for sec_idx in second_idxs]
 
     def div_03(self, a, b):
         t = 1 if a >= (b << 1) else 0

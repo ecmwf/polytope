@@ -40,11 +40,6 @@ class HealpixGridMapper(DatacubeMapper):
         vals[2 * self._resolution - 1] = 0
         return vals
 
-    def map_first_axis(self, lower, upper):
-        axis_lines = self._first_axis_vals
-        return_vals = [val for val in axis_lines if lower <= val <= upper]
-        return return_vals
-
     def second_axis_vals(self, first_val):
         tol = 1e-8
         first_val = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
@@ -79,11 +74,6 @@ class HealpixGridMapper(DatacubeMapper):
         longitudes = [start + n * step for n in range(Nj)]
 
         return longitudes
-
-    def map_second_axis(self, first_val, lower, upper):
-        axis_lines = self.second_axis_vals(first_val)
-        return_vals = [val for val in axis_lines if lower <= val <= upper]
-        return return_vals
 
     def axes_idx_to_healpix_idx(self, first_idx, second_idx):
         idx = 0

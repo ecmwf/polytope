@@ -31,19 +31,9 @@ class RegularGridMapper(DatacubeMapper):
             first_ax_vals = [-90 + i * self.deg_increment for i in range(2 * self._resolution)]
         return first_ax_vals
 
-    def map_first_axis(self, lower, upper):
-        axis_lines = self._first_axis_vals
-        return_vals = [val for val in axis_lines if lower <= val <= upper]
-        return return_vals
-
     def second_axis_vals(self, first_val):
         second_ax_vals = [i * self.deg_increment for i in range(4 * self._resolution)]
         return second_ax_vals
-
-    def map_second_axis(self, first_val, lower, upper):
-        axis_lines = self.second_axis_vals(first_val)
-        return_vals = [val for val in axis_lines if lower <= val <= upper]
-        return return_vals
 
     def axes_idx_to_regular_idx(self, first_idx, second_idx):
         final_idx = first_idx * 4 * self._resolution + second_idx
