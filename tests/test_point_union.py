@@ -117,6 +117,57 @@ class TestSlicingFDBDatacube:
             tot_leaves += len(leaf.result)
         assert tot_leaves == 9
 
+    @pytest.mark.fdb
+    def test_fdb_datacube_axis_order(self):
+        import pygribjump as gj
+
+        request = Request(
+            Select("step", [0]),
+            Select("levtype", ["sfc"]),
+            Span("date", pd.Timestamp("20230625T120000"), pd.Timestamp("20230626T120000")),
+            Select("domain", ["g"]),
+            Select("expver", ["0001"]),
+            Select("param", ["167"]),
+            Select("class", ["od"]),
+            Select("stream", ["oper"]),
+            Select("type", ["an"]),
+            Union(
+                ["latitude", "longitude"],
+                Point(["latitude", "longitude"], [[25, 30]], method="nearest"),
+            ),
+        )
+
+        inverted_request = Request(
+            Select("step", [0]),
+            Select("levtype", ["sfc"]),
+            Span("date", pd.Timestamp("20230625T120000"), pd.Timestamp("20230626T120000")),
+            Select("domain", ["g"]),
+            Select("expver", ["0001"]),
+            Select("param", ["167"]),
+            Select("class", ["od"]),
+            Select("stream", ["oper"]),
+            Select("type", ["an"]),
+            Union(
+                ["longitude", "latitude"],
+                Point(["longitude", "latitude"], [[30, 25]], method="nearest"),
+            ),
+        )
+
+        self.fdbdatacube = gj.GribJump()
+        self.slicer = HullSlicer()
+        self.API = Polytope(
+            datacube=self.fdbdatacube,
+            engine=self.slicer,
+            options=self.options,
+        )
+        result = self.API.retrieve(request)
+        inverted_result = self.API.retrieve(inverted_request)
+        result.pprint()
+        inverted_result.pprint()
+        assert len(result.leaves) == 1
+        assert len(inverted_result.leaves) == 1
+        assert inverted_result.leaves[0].result == result.leaves[0].result
+
     # @pytest.mark.fdb
     # def test_fdb_datacube_mix_methods(self):
     #     import pygribjump as gj
