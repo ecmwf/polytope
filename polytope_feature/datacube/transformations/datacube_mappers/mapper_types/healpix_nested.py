@@ -135,7 +135,8 @@ class NestedHealpixGridMapper(DatacubeMapper):
             if second_idx is None:
                 return None
             healpix_index = self.axes_idx_to_healpix_idx(first_idx, second_idx)
-            return_idxs.append(healpix_index)
+            nested_healpix_index = self.ring_to_nested(healpix_index)
+            return_idxs.append(nested_healpix_index)
         return return_idxs
 
     def div_03(self, a, b):
