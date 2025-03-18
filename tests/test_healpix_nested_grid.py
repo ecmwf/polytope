@@ -11,7 +11,7 @@ from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
 
 
-class TestHealpixGrid:
+class TestHealpixNestedGrid:
     def setup_method(self, method):
         nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/healpix_nested.grib"
         download_test_data(nexus_url, "healpix_nested.grib")
