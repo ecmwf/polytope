@@ -144,7 +144,9 @@ class TestHealpixNestedGrid:
             lat = cubepath["latitude"]
             lons_ = cubepath["longitude"]
             for i, lon in enumerate(lons_):
-                lon = [lon,]
+                lon = [
+                    lon,
+                ]
                 lats.append(lat)
                 lons.append(lon)
                 nearest_points = find_nearest_latlon("./tests/data/healpix_nested.grib", lat[0], lon[0])
