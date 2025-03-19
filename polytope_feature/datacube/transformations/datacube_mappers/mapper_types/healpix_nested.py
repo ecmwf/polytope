@@ -30,31 +30,53 @@ class NestedHealpixGridMapper(DatacubeMapper):
         if not self._axis_reversed[mapped_axes[0]]:
             raise NotImplementedError("Healpix grid with first axis in increasing order is not supported")
 
+    # def first_axis_vals(self):
+    #     rad2deg = 180 / math.pi
+    #     vals = [0] * (4 * self._resolution - 1)
+
+    #     # Polar caps
+    #     for i in range(1, self._resolution):
+    #         val = 90 - (rad2deg * math.acos(1 - (i * i / (3 * self._resolution * self._resolution))))
+    #         vals[i - 1] = val
+    #         vals[4 * self._resolution - 1 - i] = -val
+    #     # Equatorial belts
+    #     for i in range(self._resolution, 2 * self._resolution):
+    #         val = 90 - (rad2deg * math.acos((4 * self._resolution - 2 * i) / (3 * self._resolution)))
+    #         vals[i - 1] = val
+    #         vals[4 * self._resolution - 1 - i] = -val
+    #     # Equator
+    #     vals[2 * self._resolution - 1] = 0
+    #     return vals
+
     def first_axis_vals(self):
-        rad2deg = 180 / math.pi
-        vals = [0] * (4 * self._resolution - 1)
+        rad2deg = 180 / np.pi
+        res = self._resolution
+        total_size = 4 * res - 1
+        vals = np.zeros(total_size)
+
+        factor1 = 3 * res * res
+        factor2 = 3 * res
 
         # Polar caps
-        for i in range(1, self._resolution):
-            val = 90 - (rad2deg * math.acos(1 - (i * i / (3 * self._resolution * self._resolution))))
-            vals[i - 1] = val
-            vals[4 * self._resolution - 1 - i] = -val
+        i_vals = np.arange(1, res)
+        acos_vals = np.arccos(1 - (i_vals**2 / factor1)) * rad2deg
+        vals[i_vals - 1] = 90 - acos_vals
+        vals[total_size - i_vals] = -(90 - acos_vals)
+
         # Equatorial belts
-        for i in range(self._resolution, 2 * self._resolution):
-            val = 90 - (rad2deg * math.acos((4 * self._resolution - 2 * i) / (3 * self._resolution)))
-            vals[i - 1] = val
-            vals[4 * self._resolution - 1 - i] = -val
+        i_vals = np.arange(res, 2 * res)
+        acos_vals = np.arccos((4 * res - 2 * i_vals) / factor2) * rad2deg
+        vals[i_vals - 1] = 90 - acos_vals
+        vals[total_size - i_vals] = -(90 - acos_vals)
+
         # Equator
-        vals[2 * self._resolution - 1] = 0
-        return vals
+        vals[2 * res - 1] = 0
+
+        return vals.tolist()  # Convert back to list if needed
 
     def second_axis_vals(self, first_val):
-        tol = 1e-8
-        first_val = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
-        idx = self._first_axis_vals.index(first_val)
-
-        values = self.HEALPix_longitudes(idx)
-        return values
+        idx = np.searchsorted(self._first_axis_vals_np_rounded, -np.round(first_val[0], decimals=8))
+        return self.second_axis_vals_from_idx(idx)
 
     def second_axis_vals_from_idx(self, first_val_idx):
         if first_val_idx not in self._healpix_longitudes:
@@ -63,10 +85,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
         return values
 
     def HEALPix_nj(self, i):
-        assert self._resolution > 0
         ni = 4 * self._resolution - 1
-        assert i < ni
-
         if i < self._resolution:
             return 4 * (i + 1)
         elif i < 3 * self._resolution:
