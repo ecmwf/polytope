@@ -118,7 +118,7 @@ class TestHealpixNestedGrid:
         )
 
     @pytest.mark.internet
-    def test_healpix_nested_grid(self):
+    def test_healpix_nested_grid_equator(self):
         request = Request(
             Select("valid_time", [pd.Timestamp("20200102T010000")]),
             Select("time", [pd.Timestamp("20200102T010000")]),
@@ -133,6 +133,54 @@ class TestHealpixNestedGrid:
         for leaf in result.leaves:
             tot_leaves += len(leaf.result[1])
         assert tot_leaves == 21
+
+        lats = []
+        lons = []
+        eccodes_lats = []
+        eccodes_lons = []
+        tol = 1e-8
+        for i, leaf in enumerate(result.leaves[:]):
+            cubepath = leaf.flatten()
+            lat = cubepath["latitude"]
+            lons_ = cubepath["longitude"]
+            for i, lon in enumerate(lons_):
+                lon = [
+                    lon,
+                ]
+                lats.append(lat)
+                lons.append(lon)
+                nearest_points = find_nearest_latlon("./tests/data/healpix_nested.grib", lat[0], lon[0])
+                eccodes_lat = nearest_points[0][0]["lat"]
+                eccodes_lon = nearest_points[0][0]["lon"]
+                eccodes_result = nearest_points[3][0]["value"]
+                eccodes_lats.append(eccodes_lat)
+                eccodes_lons.append(eccodes_lon)
+
+                mapper = NestedHealpixGridMapper("values", ["latitude", "longitude"], 128)
+                assert nearest_points[0][0]["index"] == mapper.unmap(lat, lon)[0]
+                assert eccodes_lat - tol <= lat[0]
+                assert lat[0] <= eccodes_lat + tol
+                assert eccodes_lon - tol <= lon[0]
+                assert lon[0] <= eccodes_lon + tol
+                assert leaf.result[1][i] - 1e-4 <= eccodes_result <= leaf.result[1][i] + 1e-4
+        assert len(eccodes_lats) == 21
+
+    @pytest.mark.internet
+    def test_healpix_nested_grid_south_pole(self):
+        request = Request(
+            Select("valid_time", [pd.Timestamp("20200102T010000")]),
+            Select("time", [pd.Timestamp("20200102T010000")]),
+            Select("step", [0]),
+            Select("heightAboveGround", [2]),
+            Box(["latitude", "longitude"], [-87, 0], [-85, 10]),
+        )
+        result = self.API.retrieve(request)
+        result.pprint()
+        assert len(result.leaves) == 5
+        tot_leaves = 0
+        for leaf in result.leaves:
+            tot_leaves += len(leaf.result[1])
+        assert tot_leaves == 5
 
         lats = []
         lons = []

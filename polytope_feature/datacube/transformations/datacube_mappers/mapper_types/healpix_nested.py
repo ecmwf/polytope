@@ -208,6 +208,93 @@ class NestedHealpixGridMapper(DatacubeMapper):
     def int_sqrt(self, i):
         return int(math.sqrt(i + 0.5))
 
+    # def div_03(self, a, b):
+    #     """ Vectorized version of div_03 """
+    #     t = np.where(a >= (b << 1), 1, 0)
+    #     a -= t * (b << 1)
+    #     return (t << 1) + np.where(a >= b, 1, 0)
+
+    # def pll(self, f):
+    #     """ Vectorized lookup for PLL values """
+    #     pll_values = np.array([1, 3, 5, 7, 0, 2, 4, 6, 1, 3, 5, 7])
+    #     return pll_values[f]
+
+    # def to_nest(self, f, ring, Nring, phi, shift):
+    #     """ Vectorized to_nest conversion """
+    #     r = ((2 + (f >> 2)) << self.k) - ring - 1
+    #     p = 2 * phi - self.pll(f) * Nring - shift - 1
+    #     p = np.where(p >= 2 * self.Nside, p - 8 * self.Nside, p)
+
+    #     i = (r + p) >> 1
+    #     j = (r - p) >> 1
+    #     return self.fij_to_nest(f, i, j, self.k)
+
+    # def fij_to_nest(self, f, i, j, k):
+    #     """ Vectorized nest encoding """
+    #     return (f.astype(np.uint64) << np.uint64(2 * k)) + self.nest_encode_bits(i) + (self.nest_encode_bits(j).astype(np.uint64) << np.uint64(1))
+
+    # def nest_encode_bits(self, i):
+    #     """ Vectorized bit manipulation for HEALPix indexing """
+    #     __masks = np.array([
+    #         0x00000000FFFFFFFF,
+    #         0x0000FFFF0000FFFF,
+    #         0x00FF00FF00FF00FF,
+    #         0x0F0F0F0F0F0F0F0F,
+    #         0x3333333333333333,
+    #         0x5555555555555555,
+    #     ], dtype=np.uint64)
+
+    #     b = i.astype(np.uint64) & __masks[0]
+    #     b = (b ^ (b << np.uint64(16))) & __masks[1]
+    #     b = (b ^ (b << np.uint64(8))) & __masks[2]
+    #     b = (b ^ (b << np.uint64(4))) & __masks[3]
+    #     b = (b ^ (b << np.uint64(2))) & __masks[4]
+    #     b = (b ^ (b << np.uint64(1))) & __masks[5]
+    #     return b
+
+    # def int_sqrt(self, x):
+    #     """ Efficient integer square root for arrays """
+    #     return np.sqrt(x + 0.5).astype(int)
+
+    # def ring_to_nested(self, idx):
+    #     """ Vectorized ring_to_nested conversion """
+    #     idx = np.asarray(idx)  # Ensure input is an array
+
+    #     # Create masks for different regions
+    #     north_mask = idx < self.Ncap
+    #     south_mask = self.Npix - self.Ncap <= idx
+    #     equatorial_mask = ~(north_mask | south_mask)
+
+    #     # North polar cap
+    #     Nring_north = (1 + self.int_sqrt(2 * idx + 1)) >> 1
+    #     phi_north = 1 + idx - 2 * Nring_north * (Nring_north - 1)
+    #     f_north = self.div_03(phi_north - 1, Nring_north)
+    #     nested_north = self.to_nest(f_north, Nring_north, Nring_north, phi_north, 0)
+
+    #     # South polar cap
+    #     Nring_south = (1 + self.int_sqrt(2 * self.Npix - 2 * idx - 1)) >> 1
+    #     phi_south = 1 + idx + 2 * Nring_south * (Nring_south - 1) + 4 * Nring_south - self.Npix
+    #     ring_south = 4 * self.Nside - Nring_south
+    #     f_south = self.div_03(phi_south - 1, Nring_south) + 8
+    #     nested_south = self.to_nest(f_south, ring_south, Nring_south, phi_south, 0)
+
+    #     # Equatorial belt
+    #     ip = idx - self.Ncap
+    #     tmp = ip >> (self.k + 2)
+
+    #     phi_equatorial = ip - tmp * 4 * self.Nside + 1
+    #     ring_equatorial = tmp + self.Nside
+
+    #     ifm = 1 + ((phi_equatorial - 1 - ((1 + tmp) >> 1)) >> self.k)
+    #     ifp = 1 + ((phi_equatorial - 1 - ((1 - tmp + 2 * self.Nside) >> 1)) >> self.k)
+    #     f_equatorial = np.where(ifp == ifm, ifp | 4, np.where(ifp < ifm, ifp, ifm + 8))
+
+    #     nested_equatorial = self.to_nest(f_equatorial, ring_equatorial, self.Nside, phi_equatorial, ring_equatorial & 1)
+
+    #     # Combine results using masks
+    #     nested_result = np.where(north_mask, nested_north, np.where(south_mask, nested_south, nested_equatorial))
+    #     return nested_result
+
 
 # md5 grid hash in form {resolution : hash}
 _md5_hash = {
