@@ -119,7 +119,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
             return (
                 sum(4 * (i + 1) for i in range(res - 1))
                 + (2 * res) * (4 * res)
-                + sum(4 * (4 * res - 1 - i + 1) for i in range(3 * res, first_idx))
+                + sum(4 * (4 * res - 1 - i) for i in range(3 * res, first_idx))
                 + second_idx
             )
 
