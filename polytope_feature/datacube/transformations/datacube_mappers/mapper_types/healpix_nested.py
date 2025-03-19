@@ -113,7 +113,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
                 return idx
         for i in range(3 * self._resolution, 4 * self._resolution - 1):
             if i != first_idx:
-                idx += 4 * (4 * self._resolution - 1 - i + 1)
+                idx += 4 * (4 * self._resolution - 1 - i)
             else:
                 idx += second_idx
                 return idx
