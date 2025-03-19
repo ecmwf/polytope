@@ -270,7 +270,6 @@ class NestedHealpixGridMapper(DatacubeMapper):
         # Create masks for different regions
         north_mask = idx < self.Ncap
         south_mask = self.Npix - self.Ncap <= idx
-        equatorial_mask = ~(north_mask | south_mask)
 
         # North polar cap
         Nring_north = (1 + self.int_sqrt(2 * idx + 1)) >> 1
