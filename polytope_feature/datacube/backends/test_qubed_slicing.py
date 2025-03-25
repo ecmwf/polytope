@@ -220,9 +220,22 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
         child_vals = child.values
         new_vals = []
         for val in child_vals:
-            new_vals.append(transformation.transform_type(val))
+            if transformation:
+                new_vals.append(transformation.transform_type(val))
+            else:
+                new_vals.append(val)
 
         return new_vals
+
+    def transform_upper_lower(axis_name, lower, upper, datacube_axes):
+        ax = datacube_axes[axis_name]
+        if isinstance(ax, UnsliceableDatacubeAxis):
+            return (lower, upper)
+        tol = ax.tol
+        lower = ax.from_float(lower - tol)
+        upper = ax.from_float(upper + tol)
+
+        return (lower, upper)
 
     def _slice(q: Qube, polytopes, datacube_axes, datacube_transformations) -> list[Qube]:
         result = []
@@ -244,6 +257,10 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
                 print([v for v in child.values])
                 # here first change the child values of the datacube ie the Qubed tree to their right type with the transformation
                 modified_vals = change_datacube_val_types(child, datacube_transformations)
+
+                # here use the axis to transform lower and upper to right type too
+                lower, upper = transform_upper_lower(child.key, lower, upper, datacube_axes)
+
                 found_vals = [v for v in modified_vals if lower <= v <= upper]
                 # found_vals = [v for v in child.values if lower <= v <= upper]
                 # slice polytope along each value on child and keep resulting polytopes in memory
@@ -290,7 +307,7 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
                     # child_polytopes.remove(poly)
                     child_polytopes.extend(sliced_polys)
                     # create children
-                    children = _slice(child, child_polytopes, datacube_axes)
+                    children = _slice(child, child_polytopes, datacube_axes, datacube_transformations)
                     # If this node used to have children but now has none due to filtering, skip it.
                     if child.children and not children:
                         continue

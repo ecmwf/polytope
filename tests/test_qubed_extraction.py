@@ -16,7 +16,7 @@ print(fdb_tree.axes().keys())
 
 combi_polytopes = [
     ConvexPolytope(["param"], [["168"]]),
-    ConvexPolytope(["time"], [["0000"], ["1200"]]),
+    ConvexPolytope(["time"], [[pd.Timedelta(hours=0, minutes=0)], [pd.Timedelta(hours=12, minutes=0)]]),
     ConvexPolytope(["resolution"], [["high"]]),
     ConvexPolytope(["type"], [["fc"]]),
     ConvexPolytope(["model"], ['ifs-nemo']),
@@ -29,7 +29,7 @@ combi_polytopes = [
     ConvexPolytope(["activity"], [["scenariomip"]]),
     ConvexPolytope(["dataset"], [["climate-dt"]]),
     ConvexPolytope(["class"], [["d1"]]),
-    ConvexPolytope(["date"], [[pd.Timestamp("20190221"), pd.Timestamp("20190223")]])
+    ConvexPolytope(["date"], [[pd.Timestamp("20190221")], [pd.Timestamp("20190223")]])
 ]
 
 datacube_axes = {"param": UnsliceableDatacubeAxis(),
@@ -48,7 +48,7 @@ datacube_axes = {"param": UnsliceableDatacubeAxis(),
                  "class": UnsliceableDatacubeAxis(),
                  "date": PandasTimestampDatacubeAxis()}
 
-time_val = ?
+time_val = pd.Timedelta(hours=0, minutes=0)
 date_val = pd.Timestamp("20300101T000000")
 
 datacube_transformations = {
