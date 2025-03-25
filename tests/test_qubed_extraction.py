@@ -1,6 +1,9 @@
 from qubed import Qube
 import requests
 from polytope_feature.datacube.datacube_axis import PandasTimedeltaDatacubeAxis, PandasTimestampDatacubeAxis, UnsliceableDatacubeAxis
+from polytope_feature.datacube.backends.test_qubed_slicing import actual_slice
+from polytope_feature.datacube.transformations.datacube_type_change.datacube_type_change import TypeChangeStrToTimestamp, TypeChangeStrToTimedelta
+import pandas as pd
 
 from polytope_feature.shapes import ConvexPolytope
 
@@ -26,7 +29,7 @@ combi_polytopes = [
     ConvexPolytope(["activity"], [["scenariomip"]]),
     ConvexPolytope(["dataset"], [["climate-dt"]]),
     ConvexPolytope(["class"], [["d1"]]),
-    ConvexPolytope(["date"], [["20190221", "20190223"]])
+    ConvexPolytope(["date"], [[pd.Timestamp("20190221"), pd.Timestamp("20190223")]])
 ]
 
 datacube_axes = {"param": UnsliceableDatacubeAxis(),
@@ -45,6 +48,18 @@ datacube_axes = {"param": UnsliceableDatacubeAxis(),
                  "class": UnsliceableDatacubeAxis(),
                  "date": PandasTimestampDatacubeAxis()}
 
+time_val = ?
+date_val = pd.Timestamp("20300101T000000")
+
+datacube_transformations = {
+    "time": TypeChangeStrToTimedelta("time", time_val),
+    "date": TypeChangeStrToTimestamp("date", date_val)
+}
+
+
+sliced_tree = actual_slice(fdb_tree, combi_polytopes, datacube_axes, datacube_transformations)
+
+print(sliced_tree)
 
 # TODO: treat the transformations to talk to the qubed tree, maybe do it
 
