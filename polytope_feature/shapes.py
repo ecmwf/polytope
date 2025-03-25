@@ -61,6 +61,44 @@ class ConvexPolytope(Shape):
         return [self]
 
 
+class Product(Shape):
+    """Shape that takes two polytopes and 'multiplies' them together to obtain higher-dimensional shape"""
+
+    def __init__(self, *polytopes, method, value):
+        # TODO
+        all_axes = []
+        for poly in polytopes:
+            for ax in poly.axes():
+                if ax not in all_axes:
+                    all_axes.append(ax)
+        self._axes = all_axes
+        # Check there weren't any duplicates in the polytopes' axes
+        assert len(self._axes) == len(all_axes)
+
+        self._polytopes = []
+        for poly in polytopes:
+            self._polytopes.extend(poly.polytope())
+
+        self.is_in_union = False
+        self.method = method
+        self.values = value
+
+        self.is_orthogonal = False
+
+        polys_orthogonal = [poly.is_orthogonal for poly in polytopes]
+        if all(polys_orthogonal):
+            self.is_orthogonal = True
+
+    def add_to_union(self):
+        self.is_in_union = True
+
+    def axes(self):
+        return self._axes
+
+    def polytope(self):
+        return self._polytopes
+
+
 # This is the only shape which can slice on axes without a discretizer or interpolator
 class Select(Shape):
     """Matches several discrete values"""
@@ -89,19 +127,22 @@ class Point(Shape):
         self._axes = axes
         self.values = values
         self.method = method
-        self.polytopes = []
-        if method == "nearest":
-            assert len(self.values) == 1
-        for i in range(len(axes)):
-            polytope_points = [v[i] for v in self.values]
-            self.polytopes.extend(
-                [ConvexPolytope([axes[i]], [[point]], self.method, is_orthogonal=True) for point in polytope_points]
-            )
+        assert len(values) == 1
 
     def axes(self):
         return self._axes
 
     def polytope(self):
+        # TODO: change this to use the Product instead and return a Product here of the two 1D selects
+
+        polytopes = []
+        for point in self.values:
+            poly_to_mult = []
+            for i in range(len(self._axes)):
+                poly_to_mult.append(ConvexPolytope([self._axes[i]], [[point[i]]], self.method, is_orthogonal=True))
+            polytopes.append(Product(*poly_to_mult, method=self.method, value=[point]))
+        self.polytopes = polytopes
+
         return self.polytopes
 
     def __repr__(self):
