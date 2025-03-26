@@ -3,6 +3,7 @@ from qubed.value_types import QEnum
 from typing import Iterator
 from ...engine.hullslicer import slice
 from copy import deepcopy
+import pandas as pd
 from ..datacube_axis import UnsliceableDatacubeAxis
 # from ...shapes import ConvexPolytope
 
@@ -287,8 +288,8 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
                         # print(child.key)
                         # print(poly.points)
                         sliced_poly = slice(poly, child.key, fval, slice_axis_idx)
-                        print("WHAT IS THE SLICED POLY??")
-                        print(sliced_poly)
+                        # print("WHAT IS THE SLICED POLY??")
+                        # print(sliced_poly)
                         # if sliced_poly:
                         if True:
                             sliced_polys.append(sliced_poly)
@@ -297,9 +298,10 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
                 axis_compressed = _axes_compressed().get(child.key, False)
                 # if it's not compressed, need to separate into different nodes to append to the tree
                 if not axis_compressed and len(found_vals) > 1:
+                    polytopes.remove(poly)
                     for i, found_val in enumerate(found_vals):
                         # TODO: before removing polytope here actually, we should be careful that all the values in the polytope are on this branch... so we can't just remove here in theory
-                        polytopes.remove(poly)
+                        # polytopes.remove(poly)
                         child_polytopes = deepcopy(polytopes)
                         # print("AND NOW ARE THERE STILL POLYTOPES??")
                         # print(len(polytopes))
@@ -311,6 +313,9 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
                         if child.children and not children:
                             continue
                         # TODO: add the child_polytopes to the child.metadata/ ie change child.metadata here before passing
+                        # print(type(found_val))
+                        if isinstance(found_val, pd.Timedelta) or isinstance(found_val, pd.Timestamp):
+                            found_val = [str(found_val)]
                         qube_node = Qube.make(key=child.key,
                                               values=QEnum(found_val),
                                               metadata=child.metadata,
