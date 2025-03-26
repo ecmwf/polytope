@@ -19,7 +19,7 @@ combi_polytopes = [
     ConvexPolytope(["time"], [[pd.Timedelta(hours=0, minutes=0)], [pd.Timedelta(hours=12, minutes=0)]]),
     ConvexPolytope(["resolution"], [["high"]]),
     ConvexPolytope(["type"], [["fc"]]),
-    ConvexPolytope(["model"], ['ifs-nemo']),
+    ConvexPolytope(["model"], [['ifs-nemo']]),
     ConvexPolytope(["stream"], [["clte"]]),
     ConvexPolytope(["realization"], ["1"]),
     ConvexPolytope(["expver"], [['0001']]),
@@ -29,7 +29,7 @@ combi_polytopes = [
     ConvexPolytope(["activity"], [["scenariomip"]]),
     ConvexPolytope(["dataset"], [["climate-dt"]]),
     ConvexPolytope(["class"], [["d1"]]),
-    ConvexPolytope(["date"], [[pd.Timestamp("20190221")], [pd.Timestamp("20190223")]])
+    ConvexPolytope(["date"], [[pd.Timestamp("20210728")], [pd.Timestamp("20210729")]])
 ]
 
 datacube_axes = {"param": UnsliceableDatacubeAxis(),
@@ -59,6 +59,8 @@ datacube_transformations = {
 
 sliced_tree = actual_slice(fdb_tree, combi_polytopes, datacube_axes, datacube_transformations)
 
+
+print("THE FINAL RESULT IS")
 print(sliced_tree)
 
 # TODO: treat the transformations to talk to the qubed tree, maybe do it

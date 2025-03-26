@@ -193,8 +193,6 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
         for poly in polytopes:
             if axis_name in poly._axes:
                 polytopes_on_axis.append(poly)
-            print("HERE NOW LOOK")
-            print(poly in polytopes)
         return polytopes_on_axis
 
     def change_poly_axis_type(axis_name, polytopes, datacube_axes):
@@ -244,50 +242,71 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
             polytopes_on_axis = find_polytopes_on_axis(child, polytopes)
 
             # here now first change the values in the polytopes on the axis to reflect the axis type
-            change_poly_axis_type(child.key, polytopes_on_axis, datacube_axes)
+            # change_poly_axis_type(child.key, polytopes_on_axis, datacube_axes)
 
             # for each polytope:
             for poly in polytopes_on_axis:
                 # find extents of polytope on child.key
                 lower, upper, slice_axis_idx = poly.extents(child.key)
                 # find values on child that are within extents
-                print("WHAT ABOUT HERE WHAT DO WE COMPARE")
-                print(lower)
-                print(child.key)
-                print([v for v in child.values])
+                # print("WHAT ABOUT HERE WHAT DO WE COMPARE")
+                # print(lower)
+                # print(child.key)
+                # print([v for v in child.values])
                 # here first change the child values of the datacube ie the Qubed tree to their right type with the transformation
                 modified_vals = change_datacube_val_types(child, datacube_transformations)
 
                 # here use the axis to transform lower and upper to right type too
-                lower, upper = transform_upper_lower(child.key, lower, upper, datacube_axes)
+                print("WHAT WERE UPPER AND LOWER BEFORE")
+                print((lower, upper))
+                print(poly._axes)
+                print(poly.points)
+                new_lower, new_upper = transform_upper_lower(child.key, lower, upper, datacube_axes)
 
-                found_vals = [v for v in modified_vals if lower <= v <= upper]
+                print("WHAT ARE THE FOUND VALS???")
+
+                found_vals = [v for v in modified_vals if new_lower <= v <= new_upper]
+
+                print(modified_vals)
+                print((new_lower, new_upper))
+                print(found_vals)
+
+                if len(found_vals) == 0:
+                    continue
+
                 # found_vals = [v for v in child.values if lower <= v <= upper]
                 # slice polytope along each value on child and keep resulting polytopes in memory
                 sliced_polys = []
                 for val in found_vals:
-                    # slice polytope along the value and add sliced polytope to list of polytopes in memory
-                    print("WHERE DO WE SLICE AND WHAT")
-                    print(val)
-                    print(child.key)
-                    print(poly.points)
-                    sliced_poly = slice(poly, child.key, val, slice_axis_idx)
-                    print("WHAT IS THE SLICED POLY??")
-                    print(sliced_poly)
-                    if sliced_poly:
-                        sliced_polys.append(sliced_poly)
+                    ax = datacube_axes[child.key]
+                    if not isinstance(ax, UnsliceableDatacubeAxis):
+                        fval = ax.to_float(val)
+                        # slice polytope along the value and add sliced polytope to list of polytopes in memory
+                        # print("WHERE DO WE SLICE AND WHAT")
+                        # print(val)
+                        # print(child.key)
+                        # print(poly.points)
+                        sliced_poly = slice(poly, child.key, fval, slice_axis_idx)
+                        print("WHAT IS THE SLICED POLY??")
+                        print(sliced_poly)
+                        # if sliced_poly:
+                        if True:
+                            sliced_polys.append(sliced_poly)
 
                 # decide if axis should be compressed or not according to polytope
                 axis_compressed = _axes_compressed().get(child.key, False)
                 # if it's not compressed, need to separate into different nodes to append to the tree
                 if not axis_compressed and len(found_vals) > 1:
                     for i, found_val in enumerate(found_vals):
+                        # TODO: before removing polytope here actually, we should be careful that all the values in the polytope are on this branch... so we can't just remove here in theory
+                        polytopes.remove(poly)
                         child_polytopes = deepcopy(polytopes)
                         # print("AND NOW ARE THERE STILL POLYTOPES??")
                         # print(len(polytopes))
-                        child_polytopes.remove(poly)
-                        child_polytopes.append(sliced_polys[i])
-                        children = _slice(child, child_polytopes)
+                        # child_polytopes.remove(poly)
+                        if sliced_polys[i]:
+                            child_polytopes.append(sliced_polys[i])
+                        children = _slice(child, child_polytopes, datacube_axes, datacube_transformations)
                         # If this node used to have children but now has none due to filtering, skip it.
                         if child.children and not children:
                             continue
@@ -299,18 +318,22 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
                         result.append(qube_node)
                 else:
                     # if it's compressed, then can add all found values in a single node
-                    print("AND NOW ARE THERE STILL POLYTOPES??")
-                    print(len(polytopes))
-                    print(poly in deepcopy(polytopes))
+                    # print("AND NOW ARE THERE STILL POLYTOPES??")
+                    # print(len(polytopes))
+                    # print(poly in deepcopy(polytopes))
                     polytopes.remove(poly)
                     child_polytopes = deepcopy(polytopes)
                     # child_polytopes.remove(poly)
                     child_polytopes.extend(sliced_polys)
                     # create children
                     children = _slice(child, child_polytopes, datacube_axes, datacube_transformations)
+                    # print(" WHAT ARE THE CHILD VALUES AT THE END??")
+                    # print(child.key)
+                    # print(found_vals)
                     # If this node used to have children but now has none due to filtering, skip it.
                     if child.children and not children:
                         continue
+
                     # TODO: add the child_polytopes to the child.metadata/ ie change child.metadata here before passing
                     result.extend([Qube.make(
                         key=child.key,
@@ -320,6 +343,12 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
                     )])
 
         return result
+
+    # TODO: change the polytope point types here
+    for polytope in polytopes_to_slice:
+        for axis in polytope._axes:
+
+            change_poly_axis_type(axis, [polytope], datacube_axes)
 
     return Qube.root_node(_slice(q, polytopes_to_slice, datacube_axes, datacube_transformations))
 
