@@ -87,26 +87,52 @@ class NestedHealpixGridMapper(DatacubeMapper):
         return_vals = [val for val in axis_lines if lower <= val <= upper]
         return return_vals
 
+    # def axes_idx_to_healpix_idx(self, first_idx, second_idx):
+    #     idx = 0
+    #     for i in range(self._resolution - 1):
+    #         if i != first_idx:
+    #             idx += 4 * (i + 1)
+    #         else:
+    #             idx += second_idx
+    #             return idx
+    #     for i in range(self._resolution - 1, 3 * self._resolution):
+    #         if i != first_idx:
+    #             idx += 4 * self._resolution
+    #         else:
+    #             idx += second_idx
+    #             return idx
+    #     for i in range(3 * self._resolution, 4 * self._resolution - 1):
+    #         if i != first_idx:
+    #             idx += 4 * (4 * self._resolution - 1 - i)
+    #         else:
+    #             idx += second_idx
+    #             return idx
+
     def axes_idx_to_healpix_idx(self, first_idx, second_idx):
-        idx = 0
-        for i in range(self._resolution - 1):
-            if i != first_idx:
-                idx += 4 * (i + 1)
-            else:
-                idx += second_idx
-                return idx
-        for i in range(self._resolution - 1, 3 * self._resolution):
-            if i != first_idx:
-                idx += 4 * self._resolution
-            else:
-                idx += second_idx
-                return idx
-        for i in range(3 * self._resolution, 4 * self._resolution - 1):
-            if i != first_idx:
-                idx += 4 * (4 * self._resolution - 1 - i)
-            else:
-                idx += second_idx
-                return idx
+        res = self._resolution
+        # Directly compute index without unnecessary loops
+        # if first_idx < res - 1:
+        #     return sum(4 * (i + 1) for i in range(first_idx)) + second_idx
+        # elif first_idx < 3 * res:
+        #     return sum(4 * (i + 1) for i in range(res - 1)) + (first_idx - (res - 1)) * (4 * res) + second_idx
+        # else:
+        #     return (
+        #         sum(4 * (i + 1) for i in range(res - 1))
+        #         + (2 * res + 1) * (4 * res)
+        #         + sum(4 * (4 * res - 1 - i) for i in range(3 * res, first_idx))
+        #         + second_idx
+        #     )
+        # sum1 = (4 * np.arange(res - 1) + 4).sum()
+        sum1 = (2 * (res-1) * res)
+        # sum2 = (4 * np.arange(3 * res, first_idx) - 4 * res + 1).sum() if first_idx >= 3 * res else 0
+        sum2 = 2 * (((res-1) * res) - ((4 * res - 1 - first_idx) * (4 * res - first_idx)))
+
+        if first_idx < res - 1:
+            return (2 * first_idx * (first_idx + 1)) + second_idx
+        elif first_idx < 3 * res:
+            return sum1 + (first_idx - (res - 1)) * (4 * res) + second_idx
+        else:
+            return sum1 + (2 * res + 1) * (4 * res) + sum2 + second_idx
 
     def unmap(self, first_val, second_vals):
         tol = 1e-8
