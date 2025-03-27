@@ -16,11 +16,11 @@ class NestedHealpixGridMapper(DatacubeMapper):
         self._first_axis_vals_np_rounded = -np.round(np.array(self._first_axis_vals), decimals=8)
         self.compressed_grid_axes = [self._mapped_axes[1]]
         self.Nside = self._resolution
-        self._cached_longitudes = {}
+        # self._cached_longitudes = {}
         self.k = int(math.log2(self.Nside))
         self.Npix = 12 * self.Nside * self.Nside
         self.Ncap = (self.Nside * (self.Nside - 1)) << 1
-        self._healpix_longitudes = {}
+        # self._healpix_longitudes = {}
         if md5_hash is not None:
             self.md5_hash = md5_hash
         else:
@@ -79,9 +79,9 @@ class NestedHealpixGridMapper(DatacubeMapper):
         return self.second_axis_vals_from_idx(idx)
 
     def second_axis_vals_from_idx(self, first_val_idx):
-        if first_val_idx not in self._healpix_longitudes:
-            self._healpix_longitudes[first_val_idx] = self.HEALPix_longitudes(first_val_idx)
-        values = self._healpix_longitudes[first_val_idx]
+        # if first_val_idx not in self._healpix_longitudes:
+        #     self._healpix_longitudes[first_val_idx] = self.HEALPix_longitudes(first_val_idx)
+        values = self.HEALPix_longitudes(first_val_idx)
         return values
 
     def HEALPix_nj(self, i):
@@ -94,9 +94,10 @@ class NestedHealpixGridMapper(DatacubeMapper):
             return self.HEALPix_nj(ni - 1 - i)
 
     def HEALPix_longitudes(self, i):
-        if i in self._cached_longitudes:
-            return self._cached_longitudes[i]
-        else:
+        # if i in self._cached_longitudes:
+        #     return self._cached_longitudes[i]
+        # else:
+        if True:
             Nj = self.HEALPix_nj(i)
             step = 360.0 / Nj
             start = (
@@ -105,7 +106,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
                 else 0.0
             )
             longitudes = [start + n * step for n in range(Nj)]
-            self._cached_longitudes[i] = longitudes
+            # self._cached_longitudes[i] = longitudes
         return longitudes
 
     def axes_idx_to_healpix_idx(self, first_idx, second_idx):
