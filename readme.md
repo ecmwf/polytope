@@ -13,6 +13,9 @@
   <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
   <a href="https://github.com/ecmwf/polytope/releases"><img src="https://img.shields.io/github/v/release/ecmwf/polytope?color=blue&label=Release&style=flat-square"></a>
   <a href='https://polytope.readthedocs.io/en/latest/?badge=latest'><img src='https://readthedocs.org/projects/polytope/badge/?version=latest' alt='Documentation Status' /></a>
+  <a href="https://github.com/ecmwf/codex/raw/refs/heads/main/Project%20Maturity">
+    <img src="https://github.com/ecmwf/codex/raw/refs/heads/main/Project%20Maturity/incubating_badge.svg" alt="Project Maturity">
+  </a>
 </p>
 <p align="center">
   <a href="#concept">Concept</a> •
@@ -30,8 +33,11 @@ Polytope is designed to extend different datacube backends:
 
 Polytope supports datacubes which have branching, non-uniform indexing, and even cyclic axes. If the datacube backend supports byte-addressability and efficient random access (either in-memory or direct from storage), **Polytope** can be used to dramatically decrease overall I/O load.
 
-> [!WARNING]
-> This project is BETA and will be experimental for the foreseeable future. Interfaces and functionality are likely to change, and the project itself may be scrapped. DO NOT use this software in any project/software that is operational.
+> \[!IMPORTANT\]
+> This software is **Incubating** and subject to ECMWF's guidelines on [Software Maturity](https://github.com/ecmwf/codex/raw/refs/heads/main/Project%20Maturity).
+
+<!-- > [!WARNING]
+> This project is BETA and will be experimental for the foreseeable future. Interfaces and functionality are likely to change, and the project itself may be scrapped. DO NOT use this software in any project/software that is operational. -->
 
 ## Concept 
 

@@ -205,11 +205,11 @@ class FDBDatacube(Datacube):
                 original_fdb_node_range_vals = []
                 new_current_start_idx = []
                 for j, idx in enumerate(sub_lat_idxs):
-                    if idx not in seen_indices:
+                    if idx.tolist() not in seen_indices:
                         # NOTE: need to remove it from the values in the corresponding tree node
                         # NOTE: need to read just the range we give to gj
                         original_fdb_node_range_vals.append(actual_fdb_node[0].values[j])
-                        seen_indices.add(idx)
+                        seen_indices.add(idx.tolist())
                         new_current_start_idx.append(idx)
                 if original_fdb_node_range_vals != []:
                     actual_fdb_node[0].values = tuple(original_fdb_node_range_vals)
