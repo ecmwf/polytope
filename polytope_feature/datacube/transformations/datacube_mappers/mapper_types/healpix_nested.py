@@ -1,6 +1,7 @@
 import math
 
 from ..datacube_mappers import DatacubeMapper
+from healpix_nested_rust import axes_idx_to_healpix_idx_batch, ring_to_nested_batched
 
 
 class NestedHealpixGridMapper(DatacubeMapper):
@@ -113,7 +114,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
                 return idx
         for i in range(3 * self._resolution, 4 * self._resolution - 1):
             if i != first_idx:
-                idx += 4 * (4 * self._resolution - 1 - i + 1)
+                idx += 4 * (4 * self._resolution - 1 - i)
             else:
                 idx += second_idx
                 return idx
@@ -128,15 +129,23 @@ class NestedHealpixGridMapper(DatacubeMapper):
         second_axis_vals = self.second_axis_vals_from_idx(first_idx)
 
         return_idxs = []
+        second_idxs = []
         for second_val in second_vals:
             second_idx = next(
                 (i for i, val in enumerate(second_axis_vals) if second_val - tol <= val <= second_val + tol), None
             )
             if second_idx is None:
                 return None
-            healpix_index = self.axes_idx_to_healpix_idx(first_idx, second_idx)
-            nested_healpix_index = self.ring_to_nested(healpix_index)
-            return_idxs.append(nested_healpix_index)
+            second_idxs.append(second_idx)
+            # healpix_index = self.axes_idx_to_healpix_idx(first_idx, second_idx)
+            # nested_healpix_index = self.ring_to_nested(healpix_index)
+            # return_idxs.append(nested_healpix_index)
+        healpix_indexes = axes_idx_to_healpix_idx_batch(self._resolution, first_idx, second_idxs)
+        # for healpix_index in healpix_indexes:
+        #     nested_healpix_index = self.ring_to_nested(healpix_index)
+        #     return_idxs.append(nested_healpix_index)
+        nested_healpix_indexes = ring_to_nested_batched(healpix_indexes, self.Nside, self.Npix, self.Ncap, self.k)
+        return_idxs.extend(nested_healpix_indexes)
         return return_idxs
 
     def div_03(self, a, b):
