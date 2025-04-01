@@ -113,7 +113,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
         if not np.all(valid_mask):
             return None
         healpix_idxs = [self.axes_idx_to_healpix_idx(idx, sec_idx) for sec_idx in second_idxs]
-        return self.ring_to_nested(np.asarray(healpix_idxs))
+        return self.ring_to_nested(np.asarray(healpix_idxs)).tolist()
 
     def div_03(self, a, b):
         """Vectorized version of div_03"""
