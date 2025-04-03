@@ -292,6 +292,7 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
                         # print(sliced_poly)
                         # if sliced_poly:
                         if True:
+                            # if sliced_poly:
                             sliced_polys.append(sliced_poly)
 
                 # decide if axis should be compressed or not according to polytope
@@ -329,7 +330,7 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
                     polytopes.remove(poly)
                     child_polytopes = deepcopy(polytopes)
                     # child_polytopes.remove(poly)
-                    child_polytopes.extend(sliced_polys)
+                    child_polytopes.extend([sliced_poly_ for sliced_poly_ in sliced_polys if sliced_poly_ is not None])
                     # create children
                     children = _slice(child, child_polytopes, datacube_axes, datacube_transformations)
                     # print(" WHAT ARE THE CHILD VALUES AT THE END??")

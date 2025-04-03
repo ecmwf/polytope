@@ -11,11 +11,34 @@ from polytope_feature.shapes import ConvexPolytope
 fdb_tree = Qube.from_json(requests.get(
     "https://github.com/ecmwf/qubed/raw/refs/heads/main/tests/example_qubes/climate_dt.json").json())
 
+
+# fdb_tree = fdb_tree.remove_by_key(["year"]).remove_by_key(["month"])
+
+fdb_tree.print()
+
 print(fdb_tree.axes().keys())
 
 
+# combi_polytopes = [
+#     ConvexPolytope(["param"], [["168"]]),
+#     ConvexPolytope(["time"], [[pd.Timedelta(hours=0, minutes=0)], [pd.Timedelta(hours=12, minutes=0)]]),
+#     ConvexPolytope(["resolution"], [["high"]]),
+#     ConvexPolytope(["type"], [["fc"]]),
+#     ConvexPolytope(["model"], [['ifs-nemo']]),
+#     ConvexPolytope(["stream"], [["clte"]]),
+#     ConvexPolytope(["realization"], ["1"]),
+#     ConvexPolytope(["expver"], [['0001']]),
+#     ConvexPolytope(["experiment"], [['ssp3-7.0']]),
+#     ConvexPolytope(["generation"], [["1"]]),
+#     ConvexPolytope(["levtype"], [["sfc"]]),
+#     ConvexPolytope(["activity"], [["scenariomip"]]),
+#     ConvexPolytope(["dataset"], [["climate-dt"]]),
+#     ConvexPolytope(["class"], [["d1"]]),
+#     ConvexPolytope(["date"], [[pd.Timestamp("20210728")], [pd.Timestamp("20210729")]])
+# ]
+
 combi_polytopes = [
-    ConvexPolytope(["param"], [["168"]]),
+    ConvexPolytope(["param"], [["164"]]),
     ConvexPolytope(["time"], [[pd.Timedelta(hours=0, minutes=0)], [pd.Timedelta(hours=12, minutes=0)]]),
     ConvexPolytope(["resolution"], [["high"]]),
     ConvexPolytope(["type"], [["fc"]]),
@@ -29,7 +52,7 @@ combi_polytopes = [
     ConvexPolytope(["activity"], [["scenariomip"]]),
     ConvexPolytope(["dataset"], [["climate-dt"]]),
     ConvexPolytope(["class"], [["d1"]]),
-    ConvexPolytope(["date"], [[pd.Timestamp("20210728")], [pd.Timestamp("20210729")]])
+    ConvexPolytope(["date"], [[pd.Timestamp("20220811")], [pd.Timestamp("20230812")]])
 ]
 
 datacube_axes = {"param": UnsliceableDatacubeAxis(),
