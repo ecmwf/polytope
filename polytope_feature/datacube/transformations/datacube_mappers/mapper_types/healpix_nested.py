@@ -137,9 +137,6 @@ class NestedHealpixGridMapper(DatacubeMapper):
             if second_idx is None:
                 return None
             second_idxs.append(second_idx)
-            # healpix_index = self.axes_idx_to_healpix_idx(first_idx, second_idx)
-            # nested_healpix_index = self.ring_to_nested(healpix_index)
-            # return_idxs.append(nested_healpix_index)
         healpix_indexes = axes_idx_to_healpix_idx_batch(self._resolution, first_idx, second_idxs)
         nested_healpix_indexes = ring_to_nested_batched(healpix_indexes, self.Nside, self.Npix, self.Ncap, self.k)
         return_idxs.extend(nested_healpix_indexes)
