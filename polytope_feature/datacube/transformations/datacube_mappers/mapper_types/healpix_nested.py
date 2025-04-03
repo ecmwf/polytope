@@ -141,9 +141,6 @@ class NestedHealpixGridMapper(DatacubeMapper):
             # nested_healpix_index = self.ring_to_nested(healpix_index)
             # return_idxs.append(nested_healpix_index)
         healpix_indexes = axes_idx_to_healpix_idx_batch(self._resolution, first_idx, second_idxs)
-        # for healpix_index in healpix_indexes:
-        #     nested_healpix_index = self.ring_to_nested(healpix_index)
-        #     return_idxs.append(nested_healpix_index)
         nested_healpix_indexes = ring_to_nested_batched(healpix_indexes, self.Nside, self.Npix, self.Ncap, self.k)
         return_idxs.extend(nested_healpix_indexes)
         return return_idxs
@@ -160,6 +157,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
     def to_nest(self, f, ring, Nring, phi, shift):
         r = int(((2 + (f >> 2)) << self.k) - ring - 1)
         p = int(2 * phi - self.pll(f) * Nring - shift - 1)
+
         if p >= 2 * self.Nside:
             p -= 8 * self.Nside
         i = int((r + p)) >> 1
