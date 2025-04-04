@@ -537,46 +537,28 @@ fn find_qhull_points(points: &Vec<(f64, f64)>) -> Result<Option<Vec<(f64, f64)>>
 
     match qh_result {
         Ok(qh) => {
-            // let num_vertices = qh.num_vertices(); // Get total number of vertices
-            // let mut all_qhull_vertices_: HashSet<usize> = HashSet::with_capacity(num_vertices); 
-            // let mut all_qhull_vertices: Vec<usize> = Vec::with_capacity(num_vertices); 
+            let num_vertices = qh.num_vertices(); // Get total number of vertices
+            let mut all_qhull_vertices_: HashSet<usize> = HashSet::with_capacity(num_vertices); 
+            let mut all_qhull_vertices: Vec<usize> = Vec::with_capacity(num_vertices); 
 
-            // // Process each simplex only once
-            // for simplex in qh.simplices() {
-            //     for v in simplex.vertices().unwrap().iter() {
-            //         if let Some(index) = v.index(&qh) {
-            //             if all_qhull_vertices_.insert(index) { 
-            //                 all_qhull_vertices.push(index);
-            //             }
-            //         }
-            //     }
-            // }
+            // Process each simplex only once
+            for simplex in qh.simplices() {
+                for v in simplex.vertices().unwrap().iter() {
+                    if let Some(index) = v.index(&qh) {
+                        if all_qhull_vertices_.insert(index) { 
+                            all_qhull_vertices.push(index);
+                        }
+                    }
+                }
+            }
 
-            // // Allocate memory for final points
-            // let mut actual_qhull_points: Vec<(f64, f64)> = Vec::with_capacity(all_qhull_vertices.len());
+            // Allocate memory for final points
+            let mut actual_qhull_points: Vec<(f64, f64)> = Vec::with_capacity(all_qhull_vertices.len());
 
-            // // Fetch actual points
-            // for &idx in &all_qhull_vertices {
-            //     if let Some(&point) = points.get(idx) { 
-            //         actual_qhull_points.push(point);
-            //     }
-            // }
-
-            // let actual_qhull_points: Vec<&[f64]> = qh.vertices()
-            //                             .filter_map(|vertex| vertex.point())
-            //                             .collect();
-            
-            // let actual_qhull_points: Vec<(f64, f64)> = actual_qhull_points
-            //                                         .iter()
-            //                                         .map(|p| (p[0], p[1]))  // Convert &[f64] to (f64, f64)
-            //                                         .collect();
-
-            let num_vertices = qh.num_vertices();
-            let mut actual_qhull_points: Vec<(f64, f64)> = Vec::with_capacity(num_vertices);
-
-            for vertex in qh.vertices() {
-                if let Some(point) = vertex.point() {
-                    actual_qhull_points.push((point[0], point[1]));  // Directly convert &[f64] to (f64, f64)
+            // Fetch actual points
+            for &idx in &all_qhull_vertices {
+                if let Some(&point) = points.get(idx) { 
+                    actual_qhull_points.push(point);
                 }
             }
 
