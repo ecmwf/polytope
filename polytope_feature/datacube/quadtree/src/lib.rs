@@ -681,7 +681,7 @@ impl fmt::Display for QhullError {
 impl Error for QhullError {}
 
 
-fn find_qhull_points(points: &Vec<[f64; 2]>) -> Result<Option<Vec<(f64, f64)>>, QhullError> {
+fn find_qhull_points(points: &Vec<[f64; 2]>) -> Result<Option<Vec<[f64; 2]>>, QhullError> {
 
     // let converted = change_points_for_qhull(&points);
     // let qh_result = Qh::builder()
@@ -689,7 +689,7 @@ fn find_qhull_points(points: &Vec<[f64; 2]>) -> Result<Option<Vec<(f64, f64)>>, 
     // .build_from_iter(converted);
     let qh_result = Qh::builder()
     .compute(true)
-    .build_from_iter(points);
+    .build_from_iter(points.iter().copied());
     // let qh_result = QhBuilder::default().build_managed(2, converted).unwrap();
 
     match qh_result {
@@ -710,7 +710,7 @@ fn find_qhull_points(points: &Vec<[f64; 2]>) -> Result<Option<Vec<(f64, f64)>>, 
             }
 
             // Allocate memory for final points
-            let mut actual_qhull_points: Vec<(f64, f64)> = Vec::with_capacity(all_qhull_vertices.len());
+            let mut actual_qhull_points: Vec<[f64; 2]> = Vec::with_capacity(all_qhull_vertices.len());
 
             // Fetch actual points
             for &idx in &all_qhull_vertices {
