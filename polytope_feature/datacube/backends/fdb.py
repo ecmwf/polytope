@@ -332,7 +332,7 @@ class FDBDatacube(Datacube):
                     none_array = [None] * len(n.values)
                     n.result.extend(none_array)
                 else:
-                    n.result.extend(result.values)
+                    n.result.extend(result.values[i])
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
         (new_fdb_node_ranges, new_current_start_idx) = self.remove_duplicates_in_request_ranges(
