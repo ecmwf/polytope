@@ -63,15 +63,15 @@ class TestIndexTreesAfterSlicing:
         request1 = request.leaves[0]
         request2 = request.leaves[0]
         # Test adding child
-        axis1 = IntDatacubeAxis()
-        axis1.name = "lat"
+        # axis1 = IntDatacubeAxis()
+        axis1 = "lat"
         request2.create_child(axis1, 4.1, [])
-        assert request2.leaves[0].axis.name == "lat"
+        assert request2.leaves[0].axis == "lat"
         assert request2.leaves[0].values == tuple([4.1])
-        axis2 = IntDatacubeAxis()
-        axis2.name = "level"
+        # axis2 = IntDatacubeAxis()
+        axis2 = "level"
         # Test getting child
-        assert request1.create_child(axis2, 3.0, [])[0].axis.name == "level"
+        assert request1.create_child(axis2, 3.0, [])[0].axis == "level"
         assert request1.create_child(axis2, 3.0, [])[0].values == tuple([3.0])
 
     def test_pprint(self):
@@ -88,10 +88,10 @@ class TestIndexTreesAfterSlicing:
         request.leaves[0].remove_branch()
         new_request_size = len(request.leaves)
         assert prev_request_size == new_request_size + 1
-        axis1 = IntDatacubeAxis()
-        axis2 = IntDatacubeAxis()
-        axis1.name = "step"
-        axis2.name = "level"
+        # axis1 = IntDatacubeAxis()
+        # axis2 = IntDatacubeAxis()
+        axis1 = "step"
+        axis2 = "level"
         # Test if remove_branch() also removes longer branches
         request1 = request.create_child(axis1, 1.0, [])
         request2 = request1[0].create_child(axis2, 0.0, [])

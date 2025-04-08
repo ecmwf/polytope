@@ -21,10 +21,11 @@ class DatacubePath(OrderedDict):
 
 
 class TensorIndexTree(object):
-    root = IntDatacubeAxis()
-    root.name = "root"
+    # root = IntDatacubeAxis()
+    # root = "root"
+    associated_datacube = None
 
-    def __init__(self, axis=root, values=tuple()):
+    def __init__(self, axis="root", values=tuple()):
         # NOTE: the values here is a tuple so we can hash it
         self.values = values
         self.children = SortedList()
@@ -48,7 +49,8 @@ class TensorIndexTree(object):
         for n in self.children:
             for ancestor in self.ancestors:
                 n.ancestors.append(ancestor)
-            if self.axis != TensorIndexTree.root:
+            # if self.axis != TensorIndexTree.root:
+            if self.axis != "root":
                 n.ancestors.append(self)
             n._collect_leaf_nodes(leaves)
 
@@ -62,17 +64,19 @@ class TensorIndexTree(object):
         return delattr(self, key)
 
     def __hash__(self):
-        return hash((self.axis.name, self.values))
+        return hash((self.axis, self.values))
 
     def __eq__(self, other):
         if not isinstance(other, TensorIndexTree):
             return False
-        if self.axis.name != other.axis.name:
+        if self.axis != other.axis:
             return False
         else:
             if other.values == self.values:
                 return True
             else:
+                self_datacube_axis = self.__class__.associated_datacube._axes[self.axis]
+                other_datacube_axis = self.__class__.associated_datacube._axes[other.axis]
                 if isinstance(self.axis, UnsliceableDatacubeAxis):
                     return False
                 else:
@@ -81,8 +85,8 @@ class TensorIndexTree(object):
                     for i in range(len(other.values)):
                         other_val = other.values[i]
                         self_val = self.values[i]
-                        if self.axis.can_round:
-                            if abs(other_val - self_val) > 2 * max(other.axis.tol, self.axis.tol):
+                        if self_datacube_axis.can_round:
+                            if abs(other_val - self_val) > 2 * max(other_datacube_axis.tol, self_datacube_axis.tol):
                                 return False
                         else:
                             if other_val != self_val:
@@ -90,11 +94,11 @@ class TensorIndexTree(object):
                     return True
 
     def __lt__(self, other):
-        return (self.axis.name, self.values) < (other.axis.name, other.values)
+        return (self.axis, self.values) < (other.axis, other.values)
 
     def __repr__(self):
         if self.axis != "root":
-            return f"{self.axis.name}={self.values}"
+            return f"{self.axis}={self.values}"
         else:
             return f"{self.axis}"
 
@@ -147,7 +151,7 @@ class TensorIndexTree(object):
 
     def add_node_layer_after(self, ax_name, vals):
         ax = IntDatacubeAxis()
-        ax.name = ax_name
+        ax = ax_name
         interm_node = TensorIndexTree(ax, vals)
         interm_node.children = self.children
         interm_node._parent = self
@@ -188,7 +192,7 @@ class TensorIndexTree(object):
                 my_child.merge(other_child)
 
     def pprint(self, level=0):
-        if self.axis.name == "root":
+        if self.axis == "root":
             logging.debug("\n")
         logging.debug("\t" * level + "\u21b3" + str(self))
         for child in self.children:
@@ -216,13 +220,13 @@ class TensorIndexTree(object):
         path = DatacubePath()
         ancestors = self.get_ancestors()
         for ancestor in ancestors:
-            path[ancestor.axis.name] = ancestor.values
+            path[ancestor.axis] = ancestor.values
         return path
 
     def get_ancestors(self):
         ancestors = []
         current_node = self
-        while current_node.axis.name != "root":
+        while current_node.axis != "root":
             ancestors.append(current_node)
             current_node = current_node.parent
         return ancestors[::-1]

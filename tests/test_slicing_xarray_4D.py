@@ -151,7 +151,7 @@ class TestSlicing4DXarrayDatacube:
             Disk(["step", "level"], [5, 3.4], [0.5, 0.2]), Select("date", ["2000-01-01"]), Select("lat", [5.1])
         )
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == TensorIndexTree.root
+        assert result.leaves[0].axis == "root"
 
     def test_float_box(self):
         # Slices a box with no data inside
@@ -159,7 +159,7 @@ class TestSlicing4DXarrayDatacube:
             Box(["step", "lat"], [10.1, 1.01], [10.3, 1.04]), Select("date", ["2000-01-01"]), Select("level", [10])
         )
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == TensorIndexTree.root
+        assert result.leaves[0].axis == "root"
 
     def test_path_empty_box(self):
         # Slices the path of a box with no data inside, but gives data because the box is swept over a datacube value
@@ -179,14 +179,14 @@ class TestSlicing4DXarrayDatacube:
             Select("date", ["2000-01-01"]),
         )
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == TensorIndexTree.root
+        assert result.leaves[0].axis == "root"
 
     def test_ellipsoid_empty(self):
         # Slices an empty ellipsoid which doesn't have any step value
         ellipsoid = Ellipsoid(["step", "level", "lat"], [5, 3, 2.1], [0, 0, 0])
         request = Request(ellipsoid, Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == TensorIndexTree.root
+        assert result.leaves[0].axis == "root"
 
     # Testing special properties
 
@@ -208,7 +208,7 @@ class TestSlicing4DXarrayDatacube:
         request = Request(ellipsoid, Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
-        assert not result.leaves[0].axis == TensorIndexTree.root
+        assert not result.leaves[0].axis == "root"
 
     def test_flat_box_level(self):
         # Slices a line in the step direction
@@ -226,7 +226,7 @@ class TestSlicing4DXarrayDatacube:
         # Slices an empty disk because there is no step level
         request = Request(Disk(["level", "step"], [4, 5], [4, 0]), Select("lat", [6]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == TensorIndexTree.root
+        assert result.leaves[0].axis == "root"
 
     def test_flat_disk_line(self):
         # Slices a line in the level direction
@@ -244,20 +244,20 @@ class TestSlicing4DXarrayDatacube:
         # Slices an empty disk because there is no step
         request = Request(Disk(["level", "step"], [4, 5], [0, 0.5]), Select("lat", [6]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == TensorIndexTree.root
+        assert result.leaves[0].axis == "root"
 
     def test_disk_point(self):
         # Slices a point because the origin of the disk is a datacube point
         request = Request(Disk(["level", "step"], [4, 6], [0, 0]), Select("lat", [6]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
-        assert not result.leaves[0].axis == TensorIndexTree.root
+        assert not result.leaves[0].axis == "root"
 
     def test_empty_disk(self):
         # Slices an empty object because the origin of the disk is not a datacube point
         request = Request(Disk(["level", "step"], [4, 5], [0, 0]), Select("lat", [6]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == TensorIndexTree.root
+        assert result.leaves[0].axis == "root"
 
     def test_polygon_line(self):
         # Slices a line defined through the polygon shape
@@ -273,14 +273,14 @@ class TestSlicing4DXarrayDatacube:
         request = Request(polygon, Select("lat", [4.3]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
-        assert not result.leaves[0].axis == TensorIndexTree.root
+        assert not result.leaves[0].axis == "root"
 
     def test_polygon_empty(self):
         # Slices a point which isn't in the datacube (defined through the polygon shape)
         polygon = Polygon(["step", "level"], [[2, 3.1]])
         request = Request(polygon, Select("lat", [4.3]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
-        assert result.leaves[0].axis == TensorIndexTree.root
+        assert result.leaves[0].axis == "root"
 
     # Test exceptions are returned correctly
 

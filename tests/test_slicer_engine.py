@@ -27,14 +27,14 @@ class TestSlicerComponents:
         box = Box(["step", "level"], [3.0, 1.0], [6.0, 3.0])
         polytope = box.polytope()
         request = self.slicer.extract(self.xarraydatacube, polytope)
-        assert request.axis == TensorIndexTree.root
+        assert request.axis == "root"
         assert request.parent is None
         assert request.values is tuple()
         request.pprint()
         assert len(request.leaves) == 2
-        assert request.leaves[0].axis.name == "level"
+        assert request.leaves[0].axis == "level"
         assert len(request.children) == 2
-        assert request.children[0].axis.name == "step"
+        assert request.children[0].axis == "step"
         assert request.children[0].values == (3.0,)
         assert request.children[1].values == (6.0,)
         for i in range(len(request.leaves)):

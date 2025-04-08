@@ -9,7 +9,7 @@ from .tensor_index_tree import TensorIndexTree
 def encode_tree(tree: TensorIndexTree):
     node = pb2.Node()
 
-    node.axis = tree.axis.name
+    node.axis = tree.axis
 
     # NOTE: do we need this if we parse the tree before it has values?
     if tree.result is not None:
@@ -45,7 +45,7 @@ def encode_child(tree: TensorIndexTree, child: TensorIndexTree, node, result_siz
 
     # need to add axis and children etc to the encoded node only if the tree node isn't hidden
     else:
-        child_node.axis = child.axis.name
+        child_node.axis = child.axis
         child_node.value.extend(child.values)
         child_node.size_result.extend(new_result_size)
 
