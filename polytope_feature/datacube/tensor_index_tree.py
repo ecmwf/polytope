@@ -66,35 +66,44 @@ class TensorIndexTree(object):
     def __hash__(self):
         return hash((self.axis, self.values))
 
-    def __eq__(self, other):
-        if not isinstance(other, TensorIndexTree):
-            return False
-        if self.axis != other.axis:
-            return False
-        else:
-            if other.values == self.values:
-                return True
-            else:
-                self_datacube_axis = self.__class__.associated_datacube._axes[self.axis]
-                other_datacube_axis = self.__class__.associated_datacube._axes[other.axis]
-                if isinstance(self.axis, UnsliceableDatacubeAxis):
-                    return False
-                else:
-                    if len(other.values) != len(self.values):
-                        return False
-                    for i in range(len(other.values)):
-                        other_val = other.values[i]
-                        self_val = self.values[i]
-                        if self_datacube_axis.can_round:
-                            if abs(other_val - self_val) > 2 * max(other_datacube_axis.tol, self_datacube_axis.tol):
-                                return False
-                        else:
-                            if other_val != self_val:
-                                return False
-                    return True
+    # def __eq__(self, other):
+    #     if not isinstance(other, TensorIndexTree):
+    #         return False
+    #     if self.axis != other.axis:
+    #         return False
+    #     else:
+    #         if other.values == self.values:
+    #             return True
+    #         else:
+    #             self_datacube_axis = self.__class__.associated_datacube._axes[self.axis]
+    #             other_datacube_axis = self.__class__.associated_datacube._axes[other.axis]
+    #             if isinstance(self.axis, UnsliceableDatacubeAxis):
+    #                 return False
+    #             else:
+    #                 if len(other.values) != len(self.values):
+    #                     return False
+    #                 for i in range(len(other.values)):
+    #                     other_val = other.values[i]
+    #                     self_val = self.values[i]
+    #                     if self_datacube_axis.can_round:
+    #                         if abs(other_val - self_val) > 2 * max(other_datacube_axis.tol, self_datacube_axis.tol):
+    #                             return False
+    #                     else:
+    #                         if other_val != self_val:
+    #                             return False
+    #                 return True
+
+    # def __lt__(self, other):
+    #     return (self.axis, self.values) < (other.axis, other.values)
+
+    def __key(self):
+        return (self.axis, self.values)
 
     def __lt__(self, other):
-        return (self.axis, self.values) < (other.axis, other.values)
+        return self.__key() < other.__key()
+
+    def __eq__(self, other):
+        return self.__key() == other.__key()
 
     def __repr__(self):
         if self.axis != "root":

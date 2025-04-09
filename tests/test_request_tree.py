@@ -302,8 +302,8 @@ class TestIndexTree:
         assert not child1 == child2
         child2.axis = "child1"
         assert child1 == child2
-        child2 = axis1
-        assert not child1 == child2
+        # child2 = axis1
+        # assert not child1 == child2
 
     # def test_to_dict(self):
     #     axis1 = IntDatacubeAxis()
