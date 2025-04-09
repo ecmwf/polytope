@@ -55,12 +55,13 @@ class XArrayDatacube(Datacube):
             context = {}
         if leaf_path is None:
             leaf_path = {}
-        if requests.axis.name == "root":
+        if requests.axis == "root":
             for c in requests.children:
                 self.get(c, context, leaf_path, axis_counter + 1)
         else:
-            key_value_path = {requests.axis.name: requests.values}
-            ax = requests.axis
+            key_value_path = {requests.axis: requests.values}
+            ax_name = requests.axis
+            ax = self._axes[ax_name]
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )

@@ -150,7 +150,7 @@ class TestSlicingFDBDatacube:
         result.pprint()
         assert len(result.leaves) == 1
         assert result.leaves[0].values == (359.929906542056,)
-        assert result.leaves[0].axis.name == "longitude"
+        assert result.leaves[0].axis == "longitude"
 
     @pytest.mark.fdb
     def test_fdb_datacube_true_point_5(self):
@@ -179,7 +179,7 @@ class TestSlicingFDBDatacube:
         result.pprint()
         assert len(result.leaves) == 1
         assert result.leaves[0].values == (359.929906542056,)
-        assert result.leaves[0].axis.name == "longitude"
+        assert result.leaves[0].axis == "longitude"
 
     @pytest.mark.fdb
     def test_fdb_datacube_true_point_4(self):
@@ -208,4 +208,4 @@ class TestSlicingFDBDatacube:
         # result.pprint_2()
         assert len(result.leaves) == 1
         assert result.leaves[0].values == (359.929906542056,)
-        assert result.leaves[0].axis.name == "longitude"
+        assert result.leaves[0].axis == "longitude"

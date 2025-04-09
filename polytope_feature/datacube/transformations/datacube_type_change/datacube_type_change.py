@@ -53,7 +53,7 @@ class DatacubeAxisTypeChange(DatacubeAxisTransformation):
         return (key_value_path, leaf_path, unwanted_path)
 
     def unmap_tree_node(self, node, unwanted_path):
-        if node.axis.name == self.name:
+        if node.axis == self.name:
             new_node_vals = self.make_str(node.values)
             node.values = new_node_vals
         return (node, unwanted_path)

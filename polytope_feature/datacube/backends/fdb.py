@@ -5,6 +5,7 @@ from itertools import product
 
 from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
 from ...utility.geometry import nearest_pt
+from ..datacube_axis import IntDatacubeAxis
 from .datacube import Datacube, TensorIndexTree
 
 
@@ -165,15 +166,16 @@ class FDBDatacube(Datacube):
             leaf_path = {}
 
         # First when request node is root, go to its children
-        if requests.axis.name == "root":
+        if requests.axis == "root":
             logging.debug("Looking for data for the tree")
 
             for c in requests.children:
                 self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info)
         # If request node has no children, we have a leaf so need to assign fdb values to it
         else:
-            key_value_path = {requests.axis.name: requests.values}
-            ax = requests.axis
+            key_value_path = {requests.axis: requests.values}
+            ax_name = requests.axis
+            ax = self._axes[ax_name]
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
@@ -221,8 +223,8 @@ class FDBDatacube(Datacube):
 
     def nearest_lat_lon_search(self, requests):
         if len(self.nearest_search) != 0:
-            first_ax_name = requests.children[0].axis.name
-            second_ax_name = requests.children[0].children[0].axis.name
+            first_ax_name = requests.children[0].axis
+            second_ax_name = requests.children[0].children[0].axis
 
             axes_in_nearest_search = [
                 first_ax_name not in self.nearest_search.keys(),
@@ -232,7 +234,8 @@ class FDBDatacube(Datacube):
             if all(not item for item in axes_in_nearest_search):
                 raise Exception("nearest point search axes are wrong")
 
-            second_ax = requests.children[0].children[0].axis
+            second_ax_name = requests.children[0].children[0].axis
+            second_ax = self._axes[second_ax_name]
 
             nearest_pts = self.nearest_search.get((first_ax_name, second_ax_name), None)
             if nearest_pts is None:
@@ -286,11 +289,12 @@ class FDBDatacube(Datacube):
             lat_child = requests.children[i]
             lon_length = len(lat_child.children)
             current_start_idxs[i] = [None] * lon_length
-            fdb_node_ranges[i] = [[TensorIndexTree.root for y in range(lon_length)] for x in range(lon_length)]
+            fdb_node_ranges[i] = [["root" for y in range(lon_length)] for x in range(lon_length)]
             current_start_idx = deepcopy(current_start_idxs[i])
             fdb_range_nodes = deepcopy(fdb_node_ranges[i])
-            key_value_path = {lat_child.axis.name: lat_child.values}
-            ax = lat_child.axis
+            key_value_path = {lat_child.axis: lat_child.values}
+            ax_name = lat_child.axis
+            ax = self._axes[ax_name]
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
@@ -308,8 +312,9 @@ class FDBDatacube(Datacube):
         fdb_range_n = [[] for i in range(len(requests.children))]
         for i, c in enumerate(requests.children):
             # now c are the leaves of the initial tree
-            key_value_path = {c.axis.name: c.values}
-            ax = c.axis
+            key_value_path = {c.axis: c.values}
+            ax_name = c.axis
+            ax = self._axes[ax_name]
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
@@ -389,9 +394,14 @@ class FDBDatacube(Datacube):
         if unwanted_path is None:
             unwanted_path = {}
 
-        ax = node.axis
-        (new_node, unwanted_path) = ax.unmap_tree_node(node, unwanted_path)
+        ax_name = node.axis
 
+        if ax_name != "root":
+            ax = self._axes[ax_name]
+        else:
+            ax = IntDatacubeAxis()
+
+        (new_node, unwanted_path) = ax.unmap_tree_node(node, unwanted_path)
         if len(node.children) != 0:
             for c in new_node.children:
                 self.prep_tree_encoding(c, unwanted_path)
