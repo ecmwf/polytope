@@ -5,8 +5,8 @@ from itertools import product
 
 from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
 from ...utility.geometry import nearest_pt
-from .datacube import Datacube, TensorIndexTree
 from ..datacube_axis import IntDatacubeAxis
+from .datacube import Datacube, TensorIndexTree
 
 
 class FDBDatacube(Datacube):

@@ -2,7 +2,6 @@ import math
 from copy import deepcopy
 
 from . import index_tree_pb2 as pb2
-from .datacube_axis import IntDatacubeAxis
 from .tensor_index_tree import TensorIndexTree
 
 
@@ -33,7 +32,6 @@ def encode_child(tree: TensorIndexTree, child: TensorIndexTree, node, result_siz
     child_node = pb2.Node()
 
     new_result_size = deepcopy(result_size)
-    # new_result_size = result_size
     new_result_size.append(len(child.values))
 
     if child.hidden:
@@ -68,11 +66,8 @@ def decode_tree(datacube, bytearray):
     tree = TensorIndexTree()
 
     if node.axis == "root":
-        # root = IntDatacubeAxis()
-        # root.name = "root"
         tree.axis = "root"
     else:
-        # tree.axis = datacube._axes[node.axis]
         tree.axis = node.axis
 
     # Put contents of node children into tree
@@ -96,7 +91,6 @@ def decode_child(node, tree, datacube):
             tree.add_child(child_node)
             decode_child(child, child_node, datacube)
         else:
-            # grandchild_axis = datacube._axes[child.children[0].axis]
             grandchild_axis = child.children[0].axis
             for c in child.children:
                 grandchild_vals = tuple(c.value)

@@ -3,7 +3,7 @@ from typing import OrderedDict
 
 from sortedcontainers import SortedList
 
-from .datacube_axis import IntDatacubeAxis, UnsliceableDatacubeAxis
+from .datacube_axis import IntDatacubeAxis
 
 
 class DatacubePath(OrderedDict):
@@ -49,7 +49,6 @@ class TensorIndexTree(object):
         for n in self.children:
             for ancestor in self.ancestors:
                 n.ancestors.append(ancestor)
-            # if self.axis != TensorIndexTree.root:
             if self.axis != "root":
                 n.ancestors.append(self)
             n._collect_leaf_nodes(leaves)
@@ -65,36 +64,6 @@ class TensorIndexTree(object):
 
     def __hash__(self):
         return hash((self.axis, self.values))
-
-    # def __eq__(self, other):
-    #     if not isinstance(other, TensorIndexTree):
-    #         return False
-    #     if self.axis != other.axis:
-    #         return False
-    #     else:
-    #         if other.values == self.values:
-    #             return True
-    #         else:
-    #             self_datacube_axis = self.__class__.associated_datacube._axes[self.axis]
-    #             other_datacube_axis = self.__class__.associated_datacube._axes[other.axis]
-    #             if isinstance(self.axis, UnsliceableDatacubeAxis):
-    #                 return False
-    #             else:
-    #                 if len(other.values) != len(self.values):
-    #                     return False
-    #                 for i in range(len(other.values)):
-    #                     other_val = other.values[i]
-    #                     self_val = self.values[i]
-    #                     if self_datacube_axis.can_round:
-    #                         if abs(other_val - self_val) > 2 * max(other_datacube_axis.tol, self_datacube_axis.tol):
-    #                             return False
-    #                     else:
-    #                         if other_val != self_val:
-    #                             return False
-    #                 return True
-
-    # def __lt__(self, other):
-    #     return (self.axis, self.values) < (other.axis, other.values)
 
     def __key(self):
         return (self.axis, self.values)
