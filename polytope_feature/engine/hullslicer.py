@@ -75,8 +75,6 @@ class HullSlicer(Engine):
         lower = ax.from_float(lower - tol)
         upper = ax.from_float(upper + tol)
         flattened = node.flatten()
-        print("HERE NOW WHAT DO WE HAVE")
-        print(flattened)
         method = polytope.method
 
         # NOTE: caching
