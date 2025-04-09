@@ -114,10 +114,10 @@ class DatacubeMapper(DatacubeAxisTransformation):
 
     def unmap_tree_node(self, node, unwanted_path):
         values = node.values
-        if node.axis.name == self._mapped_axes()[0]:
-            unwanted_path[node.axis.name] = values
+        if node.axis == self._mapped_axes()[0]:
+            unwanted_path[node.axis] = values
             returned_node = node
-        if node.axis.name == self._mapped_axes()[1]:
+        if node.axis == self._mapped_axes()[1]:
             first_vals = unwanted_path[self._mapped_axes()[0]]
             unmapped_idxs = []
             for first_val in first_vals:

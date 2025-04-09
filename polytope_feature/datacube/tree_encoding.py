@@ -68,11 +68,12 @@ def decode_tree(datacube, bytearray):
     tree = TensorIndexTree()
 
     if node.axis == "root":
-        root = IntDatacubeAxis()
-        root.name = "root"
-        tree.axis = root
+        # root = IntDatacubeAxis()
+        # root.name = "root"
+        tree.axis = "root"
     else:
-        tree.axis = datacube._axes[node.axis]
+        # tree.axis = datacube._axes[node.axis]
+        tree.axis = node.axis
 
     # Put contents of node children into tree
     decode_child(node, tree, datacube)
@@ -88,13 +89,15 @@ def decode_child(node, tree, datacube):
         tree.indexes_size = node.size_indexes_branch
     for child in node.children:
         if child.axis in datacube._axes.keys():
-            child_axis = datacube._axes[child.axis]
+            # child_axis = datacube._axes[child.axis]
+            child_axis = child.axis
             child_vals = tuple(child.value)
             child_node = TensorIndexTree(child_axis, child_vals)
             tree.add_child(child_node)
             decode_child(child, child_node, datacube)
         else:
-            grandchild_axis = datacube._axes[child.children[0].axis]
+            # grandchild_axis = datacube._axes[child.children[0].axis]
+            grandchild_axis = child.children[0].axis
             for c in child.children:
                 grandchild_vals = tuple(c.value)
                 grandchild_node = TensorIndexTree(grandchild_axis, grandchild_vals)

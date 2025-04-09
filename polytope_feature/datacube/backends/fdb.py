@@ -6,6 +6,7 @@ from itertools import product
 from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
 from ...utility.geometry import nearest_pt
 from .datacube import Datacube, TensorIndexTree
+from ..datacube_axis import IntDatacubeAxis
 
 
 class FDBDatacube(Datacube):
@@ -402,11 +403,13 @@ class FDBDatacube(Datacube):
 
         if ax_name != "root":
             ax = self._axes[ax_name]
-            (new_node, unwanted_path) = ax.unmap_tree_node(node, unwanted_path)
+        else:
+            ax = IntDatacubeAxis()
 
-            if len(node.children) != 0:
-                for c in new_node.children:
-                    self.prep_tree_encoding(c, unwanted_path)
+        (new_node, unwanted_path) = ax.unmap_tree_node(node, unwanted_path)
+        if len(node.children) != 0:
+            for c in new_node.children:
+                self.prep_tree_encoding(c, unwanted_path)
 
     def prep_tree_decoding(self, tree):
         # TODO: transform the tree after decoding from protobuf
