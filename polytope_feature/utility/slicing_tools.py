@@ -1,10 +1,11 @@
+from copy import copy
+from itertools import chain
+
+import scipy.spatial
+
+from ..shapes import ConvexPolytope
 from .geometry import lerp
 from .list_tools import argmax, argmin
-
-from itertools import chain
-import scipy.spatial
-from copy import copy
-from ..shapes import ConvexPolytope
 
 
 def _find_intersects(polytope, slice_axis_idx, value):
