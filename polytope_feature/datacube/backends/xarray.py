@@ -4,6 +4,7 @@ import numpy as np
 import xarray as xr
 
 from .datacube import Datacube
+from ..tensor_index_tree import TensorIndexTree
 
 
 class XArrayDatacube(Datacube):
@@ -49,6 +50,17 @@ class XArrayDatacube(Datacube):
                         options = opt
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
+        self.axes_tree = self.construct_axes_tree()
+        # self.axes_tree.pprint()
+
+    # def construct_axes_tree(self):
+    #     axes_tree = TensorIndexTree()
+    #     parent_node = axes_tree
+    #     for axis_name in self._axes:
+    #         child_node = TensorIndexTree(self._axes[axis_name], self.ax_vals(axis_name))
+    #         parent_node.add_child(child_node)
+    #         parent_node = child_node
+    #     return axes_tree
 
     def get(self, requests, context=None, leaf_path=None, axis_counter=0):
         if context is None:

@@ -41,6 +41,15 @@ class Datacube(ABC):
     def axes(self):
         return self._axes
 
+    def construct_axes_tree(self):
+        axes_tree = TensorIndexTree()
+        parent_node = axes_tree
+        for axis_name in self._axes:
+            child_node = TensorIndexTree(self._axes[axis_name], self.ax_vals(axis_name))
+            parent_node.add_child(child_node)
+            parent_node = child_node
+        return axes_tree
+
     def validate(self, axes):
         """returns true if the input axes can be resolved against the datacube axes"""
         return validate_axes(list(self.axes.keys()), axes)

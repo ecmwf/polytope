@@ -72,6 +72,8 @@ class FDBDatacube(Datacube):
 
         logging.info("Polytope created axes for %s", self._axes.keys())
 
+        self.axes_tree = self.construct_axes_tree()
+
     def check_branching_axes(self, request):
         polytopes = request.polytopes()
         for polytope in polytopes:
