@@ -4,7 +4,7 @@ import numpy as np
 import xarray as xr
 
 from .datacube import Datacube
-from ..tensor_index_tree import TensorIndexTree
+# from ..tensor_index_tree import TensorIndexTree
 
 
 class XArrayDatacube(Datacube):
