@@ -33,8 +33,9 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         combined_strings = np.char.add(
             np.char.add(first_grid.ravel(), linkers[0]), np.char.add(second_grid.ravel(), linkers[1])
         )
-        merged_values = pd.to_datetime(combined_strings).to_numpy().astype("datetime64[s]")
-        merged_values = np.array(merged_values)
+        # merged_values = pd.to_datetime(combined_strings).to_numpy().astype("datetime64[s]")
+        # merged_values = np.array(merged_values)
+        merged_values = pd.to_datetime(combined_strings).values.astype("datetime64[s]")
         merged_values.sort()
         logging.info(
             f"Merged values {first_ax_vals} on axis {self.name} and \
@@ -49,26 +50,25 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         return self
 
     def unmerge(self, merged_val):
-        first_values = []
-        second_values = []
-        for merged_value in merged_val:
-            merged_val = str(merged_value)
-            first_idx = merged_val.find(self._linkers[0])
-            first_val = merged_val[:first_idx]
-            first_linker_size = len(self._linkers[0])
-            second_linked_size = len(self._linkers[1])
-            second_val = merged_val[first_idx + first_linker_size : -second_linked_size]
+        merged_strs = np.asarray(merged_val).astype(str)
 
-            # TODO: maybe replacing like this is too specific to time/dates?
-            first_val = str(first_val).replace("-", "")
-            second_val = second_val.replace(":", "")
-            logging.info(
-                f"Unmerged value {merged_val} to values {first_val} on axis {self.name} \
-                        and {second_val} on axis {self._second_axis}"
-            )
-            first_values.append(first_val)
-            second_values.append(second_val)
-        return (tuple(first_values), tuple(second_values))
+        linker1 = self._linkers[0]
+        linker2 = self._linkers[1]
+        len_l2 = len(linker2)
+
+        merged_series = pd.Series(merged_strs)
+        split_1 = merged_series.str.split(linker1, n=1, expand=True)
+        first_vals = split_1[0]
+        remainder = split_1[1]
+        if len_l2 > 0:
+            second_vals = remainder.str[:-len_l2]
+        else:
+            second_vals = remainder
+
+        first_vals = first_vals.str.replace("-", "", regex=False)
+        second_vals = second_vals.str.replace(":", "", regex=False)
+
+        return tuple(first_vals), tuple(second_vals)
 
     def change_val_type(self, axis_name, values):
         new_values = pd.to_datetime(values)

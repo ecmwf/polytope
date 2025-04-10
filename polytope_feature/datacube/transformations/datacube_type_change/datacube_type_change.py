@@ -1,6 +1,7 @@
 from copy import deepcopy
 from importlib import import_module
 
+import numpy as np
 import pandas as pd
 
 from ..datacube_transformations import DatacubeAxisTransformation
@@ -26,10 +27,9 @@ class DatacubeAxisTypeChange(DatacubeAxisTransformation):
         return [self._final_transformation.axis_name]
 
     def change_val_type(self, axis_name, values):
-        return_idx = [self._final_transformation.transform_type(val) for val in values]
-        if None in return_idx:
+        return_idx = self._final_transformation.transform_type(values)
+        if np.any(return_idx is None):
             return None
-        return_idx.sort()
         return return_idx
 
     def make_str(self, value):
@@ -64,16 +64,16 @@ class TypeChangeStrToInt(DatacubeAxisTypeChange):
         self.axis_name = axis_name
         self._new_type = new_type
 
-    def transform_type(self, value):
-        try:
-            return int(value)
-        except ValueError:
-            return None
+    def transform_type(self, values):
+        values_array = np.array(values, dtype='object')
+        vectorized_int = np.vectorize(lambda x: int(x) if isinstance(
+            x, (int, float, str)) and str(x).isdigit() else None)
+        return_vals = vectorized_int(values_array)
+        return_vals.sort()
+        return return_vals
 
     def make_str(self, value):
-        values = []
-        for val in value:
-            values.append(str(val))
+        values = np.asarray(value).astype(str)
         return tuple(values)
 
 
@@ -83,16 +83,14 @@ class TypeChangeStrToTimestamp(DatacubeAxisTypeChange):
         self._new_type = new_type
 
     def transform_type(self, value):
-        try:
-            return pd.Timestamp(value)
-        except ValueError:
-            return None
+        return_vals = pd.to_datetime(value, errors='coerce')
+        return_vals.sort_values()
+        return return_vals
 
     def make_str(self, value):
-        values = []
-        for val in value:
-            values.append(val.strftime("%Y%m%d"))
-        return tuple(values)
+        dt_series = pd.Series(value)
+        formatted = dt_series.dt.strftime("%Y%m%d")
+        return tuple(formatted)
 
 
 class TypeChangeStrToTimedelta(DatacubeAxisTypeChange):
@@ -101,20 +99,25 @@ class TypeChangeStrToTimedelta(DatacubeAxisTypeChange):
         self._new_type = new_type
 
     def transform_type(self, value):
-        try:
-            hours = int(value[:2])
-            mins = int(value[2:])
-            return pd.Timedelta(hours=hours, minutes=mins)
-        except ValueError:
-            return None
+        values_series = pd.Series(value)
+        hours = values_series.str[:2].astype(int, errors='ignore')
+        mins = values_series.str[2:].astype(int, errors='ignore')
+        invalid_mask = (hours.isna()) | (mins.isna())
+        result = pd.to_timedelta(hours, unit='h') + pd.to_timedelta(mins, unit='m')
+        result[invalid_mask] = pd.NaT
+        result.sort_values()
+        return result
 
     def make_str(self, value):
-        values = []
-        for val in value:
-            hours = int(val.total_seconds() // 3600)
-            mins = int((val.total_seconds() % 3600) // 60)
-            values.append(f"{hours:02d}{mins:02d}")
-        return tuple(values)
+        val_array = np.asarray(value).astype('timedelta64[s]')
+        total_seconds = val_array.astype('int')
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        formatted = np.char.add(
+            np.char.zfill(hours.astype(str), 2),
+            np.char.zfill(minutes.astype(str), 2)
+        )
+        return tuple(formatted)
 
 
 _type_to_datacube_type_change_lookup = {
