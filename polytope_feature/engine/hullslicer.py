@@ -128,21 +128,6 @@ class HullSlicer(Engine):
 
         del node["unsliced_polytopes"]
 
-    def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
-        # Determine list of axes to compress
-        combinations = self.prep_extraction(datacube, polytopes)
-
-        request = TensorIndexTree()
-
-        # NOTE: could optimise here if we know combinations will always be for one request.
-        # Then we do not need to create a new index tree and merge it to request, but can just
-        # directly work on request and return it...
-
-        for c in combinations:
-            r = self.extract_combi_tree(c, datacube)
-            request.merge(r)
-        return request
-
     def extract_combi_tree(self, c, datacube):
         r = TensorIndexTree()
         final_polys = self.find_final_combi(c)
@@ -157,3 +142,8 @@ class HullSlicer(Engine):
                 interm_next_nodes = []
             current_nodes = next_nodes
         return r
+
+    def alternative_extract_combi_tree(self, c, datacube):
+        # Recursively loop through the datacube.axes_tree and built result tree "backwards" ie from leaves onwards
+
+        pass

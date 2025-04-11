@@ -17,8 +17,8 @@ class Engine:
     def __init__(self):
         pass
 
-    def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]) -> TensorIndexTree:
-        pass
+    # def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]) -> TensorIndexTree:
+    #     pass
 
     @staticmethod
     def default():
@@ -135,3 +135,18 @@ class Engine:
             else:
                 final_polys.append(poly)
         return final_polys
+
+    def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]) -> TensorIndexTree:
+        # Determine list of axes to compress
+        combinations = self.prep_extraction(datacube, polytopes)
+
+        request = TensorIndexTree()
+
+        # NOTE: could optimise here if we know combinations will always be for one request.
+        # Then we do not need to create a new index tree and merge it to request, but can just
+        # directly work on request and return it...
+
+        for c in combinations:
+            r = self.extract_combi_tree(c, datacube)
+            request.merge(r)
+        return request
