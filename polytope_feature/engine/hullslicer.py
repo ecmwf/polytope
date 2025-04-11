@@ -71,61 +71,58 @@ class HullSlicer(Engine):
                 remapped_val = self.remap_values(ax, value)
                 child.add_value(remapped_val)
 
-    def _build_branch(self, ax, node, datacube, next_nodes):
-        if ax.name not in self.compressed_axes:
-            parent_node = node.parent
-            right_unsliced_polytopes = []
-            for polytope in node["unsliced_polytopes"]:
-                if ax.name in polytope._axes:
-                    right_unsliced_polytopes.append(polytope)
-            for i, polytope in enumerate(right_unsliced_polytopes):
-                node._parent = parent_node
-                lower, upper, slice_axis_idx = polytope.extents(ax.name)
-                # here, first check if the axis is an unsliceable axis and directly build node if it is
-                # NOTE: we should have already created the ax_is_unsliceable cache before
-                if self.ax_is_unsliceable[ax.name]:
-                    self._build_unsliceable_child(polytope, ax, node, datacube, [lower], next_nodes, slice_axis_idx)
-                else:
-                    values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
-                    # NOTE: need to only remove the branches if the values are empty,
-                    # but only if there are no other possible children left in the tree that
-                    # we can append and if somehow this happens before and we need to remove, then what do we do??
-                    if i == len(right_unsliced_polytopes) - 1:
-                        # we have iterated all polytopes and we can now remove the node if we need to
-                        if len(values) == 0 and len(node.children) == 0:
-                            node.remove_branch()
-                    self._build_sliceable_child(polytope, ax, node, datacube, values, next_nodes, slice_axis_idx)
+    def _build_child(self, polytope, ax, node, datacube, values, next_nodes, slice_axis_idx, i, num_branches):
+        if self.ax_is_unsliceable[ax.name]:
+            self._build_unsliceable_child(
+                polytope, ax, node, datacube, values, next_nodes, slice_axis_idx
+            )
         else:
-            all_values = []
-            all_lowers = []
-            first_polytope = False
-            first_slice_axis_idx = False
-            parent_node = node.parent
-            for polytope in node["unsliced_polytopes"]:
-                node._parent = parent_node
-                if ax.name in polytope._axes:
-                    # keep track of the first polytope defined on the given axis
-                    if not first_polytope:
-                        first_polytope = polytope
+            if len(values) == 0 and len(node.children) == 0 and i == num_branches - 1:
+                node.remove_branch()
+            self._build_sliceable_child(
+                polytope, ax, node, datacube, values, next_nodes, slice_axis_idx
+            )
+
+    def get_polytope_values_on_ax(self, ax, node, datacube):
+        right_unsliced_polytopes = []
+        all_values = []
+        slice_axis_idx = None
+
+        for polytope in node["unsliced_polytopes"]:
+            if ax.name in polytope._axes:
+
+                if ax.name not in self.compressed_axes:
+                    right_unsliced_polytopes.append(polytope)
                     lower, upper, slice_axis_idx = polytope.extents(ax.name)
-                    if not first_slice_axis_idx:
-                        first_slice_axis_idx = slice_axis_idx
                     if self.ax_is_unsliceable[ax.name]:
-                        all_lowers.append(lower)
+                        values = [lower]
+                        all_values.append(values)
                     else:
                         values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
-                        all_values.extend(values)
-            if self.ax_is_unsliceable[ax.name]:
-                self._build_unsliceable_child(
-                    first_polytope, ax, node, datacube, all_lowers, next_nodes, first_slice_axis_idx
-                )
-            else:
-                if len(all_values) == 0:
-                    node.remove_branch()
-                self._build_sliceable_child(
-                    first_polytope, ax, node, datacube, all_values, next_nodes, first_slice_axis_idx
-                )
+                        all_values.append(values)
+                else:
+                    if not right_unsliced_polytopes:
+                        right_unsliced_polytopes.append(polytope)
+                    lower, upper, _slice_axis_idx = polytope.extents(ax.name)
+                    if not slice_axis_idx:
+                        slice_axis_idx = _slice_axis_idx
+                    if not all_values:
+                        # Make sure that we have an inner list
+                        all_values.append([])
+                    if self.ax_is_unsliceable[ax.name]:
+                        all_values[0].append(lower)
+                    else:
+                        values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
+                        all_values[0].extend(values)
+        return (all_values, right_unsliced_polytopes, slice_axis_idx)
 
+    def _build_branch(self, ax, node, datacube, next_nodes):
+        (all_values, right_unsliced_polytopes, slice_axis_idx) = self.get_polytope_values_on_ax(ax, node, datacube)
+        num_branches = len(right_unsliced_polytopes)
+        for i, unsliced_polytope in enumerate(right_unsliced_polytopes):
+            values = all_values[i]
+            self._build_child(unsliced_polytope, ax, node, datacube, values,
+                              next_nodes, slice_axis_idx, i, num_branches)
         del node["unsliced_polytopes"]
 
     def extract_combi_tree(self, c, datacube):
@@ -146,4 +143,10 @@ class HullSlicer(Engine):
     def alternative_extract_combi_tree(self, c, datacube):
         # Recursively loop through the datacube.axes_tree and built result tree "backwards" ie from leaves onwards
 
-        pass
+        def _build_branch(polytopes, datacube):
+            pass
+
+        final_polys = self.find_final_combi(c)
+
+        # TODO: create a root_node object in the TensorIndexTree
+        return
