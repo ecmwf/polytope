@@ -83,7 +83,7 @@ def downloaded_data_test_files(shared_temp_data_dir):
 
     downloaded_paths = []
 
-    for (url, filename) in files_to_download:
+    for url, filename in files_to_download:
         path = shared_temp_data_dir / filename
         if not path.exists():
             response = requests.get(url)
