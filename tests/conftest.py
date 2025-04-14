@@ -1,15 +1,13 @@
-from requests.exceptions import HTTPError
-import pytest
-
-import pathlib
-import yaml
 import os
+import pathlib
 import shutil
 
-import tempfile
-import requests
-from .helper_functions import HTTPError
 import pyfdb
+import pytest
+import requests
+import yaml
+
+from .helper_functions import HTTPError
 
 
 @pytest.fixture
