@@ -1,0 +1,29 @@
+# Default types
+
+param:      Param;
+step:       Step;
+date:       Date;
+levelist:   Double;
+grid:       Grid;
+expver:     Expver;
+time:       Time;
+number:     Integer;
+
+########################################################
+# The are the rules matching most of the fields
+# oper/dcda
+[ class, expver, stream=oper/dcda/scda, date, time, domain?
+       [ type, levtype
+               [ step, levelist?, param ]]
+]
+# enfo
+[ class, expver, stream=enfo/efov/eefo, date, time, domain
+       [ type, levtype
+               [ step, quantile?, number?, levelist?, param ]]
+]
+
+# waef/weov
+[ class, expver, stream=waef/weov/weef, date, time, domain
+       [ type, levtype
+               [ step, number?, param, frequency?, direction? ]]
+]
