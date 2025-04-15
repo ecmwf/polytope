@@ -16,7 +16,7 @@ from helper_functions import find_nearest_latlon
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Point, Select, Polygon
 
-os.environ["FDB_HOME"] = "/Users/male/git/fdb-new-home"
+# os.environ["FDB_HOME"] = "/Users/male/git/fdb-new-home"
 
 
 class TestQuadTreeSlicer:
@@ -142,9 +142,9 @@ class TestQuadTreeSlicer:
             # assert eccodes_lon - tol <= lon
             # assert lon <= eccodes_lon + tol
 
-        worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
+        # worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
         fig, ax = plt.subplots(figsize=(12, 6))
-        worldmap.plot(color="darkgrey", ax=ax)
+        # worldmap.plot(color="darkgrey", ax=ax)
 
         plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
         plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
