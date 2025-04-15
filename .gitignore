@@ -36,3 +36,5 @@ polytope_feature/datacube/quadtree/target
 venv_python3_11
 *.txt
 venv_gj_iterator
+*.gz
+*.profile
