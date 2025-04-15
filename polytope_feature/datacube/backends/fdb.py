@@ -140,7 +140,7 @@ class FDBDatacube(Datacube):
             logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
         logging.info("Requests given to GribJump extract for %s", context)
         try:
-            output_values = self.gj.extract(complete_list_complete_uncompressed_requests, context)
+            iterator = self.gj.extract(complete_list_complete_uncompressed_requests, context)
         except Exception as e:
             if "BadValue: Grid hash mismatch" in str(e):
                 logging.info("Error is: %s", e)
@@ -152,10 +152,7 @@ class FDBDatacube(Datacube):
                 raise e
 
         logging.info("Requests extracted from GribJump for %s", context)
-        if logging.root.level <= logging.DEBUG:
-            printed_output_values = output_values[::1000]
-            logging.debug("GribJump outputs: %s", printed_output_values)
-        self.assign_fdb_output_to_nodes(output_values, complete_fdb_decoding_info)
+        self.assign_fdb_output_to_nodes(iterator, complete_fdb_decoding_info)
 
     def get_fdb_requests(
         self,
@@ -321,9 +318,8 @@ class FDBDatacube(Datacube):
             fdb_range_n[i].append(c)
         return (current_idx, fdb_range_n)
 
-    def assign_fdb_output_to_nodes(self, output_values, fdb_requests_decoding_info):
-        for k in range(len(output_values)):
-            request_output_values = output_values[k]
+    def assign_fdb_output_to_nodes(self, output_iterator, fdb_requests_decoding_info):
+        for k, result in enumerate(output_iterator):
             (
                 original_indices,
                 fdb_node_ranges,
@@ -331,13 +327,12 @@ class FDBDatacube(Datacube):
             sorted_fdb_range_nodes = [fdb_node_ranges[i] for i in original_indices]
             for i in range(len(sorted_fdb_range_nodes)):
                 n = sorted_fdb_range_nodes[i][0]
-                if len(request_output_values[0]) == 0:
+                if len(result.values) == 0:
                     # If we are here, no data was found for this path in the fdb
                     none_array = [None] * len(n.values)
                     n.result.extend(none_array)
                 else:
-                    interm_request_output_values = request_output_values[0][i][0]
-                    n.result.extend(interm_request_output_values)
+                    n.result.extend(result.values[i])
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
         new_fdb_node_ranges, current_start_idx = self.remove_duplicates_in_request_ranges(
