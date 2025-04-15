@@ -110,11 +110,8 @@ class TensorIndexTree(object):
 
     def create_child(self, axis, value, next_nodes):
         node = TensorIndexTree(axis, (value,))
-        existing_child = self.find_child(node)
-        if not existing_child:
-            self.add_child(node)
-            return (node, next_nodes)
-        return (existing_child, next_nodes)
+        self.add_child(node)
+        return (node, next_nodes)
 
     @property
     def parent(self):
