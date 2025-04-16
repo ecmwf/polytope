@@ -238,6 +238,10 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
 
     def _slice(q: Qube, polytopes, datacube_axes, datacube_transformations) -> list[Qube]:
         result = []
+
+        if len(q.children) == 0:
+            # TODO: add "fake" axes and their nodes in order -> what about merged axes??
+            pass
         for child in q.children:
             # find polytopes which are defined on axis child.key
             polytopes_on_axis = find_polytopes_on_axis(child, polytopes)
@@ -283,9 +287,12 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
                         # If this node used to have children but now has none due to filtering, skip it.
                         if child.children and not children:
                             continue
-                        # TODO: add the child_polytopes to the child.metadata/ ie change child.metadata here before passing
+                        # TODO: add the child_polytopes to the child.metadata/ ie change child.metadata here before passing?
                         if isinstance(found_val, pd.Timedelta) or isinstance(found_val, pd.Timestamp):
                             found_val = [str(found_val)]
+
+                        # TODO: when we have an axis that we would like to merge with another, we should skip the node creation here
+                        # and instead keep/cache the value to merge with the node from before??
                         qube_node = Qube.make(key=child.key,
                                               values=QEnum(found_val),
                                               metadata=child.metadata,
