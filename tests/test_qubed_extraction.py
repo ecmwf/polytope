@@ -1,9 +1,10 @@
 from qubed import Qube
 import requests
-from polytope_feature.datacube.datacube_axis import PandasTimedeltaDatacubeAxis, PandasTimestampDatacubeAxis, UnsliceableDatacubeAxis
+from polytope_feature.datacube.datacube_axis import PandasTimedeltaDatacubeAxis, PandasTimestampDatacubeAxis, UnsliceableDatacubeAxis, FloatDatacubeAxis
 from polytope_feature.datacube.backends.test_qubed_slicing import actual_slice
 from polytope_feature.datacube.transformations.datacube_type_change.datacube_type_change import TypeChangeStrToTimestamp, TypeChangeStrToTimedelta
 import pandas as pd
+from polytope_feature.datacube.transformations.datacube_mappers.mapper_types.healpix_nested import NestedHealpixGridMapper
 
 from polytope_feature.shapes import ConvexPolytope
 
@@ -37,6 +38,7 @@ print(fdb_tree.axes().keys())
 #     ConvexPolytope(["date"], [[pd.Timestamp("20210728")], [pd.Timestamp("20210729")]])
 # ]
 
+# TODO: add lat/lon polygon
 combi_polytopes = [
     ConvexPolytope(["param"], [["164"]]),
     ConvexPolytope(["time"], [[pd.Timedelta(hours=0, minutes=0)], [pd.Timedelta(hours=12, minutes=0)]]),
@@ -52,9 +54,11 @@ combi_polytopes = [
     ConvexPolytope(["activity"], [["scenariomip"]]),
     ConvexPolytope(["dataset"], [["climate-dt"]]),
     ConvexPolytope(["class"], [["d1"]]),
-    ConvexPolytope(["date"], [[pd.Timestamp("20220811")], [pd.Timestamp("20220912")]])
+    ConvexPolytope(["date"], [[pd.Timestamp("20220811")], [pd.Timestamp("20220912")]]),
+    ConvexPolytope(["latitude", "longitude"], [[0, 0], [0.5, 0.5], [0, 0.5]])
 ]
 
+# TODO: add lat and lon axes
 datacube_axes = {"param": UnsliceableDatacubeAxis(),
                  "time": PandasTimedeltaDatacubeAxis(),
                  "resolution": UnsliceableDatacubeAxis(),
@@ -69,14 +73,19 @@ datacube_axes = {"param": UnsliceableDatacubeAxis(),
                  "activity": UnsliceableDatacubeAxis(),
                  "dataset": UnsliceableDatacubeAxis(),
                  "class": UnsliceableDatacubeAxis(),
-                 "date": PandasTimestampDatacubeAxis()}
+                 "date": PandasTimestampDatacubeAxis(),
+                 "latitude": FloatDatacubeAxis(),
+                 "longitude": FloatDatacubeAxis()}
 
 time_val = pd.Timedelta(hours=0, minutes=0)
 date_val = pd.Timestamp("20300101T000000")
 
+
+# TODO: add grid axis transformation
 datacube_transformations = {
     "time": TypeChangeStrToTimedelta("time", time_val),
-    "date": TypeChangeStrToTimestamp("date", date_val)
+    "date": TypeChangeStrToTimestamp("date", date_val),
+    "values": NestedHealpixGridMapper("values", ["latitude", "longitude"], 1024)
 }
 
 
