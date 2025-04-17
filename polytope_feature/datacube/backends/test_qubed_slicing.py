@@ -5,6 +5,7 @@ from ...engine.hullslicer import slice
 from copy import deepcopy
 import pandas as pd
 from ..datacube_axis import UnsliceableDatacubeAxis
+from ..transformations.datacube_mappers.datacube_mappers import DatacubeMapper
 # from ...shapes import ConvexPolytope
 
 q = Qube.from_dict({
@@ -188,9 +189,9 @@ request = {
 
 def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transformations) -> 'Qube':
 
-    def find_polytopes_on_axis(q: Qube, polytopes):
+    def find_polytopes_on_axis(axis_name, polytopes):
         polytopes_on_axis = []
-        axis_name = q.key
+        # axis_name = q.key
         for poly in polytopes:
             if axis_name in poly._axes:
                 polytopes_on_axis.append(poly)
@@ -243,12 +244,27 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
     def _slice(q: Qube, polytopes, datacube_axes, datacube_transformations) -> list[Qube]:
         result = []
 
-        # if len(q.children) == 0:
-        #     # TODO: add "fake" axes and their nodes in order -> what about merged axes??
-        #     pass
+        if len(q.children) == 0:
+            # TODO: add "fake" axes and their nodes in order -> what about merged axes??
+            mapper_transformation = None
+            for transformation in datacube_transformations:
+                if isinstance(transformation, DatacubeMapper):
+                    mapper_transformation = transformation
+            if not mapper_transformation:
+                # There is no grid mapping
+                pass
+            else:
+                # TODO: Slice on the two grid axes
+                grid_axes = mapper_transformation._final_mapped_axes
+
+                # TODO: Handle first grid axis
+                polytopes_on_axis = find_polytopes_on_axis(grid_axes[0], polytopes)
+
+                pass
+            pass
         for i, child in enumerate(q.children):
             # find polytopes which are defined on axis child.key
-            polytopes_on_axis = find_polytopes_on_axis(child, polytopes)
+            polytopes_on_axis = find_polytopes_on_axis(child.key, polytopes)
 
             # here now first change the values in the polytopes on the axis to reflect the axis type
 
