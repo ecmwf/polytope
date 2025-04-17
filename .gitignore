@@ -30,3 +30,5 @@ new_polytope_venv
 venv_python3_11
 *.txt
 tests/data
+venv_gj_iterator
+new_venv_gj_iterator
