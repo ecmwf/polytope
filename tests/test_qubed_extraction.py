@@ -52,7 +52,7 @@ combi_polytopes = [
     ConvexPolytope(["activity"], [["scenariomip"]]),
     ConvexPolytope(["dataset"], [["climate-dt"]]),
     ConvexPolytope(["class"], [["d1"]]),
-    ConvexPolytope(["date"], [[pd.Timestamp("20220811")], [pd.Timestamp("20230812")]])
+    ConvexPolytope(["date"], [[pd.Timestamp("20220811")], [pd.Timestamp("20220912")]])
 ]
 
 datacube_axes = {"param": UnsliceableDatacubeAxis(),
