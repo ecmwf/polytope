@@ -15,7 +15,10 @@ class QubedDatacube(Datacube):
         # TODO: find datacube_axes and datacube_transformations from options like other datacube backends
         self.datacube_axes = datacube_axes
         self.datacube_transformations = datacube_transformations
+        # TODO: find compressed_axes list
+        self.compressed_axes = []
+        self._axes = datacube_axes
 
     def get(self, requests: TensorIndexTree, context):
         # TODO: use GJ to extract data from an fdb
-        return None
+        return requests

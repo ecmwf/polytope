@@ -18,6 +18,7 @@ class FDBDatacube(Datacube):
             context = {}
 
         super().__init__(axis_options, compressed_axes_options)
+        print(axis_options)
 
         logging.info("Created an FDB datacube with options: " + str(axis_options))
 

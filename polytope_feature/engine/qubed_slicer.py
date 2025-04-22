@@ -3,6 +3,7 @@ from qubed import Qube
 from qubed.value_types import QEnum
 from qubed.set_operations import union
 from .hullslicer import slice
+from ..datacube.backends.qubed import QubedDatacube
 from .engine import Engine
 import pandas as pd
 from ..datacube.datacube_axis import UnsliceableDatacubeAxis
@@ -218,7 +219,8 @@ class QubedSlicer(Engine):
                             sliced_poly = slice(poly, child.key, fval, slice_axis_idx)
                             sliced_polys.append(sliced_poly)
                     # decide if axis should be compressed or not according to polytope
-                    axis_compressed = _axes_compressed().get(child.key, False)
+                    # axis_compressed = self.compressed_axes.get(child.key, False)
+                    axis_compressed = (child.key in self.compressed_axes)
                     # if it's not compressed, need to separate into different nodes to append to the tree
                     if not axis_compressed and len(found_vals) > 1:
                         for i, found_val in enumerate(found_vals):
@@ -308,6 +310,29 @@ class QubedSlicer(Engine):
         for sub_tree in sub_trees[1:]:
             union(final_tree, sub_tree)
         return final_tree
+
+    def find_compressed_axes(self, datacube, polytopes):
+        # First determine compressable axes from input polytopes
+        compressable_axes = []
+        for polytope in polytopes:
+            if polytope.is_orthogonal:
+                for ax in polytope.axes():
+                    compressable_axes.append(ax)
+        # Cross check this list with list of compressable axis from datacube
+        # (should not include any merged or coupled axes)
+        for compressed_axis in compressable_axes:
+            if compressed_axis in datacube.compressed_axes:
+                self.compressed_axes.append(compressed_axis)
+        # add the last axis of the grid always (longitude) as a compressed axis
+        k, last_value = _, datacube.axes[k] = datacube.axes.popitem()
+        self.compressed_axes.append(k)
+
+    def remove_compressed_axis_in_union(self, polytopes):
+        for p in polytopes:
+            if p.is_in_union:
+                for axis in p.axes():
+                    if axis == self.compressed_axes[-1]:
+                        self.compressed_axes.remove(axis)
 
     def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
         self.find_compressed_axes(datacube, polytopes)

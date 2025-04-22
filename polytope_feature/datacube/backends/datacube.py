@@ -166,6 +166,8 @@ class Datacube(ABC):
                 datacube, config, axis_options, compressed_axes_options, alternative_axes, context
             )
             return fdbdatacube
+        if type(datacube).__name__ == "QubedDatacube":
+            return datacube
 
     def check_branching_axes(self, request):
         pass
