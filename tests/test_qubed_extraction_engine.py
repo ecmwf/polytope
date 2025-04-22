@@ -72,14 +72,14 @@ options = {
     "axis_config": [
         {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
         {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
-        {
-            "axis_name": "date",
-            "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
-        },
+        # {
+        #     "axis_name": "date",
+        #     "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
+        # },
         {
             "axis_name": "values",
             "transformations": [
-                {"name": "mapper", "type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                {"name": "mapper", "type": "healpix_nested", "resolution": 1024, "axes": ["latitude", "longitude"]}
             ],
         },
         {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
@@ -115,7 +115,7 @@ options = {
 # )
 
 request = Request(ConvexPolytope(["param"], [["164"]]),
-                  ConvexPolytope(["time"], [[pd.Timedelta(hours=0, minutes=0)], [pd.Timedelta(hours=12, minutes=0)]]),
+                  ConvexPolytope(["time"], [[pd.Timedelta(hours=1, minutes=0)], [pd.Timedelta(hours=3, minutes=0)]]),
                   ConvexPolytope(["resolution"], [["high"]]),
                   ConvexPolytope(["type"], [["fc"]]),
                   ConvexPolytope(["model"], [['ifs-nemo']]),
@@ -128,7 +128,7 @@ request = Request(ConvexPolytope(["param"], [["164"]]),
                   ConvexPolytope(["activity"], [["scenariomip"]]),
                   ConvexPolytope(["dataset"], [["climate-dt"]]),
                   ConvexPolytope(["class"], [["d1"]]),
-                  ConvexPolytope(["date"], [[pd.Timestamp("20220811")], [pd.Timestamp("20220912")]]),
+                  ConvexPolytope(["date"], [[pd.Timestamp("20220811")]]),
                   ConvexPolytope(["latitude", "longitude"], [[0, 0], [0.5, 0.5], [0, 0.5]]))
 
 qubeddatacube = QubedDatacube(fdb_tree, datacube_axes, datacube_transformations)

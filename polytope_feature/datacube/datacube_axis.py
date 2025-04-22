@@ -300,6 +300,7 @@ class UnsliceableDatacubeAxis(DatacubeAxis):
         self.range = None
         self.transformations = []
         self.can_round = False
+        self.type = ""
 
     def parse(self, value: Any) -> Any:
         return value
