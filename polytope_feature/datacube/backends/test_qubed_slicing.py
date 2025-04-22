@@ -1,197 +1,18 @@
 from qubed import Qube
 from qubed.value_types import QEnum
-from typing import Iterator
+from qubed.set_operations import union
 from ...engine.hullslicer import slice
-from copy import deepcopy
 import pandas as pd
 from ..datacube_axis import UnsliceableDatacubeAxis
 from ..transformations.datacube_mappers.datacube_mappers import DatacubeMapper
-# from ...shapes import ConvexPolytope
-
-q = Qube.from_dict({
-    "class=od": {
-        "expver=0001": {"param=1/2/3/4/5": {}},
-        "expver=0002": {"param=1": {}, "param=2": {}},
-    },
-    "class=rd": {
-        "expver=0001": {
-            "param=1/2/3": {},
-            "expver=0001": {"param=1/2/3": {}, }
-        },
-        "expver=0002": {"param=1/2/3/4": {}},
-    },
-}).compress()
-
-# polytopes_list = [ConvexPolytope(), ]
+from ...shapes import ConvexPolytope, Product
+from ...utility.combinatorics import group, tensor_product
 
 
-# def slice_poly(q: Qube, polytope):
-#     def _slice_poly(q: Qube, poly):
-#         for child in q.children:
-#             # For each child, find the polytopes we should slice on that axis
-#             right_unsliced_polytopes = []
-#             for polytope in q.metadata["unsliced_polytopes"]:
-#                 if q.key in polytope._axes:
-#                     right_unsliced_polytopes.append(polytope)
-
-#             for i, polytope in enumerate(right_unsliced_polytopes):
-#                 lower, upper, slice_axis_idx = polytope.extents(q.key)
-
-
-# def slice(q: Qube, request: dict) -> 'Qube':
-#     def _slice(q: Qube, r: dict) -> Iterator[Qube]:
-#         for child in q.children:
-#             requested_values = r.get(child.key, [])
-#             found_values = [v for v in requested_values if v in child.values]
-#             if not found_values:
-#                 continue
-#             truncated_request = {k: v for k, v in r.items() if k != child.key}
-#             children = list(_slice(child, truncated_request))
-
-#             # If this node used to have children, i.e was not a leaf node,
-#             # but as a result of filtering now has no children
-#             # then filter it out.
-#             if child.children and not children:
-#                 continue
-
-#             yield Qube.make(
-#                 key=child.key,
-#                 values=QEnum(found_values),
-#                 metadata=child.metadata,
-#                 children=children,
-#             )
-
-#     return Qube.root_node(list(_slice(q, request)))
-
-def slice_new(q: Qube, request: dict) -> 'Qube':
-    def _slice(q: Qube, r: dict) -> list[Qube]:
-        result = []
-        for child in q.children:
-            requested_values = r.get(child.key, [])
-            found_values = [v for v in requested_values if v in child.values]
-            if not found_values:
-                continue
-            truncated_request = {k: v for k, v in r.items() if k != child.key}
-            children = _slice(child, truncated_request)
-
-            # If this node used to have children but now has none due to filtering, skip it.
-            if child.children and not children:
-                continue
-
-            if len(found_values) > 1:
-                result.extend([Qube.make(
-                    key=child.key,
-                    values=QEnum(val),
-                    metadata=child.metadata,
-                    children=children,
-                ) for val in found_values])
-            else:
-                result.extend([Qube.make(
-                    key=child.key,
-                    values=QEnum(found_values),
-                    metadata=child.metadata,
-                    children=children
-                )])
-
-        return result
-
-    return Qube.root_node(_slice(q, request))
-
-
-request = {
-    "expver": ["0001"],
-    "class": ["rd", "od"],
-    "param": ["1", "2", "3"],
-}
-
-
-# print(q)
-# q = slice(q, request)
-
-# print(q)
-
-# new_q = Qube.from_dict({
-#     "expver=0001": {"param=1/2/3/4/5": {"level=0/1/2": {}}},
-#     "expver=0001": {"param=1": {"level=3/4": {}}, "param=2": {"level=3/4": {}}},
-# }).compress()
-
-# new_q = Qube.from_dict({
-#     "expver=0001": {"param=1/2/3/4/5": {"level=0/1/2": {}}, "param=1": {"level=3/4": {}}, "param=2": {"level=3/4": {}}},
-#     # "expver=0001": {"param=1": {"level=3/4": {}}, "param=2": {"level=3/4": {}}},
-# }).compress()
-
-# print("HERE")
-# print(new_q)
-
-# print(new_q["expver", "0001"].children)
-
-
-# def modified_slice(q: Qube, request: dict) -> 'Qube':
-#     def _slice(q: Qube, r: dict) -> Iterator[Qube]:
-#         for child in q.children:
-#             requested_values = r.get(child.key, [])
-#             found_values = [v for v in requested_values if v in child.values]
-#             if not found_values:
-#                 continue
-#             print("HERE")
-#             print(r.items())
-#             for k, v in r.items():
-#                 if k == "param":
-#                     children = []
-#                     if "1" in found_values:
-#                         truncated_request = {"level": "2"}
-#                         children.extend(list(_slice(child, truncated_request)))
-#                     if "2" in found_values:
-#                         truncated_request = {"level": ["1", "2", "3"]}
-#                         children.extend(list(_slice(child, truncated_request)))
-#                     if "3" in found_values:
-#                         truncated_request = {"level": "2"}
-#                         children.extend(list(_slice(child, truncated_request)))
-#                 else:
-#                     truncated_request = {k: v for k, v in r.items() if k != child.key}
-#                     children = list(_slice(child, truncated_request))
-
-#             # If this node used to have children, i.e was not a leaf node,
-#             # but as a result of filtering now has no children
-#             # then filter it out.
-#             if child.children and not children:
-#                 continue
-
-#             # for child in children:
-#             #     yield Qube.make(
-#             #         key=child.key,
-#             #         values=QEnum(found_values),
-#             #         metadata=child.metadata,
-#             #         children=list(child),
-#             #     )
-#             print("WHAT NODES DID WE CREATE?")
-#             print(Qube.make(
-#                 key=child.key,
-#                 values=QEnum(found_values),
-#                 metadata=child.metadata,
-#                 children=children,
-#             ))
-#             yield Qube.make(
-#                 key=child.key,
-#                 values=QEnum(found_values),
-#                 metadata=child.metadata,
-#                 children=children,
-#             )
-
-#     return Qube.root_node(list(_slice(q, request)))
-
-
-# print(modified_slice(new_q, request={
-#     "expver": ["0001"],
-#     "param": ["1", "2", "3"],
-# }))
-
-
-def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transformations) -> 'Qube':
+def _actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transformations) -> 'Qube':
 
     def find_polytopes_on_axis(axis_name, polytopes):
         polytopes_on_axis = []
-        # axis_name = q.key
         for poly in polytopes:
             if axis_name in poly._axes:
                 polytopes_on_axis.append(poly)
@@ -199,7 +20,7 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
 
     def change_poly_axis_type(axis_name, polytopes, datacube_axes):
         axis = datacube_axes[axis_name]
-        # TODO: loop through the polytopes and change each polytopes's values according to axis
+        # loop through the polytopes and change each polytopes's values according to axis
         if isinstance(axis, UnsliceableDatacubeAxis):
             return
 
@@ -237,10 +58,6 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
 
         return (lower, upper)
 
-    def find_grid_axes():
-        # TODO: handle grid axes
-        pass
-
     def _slice_second_grid_axis(axis_name, polytopes, datacube_axes, datacube_transformations, second_axis_vals) -> list[Qube]:
         result = []
         polytopes_on_axis = find_polytopes_on_axis(axis_name, polytopes)
@@ -265,7 +82,6 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
                     sliced_polys.append(sliced_poly)
             # decide if axis should be compressed or not according to polytope
             # NOTE: actually the second grid axis will always be compressed
-            # axis_compressed = _axes_compressed().get(axis_name, True)
 
             # if it's not compressed, need to separate into different nodes to append to the tree
 
@@ -278,7 +94,6 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
 
             # NOTE this was the last axis so we do not have children...
 
-            # TODO: add the child_polytopes to the child.metadata/ ie change child.metadata here before passing
             result.extend([Qube.make(
                 key=axis_name,
                 values=QEnum(new_found_vals),
@@ -286,13 +101,12 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
                 children={}
             )])
         return result
-        # pass
 
     def _slice(q: Qube, polytopes, datacube_axes, datacube_transformations) -> list[Qube]:
         result = []
 
         if len(q.children) == 0:
-            # TODO: add "fake" axes and their nodes in order -> what about merged axes??
+            # add "fake" axes and their nodes in order -> what about merged axes??
             mapper_transformation = None
             for transformation in list(datacube_transformations.values()):
                 if isinstance(transformation, DatacubeMapper):
@@ -301,10 +115,10 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
                 # There is no grid mapping
                 pass
             else:
-                # TODO: Slice on the two grid axes
+                # Slice on the two grid axes
                 grid_axes = mapper_transformation._mapped_axes
 
-                # TODO: Handle first grid axis
+                # Handle first grid axis
                 polytopes_on_axis = find_polytopes_on_axis(grid_axes[0], polytopes)
 
                 for poly in polytopes_on_axis:
@@ -332,63 +146,30 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
                     axis_compressed = _axes_compressed().get(grid_axes[0], False)
 
                     # if it's not compressed, need to separate into different nodes to append to the tree
-                    # if not axis_compressed and len(found_vals) > 1:
-                    if True:
-                        # TODO: if we have gone through all children, then can remove poly from list completely
-                        # polytopes.remove(poly)
-                        for i, found_val in enumerate(found_vals):
-                            # TODO: before removing polytope here actually, we should be careful that all the values in the polytope are on this branch... so we can't just remove here in theory
-                            # child_polytopes = deepcopy(polytopes)
-                            child_polytopes = [p for p in polytopes if p != poly]
-                            if sliced_polys[i]:
-                                child_polytopes.append(sliced_polys[i])
+                    for i, found_val in enumerate(found_vals):
+                        child_polytopes = [p for p in polytopes if p != poly]
+                        if sliced_polys[i]:
+                            child_polytopes.append(sliced_polys[i])
 
-                            second_axis_vals = mapper_transformation.second_axis_vals([found_val])
+                        second_axis_vals = mapper_transformation.second_axis_vals([found_val])
 
-                            # TODO: get second axis children through slicing
-                            children = _slice_second_grid_axis(
-                                grid_axes[1], child_polytopes, datacube_axes, datacube_transformations, second_axis_vals)
-                            # If this node used to have children but now has none due to filtering, skip it.
-                            if not children:
-                                continue
-                            # TODO: add the child_polytopes to the child.metadata/ ie change child.metadata here before passing?
-                            if isinstance(found_val, pd.Timedelta) or isinstance(found_val, pd.Timestamp):
-                                found_val = [str(found_val)]
+                        # get second axis children through slicing
+                        children = _slice_second_grid_axis(
+                            grid_axes[1], child_polytopes, datacube_axes, datacube_transformations, second_axis_vals)
+                        # If this node used to have children but now has none due to filtering, skip it.
+                        if not children:
+                            continue
+                        if isinstance(found_val, pd.Timedelta) or isinstance(found_val, pd.Timestamp):
+                            found_val = [str(found_val)]
 
-                            # TODO: when we have an axis that we would like to merge with another, we should skip the node creation here
-                            # and instead keep/cache the value to merge with the node from before??
+                        # TODO: when we have an axis that we would like to merge with another, we should skip the node creation here
+                        # and instead keep/cache the value to merge with the node from before??
 
-                            qube_node = Qube.make(key=grid_axes[0],
-                                                  values=QEnum([found_val]),
-                                                  metadata={},
-                                                  children=children)
-                            result.append(qube_node)
-                    # else:
-
-                    #     child_polytopes = [p for p in polytopes if p != poly]
-                    #     child_polytopes.extend(
-                    #         [sliced_poly_ for sliced_poly_ in sliced_polys if sliced_poly_ is not None])
-                    #     # create children
-                    #     children = _slice_second_grid_axis(
-                    #         grid_axes[1], child_polytopes, datacube_axes, datacube_transformations)
-                    #     # If this node used to have children but now has none due to filtering, skip it.
-                    #     if not children:
-                    #         continue
-
-                    #     new_found_vals = []
-                    #     for found_val in found_vals:
-                    #         if isinstance(found_val, pd.Timedelta) or isinstance(found_val, pd.Timestamp):
-                    #             new_found_vals.append(str(found_val))
-                    #         else:
-                    #             new_found_vals.append(found_val)
-
-                    #     # TODO: add the child_polytopes to the child.metadata/ ie change child.metadata here before passing
-                    #     result.extend([Qube.make(
-                    #         key=grid_axes[0],
-                    #         values=QEnum(new_found_vals),
-                    #         metadata={},
-                    #         children=children
-                    #     )])
+                        qube_node = Qube.make(key=grid_axes[0],
+                                              values=QEnum([found_val]),
+                                              metadata={},
+                                              children=children)
+                        result.append(qube_node)
 
         for i, child in enumerate(q.children):
             # find polytopes which are defined on axis child.key
@@ -396,7 +177,6 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
 
             # here now first change the values in the polytopes on the axis to reflect the axis type
 
-            # for each polytope:
             for poly in polytopes_on_axis:
                 # find extents of polytope on child.key
                 lower, upper, slice_axis_idx = poly.extents(child.key)
@@ -425,11 +205,7 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
                 axis_compressed = _axes_compressed().get(child.key, False)
                 # if it's not compressed, need to separate into different nodes to append to the tree
                 if not axis_compressed and len(found_vals) > 1:
-                    # TODO: if we have gone through all children, then can remove poly from list completely
-                    # polytopes.remove(poly)
                     for i, found_val in enumerate(found_vals):
-                        # TODO: before removing polytope here actually, we should be careful that all the values in the polytope are on this branch... so we can't just remove here in theory
-                        # child_polytopes = deepcopy(polytopes)
                         child_polytopes = [p for p in polytopes if p != poly]
                         if sliced_polys[i]:
                             child_polytopes.append(sliced_polys[i])
@@ -437,17 +213,12 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
                         # If this node used to have children but now has none due to filtering, skip it.
                         if child.children and not children:
                             continue
-                        # TODO: add the child_polytopes to the child.metadata/ ie change child.metadata here before passing?
                         if isinstance(found_val, pd.Timedelta) or isinstance(found_val, pd.Timestamp):
                             found_val = [str(found_val)]
 
                         # TODO: when we have an axis that we would like to merge with another, we should skip the node creation here
                         # and instead keep/cache the value to merge with the node from before??
 
-                        print("HERE LOOK")
-                        print(child.key)
-                        print(found_val)
-                        # print(children)
                         qube_node = Qube.make(key=child.key,
                                               values=QEnum(found_val),
                                               metadata=child.metadata,
@@ -455,8 +226,6 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
                         result.append(qube_node)
                 else:
                     # if it's compressed, then can add all found values in a single node
-                    # polytopes.remove(poly)
-                    # child_polytopes = deepcopy(polytopes)
                     child_polytopes = [p for p in polytopes if p != poly]
                     child_polytopes.extend([sliced_poly_ for sliced_poly_ in sliced_polys if sliced_poly_ is not None])
                     # create children
@@ -468,18 +237,10 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
                     new_found_vals = []
                     for found_val in found_vals:
                         if isinstance(found_val, pd.Timedelta) or isinstance(found_val, pd.Timestamp):
-                            print("DIDNT WE GO HERE?")
-                            print(found_val)
-                            print(str(found_val))
-                            # found_val = [str(found_val)]
                             new_found_vals.append(str(found_val))
                         else:
                             new_found_vals.append(found_val)
 
-                    print("WHAT ABOUT HERE?")
-                    print(found_vals)
-                    print(new_found_vals)
-                    # TODO: add the child_polytopes to the child.metadata/ ie change child.metadata here before passing
                     result.extend([Qube.make(
                         key=child.key,
                         values=QEnum(new_found_vals),
@@ -497,29 +258,48 @@ def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transforma
     return Qube.root_node(_slice(q, polytopes_to_slice, datacube_axes, datacube_transformations))
 
 
-# TODO: OLD CODE TO MODIFY
-    # requested_values = r.get(child.key, [])
-    # found_values = [v for v in requested_values if v in child.values]
-    # if not found_values:
-    #     continue
-    # truncated_request = {k: v for k, v in r.items() if k != child.key}
-    # children = _slice(child, truncated_request)
-
-    # # If this node used to have children but now has none due to filtering, skip it.
-    # if child.children and not children:
-    #     continue
-
-    # if len(found_values) > 1:
-    #     result.extend([Qube.make(
-    #         key=child.key,
-    #         values=QEnum(val),
-    #         metadata=child.metadata,
-    #         children=children,
-    #     ) for val in found_values])
+def actual_slice(q: Qube, polytopes_to_slice, datacube_axes, datacube_transformations):
+    # for p in polytopes_to_slice:
+    # if isinstance(p, Product):
+    #     for poly in p.polytope():
+    #         self._unique_continuous_points(poly, datacube)
     # else:
-    #     result.extend([Qube.make(
-    #         key=child.key,
-    #         values=QEnum(found_values),
-    #         metadata=child.metadata,
-    #         children=children
-    #     )])
+    #     self._unique_continuous_points(p, datacube)
+
+    groups, input_axes = group(polytopes_to_slice)
+    # datacube.validate(input_axes)
+    # request = TensorIndexTree()
+    combinations = tensor_product(groups)
+
+    sub_trees = []
+
+    # NOTE: could optimise here if we know combinations will always be for one request.
+    # Then we do not need to create a new index tree and merge it to request, but can just
+    # directly work on request and return it...
+
+    for c in combinations:
+        # r = TensorIndexTree()
+        new_c = []
+        for combi in c:
+            if isinstance(combi, list):
+                new_c.extend(combi)
+            else:
+                new_c.append(combi)
+        # NOTE TODO: here some of the polys in new_c can be a Product shape instead of a ConvexPolytope
+        # -> need to go through the polytopes in new_c and replace the Products with their sub-ConvexPolytopes
+        final_polys = []
+        for poly in new_c:
+            if isinstance(poly, Product):
+                final_polys.extend(poly.polytope())
+            else:
+                final_polys.append(poly)
+
+        # Get the sliced Qube for each combi
+        r = _actual_slice(q, final_polys, datacube_axes, datacube_transformations)
+        sub_trees.append(r)
+
+    final_tree = sub_trees[0]
+
+    for sub_tree in sub_trees[1:]:
+        union(final_tree, sub_tree)
+    return final_tree
