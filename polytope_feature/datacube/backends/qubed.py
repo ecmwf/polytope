@@ -77,7 +77,7 @@ class QubedDatacube(Datacube):
     #     # TODO: use GJ to extract data from an fdb
     #     return requests
         print("WHAT's INSIDE OF FDB?")
-        print(self.gj.axes({"class": "d1", "model": "ifs-nemo"}))
+        print(self.gj.axes({"class": "d1", "model": "ifs-nemo", "resolution": "high"}))
 
     def get(self, requests, context=None):
         if context is None:
@@ -107,6 +107,8 @@ class QubedDatacube(Datacube):
                 uncompressed_request = {}
                 for i, key in enumerate(compressed_request[0].keys()):
                     uncompressed_request[key] = combi[i]
+                # TODO: get the hash from somewhere...
+                self.grid_md5_hash = "cbda19e48d4d7e5e22641154878b9b22"
                 complete_uncompressed_request = (uncompressed_request, compressed_request[1], self.grid_md5_hash)
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
@@ -159,6 +161,20 @@ class QubedDatacube(Datacube):
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
+            # print("HERE NOW LOOK")
+            # print(requests.key)
+            # print(key_value_path)
+            # TODO: change to use the datacube trasnformations instead...
+            if requests.key == "time":
+                new_vals = []
+                for val in key_value_path[requests.key]:
+                    new_vals.append(val[7:9]+val[10:12])
+                key_value_path[requests.key] = new_vals
+            if requests.key == "date":
+                new_vals = []
+                for val in key_value_path[requests.key]:
+                    new_vals.append(val[:4] + val[5:7] + val[8:10])
+                key_value_path[requests.key] = new_vals
             leaf_path.update(key_value_path)
             if len(requests.children[0].children[0].children) == 0:
                 # find the fdb_requests and associated nodes to which to add results
@@ -301,8 +317,8 @@ class QubedDatacube(Datacube):
         return (current_idx, fdb_range_n)
 
     def assign_fdb_output_to_nodes(self, output_values, fdb_requests_decoding_info):
-        for k in range(len(output_values)):
-            request_output_values = output_values[k]
+        for k, request_output_values in enumerate(output_values):
+            # request_output_values = output_values[k]
             (
                 original_indices,
                 fdb_node_ranges,
@@ -310,13 +326,13 @@ class QubedDatacube(Datacube):
             sorted_fdb_range_nodes = [fdb_node_ranges[i] for i in original_indices]
             for i in range(len(sorted_fdb_range_nodes)):
                 n = sorted_fdb_range_nodes[i][0]
-                if len(request_output_values[0]) == 0:
+                if len(request_output_values.values) == 0:
                     # If we are here, no data was found for this path in the fdb
                     none_array = [None] * len(n.values)
                     n.result.extend(none_array)
                 else:
-                    interm_request_output_values = request_output_values[0][i][0]
-                    n.result.extend(interm_request_output_values)
+                    # interm_request_output_values = request_output_values[0][i][0]
+                    n.result.extend(request_output_values.values[i])
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
         (new_fdb_node_ranges, new_current_start_idx) = self.remove_duplicates_in_request_ranges(
