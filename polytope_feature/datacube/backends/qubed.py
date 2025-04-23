@@ -5,6 +5,7 @@ from itertools import product
 from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
 from ...utility.geometry import nearest_pt
 import pygribjump as pygj
+from qubed.value_types import QEnum
 
 from .datacube import Datacube, TensorIndexTree
 
@@ -76,8 +77,8 @@ class QubedDatacube(Datacube):
     # def get(self, requests: TensorIndexTree, context):
     #     # TODO: use GJ to extract data from an fdb
     #     return requests
-        print("WHAT's INSIDE OF FDB?")
-        print(self.gj.axes({"class": "d1", "model": "ifs-nemo", "resolution": "high"}))
+        # print("WHAT's INSIDE OF FDB?")
+        # print(self.gj.axes({"class": "d1", "model": "ifs-nemo", "resolution": "high"}))
 
     def get(self, requests, context=None):
         if context is None:
@@ -118,8 +119,8 @@ class QubedDatacube(Datacube):
             logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
         logging.info("Requests given to GribJump extract for %s", context)
         try:
-            print("HER ELOOOK NOW WHAT WE GIVE TO GJ")
-            print(complete_list_complete_uncompressed_requests)
+            # print("HER ELOOOK NOW WHAT WE GIVE TO GJ")
+            # print(complete_list_complete_uncompressed_requests)
             output_values = self.gj.extract(complete_list_complete_uncompressed_requests, context)
         except Exception as e:
             if "BadValue: Grid hash mismatch" in str(e):
@@ -308,9 +309,12 @@ class QubedDatacube(Datacube):
             # now c are the leaves of the initial tree
             key_value_path = {c.key: list(c.values)}
             ax = self._axes[c.key]
+            # print("LOOK HERE IF WE HAVE SAME NUM VALS")
+            # print(list(c.values))
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
+            # print(key_value_path["values"])
             # TODO: change this to accommodate non consecutive indexes being compressed too
             current_idx[i].extend(key_value_path["values"])
             fdb_range_n[i].append(c)
@@ -329,10 +333,16 @@ class QubedDatacube(Datacube):
                 if len(request_output_values.values) == 0:
                     # If we are here, no data was found for this path in the fdb
                     none_array = [None] * len(n.values)
-                    n.result.extend(none_array)
+                    # n.result.extend(none_array)
+                    if n.data.metadata.get("result", None) is None:
+                        n.data.metadata["result"] = []
+                    n.data.metadata["result"].extend(none_array)
                 else:
                     # interm_request_output_values = request_output_values[0][i][0]
-                    n.result.extend(request_output_values.values[i])
+                    # n.result.extend(request_output_values.values[i])
+                    if n.data.metadata.get("result", None) is None:
+                        n.data.metadata["result"] = []
+                    n.data.metadata["result"].extend(request_output_values.values[i])
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
         (new_fdb_node_ranges, new_current_start_idx) = self.remove_duplicates_in_request_ranges(
@@ -350,9 +360,9 @@ class QubedDatacube(Datacube):
                 sorted_list = sorted(enumerate(old_interm_start_idx[j]), key=lambda x: x[1])
                 original_indices_idx, interm_start_idx = zip(*sorted_list)
                 # TODO: !!!!!!! should really sort the values here again
-                # for interm_fdb_nodes_obj in interm_fdb_nodes[j]:
-                #     interm_fdb_nodes_obj.values = tuple([list(interm_fdb_nodes_obj.values)[k]
-                #                                         for k in original_indices_idx])
+                for interm_fdb_nodes_obj in interm_fdb_nodes[j]:
+                    interm_fdb_nodes_obj.data.values = QEnum(tuple([list(interm_fdb_nodes_obj.values)[k]
+                                                                    for k in original_indices_idx]))
                 if abs(interm_start_idx[-1] + 1 - interm_start_idx[0]) <= len(interm_start_idx):
                     current_request_ranges = (interm_start_idx[0], interm_start_idx[-1] + 1)
                     interm_request_ranges.append(current_request_ranges)

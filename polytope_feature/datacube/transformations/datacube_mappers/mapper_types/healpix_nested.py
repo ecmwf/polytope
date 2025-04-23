@@ -137,16 +137,19 @@ class NestedHealpixGridMapper(DatacubeMapper):
             else:
                 return idx
 
-    def unmap(self, first_val, second_val, unmapped_idx=None):
+    def unmap(self, first_val, second_vals, unmapped_idx=None):
         tol = 1e-8
         first_value = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
         first_idx = self._first_axis_vals.index(first_value)
-        second_val = [i for i in self.second_axis_vals(first_val) if second_val[0] - tol <= i <= second_val[0] + tol][0]
-        second_idx = self.second_axis_vals(first_val).index(second_val)
-        healpix_index = self.axes_idx_to_healpix_idx(first_idx, second_idx)
-        # TODO: here do conversion of ring to nested healpix representation before returning
-        healpix_index = self.ring_to_nested(healpix_index)
-        return [healpix_index]
+        healpix_idxs = []
+        for second_val in second_vals:
+            second_val = [i for i in self.second_axis_vals(first_val) if second_val - tol <= i <= second_val + tol][0]
+            second_idx = self.second_axis_vals(first_val).index(second_val)
+            healpix_index = self.axes_idx_to_healpix_idx(first_idx, second_idx)
+            # TODO: here do conversion of ring to nested healpix representation before returning
+            healpix_index = self.ring_to_nested(healpix_index)
+            healpix_idxs.append(healpix_index)
+        return healpix_idxs
 
     def div_03(self, a, b):
         t = 1 if a >= (b << 1) else 0
@@ -222,4 +225,8 @@ class NestedHealpixGridMapper(DatacubeMapper):
 
 
 # md5 grid hash in form {resolution : hash}
-_md5_hash = {}
+_md5_hash = {
+    1024: "cbda19e48d4d7e5e22641154878b9b22",
+    512: "47efaa0853e70948a41d5225e7653194",
+    128: "f3dfeb7a5bbbdd13a20d10fdb3797c71",
+}

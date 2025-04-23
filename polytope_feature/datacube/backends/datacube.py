@@ -169,8 +169,6 @@ class Datacube(ABC):
         if type(datacube).__name__ == "QubedDatacube":
             from .qubed import QubedDatacube
             # TODO: here we create the qubeddatacube twice..., which we do not want
-            print("WHAT ARE THE AXIS OPTIONS HERE??")
-            print(axis_options)
             qubed_datacube = QubedDatacube(datacube.q, datacube.datacube_axes, datacube.datacube_transformations,
                                            config, axis_options, compressed_axes_options, alternative_axes, context)
             return qubed_datacube
