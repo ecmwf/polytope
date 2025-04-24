@@ -18,6 +18,24 @@ import pygribjump as gj
 from polytope_feature.engine.hullslicer import HullSlicer
 
 
+def find_relevant_subcube_from_request(request, qube_url):
+
+    # NOTE: final url we want is like:
+    # "https://qubed.lumi.apps.dte.destination-earth.eu/api/v1/select/climate-dt/?class=d1&dataset=climate-dt"
+
+    for shape in request.shapes:
+        if isinstance(shape, Select):
+            qube_url += shape.axis + "="
+            for i, val in enumerate(shape.values):
+                qube_url += str(val)
+                if i < len(shape.values) - 1:
+                    qube_url += ","
+            qube_url += "&"
+    # TODO: remove last unnecessary &
+    qube_url = qube_url[:-1]
+    return qube_url
+
+
 fdb_tree = Qube.from_json(requests.get(
     "https://github.com/ecmwf/qubed/raw/refs/heads/main/tests/example_qubes/climate_dt.json").json())
 
