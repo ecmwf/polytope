@@ -7,7 +7,7 @@ import pytest
 from qubed import Qube
 import requests
 from polytope_feature.datacube.datacube_axis import PandasTimedeltaDatacubeAxis, PandasTimestampDatacubeAxis, UnsliceableDatacubeAxis, FloatDatacubeAxis
-from polytope_feature.datacube.backends.test_qubed_slicing import actual_slice
+# from polytope_feature.datacube.backends.test_qubed_slicing import actual_slice
 from polytope_feature.datacube.transformations.datacube_type_change.datacube_type_change import TypeChangeStrToTimestamp, TypeChangeStrToTimedelta
 import pandas as pd
 from polytope_feature.datacube.transformations.datacube_mappers.mapper_types.healpix_nested import NestedHealpixGridMapper
@@ -153,7 +153,7 @@ request = Request(ConvexPolytope(["param"], [["164"]]),
                   ConvexPolytope(["dataset"], [["climate-dt"]]),
                   ConvexPolytope(["class"], [["d1"]]),
                   ConvexPolytope(["date"], [[pd.Timestamp("20220811")]]),
-                  ConvexPolytope(["latitude", "longitude"], [[0, 0], [5, 5], [0, 5]]))
+                  ConvexPolytope(["latitude", "longitude"], [[0, 0], [0.5, 0.5], [0, 0.5]]))
 
 qubeddatacube = QubedDatacube(fdb_tree, datacube_axes, datacube_transformations)
 slicer = QubedSlicer()
@@ -165,6 +165,8 @@ self_API = Polytope(
 time1 = time.time()
 result = self_API.retrieve(request)
 time2 = time.time()
+
+print(result)
 
 print("TIME EXTRACTING USING QUBED")
 print(time2 - time1)
@@ -231,7 +233,7 @@ request = Request(ConvexPolytope(["param"], [["164"]]),
                   ConvexPolytope(["dataset"], [["climate-dt"]]),
                   ConvexPolytope(["class"], [["d1"]]),
                   ConvexPolytope(["date"], [[pd.Timestamp("20220811")]]),
-                  ConvexPolytope(["latitude", "longitude"], [[0, 0], [5, 5], [0, 5]]))
+                  ConvexPolytope(["latitude", "longitude"], [[0, 0], [0.5, 0.5], [0, 0.5]]))
 
 time3 = time.time()
 result = self_API.retrieve(request)

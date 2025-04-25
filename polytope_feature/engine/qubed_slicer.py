@@ -25,7 +25,7 @@ class QubedSlicer(Engine):
         self.ax_is_unsliceable = {}
         self.compressed_axes = []
 
-    def _actual_slice(self, q: Qube, polytopes_to_slice, datacube_axes, datacube_transformations) -> 'Qube':
+    def _actual_slice(self, q: Qube, polytopes_to_slice, datacube, datacube_transformations) -> 'Qube':
 
         def find_polytopes_on_axis(axis_name, polytopes):
             polytopes_on_axis = []
@@ -33,23 +33,6 @@ class QubedSlicer(Engine):
                 if axis_name in poly._axes:
                     polytopes_on_axis.append(poly)
             return polytopes_on_axis
-
-        def change_poly_axis_type(axis_name, polytopes, datacube_axes):
-            axis = datacube_axes[axis_name]
-            # loop through the polytopes and change each polytopes's values according to axis
-            if isinstance(axis, UnsliceableDatacubeAxis):
-                return
-
-            for poly in polytopes:
-                i = 0
-                for k, ax_name in enumerate(poly._axes):
-                    if ax_name == axis_name:
-                        i = k
-                for j, val in enumerate(poly.points):
-                    poly.points[j][i] = axis.to_float(axis.parse(poly.points[j][i]))
-
-        # def _axes_compressed():
-        #     return {}
 
         def change_datacube_val_types(child: Qube, datacube_transformations):
             axis_name = child.key
@@ -64,8 +47,8 @@ class QubedSlicer(Engine):
 
             return new_vals
 
-        def transform_upper_lower(axis_name, lower, upper, datacube_axes):
-            ax = datacube_axes[axis_name]
+        def transform_upper_lower(axis_name, lower, upper, datacube):
+            ax = datacube._axes[axis_name]
             if isinstance(ax, UnsliceableDatacubeAxis):
                 return (lower, upper)
             tol = ax.tol
@@ -74,14 +57,14 @@ class QubedSlicer(Engine):
 
             return (lower, upper)
 
-        def _slice_second_grid_axis(axis_name, polytopes, datacube_axes, datacube_transformations, second_axis_vals) -> list[Qube]:
+        def _slice_second_grid_axis(axis_name, polytopes, datacube, datacube_transformations, second_axis_vals) -> list[Qube]:
             result = []
             polytopes_on_axis = find_polytopes_on_axis(axis_name, polytopes)
 
             for poly in polytopes_on_axis:
                 lower, upper, slice_axis_idx = poly.extents(axis_name)
 
-                new_lower, new_upper = transform_upper_lower(axis_name, lower, upper, datacube_axes)
+                new_lower, new_upper = transform_upper_lower(axis_name, lower, upper, datacube)
                 found_vals = [v for v in second_axis_vals if new_lower <= v <= new_upper]
 
                 if len(found_vals) == 0:
@@ -90,7 +73,7 @@ class QubedSlicer(Engine):
                 # slice polytope along each value on child and keep resulting polytopes in memory
                 sliced_polys = []
                 for val in found_vals:
-                    ax = datacube_axes[axis_name]
+                    ax = datacube._axes[axis_name]
                     if not isinstance(ax, UnsliceableDatacubeAxis):
                         fval = ax.to_float(val)
                         # slice polytope along the value and add sliced polytope to list of polytopes in memory
@@ -118,7 +101,7 @@ class QubedSlicer(Engine):
                 )])
             return result
 
-        def _slice(q: Qube, polytopes, datacube_axes, datacube_transformations) -> list[Qube]:
+        def _slice(q: Qube, polytopes, datacube, datacube_transformations) -> list[Qube]:
             result = []
 
             if len(q.children) == 0:
@@ -142,7 +125,7 @@ class QubedSlicer(Engine):
 
                         first_ax_vals = mapper_transformation.first_axis_vals()
 
-                        new_lower, new_upper = transform_upper_lower(grid_axes[0], lower, upper, datacube_axes)
+                        new_lower, new_upper = transform_upper_lower(grid_axes[0], lower, upper, datacube)
                         found_vals = [v for v in first_ax_vals if new_lower <= v <= new_upper]
 
                         if len(found_vals) == 0:
@@ -151,7 +134,7 @@ class QubedSlicer(Engine):
                         # slice polytope along each value on child and keep resulting polytopes in memory
                         sliced_polys = []
                         for val in found_vals:
-                            ax = datacube_axes[grid_axes[0]]
+                            ax = datacube._axes[grid_axes[0]]
                             if not isinstance(ax, UnsliceableDatacubeAxis):
                                 fval = ax.to_float(val)
                                 # slice polytope along the value and add sliced polytope to list of polytopes in memory
@@ -159,7 +142,6 @@ class QubedSlicer(Engine):
                                 sliced_polys.append(sliced_poly)
                         # decide if axis should be compressed or not according to polytope
                         # NOTE: actually the first grid axis will never be compressed
-                        # axis_compressed = self.compressed_axes.get(grid_axes[0], False)
                         axis_compressed = (grid_axes[0] in self.compressed_axes)
 
                         # if it's not compressed, need to separate into different nodes to append to the tree
@@ -172,7 +154,7 @@ class QubedSlicer(Engine):
 
                             # get second axis children through slicing
                             children = _slice_second_grid_axis(
-                                grid_axes[1], child_polytopes, datacube_axes, datacube_transformations, second_axis_vals)
+                                grid_axes[1], child_polytopes, datacube, datacube_transformations, second_axis_vals)
                             # If this node used to have children but now has none due to filtering, skip it.
                             if not children:
                                 continue
@@ -203,7 +185,7 @@ class QubedSlicer(Engine):
                     modified_vals = change_datacube_val_types(child, datacube_transformations)
 
                     # here use the axis to transform lower and upper to right type too
-                    new_lower, new_upper = transform_upper_lower(child.key, lower, upper, datacube_axes)
+                    new_lower, new_upper = transform_upper_lower(child.key, lower, upper, datacube)
                     found_vals = [v for v in modified_vals if new_lower <= v <= new_upper]
 
                     if len(found_vals) == 0:
@@ -212,14 +194,13 @@ class QubedSlicer(Engine):
                     # slice polytope along each value on child and keep resulting polytopes in memory
                     sliced_polys = []
                     for val in found_vals:
-                        ax = datacube_axes[child.key]
+                        ax = datacube._axes[child.key]
                         if not isinstance(ax, UnsliceableDatacubeAxis):
                             fval = ax.to_float(val)
                             # slice polytope along the value and add sliced polytope to list of polytopes in memory
                             sliced_poly = slice(poly, child.key, fval, slice_axis_idx)
                             sliced_polys.append(sliced_poly)
                     # decide if axis should be compressed or not according to polytope
-                    # axis_compressed = self.compressed_axes.get(child.key, False)
                     axis_compressed = (child.key in self.compressed_axes)
                     # if it's not compressed, need to separate into different nodes to append to the tree
                     if not axis_compressed and len(found_vals) > 1:
@@ -227,7 +208,7 @@ class QubedSlicer(Engine):
                             child_polytopes = [p for p in polytopes if p != poly]
                             if sliced_polys[i]:
                                 child_polytopes.append(sliced_polys[i])
-                            children = _slice(child, child_polytopes, datacube_axes, datacube_transformations)
+                            children = _slice(child, child_polytopes, datacube, datacube_transformations)
                             # If this node used to have children but now has none due to filtering, skip it.
                             if child.children and not children:
                                 continue
@@ -248,7 +229,7 @@ class QubedSlicer(Engine):
                         child_polytopes.extend(
                             [sliced_poly_ for sliced_poly_ in sliced_polys if sliced_poly_ is not None])
                         # create children
-                        children = _slice(child, child_polytopes, datacube_axes, datacube_transformations)
+                        children = _slice(child, child_polytopes, datacube, datacube_transformations)
                         # If this node used to have children but now has none due to filtering, skip it.
                         if child.children and not children:
                             continue
@@ -269,14 +250,9 @@ class QubedSlicer(Engine):
 
             return result
 
-        # change the polytope point types here
-        for polytope in polytopes_to_slice:
-            for axis in polytope._axes:
-                change_poly_axis_type(axis, [polytope], datacube_axes)
+        return Qube.root_node(_slice(q, polytopes_to_slice, datacube, datacube_transformations))
 
-        return Qube.root_node(_slice(q, polytopes_to_slice, datacube_axes, datacube_transformations))
-
-    def actual_slice(self, q: Qube, polytopes_to_slice, datacube_axes, datacube_transformations):
+    def actual_slice(self, q: Qube, polytopes_to_slice, datacube, datacube_transformations):
 
         groups, input_axes = group(polytopes_to_slice)
         combinations = tensor_product(groups)
@@ -302,7 +278,7 @@ class QubedSlicer(Engine):
                     final_polys.append(poly)
 
             # Get the sliced Qube for each combi
-            r = self._actual_slice(q, final_polys, datacube_axes, datacube_transformations)
+            r = self._actual_slice(q, final_polys, datacube, datacube_transformations)
             sub_trees.append(r)
 
         final_tree = sub_trees[0]
@@ -311,31 +287,10 @@ class QubedSlicer(Engine):
             union(final_tree, sub_tree)
         return final_tree
 
-    def find_compressed_axes(self, datacube, polytopes):
-        # First determine compressable axes from input polytopes
-        compressable_axes = []
-        for polytope in polytopes:
-            if polytope.is_orthogonal:
-                for ax in polytope.axes():
-                    compressable_axes.append(ax)
-        # Cross check this list with list of compressable axis from datacube
-        # (should not include any merged or coupled axes)
-        for compressed_axis in compressable_axes:
-            if compressed_axis in datacube.compressed_axes:
-                self.compressed_axes.append(compressed_axis)
-        # add the last axis of the grid always (longitude) as a compressed axis
-        k, last_value = _, datacube.axes[k] = datacube.axes.popitem()
-        self.compressed_axes.append(k)
-
-    def remove_compressed_axis_in_union(self, polytopes):
-        for p in polytopes:
-            if p.is_in_union:
-                for axis in p.axes():
-                    if axis == self.compressed_axes[-1]:
-                        self.compressed_axes.remove(axis)
-
     def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
         self.find_compressed_axes(datacube, polytopes)
+        self.pre_process_polytopes(datacube, polytopes)
         assert isinstance(datacube, QubedDatacube)
-        tree = self.actual_slice(datacube.q, polytopes, datacube.datacube_axes, datacube.datacube_transformations)
+        tree = self.actual_slice(datacube.q, polytopes, datacube,
+                                 datacube.datacube_transformations)
         return tree

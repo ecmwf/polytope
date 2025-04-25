@@ -6,13 +6,12 @@ from typing import List
 import scipy.spatial
 
 from ..datacube.backends.datacube import Datacube
-from ..datacube.datacube_axis import UnsliceableDatacubeAxis
 from ..datacube.tensor_index_tree import TensorIndexTree
 from ..shapes import ConvexPolytope, Product
 from ..utility.combinatorics import group, tensor_product
 from ..utility.exceptions import UnsliceableShapeError
 from ..utility.geometry import lerp
-from ..utility.list_tools import argmax, argmin, unique
+from ..utility.list_tools import argmax, argmin
 from .engine import Engine
 
 
@@ -24,18 +23,6 @@ class HullSlicer(Engine):
         self.sliced_polytopes = {}
         self.remapped_vals = {}
         self.compressed_axes = []
-
-    def _unique_continuous_points(self, p: ConvexPolytope, datacube: Datacube):
-        for i, ax in enumerate(p._axes):
-            mapper = datacube.get_mapper(ax)
-            if self.ax_is_unsliceable.get(ax, None) is None:
-                self.ax_is_unsliceable[ax] = isinstance(mapper, UnsliceableDatacubeAxis)
-            if self.ax_is_unsliceable[ax]:
-                break
-            for j, val in enumerate(p.points):
-                p.points[j][i] = mapper.to_float(mapper.parse(p.points[j][i]))
-        # Remove duplicate points
-        unique(p.points)
 
     def _build_unsliceable_child(self, polytope, ax, node, datacube, lowers, next_nodes, slice_axis_idx):
         if not polytope.is_flat:
@@ -139,9 +126,6 @@ class HullSlicer(Engine):
                     self._build_unsliceable_child(polytope, ax, node, datacube, [lower], next_nodes, slice_axis_idx)
                 else:
                     values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
-                    # print(ax.name)
-                    # print((lower, upper))
-                    # print(values)
                     # NOTE: need to only remove the branches if the values are empty,
                     # but only if there are no other possible children left in the tree that
                     # we can append and if somehow this happens before and we need to remove, then what do we do??
@@ -183,29 +167,6 @@ class HullSlicer(Engine):
 
         del node["unsliced_polytopes"]
 
-    def find_compressed_axes(self, datacube, polytopes):
-        # First determine compressable axes from input polytopes
-        compressable_axes = []
-        for polytope in polytopes:
-            if polytope.is_orthogonal:
-                for ax in polytope.axes():
-                    compressable_axes.append(ax)
-        # Cross check this list with list of compressable axis from datacube
-        # (should not include any merged or coupled axes)
-        for compressed_axis in compressable_axes:
-            if compressed_axis in datacube.compressed_axes:
-                self.compressed_axes.append(compressed_axis)
-        # add the last axis of the grid always (longitude) as a compressed axis
-        k, last_value = _, datacube.axes[k] = datacube.axes.popitem()
-        self.compressed_axes.append(k)
-
-    def remove_compressed_axis_in_union(self, polytopes):
-        for p in polytopes:
-            if p.is_in_union:
-                for axis in p.axes():
-                    if axis == self.compressed_axes[-1]:
-                        self.compressed_axes.remove(axis)
-
     def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
         # Determine list of axes to compress
         self.find_compressed_axes(datacube, polytopes)
@@ -214,12 +175,7 @@ class HullSlicer(Engine):
         self.remove_compressed_axis_in_union(polytopes)
 
         # Convert the polytope points to float type to support triangulation and interpolation
-        for p in polytopes:
-            if isinstance(p, Product):
-                for poly in p.polytope():
-                    self._unique_continuous_points(poly, datacube)
-            else:
-                self._unique_continuous_points(p, datacube)
+        self.pre_process_polytopes(datacube, polytopes)
 
         groups, input_axes = group(polytopes)
         datacube.validate(input_axes)
@@ -246,7 +202,6 @@ class HullSlicer(Engine):
                     final_polys.extend(poly.polytope())
                 else:
                     final_polys.append(poly)
-            # r["unsliced_polytopes"] = set(new_c)
             r["unsliced_polytopes"] = set(final_polys)
             current_nodes = [r]
             for ax in datacube.axes.values():
