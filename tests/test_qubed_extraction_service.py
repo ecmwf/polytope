@@ -7,7 +7,7 @@ import pytest
 from qubed import Qube
 import requests
 from polytope_feature.datacube.datacube_axis import PandasTimedeltaDatacubeAxis, PandasTimestampDatacubeAxis, UnsliceableDatacubeAxis, FloatDatacubeAxis
-from polytope_feature.datacube.backends.test_qubed_slicing import actual_slice
+# from polytope_feature.datacube.backends.test_qubed_slicing import actual_slice
 from polytope_feature.datacube.transformations.datacube_type_change.datacube_type_change import TypeChangeStrToTimestamp, TypeChangeStrToTimedelta
 import pandas as pd
 from polytope_feature.datacube.transformations.datacube_mappers.mapper_types.healpix_nested import NestedHealpixGridMapper

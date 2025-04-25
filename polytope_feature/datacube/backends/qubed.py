@@ -26,14 +26,12 @@ class QubedDatacube(Datacube):
         self.datacube_transformations = datacube_transformations
         # TODO: find compressed_axes list
         self.compressed_axes = []
-        # self._axes = datacube_axes
         # TODO: should the gj object be passed in instead?
         self.gj = pygj.GribJump()
 
         # TODO: this doesn't fill the axes as wanted
         super().__init__(axis_options, compressed_axes_options)
 
-        # self._axes = datacube_axes
         # TODO: where do these come from and are they right?
         self.unwanted_path = {}
 
@@ -43,8 +41,6 @@ class QubedDatacube(Datacube):
         # Find values in the level 3 FDB datacube
 
         self.fdb_coordinates = {}
-        print("WHAT ARE THE AXIS OPTIONS")
-        print(axis_options)
 
         # TODO: we instead now have a list of axes with the actual axes types...
 
@@ -73,12 +69,6 @@ class QubedDatacube(Datacube):
 
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
-
-    # def get(self, requests: TensorIndexTree, context):
-    #     # TODO: use GJ to extract data from an fdb
-    #     return requests
-        # print("WHAT's INSIDE OF FDB?")
-        # print(self.gj.axes({"class": "d1", "model": "ifs-nemo", "resolution": "high"}))
 
     def get(self, requests, context=None):
         if context is None:
@@ -119,8 +109,6 @@ class QubedDatacube(Datacube):
             logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
         logging.info("Requests given to GribJump extract for %s", context)
         try:
-            # print("HER ELOOOK NOW WHAT WE GIVE TO GJ")
-            # print(complete_list_complete_uncompressed_requests)
             output_values = self.gj.extract(complete_list_complete_uncompressed_requests, context)
         except Exception as e:
             if "BadValue: Grid hash mismatch" in str(e):
@@ -157,14 +145,10 @@ class QubedDatacube(Datacube):
         # If request node has no children, we have a leaf so need to assign fdb values to it
         else:
             key_value_path = {requests.key: requests.values}
-            # ax = requests.axis
             ax = self._axes[requests.key]
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
-            # print("HERE NOW LOOK")
-            # print(requests.key)
-            # print(key_value_path)
             # TODO: change to use the datacube trasnformations instead...
             if requests.key == "time":
                 new_vals = []
@@ -309,12 +293,9 @@ class QubedDatacube(Datacube):
             # now c are the leaves of the initial tree
             key_value_path = {c.key: list(c.values)}
             ax = self._axes[c.key]
-            # print("LOOK HERE IF WE HAVE SAME NUM VALS")
-            # print(list(c.values))
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
-            # print(key_value_path["values"])
             # TODO: change this to accommodate non consecutive indexes being compressed too
             current_idx[i].extend(key_value_path["values"])
             fdb_range_n[i].append(c)
@@ -322,7 +303,6 @@ class QubedDatacube(Datacube):
 
     def assign_fdb_output_to_nodes(self, output_values, fdb_requests_decoding_info):
         for k, request_output_values in enumerate(output_values):
-            # request_output_values = output_values[k]
             (
                 original_indices,
                 fdb_node_ranges,
@@ -333,13 +313,10 @@ class QubedDatacube(Datacube):
                 if len(request_output_values.values) == 0:
                     # If we are here, no data was found for this path in the fdb
                     none_array = [None] * len(n.values)
-                    # n.result.extend(none_array)
                     if n.data.metadata.get("result", None) is None:
                         n.data.metadata["result"] = []
                     n.data.metadata["result"].extend(none_array)
                 else:
-                    # interm_request_output_values = request_output_values[0][i][0]
-                    # n.result.extend(request_output_values.values[i])
                     if n.data.metadata.get("result", None) is None:
                         n.data.metadata["result"] = []
                     n.data.metadata["result"].extend(request_output_values.values[i])
@@ -359,7 +336,6 @@ class QubedDatacube(Datacube):
                 # then we wouldn't have to sort here?
                 sorted_list = sorted(enumerate(old_interm_start_idx[j]), key=lambda x: x[1])
                 original_indices_idx, interm_start_idx = zip(*sorted_list)
-                # TODO: !!!!!!! should really sort the values here again
                 for interm_fdb_nodes_obj in interm_fdb_nodes[j]:
                     interm_fdb_nodes_obj.data.values = QEnum(tuple([list(interm_fdb_nodes_obj.values)[k]
                                                                     for k in original_indices_idx]))
