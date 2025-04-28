@@ -56,17 +56,17 @@ jobs:
         run: |
           MATRIX=$(cat << 'EOS'
           name:
-          - gnu-11@ubuntu-22.04
-          - clang-14@ubuntu-22.04
+          - gnu-11@ubuntu-latest
+          - clang-14@ubuntu-latest
           include:
-          - name: gnu-11@ubuntu-22.04
-            os: ubuntu-22.04
+          - name: gnu-11@ubuntu-latest
+            os: ubuntu-latest
             compiler: gnu-11
             compiler_cc: gcc-11
             compiler_cxx: g++-11
             compiler_fc: gfortran-11
-          - name: clang-14@ubuntu-22.04
-            os: ubuntu-22.04
+          - name: clang-14@ubuntu-latest
+            os: ubuntu-latest
             compiler: clang-14
             compiler_cc: clang-14
             compiler_cxx: clang++-14
