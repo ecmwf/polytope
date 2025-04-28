@@ -121,15 +121,11 @@ jobs:
         id: install-dependencies
         uses: ecmwf/build-package@v2
         with:
-          # self_build: false
-          cmake: true
-          cmake_options: -DCMAKE_BUILD_TYPE=Debug
+          self_build: false
           dependencies: |
             ecmwf/ecbuild@develop
             MathisRosenhauer/libaec@master
             ecmwf/eccodes@develop
-          dependency_cmake_options: |
-            ecmwf/ecbuild: "-DCMAKE_BUILD_TYPE=Debug"
 
       - name: Setup Python
         uses: actions/setup-python@v4
