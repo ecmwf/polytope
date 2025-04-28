@@ -101,7 +101,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install eccodes and Dependencies
         id: install-dependencies
-        uses: ecmwf-actions/build-package@v2
+        uses: ecmwf/build-package@v2
         with:
           # self_build: false
           cmake: true
