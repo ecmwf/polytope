@@ -75,8 +75,9 @@ datacube_axes = {"param": UnsliceableDatacubeAxis(),
                  "dataset": UnsliceableDatacubeAxis(),
                  "class": UnsliceableDatacubeAxis(),
                  "date": PandasTimestampDatacubeAxis(),
-                 "latitude": FloatDatacubeAxis(),
-                 "longitude": FloatDatacubeAxis()}
+                 #  "latitude": FloatDatacubeAxis(),
+                 #  "longitude": FloatDatacubeAxis()
+                 }
 
 time_val = pd.Timedelta(hours=0, minutes=0)
 date_val = pd.Timestamp("20300101T000000")
@@ -98,8 +99,8 @@ options = {
         #     "axis_name": "date",
         #     "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
         # },
-        # {"axis_name": "date", "transformations": [{"name": "type_change", "type": "date"}]},
-        # {"axis_name": "time", "transformations": [{"name": "type_change", "type": "time"}]},
+        {"axis_name": "date", "transformations": [{"name": "type_change", "type": "date"}]},
+        {"axis_name": "time", "transformations": [{"name": "type_change", "type": "time"}]},
         {
             "axis_name": "values",
             "transformations": [
@@ -153,7 +154,9 @@ request = Request(ConvexPolytope(["param"], [["164"]]),
                   ConvexPolytope(["dataset"], [["climate-dt"]]),
                   ConvexPolytope(["class"], [["d1"]]),
                   ConvexPolytope(["date"], [[pd.Timestamp("20220811")]]),
-                  ConvexPolytope(["latitude", "longitude"], [[0, 0], [0.5, 0.5], [0, 0.5]]))
+                  ConvexPolytope(["latitude", "longitude"], [[0, 0], [0.5, 0.5], [0, 0.5]])
+                  #   ConvexPolytope(["latitude", "longitude"], [[0, 0], [-0.5, -0.5], [0, -0.5]])
+                  )
 
 qubeddatacube = QubedDatacube(fdb_tree, datacube_axes, datacube_transformations)
 slicer = QubedSlicer()

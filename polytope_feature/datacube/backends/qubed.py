@@ -6,6 +6,7 @@ from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndex
 from ...utility.geometry import nearest_pt
 import pygribjump as pygj
 from qubed.value_types import QEnum
+import numpy as np
 
 from .datacube import Datacube, TensorIndexTree
 
@@ -46,7 +47,7 @@ class QubedDatacube(Datacube):
         # TODO: here use the qubed to find all axes names and then get the values from the first val of the qubed and then apply transformations to get the actual right axis type...
         for axis_name in datacube_axes:
             axis = datacube_axes[axis_name]
-            self.fdb_coordinates[axis_name] = [axis.type]
+            self.fdb_coordinates[axis_name] = [axis.type_eg]
 
         self.fdb_coordinates["values"] = []
         for name, values in self.fdb_coordinates.items():
@@ -67,8 +68,14 @@ class QubedDatacube(Datacube):
                     if opt.axis_name == name:
                         options = opt
 
-                val = self._axes[name].type
+                val = self._axes[name].type_eg
                 self._check_and_add_axes(options, name, val)
+
+    def datacube_natural_indexes(self, qube_node):
+        if qube_node is not None:
+            return np.asarray(list(qube_node.values))
+        else:
+            return []
 
     def get_indices(self, path_node, axis, lower, upper, method=None):
         """
@@ -78,7 +85,7 @@ class QubedDatacube(Datacube):
         e.g. returns integer discrete points between two floats
         """
         # path = self.fit_path(path)
-        indexes = axis.find_indexes(path_node, self)
+        indexes = axis.find_indexes_node(path_node, self)
 
         idx_between = axis.find_indices_between(indexes, lower, upper, self, method)
 
