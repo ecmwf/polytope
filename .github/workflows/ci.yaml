@@ -93,9 +93,27 @@ jobs:
     needs:
       - qa
       - setup
+    # strategy:
+    #   fail-fast: false
+    #   matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+    # runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+      matrix:
+        name:
+          - ubuntu-24.04
+          - ubuntu-22.04
+          - macos-latest
+        include:
+          - name: ubuntu-24.04
+            os: ubuntu-24.04
+            compiler_fc: gfortran
+          - name: ubuntu-22.04
+            os: ubuntu-22.04
+            compiler_fc: gfortran
+          - name: macos-latest
+            os: macos-latest
+            compiler_fc: gfortran-12
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
