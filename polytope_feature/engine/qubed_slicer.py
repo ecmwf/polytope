@@ -14,16 +14,25 @@ from typing import List
 
 from ..datacube.backends.datacube import Datacube
 
-# TODO: create a class for qubed slicer
-# TODO: turn actual_slice into extract, which only takes in a Datacube instead of a Qube + datacube_axes + datacube_transformations
-
-# TODO: create a Qube datacube, which takes in a Qube and exposes the Qube + datacube_axes + datacube_transformations
-
 
 class QubedSlicer(Engine):
     def __init__(self):
         self.ax_is_unsliceable = {}
         self.compressed_axes = []
+
+    def find_datacube_vals():
+        # TODO
+        pass
+
+    def find_values_between(self, polytope, ax, node, datacube, lower, upper):
+        # TODO
+        tol = ax.tol
+        lower = ax.from_float(lower - tol)
+        upper = ax.from_float(upper + tol)
+
+        # values = datacube.get_indices(flattened, ax, lower, upper, method)
+        # return values
+        pass
 
     def _actual_slice(self, q: Qube, polytopes_to_slice, datacube, datacube_transformations) -> 'Qube':
 
@@ -38,6 +47,9 @@ class QubedSlicer(Engine):
             axis_name = child.key
             transformation = datacube_transformations.get(axis_name, None)
             child_vals = child.values
+
+            # TODO: use axis.find_indexes_between to find the right child_vals
+            # TODO: actually, build same as find_values_between(self, polytope, ax, node, datacube, lower, upper) by writing new functions in qubed backend
             new_vals = []
             for val in child_vals:
                 if transformation:
@@ -160,6 +172,8 @@ class QubedSlicer(Engine):
                                 continue
                             if isinstance(found_val, pd.Timedelta) or isinstance(found_val, pd.Timestamp):
                                 found_val = [str(found_val)]
+
+                            # TODO: remap the found_val using self.remap_values like in the hullslicer
 
                             # TODO: when we have an axis that we would like to merge with another, we should skip the node creation here
                             # and instead keep/cache the value to merge with the node from before??

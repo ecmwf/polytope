@@ -43,7 +43,7 @@ class QubedDatacube(Datacube):
         self.fdb_coordinates = {}
 
         # TODO: we instead now have a list of axes with the actual axes types...
-
+        # TODO: here use the qubed to find all axes names and then get the values from the first val of the qubed and then apply transformations to get the actual right axis type...
         for axis_name in datacube_axes:
             axis = datacube_axes[axis_name]
             self.fdb_coordinates[axis_name] = [axis.type]
@@ -69,6 +69,22 @@ class QubedDatacube(Datacube):
 
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
+
+    def get_indices(self, path_node, axis, lower, upper, method=None):
+        """
+        Given a path to a subset of the datacube, return the discrete indexes which exist between
+        two non-discrete values (lower, upper) for a particular axis (given by label)
+        If lower and upper are equal, returns the index which exactly matches that value (if it exists)
+        e.g. returns integer discrete points between two floats
+        """
+        # path = self.fit_path(path)
+        indexes = axis.find_indexes(path_node, self)
+
+        idx_between = axis.find_indices_between(indexes, lower, upper, self, method)
+
+        logging.debug(f"For axis {axis.name} between {lower} and {upper}, found indices {idx_between}")
+
+        return idx_between
 
     def get(self, requests, context=None):
         if context is None:

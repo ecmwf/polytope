@@ -78,6 +78,24 @@ class DatacubeAxis(ABC):
             indexes = transformation.find_modified_indexes(indexes, path, datacube, self)
         return indexes
 
+    def find_standard_indexes_node(self, path, datacube):
+        # TODO: change to use the node instead of a path when we have a Qubed datacube backend
+        unmapped_path = {}
+        path_copy = deepcopy(path)
+        print(path)
+        for key in path_copy:
+            axis = datacube._axes[key]
+            (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
+        subarray = datacube.select(path, unmapped_path)
+        return datacube.datacube_natural_indexes(self, subarray)
+
+    def find_indexes_node(self, path_node, datacube):
+        indexes = self.find_standard_indexes_node(path_node, datacube)
+        for transformation in self.transformations[::-1]:
+            # TODO: change to use the node instead of a path when we have a Qubed dataucbe backend
+            indexes = transformation.find_modified_indexes(indexes, path, datacube, self)
+        return indexes
+
     def offset(self, value):
         offset = 0
         for transformation in self.transformations[::-1]:
