@@ -17,19 +17,19 @@ class TestEncoder:
         self.fake_tree = TensorIndexTree()
         child_ax1 = IntDatacubeAxis()
         child_ax1.name = "ax1"
-        child1 = TensorIndexTree(child_ax1, ("1",))
+        child1 = TensorIndexTree(child_ax1.name, ("1",))
         child_ax2 = PandasTimestampDatacubeAxis()
         child_ax2.name = "timestamp_ax"
-        child2 = TensorIndexTree(child_ax2, ("string",))
+        child2 = TensorIndexTree(child_ax2.name, ("string",))
         grandchild_ax1 = FloatDatacubeAxis()
         grandchild_ax1.name = "ax2"
-        grandchild1 = TensorIndexTree(grandchild_ax1, ("2.3",))
+        grandchild1 = TensorIndexTree(grandchild_ax1.name, ("2.3",))
         grandchild_ax2 = UnsliceableDatacubeAxis()
         grandchild_ax2.name = "ax3"
-        grandchild2 = TensorIndexTree(grandchild_ax2, ("var1",))
+        grandchild2 = TensorIndexTree(grandchild_ax2.name, ("var1",))
         grandchild_ax3 = PandasTimedeltaDatacubeAxis()
         grandchild_ax3.name = "timedelta_ax"
-        grandchild3 = TensorIndexTree(grandchild_ax3, ("0.0001",))
+        grandchild3 = TensorIndexTree(grandchild_ax3.name, ("0.0001",))
         child1.add_child(grandchild2)
         child1.add_child(grandchild1)
         child2.add_child(grandchild3)
@@ -63,6 +63,7 @@ class TestEncoder:
             options=self.options,
         )
         fdb_datacube = self.API.datacube
+        fdb_datacube._axes = self.datacube._axes
         fdb_datacube.prep_tree_encoding(self.fake_tree)
         encoded_bytes = encode_tree(self.fake_tree)
         decoded_tree = decode_tree(self.datacube, encoded_bytes)

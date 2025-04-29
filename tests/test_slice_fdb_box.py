@@ -47,7 +47,7 @@ class TestSlicingFDBDatacube:
         }
 
     # Testing different shapes
-    @pytest.mark.skip(reason="optimisation test")
+    # @pytest.mark.skip(reason="optimisation test")
     @pytest.mark.fdb
     def test_fdb_datacube(self):
         import pygribjump as gj
@@ -76,6 +76,8 @@ class TestSlicingFDBDatacube:
         time1 = time.time()
         result = self.API.retrieve(request)
         time2 = time.time()
+        print("TIME TO RETRIEVE")
+        print(time2 - time1)
         self.fdb_datacube = self.API.datacube
         self.fdb_datacube.prep_tree_encoding(result)
         result.pprint()

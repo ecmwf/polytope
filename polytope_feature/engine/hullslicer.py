@@ -56,7 +56,7 @@ class HullSlicer(Engine):
 
             if datacube_has_index:
                 if i == 0:
-                    (child, next_nodes) = node.create_child(ax, lower, next_nodes)
+                    (child, next_nodes) = node.create_child(ax.name, lower, next_nodes)
                     child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
                     child["unsliced_polytopes"].remove(polytope)
                     next_nodes.append(child)
@@ -113,7 +113,7 @@ class HullSlicer(Engine):
                 fvalue = ax.to_float(value)
                 new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
                 remapped_val = self.remap_values(ax, value)
-                (child, next_nodes) = node.create_child(ax, remapped_val, next_nodes)
+                (child, next_nodes) = node.create_child(ax.name, remapped_val, next_nodes)
                 child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
                 child["unsliced_polytopes"].remove(polytope)
                 if new_polytope is not None:
@@ -220,6 +220,7 @@ class HullSlicer(Engine):
 
         groups, input_axes = group(polytopes)
         datacube.validate(input_axes)
+        TensorIndexTree.associated_datacube = datacube
         request = TensorIndexTree()
         combinations = tensor_product(groups)
 

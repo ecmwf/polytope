@@ -2,14 +2,13 @@ import math
 from copy import deepcopy
 
 from . import index_tree_pb2 as pb2
-from .datacube_axis import IntDatacubeAxis
 from .tensor_index_tree import TensorIndexTree
 
 
 def encode_tree(tree: TensorIndexTree):
     node = pb2.Node()
 
-    node.axis = tree.axis.name
+    node.axis = tree.axis
 
     # NOTE: do we need this if we parse the tree before it has values?
     if tree.result is not None:
@@ -33,7 +32,6 @@ def encode_child(tree: TensorIndexTree, child: TensorIndexTree, node, result_siz
     child_node = pb2.Node()
 
     new_result_size = deepcopy(result_size)
-    # new_result_size = result_size
     new_result_size.append(len(child.values))
 
     if child.hidden:
@@ -45,7 +43,7 @@ def encode_child(tree: TensorIndexTree, child: TensorIndexTree, node, result_siz
 
     # need to add axis and children etc to the encoded node only if the tree node isn't hidden
     else:
-        child_node.axis = child.axis.name
+        child_node.axis = child.axis
         child_node.value.extend(child.values)
         child_node.size_result.extend(new_result_size)
 
@@ -68,11 +66,9 @@ def decode_tree(datacube, bytearray):
     tree = TensorIndexTree()
 
     if node.axis == "root":
-        root = IntDatacubeAxis()
-        root.name = "root"
-        tree.axis = root
+        tree.axis = "root"
     else:
-        tree.axis = datacube._axes[node.axis]
+        tree.axis = node.axis
 
     # Put contents of node children into tree
     decode_child(node, tree, datacube)
@@ -88,13 +84,14 @@ def decode_child(node, tree, datacube):
         tree.indexes_size = node.size_indexes_branch
     for child in node.children:
         if child.axis in datacube._axes.keys():
-            child_axis = datacube._axes[child.axis]
+            # child_axis = datacube._axes[child.axis]
+            child_axis = child.axis
             child_vals = tuple(child.value)
             child_node = TensorIndexTree(child_axis, child_vals)
             tree.add_child(child_node)
             decode_child(child, child_node, datacube)
         else:
-            grandchild_axis = datacube._axes[child.children[0].axis]
+            grandchild_axis = child.children[0].axis
             for c in child.children:
                 grandchild_vals = tuple(c.value)
                 grandchild_node = TensorIndexTree(grandchild_axis, grandchild_vals)
