@@ -154,8 +154,8 @@ request = Request(ConvexPolytope(["param"], [["164"]]),
                   ConvexPolytope(["dataset"], [["climate-dt"]]),
                   ConvexPolytope(["class"], [["d1"]]),
                   ConvexPolytope(["date"], [[pd.Timestamp("20220811")]]),
-                  ConvexPolytope(["latitude", "longitude"], [[0, 0], [0.5, 0.5], [0, 0.5]])
-                  #   ConvexPolytope(["latitude", "longitude"], [[0, 0], [-0.5, -0.5], [0, -0.5]])
+                  #   ConvexPolytope(["latitude", "longitude"], [[0, 0], [0.5, 0.5], [0, 0.5]])
+                  ConvexPolytope(["latitude", "longitude"], [[0, 0], [-0.5, -0.5], [0, -0.5]])
                   )
 
 qubeddatacube = QubedDatacube(fdb_tree, datacube_axes, datacube_transformations)

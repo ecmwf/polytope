@@ -77,7 +77,7 @@ class QubedDatacube(Datacube):
         else:
             return []
 
-    def get_indices(self, path_node, axis, lower, upper, method=None):
+    def get_indices(self, path, path_node, axis, lower, upper, method=None):
         """
         Given a path to a subset of the datacube, return the discrete indexes which exist between
         two non-discrete values (lower, upper) for a particular axis (given by label)
@@ -85,7 +85,7 @@ class QubedDatacube(Datacube):
         e.g. returns integer discrete points between two floats
         """
         # path = self.fit_path(path)
-        indexes = axis.find_indexes_node(path_node, self)
+        indexes = axis.find_indexes_node(path_node, self, path)
 
         idx_between = axis.find_indices_between(indexes, lower, upper, self, method)
 

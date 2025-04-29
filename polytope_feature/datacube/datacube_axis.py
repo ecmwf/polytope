@@ -81,17 +81,17 @@ class DatacubeAxis(ABC):
     def find_standard_indexes_node(self, path_node, datacube):
         return datacube.datacube_natural_indexes(path_node)
 
-    def find_indexes_node(self, path_node, datacube):
+    def find_indexes_node(self, path_node, datacube, path):
         indexes = self.find_standard_indexes_node(path_node, datacube)
         # path = {self.name: tuple(path_node.values)}
-        if path_node:
-            path = {path_node.key: tuple(path_node.values)}
-        else:
-            path = {self.name: tuple()}
+        if not path:
+            if path_node:
+                path = {path_node.key: tuple(path_node.values)}
+            else:
+                path = {self.name: tuple()}
         for transformation in self.transformations[::-1]:
-            print(indexes)
             indexes = transformation.find_modified_indexes(indexes, path, datacube, self)
-        print(indexes)
+        # print(indexes)
         return indexes
 
     def offset(self, value):
