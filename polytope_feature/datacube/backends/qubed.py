@@ -122,7 +122,7 @@ class QubedDatacube(Datacube):
                 for i, key in enumerate(compressed_request[0].keys()):
                     uncompressed_request[key] = combi[i]
                 # TODO: get the hash from somewhere...
-                self.grid_md5_hash = "cbda19e48d4d7e5e22641154878b9b22"
+                # self.grid_md5_hash = "cbda19e48d4d7e5e22641154878b9b22"
                 complete_uncompressed_request = (uncompressed_request, compressed_request[1], self.grid_md5_hash)
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
