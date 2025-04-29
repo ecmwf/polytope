@@ -5,3 +5,7 @@ eccodes
 h5netcdf
 h5py
 earthkit-data
+pyfdb
+# pygribjump
+# git+ssh://git@github.com/ecmwf/gribjump.git@develop
+git+https://github.com/ecmwf/gribjump.git@develop
