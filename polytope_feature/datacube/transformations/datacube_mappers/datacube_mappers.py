@@ -21,12 +21,14 @@ class DatacubeMapper(DatacubeAxisTransformation):
         self._axis_reversed = None
         if mapper_options.axis_reversed is not None:
             self._axis_reversed = mapper_options.axis_reversed
+        self.mapper_options = mapper_options
         self.old_axis = name
         self._final_transformation = self.generate_final_transformation()
         self._final_mapped_axes = self._final_transformation._mapped_axes
         self._axis_reversed = self._final_transformation._axis_reversed
         self.compressed_grid_axes = self._final_transformation.compressed_grid_axes
         self.md5_hash = self._final_transformation.md5_hash
+        self.is_irregular = self._final_transformation.is_irregular
 
     def generate_final_transformation(self):
         map_type = _type_to_datacube_mapper_lookup[self.grid_type]
@@ -36,7 +38,7 @@ class DatacubeMapper(DatacubeAxisTransformation):
         constructor = getattr(module, map_type)
         transformation = deepcopy(
             constructor(
-                self.old_axis, self.grid_axes, self.grid_resolution, self.md5_hash, self.local_area, self._axis_reversed
+                self.old_axis, self.grid_axes, self.grid_resolution, self.md5_hash, self.local_area, self._axis_reversed, self.mapper_options
             )
         )
         return transformation
@@ -142,6 +144,6 @@ _type_to_datacube_mapper_lookup = {
     "regular": "RegularGridMapper",
     "reduced_ll": "ReducedLatLonMapper",
     "local_regular": "LocalRegularGridMapper",
-    "irregular": "IrregularGridMapper",
+    "lambert_conformal": "IrregularGridMapper",
     "healpix_nested": "NestedHealpixGridMapper",
 }

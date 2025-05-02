@@ -1,20 +1,24 @@
 from ..datacube_mappers import DatacubeMapper
 from copy import deepcopy
+from importlib import import_module
 
 
 class IrregularGridMapper(DatacubeMapper):
     # def __init__(self, base_axis, mapped_axes, resolution, local_area=[]):
-    def __init__(self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None):
+    def __init__(self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None, mapper_options=None):
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
         self._resolution = resolution
         self._axis_reversed = False
         self.compressed_grid_axes = [self._mapped_axes[1]]
+        self.mapper_options = mapper_options
+        self.grid_type = mapper_options.type
+        self._final_irregular_transformation = self.generate_final_irregular_transformation()
+        self.is_irregular = True
         if md5_hash is not None:
             self.md5_hash = md5_hash
         else:
-            self.md5_hash = _md5_hash.get(resolution, None)
-        self._final_irregular_transformation = self.generate_final_irregular_transformation()
+            self.md5_hash = self._final_irregular_transformation.md5_hash
 
     def generate_final_irregular_transformation(self):
         map_type = _type_to_datacube_irregular_mapper_lookup[self.grid_type]
@@ -24,10 +28,13 @@ class IrregularGridMapper(DatacubeMapper):
         constructor = getattr(module, map_type)
         transformation = deepcopy(
             constructor(
-                self.old_axis, self.grid_axes, self.grid_resolution, self.md5_hash, self.local_area, self._axis_reversed
+                self.old_axis, self.grid_axes, self.grid_resolution, self.md5_hash, self.local_area, self._axis_reversed, self.mapper_options
             )
         )
         return transformation
+
+    def grid_latlon_points(self):
+        return self._final_irregular_transformation.get_latlons()
 
     def unmap(self, first_val, second_val, unmapped_idx=None):
         # TODO: But to unmap for the irregular grid, need the request tree
@@ -35,4 +42,6 @@ class IrregularGridMapper(DatacubeMapper):
         return unmapped_idx[0]
 
 
-_md5_hash = {}
+_type_to_datacube_irregular_mapper_lookup = {
+    "lambert_conformal": "LambertConformalGridMapper",
+}

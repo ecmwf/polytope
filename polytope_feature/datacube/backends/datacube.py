@@ -71,6 +71,7 @@ class Datacube(ABC):
             for compressed_grid_axis in transformation.compressed_grid_axes:
                 self.compressed_grid_axes.append(compressed_grid_axis)
                 self.grid_md5_hash = transformation.md5_hash
+                self.has_point_cloud = transformation.is_irregular
         if len(final_axis_names) > 1:
             self.coupled_axes.append(final_axis_names)
             for axis in final_axis_names:
@@ -157,7 +158,6 @@ class Datacube(ABC):
         config={},
         axis_options={},
         compressed_axes_options=[],
-        point_cloud_options=None,
         alternative_axes=[],
         context=None,
     ):
@@ -165,7 +165,7 @@ class Datacube(ABC):
         if type(datacube).__name__ == "DataArray":
             from .xarray import XArrayDatacube
 
-            xadatacube = XArrayDatacube(datacube, axis_options, compressed_axes_options, point_cloud_options, context)
+            xadatacube = XArrayDatacube(datacube, axis_options, compressed_axes_options, context)
             return xadatacube
         if type(datacube).__name__ == "GribJump":
             from .fdb import FDBDatacube
@@ -175,7 +175,6 @@ class Datacube(ABC):
                 config,
                 axis_options,
                 compressed_axes_options,
-                point_cloud_options,
                 alternative_axes,
                 context,
             )

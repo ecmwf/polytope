@@ -15,7 +15,6 @@ class FDBDatacube(Datacube):
         config=None,
         axis_options=None,
         compressed_axes_options=[],
-        point_cloud_options=None,
         alternative_axes=[],
         context=None,
     ):
@@ -30,7 +29,7 @@ class FDBDatacube(Datacube):
 
         self.unwanted_path = {}
         self.axis_options = axis_options
-        self.has_point_cloud = point_cloud_options  # NOTE: here, will be True/False
+        # self.has_point_cloud = point_cloud_options  # NOTE: here, will be True/False
 
         partial_request = config
         # Find values in the level 3 FDB datacube
@@ -83,7 +82,7 @@ class FDBDatacube(Datacube):
     def find_point_cloud(self):
         # TODO: somehow, find the point cloud of irregular grid if it exists
         if self.has_point_cloud:
-            return self.has_point_cloud
+            return self._final_transformation.grid_latlon_points()
 
     def check_branching_axes(self, request):
         polytopes = request.polytopes()

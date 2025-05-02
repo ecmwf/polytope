@@ -69,7 +69,6 @@ class Polytope:
             config,
             axis_options,
             compressed_axes_options,
-            point_cloud_options,
             alternative_axes,
             self.context,
         )

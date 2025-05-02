@@ -4,11 +4,12 @@ from ..datacube_mappers import DatacubeMapper
 
 
 class RegularGridMapper(DatacubeMapper):
-    def __init__(self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None):
+    def __init__(self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None, mapper_options=None):
         # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
         self._resolution = resolution
+        self.is_irregular = False
         self.deg_increment = 90 / self._resolution
         if axis_reversed is None:
             self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}

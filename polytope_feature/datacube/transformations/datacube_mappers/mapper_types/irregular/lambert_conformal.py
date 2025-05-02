@@ -6,11 +6,8 @@ from ..irregular import IrregularGridMapper
 
 
 class LambertConformalGridMapper(IrregularGridMapper):
-    def __init__(self, base_axis, mapped_axes, resolution, is_spherical, nv,  nx, ny, LoVInDegrees,
-                 Dx, Dy, latFirstInRadians, lonFirstInRadians, LoVInRadians, Latin1InRadians,
-                 Latin2InRadians, LaDInRadians,
-                 radius=None, earthMinorAxisInMetres=None, earthMajorAxisInMetres=None,
-                 md5_hash=None, axis_reversed=None):
+    def __init__(self, base_axis, mapped_axes, resolution,
+                 md5_hash=None, axis_reversed=None, mapper_options=None):
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
         self._resolution = resolution
@@ -21,26 +18,26 @@ class LambertConformalGridMapper(IrregularGridMapper):
         else:
             self.md5_hash = _md5_hash.get(resolution, None)
 
-        self.is_spherical = is_spherical
+        self.is_spherical = mapper_options.is_spherical
 
         if self.is_spherical:
-            self.radius = radius
+            self.radius = mapper_options.radius
         else:
-            self.earthMinorAxisInMetres = earthMinorAxisInMetres
-            self.earthMajorAxisInMetres = earthMajorAxisInMetres
+            self.earthMinorAxisInMetres = mapper_options.earthMinorAxisInMetres
+            self.earthMajorAxisInMetres = mapper_options.earthMajorAxisInMetres
 
-        self.nv = nv
-        self.nx = nx
-        self.ny = ny
-        self.LoVInDegrees = LoVInDegrees
-        self.Dx = Dx
-        self.Dy = Dy
-        self.latFirstInRadians = latFirstInRadians
-        self.lonFirstInRadians = lonFirstInRadians
-        self.LoVInRadians = LoVInRadians
-        self.Latin1InRadians = Latin1InRadians
-        self.Latin2InRadians = Latin2InRadians
-        self.LaDInRadians = LaDInRadians
+        self.nv = mapper_options.nv
+        self.nx = mapper_options.nx
+        self.ny = mapper_options.ny
+        self.LoVInDegrees = mapper_options.LoVInDegrees
+        self.Dx = mapper_options.Dx
+        self.Dy = mapper_options.Dy
+        self.latFirstInRadians = mapper_options.latFirstInRadians
+        self.lonFirstInRadians = mapper_options.lonFirstInRadians
+        self.LoVInRadians = mapper_options.LoVInRadians
+        self.Latin1InRadians = mapper_options.Latin1InRadians
+        self.Latin2InRadians = mapper_options.Latin2InRadians
+        self.LaDInRadians = mapper_options.LaDInRadians
 
         self.epsilon = 1e-10
         self.M_PI_2 = math.pi / 2

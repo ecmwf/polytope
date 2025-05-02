@@ -23,6 +23,22 @@ class MapperConfig(TransformationConfig):
     md5_hash: Optional[str] = None
     local: Optional[List[float]] = None
     axis_reversed: Optional[Dict[str, bool]] = None
+    is_spherical: Optional[bool] = None
+    radius: Optional[float] = None
+    earthMinorAxisInMetres: Optional[float] = None
+    earthMajorAxisInMetres: Optional[float] = None
+    nv: Optional[int] = None
+    nx: Optional[int] = None
+    ny: Optional[int] = None
+    LoVInDegrees: Optional[float] = None
+    Dx: Optional[float] = None
+    Dy: Optional[float] = None
+    latFirstInRadians: Optional[float] = None
+    lonFirstInRadians: Optional[float] = None
+    LoVInRadians: Optional[float] = None
+    Latin1InRadians: Optional[float] = None
+    Latin2InRadians: Optional[float] = None
+    LaDInRadians: Optional[float] = None
 
 
 class ReverseConfig(TransformationConfig):
