@@ -1,4 +1,5 @@
 from ..datacube_mappers import DatacubeMapper
+from copy import deepcopy
 
 
 class IrregularGridMapper(DatacubeMapper):
@@ -13,6 +14,20 @@ class IrregularGridMapper(DatacubeMapper):
             self.md5_hash = md5_hash
         else:
             self.md5_hash = _md5_hash.get(resolution, None)
+        self._final_irregular_transformation = self.generate_final_irregular_transformation()
+
+    def generate_final_irregular_transformation(self):
+        map_type = _type_to_datacube_irregular_mapper_lookup[self.grid_type]
+        module = import_module(
+            "polytope_feature.datacube.transformations.datacube_mappers.mapper_types.irregular" + self.grid_type
+        )
+        constructor = getattr(module, map_type)
+        transformation = deepcopy(
+            constructor(
+                self.old_axis, self.grid_axes, self.grid_resolution, self.md5_hash, self.local_area, self._axis_reversed
+            )
+        )
+        return transformation
 
     def unmap(self, first_val, second_val, unmapped_idx=None):
         # TODO: But to unmap for the irregular grid, need the request tree
