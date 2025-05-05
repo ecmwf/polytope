@@ -103,7 +103,7 @@ class TestQuadTreeSlicer:
             datacube=self.fdbdatacube,
             options=self.options,
             engine_options=self.engine_options,
-            point_cloud_options=self.points,
+            # point_cloud_options=self.points,
         )
 
         time0 = time.time()

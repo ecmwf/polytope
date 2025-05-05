@@ -29,7 +29,8 @@ class TestPolytopeExtract:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "irregular", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                        {"name": "mapper", "type": "unstructured",
+                            "resolution": 1280, "axes": ["latitude", "longitude"], "points": self.quadtree_points}
                     ],
                 },
             ],
@@ -43,7 +44,7 @@ class TestPolytopeExtract:
             datacube=self.array,
             options=self.options,
             engine_options=self.engine_options,
-            point_cloud_options=self.quadtree_points,
+            # point_cloud_options=self.quadtree_points,
         )
         result = self.API.retrieve(request)
 
