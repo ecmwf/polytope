@@ -80,12 +80,12 @@ class TestQuadTreeSlicer:
                             "LoVInDegrees": 1.93697,
                             "Dx": 500,
                             "Dy": 500,
-                            "latFirstInRadians": (43.6409 / 180) * math.pi,
-                            "lonFirstInRadians":  (357.32/180) * math.pi,
+                            "latFirstInRadians": ((43.6409 + 2.9710306719721302e-05) / 180) * math.pi,
+                            "lonFirstInRadians":  ((357.32 - 0.00024761029651987343)/180) * math.pi,
                             "LoVInRadians":  (1.93697 / 180) * math.pi,
-                            "Latin1InRadians": (47.083/180) * math.pi,
-                            "Latin2InRadians": (47.083/180) * math.pi,
-                            "LaDInRadians":  (47.083/180) * math.pi,
+                            "Latin1InRadians": (47.082971/180) * math.pi,
+                            "Latin2InRadians": (47.082971/180) * math.pi,
+                            "LaDInRadians":  (47.082971/180) * math.pi,
                         }
                     ],
                 },
@@ -112,7 +112,8 @@ class TestQuadTreeSlicer:
             Select("levtype", ["sfc"]),
             # Select("time_counter", [pd.Timestamp("1979-02-15")]),
             # Box(["latitude", "longitude"], [0, 0], [5, 5]),
-            Box(["latitude", "longitude"], [44, 5.5], [44.5, 6.5]),
+            # Box(["latitude", "longitude"], [44, 5.5], [44.5, 6.5]),
+            Box(["latitude", "longitude"], [44, 5.5], [44.25, 5.55]),
             # triangle,
         )
 
@@ -138,7 +139,7 @@ class TestQuadTreeSlicer:
         lons = []
         eccodes_lats = []
         eccodes_lons = []
-        tol = 1e-8
+        tol = 1e-3
         leaves = result.leaves
         for i in range(len(leaves)):
             cubepath = leaves[i].flatten()
@@ -147,19 +148,23 @@ class TestQuadTreeSlicer:
             lats.append(lat)
             lons.append(lon)
 
-            # # each variable in the netcdf file is a cube
-            # # cubes = iris.load('../../Downloads/votemper_ORAS5_1m_197902_grid_T_02.nc')
-            # # iris.save(cubes, '../../Downloads/votemper_ORAS5_1m_197902_grid_T_02.grib2')
-            # nearest_points = find_nearest_latlon(
-            #     "../../Downloads/icon-d2_germany_icosahedral_single-level_2025011000_024_2d_t_2m.grib2", lat, lon)
-            # eccodes_lat = nearest_points[0][0]["lat"]
-            # eccodes_lon = nearest_points[0][0]["lon"] - 360
-            # eccodes_lats.append(eccodes_lat)
-            # eccodes_lons.append(eccodes_lon)
-            # assert eccodes_lat - tol <= lat
-            # assert lat <= eccodes_lat + tol
-            # assert eccodes_lon - tol <= lon
-            # assert lon <= eccodes_lon + tol
+            # each variable in the netcdf file is a cube
+            # cubes = iris.load('../../Downloads/votemper_ORAS5_1m_197902_grid_T_02.nc')
+            # iris.save(cubes, '../../Downloads/votemper_ORAS5_1m_197902_grid_T_02.grib2')
+            nearest_points = find_nearest_latlon(
+                "tests/data/lambert_lam_one_message.grib", lat, lon)
+            eccodes_lat = nearest_points[0][0]["lat"]
+            eccodes_lon = nearest_points[0][0]["lon"]
+            eccodes_lats.append(eccodes_lat)
+            eccodes_lons.append(eccodes_lon)
+            assert eccodes_lat - tol <= lat
+            assert lat <= eccodes_lat + tol
+            assert eccodes_lon - tol <= lon
+            print("LONGITUDE")
+            print(eccodes_lon - lon)
+            print("LATITUDE")
+            print(eccodes_lat - lat)
+            assert lon <= eccodes_lon + tol
 
         # worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
         # fig, ax = plt.subplots(figsize=(12, 6))
@@ -190,8 +195,8 @@ class TestQuadTreeSlicer:
 
         # plt.scatter([lon for lon in self.longitudes if 5.5 <= lon <= 6.5], [
         #             lat for lat in self.latitudes if 44 <= lat <= 44.5], s=14, color="blue")
-        plt.scatter(self.lons[combined_mask], self.lats[combined_mask], s=14, color="blue")
+        # plt.scatter(self.lons[combined_mask], self.lats[combined_mask], s=14, color="blue")
         plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
-        # plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
+        plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
         plt.colorbar(label="Temperature")
         plt.show()
