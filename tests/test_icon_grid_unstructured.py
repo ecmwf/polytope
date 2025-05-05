@@ -178,9 +178,9 @@ class TestQuadTreeSlicer:
             # assert eccodes_lon - tol <= lon
             # assert lon <= eccodes_lon + tol
 
-        worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
-        fig, ax = plt.subplots(figsize=(12, 6))
-        worldmap.plot(color="darkgrey", ax=ax)
+        # worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
+        # fig, ax = plt.subplots(figsize=(12, 6))
+        # worldmap.plot(color="darkgrey", ax=ax)
 
         plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
         plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")

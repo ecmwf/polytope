@@ -57,7 +57,7 @@ class TestQuadTreeSlicer:
         slicer = QuadTreeSlicer(points)
         polytope = Box(["lat", "lon"], [1, 1], [20, 30]).polytope()[0]
         # results = slicer.quad_tree.query_polygon(polytope)
-        results = query_polygon(points, slicer.quad_tree, 0, polytope, results=None)
+        results = query_polygon(points, slicer.quad_tree, 0, polytope)
         assert len(results) == 3
         assert (10, 10) in [slicer.points[node] for node in results]
         assert (5, 10) in [slicer.points[node] for node in results]
@@ -66,7 +66,7 @@ class TestQuadTreeSlicer:
         slicer = QuadTreeSlicer(points)
         polytope = ConvexPolytope(["lat", "lon"], [[-10, 1], [20, 1], [5, 20]])
         # results = slicer.quad_tree.query_polygon(polytope)
-        results = query_polygon(points, slicer.quad_tree, 0, polytope, results=None)
+        results = query_polygon(points, slicer.quad_tree, 0, polytope)
         assert len(results) == 4
         assert (-5, 5) in [slicer.points[node] for node in results]
         assert (5, 10) in [slicer.points[node] for node in results]
