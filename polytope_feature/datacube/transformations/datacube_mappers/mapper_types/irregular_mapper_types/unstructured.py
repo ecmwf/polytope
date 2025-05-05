@@ -19,7 +19,7 @@ class UnstructuredGridMapper(IrregularGridMapper):
         self.latlon_points = mapper_options.points
         self.is_irregular = True
 
-    def get_latlons(self):
+    def grid_latlon_points(self):
         return self.latlon_points
 
 

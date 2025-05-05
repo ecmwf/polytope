@@ -226,7 +226,7 @@ class LambertConformalGridMapper(DatacubeMapper):
                 coords.append([latDeg, lonDeg])
         return coords
 
-    def get_latlons(self):
+    def grid_latlon_points(self):
         if self.is_spherical:
             return self.get_latlons_sphere()
         else:
