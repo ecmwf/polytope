@@ -1,13 +1,14 @@
 import math
 
-from ..irregular import IrregularGridMapper
+# from ..irregular import IrregularGridMapper
+from ...datacube_mappers import DatacubeMapper
 
 # import numpy as np
 
 
-class LambertConformalGridMapper(IrregularGridMapper):
+class LambertConformalGridMapper(DatacubeMapper):
     def __init__(self, base_axis, mapped_axes, resolution,
-                 md5_hash=None, axis_reversed=None, mapper_options=None):
+                 md5_hash=None, local_area=[], axis_reversed=None, mapper_options=None):
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
         self._resolution = resolution
@@ -19,6 +20,7 @@ class LambertConformalGridMapper(IrregularGridMapper):
             self.md5_hash = _md5_hash.get(resolution, None)
 
         self.is_spherical = mapper_options.is_spherical
+        self.is_irregular = True
 
         if self.is_spherical:
             self.radius = mapper_options.radius

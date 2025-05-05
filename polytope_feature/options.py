@@ -39,6 +39,7 @@ class MapperConfig(TransformationConfig):
     Latin1InRadians: Optional[float] = None
     Latin2InRadians: Optional[float] = None
     LaDInRadians: Optional[float] = None
+    points: Optional[List[List[float]]] = None
 
 
 class ReverseConfig(TransformationConfig):

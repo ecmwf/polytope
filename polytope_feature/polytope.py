@@ -50,7 +50,7 @@ class Polytope:
         datacube,
         options=None,
         engine_options=None,
-        point_cloud_options=None,
+        # point_cloud_options=None,
         context=None,
     ):
         from .datacube import Datacube

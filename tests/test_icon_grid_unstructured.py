@@ -16,7 +16,6 @@ from polytope_feature.shapes import Box, Select
 # import iris
 
 
-
 class TestQuadTreeSlicer:
     def setup_method(self, method):
         self.engine_options = {
@@ -116,7 +115,8 @@ class TestQuadTreeSlicer:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "irregular", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                        {"name": "mapper", "type": "unstructured", "resolution": 1280,
+                            "axes": ["latitude", "longitude"], "points": self.points}
                     ],
                 },
             ],
@@ -139,7 +139,7 @@ class TestQuadTreeSlicer:
             datacube=self.arr,
             options=self.options,
             engine_options=self.engine_options,
-            point_cloud_options=self.points,
+            # point_cloud_options=self.points,
         )
 
         time0 = time.time()

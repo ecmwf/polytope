@@ -13,28 +13,30 @@ class IrregularGridMapper(DatacubeMapper):
         self.compressed_grid_axes = [self._mapped_axes[1]]
         self.mapper_options = mapper_options
         self.grid_type = mapper_options.type
-        self._final_irregular_transformation = self.generate_final_irregular_transformation()
+        self.local_area = local_area
         self.is_irregular = True
-        if md5_hash is not None:
-            self.md5_hash = md5_hash
-        else:
-            self.md5_hash = self._final_irregular_transformation.md5_hash
+        self.md5_hash = md5_hash
+        self._final_irregular_transformation = self.generate_final_irregular_transformation()
+        # if md5_hash is not None:
+        #     self.md5_hash = md5_hash
+        # else:
+        #     self.md5_hash = self._final_irregular_transformation.md5_hash
 
     def generate_final_irregular_transformation(self):
         map_type = _type_to_datacube_irregular_mapper_lookup[self.grid_type]
         module = import_module(
-            "polytope_feature.datacube.transformations.datacube_mappers.mapper_types.irregular" + self.grid_type
+            "polytope_feature.datacube.transformations.datacube_mappers.mapper_types.irregular_mapper_types." + self.grid_type
         )
         constructor = getattr(module, map_type)
         transformation = deepcopy(
             constructor(
-                self.old_axis, self.grid_axes, self.grid_resolution, self.md5_hash, self.local_area, self._axis_reversed, self.mapper_options
+                self._base_axis, self._mapped_axes, self._resolution, self.md5_hash, self.local_area, self._axis_reversed, self.mapper_options
             )
         )
         return transformation
 
     def grid_latlon_points(self):
-        return self._final_irregular_transformation.get_latlons()
+        return self.get_latlons()
 
     def unmap(self, first_val, second_val, unmapped_idx=None):
         # TODO: But to unmap for the irregular grid, need the request tree
@@ -44,4 +46,5 @@ class IrregularGridMapper(DatacubeMapper):
 
 _type_to_datacube_irregular_mapper_lookup = {
     "lambert_conformal": "LambertConformalGridMapper",
+    "unstructured": "UnstructuredGridMapper"
 }

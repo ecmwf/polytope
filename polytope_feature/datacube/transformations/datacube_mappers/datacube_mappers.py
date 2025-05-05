@@ -32,16 +32,28 @@ class DatacubeMapper(DatacubeAxisTransformation):
 
     def generate_final_transformation(self):
         map_type = _type_to_datacube_mapper_lookup[self.grid_type]
-        module = import_module(
-            "polytope_feature.datacube.transformations.datacube_mappers.mapper_types." + self.grid_type
-        )
-        constructor = getattr(module, map_type)
-        transformation = deepcopy(
-            constructor(
-                self.old_axis, self.grid_axes, self.grid_resolution, self.md5_hash, self.local_area, self._axis_reversed, self.mapper_options
+        if map_type == "IrregularGridMapper":
+            module = import_module(
+                "polytope_feature.datacube.transformations.datacube_mappers.mapper_types." + "irregular"
             )
-        )
-        return transformation
+            constructor = getattr(module, map_type)
+            transformation = deepcopy(
+                constructor(
+                    self.old_axis, self.grid_axes, self.grid_resolution, self.md5_hash, self.local_area, self._axis_reversed, self.mapper_options
+                )
+            )
+            return transformation._final_irregular_transformation
+        else:
+            module = import_module(
+                "polytope_feature.datacube.transformations.datacube_mappers.mapper_types." + self.grid_type
+            )
+            constructor = getattr(module, map_type)
+            transformation = deepcopy(
+                constructor(
+                    self.old_axis, self.grid_axes, self.grid_resolution, self.md5_hash, self.local_area, self._axis_reversed, self.mapper_options
+                )
+            )
+            return transformation
 
     def blocked_axes(self):
         return []
@@ -145,5 +157,6 @@ _type_to_datacube_mapper_lookup = {
     "reduced_ll": "ReducedLatLonMapper",
     "local_regular": "LocalRegularGridMapper",
     "lambert_conformal": "IrregularGridMapper",
+    "unstructured": "IrregularGridMapper",
     "healpix_nested": "NestedHealpixGridMapper",
 }

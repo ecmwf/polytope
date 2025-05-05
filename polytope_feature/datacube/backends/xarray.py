@@ -59,8 +59,10 @@ class XArrayDatacube(Datacube):
 
     def find_point_cloud(self):
         # TODO: somehow, find the point cloud of irregular grid if it exists
-        if self.has_point_cloud:
-            return self._final_transformation.grid_latlon_points()
+        # if self.has_point_cloud:
+        #     return self._final_transformation.grid_latlon_points()
+        if self.grid_transformation.is_irregular:
+            return self.grid_transformation._final_transformation.grid_latlon_points()
 
     def get(self, requests, context=None, leaf_path=None, axis_counter=0):
         if leaf_path is None:
