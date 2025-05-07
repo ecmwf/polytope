@@ -15,7 +15,6 @@ class FDBDatacube(Datacube):
         config=None,
         axis_options=None,
         compressed_axes_options=[],
-        point_cloud_options=None,
         alternative_axes=[],
         context=None,
     ):
@@ -30,7 +29,6 @@ class FDBDatacube(Datacube):
 
         self.unwanted_path = {}
         self.axis_options = axis_options
-        self.has_point_cloud = point_cloud_options  # NOTE: here, will be True/False
 
         partial_request = config
         # Find values in the level 3 FDB datacube
@@ -81,9 +79,9 @@ class FDBDatacube(Datacube):
         logging.info("Polytope created axes for: " + str(self._axes.keys()))
 
     def find_point_cloud(self):
-        # TODO: somehow, find the point cloud of irregular grid if it exists
-        if self.has_point_cloud:
-            return self.has_point_cloud
+        # find the point cloud of irregular grid if it exists
+        if self.grid_transformation.is_irregular:
+            return self.grid_transformation._final_transformation.grid_latlon_points()
 
     def check_branching_axes(self, request):
         polytopes = request.polytopes()
@@ -315,8 +313,7 @@ class FDBDatacube(Datacube):
         return (current_idx, fdb_range_n)
 
     def assign_fdb_output_to_nodes(self, output_values, fdb_requests_decoding_info):
-        for k in range(len(output_values)):
-            request_output_values = output_values[k]
+        for k, result in enumerate(output_values):
             (
                 original_indices,
                 fdb_node_ranges,
@@ -324,13 +321,12 @@ class FDBDatacube(Datacube):
             sorted_fdb_range_nodes = [fdb_node_ranges[i] for i in original_indices]
             for i in range(len(sorted_fdb_range_nodes)):
                 n = sorted_fdb_range_nodes[i][0]
-                if len(request_output_values[0]) == 0:
+                if len(result.values) == 0:
                     # If we are here, no data was found for this path in the fdb
                     none_array = [None] * len(n.values)
                     n.result.extend(none_array)
                 else:
-                    interm_request_output_values = request_output_values[0][i][0]
-                    n.result.extend(interm_request_output_values)
+                    n.result.extend(result.values[i])
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
         (new_fdb_node_ranges, new_current_start_idx) = self.remove_duplicates_in_request_ranges(

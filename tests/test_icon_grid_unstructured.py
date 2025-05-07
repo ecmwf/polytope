@@ -16,7 +16,6 @@ from polytope_feature.shapes import Box, Select
 # import iris
 
 
-
 class TestQuadTreeSlicer:
     def setup_method(self, method):
         self.engine_options = {
@@ -116,7 +115,13 @@ class TestQuadTreeSlicer:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "irregular", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                        {
+                            "name": "mapper",
+                            "type": "unstructured",
+                            "resolution": 1280,
+                            "axes": ["latitude", "longitude"],
+                            "points": self.points,
+                        }
                     ],
                 },
             ],
@@ -139,7 +144,7 @@ class TestQuadTreeSlicer:
             datacube=self.arr,
             options=self.options,
             engine_options=self.engine_options,
-            point_cloud_options=self.points,
+            # point_cloud_options=self.points,
         )
 
         time0 = time.time()
@@ -178,9 +183,9 @@ class TestQuadTreeSlicer:
             # assert eccodes_lon - tol <= lon
             # assert lon <= eccodes_lon + tol
 
-        worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
-        fig, ax = plt.subplots(figsize=(12, 6))
-        worldmap.plot(color="darkgrey", ax=ax)
+        # worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
+        # fig, ax = plt.subplots(figsize=(12, 6))
+        # worldmap.plot(color="darkgrey", ax=ax)
 
         plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
         plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")

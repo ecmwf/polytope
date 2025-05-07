@@ -14,9 +14,9 @@ from earthkit import data
 from helper_functions import find_nearest_latlon
 
 from polytope_feature.polytope import Polytope, Request
-from polytope_feature.shapes import Box, Point, Select, Polygon
+from polytope_feature.shapes import Box, Point, Polygon, Select
 
-# os.environ["FDB_HOME"] = "/Users/male/git/fdb-new-home"
+os.environ["FDB_HOME"] = "/Users/male/git/fdb-new-home"
 
 
 class TestQuadTreeSlicer:
@@ -62,10 +62,11 @@ class TestQuadTreeSlicer:
                     "transformations": [
                         {
                             "name": "mapper",
-                            "type": "irregular",
+                            "type": "unstructured",
                             "resolution": 0,
                             "axes": ["latitude", "longitude"],
                             "md5_hash": "f68071a8ac9bae4e965822afb963c04f",
+                            "points": self.points,
                         }
                     ],
                 },
@@ -103,7 +104,7 @@ class TestQuadTreeSlicer:
             datacube=self.fdbdatacube,
             options=self.options,
             engine_options=self.engine_options,
-            point_cloud_options=self.points,
+            # point_cloud_options=self.points,
         )
 
         time0 = time.time()
@@ -143,7 +144,7 @@ class TestQuadTreeSlicer:
             # assert lon <= eccodes_lon + tol
 
         # worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
-        fig, ax = plt.subplots(figsize=(12, 6))
+        # fig, ax = plt.subplots(figsize=(12, 6))
         # worldmap.plot(color="darkgrey", ax=ax)
 
         plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
