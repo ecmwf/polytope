@@ -14,7 +14,7 @@ from earthkit import data
 from helper_functions import find_nearest_latlon
 
 from polytope_feature.polytope import Polytope, Request
-from polytope_feature.shapes import Box, Point, Select, Polygon
+from polytope_feature.shapes import Box, Point, Polygon, Select
 
 os.environ["FDB_HOME"] = "/Users/male/git/fdb-new-home"
 
@@ -66,7 +66,7 @@ class TestQuadTreeSlicer:
                             "resolution": 0,
                             "axes": ["latitude", "longitude"],
                             "md5_hash": "f68071a8ac9bae4e965822afb963c04f",
-                            "points": self.points
+                            "points": self.points,
                         }
                     ],
                 },

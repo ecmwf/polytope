@@ -160,71 +160,6 @@ class HullSlicer(Engine):
 
         del node["unsliced_polytopes"]
 
-    # def find_compressed_axes(self, datacube, polytopes):
-    #     # First determine compressable axes from input polytopes
-    #     compressable_axes = []
-    #     for polytope in polytopes:
-    #         if polytope.is_orthogonal:
-    #             for ax in polytope.axes():
-    #                 compressable_axes.append(ax)
-    #     # Cross check this list with list of compressable axis from datacube
-    #     # (should not include any merged or coupled axes)
-    #     for compressed_axis in compressable_axes:
-    #         if compressed_axis in datacube.compressed_axes:
-    #             self.compressed_axes.append(compressed_axis)
-    #     # add the last axis of the grid always (longitude) as a compressed axis
-    #     k, last_value = _, datacube.axes[k] = datacube.axes.popitem()
-    #     self.compressed_axes.append(k)
-
-    # def remove_compressed_axis_in_union(self, polytopes):
-    #     for p in polytopes:
-    #         if p.is_in_union:
-    #             for axis in p.axes():
-    #                 if axis == self.compressed_axes[-1]:
-    #                     self.compressed_axes.remove(axis)
-
-    # def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
-    #     # Determine list of axes to compress
-    #     self.find_compressed_axes(datacube, polytopes)
-
-    #     # remove compressed axes which are in a union
-    #     self.remove_compressed_axis_in_union(polytopes)
-
-    #     # Convert the polytope points to float type to support triangulation and interpolation
-    #     for p in polytopes:
-    #         self._unique_continuous_points(p, datacube)
-
-    #     groups, input_axes = group(polytopes)
-    #     datacube.validate(input_axes)
-    #     request = TensorIndexTree()
-    #     combinations = tensor_product(groups)
-
-    #     # NOTE: could optimise here if we know combinations will always be for one request.
-    #     # Then we do not need to create a new index tree and merge it to request, but can just
-    #     # directly work on request and return it...
-
-    #     for c in combinations:
-    #         r = TensorIndexTree()
-    #         new_c = []
-    #         for combi in c:
-    #             if isinstance(combi, list):
-    #                 new_c.extend(combi)
-    #             else:
-    #                 new_c.append(combi)
-    #         r["unsliced_polytopes"] = set(new_c)
-    #         current_nodes = [r]
-    #         for ax in datacube.axes.values():
-    #             next_nodes = []
-    #             interm_next_nodes = []
-    #             for node in current_nodes:
-    #                 self._build_branch(ax, node, datacube, interm_next_nodes)
-    #                 next_nodes.extend(interm_next_nodes)
-    #                 interm_next_nodes = []
-    #             current_nodes = next_nodes
-
-    #         request.merge(r)
-    #     return request
-
 
 def _find_intersects(polytope, slice_axis_idx, value):
     intersects = []
@@ -243,9 +178,6 @@ def _find_intersects(polytope, slice_axis_idx, value):
             # Linearly interpolate all coordinates of two points (a,b) of the polytope
             interp_coeff = (value - b[slice_axis_idx]) / (a[slice_axis_idx] - b[slice_axis_idx])
             intersect = lerp(a, b, interp_coeff)
-            # print("HERE NOW LOOK")
-            # print(intersect)
-            # print(value)
             intersects.append(intersect)
     return intersects
 

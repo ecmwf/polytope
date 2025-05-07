@@ -71,8 +71,6 @@ class Datacube(ABC):
             for compressed_grid_axis in transformation.compressed_grid_axes:
                 self.compressed_grid_axes.append(compressed_grid_axis)
                 self.grid_md5_hash = transformation.md5_hash
-                # print("DID WE GO HERE AND SHOULD HAVE POINT CLOUD??")
-                # self.has_point_cloud = (transformation.is_irregular, transformation)
                 self.grid_transformation = transformation
         if len(final_axis_names) > 1:
             self.coupled_axes.append(final_axis_names)

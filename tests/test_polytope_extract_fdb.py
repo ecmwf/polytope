@@ -40,7 +40,7 @@ class TestPolytopeExtract:
                             "type": "unstructured",
                             "axes": ["latitude", "longitude"],
                             "md5_hash": "158db321ae8e773681eeb40e0a3d350f",
-                            "points": self.quadtree_points
+                            "points": self.quadtree_points,
                         }
                     ],
                 },

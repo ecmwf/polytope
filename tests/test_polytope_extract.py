@@ -29,8 +29,13 @@ class TestPolytopeExtract:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "unstructured",
-                            "resolution": 1280, "axes": ["latitude", "longitude"], "points": self.quadtree_points}
+                        {
+                            "name": "mapper",
+                            "type": "unstructured",
+                            "resolution": 1280,
+                            "axes": ["latitude", "longitude"],
+                            "points": self.quadtree_points,
+                        }
                     ],
                 },
             ],

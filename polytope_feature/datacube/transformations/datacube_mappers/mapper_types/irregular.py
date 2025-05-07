@@ -1,11 +1,13 @@
-from ..datacube_mappers import DatacubeMapper
 from copy import deepcopy
 from importlib import import_module
 
+from ..datacube_mappers import DatacubeMapper
+
 
 class IrregularGridMapper(DatacubeMapper):
-    # def __init__(self, base_axis, mapped_axes, resolution, local_area=[]):
-    def __init__(self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None, mapper_options=None):
+    def __init__(
+        self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None, mapper_options=None
+    ):
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
         self._resolution = resolution
@@ -17,20 +19,23 @@ class IrregularGridMapper(DatacubeMapper):
         self.is_irregular = True
         self.md5_hash = md5_hash
         self._final_irregular_transformation = self.generate_final_irregular_transformation()
-        # if md5_hash is not None:
-        #     self.md5_hash = md5_hash
-        # else:
-        #     self.md5_hash = self._final_irregular_transformation.md5_hash
 
     def generate_final_irregular_transformation(self):
         map_type = _type_to_datacube_irregular_mapper_lookup[self.grid_type]
         module = import_module(
-            "polytope_feature.datacube.transformations.datacube_mappers.mapper_types.irregular_mapper_types." + self.grid_type
+            "polytope_feature.datacube.transformations.datacube_mappers.mapper_types.irregular_mapper_types."
+            + self.grid_type
         )
         constructor = getattr(module, map_type)
         transformation = deepcopy(
             constructor(
-                self._base_axis, self._mapped_axes, self._resolution, self.md5_hash, self.local_area, self._axis_reversed, self.mapper_options
+                self._base_axis,
+                self._mapped_axes,
+                self._resolution,
+                self.md5_hash,
+                self.local_area,
+                self._axis_reversed,
+                self.mapper_options,
             )
         )
         return transformation
@@ -46,5 +51,5 @@ class IrregularGridMapper(DatacubeMapper):
 
 _type_to_datacube_irregular_mapper_lookup = {
     "lambert_conformal": "LambertConformalGridMapper",
-    "unstructured": "UnstructuredGridMapper"
+    "unstructured": "UnstructuredGridMapper",
 }

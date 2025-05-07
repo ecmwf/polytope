@@ -1,3 +1,4 @@
+import csv
 import math
 
 # import iris
@@ -14,8 +15,7 @@ from earthkit import data
 from helper_functions import find_nearest_latlon
 
 from polytope_feature.polytope import Polytope, Request
-from polytope_feature.shapes import Box, Point, Select, Polygon
-import csv
+from polytope_feature.shapes import Box, Point, Polygon, Select
 
 os.environ["FDB_HOME"] = "/Users/male/git/fdb-de330-home"
 
@@ -42,7 +42,7 @@ class TestQuadTreeSlicer:
         def open_vals(file_name):
             values = []
             with open(file_name, "r") as file:
-                reader = csv.reader(file, delimiter=' ')
+                reader = csv.reader(file, delimiter=" ")
                 for row in reader:
                     row = [val for val in row if val]  # Remove empty values (caused by extra spaces)
                     values.append(float(row[0]))
@@ -72,20 +72,20 @@ class TestQuadTreeSlicer:
                             "resolution": 0,
                             "axes": ["latitude", "longitude"],
                             "md5_hash": "3c528b5fd68ca692a8922cbded813465",  # TODO: change to right md5hash
-                            "is_spherical":  True,
-                            "radius":  6371229,
+                            "is_spherical": True,
+                            "radius": 6371229,
                             "nv": 0,
-                            "nx":  1489,
+                            "nx": 1489,
                             "ny": 1489,
                             "LoVInDegrees": 1.93697,
                             "Dx": 500,
                             "Dy": 500,
                             "latFirstInRadians": ((43.6409 + 2.9710306719721302e-05) / 180) * math.pi,
-                            "lonFirstInRadians":  ((357.32 - 0.00024761029651987343)/180) * math.pi,
-                            "LoVInRadians":  (1.93697 / 180) * math.pi,
-                            "Latin1InRadians": (47.082971/180) * math.pi,
-                            "Latin2InRadians": (47.082971/180) * math.pi,
-                            "LaDInRadians":  (47.082971/180) * math.pi,
+                            "lonFirstInRadians": ((357.32 - 0.00024761029651987343) / 180) * math.pi,
+                            "LoVInRadians": (1.93697 / 180) * math.pi,
+                            "Latin1InRadians": (47.082971 / 180) * math.pi,
+                            "Latin2InRadians": (47.082971 / 180) * math.pi,
+                            "LaDInRadians": (47.082971 / 180) * math.pi,
                         }
                     ],
                 },
@@ -151,8 +151,7 @@ class TestQuadTreeSlicer:
             # each variable in the netcdf file is a cube
             # cubes = iris.load('../../Downloads/votemper_ORAS5_1m_197902_grid_T_02.nc')
             # iris.save(cubes, '../../Downloads/votemper_ORAS5_1m_197902_grid_T_02.grib2')
-            nearest_points = find_nearest_latlon(
-                "tests/data/lambert_lam_one_message.grib", lat, lon)
+            nearest_points = find_nearest_latlon("tests/data/lambert_lam_one_message.grib", lat, lon)
             eccodes_lat = nearest_points[0][0]["lat"]
             eccodes_lon = nearest_points[0][0]["lon"]
             eccodes_lats.append(eccodes_lat)
@@ -175,7 +174,7 @@ class TestQuadTreeSlicer:
         for lon in self.longitudes:
             if lon > 180:
                 print("HERE")
-                new_lons.append(lon-360)
+                new_lons.append(lon - 360)
             else:
                 new_lons.append(lon)
         self.longitudes = new_lons

@@ -107,6 +107,8 @@ def _query_polygon(quadtree_points, quadtree: QuadTree, node_idx, polygon, resul
                 # print(polygon.points)
                 # print(len(children_idxs))
                 results.update(
-                    node for node in quadtree.get_point_idxs(node_idx) if is_contained_in(quadtree_points[node], polygon)
+                    node
+                    for node in quadtree.get_point_idxs(node_idx)
+                    if is_contained_in(quadtree_points[node], polygon)
                 )
         # return results

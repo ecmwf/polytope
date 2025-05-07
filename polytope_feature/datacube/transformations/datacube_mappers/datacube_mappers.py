@@ -39,7 +39,13 @@ class DatacubeMapper(DatacubeAxisTransformation):
             constructor = getattr(module, map_type)
             transformation = deepcopy(
                 constructor(
-                    self.old_axis, self.grid_axes, self.grid_resolution, self.md5_hash, self.local_area, self._axis_reversed, self.mapper_options
+                    self.old_axis,
+                    self.grid_axes,
+                    self.grid_resolution,
+                    self.md5_hash,
+                    self.local_area,
+                    self._axis_reversed,
+                    self.mapper_options,
                 )
             )
             return transformation._final_irregular_transformation
@@ -50,7 +56,13 @@ class DatacubeMapper(DatacubeAxisTransformation):
             constructor = getattr(module, map_type)
             transformation = deepcopy(
                 constructor(
-                    self.old_axis, self.grid_axes, self.grid_resolution, self.md5_hash, self.local_area, self._axis_reversed, self.mapper_options
+                    self.old_axis,
+                    self.grid_axes,
+                    self.grid_resolution,
+                    self.md5_hash,
+                    self.local_area,
+                    self._axis_reversed,
+                    self.mapper_options,
                 )
             )
             return transformation
@@ -121,14 +133,11 @@ class DatacubeMapper(DatacubeAxisTransformation):
             first_val = unwanted_path[self._mapped_axes()[0]]
             unmapped_idx = leaf_path.get("index", None)
             if unmapped_idx is not None and len(unmapped_idx) > 0:
-                # for val in value:
-                #     unmapped_idx.append(self.unmap(first_val, (val,)))
                 unmapped_idx = list(unmapped_idx)
             else:
                 unmapped_idx = []
                 for val in value:
                     unmapped_idx.append(self.unmap(first_val, (val,)))
-            # unmapped_idx = self.unmap(first_val, value, unmapped_idx)
             leaf_path.pop(self._mapped_axes()[0], None)
             key_value_path.pop(axis.name)
             key_value_path[self.old_axis] = unmapped_idx

@@ -23,7 +23,6 @@ class XArrayDatacube(Datacube):
         self.axis_counter = 0
         self._axes = None
         self.dataarray = dataarray
-        # self.has_point_cloud = point_cloud_options
 
         for name, values in dataarray.coords.variables.items():
             options = None
@@ -58,9 +57,7 @@ class XArrayDatacube(Datacube):
                 self._check_and_add_axes(options, name, val)
 
     def find_point_cloud(self):
-        # TODO: somehow, find the point cloud of irregular grid if it exists
-        # if self.has_point_cloud:
-        #     return self._final_transformation.grid_latlon_points()
+        # find the point cloud of irregular grid if it exists
         if self.grid_transformation.is_irregular:
             return self.grid_transformation._final_transformation.grid_latlon_points()
 

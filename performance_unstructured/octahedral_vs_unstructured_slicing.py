@@ -108,8 +108,13 @@ def set_up_slicing_unstructured(file_name):
             {
                 "axis_name": "values",
                 "transformations": [
-                    {"name": "mapper", "type": "irregular", "resolution": 0, "axes": [
-                        "latitude", "longitude"], "md5_hash": "158db321ae8e773681eeb40e0a3d350f"}
+                    {
+                        "name": "mapper",
+                        "type": "irregular",
+                        "resolution": 0,
+                        "axes": ["latitude", "longitude"],
+                        "md5_hash": "158db321ae8e773681eeb40e0a3d350f",
+                    }
                 ],
             },
             {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
@@ -206,7 +211,6 @@ def set_up_slicing_structured():
 
 
 def request(box_size):
-
     request = Request(
         Select("step", [0]),
         Select("levtype", ["sfc"]),

@@ -56,8 +56,13 @@ class TestQuadTreeSlicer:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "unstructured", "resolution": 1280,
-                            "axes": ["latitude", "longitude"], "points": points}
+                        {
+                            "name": "mapper",
+                            "type": "unstructured",
+                            "resolution": 1280,
+                            "axes": ["latitude", "longitude"],
+                            "points": points,
+                        }
                     ],
                 },
             ],

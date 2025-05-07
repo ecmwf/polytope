@@ -29,7 +29,6 @@ class FDBDatacube(Datacube):
 
         self.unwanted_path = {}
         self.axis_options = axis_options
-        # self.has_point_cloud = point_cloud_options  # NOTE: here, will be True/False
 
         partial_request = config
         # Find values in the level 3 FDB datacube
@@ -80,9 +79,7 @@ class FDBDatacube(Datacube):
         logging.info("Polytope created axes for: " + str(self._axes.keys()))
 
     def find_point_cloud(self):
-        # TODO: somehow, find the point cloud of irregular grid if it exists
-        # if self.has_point_cloud:
-        #     return self._final_transformation.grid_latlon_points()
+        # find the point cloud of irregular grid if it exists
         if self.grid_transformation.is_irregular:
             return self.grid_transformation._final_transformation.grid_latlon_points()
 
@@ -317,7 +314,6 @@ class FDBDatacube(Datacube):
 
     def assign_fdb_output_to_nodes(self, output_values, fdb_requests_decoding_info):
         for k, result in enumerate(output_values):
-            # request_output_values = output_values[k]
             (
                 original_indices,
                 fdb_node_ranges,
@@ -330,8 +326,6 @@ class FDBDatacube(Datacube):
                     none_array = [None] * len(n.values)
                     n.result.extend(none_array)
                 else:
-                    # interm_request_output_values = request_output_values[0][i][0]
-                    # n.result.extend(interm_request_output_values)
                     n.result.extend(result.values[i])
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
