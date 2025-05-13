@@ -2,25 +2,18 @@
 
 
 import math
+import os
 import time
 
 import pandas as pd
 import pygribjump as gj
-import xarray as xr
-
-from polytope_feature.polytope import Polytope, Request
-from polytope_feature.shapes import Box, Select, Polygon, ConvexPolytope
-
-import os
-
-from earthkit import data
-
-
-import os
-
 import requests
+import xarray as xr
+from earthkit import data
 from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
 
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, ConvexPolytope, Polygon, Select
 
 # import logging
 # logger = logging.getLogger('')

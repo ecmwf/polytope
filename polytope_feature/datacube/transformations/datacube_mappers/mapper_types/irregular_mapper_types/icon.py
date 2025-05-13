@@ -1,7 +1,8 @@
-from ..irregular import IrregularGridMapper
+import math
+
 import xarray as xr
 
-import math
+from ..irregular import IrregularGridMapper
 
 
 class ICONGridMapper(IrregularGridMapper):

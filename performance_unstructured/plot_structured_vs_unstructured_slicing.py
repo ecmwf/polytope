@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 
-
 box_size = [10, 20, 40, 80]
 
 quadtree_build_time = [10.954054832458496, 10.95795202255249, 10.915708065032959, 11.012521028518677]
