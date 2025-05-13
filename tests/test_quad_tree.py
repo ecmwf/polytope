@@ -23,7 +23,10 @@ class TestQuadTreeSlicer:
         #         {
         #             "axis_name": "values",
         #             "transformations": [
-        #                 {"name": "mapper", "type": "unstructured", "resolution": 1280, "axes": ["latitude", "longitude"]}
+        #                 {"name": "mapper",
+        #                   "type": "unstructured",
+        #                   "resolution": 1280,
+        #                   "axes": ["latitude", "longitude"]}
         #             ],
         #         },
         #     ],
@@ -46,8 +49,8 @@ class TestQuadTreeSlicer:
 
     @pytest.mark.fdb
     def test_quad_tree_slicer(self):
-        points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
-        slicer = QuadTreeSlicer(points)
+        # points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
+        # slicer = QuadTreeSlicer(points)
         # slicer.quad_tree.pprint()
         pass
 

@@ -1,23 +1,16 @@
 import cProfile
-import datetime
 import math
 
 # import iris
-import os
 import time
 
-import geopandas as gpd
-import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import pygribjump as gj
-import pytest
 import xarray as xr
 from earthkit import data
-from helper_functions import find_nearest_latlon
 
 from polytope_feature.polytope import Polytope, Request
-from polytope_feature.shapes import Box, Point, Polygon, Select
+from polytope_feature.shapes import Box, Polygon, Select
 
 # os.environ["FDB_HOME"] = "/Users/male/git/fdb-new-home"
 

@@ -58,7 +58,8 @@ def is_contained_in(point, polygon):
 #                 # print(polygon.points)
 #                 # print(len(children_idxs))
 #                 results.update(
-#                     node for node in quadtree.get_point_idxs(node_idx) if is_contained_in(quadtree_points[node], polygon)
+#                     node for node in quadtree.get_point_idxs(node_idx)
+#                     if is_contained_in(quadtree_points[node], polygon)
 #                 )
 #         return results
 

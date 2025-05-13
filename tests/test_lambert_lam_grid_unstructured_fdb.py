@@ -5,17 +5,14 @@ import math
 import os
 import time
 
-import geopandas as gpd
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
-import xarray as xr
 from earthkit import data
 from helper_functions import find_nearest_latlon
 
 from polytope_feature.polytope import Polytope, Request
-from polytope_feature.shapes import Box, Point, Polygon, Select
+from polytope_feature.shapes import Box, Select
 
 os.environ["FDB_HOME"] = "/Users/male/git/fdb-de330-home"
 
@@ -95,7 +92,6 @@ class TestQuadTreeSlicer:
 
     @pytest.mark.fdb
     def test_quad_tree_slicer_extract(self):
-        import datetime
 
         import pygribjump as gj
 
@@ -183,14 +179,14 @@ class TestQuadTreeSlicer:
         self.lats = np.array(self.latitudes)
 
         # Create boolean masks for each condition
-        lon_mask = (self.lons >= 5.5) & (self.lons <= 6.5)
-        lat_mask = (self.lats >= 44.0) & (self.lats <= 44.5)
+        # lon_mask = (self.lons >= 5.5) & (self.lons <= 6.5)
+        # lat_mask = (self.lats >= 44.0) & (self.lats <= 44.5)
 
         # Combine both masks
-        combined_mask = lon_mask & lat_mask
+        # combined_mask = lon_mask & lat_mask
 
         # Get indices where both conditions hold
-        indices = np.where(combined_mask)[0]
+        # indices = np.where(combined_mask)[0]
 
         # # plt.scatter([lon for lon in self.longitudes if 5.5 <= lon <= 6.5], [
         # #             lat for lat in self.latitudes if 44 <= lat <= 44.5], s=14, color="blue")

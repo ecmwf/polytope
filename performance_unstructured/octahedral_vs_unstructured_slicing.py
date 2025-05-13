@@ -1,19 +1,16 @@
 # Compare octahedral grid treated as an unstructured vs as an iso-latitude grid
 
 
-import math
 import os
 import time
 
 import pandas as pd
 import pygribjump as gj
 import requests
-import xarray as xr
 from earthkit import data
-from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
 
 from polytope_feature.polytope import Polytope, Request
-from polytope_feature.shapes import Box, ConvexPolytope, Polygon, Select
+from polytope_feature.shapes import Box, Select
 
 # import logging
 # logger = logging.getLogger('')

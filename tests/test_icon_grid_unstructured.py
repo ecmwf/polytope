@@ -1,14 +1,11 @@
 import math
 import time
 
-import geopandas as gpd
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import pytest
 import xarray as xr
 from earthkit import data
-from helper_functions import find_nearest_latlon
 
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
@@ -160,7 +157,7 @@ class TestQuadTreeSlicer:
         lons = []
         eccodes_lats = []
         eccodes_lons = []
-        tol = 1e-8
+        # tol = 1e-8
         leaves = result.leaves
         for i in range(len(leaves)):
             cubepath = leaves[i].flatten()

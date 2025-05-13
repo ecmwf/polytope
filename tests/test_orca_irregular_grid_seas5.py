@@ -1,13 +1,9 @@
 import time
 
-import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import pytest
 import xarray as xr
-from earthkit import data
-from helper_functions import find_nearest_latlon
 
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
@@ -52,7 +48,7 @@ class TestQuadTreeSlicer:
         # # Drop the x and y dimensions
         # self.arr = self.arr.drop_dims(["x", "y"])
         nav_lat_flat = self.arr.nav_lat.values.ravel()
-        nav_lon_flat = self.arr.nav_lon.values.ravel()
+        # nav_lon_flat = self.arr.nav_lon.values.ravel()
         deptht_flat = self.arr.deptht.values.ravel()
         interm_data = self.arr.data[0]
         new_interm_data = []
@@ -66,8 +62,8 @@ class TestQuadTreeSlicer:
 
         # Add the flattened `nav_lat` and `nav_lon` as variables
         # self.arr = self.arr.assign_coords(grid_index=("values", grid_index))
-        nav_lat_flat_da = xr.DataArray(nav_lat_flat, dims=["grid_index"], coords={"grid_index": grid_index})
-        nav_lon_flat_da = xr.DataArray(nav_lon_flat, dims=["grid_index"], coords={"grid_index": grid_index})
+        # nav_lat_flat_da = xr.DataArray(nav_lat_flat, dims=["grid_index"], coords={"grid_index": grid_index})
+        # nav_lon_flat_da = xr.DataArray(nav_lon_flat, dims=["grid_index"], coords={"grid_index": grid_index})
 
         # Drop x and y from the original DataArray
         # ds_cleaned = self.arr.drop(["x", "y"])
@@ -137,7 +133,7 @@ class TestQuadTreeSlicer:
         lons = []
         eccodes_lats = []
         eccodes_lons = []
-        tol = 1e-8
+        # tol = 1e-8
         leaves = result.leaves
         for i in range(len(leaves)):
             cubepath = leaves[i].flatten()

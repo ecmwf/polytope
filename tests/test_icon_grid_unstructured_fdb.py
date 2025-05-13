@@ -1,20 +1,14 @@
-import math
-
 # import iris
 import os
 import time
 
-import geopandas as gpd
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import pytest
-import xarray as xr
 from earthkit import data
-from helper_functions import find_nearest_latlon
 
 from polytope_feature.polytope import Polytope, Request
-from polytope_feature.shapes import Box, Point, Polygon, Select
+from polytope_feature.shapes import Box, Select
 
 os.environ["FDB_HOME"] = "/Users/male/git/fdb-new-home"
 
@@ -30,7 +24,7 @@ class TestQuadTreeSlicer:
             "longitude": "quadtree",
         }
         print("SETTING UP THE XARRAY")
-        time_now = time.time()
+        # time_now = time.time()
 
         # ds = data.from_source(
         #     "file", "../../Downloads/icon-d2_germany_icosahedral_single-level_2025011000_024_2d_t_2m.grib2")
@@ -103,12 +97,11 @@ class TestQuadTreeSlicer:
 
     @pytest.mark.fdb
     def test_quad_tree_slicer_extract(self):
-        import datetime
 
         import pygribjump as gj
 
-        tri_side = 80
-        triangle = Polygon(["latitude", "longitude"], [[0, tri_side], [0, 0], [tri_side, 0]])
+        # tri_side = 80
+        # triangle = Polygon(["latitude", "longitude"], [[0, tri_side], [0, 0], [tri_side, 0]])
 
         request = Request(
             # Select("deptht", [0.5058], method="nearest"),
@@ -146,7 +139,7 @@ class TestQuadTreeSlicer:
         lons = []
         eccodes_lats = []
         eccodes_lons = []
-        tol = 1e-8
+        # tol = 1e-8
         leaves = result.leaves
         for i in range(len(leaves)):
             cubepath = leaves[i].flatten()
