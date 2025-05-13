@@ -48,11 +48,8 @@ class Datacube(ABC):
     def _create_axes(self, name, values, transformation_type_key, transformation_options):
         # first check what the final axes are for this axis name given transformations
         transformation_options = transformation_type_key
-        final_axis_names = DatacubeAxisTransformation.get_final_axes(
-            name, transformation_type_key.name, transformation_options
-        )
-        transformation = DatacubeAxisTransformation.create_transform(
-            name, transformation_type_key.name, transformation_options
+        (final_axis_names, transformation) = DatacubeAxisTransformation.get_final_axes(
+            name, transformation_type_key.name, transformation_options, self
         )
 
         # do not compress merged axes
@@ -144,7 +141,10 @@ class Datacube(ABC):
         """
         Get the type mapper for a subaxis of the datacube given by label
         """
-        return self._axes[axis]
+        ax = self._axes.get(axis, None)
+        if ax is None:
+            raise KeyError("The datacube does not contain a {} axis", axis)
+        return ax
 
     def remap_path(self, path: DatacubePath):
         for key in path:

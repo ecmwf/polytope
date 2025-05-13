@@ -19,6 +19,9 @@ Polytope is a library for extracting complex data from datacubes. It provides an
   <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
   <a href="https://github.com/ecmwf/polytope/releases"><img src="https://img.shields.io/github/v/release/ecmwf/polytope?color=blue&label=Release&style=flat-square"></a>
   <a href='https://polytope.readthedocs.io/en/latest/?badge=latest'><img src='https://readthedocs.org/projects/polytope/badge/?version=latest' alt='Documentation Status' /></a>
+  <a href="https://github.com/ecmwf/codex/raw/refs/heads/main/Project%20Maturity">
+    <img src="https://github.com/ecmwf/codex/raw/refs/heads/main/Project%20Maturity/incubating_badge.svg" alt="Project Maturity">
+  </a>
 </p>
 <p align="center">
   <a href="#concept">Concept</a> •
@@ -36,8 +39,11 @@ Polytope is designed to extend different datacube backends:
 
 Polytope supports datacubes which have branching, non-uniform indexing, and even cyclic axes. If the datacube backend supports byte-addressability and efficient random access (either in-memory or direct from storage), **Polytope** can be used to dramatically decrease overall I/O load.
 
-> [!WARNING]
-> This project is BETA and will be experimental for the foreseeable future. Interfaces and functionality are likely to change, and the project itself may be scrapped. DO NOT use this software in any project/software that is operational.
+> \[!IMPORTANT\]
+> This software is **Incubating** and subject to ECMWF's guidelines on [Software Maturity](https://github.com/ecmwf/codex/raw/refs/heads/main/Project%20Maturity).
+
+<!-- > [!WARNING]
+> This project is BETA and will be experimental for the foreseeable future. Interfaces and functionality are likely to change, and the project itself may be scrapped. DO NOT use this software in any project/software that is operational. -->
 
 ## Concept 
 
@@ -94,7 +100,7 @@ Here is a step-by-step example of how to use this software.
     ```Python
         options = {"longitude": {"cyclic": [0, 360.0]}}
 
-        from polytope.polytope import Polytope
+        from polytope_feature.polytope import Polytope
 
         p = Polytope(datacube=array, axis_options=options)
     ```
@@ -103,7 +109,7 @@ Here is a step-by-step example of how to use this software.
   In this example, we want to extract a simple 2D box in latitude and longitude at step 0. We thus create the two relevant shapes we need to build this 3-dimensional object,
     ```Python
         import numpy as np
-        from polytope.shapes import Box, Select
+        from polytope_feature.shapes import Box, Select
 
         box = Box(["latitude", "longitude"], [0, 0], [1, 1])
         step_point = Select("step", [np.timedelta64(0, "s")])
@@ -111,7 +117,7 @@ Here is a step-by-step example of how to use this software.
 
     which we then incorporate into a Polytope request.
     ```Python
-        from polytope.polytope import Request
+        from polytope_feature.polytope import Request
 
         request = Request(box, step_point)
     ```

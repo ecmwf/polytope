@@ -17,7 +17,7 @@ on:
 jobs:
   qa:
     name: qa
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -42,66 +42,29 @@ jobs:
 
       - name: Check flake8
         run: flake8 .
-  setup:
-    name: setup
-    runs-on: ubuntu-20.04
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-      inputs: ${{ steps.prepare-inputs.outputs.inputs }}
-      inputs-for-ubuntu: ${{ steps.prepare-inputs.outputs.inputs-for-ubuntu }}
-    steps:
-      - name: Set Matrix
-        id: set-matrix
-        shell: bash -eux {0}
-        run: |
-          MATRIX=$(cat << 'EOS'
-          name:
-          - gnu-11@ubuntu-22.04
-          - clang-14@ubuntu-22.04
-          include:
-          - name: gnu-11@ubuntu-22.04
-            os: ubuntu-22.04
-            compiler: gnu-11
-            compiler_cc: gcc-11
-            compiler_cxx: g++-11
-            compiler_fc: gfortran-11
-          - name: clang-14@ubuntu-22.04
-            os: ubuntu-22.04
-            compiler: clang-14
-            compiler_cc: clang-14
-            compiler_cxx: clang++-14
-            compiler_fc: gfortran-11
-          # Xcode compiler requires empty environment variables, so we pass null (~) here
-          EOS
-          )
-          SKIP_MATRIX_JOBS=$(cat << 'EOS'
-          ${{ inputs.skip_matrix_jobs }}
-          EOS
-          )
-          SELECT_NAME_COND="1 != 1"
-          SELECT_INCLUDE_COND="1 != 1"
-          for skip_job in $SKIP_MATRIX_JOBS; do SELECT_NAME_COND="$SELECT_NAME_COND or . == \"$skip_job\""; SELECT_INCLUDE_COND="$SELECT_INCLUDE_COND or .name == \"$skip_job\""; done
-          echo matrix=$(echo "$MATRIX" | yq eval "del(.name[] | select($SELECT_NAME_COND)) | del(.include[] | select($SELECT_INCLUDE_COND))" --output-format json --indent 0 -) >> $GITHUB_OUTPUT
-      - name: Prepare build-package Inputs
-        id: prepare-inputs
-        shell: bash -eux {0}
-        run: |
-          echo inputs=$(echo "${{ inputs.build_package_inputs || '{}' }}" | yq eval '.' --output-format json --indent 0 -) >> $GITHUB_OUTPUT
-          echo inputs-for-ubuntu=$(echo "${{ inputs.build_package_inputs || '{}' }}" | yq eval '. * {"os":"ubuntu-20.04","compiler":"gnu-10","compiler_cc":"gcc-10","compiler_cxx":"g++-10","compiler_fc":"gfortran-10"}' --output-format json --indent 0 -) >> $GITHUB_OUTPUT
   test:
     name: test
     needs:
       - qa
-      - setup
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+      matrix:
+        name:
+          - ubuntu-22.04
+          - macos-latest
+        include:
+          - name: ubuntu-22.04
+            os: ubuntu-22.04
+            compiler_fc: gfortran
+          - name: macos-latest
+            os: macos-latest
+            compiler_fc: gfortran-12
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - name: Install eccodes and Dependencies
         id: install-dependencies
-        uses: ecmwf-actions/build-package@v2
+        uses: ecmwf/build-package@v2
         with:
           self_build: false
           dependencies: |
@@ -117,6 +80,7 @@ jobs:
       - name: Install Python Dependencies
         run: |
           python -m pip install --upgrade pip
+          python -m pip install --upgrade setuptools
           python -m pip install pytest pytest-cov
           python -m pip install -r requirements.txt 
           python -m pip install -r ./tests/requirements_test.txt
@@ -142,7 +106,7 @@ jobs:
     needs: test
     if: ${{ github.event_name == 'release' }}
     name: Upload to Pypi
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
@@ -152,11 +116,11 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install setuptools wheel twine
+          pip install build twine
       - name: Build and publish
         env:
           TWINE_USERNAME: "__token__"
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: |
-          python setup.py sdist
+          python -m build
           twine upload dist/*

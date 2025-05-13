@@ -1,4 +1,5 @@
 from typing import List
+import logging
 
 from .datacube.backends.datacube import Datacube
 from .datacube.datacube_axis import UnsliceableDatacubeAxis
@@ -6,7 +7,7 @@ from .datacube.tensor_index_tree import TensorIndexTree
 from .engine.hullslicer import HullSlicer
 from .engine.quadtree_slicer import QuadTreeSlicer
 from .options import PolytopeOptions
-from .shapes import ConvexPolytope
+from .shapes import ConvexPolytope, Product
 from .utility.combinatorics import group, tensor_product
 from .utility.exceptions import AxisOverdefinedError
 from .utility.list_tools import unique
@@ -109,7 +110,11 @@ class Polytope:
 
         # Convert the polytope points to float type to support triangulation and interpolation
         for p in polytopes:
-            self._unique_continuous_points(p, datacube)
+            if isinstance(p, Product):
+                for poly in p.polytope():
+                    self._unique_continuous_points(poly, datacube)
+            else:
+                self._unique_continuous_points(p, datacube)
 
         groups, input_axes = group(polytopes)
         datacube.validate(input_axes)
@@ -128,7 +133,16 @@ class Polytope:
                     new_c.extend(combi)
                 else:
                     new_c.append(combi)
-            r["unsliced_polytopes"] = set(new_c)
+            # NOTE TODO: here some of the polys in new_c can be a Product shape instead of a ConvexPolytope
+            # -> need to go through the polytopes in new_c and replace the Products with their sub-ConvexPolytopes
+            final_polys = []
+            for poly in new_c:
+                if isinstance(poly, Product):
+                    final_polys.extend(poly.polytope())
+                else:
+                    final_polys.append(poly)
+            # r["unsliced_polytopes"] = set(new_c)
+            r["unsliced_polytopes"] = set(final_polys)
             current_nodes = [r]
             for ax in datacube.axes.values():
                 engine = self.find_engine(ax)
@@ -155,8 +169,20 @@ class Polytope:
 
     def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
+        logging.info("Starting request for %s ", self.context)
+        self.datacube.check_branching_axes(request)
+        for polytope in request.polytopes():
+            method = polytope.method
+            if method == "nearest":
+                if self.datacube.nearest_search.get(tuple(polytope.axes()), None) is None:
+                    self.datacube.nearest_search[tuple(polytope.axes())] = polytope.values
+                else:
+                    self.datacube.nearest_search[tuple(polytope.axes())].append(polytope.values[0])
+        # request_tree = self.engine.extract(self.datacube, request.polytopes())
         request_tree = self.slice(self.datacube, request.polytopes())
-        self.datacube.get(request_tree)
+        logging.info("Created request tree for %s ", self.context)
+        self.datacube.get(request_tree, self.context)
+        logging.info("Retrieved data for %s ", self.context)
         return request_tree
 
     def find_compressed_axes(self, datacube, polytopes):

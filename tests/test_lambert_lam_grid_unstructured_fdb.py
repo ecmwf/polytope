@@ -192,10 +192,10 @@ class TestQuadTreeSlicer:
         # Get indices where both conditions hold
         indices = np.where(combined_mask)[0]
 
-        # plt.scatter([lon for lon in self.longitudes if 5.5 <= lon <= 6.5], [
-        #             lat for lat in self.latitudes if 44 <= lat <= 44.5], s=14, color="blue")
-        # plt.scatter(self.lons[combined_mask], self.lats[combined_mask], s=14, color="blue")
-        plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
-        plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
-        plt.colorbar(label="Temperature")
-        plt.show()
+        # # plt.scatter([lon for lon in self.longitudes if 5.5 <= lon <= 6.5], [
+        # #             lat for lat in self.latitudes if 44 <= lat <= 44.5], s=14, color="blue")
+        # # plt.scatter(self.lons[combined_mask], self.lats[combined_mask], s=14, color="blue")
+        # plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
+        # plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
+        # plt.colorbar(label="Temperature")
+        # plt.show()

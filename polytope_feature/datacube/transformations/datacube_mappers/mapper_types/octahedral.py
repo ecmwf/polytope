@@ -7880,16 +7880,19 @@ class OctahedralGridMapper(DatacubeMapper):
     def find_second_axis_idx(self, first_val, second_val):
         (second_axis_spacing, first_idx) = self.second_axis_spacing(first_val)
         tol = 1e-8
-        if second_val[0] / second_axis_spacing > int(second_val[0] / second_axis_spacing) + 1 - tol:
-            second_idx = int(second_val[0] / second_axis_spacing) + 1
+        if second_val / second_axis_spacing > int(second_val / second_axis_spacing) + 1 - tol:
+            second_idx = int(second_val / second_axis_spacing) + 1
         else:
-            second_idx = int(second_val[0] / second_axis_spacing)
+            second_idx = int(second_val / second_axis_spacing)
         return (first_idx, second_idx)
 
-    def unmap(self, first_val, second_val, unmapped_idx=None):
-        (first_idx, second_idx) = self.find_second_axis_idx(first_val, second_val)
-        octahedral_index = self.axes_idx_to_octahedral_idx(first_idx, second_idx)
-        return octahedral_index
+    def unmap(self, first_val, second_vals, unmapped_idx=None):
+        return_idxs = []
+        for second_val in second_vals:
+            (first_idx, second_idx) = self.find_second_axis_idx(first_val, second_val)
+            octahedral_index = self.axes_idx_to_octahedral_idx(first_idx, second_idx)
+            return_idxs.append(octahedral_index)
+        return return_idxs
 
 
 # md5 grid hash in form {resolution : hash}

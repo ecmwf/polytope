@@ -4,7 +4,11 @@ from itertools import chain
 
 import scipy.spatial
 
+# from ..datacube.backends.datacube import Datacube
+# from ..datacube.datacube_axis import UnsliceableDatacubeAxis
+# from ..datacube.tensor_index_tree import TensorIndexTree
 from ..shapes import ConvexPolytope
+# from ..utility.combinatorics import group, tensor_product
 from ..utility.exceptions import UnsliceableShapeError
 from ..utility.geometry import lerp
 from ..utility.list_tools import argmax, argmin
@@ -54,8 +58,6 @@ class HullSlicer(Engine):
         upper = ax.from_float(upper + tol)
         flattened = node.flatten()
         method = polytope.method
-        if method == "nearest":
-            datacube.nearest_search[ax.name] = polytope.points
 
         # NOTE: caching
         # Create a coupled_axes list inside of datacube and add to it during axis formation, then here
@@ -159,6 +161,84 @@ class HullSlicer(Engine):
                 )
 
         del node["unsliced_polytopes"]
+
+    def find_compressed_axes(self, datacube, polytopes):
+        # First determine compressable axes from input polytopes
+        compressable_axes = []
+        for polytope in polytopes:
+            if polytope.is_orthogonal:
+                for ax in polytope.axes():
+                    compressable_axes.append(ax)
+        # Cross check this list with list of compressable axis from datacube
+        # (should not include any merged or coupled axes)
+        for compressed_axis in compressable_axes:
+            if compressed_axis in datacube.compressed_axes:
+                self.compressed_axes.append(compressed_axis)
+        # add the last axis of the grid always (longitude) as a compressed axis
+        k, last_value = _, datacube.axes[k] = datacube.axes.popitem()
+        self.compressed_axes.append(k)
+
+    def remove_compressed_axis_in_union(self, polytopes):
+        for p in polytopes:
+            if p.is_in_union:
+                for axis in p.axes():
+                    if axis == self.compressed_axes[-1]:
+                        self.compressed_axes.remove(axis)
+
+    # def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
+    #     # Determine list of axes to compress
+    #     self.find_compressed_axes(datacube, polytopes)
+
+    #     # remove compressed axes which are in a union
+    #     self.remove_compressed_axis_in_union(polytopes)
+
+    #     # Convert the polytope points to float type to support triangulation and interpolation
+    #     for p in polytopes:
+    #         if isinstance(p, Product):
+    #             for poly in p.polytope():
+    #                 self._unique_continuous_points(poly, datacube)
+    #         else:
+    #             self._unique_continuous_points(p, datacube)
+
+    #     groups, input_axes = group(polytopes)
+    #     datacube.validate(input_axes)
+    #     request = TensorIndexTree()
+    #     combinations = tensor_product(groups)
+
+    #     # NOTE: could optimise here if we know combinations will always be for one request.
+    #     # Then we do not need to create a new index tree and merge it to request, but can just
+    #     # directly work on request and return it...
+
+    #     for c in combinations:
+    #         r = TensorIndexTree()
+    #         new_c = []
+    #         for combi in c:
+    #             if isinstance(combi, list):
+    #                 new_c.extend(combi)
+    #             else:
+    #                 new_c.append(combi)
+    #         # NOTE TODO: here some of the polys in new_c can be a Product shape instead of a ConvexPolytope
+    #         # -> need to go through the polytopes in new_c and replace the Products with their sub-ConvexPolytopes
+    #         final_polys = []
+    #         for poly in new_c:
+    #             if isinstance(poly, Product):
+    #                 final_polys.extend(poly.polytope())
+    #             else:
+    #                 final_polys.append(poly)
+    #         # r["unsliced_polytopes"] = set(new_c)
+    #         r["unsliced_polytopes"] = set(final_polys)
+    #         current_nodes = [r]
+    #         for ax in datacube.axes.values():
+    #             next_nodes = []
+    #             interm_next_nodes = []
+    #             for node in current_nodes:
+    #                 self._build_branch(ax, node, datacube, interm_next_nodes)
+    #                 next_nodes.extend(interm_next_nodes)
+    #                 interm_next_nodes = []
+    #             current_nodes = next_nodes
+
+    #         request.merge(r)
+    #     return request
 
 
 def _find_intersects(polytope, slice_axis_idx, value):

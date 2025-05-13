@@ -67,7 +67,7 @@ class TestHealpixGrid:
                 eccodes_result = nearest_points[0][0]["value"]
 
                 mapper = HealpixGridMapper("base", ["base1", "base2"], 32)
-                assert nearest_points[0][0]["index"] == mapper.unmap((lat,), (lon,))
+                assert nearest_points[0][0]["index"] == mapper.unmap((lat,), (lon,))[0]
                 assert eccodes_lat - tol <= lat
                 assert lat <= eccodes_lat + tol
                 assert eccodes_lon - tol <= lon
