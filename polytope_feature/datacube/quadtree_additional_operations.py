@@ -3,6 +3,8 @@ from quadtree import QuadTree
 from ..engine.hullslicer import slice
 from ..engine.slicing_tools import slice_in_two
 
+# TODO: make this as methods of the python quadtree?
+
 
 def is_contained_in(point, polygon):
     # implement method to check if the node point is inside the polygon

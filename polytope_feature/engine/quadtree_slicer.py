@@ -1,11 +1,17 @@
 import time
 from copy import copy
 
-from quadtree import QuadTree
-
 from ..datacube.datacube_axis import IntDatacubeAxis
 from ..datacube.tensor_index_tree import TensorIndexTree
 from .engine import Engine
+
+try:
+    from quadtree import QuadTree
+except ImportError:
+    print(
+        "Failed to load Rust extension, falling back to Python implementation."
+    )
+    from ..datacube.quad_tree import QuadTree
 
 
 class QuadTreeSlicer(Engine):
