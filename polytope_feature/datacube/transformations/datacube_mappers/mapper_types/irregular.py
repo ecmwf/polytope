@@ -52,4 +52,5 @@ class IrregularGridMapper(DatacubeMapper):
 _type_to_datacube_irregular_mapper_lookup = {
     "lambert_conformal": "LambertConformalGridMapper",
     "unstructured": "UnstructuredGridMapper",
+    "icon": "ICONGridMapper",
 }

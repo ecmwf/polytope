@@ -168,4 +168,5 @@ _type_to_datacube_mapper_lookup = {
     "lambert_conformal": "IrregularGridMapper",
     "unstructured": "IrregularGridMapper",
     "healpix_nested": "NestedHealpixGridMapper",
+    "icon": "IrregularGridMapper",
 }
