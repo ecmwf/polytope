@@ -1,6 +1,5 @@
 *.py[cod]
 *.swp
-**/__pycache__
 .vscode
 polytope.egg-info
 .pytest_cache
@@ -38,3 +37,13 @@ venv_python3_11
 venv_gj_iterator
 *.gz
 *.profile
+
+__pycache__/
+.ipynb_checkpoints/
+*.egg-info
+_version.py
+target/
+dist/
+build/
+Cargo.lock
+.DS_Store
