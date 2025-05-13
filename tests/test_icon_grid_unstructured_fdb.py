@@ -14,9 +14,9 @@ from earthkit import data
 from helper_functions import find_nearest_latlon
 
 from polytope_feature.polytope import Polytope, Request
-from polytope_feature.shapes import Box, Point, Select, Polygon
+from polytope_feature.shapes import Box, Point, Polygon, Select
 
-# os.environ["FDB_HOME"] = "/Users/male/git/fdb-new-home"
+os.environ["FDB_HOME"] = "/Users/male/git/fdb-new-home"
 
 
 class TestQuadTreeSlicer:
@@ -39,17 +39,43 @@ class TestQuadTreeSlicer:
 
         ds = data.from_source("file", "../../Downloads/icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2")
 
-        grid = xr.open_dataset("../../Downloads/icon_grid_0026_R03B07_G.nc", engine="netcdf4")
-
-        print(time.time() - time_now)
         self.arr = ds.to_xarray(engine="cfgrib").t2m
 
-        self.longitudes = grid.clon.values * 180 / math.pi
-        self.latitudes = grid.clat.values * 180 / math.pi
+        # grid = xr.open_dataset("../../Downloads/icon_grid_0026_R03B07_G.nc", engine="netcdf4")
 
-        self.points = list(zip(self.latitudes, self.longitudes))
-        print((min(self.latitudes), max(self.latitudes), min(self.longitudes), max(self.longitudes)))
-        print("FINISH SETTING UP POINTS")
+        # print(time.time() - time_now)
+
+        # self.longitudes = grid.clon.values * 180 / math.pi
+        # self.latitudes = grid.clat.values * 180 / math.pi
+
+        # self.points = list(zip(self.latitudes, self.longitudes))
+        # print((min(self.latitudes), max(self.latitudes), min(self.longitudes), max(self.longitudes)))
+        # print("FINISH SETTING UP POINTS")
+        uuid = "../../Downloads/icon_grid_0026_R03B07_G.nc"
+        # self.options = {
+        #     "axis_config": [
+        #         {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
+        #         {
+        #             "axis_name": "date",
+        #             "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
+        #         },
+        #         {
+        #             "axis_name": "values",
+        #             "transformations": [
+        #                 {
+        #                     "name": "mapper",
+        #                     "type": "unstructured",
+        #                     "resolution": 0,
+        #                     "axes": ["latitude", "longitude"],
+        #                     "md5_hash": "f68071a8ac9bae4e965822afb963c04f",
+        #                     "points": self.points,
+        #                 }
+        #             ],
+        #         },
+        #     ],
+        #     # "pre_path": {"time": "20250110", "heightAboveGround": "2"},
+        #     "pre_path": {"date": "20250110"},
+        # }
         self.options = {
             "axis_config": [
                 {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
@@ -62,10 +88,11 @@ class TestQuadTreeSlicer:
                     "transformations": [
                         {
                             "name": "mapper",
-                            "type": "irregular",
+                            "type": "icon",
                             "resolution": 0,
                             "axes": ["latitude", "longitude"],
                             "md5_hash": "f68071a8ac9bae4e965822afb963c04f",
+                            "uuid": uuid,
                         }
                     ],
                 },
@@ -103,7 +130,7 @@ class TestQuadTreeSlicer:
             datacube=self.fdbdatacube,
             options=self.options,
             engine_options=self.engine_options,
-            point_cloud_options=self.points,
+            # point_cloud_options=self.points,
         )
 
         time0 = time.time()
@@ -143,7 +170,7 @@ class TestQuadTreeSlicer:
             # assert lon <= eccodes_lon + tol
 
         # worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
-        fig, ax = plt.subplots(figsize=(12, 6))
+        # fig, ax = plt.subplots(figsize=(12, 6))
         # worldmap.plot(color="darkgrey", ax=ax)
 
         plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")

@@ -1,9 +1,5 @@
-import datetime
-from polytope_feature.shapes import Box
-import pygribjump as gj
 import cProfile
-
-
+import datetime
 import math
 
 # import iris
@@ -14,13 +10,14 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import pygribjump as gj
 import pytest
 import xarray as xr
 from earthkit import data
 from helper_functions import find_nearest_latlon
 
 from polytope_feature.polytope import Polytope, Request
-from polytope_feature.shapes import Box, Point, Select, Polygon
+from polytope_feature.shapes import Box, Point, Polygon, Select
 
 # os.environ["FDB_HOME"] = "/Users/male/git/fdb-new-home"
 
@@ -60,10 +57,10 @@ options = {
             "transformations": [
                 {
                     "name": "mapper",
-                            "type": "irregular",
-                            "resolution": 0,
-                            "axes": ["latitude", "longitude"],
-                            "md5_hash": "f68071a8ac9bae4e965822afb963c04f",
+                    "type": "irregular",
+                    "resolution": 0,
+                    "axes": ["latitude", "longitude"],
+                    "md5_hash": "f68071a8ac9bae4e965822afb963c04f",
                 }
             ],
         },
@@ -104,6 +101,4 @@ time0 = time.time()
 # print(time1 - time0)
 # print(len(result.leaves))
 
-cProfile.runctx(
-    "API.retrieve(request)", globals(), locals(), "profiled_extract_quadtree.pstats"
-)
+cProfile.runctx("API.retrieve(request)", globals(), locals(), "profiled_extract_quadtree.pstats")
