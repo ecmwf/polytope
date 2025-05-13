@@ -113,7 +113,6 @@ class TestHealpixNestedGrid:
         self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.latlon_array,
-            engine=self.slicer,
             options=self.options,
         )
 
