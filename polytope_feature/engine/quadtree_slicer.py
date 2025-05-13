@@ -8,9 +8,7 @@ from .engine import Engine
 try:
     from quadtree import QuadTree
 except (ModuleNotFoundError, ImportError):
-    print(
-        "Failed to load Rust extension, falling back to Python implementation."
-    )
+    print("Failed to load Rust extension, falling back to Python implementation.")
     from ..datacube.quad_tree import QuadTree
 
 
