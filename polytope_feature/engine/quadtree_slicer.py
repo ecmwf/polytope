@@ -103,7 +103,10 @@ class QuadTreeSlicer(Engine):
             (child, _) = node.create_child(lat_ax, lat_val, [])
             (grand_child, _) = child.create_child(lon_ax, lon_val, [])
             # NOTE: the index of the point is stashed in the branches' result
-            grand_child.indexes = [value]
+            if use_rust:
+                grand_child.indexes = [value]
+            else:
+                grand_child.indexes = [value.index]
             grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             grand_child["unsliced_polytopes"].remove(polytope)
         # TODO: but now what happens to the second axis in the point cloud?? Do we create a second node for it??
