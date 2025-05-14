@@ -51,7 +51,6 @@ class TestWaveData:
         self.fdb_datacube = gj.GribJump()
         self.API = Polytope(
             datacube=self.fdb_datacube,
-            engine=self.slicer,
             options=self.options,
         )
 
