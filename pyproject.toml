@@ -50,7 +50,8 @@ dependencies = [
         "eccodes",
         "h5netcdf",
         "h5py",
-        "earthkit-data"
+        "earthkit-data",
+        "matplotlib",
         ]
 
 [project.urls]

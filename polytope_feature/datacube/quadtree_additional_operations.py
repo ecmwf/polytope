@@ -1,4 +1,8 @@
-from quadtree import QuadTree
+
+try:
+    from quadtree import QuadTree
+except (ModuleNotFoundError, ImportError):
+    print("Failed to load Rust extension.")
 
 from ..engine.hullslicer import slice
 from ..engine.slicing_tools import slice_in_two
