@@ -87,7 +87,7 @@ jobs:
         with:
           files: coverage.xml
 
-test-rust:
+  test-rust:
     env:
       USE_RUST: 1
     strategy:
