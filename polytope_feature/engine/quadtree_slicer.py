@@ -5,8 +5,11 @@ from ..datacube.datacube_axis import IntDatacubeAxis
 from ..datacube.tensor_index_tree import TensorIndexTree
 from .engine import Engine
 
+use_rust = False
 try:
     from quadtree import QuadTree
+
+    use_rust = True
 except (ModuleNotFoundError, ImportError):
     print("Failed to load Rust extension, falling back to Python implementation.")
     from ..datacube.quad_tree import QuadTree
@@ -57,8 +60,11 @@ class QuadTreeSlicer(Engine):
         time1 = time.time()
         # need to find points of the datacube contained within the polytope
         # We do this by intersecting the datacube point cloud quad tree with the polytope here
-        polytope_points = [tuple(point) for point in polytope.points]
-        polygon_points = self.quad_tree.query_polygon(self.points, 0, polytope_points)
+        if use_rust:
+            polytope_points = [tuple(point) for point in polytope.points]
+            polygon_points = self.quad_tree.query_polygon(self.points, 0, polytope_points)
+        else:
+            polytope_points = self.quad_tree.query_polygon(polytope)
         print("RUST QUERY POLYOGN TIME")
         print(time.time() - time1)
         return polygon_points
