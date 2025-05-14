@@ -64,7 +64,7 @@ class QuadTreeSlicer(Engine):
             polytope_points = [tuple(point) for point in polytope.points]
             polygon_points = self.quad_tree.query_polygon(self.points, 0, polytope_points)
         else:
-            polytope_points = self.quad_tree.query_polygon(polytope)
+            polygon_points = self.quad_tree.query_polygon(polytope)
         print("RUST QUERY POLYOGN TIME")
         print(time.time() - time1)
         return polygon_points
