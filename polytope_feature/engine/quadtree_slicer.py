@@ -92,8 +92,12 @@ class QuadTreeSlicer(Engine):
 
         for value in extracted_points:
             # convert to float for slicing
-            lat_val = self.points[value][0]
-            lon_val = self.points[value][1]
+            if use_rust:
+                lat_val = self.points[value][0]
+                lon_val = self.points[value][1]
+            else:
+                lat_val = value.item[0]
+                lon_val = value.item[1]
 
             # store the native type
             (child, _) = node.create_child(lat_ax, lat_val, [])
