@@ -97,7 +97,6 @@ class TestQuadTreeSlicer:
 
     @pytest.mark.fdb
     def test_quad_tree_slicer_extract(self):
-
         import pygribjump as gj
 
         # tri_side = 80

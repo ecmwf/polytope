@@ -1,4 +1,3 @@
-
 try:
     from quadtree import QuadTree
 except (ModuleNotFoundError, ImportError):
