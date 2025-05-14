@@ -35,7 +35,7 @@ jobs:
 
   test-purepython:
     env:
-      USE_RUST: 0
+      USE_RUST: "0"
     strategy:
       fail-fast: false
       matrix:
@@ -96,7 +96,7 @@ jobs:
 
   test-rust:
     env:
-      USE_RUST: 1
+      USE_RUST: "1"
     strategy:
       fail-fast: false
       matrix:
