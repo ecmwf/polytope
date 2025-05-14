@@ -42,6 +42,17 @@ dependencies = [
     "protobuf"
 ]
 
+[project.optional-dependencies]
+    test = [
+        "pytest",
+        "pytest-cov",
+        "cffi",
+        "eccodes",
+        "h5netcdf",
+        "h5py",
+        "earthkit-data"
+        ]
+
 [project.urls]
     repository = "https://github.com/ecmwf/polytope"
     documentation = "https://polytope.readthedocs.io/en/latest/"
