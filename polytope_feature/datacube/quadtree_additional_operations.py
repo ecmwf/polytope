@@ -73,7 +73,7 @@ def query_polygon(quadtree_points, quadtree, node_idx, polygon):
     return results
 
 
-def _query_polygon(quadtree_points, quadtree: QuadTree, node_idx, polygon, results):
+def _query_polygon(quadtree_points, quadtree, node_idx, polygon, results):
     # intersect quad tree with a 2D polygon
     # if results is None:
     #     results = set()
