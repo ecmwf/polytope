@@ -14,7 +14,7 @@ from helper_functions import find_nearest_latlon
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
 
-os.environ["FDB_HOME"] = "/Users/male/git/fdb-de330-home"
+# os.environ["FDB_HOME"] = "/Users/male/git/fdb-de330-home"
 
 
 class TestQuadTreeSlicer:

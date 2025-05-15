@@ -12,7 +12,7 @@ try:
     use_rust = True
 except (ModuleNotFoundError, ImportError):
     print("Failed to load Rust extension, falling back to Python implementation.")
-    from ..datacube.quad_tree import QuadTree
+    from ..datacube.quadtree.quad_tree import QuadTree
 
 
 class QuadTreeSlicer(Engine):
@@ -57,28 +57,17 @@ class QuadTreeSlicer(Engine):
 
     def extract_single(self, datacube, polytope):
         # extract a single polygon
-        time1 = time.time()
-        # need to find points of the datacube contained within the polytope
-        # We do this by intersecting the datacube point cloud quad tree with the polytope here
         if use_rust:
             polytope_points = [tuple(point) for point in polytope.points]
             polygon_points = self.quad_tree.query_polygon(self.points, 0, polytope_points)
         else:
             polygon_points = self.quad_tree.query_polygon(polytope)
-        print("RUST QUERY POLYOGN TIME")
-        print(time.time() - time1)
         return polygon_points
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):
         for polytope in node["unsliced_polytopes"]:
             if ax.name in polytope._axes:
-                # here, first check if the axis is an unsliceable axis and directly build node if it is
-
-                # NOTE: here, we only have sliceable children, since the unsliceable children are handled by the
-                # hullslicer engine? IS THIS TRUE?
                 self._build_sliceable_child(polytope, ax, node, datacube, next_nodes, api)
-                # TODO: what does this function actually return and what should it return?
-                # It just modifies the next_nodes?
         del node["unsliced_polytopes"]
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes, api):
@@ -109,4 +98,3 @@ class QuadTreeSlicer(Engine):
                 grand_child.indexes = [value.index]
             grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             grand_child["unsliced_polytopes"].remove(polytope)
-        # TODO: but now what happens to the second axis in the point cloud?? Do we create a second node for it??

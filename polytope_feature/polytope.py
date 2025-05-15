@@ -161,12 +161,6 @@ class Polytope:
         slicer_type = self.engine_options[ax.name]
         return self.engines[slicer_type]
 
-    def old_retrieve(self, request: Request, method="standard"):
-        """Higher-level API which takes a request and uses it to slice the datacube"""
-        request_tree = self.engine.extract(self.datacube, request.polytopes())
-        self.datacube.get(request_tree)
-        return request_tree
-
     def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
         logging.info("Starting request for %s ", self.context)
@@ -176,10 +170,8 @@ class Polytope:
             if method == "nearest":
                 if self.datacube.nearest_search.get(tuple(polytope.axes()), None) is None:
                     self.datacube.nearest_search[tuple(polytope.axes())] = polytope.values
-                    # self.datacube.nearest_search[tuple(polytope.axes())] = polytope.points
                 else:
                     self.datacube.nearest_search[tuple(polytope.axes())].append(polytope.values[0])
-        # request_tree = self.engine.extract(self.datacube, request.polytopes())
         request_tree = self.slice(self.datacube, request.polytopes())
         logging.info("Created request tree for %s ", self.context)
         self.datacube.get(request_tree, self.context)

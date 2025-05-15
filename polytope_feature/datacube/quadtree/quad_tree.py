@@ -1,5 +1,5 @@
-from ..engine.hullslicer import slice
-from ..engine.slicing_tools import slice_in_two
+from ...engine.hullslicer import slice
+from ...engine.slicing_tools import slice_in_two
 
 """
 
@@ -127,18 +127,17 @@ class QuadTree:
             self.insert_into_children(node.item, node.index)
 
     def query_polygon(self, polygon, results=None):
+        # TODO: would be like uniform rust + python API with
+        # self.quad_tree.query_polygon(self.points, 0, polytope_points)
         # intersect quad tree with a 2D polygon
         if results is None:
             results = set()
 
         # intersect the children with the polygon
-        # TODO: here, we create None polygons... think about how to handle them
         if polygon is None:
             pass
         else:
             polygon_points = set([tuple(point) for point in polygon.points])
-            # TODO: are these the right points which we are comparing, ie the points on the polygon
-            # and the points on the rectangle quadrant?
             if polygon_points == self.quadrant_rectangle_points():
                 for node in self.find_nodes_in():
                     results.add(node)

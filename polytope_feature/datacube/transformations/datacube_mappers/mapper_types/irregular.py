@@ -44,7 +44,7 @@ class IrregularGridMapper(DatacubeMapper):
         return self._final_irregular_transformation.grid_latlon_points()
 
     def unmap(self, first_val, second_val, unmapped_idx=None):
-        # TODO: But to unmap for the irregular grid, need the request tree
+        # To unmap for the irregular grid, need the request tree
         # Suppose we get the idx value somehow from the tree, as an idx input
         return unmapped_idx[0]
 

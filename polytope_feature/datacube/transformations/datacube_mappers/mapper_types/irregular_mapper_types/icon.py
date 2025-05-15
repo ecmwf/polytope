@@ -23,7 +23,6 @@ class ICONGridMapper(IrregularGridMapper):
         self.is_irregular = True
 
     def grid_latlon_points(self):
-        # TODO
         grid = xr.open_dataset(self.uuid, engine="netcdf4")
 
         longitudes = grid.clon.values * 180 / math.pi

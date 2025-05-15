@@ -135,10 +135,6 @@ class DatacubeMapper(DatacubeAxisTransformation):
             if unmapped_idx is not None and len(unmapped_idx) > 0:
                 unmapped_idx = list(unmapped_idx)
             else:
-                # unmapped_idx = []
-
-                # # for val in value:
-                # #     unmapped_idx.append(self.unmap(first_val, (val,)))
                 unmapped_idx = self.unmap(first_val, values)
             leaf_path.pop(self._mapped_axes()[0], None)
             key_value_path.pop(axis.name)

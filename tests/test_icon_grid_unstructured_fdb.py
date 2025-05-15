@@ -10,7 +10,7 @@ from earthkit import data
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
 
-os.environ["FDB_HOME"] = "/Users/male/git/fdb-new-home"
+# os.environ["FDB_HOME"] = "/Users/male/git/fdb-new-home"
 
 
 class TestQuadTreeSlicer:
