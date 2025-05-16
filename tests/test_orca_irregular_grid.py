@@ -57,16 +57,9 @@ class TestQuadTreeSlicer:
             datacube=self.arr,
             options=self.options,
             engine_options=self.engine_options,
-            # point_cloud_options=self.points,
         )
-        import time
-
-        time0 = time.time()
         result = self.API.retrieve(request)
-        time1 = time.time()
-        print("TIME TAKEN TO EXTRACT")
-        print(time1 - time0)
-        print(len(result.leaves))
+        assert len(result.leaves) == 27
         result.pprint()
 
         lats = []

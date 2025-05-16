@@ -1,8 +1,5 @@
-import time
 from copy import copy
 
-from ..datacube.datacube_axis import IntDatacubeAxis
-from ..datacube.tensor_index_tree import TensorIndexTree
 from .engine import Engine
 
 use_rust = False
@@ -19,41 +16,13 @@ class QuadTreeSlicer(Engine):
     def __init__(self, points):
         # here need to construct quadtree, which is specific to datacube
         # NOTE: should this be inside of the datacube instead that we create the quadtree?
-
+        # TODO: maybe we create the quadtree as soon as we have an unstructured slicer type and return it
+        # to the slicer somehow?
         quad_tree = QuadTree()
-        print("START BUILDING QUAD TREE")
-        time0 = time.time()
         points = [tuple(point) for point in points]
         quad_tree.build_point_tree(points)
-
         self.points = points
-        print("FINISH BUILDING QUAD TREE")
-        print(time.time() - time0)
         self.quad_tree = quad_tree
-
-    # method to slice polygon against quadtree
-    def extract(self, datacube, polytopes):
-        # need to find the points to extract within the polytopes (polygons here in 2D)
-        request = TensorIndexTree()
-        extracted_points = []
-        for polytope in polytopes:
-            assert len(polytope._axes) == 2
-            extracted_points.extend(self.extract_single(datacube, polytope))
-
-        # what data format do we return extracted points as? Append those points to the index tree?
-
-        # NOTE: for now, we return the indices of the points in the point cloud, instead of lat/lon
-        for point in extracted_points:
-            # append each found leaf to the tree
-            idx = point
-            values_axis = IntDatacubeAxis()
-            values_axis.name = "values"
-            result = self.points[idx]
-            # TODO: make finding the axes objects nicer?
-            (child, _) = request.create_child(values_axis, idx, [])
-            child.result = result
-
-        return request
 
     def extract_single(self, datacube, polytope):
         # extract a single polygon
@@ -72,13 +41,10 @@ class QuadTreeSlicer(Engine):
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes, api):
         extracted_points = self.extract_single(datacube, polytope)
-        # TODO: add the sliced points as node to the tree and update the next_nodes
         if len(extracted_points) == 0:
             node.remove_branch()
-
         lat_ax = ax
         lon_ax = datacube._axes["longitude"]
-
         for value in extracted_points:
             # convert to float for slicing
             if use_rust:
@@ -87,7 +53,6 @@ class QuadTreeSlicer(Engine):
             else:
                 lat_val = value.item[0]
                 lon_val = value.item[1]
-
             # store the native type
             (child, _) = node.create_child(lat_ax, lat_val, [])
             (grand_child, _) = child.create_child(lon_ax, lon_val, [])

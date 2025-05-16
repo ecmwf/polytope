@@ -133,15 +133,12 @@ class Polytope:
                     new_c.extend(combi)
                 else:
                     new_c.append(combi)
-            # NOTE TODO: here some of the polys in new_c can be a Product shape instead of a ConvexPolytope
-            # -> need to go through the polytopes in new_c and replace the Products with their sub-ConvexPolytopes
             final_polys = []
             for poly in new_c:
                 if isinstance(poly, Product):
                     final_polys.extend(poly.polytope())
                 else:
                     final_polys.append(poly)
-            # r["unsliced_polytopes"] = set(new_c)
             r["unsliced_polytopes"] = set(final_polys)
             current_nodes = [r]
             for ax in datacube.axes.values():
