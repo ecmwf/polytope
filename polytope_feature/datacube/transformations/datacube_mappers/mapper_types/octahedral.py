@@ -6,11 +6,14 @@ from ..datacube_mappers import DatacubeMapper
 
 
 class OctahedralGridMapper(DatacubeMapper):
-    def __init__(self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None):
+    def __init__(
+        self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None, mapper_options=None
+    ):
         # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
         self._resolution = resolution
+        self.is_irregular = False
         self._first_axis_vals = self.first_axis_vals()
         self._first_idx_map = self.create_first_idx_map()
         self._second_axis_spacing = {}
@@ -7883,7 +7886,7 @@ class OctahedralGridMapper(DatacubeMapper):
             second_idx = int(second_val / second_axis_spacing)
         return (first_idx, second_idx)
 
-    def unmap(self, first_val, second_vals):
+    def unmap(self, first_val, second_vals, unmapped_idx=None):
         return_idxs = []
         for second_val in second_vals:
             (first_idx, second_idx) = self.find_second_axis_idx(first_val, second_val)

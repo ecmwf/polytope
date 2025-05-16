@@ -4,9 +4,9 @@ import numpy as np
 import pandas as pd
 from earthkit import data
 
-from polytope.datacube.backends.fdb import FDBDatacube
-from polytope.polytope import Polytope, Request
-from polytope.shapes import All, Point, Select, Span
+from polytope_feature.datacube.backends.fdb import FDBDatacube
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import All, Point, Select, Span
 
 time1 = time.time()
 # Create a dataarray with 3 labelled axes using different index types

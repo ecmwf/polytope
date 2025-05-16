@@ -6,12 +6,15 @@ from ..datacube_mappers import DatacubeMapper
 
 
 class ReducedGaussianGridMapper(DatacubeMapper):
-    def __init__(self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None):
+    def __init__(
+        self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None, mapper_options=None
+    ):
         # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
         self._resolution = resolution
         self._first_axis_vals = self.first_axis_vals()
+        self.is_irregular = False
         self._second_axis_spacing = {}
         self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
         if self._axis_reversed[mapped_axes[1]]:
@@ -1432,7 +1435,7 @@ class ReducedGaussianGridMapper(DatacubeMapper):
                 idx += second_idx
                 return idx
 
-    def unmap(self, first_val, second_vals):
+    def unmap(self, first_val, second_vals, unmapped_idx=None):
         tol = 1e-8
         first_value = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
         first_idx = self._first_axis_vals.index(first_value)
