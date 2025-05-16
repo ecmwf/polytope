@@ -1,6 +1,8 @@
 import pytest
 
-from polytope_feature.datacube.quadtree.quadtree_additional_operations import query_polygon
+from polytope_feature.datacube.quadtree.quadtree_additional_operations import (
+    query_polygon,
+)
 from polytope_feature.engine.quadtree_slicer import QuadTreeSlicer
 from polytope_feature.shapes import Box
 

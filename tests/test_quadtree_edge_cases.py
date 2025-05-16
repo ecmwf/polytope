@@ -1,8 +1,8 @@
 import pytest
 
+from polytope_feature.datacube.tensor_index_tree import TensorIndexTree
 from polytope_feature.polytope import Polytope
 from polytope_feature.shapes import Box
-from polytope_feature.datacube.tensor_index_tree import TensorIndexTree
 
 
 class TestQuadTreeSlicer:

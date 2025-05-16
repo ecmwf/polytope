@@ -1,13 +1,10 @@
-import scipy
-
-from ..shapes import ConvexPolytope
-
+from copy import copy
 from itertools import chain
 
-from copy import copy
-
+import scipy
 import scipy.spatial
 
+from ..shapes import ConvexPolytope
 from ..utility.geometry import lerp
 from ..utility.list_tools import argmax, argmin
 

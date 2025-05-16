@@ -1,13 +1,14 @@
 import pytest
 
+from polytope_feature.datacube.tensor_index_tree import TensorIndexTree
 from polytope_feature.polytope import Polytope
 from polytope_feature.shapes import Box, ConvexPolytope
-from polytope_feature.datacube.tensor_index_tree import TensorIndexTree
 
 
 class TestQuadTreeSlicer:
     def setup_method(self, method):
         import pygribjump as gj
+
         self.fdbdatacube = gj.GribJump()
 
     @pytest.mark.fdb
