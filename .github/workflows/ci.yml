@@ -36,7 +36,6 @@ jobs:
   test-purepython:
     env:
       USE_RUST: "0"
-      INSTALL_PREFIX: ${{ runner.temp }}/install
     strategy:
       fail-fast: false
       matrix:
@@ -59,25 +58,24 @@ jobs:
         uses: ecmwf/build-package@v2
         with:
           self_build: false
-          install_path: ${{ env.INSTALL_PREFIX }}
           dependencies: |
             ecmwf/ecbuild@develop
-
-      - name: Install libaec
-        id: install-libaec
-        uses: ecmwf/build-package@v2
-        with:
-          self_build: false
-          install_path: ${{ env.INSTALL_PREFIX }}
-          dependencies: |
             MathisRosenhauer/libaec@master
+
+
+      # - name: Install libaec
+      #   id: install-libaec
+      #   uses: ecmwf/build-package@v2
+      #   with:
+      #     self_build: false
+      #     dependencies: |
+      #       MathisRosenhauer/libaec@master
 
       - name: Install eccodes
         id: install-eccodes
         uses: ecmwf/build-package@v2
         with:
           self_build: false
-          install_path: ${{ env.INSTALL_PREFIX }}
           dependencies: |
             ecmwf/eccodes@develop
 
