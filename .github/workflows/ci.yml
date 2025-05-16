@@ -36,6 +36,7 @@ jobs:
   test-purepython:
     env:
       USE_RUST: "0"
+      INSTALL_PREFIX: ${{ runner.temp }}/install
     strategy:
       fail-fast: false
       matrix:
@@ -58,19 +59,21 @@ jobs:
         uses: ecmwf/build-package@v2
         with:
           self_build: false
+          install_path: ${{ env.INSTALL_PREFIX }}
           dependencies: |
             ecmwf/ecbuild@develop
       
-      - name: Add ecbuild to PATH
+      - name: Add ecbuild to PATH and set CMAKE_PREFIX_PATH
         run: |
-          echo "CMAKE_PREFIX_PATH=$HOME/install:$CMAKE_PREFIX_PATH" >> $GITHUB_ENV
-          echo "$HOME/install/bin" >> $GITHUB_PATH
+          echo "${INSTALL_PREFIX}/bin" >> $GITHUB_PATH
+          echo "CMAKE_PREFIX_PATH=${INSTALL_PREFIX}" >> $GITHUB_ENV
 
       - name: Install libaec
         id: install-libaec
         uses: ecmwf/build-package@v2
         with:
           self_build: false
+          install_path: ${{ env.INSTALL_PREFIX }}
           dependencies: |
             MathisRosenhauer/libaec@master
 
@@ -79,6 +82,7 @@ jobs:
         uses: ecmwf/build-package@v2
         with:
           self_build: false
+          install_path: ${{ env.INSTALL_PREFIX }}
           dependencies: |
             ecmwf/eccodes@develop
 
