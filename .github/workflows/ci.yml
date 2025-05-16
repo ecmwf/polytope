@@ -53,7 +53,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install ecbuild
+      - name: Install eccodes
         id: install-ecbuild
         uses: ecmwf/build-package@v2
         with:
@@ -61,22 +61,6 @@ jobs:
           dependencies: |
             ecmwf/ecbuild@develop
             MathisRosenhauer/libaec@master
-
-
-      # - name: Install libaec
-      #   id: install-libaec
-      #   uses: ecmwf/build-package@v2
-      #   with:
-      #     self_build: false
-      #     dependencies: |
-      #       MathisRosenhauer/libaec@master
-
-      - name: Install eccodes
-        id: install-eccodes
-        uses: ecmwf/build-package@v2
-        with:
-          self_build: false
-          dependencies: |
             ecmwf/eccodes@develop
 
       - name: Setup Python
