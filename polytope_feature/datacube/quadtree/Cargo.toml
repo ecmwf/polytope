@@ -1,6 +1,6 @@
 [package]
 name = "quadtree"
-version = "0.1.0"
+version = "0.0.0" # placeholder
 edition = "2021"
 
 [dependencies]
@@ -9,8 +9,6 @@ qhull = { git = "https://github.com/LucaCiucci/qhull-rs" }
 rayon = "1.8"
 
 [lib]
+name = "quadtree"
+path = "src/lib.rs"
 crate-type = ["cdylib"]
-
-[profile.release]
-debug = true
-
