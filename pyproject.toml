@@ -89,6 +89,7 @@ log_cli_level = "INFO"
 
 # takes inspiration from https://github.com/pypa/cibuildwheel/discussions/1814
 [tool.cibuildwheel]
+skip = ["*musl*"]
 linux.before-all = "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal"
 linux.environment = { PATH="$HOME/.cargo/bin:$PATH" }
 macos.before-all = "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal"
