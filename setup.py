@@ -14,7 +14,7 @@ elif use_rust == 1:  # rust extension
 else:  # (default) try rust extension, if fail fallback to python
     print("Building with rust bindings, and if failing reverting to pure Python.")
     rust_extensions = [
-        RustExtension("polytope_feature.quadtree", "Cargo.toml", optional=True)
+        RustExtension("polytope_feature.quadtree", "Cargo.toml")
         ]
 
 setup(rust_extensions=rust_extensions)
