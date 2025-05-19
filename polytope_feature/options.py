@@ -18,11 +18,29 @@ class CyclicConfig(TransformationConfig):
 class MapperConfig(TransformationConfig):
     name: Literal["mapper"]
     type: str = ""
-    resolution: Union[int, List[int]] = 0
+    resolution: Optional[Union[int, List[int]]] = 0
     axes: List[str] = [""]
     md5_hash: Optional[str] = None
     local: Optional[List[float]] = None
     axis_reversed: Optional[Dict[str, bool]] = None
+    is_spherical: Optional[bool] = None
+    radius: Optional[float] = None
+    earthMinorAxisInMetres: Optional[float] = None
+    earthMajorAxisInMetres: Optional[float] = None
+    nv: Optional[int] = None
+    nx: Optional[int] = None
+    ny: Optional[int] = None
+    LoVInDegrees: Optional[float] = None
+    Dx: Optional[float] = None
+    Dy: Optional[float] = None
+    latFirstInRadians: Optional[float] = None
+    lonFirstInRadians: Optional[float] = None
+    LoVInRadians: Optional[float] = None
+    Latin1InRadians: Optional[float] = None
+    Latin2InRadians: Optional[float] = None
+    LaDInRadians: Optional[float] = None
+    points: Optional[List[List[float]]] = None
+    uuid: Optional[str] = None
 
 
 class ReverseConfig(TransformationConfig):
@@ -61,7 +79,7 @@ class Config(ConfigModel):
     axis_config: List[AxisConfig] = []
     compressed_axes_config: List[str] = [""]
     pre_path: Optional[Dict[str, path_subclasses_union]] = {}
-    alternative_axes: List[GribJumpAxesConfig] = []
+    alternative_axes: Optional[List[GribJumpAxesConfig]] = []
 
 
 class PolytopeOptions(ABC):

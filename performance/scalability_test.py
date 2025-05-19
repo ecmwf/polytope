@@ -3,10 +3,10 @@ import time
 import numpy as np
 import xarray as xr
 
-from polytope.datacube.backends.xarray import XArrayDatacube
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Disk, Ellipsoid, Select
+from polytope_feature.datacube.backends.xarray import XArrayDatacube
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, Disk, Ellipsoid, Select
 
 
 class Test:

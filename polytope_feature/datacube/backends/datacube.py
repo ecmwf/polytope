@@ -68,6 +68,7 @@ class Datacube(ABC):
             for compressed_grid_axis in transformation.compressed_grid_axes:
                 self.compressed_grid_axes.append(compressed_grid_axis)
                 self.grid_md5_hash = transformation.md5_hash
+                self.grid_transformation = transformation
         if len(final_axis_names) > 1:
             self.coupled_axes.append(final_axis_names)
             for axis in final_axis_names:
@@ -152,7 +153,14 @@ class Datacube(ABC):
         return path
 
     @staticmethod
-    def create(datacube, config={}, axis_options={}, compressed_axes_options=[], alternative_axes=[], context=None):
+    def create(
+        datacube,
+        config={},
+        axis_options={},
+        compressed_axes_options=[],
+        alternative_axes=[],
+        context=None,
+    ):
         # TODO: get the configs as None for pre-determined value and change them to empty dictionary inside the function
         if type(datacube).__name__ == "DataArray":
             from .xarray import XArrayDatacube
@@ -163,9 +171,20 @@ class Datacube(ABC):
             from .fdb import FDBDatacube
 
             fdbdatacube = FDBDatacube(
-                datacube, config, axis_options, compressed_axes_options, alternative_axes, context
+                datacube,
+                config,
+                axis_options,
+                compressed_axes_options,
+                alternative_axes,
+                context,
             )
             return fdbdatacube
+        if type(datacube).__name__ == "MockDatacube":
+            return datacube
 
     def check_branching_axes(self, request):
+        pass
+
+    @abstractmethod
+    def find_point_cloud(self):
         pass
