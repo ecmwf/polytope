@@ -14,6 +14,7 @@
 *.json
 *.txt
 *.gz
+*.so
 
 .coverage
 .mypy_cache
