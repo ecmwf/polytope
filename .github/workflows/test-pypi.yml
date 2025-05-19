@@ -1,9 +1,8 @@
-name: cd
+name: test-cd
 
 on:
-  push:
-    tags:
-      - '**'
+  pull_request:
+    branches: [ "main", "develop" ]
 
 jobs:
   pypi_binwheels:
@@ -12,6 +11,7 @@ jobs:
     with:
       platforms: "['ubuntu-latest','macos-latest','windows-latest']"
       pyversions: "['38','39','310','311','312','313']"
+      testpypi: true
       env_vars: |
         {
           "USE_RUST": "1",
@@ -23,6 +23,7 @@ jobs:
     uses: ecmwf/reusable-workflows/.github/workflows/cd-pypi.yml@feat/build_multiple_wheels
     secrets: inherit
     with:
+      testpypi: true
       env_vars: |
         {
           "USE_RUST": "0",
