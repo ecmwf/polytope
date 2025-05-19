@@ -1,5 +1,5 @@
 [package]
-name = "quadtree"
+name = "polytope-python"
 version = "0.0.0" # placeholder
 edition = "2021"
 
@@ -10,5 +10,5 @@ rayon = "1.8"
 
 [lib]
 name = "quadtree"
-path = "src/lib.rs"
+path = "rust/lib.rs"
 crate-type = ["cdylib"]
