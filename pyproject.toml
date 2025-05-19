@@ -91,7 +91,8 @@ log_cli_level = "INFO"
 [tool.cibuildwheel]
 skip = ["*musl*"]
 linux.before-all = '''
-yum install -y clang llvm llvm-devel && \
+curl -sSL https://repos.llvm.org/llvm.sh | bash -s -- 12 && \
+yum install -y libclang && \
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
 '''
 macos.before-all = "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal"
