@@ -86,3 +86,11 @@ readme = {file = ["README.md"], content-type = "text/markdown"}
 markers = ["internet: downloads test data from the internet (deselect with '-m \"not internet\"')",
            "fdb: test which uses fdb (deselect with '-m \"not fdb\"')",]
 log_cli_level = "INFO"
+
+# takes inspiration from https://github.com/pypa/cibuildwheel/discussions/1814
+[tool.cibuildwheel]
+linux.before-all = "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal"
+linux.environment = { PATH="$HOME/.cargo/bin:$PATH" }
+macos.before-all = "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal"
+windows.before-all = "rustup target add aarch64-pc-windows-msvc i586-pc-windows-msvc i686-pc-windows-msvc x86_64-pc-windows-msvc"
+windows.archs = "all"
