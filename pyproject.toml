@@ -68,7 +68,7 @@ include = [ "polytope_feature" ]
 where = [ "src/" ]
 
 [tool.setuptools_scm]
-version_file = "polytope_feature/_version.py"
+version_file = "src/polytope_feature/_version.py"
 version_file_template = '''# Do not change! Do not track in version control!
 __version__ = "{version}"
 '''
