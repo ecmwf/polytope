@@ -6,7 +6,7 @@ on:
 
 jobs:
   pypi_binwheels:
-    uses: ecmwf/reusable-workflows/.github/workflows/cd-pypi-binwheel.yml@feat/build_multiple_wheels
+    uses: ecmwf/reusable-workflows/.github/workflows/cd-pypi-binwheel.yml@feat/rust_wheels_with_clang
     secrets: inherit
     with:
       platforms: "['ubuntu-latest']" #",'macos-latest','windows-latest']"
@@ -20,7 +20,7 @@ jobs:
 
   pypi_purepython:
     needs: pypi_binwheels
-    uses: ecmwf/reusable-workflows/.github/workflows/cd-pypi.yml@feat/build_multiple_wheels
+    uses: ecmwf/reusable-workflows/.github/workflows/cd-pypi.yml@feat/rust_wheels_with_clang
     secrets: inherit
     with:
       testpypi: true
