@@ -49,17 +49,14 @@ class TestEncoder:
     def test_encoding(self):
         import pygribjump as gj
 
-        from polytope_feature.engine.hullslicer import HullSlicer
         from polytope_feature.polytope import Polytope
 
         self.options = {
             "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
         }
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         fdb_datacube = self.API.datacube

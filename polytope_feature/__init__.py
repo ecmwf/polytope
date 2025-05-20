@@ -1,1 +1,0 @@
-from .polytope import *
