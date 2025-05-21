@@ -72,8 +72,16 @@ class QubedDatacube(Datacube):
                 val = self._axes[name].type_eg
                 self._check_and_add_axes(options, name, val)
 
-    def add_axes_dynamically():
+    def add_axes_dynamically(self, qube_node):
         # TODO: add axes and associated transformations here and then call this in the slicing before we perform any operation
+        options = None
+        for opt in self.axis_options:
+            if opt.axis_name == qube_node.key:
+                options = opt
+
+        self._check_and_add_axes(options, qube_node.key, qube_node.values)
+
+        # TODO: will this work??
         pass
 
     def datacube_natural_indexes(self, qube_node):
