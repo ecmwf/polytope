@@ -24,6 +24,7 @@ class QubedDatacube(Datacube):
         self.q = q
         # TODO: find datacube_axes and datacube_transformations from options like other datacube backends
         self.datacube_axes = datacube_axes
+        # TODO: for the grid transformation, how could we instead build it throughout the slicing??
         self.datacube_transformations = datacube_transformations
         # TODO: find compressed_axes list
         self.compressed_axes = []
@@ -70,6 +71,10 @@ class QubedDatacube(Datacube):
 
                 val = self._axes[name].type_eg
                 self._check_and_add_axes(options, name, val)
+
+    def add_axes_dynamically():
+        # TODO: add axes and associated transformations here and then call this in the slicing before we perform any operation
+        pass
 
     def datacube_natural_indexes(self, qube_node):
         if qube_node is not None:

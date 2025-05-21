@@ -212,6 +212,8 @@ class QubedSlicer(Engine):
                 # find polytopes which are defined on axis child.key
                 polytopes_on_axis = find_polytopes_on_axis(child.key, polytopes)
 
+                # TODO: here add the axes to datacube backend with transformations for child.key
+
                 # here now first change the values in the polytopes on the axis to reflect the axis type
 
                 for poly in polytopes_on_axis:
