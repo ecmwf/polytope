@@ -213,6 +213,7 @@ class QubedSlicer(Engine):
                 polytopes_on_axis = find_polytopes_on_axis(child.key, polytopes)
 
                 # TODO: here add the axes to datacube backend with transformations for child.key
+                datacube.add_axes_dynamically(child)
 
                 # here now first change the values in the polytopes on the axis to reflect the axis type
 
@@ -332,7 +333,7 @@ class QubedSlicer(Engine):
         return final_tree
 
     def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
-        self.find_compressed_axes(datacube, polytopes)
+        # self.find_compressed_axes(datacube, polytopes)
         self.pre_process_polytopes(datacube, polytopes)
         assert isinstance(datacube, QubedDatacube)
         tree = self.actual_slice(datacube.q, polytopes, datacube,

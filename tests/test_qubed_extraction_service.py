@@ -84,8 +84,9 @@ datacube_axes = {"param": UnsliceableDatacubeAxis(),
                  "dataset": UnsliceableDatacubeAxis(),
                  "class": UnsliceableDatacubeAxis(),
                  "date": PandasTimestampDatacubeAxis(),
-                 "latitude": FloatDatacubeAxis(),
-                 "longitude": FloatDatacubeAxis()}
+                 #  "latitude": FloatDatacubeAxis(),
+                 #  "longitude": FloatDatacubeAxis()
+                 }
 
 time_val = pd.Timedelta(hours=0, minutes=0)
 date_val = pd.Timestamp("20300101T000000")
@@ -107,8 +108,8 @@ options = {
         #     "axis_name": "date",
         #     "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
         # },
-        # {"axis_name": "date", "transformations": [{"name": "type_change", "type": "date"}]},
-        # {"axis_name": "time", "transformations": [{"name": "type_change", "type": "time"}]},
+        {"axis_name": "date", "transformations": [{"name": "type_change", "type": "date"}]},
+        {"axis_name": "time", "transformations": [{"name": "type_change", "type": "time"}]},
         {
             "axis_name": "values",
             "transformations": [

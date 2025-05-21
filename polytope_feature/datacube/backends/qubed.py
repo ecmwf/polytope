@@ -51,37 +51,46 @@ class QubedDatacube(Datacube):
             self.fdb_coordinates[axis_name] = [axis.type_eg]
 
         self.fdb_coordinates["values"] = []
-        for name, values in self.fdb_coordinates.items():
-            options = None
-            for opt in self.axis_options:
-                if opt.axis_name == name:
-                    options = opt
+        # for name, values in self.fdb_coordinates.items():
+        #     options = None
+        #     for opt in self.axis_options:
+        #         if opt.axis_name == name:
+        #             options = opt
 
-            self._check_and_add_axes(options, name, values)
-            self.treated_axes.append(name)
-            self.complete_axes.append(name)
+        #     self._check_and_add_axes(options, name, values)
+        #     self.treated_axes.append(name)
+        #     self.complete_axes.append(name)
 
-        # add other options to axis which were just created above like "lat" for the mapper transformations for eg
-        for name in self._axes:
-            if name not in self.treated_axes:
-                options = None
-                for opt in self.axis_options:
-                    if opt.axis_name == name:
-                        options = opt
+        # # add other options to axis which were just created above like "lat" for the mapper transformations for eg
+        # for name in self._axes:
+        #     if name not in self.treated_axes:
+        #         options = None
+        #         for opt in self.axis_options:
+        #             if opt.axis_name == name:
+        #                 options = opt
 
-                val = self._axes[name].type_eg
-                self._check_and_add_axes(options, name, val)
+        #         val = self._axes[name].type_eg
+        #         self._check_and_add_axes(options, name, val)
+
+        # TODO: actually should separate axis creation with types from the transformations...
+        # TODO: we should create all axes here first maybe?
+        # TODO: otherwise, we need to somehow get the axis type information/objects when we transform the polytope points into continuous types?
 
     def add_axes_dynamically(self, qube_node):
         # TODO: add axes and associated transformations here and then call this in the slicing before we perform any operation
+        if len(qube_node.children) == 0:
+            axis_name = "values"
+        axis_name = qube_node.key
+
         options = None
         for opt in self.axis_options:
-            if opt.axis_name == qube_node.key:
+            if opt.axis_name == axis_name:
                 options = opt
 
         self._check_and_add_axes(options, qube_node.key, qube_node.values)
 
-        # TODO: will this work??
+        # TODO: will this work?? How do we make sure we add the grid axes which come from the values transformation here??
+        # TODO: we can't do a "difference" of axes like before since we don't a priori have the final axes set available at once??
         pass
 
     def datacube_natural_indexes(self, qube_node):
