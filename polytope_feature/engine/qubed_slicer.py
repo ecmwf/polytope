@@ -28,6 +28,10 @@ class QubedSlicer(Engine):
 
     def find_values_between(self, polytope, ax, node, datacube, lower, upper, path=None):
         if isinstance(ax, UnsliceableDatacubeAxis):
+            # print("HERE WHAT IS STR OR FLOAT")
+            # print((lower, upper))
+            # print(node)
+            # print(node.values)
             return [v for v in node.values if lower <= v <= upper]
 
         tol = ax.tol
@@ -338,4 +342,6 @@ class QubedSlicer(Engine):
         assert isinstance(datacube, QubedDatacube)
         tree = self.actual_slice(datacube.q, polytopes, datacube,
                                  datacube.datacube_transformations)
+        print("WHAT DOES THE TREE LOOK LIKE??")
+        print(tree)
         return tree

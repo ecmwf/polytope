@@ -101,6 +101,8 @@ class DatacubeAxis(ABC):
         return offset
 
     def unmap_path_key(self, key_value_path, leaf_path, unwanted_path):
+        # print("WHAT ARE THE AXIS TRANSFORMATIONS??")
+        # print(self.transformations)
         for transformation in self.transformations[::-1]:
             (key_value_path, leaf_path, unwanted_path) = transformation.unmap_path_key(
                 key_value_path, leaf_path, unwanted_path, self
