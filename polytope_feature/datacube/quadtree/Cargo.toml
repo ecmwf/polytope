@@ -1,5 +1,5 @@
 [package]
-name = "quadtree"
+name = "polytope-python"
 version = "0.0.0" # placeholder
 edition = "2021"
 
