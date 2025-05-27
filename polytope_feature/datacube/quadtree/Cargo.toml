@@ -10,5 +10,5 @@ rayon = "1.8"
 
 [lib]
 name = "quadtree"
-path = "src/lib.rs"
+path = "polytope_feature/datacube/quadtree/src/lib.rs"
 crate-type = ["cdylib"]
