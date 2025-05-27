@@ -65,6 +65,7 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 include = [ "polytope_feature" ]
+where = [ "./" ]
 
 [tool.setuptools_scm]
 version_file = "polytope_feature/_version.py"
