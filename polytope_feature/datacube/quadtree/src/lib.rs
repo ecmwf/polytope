@@ -497,8 +497,8 @@ fn slice_in_two(
         right_points.extend(intersects.iter().cloned());
 
         // Convert the points into polygons using find_qhull_points
-        let left_polygon = find_qhull_points(&left_points)?;
-        let right_polygon = find_qhull_points(&right_points)?;
+        let left_polygon = find_qhull_points3(&left_points)?;
+        let right_polygon = find_qhull_points3(&right_points)?;
 
         return Ok((left_polygon, right_polygon));
     }
@@ -513,6 +513,69 @@ fn change_points_for_qhull(points: &[(f64, f64)]) -> Vec<[f64; 2]> {
         result.push([x, y]);
     }
     result
+}
+
+
+use geo::{LineString, Polygon, point, ConvexHull, CoordsIter};
+
+fn vec_to_polygon(coords: &Vec<[f64; 2]>) -> Polygon {
+    // Ensure ring is closed (returns new Vec)
+    let closed_coords = close_ring(coords);
+
+    // Convert to LineString
+    let linestring: LineString = closed_coords
+        .into_iter()
+        .map(|[x, y]| point!(x: x, y: y))
+        .collect();
+
+    Polygon::new(linestring, vec![])
+}
+
+fn close_ring(coords: &Vec<[f64; 2]>) -> Vec<[f64; 2]> {
+    let mut closed = coords.clone();
+    if let (Some(first), Some(last)) = (coords.first(), coords.last()) {
+        if first != last {
+            closed.push(*first);
+        }
+    }
+    closed
+}
+
+fn find_qhull_points2(points: &Vec<[f64; 2]>) -> Vec<[f64; 2]> {
+    let poly = vec_to_polygon(points);
+    let hull = poly.convex_hull();
+
+    // let mut seen = HashSet::new();
+    // let mut unique_points = Vec::new();
+
+    // for pt in hull.exterior().points_iter() {
+    //     let coord = [pt.x(), pt.y()];
+    //     // Add unique points only
+    //     if seen.insert(coord) {
+    //         unique_points.push(coord);
+    //     }
+    // }
+
+    // unique_points
+    let exterior_coords = hull.exterior().coords_iter().collect::<Vec<_>>();
+
+    // exterior_coords is closed, so remove the last point (duplicate of first)
+    exterior_coords[..exterior_coords.len() - 1]
+        .iter()
+        .map(|c| [c.x, c.y])
+        .collect()
+}
+
+fn find_qhull_points3(points: &Vec<[f64; 2]>) -> Result<Option<Vec<[f64; 2]>>, QhullError> {
+    // If empty input, return None
+    if points.is_empty() {
+        return Ok(None);
+    }
+
+    // Use your hull function here
+    let hull_points = find_qhull_points2(points);
+
+    Ok(Some(hull_points))
 }
 
 

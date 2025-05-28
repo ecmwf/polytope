@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 pyo3 = { version = "0.20", features = ["extension-module"] }
+geo = { version = "0.30"}
 qhull = { git = "https://github.com/LucaCiucci/qhull-rs" }
 rayon = "1.8"
 

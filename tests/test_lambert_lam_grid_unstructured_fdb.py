@@ -9,10 +9,12 @@ from helper_functions import find_nearest_latlon
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
 
-# import os
+import os
+
+import matplotlib.pyplot as plt
 
 
-# os.environ["FDB_HOME"] = "/Users/male/git/fdb-de330-home"
+os.environ["FDB_HOME"] = "/Users/male/git/fdb-de330-home"
 
 
 class TestQuadTreeSlicer:
@@ -93,11 +95,18 @@ class TestQuadTreeSlicer:
 
         self.fdbdatacube = gj.GribJump()
 
+        import time
+
+        time1 = time.time()
+
         self.API = Polytope(
             datacube=self.fdbdatacube,
             options=self.options,
             engine_options=self.engine_options,
         )
+
+        print("TIME TAKEN TO EXTRACT")
+        print(time.time() - time1)
 
         result = self.API.retrieve(request)
         assert len(result.leaves) == 440
@@ -139,7 +148,7 @@ class TestQuadTreeSlicer:
         # Get indices where both conditions hold
         # indices = np.where(combined_mask)[0]
 
-        # plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
-        # plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
-        # plt.colorbar(label="Temperature")
-        # plt.show()
+        plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
+        plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
+        plt.colorbar(label="Temperature")
+        plt.show()
