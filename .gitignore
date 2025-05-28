@@ -53,3 +53,4 @@ venv_python3_11
 tests/data
 venv_gj_iterator
 target
+rust_deployment_venv

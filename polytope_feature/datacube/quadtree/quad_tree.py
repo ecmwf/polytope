@@ -128,7 +128,6 @@ class QuadTree:
 
     def query_polygon(self, polygon, results=None):
         # TODO: would be like uniform rust + python API with
-        # self.quad_tree.query_polygon(self.points, 0, polytope_points)
         # intersect quad tree with a 2D polygon
         if results is None:
             results = set()
