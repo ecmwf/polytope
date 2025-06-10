@@ -13,8 +13,6 @@ use std::cmp::Ordering::Equal;
 // TODO: look at rust built in arena
 
 
-
-
 // TODO: can we not replace this QuadPoint by just the index of the point in the list potentially?
 
 
@@ -197,11 +195,8 @@ impl QuadTree {
     }
     
     fn insert(&mut self, pt_index: usize, node_idx: usize, pts_ref: &Vec<(f64, f64)>) {
-        // Avoid allocating a new vector, check children directly
         if self.nodes[node_idx].children.is_empty() {
             self.add_point_to_node(node_idx, pt_index);
-    
-            // Avoid multiple calls to `self.get_points_length(node_idx)`
             let points_len = self.get_points_length(node_idx);
             let depth = self.get_depth(node_idx);
     
@@ -278,19 +273,16 @@ impl QuadTree {
 
 
     fn collect_points(&mut self, results: &mut Vec<usize>, node_idx: usize) {
-        // Lock the nodes once and avoid locking multiple times
         let nodes = &self.nodes;
     
-        // Start by collecting the points of the current node
         if let Some(n) = nodes.get(node_idx) {
             if let Some(points) = &n.points {
-                results.extend(points.iter().map(|point| point)); // Use extend for more efficient pushing
+                results.extend(points.iter().map(|point| point));
             }
         }
-    
-        // Collect points from child nodes
-        let mut stack = Vec::new(); // Use a stack to avoid recursion overhead
-        stack.push(node_idx); // Start from the current node
+
+        let mut stack = Vec::new();
+        stack.push(node_idx);
     
         while let Some(current_node_idx) = stack.pop() {
             let child_idxs = self.get_children_idxs(current_node_idx);
@@ -391,44 +383,44 @@ fn _slice_2D_vertical_extents(polygon_points: &Vec<[f64; 2]>, val: f64) -> (f64,
 }
 
 // RESTRICTED TO 2D POINTS FOR NOW
-fn _find_intersects(polytope_points: &Vec<[f64; 2]>, slice_axis_idx: usize, value: f64) -> Vec<[f64; 2]>{
-    let mut intersects: Vec<[f64; 2]> = vec![];
-    let above_slice: Vec<[f64; 2]> = polytope_points
-    .iter()
-    .filter(|&point| {
-        let value_to_compare = if slice_axis_idx == 0 { point[0] } else { point[1] };
-        value_to_compare >= value
-    })
-    .copied() // Convert `&(f64, f64)` to `(f64, f64)`
-    .collect();
+fn _find_intersects(
+    polytope_points: &[[f64; 2]],
+    slice_axis_idx: usize,
+    value: f64,
+) -> Vec<[f64; 2]> {
+    let mut intersects = Vec::new();
 
-    let below_slice: Vec<[f64; 2]> = polytope_points
-    .iter()
-    .filter(|&point| {
-        let value_to_compare = if slice_axis_idx == 0 { point[0] } else { point[1] };
-        value_to_compare <= value
-    })
-    .copied() // Convert `&(f64, f64)` to `(f64, f64)`
-    .collect();
+    let is_above = |point: &&[f64; 2]| point[slice_axis_idx] >= value;
+    let is_below = |point: &&[f64; 2]| point[slice_axis_idx] <= value;
 
-
-    for a in &above_slice {
-        for b in &below_slice {
-            // Edge is incident with the slice plane, store b in intersects
-            if a[0] == b[0] && slice_axis_idx == 0 || a[1] == b[1] && slice_axis_idx == 1 {
-                intersects.push(*b);
+    for &a in polytope_points.iter().filter(is_above) {
+        for &b in polytope_points.iter().filter(is_below) {
+            // Skip duplicate incident case
+            if a == b {
                 continue;
             }
-            let interp_coeff = (value - if slice_axis_idx == 0 { b[0] } else { b[1] }) 
-                            / (if slice_axis_idx == 0 { a[0] - b[0] } else { a[1] - b[1] });
 
-            let intersect = lerp(*a, *b, interp_coeff);
+            // Edge is incident with the slice plane
+            if (slice_axis_idx == 0 && a[0] == b[0])
+                || (slice_axis_idx == 1 && a[1] == b[1])
+            {
+                intersects.push(b);
+                continue;
+            }
+
+            let denom = if slice_axis_idx == 0 { a[0] - b[0] } else { a[1] - b[1] };
+            if denom.abs() < f64::EPSILON {
+                continue; // avoid division by zero
+            }
+
+            let t = (value - if slice_axis_idx == 0 { b[0] } else { b[1] }) / denom;
+            let intersect = lerp(a, b, t);
             intersects.push(intersect);
         }
     }
+
     intersects
 }
-
 
 fn lerp(a: [f64; 2], b: [f64; 2], t: f64) -> [f64; 2] {
     [
@@ -497,16 +489,6 @@ fn slice_in_two(
     // Return None for both left and right if no polytope_points provided
     Ok((None, None))
 }
-
-
-fn change_points_for_qhull(points: &[(f64, f64)]) -> Vec<[f64; 2]> {
-    let mut result = Vec::with_capacity(points.len()); // Preallocate
-    for &(x, y) in points {
-        result.push([x, y]);
-    }
-    result
-}
-
 
 use geo::{LineString, Polygon, point, ConvexHull, CoordsIter};
 
