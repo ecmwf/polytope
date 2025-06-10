@@ -34,13 +34,10 @@ struct QuadTreeNode {
 impl QuadTreeNode {
     fn sizeof(&self) -> usize {
         let mut size = size_of::<Self>(); // Base struct size
-        // Dynamically allocated memory for points
         if let Some(points) = &self.points {
-            // let points_size: usize = points.capacity() * size_of::<usize>();
             let points_size: usize = points.len() * size_of::<usize>();
             size += points_size;
         }
-        // Dynamically allocated memory for children
         let children_size = self.children.len() * size_of::<usize>();
         size += children_size;
         size
@@ -64,11 +61,9 @@ impl QuadTree {
     }
 
     fn sizeof(&self) -> usize {
-        let mut size = size_of::<Self>(); // Base struct size (Vec metadata)
-        // Memory allocated for `nodes` (Vec<QuadTreeNode>)
+        let mut size = size_of::<Self>();
         let nodes_size: usize = self.nodes.len() * size_of::<QuadTreeNode>();
         size += nodes_size;
-        // Sum sizes of each QuadTreeNode (including their allocated memory)
         for (_i, node) in self.nodes.iter().enumerate() {
             let node_size = node.sizeof();
             size += node_size;
@@ -85,13 +80,12 @@ impl QuadTree {
 
 
     fn query_polygon(&mut self, quadtree_points: Vec<(f64, f64)>, node_idx: usize, mut polygon_points: Option<Vec<(f64, f64)>>)  -> PyResult<HashSet<usize>> {
-        // Simulating a function that returns a Result
         let mut results: HashSet<usize> = HashSet::new();
 
         let processed_quadtree_points = self.process_points(quadtree_points);
 
         let mut processed_polygon_points: Option<Vec<[f64; 2]>> = polygon_points
-            .take() // Takes ownership, leaving None in the original variable
+            .take()
             .map(|pts| pts.into_iter().map(|(x, y)| [x, y]).collect());
 
         let query_result: Result<(), Box<dyn Error>> = self._query_polygon(&processed_quadtree_points, node_idx, processed_polygon_points.as_mut(), &mut results);
@@ -101,7 +95,6 @@ impl QuadTree {
         Ok(results)
     }
 
-    // Get the center of a node
     fn get_center(&self, index: usize) -> PyResult<(f64, f64)> {
         let nodes = &self.nodes;
         nodes.get(index).map(|n| n.center).ok_or_else(|| {
@@ -110,8 +103,8 @@ impl QuadTree {
     }
 
     fn quadrant_rectangle_points(&self, node_idx: usize) -> PyResult<Vec<[f64; 2]>> {
-        let (cx, cy) = self.get_center(node_idx)?; // Propagate error if get_center fails
-        let (sx, sy) = self.get_size(node_idx)?;   // Propagate error if get_size fails
+        let (cx, cy) = self.get_center(node_idx)?;
+        let (sx, sy) = self.get_size(node_idx)?; 
     
         Ok(vec![
             [cx - sx, cy - sy],
@@ -323,9 +316,9 @@ impl QuadTree {
 
     fn _query_polygon(
         &mut self,
-        quadtree_points: &Vec<[f64; 2]>, // Updated type
+        quadtree_points: &Vec<[f64; 2]>,
         node_idx: usize,
-        polygon_points: Option<&mut Vec<[f64; 2]>>, // Updated type
+        polygon_points: Option<&mut Vec<[f64; 2]>>,
         results: &mut HashSet<usize>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(points) = polygon_points {
@@ -389,11 +382,10 @@ fn _slice_2D_vertical_extents(polygon_points: &Vec<[f64; 2]>, val: f64) -> (f64,
     
     // Calculate the vertical extents (min and max Y-values) from the intersection points
     intersects.into_iter().fold(
-        (f64::INFINITY, f64::NEG_INFINITY), // Initialize as [min, max]
+        (f64::INFINITY, f64::NEG_INFINITY),
         |(min, max), intersect| {
-            // Destructure to access Y (intersect[1] is the Y-value)
             let y = intersect[1];
-            (min.min(y), max.max(y)) // Track the Y-values only
+            (min.min(y), max.max(y))
         },
     )
 }
@@ -440,25 +432,25 @@ fn _find_intersects(polytope_points: &Vec<[f64; 2]>, slice_axis_idx: usize, valu
 
 fn lerp(a: [f64; 2], b: [f64; 2], t: f64) -> [f64; 2] {
     [
-        b[0] + t * (a[0] - b[0]), // Linear interpolation for x
-        b[1] + t * (a[1] - b[1]), // Linear interpolation for y
+        b[0] + t * (a[0] - b[0]),
+        b[1] + t * (a[1] - b[1]),
     ]
 }
 
 
 fn polygon_extents(polytope_points: &Vec<[f64;2]>, slice_axis_idx: usize) -> (f64, f64){
     let (min_val, max_val) = polytope_points.into_iter().fold(
-        (f64::INFINITY, f64::NEG_INFINITY), // Start with extreme values
+        (f64::INFINITY, f64::NEG_INFINITY),
         |(min, max), polytope_point| {
             let value = if slice_axis_idx == 0 { polytope_point[0] } else { polytope_point[1] }; // Select the correct axis
-            (min.min(value), max.max(value)) // Update min and max
+            (min.min(value), max.max(value))
         },
     );
     (min_val, max_val)
 }
 
 fn slice_in_two(
-    polytope_points: Option<&Vec<[f64; 2]>>, // Ensure points are in [f64; 2] format
+    polytope_points: Option<&Vec<[f64; 2]>>,
     value: f64,
     slice_axis_idx: usize,
 ) -> Result<(Option<Vec<[f64; 2]>>, Option<Vec<[f64; 2]>>), QhullError> {
@@ -519,15 +511,11 @@ fn change_points_for_qhull(points: &[(f64, f64)]) -> Vec<[f64; 2]> {
 use geo::{LineString, Polygon, point, ConvexHull, CoordsIter};
 
 fn vec_to_polygon(coords: &Vec<[f64; 2]>) -> Polygon {
-    // Ensure ring is closed (returns new Vec)
     let closed_coords = close_ring(coords);
-
-    // Convert to LineString
     let linestring: LineString = closed_coords
         .into_iter()
         .map(|[x, y]| point!(x: x, y: y))
         .collect();
-
     Polygon::new(linestring, vec![])
 }
 
@@ -544,17 +532,6 @@ fn close_ring(coords: &Vec<[f64; 2]>) -> Vec<[f64; 2]> {
 fn find_qhull_points2(points: &Vec<[f64; 2]>) -> Vec<[f64; 2]> {
     let poly = vec_to_polygon(points);
     let hull = poly.convex_hull();
-
-    // let mut seen = HashSet::new();
-    // let mut unique_points = Vec::new();
-
-    // for pt in hull.exterior().points_iter() {
-    //     let coord = [pt.x(), pt.y()];
-    //     // Add unique points only
-    //     if seen.insert(coord) {
-    //         unique_points.push(coord);
-    //     }
-    // }
 
     // unique_points
     let exterior_coords = hull.exterior().coords_iter().collect::<Vec<_>>();
@@ -578,9 +555,6 @@ fn find_qhull_points3(points: &Vec<[f64; 2]>) -> Result<Option<Vec<[f64; 2]>>, Q
     Ok(Some(hull_points))
 }
 
-
-
-
 use std::fmt;
 
 #[derive(Debug)]
@@ -599,53 +573,3 @@ impl fmt::Display for QhullError {
 }
 
 impl Error for QhullError {}
-
-
-fn find_qhull_points(points: &Vec<[f64; 2]>) -> Result<Option<Vec<[f64; 2]>>, QhullError> {
-
-    let qh_result = Qh::builder()
-    .compute(true)
-    .build_from_iter(points.iter().copied());
-
-    match qh_result {
-        Ok(qh) => {
-            let num_vertices = qh.num_vertices(); // Get total number of vertices
-            let mut all_qhull_vertices_: HashSet<usize> = HashSet::with_capacity(num_vertices); 
-            let mut all_qhull_vertices: Vec<usize> = Vec::with_capacity(num_vertices); 
-
-            // Process each simplex only once
-            for simplex in qh.simplices() {
-                for v in simplex.vertices().unwrap().iter() {
-                    if let Some(index) = v.index(&qh) {
-                        if all_qhull_vertices_.insert(index) { 
-                            all_qhull_vertices.push(index);
-                        }
-                    }
-                }
-            }
-
-            // Allocate memory for final points
-            let mut actual_qhull_points: Vec<[f64; 2]> = Vec::with_capacity(all_qhull_vertices.len());
-
-            // Fetch actual points
-            for &idx in &all_qhull_vertices {
-                if let Some(&point) = points.get(idx) { 
-                    actual_qhull_points.push(point);
-                }
-            }
-
-            Ok(Some(actual_qhull_points))
-        }
-        Err(e) => {
-            let error_msg = e.to_string(); // Convert the error to a string
-
-            if error_msg.contains("is flat") || error_msg.contains("less than"){
-                Ok(None)
-            } else {
-                println!("QHull Error: {}", error_msg);
-                return Err(QhullError::OtherError("QHull Error".to_string()));
-            }
-        }
-    }
-}
-
