@@ -11,6 +11,6 @@ rayon = "1.8"
 typed-arena = "2.0"
 
 [lib]
-name = "quadtree"
+name = "polytope_rs"
 path = "src/lib.rs"
 crate-type = ["cdylib"]

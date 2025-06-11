@@ -4,7 +4,8 @@ from .engine import Engine
 
 use_rust = False
 try:
-    from polytope_feature.quadtree import QuadTree
+    # from polytope_feature.quadtree import QuadTree
+    from polytope_feature.polytope_rs import QuadTree
 
     use_rust = True
 except (ModuleNotFoundError, ImportError):
