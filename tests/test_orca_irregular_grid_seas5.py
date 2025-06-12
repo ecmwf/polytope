@@ -2,6 +2,10 @@
 import numpy as np
 import pytest
 import xarray as xr
+from helper_functions import find_nearest_latlon
+import time
+
+# import iris
 
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select

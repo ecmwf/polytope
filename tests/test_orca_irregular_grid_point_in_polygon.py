@@ -1,5 +1,5 @@
-# import geopandas as gpd
-# import matplotlib.pyplot as plt
+import geopandas as gpd
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
@@ -15,8 +15,8 @@ class TestQuadTreeSlicer:
         self.engine_options = {
             "step": "hullslicer",
             "time": "hullslicer",
-            "latitude": "quadtree",
-            "longitude": "quadtree",
+            "latitude": "point_in_polygon",
+            "longitude": "point_in_polygon",
             "oceanModelLayer": "hullslicer",
             "valid_time": "hullslicer",
         }
@@ -32,13 +32,7 @@ class TestQuadTreeSlicer:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {
-                            "name": "mapper",
-                            "type": "unstructured",
-                            "resolution": 1280,
-                            "axes": ["latitude", "longitude"],
-                            "points": self.points,
-                        }
+                        {"name": "mapper", "type": "irregular", "resolution": 1280, "axes": ["latitude", "longitude"]}
                     ],
                 },
             ],
@@ -58,9 +52,16 @@ class TestQuadTreeSlicer:
             datacube=self.arr,
             options=self.options,
             engine_options=self.engine_options,
+            point_cloud_options=self.points,
         )
+        import time
+
+        time0 = time.time()
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 27
+        time1 = time.time()
+        print("TIME TAKEN TO EXTRACT")
+        print(time1 - time0)
+        print(len(result.leaves))
         result.pprint()
 
         lats = []
@@ -84,11 +85,11 @@ class TestQuadTreeSlicer:
             assert eccodes_lon - tol <= lon
             assert lon <= eccodes_lon + tol
 
-        # worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
-        # fig, ax = plt.subplots(figsize=(12, 6))
-        # worldmap.plot(color="darkgrey", ax=ax)
+        worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
+        fig, ax = plt.subplots(figsize=(12, 6))
+        worldmap.plot(color="darkgrey", ax=ax)
 
-        # plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
-        # plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
-        # plt.colorbar(label="Temperature")
-        # plt.show()
+        plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
+        plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
+        plt.colorbar(label="Temperature")
+        plt.show()

@@ -19,6 +19,7 @@ class QuadNode:
 
     def is_contained_in(self, polygon):
         # implement method to check if the node point is inside the polygon
+        # TODO: could consider doing this through a point in polygon check?
         node_x, node_y = self.item
 
         sliced_vertical_polygon = slice(polygon, polygon._axes[0], node_x, 0)

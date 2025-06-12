@@ -22,7 +22,9 @@ class TestQuadTreeSlicer:
 
         ds = data.from_source("file", "../../Downloads/icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2")
 
-        grid = xr.open_dataset("../../Downloads/icon_grid_0026_R03B07_G.nc", engine="netcdf4")
+        # grid = xr.open_dataset("../../Downloads/icon_grid_0026_R03B07_G.nc", engine="netcdf4")
+        grid_file_name = "../../Downloads/icon_extpar_0026_R03B07_G_20231113_tiles.nc"
+        grid = xr.open_dataset(grid_file_name, engine="netcdf4")
 
         self.arr = ds.to_xarray(engine="cfgrib").t2m
 

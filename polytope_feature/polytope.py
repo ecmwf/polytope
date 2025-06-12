@@ -6,6 +6,8 @@ from .datacube.datacube_axis import UnsliceableDatacubeAxis
 from .datacube.tensor_index_tree import TensorIndexTree
 from .engine.hullslicer import HullSlicer
 from .engine.quadtree_slicer import QuadTreeSlicer
+from .engine.point_in_polygon_slicer import PointInPolygonSlicer
+from .engine.optimised_point_in_polygon_slicer import OptimisedPointInPolygonSlicer
 from .options import PolytopeOptions
 from .shapes import ConvexPolytope, Product
 from .utility.combinatorics import group, tensor_product
@@ -88,6 +90,12 @@ class Polytope:
             engines["quadtree"] = QuadTreeSlicer(quadtree_points)
         if "hullslicer" in engine_types:
             engines["hullslicer"] = HullSlicer()
+        if "point_in_polygon" in engine_types:
+            points = self.datacube.find_point_cloud()
+            engines["point_in_polygon"] = PointInPolygonSlicer(points)
+        if "optimised_point_in_polygon" in engine_types:
+            points = self.datacube.find_point_cloud()
+            engines["optimised_point_in_polygon"] = OptimisedPointInPolygonSlicer(points)
         return engines
 
     def _unique_continuous_points(self, p: ConvexPolytope, datacube: Datacube):
