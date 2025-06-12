@@ -5,6 +5,7 @@ from ...datacube_mappers import DatacubeMapper
 use_rust = False
 try:
     from polytope_feature.polytope_rs import get_latlons_sphere, get_latlons_oblate
+
     use_rust = True
 except (ModuleNotFoundError, ImportError):
     print("Failed to load Rust extension, falling back to Python implementation.")
@@ -228,13 +229,34 @@ class LambertConformalGridMapper(DatacubeMapper):
     def grid_latlon_points(self):
         if use_rust:
             if self.is_spherical:
-                return get_latlons_sphere(self.Latin1InRadians, self.Latin2InRadians, self.radius,
-                                          self.latFirstInRadians, self.LaDInRadians, self.lonFirstInRadians,
-                                          self.LoVInRadians, self.ny, self.nx, self.Dy, self.Dx)
+                return get_latlons_sphere(
+                    self.Latin1InRadians,
+                    self.Latin2InRadians,
+                    self.radius,
+                    self.latFirstInRadians,
+                    self.LaDInRadians,
+                    self.lonFirstInRadians,
+                    self.LoVInRadians,
+                    self.ny,
+                    self.nx,
+                    self.Dy,
+                    self.Dx,
+                )
             else:
-                return get_latlons_oblate(self.Latin1InRadians, self.Latin2InRadians, self.earthMinorAxisInMetres,
-                                          self.earthMajorAxisInMetres, self.latFirstInRadians, self.LaDInRadians,
-                                          self.lonFirstInRadians, self.LoVInRadians, self.ny, self.nx, self.Dy, self.Dx)
+                return get_latlons_oblate(
+                    self.Latin1InRadians,
+                    self.Latin2InRadians,
+                    self.earthMinorAxisInMetres,
+                    self.earthMajorAxisInMetres,
+                    self.latFirstInRadians,
+                    self.LaDInRadians,
+                    self.lonFirstInRadians,
+                    self.LoVInRadians,
+                    self.ny,
+                    self.nx,
+                    self.Dy,
+                    self.Dx,
+                )
         else:
             if self.is_spherical:
                 return self.get_latlons_sphere_py()

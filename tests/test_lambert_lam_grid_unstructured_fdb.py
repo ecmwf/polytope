@@ -44,6 +44,8 @@ class TestQuadTreeSlicer:
         self.latitudes = open_vals("tests/data/lambert_lam_latitudes.txt")
 
         self.points = list(zip(self.latitudes, self.longitudes))
+        print("HOW MANY POINTS IN GRID")
+        print(len(self.points))
         self.options = {
             "axis_config": [
                 {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},

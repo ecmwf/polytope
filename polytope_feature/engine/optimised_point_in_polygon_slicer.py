@@ -1,15 +1,23 @@
+from .engine import Engine
+from ..datacube.tensor_index_tree import TensorIndexTree
+from ..datacube.datacube_axis import IntDatacubeAxis
 from copy import copy
 
-from shapely.geometry import Point
-from shapely.geometry.polygon import Polygon
+use_rust = False
+try:
+    from polytope_feature.polytope_rs import extract_point_in_poly_bbox
 
-from ..datacube.datacube_axis import IntDatacubeAxis
-from ..datacube.tensor_index_tree import TensorIndexTree
-from .engine import Engine
+    use_rust = True
+except (ModuleNotFoundError, ImportError):
+    print("Failed to load Rust extension, falling back to Python implementation.")
+
+    from shapely.geometry import Point
+    from shapely.geometry.polygon import Polygon
 
 
 class OptimisedPointInPolygonSlicer(Engine):
     def __init__(self, points):
+        points = [tuple(point) for point in points]
         self.points = points
         self.bbox_points = []
 
@@ -57,14 +65,19 @@ class OptimisedPointInPolygonSlicer(Engine):
         # We do this by intersecting the datacube point cloud quad tree with the polytope here
 
         # But here, we only consider the points in the bounding box of the polygon
-        self.find_points_in_bbox(polytope)
 
-        found_points = []
-        for point in self.bbox_points:
-            new_point = Point(point[0], point[1])
-            polygon = Polygon(polytope.points)
-            if polygon.contains(new_point):
-                found_points.append(point)
+        if use_rust:
+            polytope_points = [tuple(point) for point in polytope.points]
+            found_points = extract_point_in_poly_bbox(self.points, polytope_points)
+        else:
+            self.find_points_in_bbox(polytope)
+
+            found_points = []
+            for point in self.bbox_points:
+                new_point = Point(point[0], point[1])
+                polygon = Polygon(polytope.points)
+                if polygon.contains(new_point):
+                    found_points.append(point)
         return found_points
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):

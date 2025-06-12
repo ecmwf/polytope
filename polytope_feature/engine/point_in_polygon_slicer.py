@@ -1,11 +1,19 @@
+from .engine import Engine
+from ..datacube.tensor_index_tree import TensorIndexTree
+from ..datacube.datacube_axis import IntDatacubeAxis
 from copy import copy
 
-from shapely.geometry import Point
-from shapely.geometry.polygon import Polygon
 
-from ..datacube.datacube_axis import IntDatacubeAxis
-from ..datacube.tensor_index_tree import TensorIndexTree
-from .engine import Engine
+use_rust = False
+try:
+    from polytope_feature.polytope_rs import extract_point_in_poly
+
+    use_rust = True
+except (ModuleNotFoundError, ImportError):
+    print("Failed to load Rust extension, falling back to Python implementation.")
+
+    from shapely.geometry import Point
+    from shapely.geometry.polygon import Polygon
 
 
 class PointInPolygonSlicer(Engine):
@@ -45,12 +53,15 @@ class PointInPolygonSlicer(Engine):
 
         # need to find points of the datacube contained within the polytope
         # We do this by intersecting the datacube point cloud quad tree with the polytope here
-        found_points = []
-        for point in self.points:
-            new_point = Point(point[0], point[1])
-            polygon = Polygon(polytope.points)
-            if polygon.contains(new_point):
-                found_points.append(point)
+        if use_rust:
+            found_points = extract_point_in_poly(self.points, polytope)
+        else:
+            found_points = []
+            for point in self.points:
+                new_point = Point(point[0], point[1])
+                polygon = Polygon(polytope.points)
+                if polygon.contains(new_point):
+                    found_points.append(point)
         return found_points
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):

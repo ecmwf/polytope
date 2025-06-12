@@ -1,4 +1,4 @@
-import geopandas as gpd
+# import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -32,7 +32,13 @@ class TestQuadTreeSlicer:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "irregular", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                        {
+                            "name": "mapper",
+                            "type": "unstructured",
+                            "resolution": 1280,
+                            "axes": ["latitude", "longitude"],
+                            "points": self.points,
+                        }
                     ],
                 },
             ],
@@ -52,7 +58,6 @@ class TestQuadTreeSlicer:
             datacube=self.arr,
             options=self.options,
             engine_options=self.engine_options,
-            point_cloud_options=self.points,
         )
         import time
 
@@ -85,9 +90,9 @@ class TestQuadTreeSlicer:
             assert eccodes_lon - tol <= lon
             assert lon <= eccodes_lon + tol
 
-        worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
-        fig, ax = plt.subplots(figsize=(12, 6))
-        worldmap.plot(color="darkgrey", ax=ax)
+        # worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
+        # fig, ax = plt.subplots(figsize=(12, 6))
+        # worldmap.plot(color="darkgrey", ax=ax)
 
         plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
         plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")

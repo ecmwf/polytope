@@ -2,10 +2,6 @@
 import numpy as np
 import pytest
 import xarray as xr
-from helper_functions import find_nearest_latlon
-import time
-
-# import iris
 
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
@@ -102,9 +98,6 @@ class TestQuadTreeSlicer:
             lats.append(lat)
             lons.append(lon)
 
-            # # each variable in the netcdf file is a cube
-            # # cubes = iris.load('../../Downloads/votemper_ORAS5_1m_197902_grid_T_02.nc')
-            # # iris.save(cubes, '../../Downloads/votemper_ORAS5_1m_197902_grid_T_02.grib2')
             # nearest_points = find_nearest_latlon("../../Downloads/votemper_ORAS5_1m_197902_grid_T_02.grib2", lat, lon)
             # eccodes_lat = nearest_points[0][0]["lat"]
             # eccodes_lon = nearest_points[0][0]["lon"] - 360
