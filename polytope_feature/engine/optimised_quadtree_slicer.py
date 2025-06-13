@@ -50,11 +50,10 @@ class OptimisedQuadTreeSlicer(Engine):
         if use_rust:
             polytope_points = [tuple(point) for point in polytope.points]
             polygon_points = self.quad_tree.query_polygon(self.bbox_points, 0, polytope_points)
+            print("HOW MANY TIMES??")
         else:
             polygon_points = self.quad_tree.query_polygon(polytope)
 
-        # for point in polygon_points:
-        #     assert self.bbox_points[point] in self.bbox_points
         return polygon_points
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):

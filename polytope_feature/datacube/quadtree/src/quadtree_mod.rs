@@ -308,6 +308,29 @@ impl QuadTree {
     //     a == b
     // }
 
+    fn does_polygon_bbox_intersect_line(&self, polygon_points: &mut Vec<[f64; 2]>, value: f64, axis_idx: usize) -> i32{
+        // Returns 0 if polygon bbox intersects line, 1 if bbox is on the left, 2 if bbox is on the right
+        if polygon_points.is_empty() || axis_idx > 1 {
+            return -1;
+        }
+
+        let (min, max) = polygon_points.iter()
+            .map(|pair| pair[axis_idx])
+            .fold((f64::INFINITY, f64::NEG_INFINITY), |(min, max), v| {
+                (min.min(v), max.max(v))
+            });
+
+        if value >= min && value <= max {
+            return 0;
+        }
+        else if value < min {
+            return 2;
+        }
+        else {
+            return 1;
+        }
+    }
+
     fn _query_polygon(
         &mut self,
         quadtree_points: &Vec<[f64; 2]>,
@@ -328,8 +351,21 @@ impl QuadTree {
                     let quadtree_center = self.get_center(node_idx)?;
 
                     // TODO: optimisation: if polygon is entirely within one of the child quadrants, don't need to do slice_in_two really
-    
-                    let (left_polygon, right_polygon) = slice_in_two(Some(points), quadtree_center.0, 0)?;
+                    
+                    let vertical_polygon_slice = self.does_polygon_bbox_intersect_line(points, quadtree_center.0, 0);
+                    let (left_polygon, right_polygon) = (None, None);
+                    // if vertical_polygon_slice == 0 {
+                    if true {
+                        let (left_polygon, right_polygon) = slice_in_two(Some(points), quadtree_center.0, 0)?;
+                    }
+                    else {
+                        if vertical_polygon_slice == 1 {
+                            let (left_polygon, right_polygon) = (Some(points), None::<Vec<[f64; 2]>>);
+                        }
+                        else if vertical_polygon_slice == 2 {
+                            let (left_polygon, right_polygon) = (None::<Vec<[f64; 2]>>, Some(points));
+                        }
+                    }
                     let (q1_polygon, q2_polygon) = slice_in_two(left_polygon.as_ref(), quadtree_center.1, 1)?;
                     let (q3_polygon, q4_polygon) = slice_in_two(right_polygon.as_ref(), quadtree_center.1, 1)?;
     
