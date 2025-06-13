@@ -353,19 +353,21 @@ impl QuadTree {
                     // TODO: optimisation: if polygon is entirely within one of the child quadrants, don't need to do slice_in_two really
                     
                     let vertical_polygon_slice = self.does_polygon_bbox_intersect_line(points, quadtree_center.0, 0);
-                    let (left_polygon, right_polygon) = (None, None);
-                    // if vertical_polygon_slice == 0 {
-                    if true {
-                        let (left_polygon, right_polygon) = slice_in_two(Some(points), quadtree_center.0, 0)?;
+                    // let (left_polygon, right_polygon) = (None, None);
+                    let mut left_polygon: Option<Vec<[f64; 2]>> = None;
+                    let mut right_polygon: Option<Vec<[f64; 2]>> = None;
+                    if vertical_polygon_slice == 0 {
+                        (left_polygon, right_polygon) = slice_in_two(Some(points), quadtree_center.0, 0)?;
                     }
                     else {
                         if vertical_polygon_slice == 1 {
-                            let (left_polygon, right_polygon) = (Some(points), None::<Vec<[f64; 2]>>);
+                            (left_polygon, right_polygon) = (Some(points.clone()), None::<Vec<[f64; 2]>>);
                         }
                         else if vertical_polygon_slice == 2 {
-                            let (left_polygon, right_polygon) = (None::<Vec<[f64; 2]>>, Some(points));
+                            (left_polygon, right_polygon) = (None::<Vec<[f64; 2]>>, Some(points.clone()));
                         }
                     }
+                    let (left_polygon, right_polygon) = slice_in_two(Some(points), quadtree_center.0, 0)?;
                     let (q1_polygon, q2_polygon) = slice_in_two(left_polygon.as_ref(), quadtree_center.1, 1)?;
                     let (q3_polygon, q4_polygon) = slice_in_two(right_polygon.as_ref(), quadtree_center.1, 1)?;
     
