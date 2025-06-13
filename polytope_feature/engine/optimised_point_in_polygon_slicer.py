@@ -73,9 +73,9 @@ class OptimisedPointInPolygonSlicer(Engine):
             self.find_points_in_bbox(polytope)
 
             found_points = []
+            polygon = Polygon(polytope.points)
             for point in self.bbox_points:
                 new_point = Point(point[0], point[1])
-                polygon = Polygon(polytope.points)
                 if polygon.contains(new_point):
                     found_points.append(point)
         return found_points

@@ -8,6 +8,7 @@ from .engine.hullslicer import HullSlicer
 from .engine.quadtree_slicer import QuadTreeSlicer
 from .engine.point_in_polygon_slicer import PointInPolygonSlicer
 from .engine.optimised_point_in_polygon_slicer import OptimisedPointInPolygonSlicer
+from .engine.optimised_quadtree_slicer import OptimisedQuadTreeSlicer
 from .options import PolytopeOptions
 from .shapes import ConvexPolytope, Product
 from .utility.combinatorics import group, tensor_product
@@ -88,6 +89,10 @@ class Polytope:
             # TODO: need to get the corresponding point cloud from the datacube
             quadtree_points = self.datacube.find_point_cloud()
             engines["quadtree"] = QuadTreeSlicer(quadtree_points)
+        if "optimised_quadtree" in engine_types:
+            # TODO: need to get the corresponding point cloud from the datacube
+            quadtree_points = self.datacube.find_point_cloud()
+            engines["optimised_quadtree"] = OptimisedQuadTreeSlicer(quadtree_points)
         if "hullslicer" in engine_types:
             engines["hullslicer"] = HullSlicer()
         if "point_in_polygon" in engine_types:
