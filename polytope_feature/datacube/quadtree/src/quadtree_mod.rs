@@ -302,6 +302,12 @@ impl QuadTree {
             .map_or_else(Vec::new, |points| points.iter().map(|p| *p).collect())
     }
 
+    // fn vecs_equal_unordered(mut a: Vec<[f64; 2]>, mut b: Vec<[f64; 2]>) -> bool {
+    //     a.sort_by(|p1, p2| p1.partial_cmp(p2).unwrap());
+    //     b.sort_by(|p1, p2| p1.partial_cmp(p2).unwrap());
+    //     a == b
+    // }
+
     fn _query_polygon(
         &mut self,
         quadtree_points: &Vec<[f64; 2]>,
@@ -311,14 +317,17 @@ impl QuadTree {
     ) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(points) = polygon_points {
             // Sort points based on the first coordinate
-            points.sort_unstable_by(|a, b| a[0].partial_cmp(&b[0]).unwrap());
-    
-            if *points == self.quadrant_rectangle_points(node_idx)? {
+            points.sort_unstable_by(|a, b| a.partial_cmp(&b).unwrap());
+            let mut quadrant_points = self.quadrant_rectangle_points(node_idx)?;
+            quadrant_points.sort_unstable_by(|a, b| a.partial_cmp(&b).unwrap());
+            if *points == quadrant_points {
                 results.extend(self.find_nodes_in(node_idx));
             } else {
                 let children_idxs = self.get_children_idxs(node_idx);
                 if !children_idxs.is_empty() {
                     let quadtree_center = self.get_center(node_idx)?;
+
+                    // TODO: optimisation: if polygon is entirely within one of the child quadrants, don't need to do slice_in_two really
     
                     let (left_polygon, right_polygon) = slice_in_two(Some(points), quadtree_center.0, 0)?;
                     let (q1_polygon, q2_polygon) = slice_in_two(left_polygon.as_ref(), quadtree_center.1, 1)?;

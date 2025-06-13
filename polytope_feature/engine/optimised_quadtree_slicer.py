@@ -52,6 +52,9 @@ class OptimisedQuadTreeSlicer(Engine):
             polygon_points = self.quad_tree.query_polygon(self.bbox_points, 0, polytope_points)
         else:
             polygon_points = self.quad_tree.query_polygon(polytope)
+
+        # for point in polygon_points:
+        #     assert self.bbox_points[point] in self.bbox_points
         return polygon_points
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):
@@ -69,8 +72,8 @@ class OptimisedQuadTreeSlicer(Engine):
         for value in extracted_points:
             # convert to float for slicing
             if use_rust:
-                lat_val = self.points[value][0]
-                lon_val = self.points[value][1]
+                lat_val = self.bbox_points[value][0]
+                lon_val = self.bbox_points[value][1]
             else:
                 lat_val = value.item[0]
                 lon_val = value.item[1]
