@@ -367,8 +367,24 @@ impl QuadTree {
                             (left_polygon, right_polygon) = (None::<Vec<[f64; 2]>>, Some(points.clone()));
                         }
                     }
-                    let (left_polygon, right_polygon) = slice_in_two(Some(points), quadtree_center.0, 0)?;
-                    let (q1_polygon, q2_polygon) = slice_in_two(left_polygon.as_ref(), quadtree_center.1, 1)?;
+                    // let (left_polygon, right_polygon) = slice_in_two(Some(points), quadtree_center.0, 0)?;
+
+                    let horizontal_polygon_slice_1 = self.does_polygon_bbox_intersect_line(left_polygon.as_mut(), quadtree_center.1, 1);
+                    // let (left_polygon, right_polygon) = (None, None);
+                    let mut q1_polygon: Option<Vec<[f64; 2]>> = None;
+                    let mut q2_polygon: Option<Vec<[f64; 2]>> = None;
+                    if horizontal_polygon_slice_1 == 0 {
+                        (q1_polygon, q2_polygon) = slice_in_two(left_polygon.as_ref(), quadtree_center.1, 1)?;
+                    }
+                    else {
+                        if vertical_polygon_slice == 1 {
+                            (q1_polygon, q2_polygon) = (left_polygon, None::<Vec<[f64; 2]>>);
+                        }
+                        else if vertical_polygon_slice == 2 {
+                            (q1_polygon, q2_polygon) = (None::<Vec<[f64; 2]>>, left_polygon);
+                        }
+                    }
+                    // let (q1_polygon, q2_polygon) = slice_in_two(left_polygon.as_ref(), quadtree_center.1, 1)?;
                     let (q3_polygon, q4_polygon) = slice_in_two(right_polygon.as_ref(), quadtree_center.1, 1)?;
     
                     if let Some(mut poly) = q1_polygon {
