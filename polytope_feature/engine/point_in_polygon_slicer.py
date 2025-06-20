@@ -2,6 +2,7 @@ from .engine import Engine
 from ..datacube.tensor_index_tree import TensorIndexTree
 from ..datacube.datacube_axis import IntDatacubeAxis
 from copy import copy
+import time
 
 
 use_rust = False
@@ -65,6 +66,7 @@ class PointInPolygonSlicer(Engine):
         return found_points
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):
+        time0 = time.time()
         for polytope in node["unsliced_polytopes"]:
             if ax.name in polytope._axes:
                 # here, first check if the axis is an unsliceable axis and directly build node if it is
@@ -75,13 +77,21 @@ class PointInPolygonSlicer(Engine):
                 # TODO: what does this function actually return and what should it return?
                 # It just modifies the next_nodes?
         del node["unsliced_polytopes"]
+        print("TIME TO BUILD BRANCH QUADTREE")
+        print(time.time() - time0)
+        print("\n\n")
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes, api):
+        time0 = time.time()
         extracted_points = self.extract_single(datacube, polytope)
+        print("TIME TO EXTRACT POINTS FROM POLYGON USING PIP")
+        print(time.time() - time0)
+        print("\n\n")
         # TODO: add the sliced points as node to the tree and update the next_nodes
         if len(extracted_points) == 0:
             node.remove_branch()
 
+        time1 = time.time()
         for point in extracted_points:
             # convert to float for slicing
             value = self.find_point_index(point)
@@ -101,3 +111,10 @@ class PointInPolygonSlicer(Engine):
             grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             grand_child["unsliced_polytopes"].remove(polytope)
         # TODO: but now what happens to the second axis in the point cloud?? Do we create a second node for it??
+        print("TIME TO BUILD RETURN TREE FOR POINTS FROM POLYGON USING PIP")
+        print(time.time() - time1)
+        print("\n\n")
+
+        print("TOTAL TIME EXTRACTING 2D LAT LON SHAPE")
+        print(time.time() - time0)
+        print("\n\n")

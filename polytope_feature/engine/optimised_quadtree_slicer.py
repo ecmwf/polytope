@@ -2,6 +2,7 @@
 
 
 from copy import copy
+import time
 
 from .engine import Engine
 
@@ -22,12 +23,7 @@ class OptimisedQuadTreeSlicer(Engine):
         # NOTE: should this be inside of the datacube instead that we create the quadtree?
         # TODO: maybe we create the quadtree as soon as we have an unstructured slicer type and return it
         # to the slicer somehow?
-        # quad_tree = QuadTree()
         self.points = [tuple(point) for point in points]
-        # self.find_points_in_bbox(points, polytope)
-        # quad_tree.build_point_tree(points)
-        # self.points = points
-        # self.quad_tree = quad_tree
 
     def find_points_in_bbox(self, polytope):
         x_min, x_max = polytope.extents(polytope.axes()[0])[:2]
@@ -45,29 +41,41 @@ class OptimisedQuadTreeSlicer(Engine):
         self.quad_tree = quad_tree
 
     def extract_single(self, datacube, polytope):
+        time0 = time.time()
         self.build_local_quadtree(polytope)
+        print("TIME TO BUILD LOCAL QUADTREE")
+        print(time.time() - time0)
+        print("\n\n")
         # extract a single polygon
         if use_rust:
             polytope_points = [tuple(point) for point in polytope.points]
             polygon_points = self.quad_tree.query_polygon(self.bbox_points, 0, polytope_points)
-            print("HOW MANY TIMES??")
         else:
             polygon_points = self.quad_tree.query_polygon(polytope)
 
         return polygon_points
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):
+        time0 = time.time()
         for polytope in node["unsliced_polytopes"]:
             if ax.name in polytope._axes:
                 self._build_sliceable_child(polytope, ax, node, datacube, next_nodes, api)
         del node["unsliced_polytopes"]
+        print("TIME TO BUILD BRANCH QUADTREE")
+        print(time.time() - time0)
+        print("\n\n")
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes, api):
+        time0 = time.time()
         extracted_points = self.extract_single(datacube, polytope)
+        print("TIME TO EXTRACT POINTS FROM QUADTREE")
+        print(time.time() - time0)
+        print("\n\n")
         if len(extracted_points) == 0:
             node.remove_branch()
         lat_ax = ax
         lon_ax = datacube._axes["longitude"]
+        time1 = time.time()
         for value in extracted_points:
             # convert to float for slicing
             if use_rust:
@@ -86,3 +94,10 @@ class OptimisedQuadTreeSlicer(Engine):
                 grand_child.indexes = [value.index]
             grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             grand_child["unsliced_polytopes"].remove(polytope)
+        print("TIME TO BUILD RETURN TREE FOR POINTS FROM QUADTREE")
+        print(time.time() - time1)
+        print("\n\n")
+
+        print("TOTAL TIME EXTRACTING 2D LAT LON SHAPE")
+        print(time.time() - time0)
+        print("\n\n")
