@@ -70,7 +70,6 @@ class TestSlicingFDBDatacube:
         assert len(result.leaves) == 3
         assert len(result.leaves[0].result) == 3
 
-    # @pytest.mark.fdb
     def test_fdb_datacube_point(self, downloaded_data_test_files, fdb_store_operational_setup):
         import pygribjump as gj
 
@@ -99,8 +98,8 @@ class TestSlicingFDBDatacube:
         assert set(result.leaves[0].flatten()["step"]) == set((0, 1))
         assert len(result.leaves[0].result) == 4
 
-    @pytest.mark.fdb
-    def test_fdb_datacube_point_v2(self):
+    # @pytest.mark.fdb
+    def test_fdb_datacube_point_v2(self, downloaded_data_test_files, fdb_store_operational_setup):
         import pygribjump as gj
 
         request = Request(
@@ -127,8 +126,8 @@ class TestSlicingFDBDatacube:
         assert len(result.leaves) == 3
         assert len(result.leaves[0].result) == 4
 
-    @pytest.mark.fdb
-    def test_fdb_datacube_point_step_not_compressed(self):
+    # @pytest.mark.fdb
+    def test_fdb_datacube_point_step_not_compressed(self, downloaded_data_test_files, fdb_store_operational_setup):
         import pygribjump as gj
 
         self.options = {
