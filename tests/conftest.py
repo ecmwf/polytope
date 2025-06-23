@@ -7,7 +7,12 @@ import pytest
 import requests
 import yaml
 
-from .helper_functions import HTTPError
+
+class HTTPError(Exception):
+    def __init__(self, status_code, message):
+        self.status_code = status_code
+        self.message = message
+        super().__init__(f"HTTPError {status_code}: {message}")
 
 
 @pytest.fixture
