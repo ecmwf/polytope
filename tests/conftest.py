@@ -21,7 +21,7 @@ def load_fdb_data_from_nexus():
     pass
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def fdb_path(request) -> pathlib.Path:
     """
     Provides path to test data at '<src-root>/tests/fdb_data'
