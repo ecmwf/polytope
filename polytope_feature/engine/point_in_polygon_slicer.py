@@ -54,7 +54,8 @@ class PointInPolygonSlicer(Engine):
         # need to find points of the datacube contained within the polytope
         # We do this by intersecting the datacube point cloud quad tree with the polytope here
         if use_rust:
-            found_points = extract_point_in_poly(self.points, polytope)
+            polytope_points = [tuple(point) for point in polytope.points]
+            found_points = extract_point_in_poly(self.points, polytope_points)
         else:
             found_points = []
             for point in self.points:

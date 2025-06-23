@@ -33,10 +33,10 @@ class OptimisedQuadTreeSlicer(Engine):
         x_min, x_max = polytope.extents(polytope.axes()[0])[:2]
         y_min, y_max = polytope.extents(polytope.axes()[1])[:2]
 
-        self.bbox_points = [
-            point for point in self.points
-            if x_min <= point[0] <= x_max and y_min <= point[1] <= y_max
-        ]
+        filtered = [(i, point) for i, point in enumerate(self.points)
+                    if x_min <= point[0] <= x_max and y_min <= point[1] <= y_max]
+
+        self.bbox_indexes, self.bbox_points = zip(*filtered) if filtered else ([], [])
 
     def build_local_quadtree(self, polytope):
         quad_tree = QuadTree()
@@ -72,18 +72,21 @@ class OptimisedQuadTreeSlicer(Engine):
         for value in extracted_points:
             # convert to float for slicing
             if use_rust:
+                actual_index = self.bbox_indexes[value]
                 lat_val = self.bbox_points[value][0]
                 lon_val = self.bbox_points[value][1]
             else:
+                actual_index = self.bbox_indexes[value.index]
                 lat_val = value.item[0]
                 lon_val = value.item[1]
             # store the native type
             (child, _) = node.create_child(lat_ax, lat_val, [])
             (grand_child, _) = child.create_child(lon_ax, lon_val, [])
             # NOTE: the index of the point is stashed in the branches' result
-            if use_rust:
-                grand_child.indexes = [value]
-            else:
-                grand_child.indexes = [value.index]
+            # if use_rust:
+            #     grand_child.indexes = [value]
+            # else:
+            #     grand_child.indexes = [value.index]
+            grand_child.indexes = [actual_index]
             grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             grand_child["unsliced_polytopes"].remove(polytope)
