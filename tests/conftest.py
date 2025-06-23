@@ -21,7 +21,7 @@ def load_fdb_data_from_nexus():
     pass
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def fdb_path(request) -> pathlib.Path:
     """
     Provides path to test data at '<src-root>/tests/fdb_data'
@@ -31,7 +31,7 @@ def fdb_path(request) -> pathlib.Path:
     return path
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def fdb_store_operational_setup(fdb_path, tmp_path, downloaded_data_test_files) -> pathlib.Path:
     # TODO: once we have the test data in the fdb_data folder, and we have a path to it, load it all in an fdb
 
@@ -70,14 +70,14 @@ def fdb_store_operational_setup(fdb_path, tmp_path, downloaded_data_test_files) 
     return tmp_path
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def shared_temp_data_dir(tmp_path_factory):
     # This creates a unique temp dir for the whole test session
     temp_dir = tmp_path_factory.mktemp("shared_fdb_data")
     return temp_dir
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def downloaded_data_test_files(shared_temp_data_dir):
     files_to_download = [
         # ("https://example.com/file1.csv", "file1.csv"),
