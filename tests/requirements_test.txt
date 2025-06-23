@@ -5,3 +5,4 @@ eccodes
 h5netcdf
 h5py
 earthkit-data
+requests
