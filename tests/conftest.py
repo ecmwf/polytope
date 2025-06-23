@@ -83,8 +83,8 @@ def downloaded_data_test_files(shared_temp_data_dir):
         # ("https://example.com/file1.csv", "file1.csv"),
         # ("https://example.com/file2.csv", "file2.csv"),
         # ("https://example.com/file3.csv", "file3.csv"),
-        ("https://get.ecmwf.int/test-data/polytope/test-data/foo.grib", "foo.grib")
-        ("https://get.ecmwf.int/test-data/polytope/test-data/t2m_jan_3_v2.grib", "t2m_jan_3_v2.grib")
+        ("https://get.ecmwf.int/test-data/polytope/test-data/foo.grib", "foo.grib"),
+        ("https://get.ecmwf.int/test-data/polytope/test-data/t2m_jan_3_v2.grib", "t2m_jan_3_v2.grib"),
     ]
 
     downloaded_paths = []
