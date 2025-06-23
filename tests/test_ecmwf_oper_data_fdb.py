@@ -71,7 +71,7 @@ class TestSlicingFDBDatacube:
         assert len(result.leaves[0].result) == 3
 
     # @pytest.mark.fdb
-    def test_fdb_datacube_point(self, downloaded_data_test_files):
+    def test_fdb_datacube_point(self, downloaded_data_test_files, fdb_store_operational_setup):
         import pygribjump as gj
 
         request = Request(
