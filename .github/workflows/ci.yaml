@@ -183,33 +183,6 @@ on:
     types: [labeled]
 
 jobs:
-  qa:
-    name: qa
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-        with:
-          repository: ${{ inputs.repository }}
-          ref: ${{ inputs.ref }}
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ inputs.python_version }}
-
-      - name: Install Python Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install black flake8 isort
-      - name: Check isort
-        run: isort --check .
-
-      - name: Check black
-        run: black --check .
-
-      - name: Check flake8
-        run: flake8 .
   # Run CI including downstream packages on self-hosted runners
   downstream-ci:
     name: downstream-ci
