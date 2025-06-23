@@ -6,7 +6,6 @@ dependencies: |
   ecmwf/metkit
   ecmwf/fdb
   ecmwf/gribjump
-  ecmwf/conflator@main
 dependency_cmake_options: |
   ecmwf/gribjump: "-DENABLE_FDB_BUILD_TOOLS=ON"
 dependency_branch: develop
