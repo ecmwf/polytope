@@ -1,0 +1,19 @@
+build:
+  python: "3.10"
+  modules:
+    - ninja
+    - aec
+  dependencies:
+    - ecmwf/ecbuild@develop
+    - ecmwf/eccodes@develop
+    - ecmwf/eckit@develop
+    - ecmwf/metkit@develop
+    - ecmwf/fdb@develop
+    - ecmwf/gribjump@develop
+  dependency_cmake_options:
+    - "ecmwf/gribjump: '-DENABLE_FDB_BUILD_TOOLS=ON'"
+    - "ecmwf/fdb: '-DENABLE_LUSTRE=OFF'"
+  parallel: 64
+  env:
+    - ECCODES_SAMPLES_PATH=$ECCODES_DIR/share/eccodes/samples
+    - ECCODES_DEFINITION_PATH=$ECCODES_DIR/share/eccodes/definitions

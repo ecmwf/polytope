@@ -9,3 +9,5 @@ pyfdb
 # pygribjump
 # git+ssh://git@github.com/ecmwf/gribjump.git@develop
 git+https://github.com/ecmwf/gribjump.git@develop
+
+requests
