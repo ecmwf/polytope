@@ -8,7 +8,7 @@ class TestEncoder:
     def setup_method(self):
         pass
 
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_encoding(self):
         import pygribjump as gj
 

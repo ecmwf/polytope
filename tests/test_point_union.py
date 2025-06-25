@@ -43,7 +43,7 @@ class TestSlicingFDBDatacube:
         }
 
     # Testing different shapes
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_fdb_datacube(self):
         import pygribjump as gj
 
@@ -81,7 +81,7 @@ class TestSlicingFDBDatacube:
         result.pprint()
         assert len(result.leaves) == 8
 
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_fdb_datacube_surrounding(self):
         import pygribjump as gj
 
@@ -117,7 +117,7 @@ class TestSlicingFDBDatacube:
             tot_leaves += len(leaf.result)
         assert tot_leaves == 9
 
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_fdb_datacube_axis_order(self):
         import pygribjump as gj
 

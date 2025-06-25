@@ -45,7 +45,7 @@ class TestEncoder:
             "timedelta_ax": grandchild_ax3,
         }
 
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_encoding(self):
         import pygribjump as gj
 

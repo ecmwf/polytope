@@ -43,7 +43,7 @@ class TestSlicingFDBDatacube:
         }
 
     # Testing different shapes
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_fdb_datacube(self):
         import pygribjump as gj
 
@@ -69,7 +69,7 @@ class TestSlicingFDBDatacube:
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
 
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_fdb_datacube_true_point(self):
         import pygribjump as gj
 
@@ -96,7 +96,7 @@ class TestSlicingFDBDatacube:
         # result.pprint()
         assert len(result.leaves) == 1
 
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_fdb_datacube_true_point_2(self):
         import pygribjump as gj
 
@@ -123,7 +123,7 @@ class TestSlicingFDBDatacube:
         result.pprint()
         assert len(result.leaves) == 1
 
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_fdb_datacube_true_point_3(self):
         import pygribjump as gj
 
@@ -152,7 +152,7 @@ class TestSlicingFDBDatacube:
         assert result.leaves[0].values == (359.929906542056,)
         assert result.leaves[0].axis.name == "longitude"
 
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_fdb_datacube_true_point_5(self):
         import pygribjump as gj
 
@@ -181,7 +181,7 @@ class TestSlicingFDBDatacube:
         assert result.leaves[0].values == (359.929906542056,)
         assert result.leaves[0].axis.name == "longitude"
 
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_fdb_datacube_true_point_4(self):
         import pygribjump as gj
 

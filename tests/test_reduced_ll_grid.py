@@ -50,7 +50,7 @@ class TestReducedLatLonGrid:
 
     @pytest.mark.skip(reason="wave data grid packing not supported")
     @pytest.mark.internet
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_reduced_ll_grid(self):
         import pygribjump as gj
 

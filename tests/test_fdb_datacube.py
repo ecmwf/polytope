@@ -46,7 +46,7 @@ class TestSlicingFDBDatacube:
         }
 
     # Testing different shapes
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_fdb_datacube(self):
         import pygribjump as gj
 
@@ -96,7 +96,7 @@ class TestSlicingFDBDatacube:
         # plt.colorbar(label="Temperature")
         # plt.show()
 
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_fdb_datacube_select_grid(self):
         import pygribjump as gj
 

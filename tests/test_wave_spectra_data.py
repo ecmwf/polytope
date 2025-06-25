@@ -44,7 +44,7 @@ class TestWaveData:
         }
         self.slicer = HullSlicer()
 
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_healpix_grid(self):
         import pygribjump as gj
 

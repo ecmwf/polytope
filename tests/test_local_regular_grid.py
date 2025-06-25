@@ -50,7 +50,7 @@ class TestSlicingFDBDatacube:
         }
 
     # Testing different shapes
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_fdb_datacube(self):
         import pygribjump as gj
 
@@ -79,7 +79,7 @@ class TestSlicingFDBDatacube:
         assert result.leaves[0].flatten()["latitude"] == (0,)
         assert result.leaves[0].flatten()["longitude"] == (0,)
 
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_point_outside_local_region(self):
         import pygribjump as gj
 
@@ -108,7 +108,7 @@ class TestSlicingFDBDatacube:
         assert result.leaves[0].flatten()["latitude"] == (0,)
         assert result.leaves[0].flatten()["longitude"] == (60,)
 
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_point_outside_local_region_2(self):
         import pygribjump as gj
 
@@ -137,7 +137,7 @@ class TestSlicingFDBDatacube:
         assert result.leaves[0].flatten()["latitude"] == (40,)
         assert result.leaves[0].flatten()["longitude"] == (1,)
 
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_point_outside_local_region_3(self):
         import pygribjump as gj
 
@@ -165,7 +165,7 @@ class TestSlicingFDBDatacube:
         assert len(result.leaves) == 1
         assert result.is_root()
 
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_point_outside_local_region_4(self):
         import pygribjump as gj
 
@@ -193,7 +193,7 @@ class TestSlicingFDBDatacube:
         assert len(result.leaves) == 1
         assert result.is_root()
 
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_point_outside_local_region_5(self):
         import pygribjump as gj
 
@@ -221,7 +221,7 @@ class TestSlicingFDBDatacube:
         assert len(result.leaves) == 1
         assert result.is_root()
 
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_point_outside_local_region_6(self):
         import pygribjump as gj
 
@@ -249,7 +249,7 @@ class TestSlicingFDBDatacube:
         assert len(result.leaves) == 1
         assert result.is_root()
 
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_point_outside_local_region_7(self):
         import pygribjump as gj
 
@@ -278,7 +278,7 @@ class TestSlicingFDBDatacube:
         assert result.leaves[0].flatten()["latitude"] == (-40,)
         assert result.leaves[0].flatten()["longitude"] == (1,)
 
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_point_outside_local_region_8(self):
         import pygribjump as gj
 
@@ -307,7 +307,7 @@ class TestSlicingFDBDatacube:
         assert result.leaves[0].flatten()["latitude"] == (-30,)
         assert result.leaves[0].flatten()["longitude"] == (-20,)
 
-    @pytest.mark.fdb
+    # @pytest.mark.fdb
     def test_point_outside_local_region_9(self):
         import pygribjump as gj
 
