@@ -26,7 +26,8 @@ class TestQuadTreeSlicer:
 
         self.arr = ds.to_xarray(engine="cfgrib").t2m
 
-        uuid = "../../Downloads/icon_grid_0026_R03B07_G.nc"
+        # uuid = "../../Downloads/icon_grid_0026_R03B07_G.nc"
+        uuid = "icon_grid_0026_R03B07_G"
 
         self.options = {
             "axis_config": [

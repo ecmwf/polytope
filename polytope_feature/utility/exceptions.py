@@ -45,3 +45,10 @@ class GribJumpNoIndexError(PolytopeError, ValueError):
         self.message = (
             "Feature extraction cannot be performed on this data because no GribJump index has been generated."
         )
+
+
+class HTTPError(Exception):
+    def __init__(self, status_code, message):
+        self.status_code = status_code
+        self.message = message
+        super().__init__(f"HTTPError {status_code}: {message}")

@@ -4,6 +4,11 @@ import xarray as xr
 
 from ..irregular import IrregularGridMapper
 
+import os
+import requests
+
+from ......utility.exceptions import HTTPError
+
 
 class ICONGridMapper(IrregularGridMapper):
     def __init__(
@@ -21,9 +26,41 @@ class ICONGridMapper(IrregularGridMapper):
 
         self.uuid = mapper_options.uuid
         self.is_irregular = True
+        self.uuid_map = {"icon_grid_0026_R03B07_G": "icon_grid_0026_R03B07_G.nc"}
+
+    def get_icon_grid_path(self, filename):
+
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+
+        local_directory = os.path.join(script_dir, "icon_grids")
+
+        nexus_url = ""
+
+        if not os.path.exists(local_directory):
+            os.makedirs(local_directory)
+
+        # Construct the full path for the local file
+        local_file_path = os.path.join(local_directory, filename)
+
+        if not os.path.exists(local_file_path):
+            session = requests.Session()
+            response = session.get(nexus_url)
+            if response.status_code != 200:
+                raise HTTPError(response.status_code, "Failed to download data.")
+            # Save the downloaded data to the local file
+            with open(local_file_path, "wb") as f:
+                f.write(response.content)
+        return local_file_path
 
     def grid_latlon_points(self):
-        grid = xr.open_dataset(self.uuid, engine="netcdf4")
+        path = self.uuid_map[self.uuid]
+
+        # if the path already exists locally, then do nothing
+        # else, pull data from remote
+
+        path = self.get_icon_grid_path(path)
+
+        grid = xr.open_dataset(path, engine="netcdf4")
 
         longitudes = grid.clon.values * 180 / math.pi
         latitudes = grid.clat.values * 180 / math.pi

@@ -55,3 +55,4 @@ venv_gj_iterator
 target
 rust_deployment_venv
 *.so
+*.nc
