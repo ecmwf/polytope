@@ -57,7 +57,7 @@ class TestQuadTreeSlicer:
             Select("time", [pd.Timestamp("2025-01-10")]),
             Select("heightAboveGround", [2.0]),
             Select("step", [datetime.timedelta(days=0)]),
-            Box(["latitude", "longitude"], [0, 0], [10, 10]),
+            Box(["latitude", "longitude"], [0, 0], [1, 1]),
         )
 
         self.API = Polytope(

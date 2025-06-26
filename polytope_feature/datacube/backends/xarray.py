@@ -15,8 +15,11 @@ class XArrayDatacube(Datacube):
         axis_options=None,
         compressed_axes_options=[],
         context=None,
+        grid_online_path="",
+        grid_local_directory="",
     ):
-        super().__init__(axis_options, compressed_axes_options)
+        super().__init__(axis_options, compressed_axes_options, grid_online_path, grid_local_directory)
+
         if axis_options is None:
             axis_options = {}
         self.axis_options = axis_options

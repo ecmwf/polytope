@@ -52,6 +52,8 @@ class TestQuadTreeSlicer:
             ],
             "pre_path": {"date": "20250110"},
             # TODO: add "grid_url" + "grid_local_path"
+            "grid_online_path": "https://get.ecmwf.int/test-data/polytope/test-data/icon_grid_0026_R03B07_G.nc",
+            "grid_local_directory": "downloaded_files",
         }
 
     @pytest.mark.fdb

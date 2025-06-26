@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Dict, List, Literal, Optional, Union
+from typing import Dict, List, Literal, Optional, Union, Tuple
 
 from conflator import ConfigModel
 from pydantic import ConfigDict
@@ -39,7 +39,8 @@ class MapperConfig(TransformationConfig):
     Latin1InRadians: Optional[float] = None
     Latin2InRadians: Optional[float] = None
     LaDInRadians: Optional[float] = None
-    points: Optional[List[List[float]]] = None
+    # points: Optional[List[List[float]]] = None
+    points: Optional[List[Tuple[float, float]]] = None
     uuid: Optional[str] = None
 
 
@@ -80,8 +81,8 @@ class Config(ConfigModel):
     compressed_axes_config: List[str] = [""]
     pre_path: Optional[Dict[str, path_subclasses_union]] = {}
     alternative_axes: Optional[List[GribJumpAxesConfig]] = []
-    grid_online_path: Optional[str] = None
-    grid_local_directory: Optional[str] = None
+    grid_online_path: Optional[str] = ""
+    grid_local_directory: Optional[str] = ""
 
 
 class PolytopeOptions(ABC):

@@ -23,6 +23,8 @@ class DatacubeMapper(DatacubeAxisTransformation):
             self._axis_reversed = mapper_options.axis_reversed
         self.mapper_options = mapper_options
         self.old_axis = name
+        print("HERE")
+        print(datacube.grid_online_path)
         self.grid_online_path = datacube.grid_online_path
         self.grid_local_directory = datacube.grid_local_directory
         self._final_transformation = self.generate_final_transformation()
