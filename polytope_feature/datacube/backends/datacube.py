@@ -32,6 +32,8 @@ class Datacube(ABC):
         self.unwanted_path = {}
         self.compressed_axes = compressed_axes_options
         self.grid_md5_hash = None
+        self.grid_online_path = None
+        self.grid_local_directory = None
 
     @abstractmethod
     def get(self, requests: TensorIndexTree, context: Dict) -> Any:

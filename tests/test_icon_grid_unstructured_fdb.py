@@ -51,6 +51,7 @@ class TestQuadTreeSlicer:
                 },
             ],
             "pre_path": {"date": "20250110"},
+            # TODO: add "grid_url" + "grid_local_path"
         }
 
     @pytest.mark.fdb

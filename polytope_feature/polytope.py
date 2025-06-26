@@ -66,7 +66,8 @@ class Polytope:
         self.compressed_axes = []
         self.context = context
 
-        axis_options, compressed_axes_options, config, alternative_axes = PolytopeOptions.get_polytope_options(options)
+        axis_options, compressed_axes_options, config, alternative_axes, grid_online_path, grid_local_directory = PolytopeOptions.get_polytope_options(
+            options)
         self.datacube = Datacube.create(
             datacube,
             config,
@@ -75,6 +76,8 @@ class Polytope:
             alternative_axes,
             self.context,
         )
+        self.datacube.grid_online_path = grid_online_path
+        self.datacube.grid_local_directory = grid_local_directory
         if engine_options == {}:
             for ax_name in self.datacube._axes.keys():
                 engine_options[ax_name] = "hullslicer"

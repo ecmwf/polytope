@@ -13,7 +13,8 @@ except (ModuleNotFoundError, ImportError):
 
 class LambertConformalGridMapper(DatacubeMapper):
     def __init__(
-        self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None, mapper_options=None
+        self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None, mapper_options=None, grid_online_path=None,
+        grid_local_directory=None
     ):
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
