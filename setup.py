@@ -15,8 +15,6 @@ elif use_rust == 1:  # rust extension
         "polytope_feature.polytope_rs",
         path="polytope_feature/datacube/quadtree/Cargo.toml",
         debug=False,
-        # Optional: args to control the output
-        args=["--manifest-path=polytope_feature/datacube/quadtree/Cargo.toml"]
     )]
 else:  # (default) try rust extension, if fail fallback to python
     print("Building with rust bindings, and if failing reverting to pure Python.")
@@ -27,8 +25,6 @@ else:  # (default) try rust extension, if fail fallback to python
         "polytope_feature.polytope_rs",
         path="polytope_feature/datacube/quadtree/Cargo.toml",
         debug=False,
-        # Optional: args to control the output
-        args=["--manifest-path=polytope_feature/datacube/quadtree/Cargo.toml"],
         optional=True,
     )]
 
