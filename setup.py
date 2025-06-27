@@ -14,7 +14,6 @@ elif use_rust == 1:  # rust extension
     rust_extensions = [RustExtension(
         "polytope_feature.polytope_rs",
         path="polytope_feature/datacube/quadtree/Cargo.toml",
-        binding="pyo3",
         debug=False,
         # Optional: args to control the output
         args=["--manifest-path=polytope_feature/datacube/quadtree/Cargo.toml"]
@@ -27,7 +26,6 @@ else:  # (default) try rust extension, if fail fallback to python
     rust_extensions = [RustExtension(
         "polytope_feature.polytope_rs",
         path="polytope_feature/datacube/quadtree/Cargo.toml",
-        binding="pyo3",
         debug=False,
         # Optional: args to control the output
         args=["--manifest-path=polytope_feature/datacube/quadtree/Cargo.toml"],
