@@ -28,19 +28,12 @@ class QubedSlicer(Engine):
 
     def find_values_between(self, polytope, ax, node, datacube, lower, upper, path=None):
         if isinstance(ax, UnsliceableDatacubeAxis):
-            # print("HERE WHAT IS STR OR FLOAT")
-            # print((lower, upper))
-            # print(node)
-            # print(node.values)
             return [v for v in node.values if lower <= v <= upper]
 
         tol = ax.tol
         lower = ax.from_float(lower - tol)
         upper = ax.from_float(upper + tol)
-
         method = polytope.method
-
-        # values = datacube.get_indices(flattened, ax, lower, upper, method)
         values = datacube.get_indices(path, node, ax, lower, upper, method)
         return values
 
@@ -99,8 +92,6 @@ class QubedSlicer(Engine):
                 ax = datacube._axes[axis_name]
                 lower, upper, slice_axis_idx = poly.extents(axis_name)
 
-                # new_lower, new_upper = transform_upper_lower(axis_name, lower, upper, datacube)
-                # found_vals = [v for v in second_axis_vals if new_lower <= v <= new_upper]
                 found_vals = self.find_values_between(poly, ax, None, datacube, lower, upper, path)
 
                 if len(found_vals) == 0:
@@ -109,7 +100,6 @@ class QubedSlicer(Engine):
                 # slice polytope along each value on child and keep resulting polytopes in memory
                 sliced_polys = []
                 for val in found_vals:
-                    # ax = datacube._axes[axis_name]
                     if not isinstance(ax, UnsliceableDatacubeAxis):
                         fval = ax.to_float(val)
                         # slice polytope along the value and add sliced polytope to list of polytopes in memory
@@ -173,7 +163,6 @@ class QubedSlicer(Engine):
                         # slice polytope along each value on child and keep resulting polytopes in memory
                         sliced_polys = []
                         for val in found_vals:
-                            # ax = datacube._axes[grid_axes[0]]
                             if not isinstance(ax, UnsliceableDatacubeAxis):
                                 fval = ax.to_float(val)
                                 # slice polytope along the value and add sliced polytope to list of polytopes in memory
@@ -218,7 +207,6 @@ class QubedSlicer(Engine):
 
                 # TODO: here add the axes to datacube backend with transformations for child.key
                 # TODO: update the datacube axis_options before we dynamically change the axes
-                # datacube.axis_options.update()
                 datacube.add_axes_dynamically(child)
 
                 # here now first change the values in the polytopes on the axis to reflect the axis type
@@ -230,11 +218,8 @@ class QubedSlicer(Engine):
 
                     # # find values on child that are within extents
                     # # here first change the child values of the datacube ie the Qubed tree to their right type with the transformation
-                    # modified_vals = change_datacube_val_types(child, datacube_transformations)
 
                     # # here use the axis to transform lower and upper to right type too
-                    # new_lower, new_upper = transform_upper_lower(child.key, lower, upper, datacube)
-                    # found_vals = [v for v in modified_vals if new_lower <= v <= new_upper]
                     found_vals = self.find_values_between(poly, ax, child, datacube, lower, upper)
 
                     if len(found_vals) == 0:
