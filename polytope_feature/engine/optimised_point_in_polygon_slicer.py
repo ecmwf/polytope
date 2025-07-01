@@ -20,9 +20,10 @@ class OptimisedPointInPolygonSlicer(Engine):
         points = [tuple(point) for point in points]
         self.points = points
         self.bbox_points = []
+        self._points = {point: i for i, point in enumerate(self.points)}
 
     def find_point_index(self, point):
-        index = self.points.index(point)
+        index = self._points[point]
         return index
 
     # method to slice polygon against quadtree
@@ -98,16 +99,14 @@ class OptimisedPointInPolygonSlicer(Engine):
         if len(extracted_points) == 0:
             node.remove_branch()
 
+        lat_ax = ax
+        lon_ax = datacube._axes["longitude"]
+
         for point in extracted_points:
             # convert to float for slicing
             value = self.find_point_index(point)
             lat_val = point[0]
             lon_val = point[1]
-            lat_ax = ax
-
-            # TODO: is there a nicer way to get this axis that does not depend on knowing
-            # the axis name in advance?
-            lon_ax = datacube._axes["longitude"]
 
             # store the native type
             (child, _) = node.create_child(lat_ax, lat_val, [])

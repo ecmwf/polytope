@@ -1,4 +1,4 @@
-# import os
+import os
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -8,7 +8,7 @@ from earthkit import data
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
 
-# os.environ["FDB_HOME"] = "/Users/male/git/fdb-new-home"
+os.environ["FDB_HOME"] = "/Users/male/git/fdb-new-home"
 
 
 class TestQuadTreeSlicer:
@@ -53,7 +53,8 @@ class TestQuadTreeSlicer:
             "pre_path": {"date": "20250110"},
             # TODO: add "grid_url" + "grid_local_path"
             "grid_online_path": "https://get.ecmwf.int/test-data/polytope/test-data/icon_grid_0026_R03B07_G.nc",
-            "grid_local_directory": "downloaded_files",
+            # "grid_local_directory": "downloaded_files",
+            "grid_local_directory": "",
         }
 
     @pytest.mark.fdb
