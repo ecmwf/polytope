@@ -32,3 +32,10 @@ venv_python3_11
 tests/data
 venv_gj_iterator
 new_venv_gj_iterator
+*.so
+rust_deployment_venv
+**/icon_grids
+polytope_feature/_version.py
+**/build
+**.lock
+**/target
