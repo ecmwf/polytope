@@ -65,181 +65,180 @@ class QubedSlicer(Engine):
             [sliced_poly_ for sliced_poly_ in sliced_polys if sliced_poly_ is not None])
         return child_polytopes
 
-    def _actual_slice(self, q: Qube, polytopes_to_slice, datacube, datacube_transformations) -> 'Qube':
+    def find_new_vals(self, found_vals, ax):
+        new_found_vals = []
+        for found_val in found_vals:
+            found_val = self.remap_values(ax, found_val)
+            if isinstance(found_val, pd.Timedelta) or isinstance(found_val, pd.Timestamp):
+                new_found_vals.append(str(found_val))
+            else:
+                new_found_vals.append(found_val)
+        return new_found_vals
 
-        def _slice_second_grid_axis(axis_name, polytopes, datacube, datacube_transformations, second_axis_vals, path) -> list[Qube]:
-            result = []
-            polytopes_on_axis = find_polytopes_on_axis(axis_name, polytopes)
-
-            for poly in polytopes_on_axis:
-                ax = datacube._axes[axis_name]
-                lower, upper, slice_axis_idx = poly.extents(axis_name)
-
-                found_vals = self.find_values_between(poly, ax, None, datacube, lower, upper, path)
-
-                if len(found_vals) == 0:
+    def build_branch(self, real_uncompressed_axis, found_vals, sliced_polys, polytopes, poly, child, datacube, datacube_transformations, ax):
+        final_children_and_vals = []
+        if real_uncompressed_axis:
+            for i, found_val in enumerate(found_vals):
+                sliced_polys_ = [sliced_polys[i]]
+                child_polytopes = self.find_children_polytopes(polytopes, poly, sliced_polys_)
+                children = self._slice(child, child_polytopes, datacube, datacube_transformations)
+                # If this node used to have children but now has none due to filtering, skip it.
+                if child.children and not children:
                     continue
 
-                # decide if axis should be compressed or not according to polytope
-                # NOTE: actually the second grid axis will always be compressed
+                new_found_vals = self.find_new_vals([found_val], ax)
+                final_children_and_vals.append((children, new_found_vals))
+        else:
+            # if it's compressed, then can add all found values in a single node
+            child_polytopes = self.find_children_polytopes(polytopes, poly, sliced_polys)
+            # create children
+            children = self._slice(child, child_polytopes, datacube, datacube_transformations)
+            # If this node used to have children but now has none due to filtering, skip it.
+            if child.children and not children:
+                return None
 
-                # if it's not compressed, need to separate into different nodes to append to the tree
+            new_found_vals = self.find_new_vals(found_vals, ax)
+            final_children_and_vals.append((children, new_found_vals))
+        if len(final_children_and_vals) == 0:
+            return None
+        return final_children_and_vals
 
-                new_found_vals = []
-                for found_val in found_vals:
-                    found_val = self.remap_values(ax, found_val)
-                    if isinstance(found_val, pd.Timedelta) or isinstance(found_val, pd.Timestamp):
-                        new_found_vals.append(str(found_val))
-                    else:
-                        new_found_vals.append(found_val)
+    def _slice(self, q: Qube, polytopes, datacube, datacube_transformations) -> list[Qube]:
+        result = []
 
-                # NOTE this was the last axis so we do not have children...
+        if len(q.children) == 0:
+            # add "fake" axes and their nodes in order -> what about merged axes??
+            mapper_transformation = None
+            for transformation in list(datacube_transformations.values()):
+                if isinstance(transformation, DatacubeMapper):
+                    mapper_transformation = transformation
+            if not mapper_transformation:
+                # There is no grid mapping
+                pass
+            else:
+                # Slice on the two grid axes
+                grid_axes = mapper_transformation._mapped_axes
 
-                result.extend([Qube.make(
-                    key=axis_name,
-                    values=QEnum(new_found_vals),
-                    metadata={},
-                    children={}
-                )])
-            return result
-
-        def _slice(q: Qube, polytopes, datacube, datacube_transformations) -> list[Qube]:
-            result = []
-
-            if len(q.children) == 0:
-                # add "fake" axes and their nodes in order -> what about merged axes??
-                mapper_transformation = None
-                for transformation in list(datacube_transformations.values()):
-                    if isinstance(transformation, DatacubeMapper):
-                        mapper_transformation = transformation
-                if not mapper_transformation:
-                    # There is no grid mapping
-                    pass
-                else:
-                    # Slice on the two grid axes
-                    grid_axes = mapper_transformation._mapped_axes
-
-                    # Handle first grid axis
-                    polytopes_on_axis = find_polytopes_on_axis(grid_axes[0], polytopes)
-
-                    for poly in polytopes_on_axis:
-                        ax = datacube._axes[grid_axes[0]]
-                        lower, upper, slice_axis_idx = poly.extents(grid_axes[0])
-
-                        found_vals = self.find_values_between(poly, ax, None, datacube, lower, upper)
-
-                        if len(found_vals) == 0:
-                            continue
-
-                        sliced_polys = self.get_sliced_polys(found_vals, ax, grid_axes[0], poly, slice_axis_idx)
-                        # decide if axis should be compressed or not according to polytope
-                        # NOTE: actually the first grid axis will never be compressed
-                        # axis_compressed = (grid_axes[0] in self.compressed_axes)
-
-                        # if it's not compressed, need to separate into different nodes to append to the tree
-                        for i, found_val in enumerate(found_vals):
-                            found_val = self.remap_values(ax, found_val)
-                            child_polytopes = [p for p in polytopes if p != poly]
-                            if sliced_polys[i]:
-                                child_polytopes.append(sliced_polys[i])
-
-                            second_axis_vals = mapper_transformation.second_axis_vals([found_val])
-                            flattened_path = {grid_axes[0]: (found_val,)}
-                            # get second axis children through slicing
-                            children = _slice_second_grid_axis(
-                                grid_axes[1], child_polytopes, datacube, datacube_transformations, second_axis_vals, flattened_path)
-                            # If this node used to have children but now has none due to filtering, skip it.
-                            if not children:
-                                continue
-                            if isinstance(found_val, pd.Timedelta) or isinstance(found_val, pd.Timestamp):
-                                found_val = [str(found_val)]
-
-                            # TODO: remap the found_val using self.remap_values like in the hullslicer
-
-                            # TODO: when we have an axis that we would like to merge with another, we should skip the node creation here
-                            # and instead keep/cache the value to merge with the node from before??
-
-                            qube_node = Qube.make(key=grid_axes[0],
-                                                  values=QEnum([found_val]),
-                                                  metadata={},
-                                                  children=children)
-                            result.append(qube_node)
-
-            for i, child in enumerate(q.children):
-                # find polytopes which are defined on axis child.key
-                polytopes_on_axis = find_polytopes_on_axis(child.key, polytopes)
-
-                # TODO: here add the axes to datacube backend with transformations for child.key
-                # TODO: update the datacube axis_options before we dynamically change the axes
-                datacube.add_axes_dynamically(child)
-
-                # here now first change the values in the polytopes on the axis to reflect the axis type
+                # Handle first grid axis
+                polytopes_on_axis = find_polytopes_on_axis(grid_axes[0], polytopes)
 
                 for poly in polytopes_on_axis:
-                    ax = datacube._axes[child.key]
-                    # find extents of polytope on child.key
-                    lower, upper, slice_axis_idx = poly.extents(child.key)
+                    ax = datacube._axes[grid_axes[0]]
+                    lower, upper, slice_axis_idx = poly.extents(grid_axes[0])
 
-                    # # find values on child that are within extents
-                    # # here first change the child values of the datacube ie the Qubed tree to their right type with the transformation
-
-                    # # here use the axis to transform lower and upper to right type too
-                    found_vals = self.find_values_between(poly, ax, child, datacube, lower, upper)
+                    found_vals = self.find_values_between(poly, ax, None, datacube, lower, upper)
 
                     if len(found_vals) == 0:
                         continue
 
-                    sliced_polys = self.get_sliced_polys(found_vals, ax, child.key, poly, slice_axis_idx)
+                    sliced_polys = self.get_sliced_polys(found_vals, ax, grid_axes[0], poly, slice_axis_idx)
                     # decide if axis should be compressed or not according to polytope
-                    axis_compressed = (child.key in self.compressed_axes)
-                    real_uncompressed_axis = not axis_compressed and len(found_vals) > 1
+                    # NOTE: actually the first grid axis will never be compressed
+                    # axis_compressed = (grid_axes[0] in self.compressed_axes)
+
                     # if it's not compressed, need to separate into different nodes to append to the tree
-                    if real_uncompressed_axis:
-                        for i, found_val in enumerate(found_vals):
-                            found_val = self.remap_values(ax, found_val)
-                            sliced_polys_ = [sliced_polys[i]]
-                            child_polytopes = self.find_children_polytopes(polytopes, poly, sliced_polys_)
-                            children = _slice(child, child_polytopes, datacube, datacube_transformations)
-                            # If this node used to have children but now has none due to filtering, skip it.
-                            if child.children and not children:
-                                continue
-                            if isinstance(found_val, pd.Timedelta) or isinstance(found_val, pd.Timestamp):
-                                found_val = [str(found_val)]
+                    for i, found_val in enumerate(found_vals):
+                        found_val = self.remap_values(ax, found_val)
+                        child_polytopes = [p for p in polytopes if p != poly]
+                        if sliced_polys[i]:
+                            child_polytopes.append(sliced_polys[i])
 
-                            # TODO: when we have an axis that we would like to merge with another, we should skip the node creation here
-                            # and instead keep/cache the value to merge with the node from before??
-
-                            result.extend([Qube.make(key=child.key,
-                                                     values=QEnum(found_val),
-                                                     metadata=child.metadata,
-                                                     children=children)])
-                    else:
-                        # if it's compressed, then can add all found values in a single node
-                        child_polytopes = self.find_children_polytopes(polytopes, poly, sliced_polys)
-                        # create children
-                        children = _slice(child, child_polytopes, datacube, datacube_transformations)
+                        second_axis_vals = mapper_transformation.second_axis_vals([found_val])
+                        flattened_path = {grid_axes[0]: (found_val,)}
+                        # get second axis children through slicing
+                        children = self._slice_second_grid_axis(
+                            grid_axes[1], child_polytopes, datacube, datacube_transformations, second_axis_vals, flattened_path)
                         # If this node used to have children but now has none due to filtering, skip it.
-                        if child.children and not children:
+                        if not children:
                             continue
+                        if isinstance(found_val, pd.Timedelta) or isinstance(found_val, pd.Timestamp):
+                            found_val = [str(found_val)]
 
-                        new_found_vals = []
-                        for found_val in found_vals:
-                            found_val = self.remap_values(ax, found_val)
-                            if isinstance(found_val, pd.Timedelta) or isinstance(found_val, pd.Timestamp):
-                                new_found_vals.append(str(found_val))
-                            else:
-                                new_found_vals.append(found_val)
+                        # TODO: remap the found_val using self.remap_values like in the hullslicer
 
-                        result.extend([Qube.make(
-                            key=child.key,
-                            values=QEnum(new_found_vals),
-                            metadata=child.metadata,
-                            children=children
-                        )])
+                        # TODO: when we have an axis that we would like to merge with another, we should skip the node creation here
+                        # and instead keep/cache the value to merge with the node from before??
 
-            return result
+                        qube_node = Qube.make(key=grid_axes[0],
+                                              values=QEnum([found_val]),
+                                              metadata={},
+                                              children=children)
+                        result.append(qube_node)
 
-        return Qube.root_node(_slice(q, polytopes_to_slice, datacube, datacube_transformations))
+        for i, child in enumerate(q.children):
+            # find polytopes which are defined on axis child.key
+            polytopes_on_axis = find_polytopes_on_axis(child.key, polytopes)
+
+            # TODO: here add the axes to datacube backend with transformations for child.key
+            # TODO: update the datacube axis_options before we dynamically change the axes
+            datacube.add_axes_dynamically(child)
+
+            # here now first change the values in the polytopes on the axis to reflect the axis type
+
+            for poly in polytopes_on_axis:
+                ax = datacube._axes[child.key]
+                # find extents of polytope on child.key
+                lower, upper, slice_axis_idx = poly.extents(child.key)
+
+                # find values on child that are within extents
+                found_vals = self.find_values_between(poly, ax, child, datacube, lower, upper)
+
+                if len(found_vals) == 0:
+                    continue
+
+                sliced_polys = self.get_sliced_polys(found_vals, ax, child.key, poly, slice_axis_idx)
+                # decide if axis should be compressed or not according to polytope
+                axis_compressed = (child.key in self.compressed_axes)
+                real_uncompressed_axis = not axis_compressed and len(found_vals) > 1
+                final_children_and_vals = self.build_branch(
+                    real_uncompressed_axis, found_vals, sliced_polys, polytopes, poly, child, datacube, datacube_transformations, ax)
+
+                if final_children_and_vals is None:
+                    continue
+                result.extend([Qube.make(
+                    key=child.key,
+                    values=QEnum(new_found_vals),
+                    metadata=child.metadata,
+                    children=children
+                ) for (children, new_found_vals) in final_children_and_vals])
+
+        return result
+
+    def _slice_second_grid_axis(self, axis_name, polytopes, datacube, datacube_transformations, second_axis_vals, path) -> list[Qube]:
+        result = []
+        polytopes_on_axis = find_polytopes_on_axis(axis_name, polytopes)
+
+        for poly in polytopes_on_axis:
+            ax = datacube._axes[axis_name]
+            lower, upper, slice_axis_idx = poly.extents(axis_name)
+
+            found_vals = self.find_values_between(poly, ax, None, datacube, lower, upper, path)
+
+            if len(found_vals) == 0:
+                continue
+
+            # decide if axis should be compressed or not according to polytope
+            # NOTE: actually the second grid axis will always be compressed
+
+            # if it's not compressed, need to separate into different nodes to append to the tree
+
+            new_found_vals = []
+            for found_val in found_vals:
+                found_val = self.remap_values(ax, found_val)
+                if isinstance(found_val, pd.Timedelta) or isinstance(found_val, pd.Timestamp):
+                    new_found_vals.append(str(found_val))
+                else:
+                    new_found_vals.append(found_val)
+
+            # NOTE this was the last axis so we do not have children...
+
+            result.extend([Qube.make(
+                key=axis_name,
+                values=QEnum(new_found_vals),
+                metadata={},
+                children={}
+            )])
+        return result
 
     def actual_slice(self, q: Qube, polytopes_to_slice, datacube, datacube_transformations):
 
@@ -267,7 +266,7 @@ class QubedSlicer(Engine):
                     final_polys.append(poly)
 
             # Get the sliced Qube for each combi
-            r = self._actual_slice(q, final_polys, datacube, datacube_transformations)
+            r = Qube.root_node(self._slice(q, final_polys, datacube, datacube_transformations))
             sub_trees.append(r)
 
         final_tree = sub_trees[0]
