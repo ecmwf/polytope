@@ -151,19 +151,24 @@ class HullSlicer(Engine):
 
         del node["unsliced_polytopes"]
 
-    def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
-        # Determine list of axes to compress
-        self.find_compressed_axes(datacube, polytopes)
+    def slice_tree(self, datacube, final_polys):
+        r = TensorIndexTree()
+        r["unsliced_polytopes"] = set(final_polys)
+        current_nodes = [r]
+        for ax in datacube.axes.values():
+            next_nodes = []
+            interm_next_nodes = []
+            for node in current_nodes:
+                self._build_branch(ax, node, datacube, interm_next_nodes)
+                next_nodes.extend(interm_next_nodes)
+                interm_next_nodes = []
+            current_nodes = next_nodes
+        return r
 
-        # remove compressed axes which are in a union
-        self.remove_compressed_axis_in_union(polytopes)
-
-        # Convert the polytope points to float type to support triangulation and interpolation
-        self.pre_process_polytopes(datacube, polytopes)
-
+    def build_tree(self, polytopes, datacube):
         groups, input_axes = group(polytopes)
         datacube.validate(input_axes)
-        request = TensorIndexTree()
+        tree = TensorIndexTree()
         combinations = tensor_product(groups)
 
         sub_trees = []
@@ -171,19 +176,10 @@ class HullSlicer(Engine):
         for c in combinations:
             r = TensorIndexTree()
             final_polys = find_polytope_combinations(c)
-            r["unsliced_polytopes"] = set(final_polys)
-            current_nodes = [r]
-            for ax in datacube.axes.values():
-                next_nodes = []
-                interm_next_nodes = []
-                for node in current_nodes:
-                    self._build_branch(ax, node, datacube, interm_next_nodes)
-                    next_nodes.extend(interm_next_nodes)
-                    interm_next_nodes = []
-                current_nodes = next_nodes
+            r = self.slice_tree(datacube, final_polys)
 
             sub_trees.append(r)
 
         for sub_tree in sub_trees[0:]:
-            request.merge(sub_tree)
-        return request
+            tree.merge(sub_tree)
+        return tree

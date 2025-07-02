@@ -32,6 +32,7 @@ class Datacube(ABC):
         self.unwanted_path = {}
         self.compressed_axes = compressed_axes_options
         self.grid_md5_hash = None
+        self.datacube_transformations = []
 
     @abstractmethod
     def get(self, requests: TensorIndexTree, context: Dict) -> Any:
@@ -89,6 +90,10 @@ class Datacube(ABC):
 
                 if transformation not in self._axes[axis_name].transformations:  # Avoids duplicates being stored
                     self._axes[axis_name].transformations.append(transformation)
+                if transformation not in self.datacube_transformations:
+                    self.datacube_transformations.append(transformation)
+                # print("LOOK HERE MEANWHILE")
+                # print(self._axes[axis_name].transformations)
             else:
                 # Means we have an unsliceable axis since we couln't transform values to desired type
                 if self._axes is None or axis_name not in self._axes.keys():
@@ -174,7 +179,7 @@ class Datacube(ABC):
         return path
 
     @staticmethod
-    def create(datacube, config={}, axis_options={}, compressed_axes_options=[], alternative_axes=[], context=None):
+    def create(datacube, config={}, axis_options={}, compressed_axes_options=[], alternative_axes=[], datacube_axes={}, context=None):
         # TODO: get the configs as None for pre-determined value and change them to empty dictionary inside the function
         if type(datacube).__name__ == "DataArray":
             from .xarray import XArrayDatacube
@@ -188,10 +193,13 @@ class Datacube(ABC):
                 datacube, config, axis_options, compressed_axes_options, alternative_axes, context
             )
             return fdbdatacube
-        if type(datacube).__name__ == "QubedDatacube":
+        if type(datacube).__name__ == "Qube":
             from .qubed import QubedDatacube
-            # TODO: here we create the qubeddatacube twice..., which we do not want
-            qubed_datacube = QubedDatacube(datacube.q, datacube.datacube_axes, datacube.datacube_transformations,
+            from ..datacube_axis import _str_to_axis
+            actual_datacube_axes = {}
+            for key, value in datacube_axes.items():
+                actual_datacube_axes[key] = _str_to_axis[value]
+            qubed_datacube = QubedDatacube(datacube, actual_datacube_axes,
                                            config, axis_options, compressed_axes_options, alternative_axes, context)
             return qubed_datacube
 

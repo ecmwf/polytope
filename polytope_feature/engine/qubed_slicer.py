@@ -97,7 +97,8 @@ class QubedSlicer(Engine):
         if len(q.children) == 0:
             # add "fake" axes and their nodes in order -> what about merged axes??
             mapper_transformation = None
-            for transformation in list(datacube_transformations.values()):
+            # for transformation in list(datacube_transformations.values()):
+            for transformation in datacube_transformations:
                 if isinstance(transformation, DatacubeMapper):
                     mapper_transformation = transformation
             if not mapper_transformation:
@@ -105,7 +106,7 @@ class QubedSlicer(Engine):
                 pass
             else:
                 # Slice on the two grid axes
-                grid_axes = mapper_transformation._mapped_axes
+                grid_axes = mapper_transformation._mapped_axes()
 
                 # Handle first grid axis
                 polytopes_on_axis = find_polytopes_on_axis(grid_axes[0], polytopes)
@@ -228,8 +229,12 @@ class QubedSlicer(Engine):
             )])
         return result
 
-    def actual_slice(self, q: Qube, polytopes_to_slice, datacube, datacube_transformations):
+    def slice_tree(self, datacube, final_polys):
+        q = datacube.q
+        datacube_transformations = datacube.datacube_transformations
+        return Qube.root_node(self._slice(q, final_polys, datacube, datacube_transformations))
 
+    def build_tree(self, polytopes_to_slice, datacube):
         groups, input_axes = group(polytopes_to_slice)
         combinations = tensor_product(groups)
 
@@ -239,7 +244,7 @@ class QubedSlicer(Engine):
             final_polys = find_polytope_combinations(c)
 
             # Get the sliced Qube for each combi
-            r = Qube.root_node(self._slice(q, final_polys, datacube, datacube_transformations))
+            r = self.slice_tree(datacube, final_polys)
             sub_trees.append(r)
 
         final_tree = sub_trees[0]
@@ -247,13 +252,3 @@ class QubedSlicer(Engine):
         for sub_tree in sub_trees[1:]:
             union(final_tree, sub_tree)
         return final_tree
-
-    def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
-        # self.find_compressed_axes(datacube, polytopes)
-        self.pre_process_polytopes(datacube, polytopes)
-        assert isinstance(datacube, QubedDatacube)
-        tree = self.actual_slice(datacube.q, polytopes, datacube,
-                                 datacube.datacube_transformations)
-        print("WHAT DOES THE TREE LOOK LIKE??")
-        print(tree)
-        return tree

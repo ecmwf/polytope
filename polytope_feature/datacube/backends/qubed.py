@@ -14,7 +14,7 @@ from .datacube import Datacube, TensorIndexTree
 class QubedDatacube(Datacube):
 
     def __init__(
-        self, q, datacube_axes, datacube_transformations, config=None, axis_options=None, compressed_axes_options=[], alternative_axes=[], context=None
+        self, q, datacube_axes, config=None, axis_options=None, compressed_axes_options=[], alternative_axes=[], context=None
     ):
         if config is None:
             config = {}
@@ -24,10 +24,6 @@ class QubedDatacube(Datacube):
         self.q = q
         # TODO: find datacube_axes and datacube_transformations from options like other datacube backends
         self.datacube_axes = datacube_axes
-        # TODO: for the grid transformation, how could we instead build it throughout the slicing??
-        self.datacube_transformations = datacube_transformations
-        # TODO: find compressed_axes list
-        self.compressed_axes = []
         # TODO: should the gj object be passed in instead?
         self.gj = pygj.GribJump()
 

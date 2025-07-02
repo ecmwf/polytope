@@ -13,9 +13,6 @@ class Engine:
     def __init__(self):
         pass
 
-    def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]) -> TensorIndexTree:
-        pass
-
     @staticmethod
     def default():
         from .hullslicer import HullSlicer
@@ -76,3 +73,13 @@ class Engine:
                 for axis in p.axes():
                     if axis == self.compressed_axes[-1]:
                         self.compressed_axes.remove(axis)
+
+    def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
+        self.find_compressed_axes(datacube, polytopes)
+        self.remove_compressed_axis_in_union(polytopes)
+        self.pre_process_polytopes(datacube, polytopes)
+        # assert isinstance(datacube, QubedDatacube)
+        tree = self.build_tree(polytopes, datacube)
+        print("WHAT DOES THE TREE LOOK LIKE??")
+        print(tree)
+        return tree

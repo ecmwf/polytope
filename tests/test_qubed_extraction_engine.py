@@ -124,6 +124,40 @@ options = {
         "type",
     ],
     "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
+    # "datacube_axes": {"param": UnsliceableDatacubeAxis(),
+    #                   "time": PandasTimedeltaDatacubeAxis(),
+    #                   "resolution": UnsliceableDatacubeAxis(),
+    #                   "type": UnsliceableDatacubeAxis(),
+    #                   "model": UnsliceableDatacubeAxis(),
+    #                   "stream": UnsliceableDatacubeAxis(),
+    #                   "realization": UnsliceableDatacubeAxis(),
+    #                   "expver": UnsliceableDatacubeAxis(),
+    #                   "experiment": UnsliceableDatacubeAxis(),
+    #                   "generation": UnsliceableDatacubeAxis(),
+    #                   "levtype": UnsliceableDatacubeAxis(),
+    #                   "activity": UnsliceableDatacubeAxis(),
+    #                   "dataset": UnsliceableDatacubeAxis(),
+    #                   "class": UnsliceableDatacubeAxis(),
+    #                   "date": PandasTimestampDatacubeAxis(),
+    #                   #  "latitude": FloatDatacubeAxis(),
+    #                   #  "longitude": FloatDatacubeAxis()
+    #                   }
+    "datacube_axes": {"param": "UnsliceableDatacubeAxis",
+                      "time": "PandasTimedeltaDatacubeAxis",
+                      "resolution": "UnsliceableDatacubeAxis",
+                      "type": "UnsliceableDatacubeAxis",
+                      "model": "UnsliceableDatacubeAxis",
+                      "stream": "UnsliceableDatacubeAxis",
+                      "realization": "UnsliceableDatacubeAxis",
+                      "expver": "UnsliceableDatacubeAxis",
+                      "experiment": "UnsliceableDatacubeAxis",
+                      "generation": "UnsliceableDatacubeAxis",
+                      "levtype": "UnsliceableDatacubeAxis",
+                      "activity": "UnsliceableDatacubeAxis",
+                      "dataset": "UnsliceableDatacubeAxis",
+                      "class": "UnsliceableDatacubeAxis",
+                      "date": "PandasTimestampDatacubeAxis",
+                      }
 }
 
 # request = Request(
@@ -161,7 +195,8 @@ request = Request(ConvexPolytope(["param"], [["164"]]),
 qubeddatacube = QubedDatacube(fdb_tree, datacube_axes, datacube_transformations)
 slicer = QubedSlicer()
 self_API = Polytope(
-    datacube=qubeddatacube,
+    # datacube=qubeddatacube,
+    datacube=fdb_tree,
     engine=slicer,
     options=options,
 )

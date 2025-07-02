@@ -46,12 +46,12 @@ class Polytope:
         if options is None:
             options = {}
 
-        axis_options, compressed_axes_options, config, alternative_axes = PolytopeOptions.get_polytope_options(options)
-
+        axis_options, compressed_axes_options, config, alternative_axes, datacube_axes = PolytopeOptions.get_polytope_options(
+            options)
         self.context = context
 
         self.datacube = Datacube.create(
-            datacube, config, axis_options, compressed_axes_options, alternative_axes, self.context
+            datacube, config, axis_options, compressed_axes_options, alternative_axes, datacube_axes, self.context
         )
         self.engine = engine if engine is not None else Engine.default()
         self.time = 0

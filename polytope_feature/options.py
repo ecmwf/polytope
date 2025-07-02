@@ -3,6 +3,7 @@ from typing import Dict, List, Literal, Optional, Union
 
 from conflator import ConfigModel
 from pydantic import ConfigDict
+from .datacube.datacube_axis import DatacubeAxis
 
 
 class TransformationConfig(ConfigModel):
@@ -62,6 +63,7 @@ class Config(ConfigModel):
     compressed_axes_config: List[str] = [""]
     pre_path: Optional[Dict[str, path_subclasses_union]] = {}
     alternative_axes: List[GribJumpAxesConfig] = []
+    datacube_axes: Optional[Dict[str, str]] = {}
 
 
 class PolytopeOptions(ABC):
@@ -73,5 +75,6 @@ class PolytopeOptions(ABC):
         compressed_axes_config = config_options.compressed_axes_config
         pre_path = config_options.pre_path
         alternative_axes = config_options.alternative_axes
+        datacube_axes = config_options.datacube_axes
 
-        return (axis_config, compressed_axes_config, pre_path, alternative_axes)
+        return (axis_config, compressed_axes_config, pre_path, alternative_axes, datacube_axes)
