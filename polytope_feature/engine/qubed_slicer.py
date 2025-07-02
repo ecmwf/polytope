@@ -2,18 +2,17 @@
 from qubed import Qube
 from qubed.value_types import QEnum
 from qubed.set_operations import union
-from .hullslicer import slice
+from .slicing_tools import slice
 from ..datacube.backends.qubed import QubedDatacube
 from .engine import Engine
 import pandas as pd
 from ..datacube.datacube_axis import UnsliceableDatacubeAxis
 from ..datacube.transformations.datacube_mappers.datacube_mappers import DatacubeMapper
 from ..shapes import ConvexPolytope, Product
-from ..utility.combinatorics import group, tensor_product
+from ..utility.combinatorics import group, tensor_product, find_polytopes_on_axis, find_polytope_combinations
 from typing import List
 
 from ..datacube.backends.datacube import Datacube
-import math
 
 
 class QubedSlicer(Engine):
@@ -37,18 +36,6 @@ class QubedSlicer(Engine):
         values = datacube.get_indices(path, node, ax, lower, upper, method)
         return values
 
-    def remap_values(self, ax, value):
-        remapped_val = self.remapped_vals.get((value, ax.name), None)
-        if remapped_val is None:
-            remapped_val = value
-            if ax.is_cyclic:
-                remapped_val_interm = ax.remap([value, value])[0]
-                remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
-            if ax.can_round:
-                remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
-            self.remapped_vals[(value, ax.name)] = remapped_val
-        return remapped_val
-
     def get_sliced_polys(self, found_vals, ax, child_name, poly, slice_axis_idx):
         sliced_polys = []
         for val in found_vals:
@@ -69,6 +56,7 @@ class QubedSlicer(Engine):
         new_found_vals = []
         for found_val in found_vals:
             found_val = self.remap_values(ax, found_val)
+            # TODO: use unmap_path_key here with the transformations instead
             if isinstance(found_val, pd.Timedelta) or isinstance(found_val, pd.Timestamp):
                 new_found_vals.append(str(found_val))
             else:
@@ -247,23 +235,8 @@ class QubedSlicer(Engine):
 
         sub_trees = []
 
-        # NOTE: could optimise here if we know combinations will always be for one request.
-        # Then we do not need to create a new index tree and merge it to request, but can just
-        # directly work on request and return it...
-
         for c in combinations:
-            new_c = []
-            for combi in c:
-                if isinstance(combi, list):
-                    new_c.extend(combi)
-                else:
-                    new_c.append(combi)
-            final_polys = []
-            for poly in new_c:
-                if isinstance(poly, Product):
-                    final_polys.extend(poly.polytope())
-                else:
-                    final_polys.append(poly)
+            final_polys = find_polytope_combinations(c)
 
             # Get the sliced Qube for each combi
             r = Qube.root_node(self._slice(q, final_polys, datacube, datacube_transformations))
@@ -284,11 +257,3 @@ class QubedSlicer(Engine):
         print("WHAT DOES THE TREE LOOK LIKE??")
         print(tree)
         return tree
-
-
-def find_polytopes_on_axis(axis_name, polytopes):
-    polytopes_on_axis = []
-    for poly in polytopes:
-        if axis_name in poly._axes:
-            polytopes_on_axis.append(poly)
-    return polytopes_on_axis
