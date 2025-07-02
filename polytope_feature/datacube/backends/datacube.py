@@ -92,8 +92,6 @@ class Datacube(ABC):
                     self._axes[axis_name].transformations.append(transformation)
                 if transformation not in self.datacube_transformations:
                     self.datacube_transformations.append(transformation)
-                # print("LOOK HERE MEANWHILE")
-                # print(self._axes[axis_name].transformations)
             else:
                 # Means we have an unsliceable axis since we couln't transform values to desired type
                 if self._axes is None or axis_name not in self._axes.keys():
@@ -115,8 +113,6 @@ class Datacube(ABC):
 
     def _add_all_type_change_transformation_axes(self, options, name, values):
         for transformation_type_key in options.transformations:
-            # if transformation_type_key != "cyclic":
-            #     self.transformed_axes.append(name)
             if transformation_type_key == "type_change":
                 self._create_axes(name, values, transformation_type_key, options)
             else:
@@ -124,15 +120,10 @@ class Datacube(ABC):
 
     def _check_and_readd_axes(self, options, name, values):
         if options is not None:
-            print("WHICH AXES ARE WE READING")
-            print(self._axes.keys())
-            print(name)
             self._add_all_transformation_axes(options, name, values)
         else:
-            # if name not in self.blocked_axes:
-            if True:
-                if self._axes is None or name not in self._axes.keys():
-                    DatacubeAxis.create_standard(name, values, self)
+            if self._axes is None or name not in self._axes.keys():
+                DatacubeAxis.create_standard(name, values, self)
 
     def has_index(self, path: DatacubePath, axis, index):
         "Given a path to a subset of the datacube, checks if the index exists on that sub-datacube axis"

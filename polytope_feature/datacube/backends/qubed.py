@@ -22,18 +22,13 @@ class QubedDatacube(Datacube):
             axis_options = {}
 
         self.q = q
-        # TODO: find datacube_axes and datacube_transformations from options like other datacube backends
         self.datacube_axes = datacube_axes
         # TODO: should the gj object be passed in instead?
         self.gj = pygj.GribJump()
-
-        # TODO: this doesn't fill the axes as wanted
         super().__init__(axis_options, compressed_axes_options)
 
         # TODO: where do these come from and are they right?
         self.unwanted_path = {}
-
-        # TODO: is this right?
 
         self.axis_options = axis_options
         # Find values in the level 3 FDB datacube
@@ -74,77 +69,50 @@ class QubedDatacube(Datacube):
         # TODO: Also, if we don't have the right axis types from the start here, then when we pre-process the polytopes, it will be wrong...
 
     def add_axes_dynamically(self, qube_node):
-        # TODO: add the grid transformations as we find it in the slicing mechanism in the datacube options
-        # TODO: add axes and associated transformations here and then call this in the slicing before we perform any operation
-        if len(qube_node.children) == 0:
-            axis_name = "values"
-            vals = []
-        else:
-            axis_name = qube_node.key
-            self._axes.pop(axis_name, None)
-            vals = list(qube_node.values)
+        # TODO: here look if the options have changed and we need to modify the transformations
+        changed_options = False
+        if not len(qube_node.metadata.items()) == 0:
+            changed_options = True
 
-        options = None
+        if changed_options:
+            if len(qube_node.children) == 0:
+                axis_name = "values"
+                vals = []
+            else:
+                axis_name = qube_node.key
+                self._axes.pop(axis_name, None)
+                vals = list(qube_node.values)
 
-        for opt in self.axis_options:
-            if opt.axis_name == axis_name:
-                options = opt
+            options = None
 
-        # remove all options that are type changes, which should already have been handled
-        # if options is not None:
-        #     filtered_transformations = []
-        #     for transformation_type in options.transformations:
-        #         if transformation_type.name != "type_change":
-        #             filtered_transformations.append(transformation_type)
-        #     options.transformations = filtered_transformations
-        #     if len(filtered_transformations) == 0:
-        #         options = None
+            for opt in self.axis_options:
+                if opt.axis_name == axis_name:
+                    options = opt
 
-        # NOTE: this can overwritte already existing axes
-        # print("WHAT ARE THE DATAUBCE AXES BEFORE")
-        # print(self._axes.keys())
-        # # self._axes.pop(axis_name, None)
-        # print("WHAT ARE THE DATACUBE AXES AFTER")
-        # print(self._axes.keys())
-        # print("WHAT IS THE AXIS WE WANT TO ADD BACK HERE??")
-        # print(qube_node.key)
-        # self._check_and_readd_axes(options, qube_node.key, list(qube_node.values))
+            # NOTE: be sure to remove the "fake" additional grid axes
+            if len(qube_node.children) == 0:
+                axes_names = list(self._axes.keys())
 
-        # NOTE: be sure to remove the "fake" additional grid axes
+                for name in axes_names:
+                    if name not in self.treated_axes:
+                        self._axes.pop(name, None)
 
-        if len(qube_node.children) == 0:
-            axes_names = list(self._axes.keys())
+            self._check_and_readd_axes(options, axis_name, vals)
 
-            for name in axes_names:
+            # NOTE: now if we have created the additional grid axes, readd the additional transformations associated to them
+            new_axes_names = list(self._axes.keys())
+            for name in new_axes_names:
                 if name not in self.treated_axes:
-                    self._axes.pop(name, None)
+                    options = None
+                    for opt in self.axis_options:
+                        if opt.axis_name == name:
+                            options = opt
 
-        self._check_and_readd_axes(options, axis_name, vals)
-
-        # NOTE: now if we have created the additional grid axes, readd the additional transformations associated to them
-        new_axes_names = list(self._axes.keys())
-
-        print("SHOULD GENERATE LAT AND LON AT SOME POINT")
-        print(self._axes.keys())
-        print("WHAT IS THE CORRESPONDING AXIS WE ARE REBUILDING")
-        print(axis_name)
-        # for name in self._axes:
-        for name in new_axes_names:
-            if name not in self.treated_axes:
-                options = None
-                for opt in self.axis_options:
-                    if opt.axis_name == name:
-                        options = opt
-
-                val = [self._axes[name].type_eg]
-                # self._axes.pop(name)
-                self._check_and_readd_axes(options, name, val)
+                    val = [self._axes[name].type_eg]
+                    self._check_and_readd_axes(options, name, val)
 
         # TODO: will this work?? How do we make sure we add the grid axes which come from the values transformation here??
         # TODO: we can't do a "difference" of axes like before since we don't a priori have the final axes set available at once??
-
-        # print("AND SHOULD HAVE ADDED THE AXIS BACK??")
-        # print(self._axes.keys())
         pass
 
     def datacube_natural_indexes(self, qube_node):
@@ -160,7 +128,6 @@ class QubedDatacube(Datacube):
         If lower and upper are equal, returns the index which exactly matches that value (if it exists)
         e.g. returns integer discrete points between two floats
         """
-        # path = self.fit_path(path)
         indexes = axis.find_indexes_node(path_node, self, path)
 
         idx_between = axis.find_indices_between(indexes, lower, upper, self, method)
@@ -197,8 +164,6 @@ class QubedDatacube(Datacube):
                 uncompressed_request = {}
                 for i, key in enumerate(compressed_request[0].keys()):
                     uncompressed_request[key] = combi[i]
-                # TODO: get the hash from somewhere...
-                # self.grid_md5_hash = "cbda19e48d4d7e5e22641154878b9b22"
                 complete_uncompressed_request = (uncompressed_request, compressed_request[1], self.grid_md5_hash)
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
