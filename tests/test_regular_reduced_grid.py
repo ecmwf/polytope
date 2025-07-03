@@ -1,6 +1,7 @@
 import pandas as pd
 import pytest
 from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
+from helper_functions import download_test_data
 
 from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.polytope import Polytope, Request
