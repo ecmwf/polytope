@@ -31,4 +31,10 @@ venv_python3_11
 *.txt
 tests/data
 venv_gj_iterator
-target
+*.so
+rust_deployment_venv
+*.lock
+**/target
+**/build
+_version.py
+*.DS_Store

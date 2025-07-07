@@ -38,7 +38,6 @@ class TestSlicingFDBDatacube:
             ],
         }
 
-    # Testing different shapes
     @pytest.mark.fdb
     def test_fdb_datacube(self):
         import pygribjump as gj
@@ -46,9 +45,7 @@ class TestSlicingFDBDatacube:
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
-            # Select("date", [pd.Timestamp("20240118")]),
             Select("time", [pd.Timedelta("00:00:00")]),
-            # Span("time", [pd.Timedelta("00:00:00")]),
             Span("date", pd.Timestamp("20240118"), pd.Timestamp("20240119")),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
