@@ -53,7 +53,7 @@ class TestSlicingFDBDatacube:
 
     # Testing different shapes
     # @pytest.mark.fdb
-    def test_fdb_datacube(self):
+    def test_fdb_datacube(self, downloaded_data_test_files):
         import pygribjump as gj
 
         request = Request(
@@ -90,7 +90,12 @@ class TestSlicingFDBDatacube:
         eccodes_lats = []
         eccodes_lons = []
         tol = 1e-12
-        f = open("tests/data/aifs_data_from_fdb.grib", "rb")
+        aifs_file = ""
+        for f in downloaded_data_test_files:
+            if "aifs_data_from_fdb.grib" in f.name:
+                aifs_file = f
+        # f = open("tests/data/aifs_data_from_fdb.grib", "rb")
+        f = open(aifs_file, "rb")
         messages = []
         message = codes_grib_new_from_file(f)
         messages.append(message)
