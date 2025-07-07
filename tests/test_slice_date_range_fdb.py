@@ -42,8 +42,7 @@ class TestSlicingFDBDatacube:
             ],
         }
 
-    # Testing different shapes
-    # @pytest.mark.fdb
+    @pytest.mark.fdb
     def test_fdb_datacube(self):
         import pygribjump as gj
 
@@ -73,7 +72,7 @@ class TestSlicingFDBDatacube:
         for i in range(len(result.leaves)):
             assert len(result.leaves[i].result) == 3
 
-    # @pytest.mark.fdb
+    @pytest.mark.fdb
     def test_fdb_datacube_select_non_existing_last(self):
         import pygribjump as gj
 
@@ -103,7 +102,7 @@ class TestSlicingFDBDatacube:
         for i in range(len(result.leaves)):
             assert len(result.leaves[i].result) == 3
 
-    # @pytest.mark.fdb
+    @pytest.mark.fdb
     def test_fdb_datacube_select_non_existing_first(self):
         import pygribjump as gj
 
@@ -133,7 +132,7 @@ class TestSlicingFDBDatacube:
         for i in range(len(result.leaves)):
             assert len(result.leaves[i].result) == 3
 
-    # @pytest.mark.fdb
+    @pytest.mark.fdb
     def test_fdb_datacube_select_completely_non_existing(self):
         import pygribjump as gj
 
@@ -163,7 +162,7 @@ class TestSlicingFDBDatacube:
         for i in range(len(result.leaves)):
             assert len(result.leaves[i].result) == 0
 
-    # @pytest.mark.fdb
+    @pytest.mark.fdb
     def test_fdb_datacube_disk(self):
         import pygribjump as gj
 
@@ -195,7 +194,7 @@ class TestSlicingFDBDatacube:
         assert len(result.leaves[0].values) == 3
         assert len(result.leaves[1].values) == 3
 
-    # @pytest.mark.fdb
+    @pytest.mark.fdb
     def test_fdb_datacube_disk_2(self):
         import pygribjump as gj
 

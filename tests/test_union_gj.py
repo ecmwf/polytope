@@ -42,8 +42,7 @@ class TestSlicingFDBDatacube:
             ],
         }
 
-    # Testing different shapes
-    # @pytest.mark.fdb
+    @pytest.mark.fdb
     def test_fdb_datacube(self):
         import pygribjump as gj
 
@@ -84,7 +83,7 @@ class TestSlicingFDBDatacube:
         assert total_lons == 16
         assert total_vals == 16
 
-    # @pytest.mark.fdb
+    @pytest.mark.fdb
     def test_fdb_datacube_complete_overlap(self):
         import pygribjump as gj
 
@@ -125,7 +124,7 @@ class TestSlicingFDBDatacube:
         assert total_lons == 9
         assert total_vals == 9
 
-    # @pytest.mark.fdb
+    @pytest.mark.fdb
     def test_fdb_datacube_complete_overlap_v2(self):
         import pygribjump as gj
 

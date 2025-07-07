@@ -67,7 +67,7 @@ class TestRegularGrid:
 
         return nearest_points
 
-    # @pytest.mark.fdb
+    @pytest.mark.fdb
     @pytest.mark.internet
     def test_regular_grid(self):
         import pygribjump as gj
@@ -75,7 +75,6 @@ class TestRegularGrid:
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
-            # Select("date", [pd.Timestamp("20231102T000000")]),
             Select("date", [pd.Timestamp("20240103T0000")]),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
@@ -100,7 +99,6 @@ class TestRegularGrid:
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
-            # Select("date", [pd.Timestamp("20231102T000000")]),
             Select("date", [pd.Timestamp("20240103T0000")]),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),

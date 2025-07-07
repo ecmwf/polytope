@@ -8,7 +8,7 @@ class TestEncoder:
     def setup_method(self):
         pass
 
-    # @pytest.mark.fdb
+    @pytest.mark.fdb
     def test_encoding(self):
         import pygribjump as gj
 
@@ -75,7 +75,6 @@ class TestEncoder:
         fdb_datacube = self.API.datacube
         fdb_datacube.prep_tree_encoding(result)
         encoded_bytes = encode_tree(result)
-        # write_encoded_tree_to_file(encoded_bytes)
         decoded_tree = decode_tree(fdb_datacube, encoded_bytes)
         decoded_tree.pprint()
         assert decoded_tree.leaves[0].result_size == [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]

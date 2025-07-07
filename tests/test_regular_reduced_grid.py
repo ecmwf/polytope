@@ -1,7 +1,6 @@
 import pandas as pd
 import pytest
 from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
-from helper_functions import download_test_data
 
 from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.polytope import Polytope, Request
@@ -52,16 +51,14 @@ class TestSlicingFDBDatacube:
         }
 
     # Testing different shapes
-    # @pytest.mark.fdb
+    @pytest.mark.fdb
     def test_fdb_datacube(self, downloaded_data_test_files):
         import pygribjump as gj
 
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
-            # Select("date", [pd.Timestamp("20231102T000000")]),
             Select("date", [pd.Timestamp("20240103T0000")]),
-            # Select("date", [pd.Timestamp("20240129T000000")]),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
             Select("param", ["167"]),
@@ -94,7 +91,6 @@ class TestSlicingFDBDatacube:
         for f in downloaded_data_test_files:
             if "aifs_data_from_fdb.grib" in f.name:
                 aifs_file = f
-        # f = open("tests/data/aifs_data_from_fdb.grib", "rb")
         f = open(aifs_file, "rb")
         messages = []
         message = codes_grib_new_from_file(f)

@@ -42,8 +42,7 @@ class TestSlicingFDBDatacube:
             ],
         }
 
-    # Testing different shapes
-    # @pytest.mark.fdb
+    @pytest.mark.fdb
     def test_fdb_datacube(self):
         import pygribjump as gj
 
@@ -69,7 +68,7 @@ class TestSlicingFDBDatacube:
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
 
-    # @pytest.mark.fdb
+    @pytest.mark.fdb
     def test_fdb_datacube_true_point(self):
         import pygribjump as gj
 
@@ -96,7 +95,7 @@ class TestSlicingFDBDatacube:
         # result.pprint()
         assert len(result.leaves) == 1
 
-    # @pytest.mark.fdb
+    @pytest.mark.fdb
     def test_fdb_datacube_true_point_2(self):
         import pygribjump as gj
 
@@ -123,20 +122,11 @@ class TestSlicingFDBDatacube:
         result.pprint()
         assert len(result.leaves) == 1
 
-    # @pytest.mark.fdb
+    @pytest.mark.fdb
     def test_fdb_datacube_true_point_3(self):
         import pygribjump as gj
 
         request = Request(
-            # Select("step", [21]),
-            # Select("levtype", ["sfc"]),
-            # Select("date", [pd.Timestamp("20231102T000000")]),
-            # Select("domain", ["g"]),
-            # Select("expver", ["0001"]),
-            # Select("param", ["167"]),
-            # Select("class", ["od"]),
-            # Select("stream", ["oper"]),
-            # Select("type", ["fc"]),
             Select("step", [0]),
             Select("levtype", ["sfc"]),
             Select("date", [pd.Timestamp("20230625T120000")]),
@@ -161,7 +151,7 @@ class TestSlicingFDBDatacube:
         assert result.leaves[0].values == (359.929906542056,)
         assert result.leaves[0].axis.name == "longitude"
 
-    # @pytest.mark.fdb
+    @pytest.mark.fdb
     def test_fdb_datacube_true_point_5(self):
         import pygribjump as gj
 
@@ -190,7 +180,7 @@ class TestSlicingFDBDatacube:
         assert result.leaves[0].values == (359.929906542056,)
         assert result.leaves[0].axis.name == "longitude"
 
-    # @pytest.mark.fdb
+    @pytest.mark.fdb
     def test_fdb_datacube_true_point_4(self):
         import pygribjump as gj
 
@@ -214,7 +204,6 @@ class TestSlicingFDBDatacube:
             options=self.options,
         )
         result = self.API.retrieve(request)
-        # result.pprint_2()
         assert len(result.leaves) == 1
         assert result.leaves[0].values == (359.929906542056,)
         assert result.leaves[0].axis.name == "longitude"

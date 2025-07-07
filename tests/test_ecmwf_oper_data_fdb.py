@@ -41,8 +41,7 @@ class TestSlicingFDBDatacube:
             "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "type": "fc", "stream": "oper"},
         }
 
-    # Testing different shapes
-    # @pytest.mark.fdb
+    @pytest.mark.fdb
     def test_fdb_datacube(self):
         import pygribjump as gj
 
@@ -98,7 +97,7 @@ class TestSlicingFDBDatacube:
         assert set(result.leaves[0].flatten()["step"]) == set((0, 1))
         assert len(result.leaves[0].result) == 4
 
-    # @pytest.mark.fdb
+    @pytest.mark.fdb
     def test_fdb_datacube_point_v2(self):
         import pygribjump as gj
 
@@ -126,7 +125,7 @@ class TestSlicingFDBDatacube:
         assert len(result.leaves) == 3
         assert len(result.leaves[0].result) == 4
 
-    # @pytest.mark.fdb
+    @pytest.mark.fdb
     def test_fdb_datacube_point_step_not_compressed(self):
         import pygribjump as gj
 

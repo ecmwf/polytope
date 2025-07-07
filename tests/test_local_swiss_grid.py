@@ -38,8 +38,7 @@ class TestSlicingFDBDatacube:
             "compressed_axes_config": ["longitude", "latitude", "levtype", "levelist", "step", "date", "param"],
         }
 
-    # Testing different shapes
-    # @pytest.mark.fdb
+    @pytest.mark.fdb
     @pytest.mark.skip("Non-accessible data")
     def test_fdb_datacube(self):
         import pygribjump as gj
