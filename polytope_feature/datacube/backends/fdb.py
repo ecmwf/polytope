@@ -48,7 +48,6 @@ class FDBDatacube(Datacube):
         logging.info("Axes returned from GribJump are: " + str(self.fdb_coordinates))
 
         self.fdb_coordinates["values"] = []
-        print(self.fdb_coordinates)
         for name, values in self.fdb_coordinates.items():
             values.sort()
             options = None

@@ -49,7 +49,6 @@ class TestSlicingFDBDatacube:
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
-            # Select("date", [pd.Timestamp("20231102T000000")]),
             Select("date", [pd.Timestamp("20240103T0000")]),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
@@ -71,7 +70,7 @@ class TestSlicingFDBDatacube:
         assert len(result.leaves) == 3
         assert len(result.leaves[0].result) == 3
 
-    def test_fdb_datacube_point(self, downloaded_data_test_files, fdb_store_operational_setup):
+    def test_fdb_datacube_point(self):
         import pygribjump as gj
 
         request = Request(
@@ -100,7 +99,7 @@ class TestSlicingFDBDatacube:
         assert len(result.leaves[0].result) == 4
 
     # @pytest.mark.fdb
-    def test_fdb_datacube_point_v2(self, downloaded_data_test_files, fdb_store_operational_setup):
+    def test_fdb_datacube_point_v2(self):
         import pygribjump as gj
 
         request = Request(
@@ -128,7 +127,7 @@ class TestSlicingFDBDatacube:
         assert len(result.leaves[0].result) == 4
 
     # @pytest.mark.fdb
-    def test_fdb_datacube_point_step_not_compressed(self, downloaded_data_test_files, fdb_store_operational_setup):
+    def test_fdb_datacube_point_step_not_compressed(self):
         import pygribjump as gj
 
         self.options = {
