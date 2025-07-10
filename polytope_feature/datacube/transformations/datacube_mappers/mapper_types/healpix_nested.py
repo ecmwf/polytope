@@ -9,6 +9,7 @@ try:
     from polytope_feature.polytope_rs import (
         axes_idx_to_healpix_idx_batch,
         ring_to_nested_batched,
+        first_axis_vals_healpix_nested
     )
 
     use_rust = True
@@ -40,21 +41,24 @@ class NestedHealpixGridMapper(DatacubeMapper):
             raise NotImplementedError("Healpix grid with first axis in increasing order is not supported")
 
     def first_axis_vals(self):
-        rad2deg = 180 / math.pi
-        vals = [0] * (4 * self._resolution - 1)
+        if use_rust:
+            vals = first_axis_vals_healpix_nested(self._resolution)
+        else:
+            rad2deg = 180 / math.pi
+            vals = [0] * (4 * self._resolution - 1)
 
-        # Polar caps
-        for i in range(1, self._resolution):
-            val = 90 - (rad2deg * math.acos(1 - (i * i / (3 * self._resolution * self._resolution))))
-            vals[i - 1] = val
-            vals[4 * self._resolution - 1 - i] = -val
-        # Equatorial belts
-        for i in range(self._resolution, 2 * self._resolution):
-            val = 90 - (rad2deg * math.acos((4 * self._resolution - 2 * i) / (3 * self._resolution)))
-            vals[i - 1] = val
-            vals[4 * self._resolution - 1 - i] = -val
-        # Equator
-        vals[2 * self._resolution - 1] = 0
+            # Polar caps
+            for i in range(1, self._resolution):
+                val = 90 - (rad2deg * math.acos(1 - (i * i / (3 * self._resolution * self._resolution))))
+                vals[i - 1] = val
+                vals[4 * self._resolution - 1 - i] = -val
+            # Equatorial belts
+            for i in range(self._resolution, 2 * self._resolution):
+                val = 90 - (rad2deg * math.acos((4 * self._resolution - 2 * i) / (3 * self._resolution)))
+                vals[i - 1] = val
+                vals[4 * self._resolution - 1 - i] = -val
+            # Equator
+            vals[2 * self._resolution - 1] = 0
         return vals
 
     def map_first_axis(self, lower, upper):

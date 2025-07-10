@@ -158,3 +158,39 @@ fn to_nest(
 
     fij_to_nest(f, i, j, k as usize)
 }
+
+#[pyfunction]
+pub fn first_axis_vals_healpix_nested(resolution: usize) -> Vec<f64> {
+    let rad2deg = 180.0 / std::f64::consts::PI;
+    let size = 4 * resolution - 1;
+    let mut vals = vec![0.0; size];
+
+    // Polar caps
+    for i in 1..resolution {
+        let i_f64 = i as f64;
+        let res_f64 = resolution as f64;
+        let val = 90.0
+            - rad2deg
+                * (1.0 - (i_f64 * i_f64) / (3.0 * res_f64 * res_f64))
+                    .acos();
+        vals[(i - 1) as usize] = val;
+        vals[size - i as usize] = -val;
+    }
+
+    // Equatorial belts
+    for i in resolution..(2 * resolution) {
+        let i_f64 = i as f64;
+        let res_f64 = resolution as f64;
+        let val = 90.0
+            - rad2deg
+                * ((4.0 * res_f64 - 2.0 * i_f64) / (3.0 * res_f64))
+                    .acos();
+        vals[(i - 1) as usize] = val;
+        vals[size - i as usize] = -val;
+    }
+
+    // Equator
+    vals[2 * resolution - 1] = 0.0;
+
+    vals
+}
