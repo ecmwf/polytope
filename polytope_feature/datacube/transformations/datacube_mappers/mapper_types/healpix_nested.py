@@ -4,6 +4,14 @@ import numpy as np
 
 from ..datacube_mappers import DatacubeMapper
 
+use_rust = False
+try:
+    from polytope_feature.polytope_rs import axes_idx_to_healpix_idx_batch, ring_to_nested_batched
+
+    use_rust = True
+except (ModuleNotFoundError, ImportError):
+    print("Failed to load Rust extension, falling back to Python implementation.")
+
 
 class NestedHealpixGridMapper(DatacubeMapper):
     def __init__(self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None):
@@ -102,18 +110,42 @@ class NestedHealpixGridMapper(DatacubeMapper):
             return sum1 + (2 * res + 1) * (4 * res) + sum2 + second_idx
 
     def unmap(self, first_val, second_vals):
-        # Convert to NumPy array for fast computation
-        idx = np.searchsorted(self._first_axis_vals_np_rounded, -np.round(first_val[0], decimals=8))
-        if idx >= len(self._first_axis_vals_np_rounded):
-            return None
-        second_axis_vals = np.round(np.array(self.second_axis_vals_from_idx(idx)), decimals=8)
-        second_vals = np.round(np.array(second_vals), decimals=8)
-        second_idxs = np.searchsorted(second_axis_vals, second_vals)
-        valid_mask = second_idxs < len(second_axis_vals)
-        if not np.all(valid_mask):
-            return None
-        healpix_idxs = [self.axes_idx_to_healpix_idx(idx, sec_idx) for sec_idx in second_idxs]
-        return self.ring_to_nested(np.asarray(healpix_idxs)).tolist()
+        if use_rust:
+            tol = 1e-8
+            first_idx = next(
+                (i for i, val in enumerate(self._first_axis_vals)
+                 if first_val[0] - tol <= val <= first_val[0] + tol), None
+            )
+            if first_idx is None:
+                return None
+            second_axis_vals = self.second_axis_vals_from_idx(first_idx)
+
+            return_idxs = []
+            second_idxs = []
+            for second_val in second_vals:
+                second_idx = next(
+                    (i for i, val in enumerate(second_axis_vals) if second_val - tol <= val <= second_val + tol), None
+                )
+                if second_idx is None:
+                    return None
+                second_idxs.append(second_idx)
+            healpix_indexes = axes_idx_to_healpix_idx_batch(self._resolution, first_idx, second_idxs)
+            nested_healpix_indexes = ring_to_nested_batched(healpix_indexes, self.Nside, self.Npix, self.Ncap, self.k)
+            return_idxs.extend(nested_healpix_indexes)
+        else:
+            # Convert to NumPy array for fast computation
+            idx = np.searchsorted(self._first_axis_vals_np_rounded, -np.round(first_val[0], decimals=8))
+            if idx >= len(self._first_axis_vals_np_rounded):
+                return None
+            second_axis_vals = np.round(np.array(self.second_axis_vals_from_idx(idx)), decimals=8)
+            second_vals = np.round(np.array(second_vals), decimals=8)
+            second_idxs = np.searchsorted(second_axis_vals, second_vals)
+            valid_mask = second_idxs < len(second_axis_vals)
+            if not np.all(valid_mask):
+                return None
+            healpix_idxs = [self.axes_idx_to_healpix_idx(idx, sec_idx) for sec_idx in second_idxs]
+            return_idxs = self.ring_to_nested(np.asarray(healpix_idxs)).tolist()
+        return return_idxs
 
     def div_03(self, a, b):
         """Vectorized version of div_03"""
