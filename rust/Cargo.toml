@@ -1,0 +1,16 @@
+[package]
+name = "polytope-python"
+version = "0.0.0" # placeholder
+edition = "2021"
+
+[dependencies]
+pyo3 = { version = "0.20", features = ["extension-module"] }
+geo = { version = "0.30"}
+qhull = { git = "https://github.com/LucaCiucci/qhull-rs" }
+rayon = "1.8"
+typed-arena = "2.0"
+
+[lib]
+name = "polytope_rs"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
