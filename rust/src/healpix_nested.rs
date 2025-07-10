@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 
 #[pyfunction]
-fn axes_idx_to_healpix_idx_batch(
+pub fn axes_idx_to_healpix_idx_batch(
     resolution: usize,
     first_idx: usize,
     second_idxs: Vec<usize>,
@@ -133,7 +133,7 @@ fn ring_to_nested(idx: isize, nside: isize, npix: isize, ncap: isize, k: isize) 
 }
 
 #[pyfunction]
-fn ring_to_nested_batched(idxs: Vec<isize>, nside: isize, npix: isize, ncap: isize, k: isize) -> Vec<usize> {
+pub fn ring_to_nested_batched(idxs: Vec<isize>, nside: isize, npix: isize, ncap: isize, k: isize) -> Vec<usize> {
     let mut results = Vec::with_capacity(idxs.len());
     for &idx in idxs.iter() {
         results.push(ring_to_nested(idx, nside, npix, ncap, k));

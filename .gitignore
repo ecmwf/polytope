@@ -38,3 +38,4 @@ rust_deployment_venv
 **/build
 _version.py
 *.DS_Store
+rust_venv
