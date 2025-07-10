@@ -6,7 +6,10 @@ from ..datacube_mappers import DatacubeMapper
 
 use_rust = False
 try:
-    from polytope_feature.polytope_rs import axes_idx_to_healpix_idx_batch, ring_to_nested_batched
+    from polytope_feature.polytope_rs import (
+        axes_idx_to_healpix_idx_batch,
+        ring_to_nested_batched,
+    )
 
     use_rust = True
 except (ModuleNotFoundError, ImportError):
@@ -113,8 +116,8 @@ class NestedHealpixGridMapper(DatacubeMapper):
         if use_rust:
             tol = 1e-8
             first_idx = next(
-                (i for i, val in enumerate(self._first_axis_vals)
-                 if first_val[0] - tol <= val <= first_val[0] + tol), None
+                (i for i, val in enumerate(self._first_axis_vals) if first_val[0] - tol <= val <= first_val[0] + tol),
+                None,
             )
             if first_idx is None:
                 return None
