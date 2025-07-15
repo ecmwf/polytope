@@ -1,8 +1,10 @@
 use pyo3::prelude::*;
 use std::f64::consts::PI;
 
+use crate::list_tools::bisect_left_cmp;
+
 fn gauss_first_guess(resolution: usize) -> Vec<f64> {
-    let gvals: [f64; 52] = [
+    let gvals: [f64; 50] = [
         2.4048255577e0,
         5.5200781103e0,
         8.6537279129e0,
@@ -69,11 +71,11 @@ fn gauss_first_guess(resolution: usize) -> Vec<f64> {
 }
 
 #[pyfunction]
-pub fn first_axis_vals(resolution: usize) -> Vec<f64> {
+pub fn first_axis_vals_octahedral(resolution: usize) -> PyResult<Vec<f64>> {
     if resolution == 2560 {
-        return get_precomputed_values_n2560();
+        return Ok(get_precomputed_values_n2560());
     } else if resolution == 1280 {
-        return get_precomputed_values_n1280();
+        return Ok(get_precomputed_values_n1280());
     } else {
         println!("Calculating grid. Not using a pre-computed grid.");
 
@@ -89,7 +91,7 @@ pub fn first_axis_vals(resolution: usize) -> Vec<f64> {
 
         for jval in 0..resolution {
             let mut root = (vals[jval] / denom).cos();
-            let mut conv = 1.0;
+            let mut conv: f64 = 1.0;
 
             while conv.abs() >= precision {
                 let mut mem2 = 1.0;
@@ -117,7 +119,7 @@ pub fn first_axis_vals(resolution: usize) -> Vec<f64> {
             new_vals[nval - 1 - jval] = -asin_root;
         }
 
-        new_vals
+        Ok(new_vals)
     }
 }
 
@@ -7836,4 +7838,142 @@ fn create_first_idx_list(resolution: usize) -> Vec<usize> {
     }
 
     first_idx_list
+}
+
+// fn second_axis_spacing(resolution: usize, first_val: &[f64], first_axis_vals: Vec<f64>) -> (f64, usize) {
+//     // let first_axis_vals = first_axis_vals(resolution);
+//     let tol = 1e-10;
+//     let target = first_val[0] - tol;
+
+//     // Call bisect_left_cmp with cmp = |x, y| x > y
+//     let _first_idx = bisect_left_cmp(&first_axis_vals, &target, |x, y| x > y);
+
+//     // Convert isize to usize safely, clamp if negative (if you expect no negative)
+//     let mut first_idx = if _first_idx < 0 {
+//         0usize
+//     } else {
+//         _first_idx as usize
+//     };
+
+//     if first_idx >= resolution {
+//         first_idx = (2 * resolution) - 1 - first_idx;
+//     }
+
+//     first_idx += 1;
+
+//     let npoints = 4 * first_idx + 16;
+//     let second_axis_spacing = 360.0 / (npoints as f64);
+
+//     (second_axis_spacing, (_first_idx + 1) as usize)
+// }
+
+// fn find_second_axis_idx(resolution: usize, first_val: &[f64], second_val: f64, first_axis_vals: Vec<f64>) -> (usize, usize) {
+//     let (second_axis_spacing, first_idx) = second_axis_spacing(resolution, first_val, first_axis_vals);
+//     let tol = 1e-8;
+
+//     let div = second_val / second_axis_spacing;
+//     let div_floor = div.floor() as usize;
+
+//     let second_idx = if div > (div_floor as f64 + 1.0 - tol) {
+//         div_floor + 1
+//     } else {
+//         div_floor
+//     };
+
+//     (first_idx, second_idx)
+// }
+
+fn second_axis_spacing(
+    resolution: usize,
+    first_val: &[f64],
+    first_axis_vals: &Vec<f64> // use Vec, but pass as reference!
+) -> (f64, usize) {
+    let tol = 1e-10;
+    let target = first_val[0] - tol;
+
+    let _first_idx = bisect_left_cmp(first_axis_vals, &target, |x, y| x > y);
+
+    let mut first_idx = if _first_idx < 0 {
+        0usize
+    } else {
+        _first_idx as usize
+    };
+
+    if first_idx >= resolution {
+        first_idx = (2 * resolution) - 1 - first_idx;
+    }
+
+    first_idx += 1;
+
+    let npoints = 4 * first_idx + 16;
+    let second_axis_spacing = 360.0 / (npoints as f64);
+
+    (second_axis_spacing, (_first_idx + 1) as usize)
+}
+
+fn find_second_axis_idx(
+    resolution: usize,
+    // first_val: &[f64],
+    first_val: &Vec<f64>,
+    second_val: f64,
+    first_axis_vals: &Vec<f64> // keep Vec, pass by reference!
+) -> (usize, usize) {
+    let (second_axis_spacing, first_idx) =
+        second_axis_spacing(resolution, first_val, first_axis_vals);
+
+    let tol = 1e-8;
+
+    let div = second_val / second_axis_spacing;
+    let div_floor = div.floor() as usize;
+
+    let second_idx = if div > (div_floor as f64 + 1.0 - tol) {
+        div_floor + 1
+    } else {
+        div_floor
+    };
+
+    (first_idx, second_idx)
+}
+
+
+fn axes_idx_to_octahedral_idx(first_idx: usize, second_idx: usize, first_idx_map: &Vec<usize>) -> usize {
+    first_idx_map[first_idx - 1] + second_idx
+    }
+
+// #[pyfunction]
+// pub fn unmap_octahedral(resolution: usize, first_val: &[f64], second_vals: &[f64]) -> PyResult<Vec<usize>> {
+//     let mut return_idxs = Vec::with_capacity(second_vals.len());
+
+//     let first_axis_vals = first_axis_vals_octahedral(resolution)?;
+//     let first_idx_map = create_first_idx_list(resolution);
+
+//     for &second_val in second_vals.iter() {
+//         let (first_idx, second_idx) = find_second_axis_idx(resolution, first_val, second_val, &first_axis_vals);
+//         let octahedral_index = axes_idx_to_octahedral_idx(first_idx, second_idx, &first_idx_map);
+//         return_idxs.push(octahedral_index);
+//     }
+
+//     Ok(return_idxs)
+// }
+
+#[pyfunction]
+pub fn unmap_octahedral(
+    resolution: usize,
+    first_val: Vec<f64>,      // <-- now Vec<f64> passed by reference
+    second_vals: Vec<f64>     // <-- now Vec<f64> passed by reference
+) -> PyResult<Vec<usize>> {
+    let mut return_idxs = Vec::with_capacity(second_vals.len());
+
+    let first_axis_vals = first_axis_vals_octahedral(resolution)?;
+    let first_idx_map = create_first_idx_list(resolution);
+
+    for &second_val in second_vals.iter() {
+        let (first_idx, second_idx) =
+            find_second_axis_idx(resolution, &first_val, second_val, &first_axis_vals);
+        let octahedral_index =
+            axes_idx_to_octahedral_idx(first_idx, second_idx, &first_idx_map);
+        return_idxs.push(octahedral_index);
+    }
+
+    Ok(return_idxs)
 }
