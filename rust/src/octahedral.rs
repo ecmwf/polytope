@@ -7815,3 +7815,25 @@ fn get_precomputed_values_n2560() -> Vec<f64> {
     lats
 }
 
+fn create_first_idx_list(resolution: usize) -> Vec<usize> {
+    let mut first_idx_list = vec![0; 2 * resolution];
+    let mut idx = 0;
+
+    for i in 0..(2 * resolution) {
+        first_idx_list[i] = idx;
+
+        if i <= resolution - 1 {
+            idx += 20 + 4 * i;
+        } else {
+            let mut j = i - resolution + 1;
+            if j == 1 {
+                idx += 16 + 4 * resolution;
+            } else {
+                j -= 1;
+                idx += 16 + 4 * (resolution - j);
+            }
+        }
+    }
+
+    first_idx_list
+}
