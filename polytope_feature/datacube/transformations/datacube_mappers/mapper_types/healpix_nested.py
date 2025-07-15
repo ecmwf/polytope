@@ -8,8 +8,8 @@ use_rust = False
 try:
     from polytope_feature.polytope_rs import (
         axes_idx_to_healpix_idx_batch,
+        first_axis_vals_healpix_nested,
         ring_to_nested_batched,
-        first_axis_vals_healpix_nested
     )
 
     use_rust = True
