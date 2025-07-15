@@ -48,7 +48,6 @@ fn axes_idx_to_healpix_idx(resolution: usize, first_idx: usize, second_idx: usiz
     idx // Return idx in case no match is found
 }
 
-
 use std::f64;
 
 fn int_sqrt(i: isize) -> isize {
@@ -133,7 +132,13 @@ fn ring_to_nested(idx: isize, nside: isize, npix: isize, ncap: isize, k: isize) 
 }
 
 #[pyfunction]
-pub fn ring_to_nested_batched(idxs: Vec<isize>, nside: isize, npix: isize, ncap: isize, k: isize) -> Vec<usize> {
+pub fn ring_to_nested_batched(
+    idxs: Vec<isize>,
+    nside: isize,
+    npix: isize,
+    ncap: isize,
+    k: isize,
+) -> Vec<usize> {
     let mut results = Vec::with_capacity(idxs.len());
     for &idx in idxs.iter() {
         results.push(ring_to_nested(idx, nside, npix, ncap, k));
@@ -143,8 +148,13 @@ pub fn ring_to_nested_batched(idxs: Vec<isize>, nside: isize, npix: isize, ncap:
 
 /// Converts to nested index
 fn to_nest(
-    f: usize, ring: isize, nring: isize, phi: isize, 
-    shift: isize, k: isize, nside: isize
+    f: usize,
+    ring: isize,
+    nring: isize,
+    phi: isize,
+    shift: isize,
+    k: isize,
+    nside: isize,
 ) -> usize {
     let r: isize = ((2 + (f >> 2)) << k) as isize - ring - 1;
     let mut p: isize = (2 * phi) - pll(f) * nring - shift - 1;
@@ -169,10 +179,7 @@ pub fn first_axis_vals_healpix_nested(resolution: usize) -> Vec<f64> {
     for i in 1..resolution {
         let i_f64 = i as f64;
         let res_f64 = resolution as f64;
-        let val = 90.0
-            - rad2deg
-                * (1.0 - (i_f64 * i_f64) / (3.0 * res_f64 * res_f64))
-                    .acos();
+        let val = 90.0 - rad2deg * (1.0 - (i_f64 * i_f64) / (3.0 * res_f64 * res_f64)).acos();
         vals[(i - 1) as usize] = val;
         vals[size - i as usize] = -val;
     }
@@ -181,10 +188,7 @@ pub fn first_axis_vals_healpix_nested(resolution: usize) -> Vec<f64> {
     for i in resolution..(2 * resolution) {
         let i_f64 = i as f64;
         let res_f64 = resolution as f64;
-        let val = 90.0
-            - rad2deg
-                * ((4.0 * res_f64 - 2.0 * i_f64) / (3.0 * res_f64))
-                    .acos();
+        let val = 90.0 - rad2deg * ((4.0 * res_f64 - 2.0 * i_f64) / (3.0 * res_f64)).acos();
         vals[(i - 1) as usize] = val;
         vals[size - i as usize] = -val;
     }
