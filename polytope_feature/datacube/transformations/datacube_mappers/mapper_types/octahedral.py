@@ -7,8 +7,8 @@ from ..datacube_mappers import DatacubeMapper
 use_rust = False
 try:
     from polytope_feature.polytope_rs import (
+        first_axis_vals_octahedral,
         unmap_octahedral,
-        first_axis_vals_octahedral
     )
 
     use_rust = True
