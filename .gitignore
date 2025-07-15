@@ -39,3 +39,4 @@ polytope_feature/_version.py
 **/build
 **.lock
 **/target
+rust_venv
