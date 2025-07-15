@@ -27,7 +27,7 @@ jobs:
     uses: ecmwf/downstream-ci/.github/workflows/downstream-ci.yml@main
     with:
       polytope: ecmwf/polytope@${{ github.event.pull_request.head.sha || github.sha }}
-      codecov_upload: true
+      # codecov_upload: true
       python_qa: true
     secrets: inherit
 
