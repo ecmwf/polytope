@@ -77,7 +77,13 @@ class TestQuadTreeSlicer:
             engine_options=self.engine_options,
         )
 
+        import time
+
+        time1 = time.time()
+
         result = self.API.retrieve(request)
+
+        print(time.time() - time1)
         assert len(result.leaves) == 321304
         result.pprint()
 

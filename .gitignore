@@ -56,3 +56,6 @@ target
 rust_deployment_venv
 *.so
 *.nc
+
+test_w_qubed
+rust_venv

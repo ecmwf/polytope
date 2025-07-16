@@ -108,6 +108,24 @@ impl QuadTree {
         ])
     }
 
+    // fn node_bbox_points(&self, node_idx: usize) -> PyResult<Vec<[f64; 2]>> {
+    //     let (cx, cy) = self.get_center(node_idx)?;
+    //     let (sx, sy) = self.get_size(node_idx)?; 
+    //     Ok(vec![
+    //         [cx - sx, cy - sy],
+    //         [cx + sx, cy + sy]
+    //     ])
+    // }
+
+    fn node_bbox_points(&self, node_idx: usize) -> PyResult<([f64; 2], [f64; 2])> {
+        let (cx, cy) = self.get_center(node_idx)?;
+        let (sx, sy) = self.get_size(node_idx)?;
+        Ok((
+            [cx - sx, cy - sy], // min corner
+            [cx + sx, cy + sy], // max corner
+        ))
+    }
+
     fn find_nodes_in(&mut self, node_idx: usize) -> Vec<usize> {
         let mut results = Vec::new();
         self.collect_points(&mut results, node_idx);
@@ -316,13 +334,32 @@ impl QuadTree {
         results: &mut HashSet<usize>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(points) = polygon_points {
+
+            // let node_bbox = self.node_bbox_points(node_idx)?;
+            // let poly_bbox = get_polygon_bbox(points);
+
+            // println!(
+            //     "node_bbox: min = {:?}, max = {:?}, poly_bbox: min = {:?}, max = {:?}",
+            //     node_bbox.0,
+            //     node_bbox.1,
+            //     poly_bbox.0,
+            //     poly_bbox.1
+            // );
+            // // if !bbox_intersects(node_bbox.min, node_bbox.max, poly_bbox.0, poly_bbox.1) {
+            // if !bbox_intersects(node_bbox.0, node_bbox.1, poly_bbox.0, poly_bbox.1) {
+            //     println!("HERE");
+            //     return Ok(()); // 🚫 Prune entire branch!
+            // }
+
             // Sort points based on the first coordinate
             points.sort_unstable_by(|a, b| a.partial_cmp(&b).unwrap());
             let mut quadrant_points = self.quadrant_rectangle_points(node_idx)?;
-            quadrant_points.sort_unstable_by(|a, b| a.partial_cmp(&b).unwrap());
+            // quadrant_points.sort_unstable_by(|a, b| a.partial_cmp(&b).unwrap());
             if *points == quadrant_points {
+                // println!("HERE");
                 results.extend(self.find_nodes_in(node_idx));
             } else {
+                // println!("ARE WE HERE??");
                 let children_idxs = self.get_children_idxs(node_idx);
                 if !children_idxs.is_empty() {
                     let quadtree_center = self.get_center(node_idx)?;
@@ -346,6 +383,7 @@ impl QuadTree {
                         self._query_polygon(quadtree_points, children_idxs[3], Some(poly.as_mut()), results)?;
                     }
                 } else {
+                    println!("ARE WE HERE?? x2")
                     let filtered_nodes: Vec<usize> = self
                         .get_point_idxs(node_idx)
                         .into_iter()
@@ -358,3 +396,25 @@ impl QuadTree {
         Ok(())
     }
 }
+
+// fn get_polygon_bbox(points: &[[f64; 2]]) -> ([f64; 2], [f64; 2]) {
+//     let mut min_x = f64::INFINITY;
+//     let mut min_y = f64::INFINITY;
+//     let mut max_x = f64::NEG_INFINITY;
+//     let mut max_y = f64::NEG_INFINITY;
+
+//     for p in points {
+//         min_x = min_x.min(p[0]);
+//         min_y = min_y.min(p[1]);
+//         max_x = max_x.max(p[0]);
+//         max_y = max_y.max(p[1]);
+//     }
+
+//     ([min_x, min_y], [max_x, max_y])
+// }
+
+// fn bbox_intersects(min1: [f64; 2], max1: [f64; 2],
+//                    min2: [f64; 2], max2: [f64; 2]) -> bool {
+//     !(min1[0] > max2[0] || max1[0] < min2[0] ||  // x
+//       min1[1] > max2[1] || max1[1] < min2[1])    // y
+// }

@@ -19,6 +19,20 @@ fn _slice_2D_vertical_extents(polygon_points: &Vec<[f64; 2]>, val: f64) -> (f64,
     )
 }
 
+// pub fn is_contained_in(point: [f64; 2], polygon_points: &[[f64; 2]]) -> bool {
+//     let (min_y, max_y) = _slice_2D_vertical_extents(polygon_points, point[0]);
+//     point[1] >= min_y && point[1] <= max_y
+// }
+
+// fn _slice_2D_vertical_extents(polygon_points: &[[f64; 2]], val: f64) -> (f64, f64) {
+//     println!("HERE")
+//     let intersects = _find_intersects(polygon_points, 0, val);
+//     intersects.iter().fold(
+//         (f64::INFINITY, f64::NEG_INFINITY),
+//         |(min, max), &[_x, y]| (min.min(y), max.max(y)),
+//     )
+// }
+
 // RESTRICTED TO 2D POINTS FOR NOW
 fn _find_intersects(
     polytope_points: &[[f64; 2]],
