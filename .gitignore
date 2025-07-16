@@ -29,3 +29,4 @@ polytope_feature/_version.py
 **.lock
 **/target
 **/*venv*/
+test_w_qubed
