@@ -286,28 +286,45 @@ impl QuadTree {
     }
 
 
-    fn collect_points(&mut self, results: &mut Vec<usize>, node_idx: usize) {
-        let nodes = &self.nodes;
+    // fn collect_points(&mut self, results: &mut Vec<usize>, node_idx: usize) {
+    //     let nodes = &self.nodes;
     
-        if let Some(n) = nodes.get(node_idx) {
-            if let Some(points) = &n.points {
-                results.extend(points.iter().map(|point| point));
-            }
-        }
+    //     if let Some(n) = nodes.get(node_idx) {
+    //         if let Some(points) = &n.points {
+    //             results.extend(points.iter().map(|point| point));
+    //         }
+    //     }
 
-        let mut stack = Vec::new();
-        stack.push(node_idx);
+    //     let mut stack = Vec::new();
+    //     stack.push(node_idx);
     
+    //     while let Some(current_node_idx) = stack.pop() {
+    //         let child_idxs = self.get_children_idxs(current_node_idx);
+    //         for child_idx in child_idxs {
+    //             stack.push(child_idx); // Add children to stack for later processing
+    //         }
+    
+    //         // Collect points of the child node
+    //         if let Some(n) = nodes.get(current_node_idx) {
+    //             if let Some(points) = &n.points {
+    //                 results.extend(points.iter().map(|point| point)); // Efficiently extend the result
+    //             }
+    //         }
+    //     }
+    // }
+
+    fn collect_points(&self, results: &mut Vec<usize>, node_idx: usize) {
+        let mut stack = vec![node_idx];
+
         while let Some(current_node_idx) = stack.pop() {
-            let child_idxs = self.get_children_idxs(current_node_idx);
-            for child_idx in child_idxs {
-                stack.push(child_idx); // Add children to stack for later processing
-            }
-    
-            // Collect points of the child node
-            if let Some(n) = nodes.get(current_node_idx) {
-                if let Some(points) = &n.points {
-                    results.extend(points.iter().map(|point| point)); // Efficiently extend the result
+            if let Some(node) = self.nodes.get(current_node_idx) {
+                if let Some(points) = &node.points {
+                    results.extend(points.iter()); // more concise and efficient
+                }
+
+                // Add children to the stack
+                for &child_idx in self.get_children_idxs(current_node_idx).iter() {
+                    stack.push(child_idx);
                 }
             }
         }
@@ -383,7 +400,7 @@ impl QuadTree {
                         self._query_polygon(quadtree_points, children_idxs[3], Some(poly.as_mut()), results)?;
                     }
                 } else {
-                    println!("ARE WE HERE?? x2")
+                    // println!("ARE WE HERE?? x2");
                     let filtered_nodes: Vec<usize> = self
                         .get_point_idxs(node_idx)
                         .into_iter()
@@ -396,6 +413,85 @@ impl QuadTree {
         Ok(())
     }
 }
+
+        // use std::collections::HashSet;
+
+        //     pub fn _query_polygon(
+        //         &mut self,
+        //         polygon: &[[f64; 2]],
+        //         node_idx: usize,
+        //         quadtree_points: &[[f64; 2]],
+        //         results: &mut HashSet<usize>,
+        //     ) -> Result<(), Box<dyn std::error::Error>> {
+        //         // 1. Prune if polygon doesn't intersect node's bounding box
+        //         let (node_min, node_max) = self.node_bbox_points(node_idx)?;
+        //         let (poly_min, poly_max) = get_polygon_bbox(polygon);
+        //         if !bbox_intersects(node_min, node_max, poly_min, poly_max) {
+        //             return Ok(()); // Early exit
+        //         }
+
+        //         // 2. Check if polygon fully matches this quadrant
+        //         let quadrant_points = self.quadrant_rectangle_points(node_idx)?;
+        //         let poly_set: HashSet<_> = polygon.iter().copied().collect();
+        //         let quad_set: HashSet<_> = quadrant_points.iter().copied().collect();
+
+        //         if poly_set == quad_set {
+        //             results.extend(self.find_nodes_in(node_idx));
+        //             return Ok(());
+        //         }
+
+        //         // 3. Check children
+        //         let children_idxs = self.get_children_idxs(node_idx);
+        //         if !children_idxs.is_empty() {
+        //             let bboxes = self.get_child_bboxes(node_idx)?;
+
+        //             for (child_idx, bbox) in children_idxs.iter().zip(bboxes.iter()) {
+        //                 if polygon_fits_in_bbox(polygon, bbox[0], bbox[1]) {
+        //                     self.query_polygon(polygon, *child_idx, quadtree_points, results)?;
+        //                     return Ok(()); // Only in one child — no slicing needed
+        //                 }
+        //             }
+
+        //             // 4. If not in one child, slice polygon and recurse
+        //             let center = self.get_center(node_idx)?;
+        //             let (left_poly, right_poly) = slice_in_two(Some(&polygon.to_vec()), center.0, 0)?;
+        //             let (q1, q2) = slice_in_two(left_poly.as_ref(), center.1, 1)?;
+        //             let (q3, q4) = slice_in_two(right_poly.as_ref(), center.1, 1)?;
+
+        //             if let Some(mut poly) = q1 {
+        //                 self._query_polygon(&poly, children_idxs[0], quadtree_points, results)?;
+        //             }
+        //             if let Some(mut poly) = q2 {
+        //                 self._query_polygon(&poly, children_idxs[1], quadtree_points, results)?;
+        //             }
+        //             if let Some(mut poly) = q3 {
+        //                 self._query_polygon(&poly, children_idxs[2], quadtree_points, results)?;
+        //             }
+        //             if let Some(mut poly) = q4 {
+        //                 self._query_polygon(&poly, children_idxs[3], quadtree_points, results)?;
+        //             }
+        //         } else {
+        //             // 5. Leaf node: filter contained points
+        //             let contained = self
+        //                 .get_point_idxs(node_idx)
+        //                 .into_iter()
+        //                 .filter(|&idx| is_contained_in(quadtree_points[idx], polygon))
+        //                 .collect::<Vec<_>>();
+        //             results.extend(contained);
+        //         }
+
+        //         Ok(())
+        //     }
+
+        //     fn get_child_bboxes(&self, node_idx: usize) -> Result<Vec<([f64; 2], [f64; 2])>, Box<dyn std::error::Error>> {
+        //         let children = self.get_children_idxs(node_idx);
+        //         let mut bboxes = Vec::new();
+        //         for &child_idx in &children {
+        //             bboxes.push(self.node_bbox_points(child_idx)?);
+        //         }
+        //         Ok(bboxes)
+        //     }
+        // }
 
 // fn get_polygon_bbox(points: &[[f64; 2]]) -> ([f64; 2], [f64; 2]) {
 //     let mut min_x = f64::INFINITY;
@@ -417,4 +513,18 @@ impl QuadTree {
 //                    min2: [f64; 2], max2: [f64; 2]) -> bool {
 //     !(min1[0] > max2[0] || max1[0] < min2[0] ||  // x
 //       min1[1] > max2[1] || max1[1] < min2[1])    // y
+// }
+
+// fn polygon_fits_in_bbox(polygon: &[[f64; 2]], min: [f64; 2], max: [f64; 2]) -> bool {
+//     polygon.iter().all(|&[x, y]| {
+//         x >= min[0] && x <= max[0] &&
+//         y >= min[1] && y <= max[1]
+//     })
+// }
+
+// fn bbox_intersects(
+//     a_min: [f64; 2], a_max: [f64; 2],
+//     b_min: [f64; 2], b_max: [f64; 2]
+// ) -> bool {
+//     !(a_max[0] < b_min[0] || a_min[0] > b_max[0] || a_max[1] < b_min[1] || a_min[1] > b_max[1])
 // }
