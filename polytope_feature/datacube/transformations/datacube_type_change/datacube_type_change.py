@@ -118,14 +118,14 @@ class TypeChangeStrToTimedelta(DatacubeAxisTypeChange):
         return tuple(values)
 
 
-class TypeChangeSubHourlyTimeSteps(DatacubeAxisTypeChange):
+class TypeChangeSubHourlyTimeStepsCompact(DatacubeAxisTypeChange):
     def __init__(self, axis_name, new_type):
         self.axis_name = axis_name
         self._new_type = new_type
 
     def transform_type(self, value):
-        if isinstance(value, int):
-            return pd.Timedelta(hours=value)
+        if isinstance(value, str) and value.isdigit():
+            return pd.Timedelta(hours=int(value))
 
         if isinstance(value, str):
             # Extract hours and minutes using regex
@@ -143,7 +143,7 @@ class TypeChangeSubHourlyTimeSteps(DatacubeAxisTypeChange):
         total_minutes = int(value.total_seconds() // 60)
 
         if total_minutes % 60 == 0:
-            return total_minutes // 60
+            return f"{total_minutes // 60}"
         else:
             return f"{total_minutes}m"
 
@@ -152,5 +152,5 @@ _type_to_datacube_type_change_lookup = {
     "int": "TypeChangeStrToInt",
     "date": "TypeChangeStrToTimestamp",
     "time": "TypeChangeStrToTimedelta",
-    "subhourly_step": "TypeChangeSubHourlyTimeSteps",
+    "subhourly_step_compact": "TypeChangeSubHourlyTimeStepsCompact",
 }
