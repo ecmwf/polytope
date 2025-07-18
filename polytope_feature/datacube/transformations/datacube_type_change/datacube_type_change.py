@@ -148,9 +148,45 @@ class TypeChangeSubHourlyTimeStepsCompact(DatacubeAxisTypeChange):
             return f"{total_minutes}m"
 
 
+class TypeChangeSubHourlyTimeSteps(DatacubeAxisTypeChange):
+    def __init__(self, axis_name, new_type):
+        self.axis_name = axis_name
+        self._new_type = new_type
+
+    def transform_type(self, value):
+        if isinstance(value, str) and value.isdigit():
+            return pd.Timedelta(hours=int(value))
+
+        if isinstance(value, str):
+            # Extract hours and minutes using regex
+            h_match = re.search(r'(\d+)\s*h', value)
+            m_match = re.search(r'(\d+)\s*m(?:in)?', value)
+
+            hours = int(h_match.group(1)) if h_match else 0
+            minutes = int(m_match.group(1)) if m_match else 0
+
+            return pd.Timedelta(hours=hours, minutes=minutes)
+
+        raise ValueError(f"Unsupported timestep format: {value}")
+
+    def make_str(self, value):
+        total_minutes = int(value.total_seconds() // 60)
+        hours, minutes = divmod(total_minutes, 60)
+
+        if hours == 0 and minutes == 0:
+            return "0"
+        elif hours == 0:
+            return f"{minutes}m"
+        elif minutes == 0:
+            return f"{hours}"
+        else:
+            return f"{hours}h{minutes}m"
+
+
 _type_to_datacube_type_change_lookup = {
     "int": "TypeChangeStrToInt",
     "date": "TypeChangeStrToTimestamp",
     "time": "TypeChangeStrToTimedelta",
     "subhourly_step_compact": "TypeChangeSubHourlyTimeStepsCompact",
+    "subhourly_step": "TypeChangeSubHourlyTimeSteps",
 }
