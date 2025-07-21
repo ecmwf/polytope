@@ -104,28 +104,30 @@ impl DatacubeAxis for FloatDatacubeAxis {
 
 
 
-// // Timestamp
+// Timestamp
 
-// #[derive(Debug)]
-// pub struct PandasTimestampDatacubeAxis {
-//     pub name: String,
-//     pub tol: f64,
-//     pub can_round: bool,
-//     pub range: (f64, f64),
-//     pub type_: f64,
-// }
+use chrono::{DateTime, Utc};
 
-// impl PandasTimestampDatacubeAxis {
-//     pub fn new() -> Self {
-//         Self {
-//             name: "timestamp_axis".to_string(),
-//             tol: 1e-12,
-//             can_round: false,
-//             range: (0., 1.), //TODO
-//             type_: 0., // TODO
-//         }
-//     }
-// }
+#[derive(Debug)]
+pub struct PandasTimestampDatacubeAxis {
+    pub name: String,
+    pub tol: f64,
+    pub can_round: bool,
+    pub range: (f64, f64),
+    pub type_: DateTime<Utc>,
+}
+
+impl PandasTimestampDatacubeAxis {
+    pub fn new() -> Self {
+        Self {
+            name: "timestamp_axis".to_string(),
+            tol: 1e-12,
+            can_round: false,
+            range: (0., 1.),
+            type_: Utc::now(),
+        }
+    }
+}
 
 // impl DatacubeAxis for PandasTimestampDatacubeAxis {
 //     fn parse(&self, value: &dyn std::any::Any) -> Box<dyn std::any::Any> {
