@@ -12,6 +12,12 @@ pub mod datacube;
 
 use crate::datacube::datacube_axis::{IntDatacubeAxis, FloatDatacubeAxis};
 
+pub mod utility;
+
+use crate::utility::exceptions::{BadRequestError, AxisOverdefinedError};
+
+
+
 
 #[pymodule]
 fn polytope_rs(py: Python, m: &PyModule) -> PyResult<()> {

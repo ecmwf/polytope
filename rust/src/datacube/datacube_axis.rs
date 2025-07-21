@@ -1,13 +1,13 @@
 use std::any::Any;
 
-pub trait DatacubeAxis {
+pub trait DatacubeAxis: std::fmt::Debug  {
     fn parse(&self, value: &dyn Any) -> Box<dyn Any>;
     fn to_float(&self, value: &dyn Any) -> Option<f64>;
     fn from_float(&self, value: f64) -> Box<dyn Any>;
     fn serialize(&self, value: &dyn Any) -> Box<dyn Any>;
 }
 
-
+#[derive(Debug)]
 pub struct IntDatacubeAxis {
     pub name: String,
     pub tol: f64,
@@ -55,7 +55,7 @@ impl DatacubeAxis for IntDatacubeAxis {
 }
 
 
-
+#[derive(Debug)]
 pub struct FloatDatacubeAxis {
     pub name: String,
     pub tol: f64,
