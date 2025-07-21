@@ -60,38 +60,115 @@ impl fmt::Display for AxisOverdefinedError {
 impl Error for AxisOverdefinedError {}
 
 
-// // AxisUnderdefinedError
+// AxisUnderdefinedError
 
-// class AxisUnderdefinedError(PolytopeError, KeyError):
-//     def __init__(self, axis):
-//         self.axis = axis
-//         self.message = f"Axis {axis} is underdefined. It does not appear in any input polytope."
+#[derive(Debug)]
+pub struct AxisUnderdefinedError{
+    axis: Box<dyn DatacubeAxis>,
+}
 
+impl AxisUnderdefinedError {
+    pub fn new(axis: Box<dyn DatacubeAxis>) -> Self {
+        Self {
+            axis,
+        }
+    }
+}
 
-// // AxisNotFoundError
+impl fmt::Display for AxisUnderdefinedError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Axis {:?} is underdefined. It does not appear in any input polytope.",
+            self.axis
+        )
+    }
+}
 
-// class AxisNotFoundError(PolytopeError, KeyError):
-//     def __init__(self, axis):
-//         self.axis = axis
-//         self.message = f"Axis {axis} does not exist in the datacube."
+impl Error for AxisUnderdefinedError {}
 
-// // UnsliceableShapeError
+// AxisNotFoundError
 
-// class UnsliceableShapeError(PolytopeError, KeyError):
-//     def __init__(self, axis):
-//         self.axis = axis
-//         self.message = f"Higher-dimensional shape does not support unsliceable axis {axis.name}."
+#[derive(Debug)]
+pub struct AxisNotFoundError{
+    axis: Box<dyn DatacubeAxis>,
+}
 
-// // BadGridError
+impl AxisNotFoundError {
+    pub fn new(axis: Box<dyn DatacubeAxis>) -> Self {
+        Self {
+            axis,
+        }
+    }
+}
 
-// class BadGridError(PolytopeError, ValueError):
-//     def __init__(self):
-//         self.message = "Data on this grid is not supported by Polytope."
+impl fmt::Display for AxisNotFoundError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Axis {:?} does not exist in the datacube.",
+            self.axis
+        )
+    }
+}
 
-// // GribJumpNoIndexError
+impl Error for AxisNotFoundError {}
 
-// class GribJumpNoIndexError(PolytopeError, ValueError):
-//     def __init__(self):
-//         self.message = (
-//             "Feature extraction cannot be performed on this data because no GribJump index has been generated."
-//         )
+// UnsliceableShapeError
+
+#[derive(Debug)]
+pub struct UnsliceableShapeError{
+    axis: Box<dyn DatacubeAxis>,
+}
+
+impl UnsliceableShapeError {
+    pub fn new(axis: Box<dyn DatacubeAxis>) -> Self {
+        Self {
+            axis,
+        }
+    }
+}
+
+impl fmt::Display for UnsliceableShapeError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Higher-dimensional shape does not support unsliceable axis {:?}.",
+            self.axis
+        )
+    }
+}
+
+impl Error for UnsliceableShapeError {}
+
+// BadGridError
+
+#[derive(Debug)]
+pub struct BadGridError;
+
+impl fmt::Display for BadGridError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Data on this grid is not supported by Polytope."
+        )
+    }
+}
+
+impl Error for BadGridError {}
+
+// GribJumpNoIndexError
+
+#[derive(Debug)]
+pub struct GribJumpNoIndexError;
+
+impl fmt::Display for GribJumpNoIndexError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+             "Feature extraction cannot be performed on this data because no GribJump index has been generated."
+        )
+    }
+}
+
+impl Error for GribJumpNoIndexError {}

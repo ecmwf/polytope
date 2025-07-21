@@ -14,7 +14,7 @@ use crate::datacube::datacube_axis::{IntDatacubeAxis, FloatDatacubeAxis};
 
 pub mod utility;
 
-use crate::utility::exceptions::{BadRequestError, AxisOverdefinedError};
+use crate::utility::exceptions::{BadRequestError, AxisOverdefinedError, BadGridError};
 
 
 
