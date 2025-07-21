@@ -10,7 +10,7 @@ use crate::healpix_nested::{axes_idx_to_healpix_idx_batch, ring_to_nested_batche
 
 pub mod datacube;
 
-use crate::datacube::datacube_axis::IntDatacubeAxis;
+use crate::datacube::datacube_axis::{IntDatacubeAxis, FloatDatacubeAxis};
 
 
 #[pymodule]
