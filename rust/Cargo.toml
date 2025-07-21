@@ -7,7 +7,7 @@ edition = "2021"
 pyo3 = { version = "0.20", features = ["extension-module"] }
 geo = { version = "0.30"}
 rayon = "1.8"
-typed-arena = "2.0"
+chrono = "0.4"
 
 [lib]
 name = "polytope_rs"
