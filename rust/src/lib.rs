@@ -8,6 +8,10 @@ pub mod healpix_nested;
 
 use crate::healpix_nested::{axes_idx_to_healpix_idx_batch, ring_to_nested_batched, first_axis_vals_healpix_nested};
 
+pub mod datacube;
+
+use crate::datacube::datacube_axis::IntDatacubeAxis;
+
 
 #[pymodule]
 fn polytope_rs(py: Python, m: &PyModule) -> PyResult<()> {
