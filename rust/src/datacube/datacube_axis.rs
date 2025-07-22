@@ -178,31 +178,80 @@ impl DatacubeAxis for PandasTimestampDatacubeAxis {
 //         return None
 
 
+// Timedelta
+
+use chrono::{Duration};
+
+#[derive(Debug)]
+pub struct PandasTimedeltaDatacubeAxis {
+    pub name: String,
+    pub tol: f64,
+    pub can_round: bool,
+    pub range: (f64, f64),
+    pub type_: Duration,
+}
+
+impl PandasTimedeltaDatacubeAxis {
+    pub fn new() -> Self {
+        Self {
+            name: "timedeltaaxis".to_string(),
+            tol: 1e-12,
+            can_round: false,
+            range: (0., 1.),
+            type_: Duration::hours(0),
+        }
+    }
+}
+
+impl DatacubeAxis for PandasTimedeltaDatacubeAxis {
+
+    // fn parse(&self, value: &dyn Any) -> Box<dyn Any> {
+    //     if let Some(s) = value.downcast_ref::<&str>() {
+    //         // Try parsing as RFC 3339 datetime
+    //         match DateTime::parse_from_rfc3339(s) {
+    //             Ok(dt) => Box::new(dt.with_timezone(&Utc)),
+    //             Err(_) => Box::new("invalid datetime"),
+    //         }
+    //     } else if let Some(dt) = value.downcast_ref::<DateTime<Utc>>() {
+    //         Box::new(*dt)
+    //     } else {
+    //         Box::new("invalid")
+    //     }
+    // }
+
+    fn to_float(&self, value: &dyn std::any::Any) -> Option<f64> {
+        if let Some(dur) = value.downcast_ref::<Duration>() {
+            Some(dur.num_nanoseconds()? as f64 / 1_000_000_000.0)
+        } else {
+            None
+        }
+    }
+
+    fn from_float(&self, value: f64) -> Box<dyn std::any::Any> {
+        let secs = value.trunc() as i64;
+        let nanos = ((value.fract()) * 1_000_000_000.0).round() as i64;
+        let total_nanos = secs * 1_000_000_000 + nanos;
+        Box::new(Duration::nanoseconds(total_nanos))
+    }
+
+    fn serialize(&self, value: &dyn std::any::Any) -> Box<dyn std::any::Any> {
+        if let Some(dur) = value.downcast_ref::<Duration>() {
+            let secs = dur.num_seconds();
+            Box::new(format!("{}s", secs))
+        } else {
+            Box::new("invalid")
+        }
+    }
+}
+
+
+
 // class PandasTimedeltaDatacubeAxis(DatacubeAxis):
-//     def __init__(self):
-//         self.name = None
-//         self.tol = 1e-12
-//         self.range = None
-//         self.transformations = []
-//         self.type = np.timedelta64(0, "s")
-//         self.can_round = False
 
 //     def parse(self, value: Any) -> Any:
 //         if isinstance(value, np.str_):
 //             value = str(value)
 //         return pd.Timedelta(value)
-
-//     def to_float(self, value: pd.Timedelta):
-//         if isinstance(value, np.timedelta64):
-//             return value.astype("timedelta64[s]").astype(int)
-//         else:
-//             return float(value.value / 10**9)
-
-//     def from_float(self, value):
-//         return pd.Timedelta(int(value), unit="s")
-
-//     def serialize(self, value):
-//         return str(value)
 
 //     def offset(self, value):
 //         return None
