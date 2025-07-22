@@ -103,6 +103,9 @@ datacube_transformations = {
 options = {
     "axis_config": [
         {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
+        {"axis_name": "expver", "transformations": [{"name": "type_change", "type": "int"}]},
+        {"axis_name": "realization", "transformations": [{"name": "type_change", "type": "int"}]},
+        {"axis_name": "generation", "transformations": [{"name": "type_change", "type": "int"}]},
         {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
         # {
         #     "axis_name": "date",
@@ -139,10 +142,13 @@ options = {
                       "type": "UnsliceableDatacubeAxis",
                       "model": "UnsliceableDatacubeAxis",
                       "stream": "UnsliceableDatacubeAxis",
-                      "realization": "UnsliceableDatacubeAxis",
-                      "expver": "UnsliceableDatacubeAxis",
+                      #   "realization": "UnsliceableDatacubeAxis",
+                      "realization": "IntDatacubeAxis",
+                      #   "expver": "UnsliceableDatacubeAxis",
+                      "expver": "IntDatacubeAxis",
                       "experiment": "UnsliceableDatacubeAxis",
-                      "generation": "UnsliceableDatacubeAxis",
+                      #   "generation": "UnsliceableDatacubeAxis",
+                      "generation": "IntDatacubeAxis",
                       "levtype": "UnsliceableDatacubeAxis",
                       "activity": "UnsliceableDatacubeAxis",
                       "dataset": "UnsliceableDatacubeAxis",
@@ -166,27 +172,34 @@ options = {
 
 request = Request(
     # ConvexPolytope(["param"], [["164"]]),
-    Select("param", ["164"]),
+    # Select("param", ["164"]),
+    Select("param", ["165"]),
     ConvexPolytope(["time"], [[pd.Timedelta(hours=0, minutes=0)], [pd.Timedelta(hours=3, minutes=0)]]),
     ConvexPolytope(["resolution"], [["high"]]),
     ConvexPolytope(["type"], [["fc"]]),
     #   ConvexPolytope(["model"], [['ifs-nemo']]),
-    Select("model", ["ifs-nemo"]),
+    # Select("model", ["ifs-nemo"]),
+    Select("model", ["icon"]),
     Select("stream", ["clte"]),
     #   ConvexPolytope(["stream"], [["clte"]]),
     ConvexPolytope(["realization"], ["1"]),
     ConvexPolytope(["expver"], [['0001']]),
     ConvexPolytope(["experiment"], [['ssp3-7.0']]),
-    ConvexPolytope(["generation"], [["1"]]),
+    # ConvexPolytope(["generation"], [["1"]]),
+    Select("generation", [1]),
     ConvexPolytope(["levtype"], [["sfc"]]),
     # ConvexPolytope(["activity"], [["scenariomip"]]),
     Select("activity", ["scenariomip"]),
     ConvexPolytope(["dataset"], [["climate-dt"]]),
     ConvexPolytope(["class"], [["d1"]]),
-    ConvexPolytope(["date"], [[pd.Timestamp("20220811")]]),
+    # ConvexPolytope(["date"], [[pd.Timestamp("20220811")]]),
+    ConvexPolytope(["date"], [[pd.Timestamp("20200908")]]),
     ConvexPolytope(["latitude", "longitude"], [[0, 0], [5, 5], [0, 5]]))
 
-fdb_tree = get_fdb_tree(request)
+# fdb_tree = get_fdb_tree(request)
+path_to_qube = "../qubed/"
+full_qube_path = path_to_qube+"tests/example_qubes/climate_dt_with_metadata.json"
+fdb_tree = Qube.load(full_qube_path)
 
 print("HERE WE HAVE THE FDB TREE")
 print(fdb_tree)
