@@ -27,9 +27,9 @@ class QubedSlicer(Engine):
 
     def find_values_between(self, polytope, ax, node, datacube, lower, upper, path=None):
         if isinstance(ax, UnsliceableDatacubeAxis):
-            # print(node.values)
-            # print(lower)
-            # print(ax.name)
+            print(node.values)
+            print(lower)
+            print(ax.name)
             return [v for v in node.values if lower <= v <= upper]
 
         tol = ax.tol
@@ -151,10 +151,10 @@ class QubedSlicer(Engine):
                         # TODO: when we have an axis that we would like to merge with another, we should skip the node creation here
                         # and instead keep/cache the value to merge with the node from before??
 
-                        qube_node = Qube.make(key=grid_axes[0],
-                                              values=QEnum([found_val]),
-                                              metadata={},
-                                              children=children)
+                        qube_node = Qube.make_node(key=grid_axes[0],
+                                                   values=QEnum([found_val]),
+                                                   metadata={},
+                                                   children=children)
                         result.append(qube_node)
 
         for i, child in enumerate(q.children):
@@ -189,7 +189,7 @@ class QubedSlicer(Engine):
 
                 if final_children_and_vals is None:
                     continue
-                result.extend([Qube.make(
+                result.extend([Qube.make_node(
                     key=child.key,
                     values=QEnum(new_found_vals),
                     metadata=child.metadata,
@@ -226,7 +226,7 @@ class QubedSlicer(Engine):
 
             # NOTE this was the last axis so we do not have children...
 
-            result.extend([Qube.make(
+            result.extend([Qube.make_node(
                 key=axis_name,
                 values=QEnum(new_found_vals),
                 metadata={},

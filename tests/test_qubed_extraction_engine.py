@@ -37,7 +37,7 @@ def find_relevant_subcube_from_request(request, qube_url):
 
 
 fdb_tree = Qube.from_json(requests.get(
-    "https://github.com/ecmwf/qubed/raw/refs/heads/main/tests/example_qubes/climate_dt.json").json())
+    "https://github.com/ecmwf/qubed/raw/refs/heads/main/tests/example_qubes/climate-dt.json").json())
 
 
 combi_polytopes = [
@@ -173,16 +173,16 @@ options = {
 #     Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
 # )
 
-request = Request(ConvexPolytope(["param"], [["164"]]),
+request = Request(ConvexPolytope(["param"], [[164]]),
                   ConvexPolytope(["time"], [[pd.Timedelta(hours=1, minutes=0)], [pd.Timedelta(hours=3, minutes=0)]]),
                   ConvexPolytope(["resolution"], [["high"]]),
                   ConvexPolytope(["type"], [["fc"]]),
                   ConvexPolytope(["model"], [['ifs-nemo']]),
                   ConvexPolytope(["stream"], [["clte"]]),
-                  ConvexPolytope(["realization"], ["1"]),
+                  ConvexPolytope(["realization"], [[1]]),
                   ConvexPolytope(["expver"], [['0001']]),
                   ConvexPolytope(["experiment"], [['ssp3-7.0']]),
-                  ConvexPolytope(["generation"], [["1"]]),
+                  ConvexPolytope(["generation"], [[1]]),
                   ConvexPolytope(["levtype"], [["sfc"]]),
                   ConvexPolytope(["activity"], [["scenariomip"]]),
                   ConvexPolytope(["dataset"], [["climate-dt"]]),
@@ -201,7 +201,8 @@ self_API = Polytope(
     options=options,
 )
 time1 = time.time()
-result = self_API.retrieve(request)
+# result = self_API.retrieve(request)
+result = self_API.slice(request.polytopes())
 time2 = time.time()
 
 print(result)
@@ -249,11 +250,11 @@ options = {
 
 fdbdatacube = gj.GribJump()
 slicer = HullSlicer()
-self_API = Polytope(
-    datacube=fdbdatacube,
-    engine=slicer,
-    options=options,
-)
+# self_API = Polytope(
+#     datacube=fdbdatacube,
+#     engine=slicer,
+#     options=options,
+# )
 
 
 request = Request(ConvexPolytope(["param"], [["164"]]),
@@ -274,7 +275,8 @@ request = Request(ConvexPolytope(["param"], [["164"]]),
                   ConvexPolytope(["latitude", "longitude"], [[0, 0], [0.5, 0.5], [0, 0.5]]))
 
 time3 = time.time()
-result = self_API.retrieve(request)
+# result = self_API.retrieve(request)
+# result = self_API.slice(request.polytopes())
 time4 = time.time()
 
 print("TIME EXTRACTING USING GJ NORMAL")

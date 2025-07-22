@@ -44,7 +44,7 @@ def get_fdb_tree(request):
 
 
 fdb_tree = Qube.from_json(requests.get(
-    "https://github.com/ecmwf/qubed/raw/refs/heads/main/tests/example_qubes/climate_dt.json").json())
+    "https://github.com/ecmwf/qubed/raw/refs/heads/main/tests/example_qubes/climate-dt.json").json())
 
 
 # print(fdb_tree)
