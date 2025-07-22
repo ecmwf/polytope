@@ -1,7 +1,7 @@
 
 from qubed import Qube
 from qubed.value_types import QEnum
-# from qubed.set_operations import union
+from qubed.set_operations import union
 from .slicing_tools import slice
 from ..datacube.backends.qubed import QubedDatacube
 from .engine import Engine
@@ -27,9 +27,6 @@ class QubedSlicer(Engine):
 
     def find_values_between(self, polytope, ax, node, datacube, lower, upper, path=None):
         if isinstance(ax, UnsliceableDatacubeAxis):
-            # print(node.values)
-            # print(lower)
-            # print(ax.name)
             return [v for v in node.values if lower <= v <= upper]
 
         tol = ax.tol
@@ -235,8 +232,7 @@ class QubedSlicer(Engine):
     def slice_tree(self, datacube, final_polys):
         q = datacube.q
         datacube_transformations = datacube.datacube_transformations
-        # return Qube.root_node(self._slice(q, final_polys, datacube, datacube_transformations))
-        return Qube.make_root(self._slice(q, final_polys, datacube, datacube_transformations))
+        return Qube.root_node(self._slice(q, final_polys, datacube, datacube_transformations))
 
     def build_tree(self, polytopes_to_slice, datacube):
         groups, input_axes = group(polytopes_to_slice)
@@ -254,6 +250,5 @@ class QubedSlicer(Engine):
         final_tree = sub_trees[0]
 
         for sub_tree in sub_trees[1:]:
-            # union(final_tree, sub_tree)
-            final_tree | sub_tree
+            union(final_tree, sub_tree)
         return final_tree
