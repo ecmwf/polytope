@@ -5,6 +5,9 @@ pub trait DatacubeAxis: std::fmt::Debug  {
     fn to_float(&self, value: &dyn Any) -> Option<f64>;
     fn from_float(&self, value: f64) -> Box<dyn Any>;
     fn serialize(&self, value: &dyn Any) -> Box<dyn Any>;
+    fn offset(&self, value: &dyn Any) -> Option<Box<dyn Any>> {
+        Some(Box::new(0))
+    }
 }
 
 #[derive(Debug)]
@@ -167,16 +170,11 @@ impl DatacubeAxis for PandasTimestampDatacubeAxis {
             Box::new("invalid")
         }
     }
+
+    fn offset(&self, value: &dyn Any) -> Option<Box<dyn Any>>{
+        None
+    }
 }
-
-
-
-
-// class PandasTimestampDatacubeAxis(DatacubeAxis):
-
-//     def offset(self, value):
-//         return None
-
 
 // Timedelta
 
@@ -205,19 +203,32 @@ impl PandasTimedeltaDatacubeAxis {
 
 impl DatacubeAxis for PandasTimedeltaDatacubeAxis {
 
-    // fn parse(&self, value: &dyn Any) -> Box<dyn Any> {
-    //     if let Some(s) = value.downcast_ref::<&str>() {
-    //         // Try parsing as RFC 3339 datetime
-    //         match DateTime::parse_from_rfc3339(s) {
-    //             Ok(dt) => Box::new(dt.with_timezone(&Utc)),
-    //             Err(_) => Box::new("invalid datetime"),
-    //         }
-    //     } else if let Some(dt) = value.downcast_ref::<DateTime<Utc>>() {
-    //         Box::new(*dt)
-    //     } else {
-    //         Box::new("invalid")
-    //     }
-    // }
+    fn parse(&self, value: &dyn Any) -> Box<dyn Any> {
+        if let Some(s) = value.downcast_ref::<&str>() {
+            // Basic parsing for "60", "60s", "1h"
+            let trimmed = s.trim();
+            if let Ok(hours) = trimmed.parse::<i64>() {
+                return Box::new(Duration::hours(hours));
+            } else if let Some(stripped) = trimmed.strip_suffix("s") {
+                if let Ok(secs) = stripped.parse::<i64>() {
+                    return Box::new(Duration::seconds(secs));
+                }
+            } else if let Some(stripped) = trimmed.strip_suffix("m") {
+                if let Ok(mins) = stripped.parse::<i64>() {
+                    return Box::new(Duration::minutes(mins));
+                }
+            } else if let Some(stripped) = trimmed.strip_suffix("h") {
+                if let Ok(hours) = stripped.parse::<i64>() {
+                    return Box::new(Duration::hours(hours));
+                }
+            }
+            Box::new("invalid")
+        } else if let Some(dur) = value.downcast_ref::<Duration>() {
+            Box::new(*dur)
+        } else {
+            Box::new("invalid")
+        }
+    }
 
     fn to_float(&self, value: &dyn std::any::Any) -> Option<f64> {
         if let Some(dur) = value.downcast_ref::<Duration>() {
@@ -242,28 +253,62 @@ impl DatacubeAxis for PandasTimedeltaDatacubeAxis {
             Box::new("invalid")
         }
     }
+
+    fn offset(&self, value: &dyn Any) -> Option<Box<dyn Any>>{
+        None
+    }
 }
 
 
+// UnsliceableDatacubeAxis
 
-// class PandasTimedeltaDatacubeAxis(DatacubeAxis):
+pub struct UnsliceableDatacubeAxis {
+    pub name: String,
+    pub tol: f64,
+    pub can_round: bool,
+    pub range: (i32, i32),
+    pub type_: f64,
+}
 
-//     def parse(self, value: Any) -> Any:
-//         if isinstance(value, np.str_):
-//             value = str(value)
-//         return pd.Timedelta(value)
+impl UnsliceableDatacubeAxis {
+    pub fn new() -> Self {
+        Self {
+            name: "unsliceable_axis".to_string(),
+            tol: f64::NAN,
+            can_round: false,
+            range: (0, 1),
+            type_: f64::NAN,
+        }
+    }
+}
 
-//     def offset(self, value):
-//         return None
+// impl DatacubeAxis for UnsliceableDatacubeAxis {
+//     fn parse(&self, value: &dyn std::any::Any) -> Box<dyn std::any::Any> {
+//         if let Some(v) = value.downcast_ref::<f64>() {
+//             Box::new(*v)
+//         } else {
+//             Box::new("invalid")
+//         }
+//     }
 
+//     fn to_float(&self, value: &dyn std::any::Any) -> Option<f64> {
+//         value.downcast_ref::<f64>().copied()
+//     }
+
+//     fn from_float(&self, value: f64) -> Box<dyn std::any::Any> {
+//         Box::new(value)
+//     }
+
+//     fn serialize(&self, value: &dyn std::any::Any) -> Box<dyn std::any::Any> {
+//         if let Some(v) = value.downcast_ref::<i32>() {
+//             Box::new(*v)
+//         } else {
+//             Box::new("invalid")
+//         }
+//     }
+// }
 
 // class UnsliceableDatacubeAxis(DatacubeAxis):
-//     def __init__(self):
-//         self.name = None
-//         self.tol = float("NaN")
-//         self.range = None
-//         self.transformations = []
-//         self.can_round = False
 
 //     def parse(self, value: Any) -> Any:
 //         return value
