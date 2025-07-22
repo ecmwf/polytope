@@ -149,6 +149,10 @@ class QubedDatacube(Datacube):
         complete_list_complete_uncompressed_requests = []
         complete_fdb_decoding_info = []
         for j, compressed_request in enumerate(fdb_requests):
+
+            compressed_metadata = compressed_request[2]
+
+            # TODO: get uncompressed metadata for each leaf
             uncompressed_request = {}
 
             # Need to determine the possible decompressed requests
@@ -196,9 +200,14 @@ class QubedDatacube(Datacube):
         fdb_requests=[],
         fdb_requests_decoding_info=[],
         leaf_path=None,
+        leaf_metadata=None,
     ):
+        # TODO: collect leaf metadata from qube here too
         if leaf_path is None:
             leaf_path = {}
+
+        if leaf_metadata is None:
+            leaf_metadata = {}
 
         # First when request node is root, go to its children
         if requests.key == "root":
@@ -225,6 +234,7 @@ class QubedDatacube(Datacube):
                     new_vals.append(val[:4] + val[5:7] + val[8:10])
                 key_value_path[requests.key] = new_vals
             leaf_path.update(key_value_path)
+            leaf_metadata.update(requests.metadata)
             if len(requests.children[0].children[0].children) == 0:
                 # find the fdb_requests and associated nodes to which to add results
                 (path, current_start_idxs, fdb_node_ranges, lat_length) = self.get_2nd_last_values(requests, leaf_path)
@@ -233,13 +243,13 @@ class QubedDatacube(Datacube):
                     sorted_request_ranges,
                     fdb_node_ranges,
                 ) = self.sort_fdb_request_ranges(current_start_idxs, lat_length, fdb_node_ranges)
-                fdb_requests.append((path, sorted_request_ranges))
+                fdb_requests.append((path, sorted_request_ranges, leaf_metadata))
                 fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
 
             # Otherwise remap the path for this key and iterate again over children
             else:
                 for c in requests.children:
-                    self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path)
+                    self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path, leaf_metadata)
 
     def remove_duplicates_in_request_ranges(self, fdb_node_ranges, current_start_idxs):
         # seen_indices = set()

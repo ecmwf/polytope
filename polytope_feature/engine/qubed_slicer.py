@@ -172,6 +172,8 @@ class QubedSlicer(Engine):
                 # find values on child that are within extents
                 found_vals = self.find_values_between(poly, ax, child, datacube, lower, upper)
 
+                # TODO: find the indexes of the found_vals wrt child.values, to extract the right metadata that we want to keep inside self.build_branch
+
                 if len(found_vals) == 0:
                     continue
 
