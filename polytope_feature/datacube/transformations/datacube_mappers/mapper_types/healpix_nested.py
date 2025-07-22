@@ -118,27 +118,38 @@ class NestedHealpixGridMapper(DatacubeMapper):
 
     def unmap(self, first_val, second_vals):
         if use_rust:
-            tol = 1e-8
-            first_idx = next(
-                (i for i, val in enumerate(self._first_axis_vals) if first_val[0] - tol <= val <= first_val[0] + tol),
-                None,
-            )
-            if first_idx is None:
-                return None
-            second_axis_vals = self.second_axis_vals_from_idx(first_idx)
+            # tol = 1e-8
+            # first_idx = next(
+            #     (i for i, val in enumerate(self._first_axis_vals) if first_val[0] - tol <= val <= first_val[0] + tol),
+            #     None,
+            # )
+            # if first_idx is None:
+            #     return None
+            # second_axis_vals = self.second_axis_vals_from_idx(first_idx)
 
-            return_idxs = []
-            second_idxs = []
-            for second_val in second_vals:
-                second_idx = next(
-                    (i for i, val in enumerate(second_axis_vals) if second_val - tol <= val <= second_val + tol), None
-                )
-                if second_idx is None:
-                    return None
-                second_idxs.append(second_idx)
-            healpix_indexes = axes_idx_to_healpix_idx_batch(self._resolution, first_idx, second_idxs)
-            nested_healpix_indexes = ring_to_nested_batched(healpix_indexes, self.Nside, self.Npix, self.Ncap, self.k)
-            return_idxs.extend(nested_healpix_indexes)
+            # return_idxs = []
+            # second_idxs = []
+            # for second_val in second_vals:
+            #     second_idx = next(
+            #         (i for i, val in enumerate(second_axis_vals) if second_val - tol <= val <= second_val + tol), None
+            #     )
+            #     if second_idx is None:
+            #         return None
+            #     second_idxs.append(second_idx)
+            # healpix_indexes = axes_idx_to_healpix_idx_batch(self._resolution, first_idx, second_idxs)
+            # nested_healpix_indexes = ring_to_nested_batched(healpix_indexes, self.Nside, self.Npix, self.Ncap, self.k)
+            # return_idxs.extend(nested_healpix_indexes)
+            idx = np.searchsorted(self._first_axis_vals_np_rounded, -np.round(first_val[0], decimals=8))
+            if idx >= len(self._first_axis_vals_np_rounded):
+                return None
+            second_axis_vals = np.round(np.array(self.second_axis_vals_from_idx(idx)), decimals=8)
+            second_vals = np.round(np.array(second_vals), decimals=8)
+            second_idxs = np.searchsorted(second_axis_vals, second_vals)
+            valid_mask = second_idxs < len(second_axis_vals)
+            if not np.all(valid_mask):
+                return None
+            healpix_indexes = axes_idx_to_healpix_idx_batch(self._resolution, idx, second_idxs)
+            return_idxs = ring_to_nested_batched(healpix_indexes, self.Nside, self.Npix, self.Ncap, self.k)
         else:
             # Convert to NumPy array for fast computation
             idx = np.searchsorted(self._first_axis_vals_np_rounded, -np.round(first_val[0], decimals=8))

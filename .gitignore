@@ -39,3 +39,6 @@ rust_deployment_venv
 _version.py
 *.DS_Store
 rust_venv
+icon_grids
+new_rust_test_venv
+test_w_qubed
