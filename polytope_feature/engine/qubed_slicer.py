@@ -27,17 +27,20 @@ class QubedSlicer(Engine):
 
     def find_values_between(self, polytope, ax, node, datacube, lower, upper, path=None):
         if isinstance(ax, UnsliceableDatacubeAxis):
-            print(node.values)
-            print(lower)
-            print(ax.name)
-            return [v for v in node.values if lower <= v <= upper]
+            # print(node.values)
+            # print(lower)
+            # print(ax.name)
+            values = [v for v in node.values if lower <= v <= upper]
+            indices = [i for i, v in enumerate(node.values) if lower <= v <= upper]
+            # return [v for v in node.values if lower <= v <= upper]
+            return values, indices
 
         tol = ax.tol
         lower = ax.from_float(lower - tol)
         upper = ax.from_float(upper + tol)
         method = polytope.method
-        values = datacube.get_indices(path, node, ax, lower, upper, method)
-        return values
+        values, indexes = datacube.get_indices(path, node, ax, lower, upper, method)
+        return values, indexes
 
     def get_sliced_polys(self, found_vals, ax, child_name, poly, slice_axis_idx):
         sliced_polys = []
@@ -66,7 +69,7 @@ class QubedSlicer(Engine):
                 new_found_vals.append(found_val)
         return new_found_vals
 
-    def build_branch(self, real_uncompressed_axis, found_vals, sliced_polys, polytopes, poly, child, datacube, datacube_transformations, ax):
+    def build_branch(self, real_uncompressed_axis, found_vals, sliced_polys, polytopes, poly, child, datacube, datacube_transformations, ax, idxs=None):
         final_children_and_vals = []
         if real_uncompressed_axis:
             for i, found_val in enumerate(found_vals):
@@ -78,7 +81,13 @@ class QubedSlicer(Engine):
                     continue
 
                 new_found_vals = self.find_new_vals([found_val], ax)
-                final_children_and_vals.append((children, new_found_vals))
+
+                if idxs:
+                    request_child_val = (children, new_found_vals, [idxs[i]])
+                else:
+                    request_child_val = (children, new_found_vals)
+                # final_children_and_vals.append((children, new_found_vals))
+                final_children_and_vals.append(request_child_val)
         else:
             # if it's compressed, then can add all found values in a single node
             child_polytopes = self.find_children_polytopes(polytopes, poly, sliced_polys)
@@ -89,7 +98,13 @@ class QubedSlicer(Engine):
                 return None
 
             new_found_vals = self.find_new_vals(found_vals, ax)
-            final_children_and_vals.append((children, new_found_vals))
+            # final_children_and_vals.append((children, new_found_vals))
+            if idxs:
+                request_child_val = (children, new_found_vals, idxs)
+            else:
+                request_child_val = (children, new_found_vals)
+            final_children_and_vals.append(request_child_val)
+
         if len(final_children_and_vals) == 0:
             return None
         return final_children_and_vals
@@ -118,7 +133,7 @@ class QubedSlicer(Engine):
                     ax = datacube._axes[grid_axes[0]]
                     lower, upper, slice_axis_idx = poly.extents(grid_axes[0])
 
-                    found_vals = self.find_values_between(poly, ax, None, datacube, lower, upper)
+                    found_vals, _ = self.find_values_between(poly, ax, None, datacube, lower, upper)
 
                     if len(found_vals) == 0:
                         continue
@@ -173,7 +188,7 @@ class QubedSlicer(Engine):
                 lower, upper, slice_axis_idx = poly.extents(child.key)
 
                 # find values on child that are within extents
-                found_vals = self.find_values_between(poly, ax, child, datacube, lower, upper)
+                found_vals, idxs = self.find_values_between(poly, ax, child, datacube, lower, upper)
 
                 # TODO: find the indexes of the found_vals wrt child.values, to extract the right metadata that we want to keep inside self.build_branch
 
@@ -185,16 +200,19 @@ class QubedSlicer(Engine):
                 axis_compressed = (child.key in self.compressed_axes)
                 real_uncompressed_axis = not axis_compressed and len(found_vals) > 1
                 final_children_and_vals = self.build_branch(
-                    real_uncompressed_axis, found_vals, sliced_polys, polytopes, poly, child, datacube, datacube_transformations, ax)
+                    real_uncompressed_axis, found_vals, sliced_polys, polytopes, poly, child, datacube, datacube_transformations, ax, idxs)
 
                 if final_children_and_vals is None:
                     continue
+                print([{k: vs[idxs] for k, vs in child.metadata.items()}
+                      for (children, new_found_vals, idxs) in final_children_and_vals])
                 result.extend([Qube.make_node(
                     key=child.key,
                     values=QEnum(new_found_vals),
-                    metadata=child.metadata,
+                    # metadata=child.metadata,
+                    metadata={k: vs[idxs] for k, vs in child.metadata.items()},
                     children=children
-                ) for (children, new_found_vals) in final_children_and_vals])
+                ) for (children, new_found_vals, idxs) in final_children_and_vals])
 
         return result
 
@@ -206,7 +224,7 @@ class QubedSlicer(Engine):
             ax = datacube._axes[axis_name]
             lower, upper, slice_axis_idx = poly.extents(axis_name)
 
-            found_vals = self.find_values_between(poly, ax, None, datacube, lower, upper, path)
+            found_vals, _ = self.find_values_between(poly, ax, None, datacube, lower, upper, path)
 
             if len(found_vals) == 0:
                 continue

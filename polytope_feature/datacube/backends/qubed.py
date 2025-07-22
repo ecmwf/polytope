@@ -134,7 +134,14 @@ class QubedDatacube(Datacube):
 
         logging.debug(f"For axis {axis.name} between {lower} and {upper}, found indices {idx_between}")
 
-        return idx_between
+        # print("NOW")
+        # # print(indexes)
+        # # print(idx_between)
+        # print(all(idx in indexes for idx in idx_between))
+
+        indexes = [indexes.index(item) for item in idx_between]
+
+        return (idx_between, indexes)
 
     def get(self, requests, context=None):
         if context is None:
