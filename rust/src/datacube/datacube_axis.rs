@@ -106,7 +106,7 @@ impl DatacubeAxis for FloatDatacubeAxis {
 
 // Timestamp
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Utc, TimeZone};
 
 #[derive(Debug)]
 pub struct PandasTimestampDatacubeAxis {
@@ -129,64 +129,50 @@ impl PandasTimestampDatacubeAxis {
     }
 }
 
-// impl DatacubeAxis for PandasTimestampDatacubeAxis {
-//     fn parse(&self, value: &dyn std::any::Any) -> Box<dyn std::any::Any> {
-//         // TODO
-//         if let Some(v) = value.downcast_ref::<f64>() {
-//             Box::new(*v)
-//         } else {
-//             Box::new("invalid")
-//         }
-//     }
+impl DatacubeAxis for PandasTimestampDatacubeAxis {
 
-//     fn to_float(&self, value: &dyn std::any::Any) -> Option<f64> {
-//         // TODO
-//         value.downcast_ref::<f64>().copied()
-//     }
+    fn parse(&self, value: &dyn Any) -> Box<dyn Any> {
+        if let Some(s) = value.downcast_ref::<&str>() {
+            // Try parsing as RFC 3339 datetime
+            match DateTime::parse_from_rfc3339(s) {
+                Ok(dt) => Box::new(dt.with_timezone(&Utc)),
+                Err(_) => Box::new("invalid datetime"),
+            }
+        } else if let Some(dt) = value.downcast_ref::<DateTime<Utc>>() {
+            Box::new(*dt)
+        } else {
+            Box::new("invalid")
+        }
+    }
 
-//     fn from_float(&self, value: f64) -> Box<dyn std::any::Any> {
-//         // TODO
-//         Box::new(value)
-//     }
+    fn to_float(&self, value: &dyn std::any::Any) -> Option<f64> {
+        if let Some(dt) = value.downcast_ref::<DateTime<Utc>>() {
+            Some(dt.timestamp() as f64)
+        } else {
+            None
+    }
+    }
 
-//     fn serialize(&self, value: &dyn std::any::Any) -> Box<dyn std::any::Any> {
-//         // TODO
-//         if let Some(v) = value.downcast_ref::<f64>() {
-//             Box::new(*v)
-//         } else {
-//             Box::new("invalid")
-//         }
-//     }
-// }
+    fn from_float(&self, value: f64) -> Box<dyn std::any::Any> {
+        let s = value.trunc() as i64;
+        let datetime: DateTime<Utc> = Utc.timestamp_opt(s, 0).unwrap();
+        Box::new(datetime)
+    }
+
+    fn serialize(&self, value: &dyn std::any::Any) -> Box<dyn std::any::Any> {
+
+        if let Some(dt) = value.downcast_ref::<DateTime<Utc>>() {
+            Box::new(dt.to_rfc3339())
+        } else {
+            Box::new("invalid")
+        }
+    }
+}
 
 
 
 
 // class PandasTimestampDatacubeAxis(DatacubeAxis):
-//     def __init__(self):
-//         self.name = None
-//         self.tol = 1e-12
-//         self.range = None
-//         self.transformations = []
-//         self.type = pd.Timestamp("2000-01-01T00:00:00")
-//         self.can_round = False
-
-//     def parse(self, value: Any) -> Any:
-//         if isinstance(value, np.str_):
-//             value = str(value)
-//         return pd.Timestamp(value)
-
-//     def to_float(self, value: pd.Timestamp):
-//         if isinstance(value, np.datetime64):
-//             return float((value - np.datetime64("1970-01-01T00:00:00")).astype("int"))
-//         else:
-//             return float(value.value / 10**9)
-
-//     def from_float(self, value):
-//         return pd.Timestamp(int(value), unit="s")
-
-//     def serialize(self, value):
-//         return str(value)
 
 //     def offset(self, value):
 //         return None
