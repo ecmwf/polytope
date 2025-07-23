@@ -164,6 +164,7 @@ class QubedDatacube(Datacube):
         for j, compressed_request in enumerate(fdb_requests):
 
             compressed_metadata = compressed_request[2]
+            # print(compressed_metadata)
 
             # TODO: get uncompressed metadata for each leaf
             uncompressed_request = {}
@@ -176,12 +177,35 @@ class QubedDatacube(Datacube):
                 interm_branch_tuple_values.append(compressed_request[0][key])
             request_combis = product(*interm_branch_tuple_values)
 
+            index_combis = list(product(*[range(len(lst)) for lst in interm_branch_tuple_values]))
+
             # Need to extract the possible requests and add them to the right nodes
-            for combi in request_combis:
+            # print("REALLY HERE")
+            # print(index_combis)
+            # print([combi for combi in request_combis])
+            # print(interm_branch_tuple_values)
+
+            def find_metadata(metadata_idx):
+                metadata = {}
+                for k, vs in compressed_metadata.items():
+                    metadata_depth = len(vs.shape)
+                    # print("LOOK HERE")
+                    # print(metadata_depth)
+                    relevant_metadata_dxs = metadata_idx[:metadata_depth]
+                    metadata[k] = vs[relevant_metadata_dxs]
+                return metadata
+
+            for i, combi in enumerate(request_combis):
+                metadata_idxs = index_combis[i]
+                actual_metadata = find_metadata(metadata_idxs)
+                # print("WHAT METADATA WILL WE GIVE TO GJ")
+                # print(actual_metadata)
+
                 uncompressed_request = {}
                 for i, key in enumerate(compressed_request[0].keys()):
                     uncompressed_request[key] = combi[i]
-                complete_uncompressed_request = (uncompressed_request, compressed_request[1], self.grid_md5_hash)
+                # complete_uncompressed_request = (uncompressed_request, compressed_request[1], self.grid_md5_hash)
+                complete_uncompressed_request = (actual_metadata, compressed_request[1], self.grid_md5_hash)
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
 
@@ -189,23 +213,23 @@ class QubedDatacube(Datacube):
             printed_list_to_gj = complete_list_complete_uncompressed_requests[::1000]
             logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
         logging.info("Requests given to GribJump extract for %s", context)
-        try:
-            output_values = self.gj.extract(complete_list_complete_uncompressed_requests, context)
-        except Exception as e:
-            if "BadValue: Grid hash mismatch" in str(e):
-                logging.info("Error is: %s", e)
-                raise BadGridError()
-            if "Missing JumpInfo" in str(e):
-                logging.info("Error is: %s", e)
-                raise GribJumpNoIndexError()
-            else:
-                raise e
+        # try:
+        #     output_values = self.gj.extract(complete_list_complete_uncompressed_requests, context)
+        # except Exception as e:
+        #     if "BadValue: Grid hash mismatch" in str(e):
+        #         logging.info("Error is: %s", e)
+        #         raise BadGridError()
+        #     if "Missing JumpInfo" in str(e):
+        #         logging.info("Error is: %s", e)
+        #         raise GribJumpNoIndexError()
+        #     else:
+        #         raise e
 
-        logging.info("Requests extracted from GribJump for %s", context)
-        if logging.root.level <= logging.DEBUG:
-            printed_output_values = output_values[::1000]
-            logging.debug("GribJump outputs: %s", printed_output_values)
-        self.assign_fdb_output_to_nodes(output_values, complete_fdb_decoding_info)
+        # logging.info("Requests extracted from GribJump for %s", context)
+        # if logging.root.level <= logging.DEBUG:
+        #     printed_output_values = output_values[::1000]
+        #     logging.debug("GribJump outputs: %s", printed_output_values)
+        # self.assign_fdb_output_to_nodes(output_values, complete_fdb_decoding_info)
 
     def get_fdb_requests(
         self,

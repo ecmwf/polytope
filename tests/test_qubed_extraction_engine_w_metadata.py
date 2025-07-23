@@ -173,8 +173,8 @@ self_API = Polytope(
     options=options,
 )
 time1 = time.time()
-# result = self_API.retrieve(request)
-result = self_API.slice(request.polytopes())
+result = self_API.retrieve(request)
+# result = self_API.slice(request.polytopes())
 time2 = time.time()
 
 print(result)

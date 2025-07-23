@@ -217,8 +217,8 @@ class QubedSlicer(Engine):
                     real_uncompressed_axis, found_vals, sliced_polys, polytopes, poly, child, datacube, datacube_transformations, ax, idxs, compressed_idxs)
 
                 # combined_idxs.append(idxs)
-                print(compressed_idxs)
-                print([{k: child.metadata[k].shape} for k in child.metadata.keys()])
+                # print(compressed_idxs)
+                # print([{k: child.metadata[k].shape} for k in child.metadata.keys()])
                 # print([(ax.name, idxs) for (children, new_found_vals, idxs) in final_children_and_vals])
                 if final_children_and_vals is None:
                     continue
@@ -241,28 +241,45 @@ class QubedSlicer(Engine):
                 # ) for (children, new_found_vals, idxs) in final_children_and_vals])
 
                 def format_metadata_idxs(idxs):
-                    squeezed_indices = [np.squeeze(i) for i in idxs]
+                    # squeezed_indices = [np.squeeze(i) for i in idxs]
 
-                    def format_index(idx):
-                        if isinstance(idx, np.ndarray) and idx.ndim > 0:
-                            return idx.tolist()  # for multiple indices
-                        return int(idx)         # for scalar index
-                    index_tuple = tuple(format_index(i) for i in squeezed_indices)
-                    return index_tuple
+                    # def format_index(idx):
+                    #     if isinstance(idx, np.ndarray) and idx.ndim > 0:
+                    #         return idx.tolist()  # for multiple indices
+                    #     return int(idx)         # for scalar index
+                    # index_tuple = tuple(format_index(i) for i in squeezed_indices)
+                    # return index_tuple
+                    flat_indices = [np.ravel(idx) for idx in idxs]
+                    return flat_indices
 
                 def find_metadata(metadata_idx):
                     metadata = {}
                     for k, vs in child.metadata.items():
-                        metadata_depth = len(vs)
-                        relevant_metadata_dxs = metadata_idx[:metadata_depth]
-                        metadata[k] = vs[relevant_metadata_dxs]
+                        metadata_depth = len(vs.shape)
+                        relevant_metadata_idxs = metadata_idx[:metadata_depth]
+                        # print("AND WHAT ABOUT HERE")
+                        # print(relevant_metadata_idxs)
+                        # print(vs.shape)
+                        # print(vs[relevant_metadata_idxs].shape)
+                        # if len(vs[relevant_metadata_idxs].shape) == 0:
+                        #     metadata[k] = vs[relevant_metadata_idxs]
+
+                        # metadata[k] = vs[relevant_metadata_idxs]
+                        ix = np.ix_(*relevant_metadata_idxs)
+                        metadata[k] = vs[ix]
+                        # print(metadata[k])
                     return metadata
 
                 # print(len(final_children_and_vals))
 
                 for (children, new_found_vals, idxs) in final_children_and_vals:
+                    # print("WHAT'S THE INDEX LIKE HERE?")
+                    # print(idxs)
                     metadata_idx = format_metadata_idxs(idxs)
                     metadata = find_metadata(metadata_idx)
+                    # print("HERE WHAT'S THE METADATA")
+                    # print(metadata)
+                    # print(metadata_idx)
                     qube_node = Qube.make_node(
                         key=child.key,
                         values=QEnum(new_found_vals),
