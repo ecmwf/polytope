@@ -139,7 +139,13 @@ class QubedDatacube(Datacube):
         # # print(idx_between)
         # print(all(idx in indexes for idx in idx_between))
 
-        indexes = [indexes.index(item) for item in idx_between]
+        if path_node:
+            # print(path_node.key)
+            # print(indexes)
+            # print(idx_between)
+            indexes = [indexes.index(item) for item in idx_between]
+        else:
+            indexes = None
 
         return (idx_between, indexes)
 

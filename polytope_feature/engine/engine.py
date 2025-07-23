@@ -80,6 +80,7 @@ class Engine:
         self.pre_process_polytopes(datacube, polytopes)
         # assert isinstance(datacube, QubedDatacube)
         tree = self.build_tree(polytopes, datacube)
-        print("WHAT DOES THE TREE LOOK LIKE??")
-        print(tree)
+        # print("WHAT DOES THE TREE LOOK LIKE??")
+        # print(tree)
+        # print([leaf for leaf in tree.leaves_with_metadata()])
         return tree
