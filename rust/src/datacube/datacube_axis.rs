@@ -262,6 +262,7 @@ impl DatacubeAxis for PandasTimedeltaDatacubeAxis {
 
 // UnsliceableDatacubeAxis
 
+#[derive(Debug)]
 pub struct UnsliceableDatacubeAxis {
     pub name: String,
     pub tol: f64,
@@ -282,42 +283,24 @@ impl UnsliceableDatacubeAxis {
     }
 }
 
-// impl DatacubeAxis for UnsliceableDatacubeAxis {
-//     fn parse(&self, value: &dyn std::any::Any) -> Box<dyn std::any::Any> {
-//         if let Some(v) = value.downcast_ref::<f64>() {
-//             Box::new(*v)
-//         } else {
-//             Box::new("invalid")
-//         }
-//     }
+impl DatacubeAxis for UnsliceableDatacubeAxis {
+    fn parse(&self, value: &dyn std::any::Any) -> Box<dyn std::any::Any> {
+        if let Some(s) = value.downcast_ref::<String>() {
+            Box::new(s.clone())
+        } else {
+            Box::new("invalid")
+        }
+    }
 
-//     fn to_float(&self, value: &dyn std::any::Any) -> Option<f64> {
-//         value.downcast_ref::<f64>().copied()
-//     }
+    fn to_float(&self, value: &dyn std::any::Any) -> Option<f64> {
+        None
+    }
 
-//     fn from_float(&self, value: f64) -> Box<dyn std::any::Any> {
-//         Box::new(value)
-//     }
+    fn from_float(&self, value: f64) -> Box<dyn std::any::Any> {
+        Box::new("Tried to slice unsliceable axis")
+    }
 
-//     fn serialize(&self, value: &dyn std::any::Any) -> Box<dyn std::any::Any> {
-//         if let Some(v) = value.downcast_ref::<i32>() {
-//             Box::new(*v)
-//         } else {
-//             Box::new("invalid")
-//         }
-//     }
-// }
-
-// class UnsliceableDatacubeAxis(DatacubeAxis):
-
-//     def parse(self, value: Any) -> Any:
-//         return value
-
-//     def to_float(self, value: pd.Timedelta):
-//         raise TypeError("Tried to slice unsliceable axis")
-
-//     def from_float(self, value):
-//         raise TypeError("Tried to slice unsliceable axis")
-
-//     def serialize(self, value):
-//         raise TypeError("Tried to slice unsliceable axis")
+    fn serialize(&self, value: &dyn std::any::Any) -> Box<dyn std::any::Any> {
+        Box::new("Tried to slice unsliceable axis")
+    }
+}
