@@ -190,11 +190,14 @@ class QubedDatacube(Datacube):
                 metadata_idxs = index_combis[i]
                 actual_metadata = find_metadata(metadata_idxs)
 
-                path = actual_metadata["path"][0]
-                scheme = actual_metadata["scheme"]
-                offset = actual_metadata["offset"][0]
-                host = actual_metadata["host"][0]
-                port = actual_metadata["port"]
+                def flatten_metadata(value):
+                    return value[0] if isinstance(value, np.ndarray) else value
+
+                path = flatten_metadata(actual_metadata["path"])
+                scheme = flatten_metadata(actual_metadata["scheme"])
+                offset = flatten_metadata(actual_metadata["offset"])
+                host = flatten_metadata(actual_metadata["host"])
+                port = flatten_metadata(actual_metadata["port"])
 
                 uncompressed_request = {}
                 for i, key in enumerate(compressed_request[0].keys()):
