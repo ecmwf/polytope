@@ -81,7 +81,11 @@ class QubedSlicer(Engine):
         final_children_and_vals = []
         if real_uncompressed_axis:
             for i, found_val in enumerate(found_vals):
-                sliced_polys_ = [sliced_polys[i]]
+                # sliced_polys_ = [sliced_polys[i]]
+                if i < len(sliced_polys):
+                    sliced_polys_ = [sliced_polys[i]]
+                else:
+                    sliced_polys_ = sliced_polys
                 child_polytopes = self.find_children_polytopes(polytopes, poly, sliced_polys_)
                 if idxs:
                     compressed_idxs.append([idxs[i]])
