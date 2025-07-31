@@ -284,7 +284,8 @@ class QubedSlicer(Engine):
 
             # NOTE this was the last axis so we do not have children...
 
-            result.extend([Qube.make_node(key=axis_name, values=QEnum(new_found_vals), metadata={}, children={})])
+            result.extend([Qube.make_node(key=axis_name, values=QEnum(
+                new_found_vals), metadata={"result": []}, children={})])
         return result
 
     def slice_tree(self, datacube, final_polys):

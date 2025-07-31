@@ -426,13 +426,13 @@ class QubedDatacube(Datacube):
                 if len(request_output_values.values) == 0:
                     # If we are here, no data was found for this path in the fdb
                     none_array = [None] * len(n.values)
-                    if n.data.metadata.get("result", None) is None:
-                        n.data.metadata["result"] = []
-                    n.data.metadata["result"].extend(none_array)
+                    if n.metadata.get("result", None) is None:
+                        n.metadata["result"] = []
+                    n.metadata["result"].extend(none_array)
                 else:
-                    if n.data.metadata.get("result", None) is None:
-                        n.data.metadata["result"] = []
-                    n.data.metadata["result"].extend(request_output_values.values[i])
+                    if n.metadata.get("result", None) is None:
+                        n.metadata["result"] = []
+                    n.metadata["result"].extend(request_output_values.values[i])
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
         (new_fdb_node_ranges, new_current_start_idx) = self.remove_duplicates_in_request_ranges(
