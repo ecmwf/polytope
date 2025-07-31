@@ -201,11 +201,19 @@ class QubedDatacube(Datacube):
                 # print("WHAT METADATA WILL WE GIVE TO GJ")
                 # print(actual_metadata)
 
+                path = actual_metadata["path"][0]
+                scheme = actual_metadata["scheme"]
+                offset = actual_metadata["offset"][0]
+                host = actual_metadata["host"][0]
+                port = actual_metadata["port"]
+
                 uncompressed_request = {}
                 for i, key in enumerate(compressed_request[0].keys()):
                     uncompressed_request[key] = combi[i]
                 # complete_uncompressed_request = (uncompressed_request, compressed_request[1], self.grid_md5_hash)
-                complete_uncompressed_request = (actual_metadata, compressed_request[1], self.grid_md5_hash)
+                # complete_uncompressed_request = (actual_metadata, compressed_request[1], self.grid_md5_hash)
+                complete_uncompressed_request = (path, scheme, offset, host, port,
+                                                 compressed_request[1], self.grid_md5_hash)
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
 
@@ -213,23 +221,23 @@ class QubedDatacube(Datacube):
             printed_list_to_gj = complete_list_complete_uncompressed_requests[::1000]
             logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
         logging.info("Requests given to GribJump extract for %s", context)
-        # try:
-        #     output_values = self.gj.extract(complete_list_complete_uncompressed_requests, context)
-        # except Exception as e:
-        #     if "BadValue: Grid hash mismatch" in str(e):
-        #         logging.info("Error is: %s", e)
-        #         raise BadGridError()
-        #     if "Missing JumpInfo" in str(e):
-        #         logging.info("Error is: %s", e)
-        #         raise GribJumpNoIndexError()
-        #     else:
-        #         raise e
+        try:
+            output_values = self.gj.extract_from_paths(complete_list_complete_uncompressed_requests, context)
+        except Exception as e:
+            if "BadValue: Grid hash mismatch" in str(e):
+                logging.info("Error is: %s", e)
+                raise BadGridError()
+            if "Missing JumpInfo" in str(e):
+                logging.info("Error is: %s", e)
+                raise GribJumpNoIndexError()
+            else:
+                raise e
 
-        # logging.info("Requests extracted from GribJump for %s", context)
-        # if logging.root.level <= logging.DEBUG:
-        #     printed_output_values = output_values[::1000]
-        #     logging.debug("GribJump outputs: %s", printed_output_values)
-        # self.assign_fdb_output_to_nodes(output_values, complete_fdb_decoding_info)
+        logging.info("Requests extracted from GribJump for %s", context)
+        if logging.root.level <= logging.DEBUG:
+            printed_output_values = output_values[::1000]
+            logging.debug("GribJump outputs: %s", printed_output_values)
+        self.assign_fdb_output_to_nodes(output_values, complete_fdb_decoding_info)
 
     def get_fdb_requests(
         self,
