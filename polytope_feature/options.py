@@ -3,6 +3,7 @@ from typing import Dict, List, Literal, Optional, Union
 
 from conflator import ConfigModel
 from pydantic import ConfigDict
+
 from .datacube.datacube_axis import DatacubeAxis
 
 

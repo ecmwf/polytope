@@ -1,25 +1,35 @@
-from polytope_feature.shapes import Box, Select, Span
-from polytope_feature.polytope import Polytope, Request
-from polytope_feature.engine.qubed_slicer import QubedSlicer
-from polytope_feature.datacube.backends.qubed import QubedDatacube
-from polytope_feature.datacube.backends.fdb import FDBDatacube
-import pytest
-from qubed import Qube
-import requests
-from polytope_feature.datacube.datacube_axis import PandasTimedeltaDatacubeAxis, PandasTimestampDatacubeAxis, UnsliceableDatacubeAxis, FloatDatacubeAxis
-# from polytope_feature.datacube.backends.test_qubed_slicing import actual_slice
-from polytope_feature.datacube.transformations.datacube_type_change.datacube_type_change import TypeChangeStrToTimestamp, TypeChangeStrToTimedelta
-import pandas as pd
-from polytope_feature.datacube.transformations.datacube_mappers.mapper_types.healpix_nested import NestedHealpixGridMapper
-
-from polytope_feature.shapes import ConvexPolytope
 import time
+
+import pandas as pd
 import pygribjump as gj
+import pytest
+import requests
+from qubed import Qube
+
+from polytope_feature.datacube.backends.fdb import FDBDatacube
+from polytope_feature.datacube.backends.qubed import QubedDatacube
+from polytope_feature.datacube.datacube_axis import (
+    FloatDatacubeAxis,
+    PandasTimedeltaDatacubeAxis,
+    PandasTimestampDatacubeAxis,
+    UnsliceableDatacubeAxis,
+)
+from polytope_feature.datacube.transformations.datacube_mappers.mapper_types.healpix_nested import (
+    NestedHealpixGridMapper,
+)
+
+# from polytope_feature.datacube.backends.test_qubed_slicing import actual_slice
+from polytope_feature.datacube.transformations.datacube_type_change.datacube_type_change import (
+    TypeChangeStrToTimedelta,
+    TypeChangeStrToTimestamp,
+)
 from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.engine.qubed_slicer import QubedSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, ConvexPolytope, Select, Span
 
 
 def find_relevant_subcube_from_request(request, qube_url):
-
     # NOTE: final url we want is like:
     # "https://qubed.lumi.apps.dte.destination-earth.eu/api/v1/select/climate-dt/?class=d1&dataset=climate-dt"
 
@@ -36,8 +46,11 @@ def find_relevant_subcube_from_request(request, qube_url):
     return qube_url
 
 
-fdb_tree = Qube.from_json(requests.get(
-    "https://github.com/ecmwf/qubed/raw/refs/heads/main/tests/example_qubes/extremes-dt_with_metadata.json").json())
+fdb_tree = Qube.from_json(
+    requests.get(
+        "https://github.com/ecmwf/qubed/raw/refs/heads/main/tests/example_qubes/extremes-dt_with_metadata.json"
+    ).json()
+)
 
 
 # combi_polytopes = [
@@ -60,24 +73,25 @@ fdb_tree = Qube.from_json(requests.get(
 # ]
 
 # TODO: add lat and lon axes
-datacube_axes = {"param": UnsliceableDatacubeAxis(),
-                 "time": PandasTimedeltaDatacubeAxis(),
-                 "resolution": UnsliceableDatacubeAxis(),
-                 "type": UnsliceableDatacubeAxis(),
-                 "model": UnsliceableDatacubeAxis(),
-                 "stream": UnsliceableDatacubeAxis(),
-                 "realization": UnsliceableDatacubeAxis(),
-                 "expver": UnsliceableDatacubeAxis(),
-                 "experiment": UnsliceableDatacubeAxis(),
-                 "generation": UnsliceableDatacubeAxis(),
-                 "levtype": UnsliceableDatacubeAxis(),
-                 "activity": UnsliceableDatacubeAxis(),
-                 "dataset": UnsliceableDatacubeAxis(),
-                 "class": UnsliceableDatacubeAxis(),
-                 "date": PandasTimestampDatacubeAxis(),
-                 #  "latitude": FloatDatacubeAxis(),
-                 #  "longitude": FloatDatacubeAxis()
-                 }
+datacube_axes = {
+    "param": UnsliceableDatacubeAxis(),
+    "time": PandasTimedeltaDatacubeAxis(),
+    "resolution": UnsliceableDatacubeAxis(),
+    "type": UnsliceableDatacubeAxis(),
+    "model": UnsliceableDatacubeAxis(),
+    "stream": UnsliceableDatacubeAxis(),
+    "realization": UnsliceableDatacubeAxis(),
+    "expver": UnsliceableDatacubeAxis(),
+    "experiment": UnsliceableDatacubeAxis(),
+    "generation": UnsliceableDatacubeAxis(),
+    "levtype": UnsliceableDatacubeAxis(),
+    "activity": UnsliceableDatacubeAxis(),
+    "dataset": UnsliceableDatacubeAxis(),
+    "class": UnsliceableDatacubeAxis(),
+    "date": PandasTimestampDatacubeAxis(),
+    #  "latitude": FloatDatacubeAxis(),
+    #  "longitude": FloatDatacubeAxis()
+}
 
 time_val = pd.Timedelta(hours=0, minutes=0)
 date_val = pd.Timestamp("20300101T000000")
@@ -87,7 +101,7 @@ date_val = pd.Timestamp("20300101T000000")
 datacube_transformations = {
     "time": TypeChangeStrToTimedelta("time", time_val),
     "date": TypeChangeStrToTimestamp("date", date_val),
-    "values": NestedHealpixGridMapper("values", ["latitude", "longitude"], 1024)
+    "values": NestedHealpixGridMapper("values", ["latitude", "longitude"], 1024),
 }
 
 
@@ -124,17 +138,18 @@ options = {
         "type",
     ],
     "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
-    "datacube_axes": {"param": "UnsliceableDatacubeAxis",
-                      "time": "PandasTimedeltaDatacubeAxis",
-                      "type": "UnsliceableDatacubeAxis",
-                      "stream": "UnsliceableDatacubeAxis",
-                      "expver": "UnsliceableDatacubeAxis",
-                      "levtype": "UnsliceableDatacubeAxis",
-                      "dataset": "UnsliceableDatacubeAxis",
-                      "class": "UnsliceableDatacubeAxis",
-                      "date": "PandasTimestampDatacubeAxis",
-                      "step": "IntDatacubeAxis",
-                      }
+    "datacube_axes": {
+        "param": "UnsliceableDatacubeAxis",
+        "time": "PandasTimedeltaDatacubeAxis",
+        "type": "UnsliceableDatacubeAxis",
+        "stream": "UnsliceableDatacubeAxis",
+        "expver": "UnsliceableDatacubeAxis",
+        "levtype": "UnsliceableDatacubeAxis",
+        "dataset": "UnsliceableDatacubeAxis",
+        "class": "UnsliceableDatacubeAxis",
+        "date": "PandasTimestampDatacubeAxis",
+        "step": "IntDatacubeAxis",
+    },
 }
 
 # request = Request(
@@ -150,19 +165,20 @@ options = {
 #     Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
 # )
 
-request = Request(ConvexPolytope(["param"], [["167"]]),
-                  ConvexPolytope(["time"], [[pd.Timedelta(hours=0, minutes=0)], [pd.Timedelta(hours=3, minutes=0)]]),
-                  ConvexPolytope(["type"], [["fc"]]),
-                  ConvexPolytope(["stream"], [["oper"]]),
-                  ConvexPolytope(["expver"], [['0001']]),
-                  ConvexPolytope(["levtype"], [["sfc"]]),
-                  ConvexPolytope(["dataset"], [["extremes-dt"]]),
-                  ConvexPolytope(["class"], [["d1"]]),
-                  ConvexPolytope(["step"], [[1]]),
-                  ConvexPolytope(["date"], [[pd.Timestamp("20240407")]]),
-                  ConvexPolytope(["latitude", "longitude"], [[0, 0], [0.5, 0.5], [0, 0.5]])
-                  #   ConvexPolytope(["latitude", "longitude"], [[0, 0], [-0.5, -0.5], [0, -0.5]])
-                  )
+request = Request(
+    ConvexPolytope(["param"], [["167"]]),
+    ConvexPolytope(["time"], [[pd.Timedelta(hours=0, minutes=0)], [pd.Timedelta(hours=3, minutes=0)]]),
+    ConvexPolytope(["type"], [["fc"]]),
+    ConvexPolytope(["stream"], [["oper"]]),
+    ConvexPolytope(["expver"], [["0001"]]),
+    ConvexPolytope(["levtype"], [["sfc"]]),
+    ConvexPolytope(["dataset"], [["extremes-dt"]]),
+    ConvexPolytope(["class"], [["d1"]]),
+    ConvexPolytope(["step"], [[1]]),
+    ConvexPolytope(["date"], [[pd.Timestamp("20240407")]]),
+    ConvexPolytope(["latitude", "longitude"], [[0, 0], [0.5, 0.5], [0, 0.5]])
+    #   ConvexPolytope(["latitude", "longitude"], [[0, 0], [-0.5, -0.5], [0, -0.5]])
+)
 # print(fdb_tree)
 qubeddatacube = QubedDatacube(fdb_tree, datacube_axes, datacube_transformations)
 slicer = QubedSlicer()
@@ -229,22 +245,24 @@ slicer = HullSlicer()
 # )
 
 
-request = Request(ConvexPolytope(["param"], [["164"]]),
-                  ConvexPolytope(["time"], [[pd.Timedelta(hours=1, minutes=0)], [pd.Timedelta(hours=3, minutes=0)]]),
-                  ConvexPolytope(["resolution"], [["high"]]),
-                  ConvexPolytope(["type"], [["fc"]]),
-                  ConvexPolytope(["model"], [['ifs-nemo']]),
-                  ConvexPolytope(["stream"], [["clte"]]),
-                  ConvexPolytope(["realization"], ["1"]),
-                  ConvexPolytope(["expver"], [['0001']]),
-                  ConvexPolytope(["experiment"], [['ssp3-7.0']]),
-                  ConvexPolytope(["generation"], [["1"]]),
-                  ConvexPolytope(["levtype"], [["sfc"]]),
-                  ConvexPolytope(["activity"], [["scenariomip"]]),
-                  ConvexPolytope(["dataset"], [["climate-dt"]]),
-                  ConvexPolytope(["class"], [["d1"]]),
-                  ConvexPolytope(["date"], [[pd.Timestamp("20220811")]]),
-                  ConvexPolytope(["latitude", "longitude"], [[0, 0], [0.5, 0.5], [0, 0.5]]))
+request = Request(
+    ConvexPolytope(["param"], [["164"]]),
+    ConvexPolytope(["time"], [[pd.Timedelta(hours=1, minutes=0)], [pd.Timedelta(hours=3, minutes=0)]]),
+    ConvexPolytope(["resolution"], [["high"]]),
+    ConvexPolytope(["type"], [["fc"]]),
+    ConvexPolytope(["model"], [["ifs-nemo"]]),
+    ConvexPolytope(["stream"], [["clte"]]),
+    ConvexPolytope(["realization"], ["1"]),
+    ConvexPolytope(["expver"], [["0001"]]),
+    ConvexPolytope(["experiment"], [["ssp3-7.0"]]),
+    ConvexPolytope(["generation"], [["1"]]),
+    ConvexPolytope(["levtype"], [["sfc"]]),
+    ConvexPolytope(["activity"], [["scenariomip"]]),
+    ConvexPolytope(["dataset"], [["climate-dt"]]),
+    ConvexPolytope(["class"], [["d1"]]),
+    ConvexPolytope(["date"], [[pd.Timestamp("20220811")]]),
+    ConvexPolytope(["latitude", "longitude"], [[0, 0], [0.5, 0.5], [0, 0.5]]),
+)
 
 time3 = time.time()
 # result = self_API.retrieve(request)

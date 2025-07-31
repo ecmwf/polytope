@@ -2,19 +2,26 @@ import logging
 import operator
 from copy import deepcopy
 from itertools import product
-from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
-from ...utility.geometry import nearest_pt
+
+import numpy as np
 import pygribjump as pygj
 from qubed.value_types import QEnum
-import numpy as np
 
+from ...utility.exceptions import BadGridError, GribJumpNoIndexError
+from ...utility.geometry import nearest_pt
 from .datacube import Datacube, TensorIndexTree
 
 
 class QubedDatacube(Datacube):
-
     def __init__(
-        self, q, datacube_axes, config=None, axis_options=None, compressed_axes_options=[], alternative_axes=[], context=None
+        self,
+        q,
+        datacube_axes,
+        config=None,
+        axis_options=None,
+        compressed_axes_options=[],
+        alternative_axes=[],
+        context=None,
     ):
         if config is None:
             config = {}
@@ -134,15 +141,7 @@ class QubedDatacube(Datacube):
 
         logging.debug(f"For axis {axis.name} between {lower} and {upper}, found indices {idx_between}")
 
-        # print("NOW")
-        # # print(indexes)
-        # # print(idx_between)
-        # print(all(idx in indexes for idx in idx_between))
-
         if path_node:
-            # print(path_node.key)
-            # print(indexes)
-            # print(idx_between)
             indexes = [indexes.index(item) for item in idx_between]
         else:
             indexes = None
@@ -162,9 +161,7 @@ class QubedDatacube(Datacube):
         complete_list_complete_uncompressed_requests = []
         complete_fdb_decoding_info = []
         for j, compressed_request in enumerate(fdb_requests):
-
             compressed_metadata = compressed_request[2]
-            # print(compressed_metadata)
 
             # TODO: get uncompressed metadata for each leaf
             uncompressed_request = {}
@@ -180,17 +177,11 @@ class QubedDatacube(Datacube):
             index_combis = list(product(*[range(len(lst)) for lst in interm_branch_tuple_values]))
 
             # Need to extract the possible requests and add them to the right nodes
-            # print("REALLY HERE")
-            # print(index_combis)
-            # print([combi for combi in request_combis])
-            # print(interm_branch_tuple_values)
 
             def find_metadata(metadata_idx):
                 metadata = {}
                 for k, vs in compressed_metadata.items():
                     metadata_depth = len(vs.shape)
-                    # print("LOOK HERE")
-                    # print(metadata_depth)
                     relevant_metadata_dxs = metadata_idx[:metadata_depth]
                     metadata[k] = vs[relevant_metadata_dxs]
                 return metadata
@@ -198,8 +189,6 @@ class QubedDatacube(Datacube):
             for i, combi in enumerate(request_combis):
                 metadata_idxs = index_combis[i]
                 actual_metadata = find_metadata(metadata_idxs)
-                # print("WHAT METADATA WILL WE GIVE TO GJ")
-                # print(actual_metadata)
 
                 path = actual_metadata["path"][0]
                 scheme = actual_metadata["scheme"]
@@ -210,10 +199,15 @@ class QubedDatacube(Datacube):
                 uncompressed_request = {}
                 for i, key in enumerate(compressed_request[0].keys()):
                     uncompressed_request[key] = combi[i]
-                # complete_uncompressed_request = (uncompressed_request, compressed_request[1], self.grid_md5_hash)
-                # complete_uncompressed_request = (actual_metadata, compressed_request[1], self.grid_md5_hash)
-                complete_uncompressed_request = (path, scheme, offset, host, port,
-                                                 compressed_request[1], self.grid_md5_hash)
+                complete_uncompressed_request = (
+                    path,
+                    scheme,
+                    offset,
+                    host,
+                    port,
+                    compressed_request[1],
+                    self.grid_md5_hash,
+                )
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
 
@@ -271,7 +265,7 @@ class QubedDatacube(Datacube):
             if requests.key == "time":
                 new_vals = []
                 for val in key_value_path[requests.key]:
-                    new_vals.append(val[7:9]+val[10:12])
+                    new_vals.append(val[7:9] + val[10:12])
                 key_value_path[requests.key] = new_vals
             if requests.key == "date":
                 new_vals = []
@@ -392,8 +386,6 @@ class QubedDatacube(Datacube):
             current_start_idx = deepcopy(current_start_idxs[i])
             fdb_range_nodes = deepcopy(fdb_node_ranges[i])
             key_value_path = {lat_child.key: list(lat_child.values)}
-            # print("WHAT ARE THE DATACUBE AXES NOW??")
-            # print(self._axes.keys())
             ax = self._axes[lat_child.key]
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
@@ -460,8 +452,9 @@ class QubedDatacube(Datacube):
                 for interm_fdb_nodes_obj in interm_fdb_nodes[j]:
                     # interm_fdb_nodes_obj.data.values = QEnum(tuple([list(interm_fdb_nodes_obj.values)[k]
                     #                                                 for k in original_indices_idx]))
-                    interm_fdb_nodes_obj.values = QEnum(tuple([list(interm_fdb_nodes_obj.values)[k]
-                                                               for k in original_indices_idx]))
+                    interm_fdb_nodes_obj.values = QEnum(
+                        tuple([list(interm_fdb_nodes_obj.values)[k] for k in original_indices_idx])
+                    )
                 if abs(interm_start_idx[-1] + 1 - interm_start_idx[0]) <= len(interm_start_idx):
                     current_request_ranges = (interm_start_idx[0], interm_start_idx[-1] + 1)
                     interm_request_ranges.append(current_request_ranges)

@@ -1,25 +1,35 @@
-from polytope_feature.shapes import Box, Select, Span
-from polytope_feature.polytope import Polytope, Request
-from polytope_feature.engine.qubed_slicer import QubedSlicer
-from polytope_feature.datacube.backends.qubed import QubedDatacube
-from polytope_feature.datacube.backends.fdb import FDBDatacube
-import pytest
-from qubed import Qube
-import requests
-from polytope_feature.datacube.datacube_axis import PandasTimedeltaDatacubeAxis, PandasTimestampDatacubeAxis, UnsliceableDatacubeAxis, FloatDatacubeAxis
-# from polytope_feature.datacube.backends.test_qubed_slicing import actual_slice
-from polytope_feature.datacube.transformations.datacube_type_change.datacube_type_change import TypeChangeStrToTimestamp, TypeChangeStrToTimedelta
-import pandas as pd
-from polytope_feature.datacube.transformations.datacube_mappers.mapper_types.healpix_nested import NestedHealpixGridMapper
-
-from polytope_feature.shapes import ConvexPolytope
 import time
+
+import pandas as pd
 import pygribjump as gj
+import pytest
+import requests
+from qubed import Qube
+
+from polytope_feature.datacube.backends.fdb import FDBDatacube
+from polytope_feature.datacube.backends.qubed import QubedDatacube
+from polytope_feature.datacube.datacube_axis import (
+    FloatDatacubeAxis,
+    PandasTimedeltaDatacubeAxis,
+    PandasTimestampDatacubeAxis,
+    UnsliceableDatacubeAxis,
+)
+from polytope_feature.datacube.transformations.datacube_mappers.mapper_types.healpix_nested import (
+    NestedHealpixGridMapper,
+)
+
+# from polytope_feature.datacube.backends.test_qubed_slicing import actual_slice
+from polytope_feature.datacube.transformations.datacube_type_change.datacube_type_change import (
+    TypeChangeStrToTimedelta,
+    TypeChangeStrToTimestamp,
+)
 from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.engine.qubed_slicer import QubedSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, ConvexPolytope, Select, Span
 
 
 def find_relevant_subcube_from_request(request, qube_url):
-
     # NOTE: final url we want is like:
     # "https://qubed.lumi.apps.dte.destination-earth.eu/api/v1/select/climate-dt/?class=d1&dataset=climate-dt"
 
@@ -43,8 +53,9 @@ def get_fdb_tree(request):
     return fdb_tree
 
 
-fdb_tree = Qube.from_json(requests.get(
-    "https://github.com/ecmwf/qubed/raw/refs/heads/main/tests/example_qubes/climate-dt.json").json())
+fdb_tree = Qube.from_json(
+    requests.get("https://github.com/ecmwf/qubed/raw/refs/heads/main/tests/example_qubes/climate-dt.json").json()
+)
 
 
 # print(fdb_tree)
@@ -69,24 +80,25 @@ fdb_tree = Qube.from_json(requests.get(
 # ]
 
 # TODO: add lat and lon axes
-datacube_axes = {"param": UnsliceableDatacubeAxis(),
-                 "time": PandasTimedeltaDatacubeAxis(),
-                 "resolution": UnsliceableDatacubeAxis(),
-                 "type": UnsliceableDatacubeAxis(),
-                 "model": UnsliceableDatacubeAxis(),
-                 "stream": UnsliceableDatacubeAxis(),
-                 "realization": UnsliceableDatacubeAxis(),
-                 "expver": UnsliceableDatacubeAxis(),
-                 "experiment": UnsliceableDatacubeAxis(),
-                 "generation": UnsliceableDatacubeAxis(),
-                 "levtype": UnsliceableDatacubeAxis(),
-                 "activity": UnsliceableDatacubeAxis(),
-                 "dataset": UnsliceableDatacubeAxis(),
-                 "class": UnsliceableDatacubeAxis(),
-                 "date": PandasTimestampDatacubeAxis(),
-                 #  "latitude": FloatDatacubeAxis(),
-                 #  "longitude": FloatDatacubeAxis()
-                 }
+datacube_axes = {
+    "param": UnsliceableDatacubeAxis(),
+    "time": PandasTimedeltaDatacubeAxis(),
+    "resolution": UnsliceableDatacubeAxis(),
+    "type": UnsliceableDatacubeAxis(),
+    "model": UnsliceableDatacubeAxis(),
+    "stream": UnsliceableDatacubeAxis(),
+    "realization": UnsliceableDatacubeAxis(),
+    "expver": UnsliceableDatacubeAxis(),
+    "experiment": UnsliceableDatacubeAxis(),
+    "generation": UnsliceableDatacubeAxis(),
+    "levtype": UnsliceableDatacubeAxis(),
+    "activity": UnsliceableDatacubeAxis(),
+    "dataset": UnsliceableDatacubeAxis(),
+    "class": UnsliceableDatacubeAxis(),
+    "date": PandasTimestampDatacubeAxis(),
+    #  "latitude": FloatDatacubeAxis(),
+    #  "longitude": FloatDatacubeAxis()
+}
 
 time_val = pd.Timedelta(hours=0, minutes=0)
 date_val = pd.Timestamp("20300101T000000")
@@ -96,7 +108,7 @@ date_val = pd.Timestamp("20300101T000000")
 datacube_transformations = {
     "time": TypeChangeStrToTimedelta("time", time_val),
     "date": TypeChangeStrToTimestamp("date", date_val),
-    "values": NestedHealpixGridMapper("values", ["latitude", "longitude"], 1024)
+    "values": NestedHealpixGridMapper("values", ["latitude", "longitude"], 1024),
 }
 
 
@@ -136,25 +148,26 @@ options = {
         "type",
     ],
     "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
-    "datacube_axes": {"param": "UnsliceableDatacubeAxis",
-                      "time": "PandasTimedeltaDatacubeAxis",
-                      "resolution": "UnsliceableDatacubeAxis",
-                      "type": "UnsliceableDatacubeAxis",
-                      "model": "UnsliceableDatacubeAxis",
-                      "stream": "UnsliceableDatacubeAxis",
-                      #   "realization": "UnsliceableDatacubeAxis",
-                      "realization": "IntDatacubeAxis",
-                      #   "expver": "UnsliceableDatacubeAxis",
-                      "expver": "IntDatacubeAxis",
-                      "experiment": "UnsliceableDatacubeAxis",
-                      #   "generation": "UnsliceableDatacubeAxis",
-                      "generation": "IntDatacubeAxis",
-                      "levtype": "UnsliceableDatacubeAxis",
-                      "activity": "UnsliceableDatacubeAxis",
-                      "dataset": "UnsliceableDatacubeAxis",
-                      "class": "UnsliceableDatacubeAxis",
-                      "date": "PandasTimestampDatacubeAxis",
-                      }
+    "datacube_axes": {
+        "param": "UnsliceableDatacubeAxis",
+        "time": "PandasTimedeltaDatacubeAxis",
+        "resolution": "UnsliceableDatacubeAxis",
+        "type": "UnsliceableDatacubeAxis",
+        "model": "UnsliceableDatacubeAxis",
+        "stream": "UnsliceableDatacubeAxis",
+        #   "realization": "UnsliceableDatacubeAxis",
+        "realization": "IntDatacubeAxis",
+        #   "expver": "UnsliceableDatacubeAxis",
+        "expver": "IntDatacubeAxis",
+        "experiment": "UnsliceableDatacubeAxis",
+        #   "generation": "UnsliceableDatacubeAxis",
+        "generation": "IntDatacubeAxis",
+        "levtype": "UnsliceableDatacubeAxis",
+        "activity": "UnsliceableDatacubeAxis",
+        "dataset": "UnsliceableDatacubeAxis",
+        "class": "UnsliceableDatacubeAxis",
+        "date": "PandasTimestampDatacubeAxis",
+    },
 }
 
 # request = Request(
@@ -183,8 +196,8 @@ request = Request(
     Select("stream", ["clte"]),
     #   ConvexPolytope(["stream"], [["clte"]]),
     ConvexPolytope(["realization"], ["1"]),
-    ConvexPolytope(["expver"], [['0001']]),
-    ConvexPolytope(["experiment"], [['ssp3-7.0']]),
+    ConvexPolytope(["expver"], [["0001"]]),
+    ConvexPolytope(["experiment"], [["ssp3-7.0"]]),
     # ConvexPolytope(["generation"], [["1"]]),
     Select("generation", [1]),
     ConvexPolytope(["levtype"], [["sfc"]]),
@@ -194,11 +207,12 @@ request = Request(
     ConvexPolytope(["class"], [["d1"]]),
     # ConvexPolytope(["date"], [[pd.Timestamp("20220811")]]),
     ConvexPolytope(["date"], [[pd.Timestamp("20200908")]]),
-    ConvexPolytope(["latitude", "longitude"], [[0, 0], [5, 5], [0, 5]]))
+    ConvexPolytope(["latitude", "longitude"], [[0, 0], [5, 5], [0, 5]]),
+)
 
 # fdb_tree = get_fdb_tree(request)
 path_to_qube = "../qubed/"
-full_qube_path = path_to_qube+"tests/example_qubes/climate_dt_with_metadata.json"
+full_qube_path = path_to_qube + "tests/example_qubes/climate_dt_with_metadata.json"
 fdb_tree = Qube.load(full_qube_path)
 
 print("HERE WE HAVE THE FDB TREE")

@@ -1,11 +1,7 @@
 from copy import copy
-from typing import List
 
-
-from ..datacube.backends.datacube import Datacube
 from ..datacube.tensor_index_tree import TensorIndexTree
-from ..shapes import ConvexPolytope
-from ..utility.combinatorics import group, tensor_product, find_polytope_combinations
+from ..utility.combinatorics import find_polytope_combinations, group, tensor_product
 from ..utility.exceptions import UnsliceableShapeError
 from .engine import Engine
 from .slicing_tools import slice

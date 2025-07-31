@@ -170,7 +170,15 @@ class Datacube(ABC):
         return path
 
     @staticmethod
-    def create(datacube, config={}, axis_options={}, compressed_axes_options=[], alternative_axes=[], datacube_axes={}, context=None):
+    def create(
+        datacube,
+        config={},
+        axis_options={},
+        compressed_axes_options=[],
+        alternative_axes=[],
+        datacube_axes={},
+        context=None,
+    ):
         # TODO: get the configs as None for pre-determined value and change them to empty dictionary inside the function
         if type(datacube).__name__ == "DataArray":
             from .xarray import XArrayDatacube
@@ -185,13 +193,15 @@ class Datacube(ABC):
             )
             return fdbdatacube
         if type(datacube).__name__ == "Qube":
-            from .qubed import QubedDatacube
             from ..datacube_axis import _str_to_axis
+            from .qubed import QubedDatacube
+
             actual_datacube_axes = {}
             for key, value in datacube_axes.items():
                 actual_datacube_axes[key] = _str_to_axis[value]
-            qubed_datacube = QubedDatacube(datacube, actual_datacube_axes,
-                                           config, axis_options, compressed_axes_options, alternative_axes, context)
+            qubed_datacube = QubedDatacube(
+                datacube, actual_datacube_axes, config, axis_options, compressed_axes_options, alternative_axes, context
+            )
             return qubed_datacube
 
     def check_branching_axes(self, request):
