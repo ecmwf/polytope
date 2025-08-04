@@ -9,7 +9,7 @@ from polytope_feature.shapes import Box, Select
 
 class TestSlicingMultipleTransformationsOneAxis:
     def setup_method(self, method):
-        nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/foo.grib"
+        nexus_url = "https://sites.ecmwf.int/repository/polytope/test-data/foo.grib"
         download_test_data(nexus_url, "foo.grib")
 
         ds = data.from_source("file", "./tests/data/foo.grib")

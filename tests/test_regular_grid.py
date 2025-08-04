@@ -12,7 +12,7 @@ from polytope_feature.shapes import Disk, Select
 
 class TestRegularGrid:
     def setup_method(self, method):
-        nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/era5-levels-members.grib"
+        nexus_url = "https://sites.ecmwf.int/repository/polytope/test-data/era5-levels-members.grib"
         download_test_data(nexus_url, "era5-levels-members.grib")
         self.options = {
             "axis_config": [
@@ -102,7 +102,7 @@ class TestRegularGrid:
         tol = 1e-8
         leaves = result.leaves
         for i in range(len(leaves)):
-            right_pl_results = leaves[i].result[len(leaves[i].values) :]
+            right_pl_results = leaves[i].result[len(leaves[i].values):]
             result_tree = right_pl_results[0]
             cubepath = leaves[i].flatten()
             lat = cubepath["latitude"][0]

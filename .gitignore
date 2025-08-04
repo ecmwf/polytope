@@ -40,3 +40,5 @@ _version.py
 *.DS_Store
 rust_venv
 test_w_qubed
+*.nc
+**/*venv*
