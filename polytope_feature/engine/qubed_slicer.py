@@ -258,7 +258,6 @@ class QubedSlicer(Engine):
                     return metadata
 
                 for children, new_found_vals, current_metadata_idxs in final_children_and_vals:
-                    # metadata_idx = format_metadata_idxs(idxs)
                     metadata_idx = format_metadata_idxs(current_metadata_idxs)
                     metadata = find_metadata(metadata_idx)
                     qube_node = Qube.make_node(
