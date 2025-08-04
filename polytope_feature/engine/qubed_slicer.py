@@ -77,24 +77,21 @@ class QubedSlicer(Engine):
         datacube_transformations,
         ax,
         idxs=None,
-        compressed_idxs=None,
         metadata_idx_stack=None,
     ):
         final_children_and_vals = []
         if real_uncompressed_axis:
             for i, found_val in enumerate(found_vals):
-                # sliced_polys_ = [sliced_polys[i]]
                 if i < len(sliced_polys):
                     sliced_polys_ = [sliced_polys[i]]
                 else:
                     sliced_polys_ = sliced_polys
                 child_polytopes = self.find_children_polytopes(polytopes, poly, sliced_polys_)
                 if idxs:
-                    compressed_idxs.append([idxs[i]])
                     metadata_idx_stack.append([idxs[i]])
                 current_metadata_idx_stack = deepcopy(metadata_idx_stack)
                 children = self._slice(child, child_polytopes, datacube, datacube_transformations,
-                                       compressed_idxs, metadata_idx_stack)
+                                       metadata_idx_stack)
                 metadata_idx_stack.pop()
                 # If this node used to have children but now has none due to filtering, skip it.
                 if child.children and not children:
@@ -112,11 +109,10 @@ class QubedSlicer(Engine):
             child_polytopes = self.find_children_polytopes(polytopes, poly, sliced_polys)
             # create children
             if idxs:
-                compressed_idxs.append([idxs])
                 metadata_idx_stack.append([idxs])
             current_metadata_idx_stack = deepcopy(metadata_idx_stack)
             children = self._slice(child, child_polytopes, datacube, datacube_transformations,
-                                   compressed_idxs, metadata_idx_stack)
+                                   metadata_idx_stack)
             metadata_idx_stack.pop()
             # If this node used to have children but now has none due to filtering, skip it.
             if child.children and not children:
@@ -133,9 +129,7 @@ class QubedSlicer(Engine):
             return None
         return final_children_and_vals
 
-    def _slice(self, q: Qube, polytopes, datacube, datacube_transformations, compressed_idxs=None, metadata_idx_stack=None) -> list[Qube]:
-        if compressed_idxs is None:
-            compressed_idxs = [[[0]]]
+    def _slice(self, q: Qube, polytopes, datacube, datacube_transformations, metadata_idx_stack=None) -> list[Qube]:
         result = []
 
         if metadata_idx_stack is None:
@@ -211,6 +205,8 @@ class QubedSlicer(Engine):
 
             # TODO: here add the axes to datacube backend with transformations for child.key
             # TODO: update the datacube axis_options before we dynamically change the axes
+
+            # TODO: this is slow... will need to make it faster and only do this when we need...
             datacube.add_axes_dynamically(child)
 
             # here now first change the values in the polytopes on the axis to reflect the axis type
@@ -242,7 +238,6 @@ class QubedSlicer(Engine):
                     datacube_transformations,
                     ax,
                     idxs,
-                    compressed_idxs,
                     metadata_idx_stack
                 )
 
