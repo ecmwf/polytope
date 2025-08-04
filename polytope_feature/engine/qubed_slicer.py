@@ -106,7 +106,7 @@ class QubedSlicer(Engine):
             child_polytopes = self.find_children_polytopes(polytopes, poly, sliced_polys)
             # create children
             if idxs:
-                current_metadata_idx_stack = metadata_idx_stack + [[idxs]]
+                current_metadata_idx_stack = metadata_idx_stack + [idxs]
             children = self._slice(child, child_polytopes, datacube, datacube_transformations,
                                    metadata_idx_stack)
             # If this node used to have children but now has none due to filtering, skip it.
@@ -128,12 +128,11 @@ class QubedSlicer(Engine):
         result = []
 
         if metadata_idx_stack is None:
-            metadata_idx_stack = [[[0]]]
+            metadata_idx_stack = [[0]]
 
         if len(q.children) == 0:
             # add "fake" axes and their nodes in order -> what about merged axes??
             mapper_transformation = None
-            # for transformation in list(datacube_transformations.values()):
             for transformation in datacube_transformations:
                 if isinstance(transformation, DatacubeMapper):
                     mapper_transformation = transformation
@@ -239,10 +238,6 @@ class QubedSlicer(Engine):
                 if final_children_and_vals is None:
                     continue
 
-                def format_metadata_idxs(idxs):
-                    flat_indices = [np.ravel(idx) for idx in idxs]
-                    return flat_indices
-
                 def find_metadata(metadata_idx):
                     metadata = {}
                     for k, vs in child.metadata.items():
@@ -253,8 +248,7 @@ class QubedSlicer(Engine):
                     return metadata
 
                 for children, new_found_vals, current_metadata_idxs in final_children_and_vals:
-                    metadata_idx = format_metadata_idxs(current_metadata_idxs)
-                    metadata = find_metadata(metadata_idx)
+                    metadata = find_metadata(current_metadata_idxs)
                     qube_node = Qube.make_node(
                         key=child.key, values=QEnum(new_found_vals), metadata=metadata, children=children
                     )
