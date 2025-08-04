@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 from qubed import Qube
 from qubed.value_types import QEnum
-from copy import deepcopy
 
 from ..datacube.datacube_axis import UnsliceableDatacubeAxis
 from ..datacube.transformations.datacube_mappers.datacube_mappers import DatacubeMapper
@@ -88,11 +87,9 @@ class QubedSlicer(Engine):
                     sliced_polys_ = sliced_polys
                 child_polytopes = self.find_children_polytopes(polytopes, poly, sliced_polys_)
                 if idxs:
-                    metadata_idx_stack.append([idxs[i]])
-                current_metadata_idx_stack = deepcopy(metadata_idx_stack)
+                    current_metadata_idx_stack = metadata_idx_stack + [[idxs[i]]]
                 children = self._slice(child, child_polytopes, datacube, datacube_transformations,
-                                       metadata_idx_stack)
-                metadata_idx_stack.pop()
+                                       current_metadata_idx_stack)
                 # If this node used to have children but now has none due to filtering, skip it.
                 if child.children and not children:
                     continue
@@ -109,11 +106,9 @@ class QubedSlicer(Engine):
             child_polytopes = self.find_children_polytopes(polytopes, poly, sliced_polys)
             # create children
             if idxs:
-                metadata_idx_stack.append([idxs])
-            current_metadata_idx_stack = deepcopy(metadata_idx_stack)
+                current_metadata_idx_stack = metadata_idx_stack + [[idxs]]
             children = self._slice(child, child_polytopes, datacube, datacube_transformations,
                                    metadata_idx_stack)
-            metadata_idx_stack.pop()
             # If this node used to have children but now has none due to filtering, skip it.
             if child.children and not children:
                 return None
