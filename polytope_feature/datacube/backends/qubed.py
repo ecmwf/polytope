@@ -199,9 +199,10 @@ class QubedDatacube(Datacube):
                 host = flatten_metadata(actual_metadata["host"])
                 port = flatten_metadata(actual_metadata["port"])
 
-                uncompressed_request = {}
-                for i, key in enumerate(compressed_request[0].keys()):
-                    uncompressed_request[key] = combi[i]
+                # uncompressed_request = {}
+                # for i, key in enumerate(compressed_request[0].keys()):
+                #     uncompressed_request[key] = combi[i]
+
                 complete_uncompressed_request = (
                     path,
                     scheme,
@@ -285,7 +286,8 @@ class QubedDatacube(Datacube):
                     sorted_request_ranges,
                     fdb_node_ranges,
                 ) = self.sort_fdb_request_ranges(current_start_idxs, lat_length, fdb_node_ranges)
-                fdb_requests.append((path, sorted_request_ranges, leaf_metadata))
+                fdb_requests.append((path, sorted_request_ranges, deepcopy(leaf_metadata)))
+                # TODO: did we need to deepcopy the leaf metadata??
                 fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
 
             # Otherwise remap the path for this key and iterate again over children
