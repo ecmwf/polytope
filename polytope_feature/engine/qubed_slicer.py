@@ -241,26 +241,10 @@ class QubedSlicer(Engine):
                 def find_metadata(metadata_idx):
                     metadata = {}
                     for k, vs in child.metadata.items():
-                        depth = len(vs.shape)
-                        idxs = metadata_idx[:depth]
-
-                        # Clean and flatten inputs
-                        cleaned_idxs = []
-                        multi_dim = 0
-                        for idx in idxs:
-                            if isinstance(idx, np.ndarray):
-                                if idx.ndim > 1:
-                                    idx = idx.ravel()
-                                if idx.size > 1:
-                                    multi_dim += 1
-                            cleaned_idxs.append(idx)
-
-                        # If multiple axes have multiple elements, use np.ix_ to broadcast properly
-                        if multi_dim > 1:
-                            metadata[k] = vs[np.ix_(*cleaned_idxs)]
-                        else:
-                            metadata[k] = vs[tuple(cleaned_idxs)]
-
+                        metadata_depth = len(vs.shape)
+                        relevant_metadata_idxs = metadata_idx[:metadata_depth]
+                        ix = np.ix_(*relevant_metadata_idxs)
+                        metadata[k] = vs[ix]
                     return metadata
 
                 for children, new_found_vals, current_metadata_idxs in final_children_and_vals:

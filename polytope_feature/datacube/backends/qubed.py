@@ -174,7 +174,8 @@ class QubedDatacube(Datacube):
                 interm_branch_tuple_values.append(compressed_request[0][key])
             request_combis = product(*interm_branch_tuple_values)
 
-            index_combis = list(product(*[range(len(lst)) for lst in interm_branch_tuple_values]))
+            index_combis_raw = list(product(*[range(len(lst)) for lst in interm_branch_tuple_values]))
+            index_combis = [(0, *comb) for comb in index_combis_raw]
 
             # Need to extract the possible requests and add them to the right nodes
 
@@ -198,10 +199,6 @@ class QubedDatacube(Datacube):
                 offset = flatten_metadata(actual_metadata["offset"])
                 host = flatten_metadata(actual_metadata["host"])
                 port = flatten_metadata(actual_metadata["port"])
-
-                # uncompressed_request = {}
-                # for i, key in enumerate(compressed_request[0].keys()):
-                #     uncompressed_request[key] = combi[i]
 
                 complete_uncompressed_request = (
                     path,
