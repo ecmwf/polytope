@@ -27,8 +27,8 @@ class QubedSlicer(Engine):
 
     def find_values_between(self, polytope, ax, node, datacube, lower, upper, path=None):
         if isinstance(ax, UnsliceableDatacubeAxis):
-            values = [v for v in node.values if lower <= v <= upper]
-            indices = [i for i, v in enumerate(node.values) if lower <= v <= upper]
+            filtered = [(i, v) for i, v in enumerate(node.values) if lower <= v <= upper]
+            indices, values = zip(*filtered) if filtered else ([], [])
             return values, indices
 
         tol = ax.tol

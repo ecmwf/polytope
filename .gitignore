@@ -31,3 +31,4 @@ polytope_feature/_version.py
 rust_venv
 **/*venv*/
 test_w_qubed
+performance_plots_qubed
