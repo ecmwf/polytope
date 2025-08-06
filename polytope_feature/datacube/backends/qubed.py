@@ -200,16 +200,10 @@ class QubedDatacube(Datacube):
                 host = flatten_metadata(actual_metadata["host"])
                 port = flatten_metadata(actual_metadata["port"])
 
-                complete_uncompressed_request = (
-                    path,
-                    scheme,
-                    offset,
-                    host,
-                    port,
-                    compressed_request[1],
-                    self.grid_md5_hash,
-                )
-                complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
+                gj_extraction_request = pygj.PathExtractionRequest(
+                    path, scheme, offset, host, port, compressed_request[1], self.grid_md5_hash)
+
+                complete_list_complete_uncompressed_requests.append(gj_extraction_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
 
         if logging.root.level <= logging.DEBUG:
