@@ -145,7 +145,6 @@ class Datacube(ABC):
         e.g. returns integer discrete points between two floats
         """
         path = self.fit_path(path)
-        print(path)
         indexes = axis.find_indexes(path, self)
 
         idx_between = axis.find_indices_between(indexes, lower, upper, self, method)
