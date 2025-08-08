@@ -42,3 +42,4 @@ rust_venv
 test_w_qubed
 *.nc
 **/*venv*
+performance_plots_qubed
