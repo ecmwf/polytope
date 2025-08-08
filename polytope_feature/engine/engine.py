@@ -1,12 +1,10 @@
+import math
 from typing import List
 
 from ..datacube.backends.datacube import Datacube
-from ..datacube.tensor_index_tree import TensorIndexTree
-from ..shapes import ConvexPolytope, Product
-
 from ..datacube.datacube_axis import UnsliceableDatacubeAxis
+from ..shapes import ConvexPolytope, Product
 from ..utility.list_tools import unique
-import math
 
 
 class Engine:
@@ -78,8 +76,5 @@ class Engine:
         self.find_compressed_axes(datacube, polytopes)
         self.remove_compressed_axis_in_union(polytopes)
         self.pre_process_polytopes(datacube, polytopes)
-        # assert isinstance(datacube, QubedDatacube)
         tree = self.build_tree(polytopes, datacube)
-        print("WHAT DOES THE TREE LOOK LIKE??")
-        print(tree)
         return tree

@@ -355,9 +355,10 @@ _type_to_axis_lookup = {
     float: FloatDatacubeAxis(),
 }
 
-_str_to_axis = {"FloatDatacubeAxis": FloatDatacubeAxis(),
-                "IntDatacubeAxis": IntDatacubeAxis(),
-                "UnsliceableDatacubeAxis": UnsliceableDatacubeAxis(),
-                "PandasTimedeltaDatacubeAxis": PandasTimedeltaDatacubeAxis(),
-                "PandasTimestampDatacubeAxis": PandasTimestampDatacubeAxis(),
-                }
+_str_to_axis = {
+    "FloatDatacubeAxis": FloatDatacubeAxis(),
+    "IntDatacubeAxis": IntDatacubeAxis(),
+    "UnsliceableDatacubeAxis": UnsliceableDatacubeAxis(),
+    "PandasTimedeltaDatacubeAxis": PandasTimedeltaDatacubeAxis(),
+    "PandasTimestampDatacubeAxis": PandasTimestampDatacubeAxis(),
+}

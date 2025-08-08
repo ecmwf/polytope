@@ -2,19 +2,26 @@ import logging
 import operator
 from copy import deepcopy
 from itertools import product
-from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
-from ...utility.geometry import nearest_pt
+
+import numpy as np
 import pygribjump as pygj
 from qubed.value_types import QEnum
-import numpy as np
 
+from ...utility.exceptions import BadGridError, GribJumpNoIndexError
+from ...utility.geometry import nearest_pt
 from .datacube import Datacube, TensorIndexTree
 
 
 class QubedDatacube(Datacube):
-
     def __init__(
-        self, q, datacube_axes, config=None, axis_options=None, compressed_axes_options=[], alternative_axes=[], context=None
+        self,
+        q,
+        datacube_axes,
+        config=None,
+        axis_options=None,
+        compressed_axes_options=[],
+        alternative_axes=[],
+        context=None,
     ):
         if config is None:
             config = {}
@@ -134,9 +141,26 @@ class QubedDatacube(Datacube):
 
         logging.debug(f"For axis {axis.name} between {lower} and {upper}, found indices {idx_between}")
 
-        return idx_between
+        if path_node:
+            indexes = [indexes.index(item) for item in idx_between]
+        else:
+            indexes = None
+
+        return (idx_between, indexes)
 
     def get(self, requests, context=None):
+        """
+        We have a compressed tree of requests, which we need to decompress completely with its metadata indexes.
+        BUT the last two axes, we would like to "ignore" in the decompression and instead, we create grid index ranges from them.
+        WHILE we decompress, we need to keep some kind of map from decompressed request + grid index ranges to corresponding tree node.
+        This mapping will map potentially several decompressed request + grid index ranges tuples to the same tree nodes.
+
+        ADDED DIFFICULTY: the grid index ranges MUST be ordered (which is not guaranteed from the tree) so we need to sort them, while also sorting the tree nodes so that they match up.
+
+        UNTIL NOW, we had a map of compressed request + grid index ranges tuples to tree nodes.
+        We could just add a map of compressed request -> list of decompressed request + associated metadata
+        """
+
         if context is None:
             context = {}
         if len(requests.children) == 0:
@@ -149,6 +173,9 @@ class QubedDatacube(Datacube):
         complete_list_complete_uncompressed_requests = []
         complete_fdb_decoding_info = []
         for j, compressed_request in enumerate(fdb_requests):
+            compressed_metadata = compressed_request[2]
+
+            # TODO: get uncompressed metadata for each leaf
             uncompressed_request = {}
 
             # Need to determine the possible decompressed requests
@@ -159,13 +186,36 @@ class QubedDatacube(Datacube):
                 interm_branch_tuple_values.append(compressed_request[0][key])
             request_combis = product(*interm_branch_tuple_values)
 
+            index_combis_raw = list(product(*[range(len(lst)) for lst in interm_branch_tuple_values]))
+            index_combis = [(0, *comb) for comb in index_combis_raw]
+
             # Need to extract the possible requests and add them to the right nodes
-            for combi in request_combis:
-                uncompressed_request = {}
-                for i, key in enumerate(compressed_request[0].keys()):
-                    uncompressed_request[key] = combi[i]
-                complete_uncompressed_request = (uncompressed_request, compressed_request[1], self.grid_md5_hash)
-                complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
+
+            def find_metadata(metadata_idx):
+                metadata = {}
+                for k, vs in compressed_metadata.items():
+                    metadata_depth = len(vs.shape)
+                    relevant_metadata_dxs = metadata_idx[:metadata_depth]
+                    metadata[k] = vs[relevant_metadata_dxs]
+                return metadata
+
+            for i, combi in enumerate(request_combis):
+                metadata_idxs = index_combis[i]
+                actual_metadata = find_metadata(metadata_idxs)
+
+                def flatten_metadata(value):
+                    return value[0] if isinstance(value, np.ndarray) else value
+
+                path = flatten_metadata(actual_metadata["path"])
+                scheme = flatten_metadata(actual_metadata["scheme"])
+                offset = flatten_metadata(actual_metadata["offset"])
+                host = flatten_metadata(actual_metadata["host"])
+                port = flatten_metadata(actual_metadata["port"])
+
+                gj_extraction_request = pygj.PathExtractionRequest(
+                    path, scheme, offset, host, port, compressed_request[1], self.grid_md5_hash)
+
+                complete_list_complete_uncompressed_requests.append(gj_extraction_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
 
         if logging.root.level <= logging.DEBUG:
@@ -173,7 +223,7 @@ class QubedDatacube(Datacube):
             logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
         logging.info("Requests given to GribJump extract for %s", context)
         try:
-            output_values = self.gj.extract(complete_list_complete_uncompressed_requests, context)
+            output_values = self.gj.extract_from_paths(complete_list_complete_uncompressed_requests, context)
         except Exception as e:
             if "BadValue: Grid hash mismatch" in str(e):
                 logging.info("Error is: %s", e)
@@ -196,9 +246,14 @@ class QubedDatacube(Datacube):
         fdb_requests=[],
         fdb_requests_decoding_info=[],
         leaf_path=None,
+        leaf_metadata=None,
     ):
+        # TODO: collect leaf metadata from qube here too
         if leaf_path is None:
             leaf_path = {}
+
+        if leaf_metadata is None:
+            leaf_metadata = {}
 
         # First when request node is root, go to its children
         if requests.key == "root":
@@ -217,7 +272,7 @@ class QubedDatacube(Datacube):
             if requests.key == "time":
                 new_vals = []
                 for val in key_value_path[requests.key]:
-                    new_vals.append(val[7:9]+val[10:12])
+                    new_vals.append(val[7:9] + val[10:12])
                 key_value_path[requests.key] = new_vals
             if requests.key == "date":
                 new_vals = []
@@ -225,6 +280,8 @@ class QubedDatacube(Datacube):
                     new_vals.append(val[:4] + val[5:7] + val[8:10])
                 key_value_path[requests.key] = new_vals
             leaf_path.update(key_value_path)
+            # TODO: in the leaf metadata, try to instead store mapping leaf_path -> list(individual metadata dicts for each uncompressed value of tree)
+            leaf_metadata.update(requests.metadata)
             if len(requests.children[0].children[0].children) == 0:
                 # find the fdb_requests and associated nodes to which to add results
                 (path, current_start_idxs, fdb_node_ranges, lat_length) = self.get_2nd_last_values(requests, leaf_path)
@@ -233,13 +290,14 @@ class QubedDatacube(Datacube):
                     sorted_request_ranges,
                     fdb_node_ranges,
                 ) = self.sort_fdb_request_ranges(current_start_idxs, lat_length, fdb_node_ranges)
-                fdb_requests.append((path, sorted_request_ranges))
+                fdb_requests.append((path, sorted_request_ranges, deepcopy(leaf_metadata)))
+                # TODO: did we need to deepcopy the leaf metadata??
                 fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
 
             # Otherwise remap the path for this key and iterate again over children
             else:
                 for c in requests.children:
-                    self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path)
+                    self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path, leaf_metadata)
 
     def remove_duplicates_in_request_ranges(self, fdb_node_ranges, current_start_idxs):
         # seen_indices = set()
@@ -337,8 +395,6 @@ class QubedDatacube(Datacube):
             current_start_idx = deepcopy(current_start_idxs[i])
             fdb_range_nodes = deepcopy(fdb_node_ranges[i])
             key_value_path = {lat_child.key: list(lat_child.values)}
-            # print("WHAT ARE THE DATACUBE AXES NOW??")
-            # print(self._axes.keys())
             ax = self._axes[lat_child.key]
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
@@ -379,13 +435,13 @@ class QubedDatacube(Datacube):
                 if len(request_output_values.values) == 0:
                     # If we are here, no data was found for this path in the fdb
                     none_array = [None] * len(n.values)
-                    if n.data.metadata.get("result", None) is None:
-                        n.data.metadata["result"] = []
-                    n.data.metadata["result"].extend(none_array)
+                    if n.metadata.get("result", None) is None:
+                        n.metadata["result"] = []
+                    n.metadata["result"].extend(none_array)
                 else:
-                    if n.data.metadata.get("result", None) is None:
-                        n.data.metadata["result"] = []
-                    n.data.metadata["result"].extend(request_output_values.values[i])
+                    if n.metadata.get("result", None) is None:
+                        n.metadata["result"] = []
+                    n.metadata["result"].extend(request_output_values.values[i])
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
         (new_fdb_node_ranges, new_current_start_idx) = self.remove_duplicates_in_request_ranges(
@@ -403,8 +459,11 @@ class QubedDatacube(Datacube):
                 sorted_list = sorted(enumerate(old_interm_start_idx[j]), key=lambda x: x[1])
                 original_indices_idx, interm_start_idx = zip(*sorted_list)
                 for interm_fdb_nodes_obj in interm_fdb_nodes[j]:
-                    interm_fdb_nodes_obj.data.values = QEnum(tuple([list(interm_fdb_nodes_obj.values)[k]
-                                                                    for k in original_indices_idx]))
+                    # interm_fdb_nodes_obj.data.values = QEnum(tuple([list(interm_fdb_nodes_obj.values)[k]
+                    #                                                 for k in original_indices_idx]))
+                    interm_fdb_nodes_obj.values = QEnum(
+                        tuple([list(interm_fdb_nodes_obj.values)[k] for k in original_indices_idx])
+                    )
                 if abs(interm_start_idx[-1] + 1 - interm_start_idx[0]) <= len(interm_start_idx):
                     current_request_ranges = (interm_start_idx[0], interm_start_idx[-1] + 1)
                     interm_request_ranges.append(current_request_ranges)

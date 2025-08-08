@@ -1,6 +1,7 @@
+import numpy as np
+
 from ....utility.list_tools import bisect_left_cmp, bisect_right_cmp
 from ..datacube_transformations import DatacubeAxisTransformation
-import numpy as np
 
 
 class DatacubeAxisReverse(DatacubeAxisTransformation):

@@ -3,11 +3,12 @@ import operator
 from copy import deepcopy
 from itertools import product
 
+import requests
+from qubed import Qube
+
 from ...utility.exceptions import BadGridError, BadRequestError
 from ...utility.geometry import nearest_pt
 from .datacube import Datacube, TensorIndexTree
-from qubed import Qube
-import requests
 
 
 class FDBDatacube(Datacube):
@@ -30,8 +31,11 @@ class FDBDatacube(Datacube):
         # Find values in the level 3 FDB datacube
 
         self.gj = gj
-        self.fdb_tree = Qube.from_json(requests.get(
-            "https://github.com/ecmwf/qubed/raw/refs/heads/main/tests/example_qubes/climate_dt.json").json())
+        self.fdb_tree = Qube.from_json(
+            requests.get(
+                "https://github.com/ecmwf/qubed/raw/refs/heads/main/tests/example_qubes/climate_dt.json"
+            ).json()
+        )
 
         if len(alternative_axes) == 0:
             logging.info("Find GribJump axes for %s", context)

@@ -28,6 +28,9 @@ polytope_feature/_version.py
 **/build
 **.lock
 **/target
-rust_venv
 **/*venv*/
 test_w_qubed
+performance_plots_qubed
+_version.py
+*.DS_Store
+*.nc

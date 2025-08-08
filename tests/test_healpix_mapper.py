@@ -12,7 +12,7 @@ from polytope_feature.shapes import Box, Select
 
 class TestHealpixGrid:
     def setup_method(self, method):
-        nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/healpix.grib"
+        nexus_url = "https://sites.ecmwf.int/repository/polytope/test-data/healpix.grib"
         download_test_data(nexus_url, "healpix.grib")
 
         ds = data.from_source("file", "./tests/data/healpix.grib")
