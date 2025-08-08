@@ -23,8 +23,6 @@ class TestSlicing3DXarrayDatacube:
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 
-    # Testing different shapes
-
     def test_cyclic_float_axis_across_seam(self):
         request = Request(Select("long", [-0.2], method="surrounding"))
         result = self.API.retrieve(request)

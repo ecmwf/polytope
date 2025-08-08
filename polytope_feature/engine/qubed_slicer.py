@@ -108,7 +108,7 @@ class QubedSlicer(Engine):
             if idxs:
                 current_metadata_idx_stack = metadata_idx_stack + [idxs]
             children = self._slice(child, child_polytopes, datacube, datacube_transformations,
-                                   metadata_idx_stack)
+                                   current_metadata_idx_stack)
             # If this node used to have children but now has none due to filtering, skip it.
             if child.children and not children:
                 return None
