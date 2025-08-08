@@ -1,6 +1,6 @@
+import re
 from copy import deepcopy
 from importlib import import_module
-import re
 
 import pandas as pd
 
@@ -132,8 +132,8 @@ class TypeChangeSubHourlyTimeStepsCompact(DatacubeAxisTypeChange):
 
         if isinstance(value, str):
             # Extract hours and minutes using regex
-            h_match = re.search(r'(\d+)\s*h', value)
-            m_match = re.search(r'(\d+)\s*m(?:in)?', value)
+            h_match = re.search(r"(\d+)\s*h", value)
+            m_match = re.search(r"(\d+)\s*m(?:in)?", value)
 
             hours = int(h_match.group(1)) if h_match else 0
             minutes = int(m_match.group(1)) if m_match else 0
@@ -166,8 +166,8 @@ class TypeChangeSubHourlyTimeSteps(DatacubeAxisTypeChange):
 
         if isinstance(value, str):
             # Extract hours and minutes using regex
-            h_match = re.search(r'(\d+)\s*h', value)
-            m_match = re.search(r'(\d+)\s*m(?:in)?', value)
+            h_match = re.search(r"(\d+)\s*h", value)
+            m_match = re.search(r"(\d+)\s*m(?:in)?", value)
 
             hours = int(h_match.group(1)) if h_match else 0
             minutes = int(m_match.group(1)) if m_match else 0
