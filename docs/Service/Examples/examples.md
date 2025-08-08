@@ -12,11 +12,11 @@
 ## Open Data
 
 * <a href="../OpenData/od_timeseries_example">Timeseries</a>
-* <a href="../OpenData/od_polygon_example">Timeseries</a>
-* <a href="../OpenData/od_vertical_profile_example">Timeseries</a>
-* <a href="../OpenData/od_boundingbox_example">Timeseries</a>
-* <a href="../OpenData/od_trajectory_example">Timeseries</a>
-* <a href="../OpenData/od_country_example">Timeseries</a>
+* <a href="../OpenData/od_polygon_example">Polygon</a>
+* <a href="../OpenData/od_vertical_profile_example">Vertical Profile</a>
+* <a href="../OpenData/od_boundingbox_example">Bounding Box</a>
+* <a href="../OpenData/od_trajectory_example">Trajectory</a>
+* <a href="../OpenData/od_country_example">Country Cut-Out</a>
 
 For examples of Polytope Feature Extraction on Destination Earth Digital Twin Data please visit the following Github Repo: https://github.com/destination-earth-digital-twins/polytope-examples
 
