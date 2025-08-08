@@ -124,6 +124,9 @@ class TypeChangeSubHourlyTimeStepsCompact(DatacubeAxisTypeChange):
         self._new_type = new_type
 
     def transform_type(self, value):
+        if isinstance(value, int):
+            return pd.Timedelta(hours=value)
+
         if isinstance(value, str) and value.isdigit():
             return pd.Timedelta(hours=int(value))
 
@@ -155,6 +158,9 @@ class TypeChangeSubHourlyTimeSteps(DatacubeAxisTypeChange):
         self._new_type = new_type
 
     def transform_type(self, value):
+        if isinstance(value, int):
+            return pd.Timedelta(hours=value)
+
         if isinstance(value, str) and value.isdigit():
             return pd.Timedelta(hours=int(value))
 

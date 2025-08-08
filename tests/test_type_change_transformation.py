@@ -36,6 +36,7 @@ class TestIntTypeChangeTransformation:
         type_change_transform = TypeChangeSubHourlyTimeSteps("step", "subhourly_step")
 
         assert type_change_transform.transform_type("2") == pd.Timedelta(hours=2)
+        assert type_change_transform.transform_type(3) == pd.Timedelta(hours=3)
         assert type_change_transform.transform_type("70m") == pd.Timedelta(hours=1, minutes=10)
         assert type_change_transform.transform_type("1h15m") == pd.Timedelta(hours=1, minutes=15)
 
@@ -48,6 +49,7 @@ class TestIntTypeChangeTransformation:
         type_change_transform = TypeChangeSubHourlyTimeStepsCompact("step", "subhourly_step_compact")
 
         assert type_change_transform.transform_type("2") == pd.Timedelta(hours=2)
+        assert type_change_transform.transform_type(3) == pd.Timedelta(hours=3)
         assert type_change_transform.transform_type("70m") == pd.Timedelta(hours=1, minutes=10)
         assert type_change_transform.transform_type("1h15m") == pd.Timedelta(hours=1, minutes=15)
 
