@@ -6,7 +6,7 @@ from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Select
 
 
-class TestTypeChangeTransformation:
+class TestIntTypeChangeTransformation:
     def setup_method(self, method):
         # Create a dataarray with 4 labelled axes using different index types
         array = xr.DataArray(
@@ -24,7 +24,7 @@ class TestTypeChangeTransformation:
         self.slicer = HullSlicer()
         self.API = Polytope(datacube=array, engine=self.slicer, options=options)
 
-    def test_merge_axis(self):
+    def test_int_type_change_axis(self):
         request = Request(Select("step", [0]))
         result = self.API.retrieve(request)
         result.pprint()
