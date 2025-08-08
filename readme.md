@@ -164,6 +164,7 @@ See also the [contributors](https://github.com/ecmwf/polytope/contributors) for 
 
 ## License 
 
+```
 Copyright 2021 European Centre for Medium-Range Weather Forecasts (ECMWF)
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -179,6 +180,7 @@ limitations under the License.
 In applying this licence, ECMWF does not waive the privileges and immunities
 granted to it by virtue of its status as an intergovernmental organisation nor
 does it submit to any jurisdiction.
+```
 
 ## Citing 
 
