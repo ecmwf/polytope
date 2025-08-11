@@ -31,6 +31,14 @@ jobs:
       python_qa: true
     secrets: inherit
 
+  downstream-ci-hpc:
+    name: downstream-ci-hpc
+    if: ${{ !github.event.pull_request.head.repo.fork && github.event.action != 'labeled' || github.event.label.name == 'approved-for-ci' }}
+    uses: ecmwf/downstream-ci/.github/workflows/downstream-ci-hpc.yml@main
+    with:
+      polytope: ecmwf/polytope@${{ github.event.pull_request.head.sha || github.sha }}
+    secrets: inherit
+
   deploy:
     if: ${{ github.event_name == 'release' }}
     name: Upload to Pypi
