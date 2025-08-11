@@ -232,11 +232,11 @@ fn healpix_longitudes(i: usize, resolution: usize) -> Vec<f64> {
         .collect()
 }
 
-
-fn unmap(
+#[pyfunction]
+pub fn unmap(
     first_axis_vals: Vec<f64>,
     first_val: f64,
-    second_vals: &[f64],
+    second_vals: Vec<f64>,
     nside: isize, npix: isize, ncap: isize, k: isize, resolution: usize
 ) -> Vec<usize> {
     let tol = 1e-8;
@@ -250,7 +250,7 @@ fn unmap(
 
     let second_axis_vals = second_axis_vals_from_idx(first_idx, resolution);
     let mut healpix_idxs = Vec::with_capacity(second_vals.len());
-    for &second_val in second_vals {
+    for second_val in second_vals {
             let second_idx = second_axis_vals
                 .iter()
                 .enumerate()
