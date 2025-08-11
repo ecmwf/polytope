@@ -194,3 +194,75 @@ pub fn first_axis_vals_healpix_nested(resolution: usize) -> Vec<f64> {
 
     vals
 }
+
+
+fn second_axis_vals_from_idx(first_val_idx: usize, resolution: usize) -> Vec<f64> {
+    healpix_longitudes(first_val_idx, resolution)
+}
+
+fn healpix_nj(i: usize, resolution: usize) -> usize {
+    assert!(resolution > 0);
+    let ni = 4 * resolution - 1;
+    assert!(i < ni);
+
+    if i < resolution {
+        4 * (i + 1)
+    } else if i < 3 * resolution {
+        4 * resolution
+    } else {
+        healpix_nj(ni - 1 - i, resolution)
+    }
+}
+
+fn healpix_longitudes(i: usize, resolution: usize) -> Vec<f64> {
+    let nj = healpix_nj(i, resolution);
+    let step = 360.0 / nj as f64;
+
+    let start = if i < resolution
+        || (3 * resolution - 1 < i)
+        || ((i + resolution) % 2 == 1)
+    {
+        step / 2.0
+    } else {
+        0.0
+    };
+
+    (0..nj)
+        .map(|k| start + k as f64 * step)
+        .collect()
+}
+
+
+fn unmap(
+    first_axis_vals: Vec<f64>,
+    first_val: f64,
+    second_vals: &[f64],
+    nside: isize, npix: isize, ncap: isize, k: isize, resolution: usize
+) -> Vec<usize> {
+    let tol = 1e-8;
+
+    let first_idx = first_axis_vals
+            .iter()
+            .enumerate()
+            .find(|(_, &v)| (first_val - tol <= v) && (v <= first_val + tol))
+            .map(|(idx, _)| idx)
+            .expect("No matching first-axis value found");
+
+    let second_axis_vals = second_axis_vals_from_idx(first_idx, resolution);
+    let mut healpix_idxs = Vec::with_capacity(second_vals.len());
+    for &second_val in second_vals {
+            let second_idx = second_axis_vals
+                .iter()
+                .enumerate()
+                .find(|(_, &v)| (second_val - tol <= v) && (v <= second_val + tol))
+                .map(|(idx, _)| idx)
+                .expect("No matching second-axis value found");
+
+            let healpix_index = ring_to_nested(
+                axes_idx_to_healpix_idx(resolution, first_idx, second_idx) as isize, nside, npix, ncap, k
+            );
+            healpix_idxs.push(healpix_index);
+        }
+
+        healpix_idxs
+    }
