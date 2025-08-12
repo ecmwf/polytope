@@ -130,8 +130,75 @@ class QubedSlicer(Engine):
         if metadata_idx_stack is None:
             metadata_idx_stack = [[0]]
 
+        for i, child in enumerate(q.children):
+            # find polytopes which are defined on axis child.key
+            polytopes_on_axis = find_polytopes_on_axis(child.key, polytopes)
+
+            # TODO: here add the axes to datacube backend with transformations for child.key
+            # TODO: update the datacube axis_options before we dynamically change the axes
+
+            # TODO: this is slow... will need to make it faster and only do this when we need...
+            datacube.add_axes_dynamically(child)
+
+            # here now first change the values in the polytopes on the axis to reflect the axis type
+            for poly in polytopes_on_axis:
+                ax = datacube._axes[child.key]
+                # find extents of polytope on child.key
+                lower, upper, slice_axis_idx = poly.extents(child.key)
+
+                # find values on child that are within extents
+                found_vals, idxs = self.find_values_between(poly, ax, child, datacube, lower, upper)
+
+                # TODO: find the indexes of the found_vals wrt child.values, to extract the right metadata that we want to keep inside self.build_branch
+
+                if len(found_vals) == 0:
+                    continue
+
+                sliced_polys = self.get_sliced_polys(found_vals, ax, child.key, poly, slice_axis_idx)
+                # decide if axis should be compressed or not according to polytope
+                axis_compressed = child.key in self.compressed_axes
+                real_uncompressed_axis = not axis_compressed and len(found_vals) > 1
+                final_children_and_vals = self.build_branch(
+                    real_uncompressed_axis,
+                    found_vals,
+                    sliced_polys,
+                    polytopes,
+                    poly,
+                    child,
+                    datacube,
+                    datacube_transformations,
+                    ax,
+                    idxs,
+                    metadata_idx_stack
+                )
+
+                if final_children_and_vals is None:
+                    continue
+
+                def find_metadata(metadata_idx):
+                    metadata = {}
+                    for k, vs in child.metadata.items():
+                        metadata_depth = len(vs.shape)
+                        relevant_metadata_idxs = metadata_idx[:metadata_depth]
+                        ix = np.ix_(*relevant_metadata_idxs)
+                        metadata[k] = vs[ix]
+                    return metadata
+
+                for children, new_found_vals, current_metadata_idxs in final_children_and_vals:
+                    # TODO: if we've reached the end of the qube/qube leaves, attach the sliced_polys to the leaf
+                    metadata = find_metadata(current_metadata_idxs)
+                    qube_node = Qube.make_node(
+                        key=child.key, values=QEnum(new_found_vals), metadata=metadata, children=children
+                    )
+                    result.append(qube_node)
+
+        return result
+
+    def slice_grid_axes(self, q: Qube, datacube, datacube_transformations):
+        # TODO: here, instead of checking if the qube is at the leaves, we instead give it the sub-tree and go to its leaves
+        # TODO: we then find the remaining sliced_polys to continue slicing and slice along lat + lon like before
+        # TODO: we then return the completed tree
         if len(q.children) == 0:
-            # TODO: stop slicing here and re-compress intermediate tree, then start slicing again and add to recompressed tree
             # add "fake" axes and their nodes in order -> what about merged axes??
             mapper_transformation = None
             for transformation in datacube_transformations:
@@ -193,69 +260,7 @@ class QubedSlicer(Engine):
                             key=grid_axes[0], values=QEnum([found_val]), metadata={}, children=children
                         )
                         result.append(qube_node)
-
-        for i, child in enumerate(q.children):
-            # find polytopes which are defined on axis child.key
-            polytopes_on_axis = find_polytopes_on_axis(child.key, polytopes)
-
-            # TODO: here add the axes to datacube backend with transformations for child.key
-            # TODO: update the datacube axis_options before we dynamically change the axes
-
-            # TODO: this is slow... will need to make it faster and only do this when we need...
-            datacube.add_axes_dynamically(child)
-
-            # here now first change the values in the polytopes on the axis to reflect the axis type
-            for poly in polytopes_on_axis:
-                ax = datacube._axes[child.key]
-                # find extents of polytope on child.key
-                lower, upper, slice_axis_idx = poly.extents(child.key)
-
-                # find values on child that are within extents
-                found_vals, idxs = self.find_values_between(poly, ax, child, datacube, lower, upper)
-
-                # TODO: find the indexes of the found_vals wrt child.values, to extract the right metadata that we want to keep inside self.build_branch
-
-                if len(found_vals) == 0:
-                    continue
-
-                sliced_polys = self.get_sliced_polys(found_vals, ax, child.key, poly, slice_axis_idx)
-                # decide if axis should be compressed or not according to polytope
-                axis_compressed = child.key in self.compressed_axes
-                real_uncompressed_axis = not axis_compressed and len(found_vals) > 1
-                final_children_and_vals = self.build_branch(
-                    real_uncompressed_axis,
-                    found_vals,
-                    sliced_polys,
-                    polytopes,
-                    poly,
-                    child,
-                    datacube,
-                    datacube_transformations,
-                    ax,
-                    idxs,
-                    metadata_idx_stack
-                )
-
-                if final_children_and_vals is None:
-                    continue
-
-                def find_metadata(metadata_idx):
-                    metadata = {}
-                    for k, vs in child.metadata.items():
-                        metadata_depth = len(vs.shape)
-                        relevant_metadata_idxs = metadata_idx[:metadata_depth]
-                        ix = np.ix_(*relevant_metadata_idxs)
-                        metadata[k] = vs[ix]
-                    return metadata
-
-                for children, new_found_vals, current_metadata_idxs in final_children_and_vals:
-                    metadata = find_metadata(current_metadata_idxs)
-                    qube_node = Qube.make_node(
-                        key=child.key, values=QEnum(new_found_vals), metadata=metadata, children=children
-                    )
-                    result.append(qube_node)
-
-        return result
+        pass
 
     def _slice_second_grid_axis(
         self, axis_name, polytopes, datacube, datacube_transformations, second_axis_vals, path
@@ -294,7 +299,13 @@ class QubedSlicer(Engine):
     def slice_tree(self, datacube, final_polys):
         q = datacube.q
         datacube_transformations = datacube.datacube_transformations
-        return Qube.make_root(self._slice(q, final_polys, datacube, datacube_transformations))
+        # create sub-qube without grid first
+        partial_qube = Qube.make_root(self._slice(q, final_polys, datacube, datacube_transformations))
+        # recompress this sub-qube
+        partial_qube.compress()
+        # complete the qube with grid axes and return it
+        complete_qube = self.slice_grid_axes(partial_qube, datacube, datacube_transformations)
+        return complete_qube
 
     def build_tree(self, polytopes_to_slice, datacube):
         groups, input_axes = group(polytopes_to_slice)
