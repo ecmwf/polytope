@@ -10,7 +10,7 @@ try:
         axes_idx_to_healpix_idx_batch,
         first_axis_vals_healpix_nested,
         ring_to_nested_batched,
-        unmap
+        unmap,
     )
 
     use_rust = True
@@ -151,7 +151,16 @@ class NestedHealpixGridMapper(DatacubeMapper):
             #     return None
             # healpix_indexes = axes_idx_to_healpix_idx_batch(self._resolution, idx, second_idxs)
             # return_idxs = ring_to_nested_batched(healpix_indexes, self.Nside, self.Npix, self.Ncap, self.k)
-            return unmap(self._first_axis_vals, first_val[0], second_vals, self.Nside, self.Npix, self.Ncap, self.k, self._resolution)
+            return unmap(
+                self._first_axis_vals,
+                first_val[0],
+                second_vals,
+                self.Nside,
+                self.Npix,
+                self.Ncap,
+                self.k,
+                self._resolution,
+            )
         else:
             # Convert to NumPy array for fast computation
             idx = np.searchsorted(self._first_axis_vals_np_rounded, -np.round(first_val[0], decimals=8))
