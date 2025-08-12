@@ -131,6 +131,7 @@ class QubedSlicer(Engine):
             metadata_idx_stack = [[0]]
 
         if len(q.children) == 0:
+            # TODO: stop slicing here and re-compress intermediate tree, then start slicing again and add to recompressed tree
             # add "fake" axes and their nodes in order -> what about merged axes??
             mapper_transformation = None
             for transformation in datacube_transformations:
