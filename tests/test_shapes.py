@@ -66,25 +66,24 @@ class TestSlicing3DXarrayDatacube:
                             "type": "octahedral",
                             "resolution": 1280,
                             "axes": ["latitude", "longitude"],
-                            "md5_hash": "5ea6378bf5e2904f565ef7221da63a09",
                         }
                     ],
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
             ],
-            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
+            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "type": "fc", "stream": "oper"},
         }
         self.fdbdatacube = gj.GribJump()
         self.slicer = HullSlicer()
 
         request = Request(
-            Select("step", [11]),
+            Select("step", [0]),
             Select("levtype", ["sfc"]),
-            Select("date", [pd.Timestamp("20230710T120000")]),
+            Select("date", [pd.Timestamp("20240103T0000")]),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
-            Select("param", ["151130"]),
+            Select("param", ["167"]),
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["fc"]),

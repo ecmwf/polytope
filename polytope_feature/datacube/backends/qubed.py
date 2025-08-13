@@ -149,6 +149,18 @@ class QubedDatacube(Datacube):
         return (idx_between, indexes)
 
     def get(self, requests, context=None):
+        """
+        We have a compressed tree of requests, which we need to decompress completely with its metadata indexes.
+        BUT the last two axes, we would like to "ignore" in the decompression and instead, we create grid index ranges from them.
+        WHILE we decompress, we need to keep some kind of map from decompressed request + grid index ranges to corresponding tree node.
+        This mapping will map potentially several decompressed request + grid index ranges tuples to the same tree nodes.
+
+        ADDED DIFFICULTY: the grid index ranges MUST be ordered (which is not guaranteed from the tree) so we need to sort them, while also sorting the tree nodes so that they match up.
+
+        UNTIL NOW, we had a map of compressed request + grid index ranges tuples to tree nodes.
+        We could just add a map of compressed request -> list of decompressed request + associated metadata
+        """
+
         if context is None:
             context = {}
         if len(requests.children) == 0:
@@ -268,6 +280,7 @@ class QubedDatacube(Datacube):
                     new_vals.append(val[:4] + val[5:7] + val[8:10])
                 key_value_path[requests.key] = new_vals
             leaf_path.update(key_value_path)
+            # TODO: in the leaf metadata, try to instead store mapping leaf_path -> list(individual metadata dicts for each uncompressed value of tree)
             leaf_metadata.update(requests.metadata)
             if len(requests.children[0].children[0].children) == 0:
                 # find the fdb_requests and associated nodes to which to add results
