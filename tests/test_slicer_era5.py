@@ -10,7 +10,7 @@ from polytope_feature.shapes import Box, Select
 
 class TestSlicingEra5Data:
     def setup_method(self, method):
-        nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/era5-levels-members.grib"
+        nexus_url = "https://sites.ecmwf.int/repository/polytope/test-data/era5-levels-members.grib"
         download_test_data(nexus_url, "era5-levels-members.grib")
 
         ds = data.from_source("file", "./tests/data/era5-levels-members.grib")
