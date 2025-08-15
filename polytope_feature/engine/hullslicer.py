@@ -50,7 +50,6 @@ class HullSlicer(Engine):
                 path = {flattened_tuple[0]: flattened_tuple[1]}
         for i, lower in enumerate(lowers):
             if self.axis_values_between.get((flattened_tuple, ax.name, lower), None) is None:
-                # path_copy = path.copy()
                 self.axis_values_between[(flattened_tuple, ax.name, lower)] = datacube.has_index(path, ax, lower)
             datacube_has_index = self.axis_values_between[(flattened_tuple, ax.name, lower)]
 
