@@ -1,4 +1,4 @@
-from copy import deepcopy
+from copy import copy, deepcopy
 
 import numpy as np
 import xarray as xr
@@ -118,15 +118,16 @@ class XArrayDatacube(Datacube):
                     path_copy.pop(key, None)
 
     def select(self, path, unmapped_path):
-        for key in path:
-            key_value = path[key][0]
-            path[key] = key_value
+        path_copy = copy(path)
+        for key in path_copy:
+            key_value = path_copy[key][0]
+            path_copy[key] = key_value
         for key in unmapped_path:
             key_value = unmapped_path[key][0]
             unmapped_path[key] = key_value
-        path_copy = deepcopy(path)
-        self.refit_path(path_copy, unmapped_path, path)
-        subarray = self.dataarray.sel(path_copy, method="nearest")
+        path_second_copy = deepcopy(path_copy)
+        self.refit_path(path_second_copy, unmapped_path, path_copy)
+        subarray = self.dataarray.sel(path_second_copy, method="nearest")
         subarray = subarray.sel(unmapped_path)
         return subarray
 
