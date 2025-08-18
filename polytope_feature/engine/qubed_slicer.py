@@ -13,6 +13,7 @@ from ..utility.combinatorics import (
 )
 from .engine import Engine
 from .slicing_tools import slice
+from copy import deepcopy
 
 
 class QubedSlicer(Engine):
@@ -201,7 +202,10 @@ class QubedSlicer(Engine):
         # TODO: here, instead of checking if the qube is at the leaves, we instead give it the sub-tree and go to its leaves
         # TODO: we then find the remaining sliced_polys to continue slicing and slice along lat + lon like before
         # TODO: we then return the completed tree
-        for leaf in q.compressed_leaf_nodes():
+        compressed_leaves = [leaf for leaf in q.compressed_leaf_nodes()]
+        actual_leaves = deepcopy(compressed_leaves)
+        for j, leaf in enumerate(actual_leaves):
+            # for leaf in q.compressed_leaf_nodes():
             result = []
             mapper_transformation = None
             for transformation in datacube_transformations:
@@ -256,7 +260,8 @@ class QubedSlicer(Engine):
                             key=grid_axes[0], values=QEnum([found_val]), metadata={}, children=children
                         )
                         result.append(qube_node)
-            leaf.children = result
+            # leaf.children = result
+            compressed_leaves[j].children = result
 
     def _slice_second_grid_axis(
         self, axis_name, polytopes, datacube, datacube_transformations, second_axis_vals, path
@@ -301,7 +306,8 @@ class QubedSlicer(Engine):
         partial_qube.compress()
         # complete the qube with grid axes and return it
         complete_qube = self.slice_grid_axes(partial_qube, datacube, datacube_transformations)
-        return complete_qube
+        # return complete_qube
+        return partial_qube
 
     def build_tree(self, polytopes_to_slice, datacube):
         groups, input_axes = group(polytopes_to_slice)
