@@ -191,7 +191,8 @@ class QubedSlicer(Engine):
                     )
                     if not children:
                         # We've reached the end of the qube
-                        qube_node.sliced_polys = sliced_polys
+                        # qube_node.sliced_polys = sliced_polys
+                        qube_node.sliced_polys = polytopes
                     result.append(qube_node)
 
         return result
