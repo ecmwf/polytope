@@ -303,7 +303,8 @@ class QubedSlicer(Engine):
         # create sub-qube without grid first
         partial_qube = Qube.make_root(self._slice(q, final_polys, datacube, datacube_transformations))
         # recompress this sub-qube
-        partial_qube.compress()
+        # partial_qube.compress()
+        partial_qube = partial_qube.compress_w_poly_attrs()
         # complete the qube with grid axes and return it
         complete_qube = self.slice_grid_axes(partial_qube, datacube, datacube_transformations)
         # return complete_qube
