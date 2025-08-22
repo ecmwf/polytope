@@ -8,6 +8,7 @@ pyo3 = { version = "0.20", features = ["extension-module"] }
 geo = { version = "0.30"}
 rayon = "1.8"
 chrono = "0.4"
+once_cell = "1.19"
 
 [lib]
 name = "polytope_rs"

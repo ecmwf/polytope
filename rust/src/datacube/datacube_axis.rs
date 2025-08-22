@@ -310,7 +310,7 @@ impl DatacubeAxis for UnsliceableDatacubeAxis {
 enum AxisType {
     Int,
     Float,
-    String,
+    Str,
     Timedelta,
     Timestamp,
 }
@@ -326,10 +326,10 @@ impl IntoAxisType for f64 {
     fn into_axis_type(&self) -> AxisType { AxisType::Float }
 }
 impl IntoAxisType for String {
-    fn into_axis_type(&self) -> AxisType { AxisType::String }
+    fn into_axis_type(&self) -> AxisType { AxisType::Str }
 }
 impl IntoAxisType for &str {
-    fn into_axis_type(&self) -> AxisType { AxisType::String }
+    fn into_axis_type(&self) -> AxisType { AxisType::Str }
 }
 impl IntoAxisType for chrono::Duration {
     fn into_axis_type(&self) -> AxisType {AxisType::Timedelta}
@@ -337,3 +337,78 @@ impl IntoAxisType for chrono::Duration {
 impl IntoAxisType for chrono::DateTime<Utc> {
     fn into_axis_type(&self) -> AxisType {AxisType::Timestamp}
 }
+
+use std::collections::HashMap;
+
+// const type_to_axis_lookup: HashMap<AxisType, Box<dyn DatacubeAxis>> = HashMap::from([
+//         (AxisType::Int, Box::new(IntDatacubeAxis::new())),
+//         (AxisType::Float, Box::new(FloatDatacubeAxis::new())),
+//         (AxisType::Str, Box::new(UnsliceableDatacubeAxis::new())),
+//         (AxisType::Timedelta, Box::new(PandasTimedeltaDatacubeAxis::new())),
+//         (AxisType::Timestamp, Box::new(PandasTimestampDatacubeAxis::new())),
+//     ]);
+
+use once_cell::sync::Lazy;
+
+// static TYPE_TO_AXIS_LOOKUP: Lazy<HashMap<AxisType, Box<dyn DatacubeAxis>>> = Lazy::new(|| {
+//     HashMap::from([
+//         (AxisType::Int, Box::new(IntDatacubeAxis::new())),
+//         (AxisType::Float, Box::new(FloatDatacubeAxis::new())),
+//         (AxisType::Str, Box::new(UnsliceableDatacubeAxis::new())),
+//         (AxisType::Timedelta, Box::new(PandasTimedeltaDatacubeAxis::new())),
+//         (AxisType::Timestamp, Box::new(PandasTimestampDatacubeAxis::new())),
+//     ])
+// });
+
+// static TYPE_TO_AXIS_LOOKUP: Lazy<
+//     HashMap<AxisType, fn() -> Box<dyn DatacubeAxis + Send + Sync>>
+// > = Lazy::new(|| {
+//     HashMap::from([
+//         (AxisType::Int, || Box::new(IntDatacubeAxis::new())),
+//         (AxisType::Float, || Box::new(FloatDatacubeAxis::new())),
+//         // (AxisType::Str, || Box::new(UnsliceableDatacubeAxis::new())),
+//         // (AxisType::Timedelta, || Box::new(PandasTimedeltaDatacubeAxis::new())),
+//         // (AxisType::Timestamp, || Box::new(PandasTimestampDatacubeAxis::new())),
+//     ])
+// });
+
+// fn make_int_axis() -> Box<dyn DatacubeAxis + Send + Sync> {
+//     Box::new(IntDatacubeAxis::new())
+// }
+
+// fn make_float_axis() -> Box<dyn DatacubeAxis + Send + Sync> {
+//     Box::new(FloatDatacubeAxis::new())
+// }
+
+// static TYPE_TO_AXIS_LOOKUP: Lazy<
+//     HashMap<AxisType, fn() -> Box<dyn DatacubeAxis + Send + Sync>>
+// > = Lazy::new(|| {
+//     HashMap::from([
+//         (AxisType::Int, make_int_axis),
+//         (AxisType::Float, make_float_axis),
+//     ])
+// });
+
+// static TYPE_TO_AXIS_LOOKUP: Lazy<
+//     HashMap<AxisType, Box<dyn Fn() -> Box<dyn DatacubeAxis + Send + Sync> + Send + Sync>>
+// > = Lazy::new(|| {
+//     HashMap::from([
+//         (AxisType::Int, Box::new(|| Box::new(IntDatacubeAxis::new()))),
+//         (AxisType::Float, Box::new(|| Box::new(FloatDatacubeAxis::new()))),
+//     ])
+// });
+
+static TYPE_TO_AXIS_LOOKUP: Lazy<
+    HashMap<
+        AxisType,
+        Box<dyn Fn() -> Box<dyn DatacubeAxis + Send + Sync> + Send + Sync>
+    >
+> = Lazy::new(|| {
+    HashMap::from([
+        (AxisType::Int, Box::new(|| Box::new(IntDatacubeAxis::new()) as Box<dyn DatacubeAxis + Send + Sync>) as Box<dyn Fn() -> Box<dyn DatacubeAxis + Send + Sync> + Send + Sync>),
+        (AxisType::Float, Box::new(|| Box::new(FloatDatacubeAxis::new()) as Box<dyn DatacubeAxis + Send + Sync>) as Box<dyn Fn() -> Box<dyn DatacubeAxis + Send + Sync> + Send + Sync>),
+        (AxisType::Str, Box::new(|| Box::new(UnsliceableDatacubeAxis::new()) as Box<dyn DatacubeAxis + Send + Sync>) as Box<dyn Fn() -> Box<dyn DatacubeAxis + Send + Sync> + Send + Sync>),
+        (AxisType::Timedelta, Box::new(|| Box::new(PandasTimedeltaDatacubeAxis::new()) as Box<dyn DatacubeAxis + Send + Sync>) as Box<dyn Fn() -> Box<dyn DatacubeAxis + Send + Sync> + Send + Sync>),
+        (AxisType::Timestamp, Box::new(|| Box::new(PandasTimestampDatacubeAxis::new()) as Box<dyn DatacubeAxis + Send + Sync>) as Box<dyn Fn() -> Box<dyn DatacubeAxis + Send + Sync> + Send + Sync>),
+        ])
+});
