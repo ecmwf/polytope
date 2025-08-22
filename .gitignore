@@ -43,3 +43,4 @@ test_w_qubed
 *.nc
 **/*venv*
 performance_plots_qubed
+icon_grids
