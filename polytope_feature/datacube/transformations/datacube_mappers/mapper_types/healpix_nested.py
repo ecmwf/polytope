@@ -6,12 +6,7 @@ from ..datacube_mappers import DatacubeMapper
 
 use_rust = False
 try:
-    from polytope_feature.polytope_rs import (
-        axes_idx_to_healpix_idx_batch,
-        first_axis_vals_healpix_nested,
-        ring_to_nested_batched,
-        unmap,
-    )
+    from polytope_feature.polytope_rs import first_axis_vals_healpix_nested, unmap
 
     use_rust = True
 except (ModuleNotFoundError, ImportError):
