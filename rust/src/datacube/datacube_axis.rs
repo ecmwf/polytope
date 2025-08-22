@@ -304,3 +304,36 @@ impl DatacubeAxis for UnsliceableDatacubeAxis {
         Box::new("Tried to slice unsliceable axis")
     }
 }
+
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+enum AxisType {
+    Int,
+    Float,
+    String,
+    Timedelta,
+    Timestamp,
+}
+
+trait IntoAxisType {
+    fn into_axis_type(&self) -> AxisType;
+}
+
+impl IntoAxisType for i32 {
+    fn into_axis_type(&self) -> AxisType { AxisType::Int }
+}
+impl IntoAxisType for f64 {
+    fn into_axis_type(&self) -> AxisType { AxisType::Float }
+}
+impl IntoAxisType for String {
+    fn into_axis_type(&self) -> AxisType { AxisType::String }
+}
+impl IntoAxisType for &str {
+    fn into_axis_type(&self) -> AxisType { AxisType::String }
+}
+impl IntoAxisType for chrono::Duration {
+    fn into_axis_type(&self) -> AxisType {AxisType::Timedelta}
+}
+impl IntoAxisType for chrono::DateTime<Utc> {
+    fn into_axis_type(&self) -> AxisType {AxisType::Timestamp}
+}
