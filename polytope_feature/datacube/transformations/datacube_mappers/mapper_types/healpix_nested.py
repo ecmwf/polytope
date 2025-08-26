@@ -6,7 +6,11 @@ from ..datacube_mappers import DatacubeMapper
 
 use_rust = False
 try:
-    from polytope_feature.polytope_rs import first_axis_vals_healpix_nested, unmap
+    from polytope_feature.polytope_rs import (
+        first_axis_vals_healpix_nested,
+        healpix_longitudes,
+        unmap,
+    )
 
     use_rust = True
 except (ModuleNotFoundError, ImportError):
@@ -87,6 +91,8 @@ class NestedHealpixGridMapper(DatacubeMapper):
             return self.HEALPix_nj(ni - 1 - i)
 
     def HEALPix_longitudes(self, i):
+        if use_rust:
+            return healpix_longitudes(i, self._resolution)
         Nj = self.HEALPix_nj(i)
         step = 360.0 / Nj
         start = np.where(

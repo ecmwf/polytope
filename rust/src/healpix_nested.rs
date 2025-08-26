@@ -218,7 +218,8 @@ fn healpix_nj(i: usize, resolution: usize) -> usize {
     }
 }
 
-fn healpix_longitudes(i: usize, resolution: usize) -> Vec<f64> {
+#[pyfunction]
+pub fn healpix_longitudes(i: usize, resolution: usize) -> Vec<f64> {
     let nj = healpix_nj(i, resolution);
     let step = 360.0 / nj as f64;
 
