@@ -8,6 +8,8 @@ from ..utility.list_tools import unique
 
 
 class Engine:
+    # TODO: maybe create different slicer levels: some specialised for 1D, and some higher-dimensional
+    # TODO: if we do this, will need to check that polytopes have appropriate dimension when we select a slicer for them
     def __init__(self):
         pass
 

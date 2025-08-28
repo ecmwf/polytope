@@ -17,6 +17,8 @@ from copy import deepcopy
 
 
 class QubedSlicer(Engine):
+    # TODO: this slicer is very similar to the hullslicer, but just creating a different type of tree...
+    # try to abstract the object we create and unify both slicer methods, which act on 1D space...
     def __init__(self):
         self.ax_is_unsliceable = {}
         self.compressed_axes = []
