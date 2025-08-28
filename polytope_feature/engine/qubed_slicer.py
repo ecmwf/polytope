@@ -13,6 +13,7 @@ from ..utility.combinatorics import (
 )
 from .engine import Engine
 from .slicing_tools import slice
+from copy import deepcopy
 
 
 class QubedSlicer(Engine):
@@ -130,69 +131,6 @@ class QubedSlicer(Engine):
         if metadata_idx_stack is None:
             metadata_idx_stack = [[0]]
 
-        if len(q.children) == 0:
-            # add "fake" axes and their nodes in order -> what about merged axes??
-            mapper_transformation = None
-            for transformation in datacube_transformations:
-                if isinstance(transformation, DatacubeMapper):
-                    mapper_transformation = transformation
-            if not mapper_transformation:
-                # There is no grid mapping
-                pass
-            else:
-                # Slice on the two grid axes
-                grid_axes = mapper_transformation._mapped_axes()
-
-                # Handle first grid axis
-                polytopes_on_axis = find_polytopes_on_axis(grid_axes[0], polytopes)
-
-                for poly in polytopes_on_axis:
-                    ax = datacube._axes[grid_axes[0]]
-                    lower, upper, slice_axis_idx = poly.extents(grid_axes[0])
-
-                    found_vals, _ = self.find_values_between(poly, ax, None, datacube, lower, upper)
-
-                    if len(found_vals) == 0:
-                        continue
-
-                    sliced_polys = self.get_sliced_polys(found_vals, ax, grid_axes[0], poly, slice_axis_idx)
-                    # decide if axis should be compressed or not according to polytope
-                    # NOTE: actually the first grid axis will never be compressed
-
-                    # if it's not compressed, need to separate into different nodes to append to the tree
-                    for i, found_val in enumerate(found_vals):
-                        found_val = self.remap_values(ax, found_val)
-                        child_polytopes = [p for p in polytopes if p != poly]
-                        if sliced_polys[i]:
-                            child_polytopes.append(sliced_polys[i])
-
-                        second_axis_vals = mapper_transformation.second_axis_vals([found_val])
-                        flattened_path = {grid_axes[0]: (found_val,)}
-                        # get second axis children through slicing
-                        children = self._slice_second_grid_axis(
-                            grid_axes[1],
-                            child_polytopes,
-                            datacube,
-                            datacube_transformations,
-                            second_axis_vals,
-                            flattened_path,
-                        )
-                        # If this node used to have children but now has none due to filtering, skip it.
-                        if not children:
-                            continue
-                        if isinstance(found_val, pd.Timedelta) or isinstance(found_val, pd.Timestamp):
-                            found_val = [str(found_val)]
-
-                        # TODO: remap the found_val using self.remap_values like in the hullslicer
-
-                        # TODO: when we have an axis that we would like to merge with another, we should skip the node creation here
-                        # and instead keep/cache the value to merge with the node from before??
-
-                        qube_node = Qube.make_node(
-                            key=grid_axes[0], values=QEnum([found_val]), metadata={}, children=children
-                        )
-                        result.append(qube_node)
-
         for i, child in enumerate(q.children):
             # find polytopes which are defined on axis child.key
             polytopes_on_axis = find_polytopes_on_axis(child.key, polytopes)
@@ -252,9 +190,78 @@ class QubedSlicer(Engine):
                     qube_node = Qube.make_node(
                         key=child.key, values=QEnum(new_found_vals), metadata=metadata, children=children
                     )
+                    if not children:
+                        # We've reached the end of the qube
+                        # qube_node.sliced_polys = sliced_polys
+                        qube_node.sliced_polys = polytopes
                     result.append(qube_node)
 
         return result
+
+    def slice_grid_axes(self, q: Qube, datacube, datacube_transformations):
+        # TODO: here, instead of checking if the qube is at the leaves, we instead give it the sub-tree and go to its leaves
+        # TODO: we then find the remaining sliced_polys to continue slicing and slice along lat + lon like before
+        # TODO: we then return the completed tree
+        compressed_leaves = [leaf for leaf in q.compressed_leaf_nodes()]
+        actual_leaves = deepcopy(compressed_leaves)
+        for j, leaf in enumerate(actual_leaves):
+            # for leaf in q.compressed_leaf_nodes():
+            result = []
+            mapper_transformation = None
+            for transformation in datacube_transformations:
+                if isinstance(transformation, DatacubeMapper):
+                    mapper_transformation = transformation
+            if not mapper_transformation:
+                # There is no grid mapping
+                pass
+            else:
+                grid_axes = mapper_transformation._mapped_axes()
+                polytopes = leaf.sliced_polys
+
+                # Handle first grid axis
+                polytopes_on_axis = find_polytopes_on_axis(grid_axes[0], polytopes)
+
+                for poly in polytopes_on_axis:
+                    ax = datacube._axes[grid_axes[0]]
+                    lower, upper, slice_axis_idx = poly.extents(grid_axes[0])
+
+                    found_vals, _ = self.find_values_between(poly, ax, None, datacube, lower, upper)
+
+                    if len(found_vals) == 0:
+                        continue
+
+                    sliced_polys = self.get_sliced_polys(found_vals, ax, grid_axes[0], poly, slice_axis_idx)
+                    # decide if axis should be compressed or not according to polytope
+                    # NOTE: actually the first grid axis will never be compressed
+
+                    # if it's not compressed, need to separate into different nodes to append to the tree
+                    for i, found_val in enumerate(found_vals):
+                        found_val = self.remap_values(ax, found_val)
+                        child_polytopes = [p for p in polytopes if p != poly]
+                        if sliced_polys[i]:
+                            child_polytopes.append(sliced_polys[i])
+
+                        second_axis_vals = mapper_transformation.second_axis_vals([found_val])
+                        flattened_path = {grid_axes[0]: (found_val,)}
+                        # get second axis children through slicing
+                        children = self._slice_second_grid_axis(
+                            grid_axes[1],
+                            child_polytopes,
+                            datacube,
+                            datacube_transformations,
+                            second_axis_vals,
+                            flattened_path,
+                        )
+                        # If this node used to have children but now has none due to filtering, skip it.
+                        if not children:
+                            continue
+
+                        qube_node = Qube.make_node(
+                            key=grid_axes[0], values=QEnum([found_val]), metadata={}, children=children
+                        )
+                        result.append(qube_node)
+            # leaf.children = result
+            compressed_leaves[j].children = result
 
     def _slice_second_grid_axis(
         self, axis_name, polytopes, datacube, datacube_transformations, second_axis_vals, path
@@ -293,7 +300,15 @@ class QubedSlicer(Engine):
     def slice_tree(self, datacube, final_polys):
         q = datacube.q
         datacube_transformations = datacube.datacube_transformations
-        return Qube.make_root(self._slice(q, final_polys, datacube, datacube_transformations))
+        # create sub-qube without grid first
+        partial_qube = Qube.make_root(self._slice(q, final_polys, datacube, datacube_transformations))
+        # recompress this sub-qube
+        # partial_qube.compress()
+        partial_qube = partial_qube.compress_w_leaf_attrs("sliced_polys")
+        # complete the qube with grid axes and return it
+        complete_qube = self.slice_grid_axes(partial_qube, datacube, datacube_transformations)
+        # return complete_qube
+        return partial_qube
 
     def build_tree(self, polytopes_to_slice, datacube):
         groups, input_axes = group(polytopes_to_slice)
