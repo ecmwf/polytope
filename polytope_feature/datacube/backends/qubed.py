@@ -11,6 +11,8 @@ from ...utility.exceptions import BadGridError, GribJumpNoIndexError
 from ...utility.geometry import nearest_pt
 from .datacube import Datacube, TensorIndexTree
 
+from ...utility.metadata_handling import flatten_metadata, find_metadata
+
 
 class QubedDatacube(Datacube):
     def __init__(
@@ -174,13 +176,8 @@ class QubedDatacube(Datacube):
         complete_fdb_decoding_info = []
         for j, compressed_request in enumerate(fdb_requests):
             compressed_metadata = compressed_request[2]
-
-            # TODO: get uncompressed metadata for each leaf
-            uncompressed_request = {}
-
             # Need to determine the possible decompressed requests
-
-            # find the possible combinations of compressed indices
+            # First, find the possible combinations of compressed indices
             interm_branch_tuple_values = []
             for key in compressed_request[0].keys():
                 interm_branch_tuple_values.append(compressed_request[0][key])
@@ -191,20 +188,9 @@ class QubedDatacube(Datacube):
 
             # Need to extract the possible requests and add them to the right nodes
 
-            def find_metadata(metadata_idx):
-                metadata = {}
-                for k, vs in compressed_metadata.items():
-                    metadata_depth = len(vs.shape)
-                    relevant_metadata_dxs = metadata_idx[:metadata_depth]
-                    metadata[k] = vs[relevant_metadata_dxs]
-                return metadata
-
             for i, combi in enumerate(request_combis):
                 metadata_idxs = index_combis[i]
-                actual_metadata = find_metadata(metadata_idxs)
-
-                def flatten_metadata(value):
-                    return value[0] if isinstance(value, np.ndarray) else value
+                actual_metadata = find_metadata(metadata_idxs, compressed_metadata)
 
                 path = flatten_metadata(actual_metadata["path"])
                 scheme = flatten_metadata(actual_metadata["scheme"])
@@ -459,8 +445,6 @@ class QubedDatacube(Datacube):
                 sorted_list = sorted(enumerate(old_interm_start_idx[j]), key=lambda x: x[1])
                 original_indices_idx, interm_start_idx = zip(*sorted_list)
                 for interm_fdb_nodes_obj in interm_fdb_nodes[j]:
-                    # interm_fdb_nodes_obj.data.values = QEnum(tuple([list(interm_fdb_nodes_obj.values)[k]
-                    #                                                 for k in original_indices_idx]))
                     interm_fdb_nodes_obj.values = QEnum(
                         tuple([list(interm_fdb_nodes_obj.values)[k] for k in original_indices_idx])
                     )

@@ -301,14 +301,12 @@ class QubedSlicer(Engine):
         q = datacube.q
         datacube_transformations = datacube.datacube_transformations
         # create sub-qube without grid first
-        partial_qube = Qube.make_root(self._slice(q, final_polys, datacube, datacube_transformations))
+        request_qube = Qube.make_root(self._slice(q, final_polys, datacube, datacube_transformations))
         # recompress this sub-qube
-        # partial_qube.compress()
-        partial_qube = partial_qube.compress_w_leaf_attrs("sliced_polys")
+        request_qube = request_qube.compress_w_leaf_attrs("sliced_polys")
         # complete the qube with grid axes and return it
-        complete_qube = self.slice_grid_axes(partial_qube, datacube, datacube_transformations)
-        # return complete_qube
-        return partial_qube
+        self.slice_grid_axes(request_qube, datacube, datacube_transformations)
+        return request_qube
 
     def build_tree(self, polytopes_to_slice, datacube):
         groups, input_axes = group(polytopes_to_slice)
