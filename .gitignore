@@ -60,3 +60,16 @@ rust_deployment_venv
 test_w_qubed
 rust_venv
 new_rust_test_venv
+*.so
+rust_deployment_venv
+*.lock
+**/target
+**/build
+_version.py
+*.DS_Store
+icon_grids
+rust_venv
+test_w_qubed
+performance_plots_qubed
+*.nc
+**/*venv*

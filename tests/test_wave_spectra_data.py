@@ -45,7 +45,7 @@ class TestWaveData:
         self.slicer = HullSlicer()
 
     @pytest.mark.fdb
-    def test_healpix_grid(self):
+    def test_healpix_grid(self, downloaded_data_test_files):
         import pygribjump as gj
 
         self.fdb_datacube = gj.GribJump()
@@ -79,6 +79,10 @@ class TestWaveData:
         eccodes_lats = []
         tol = 1e-8
         leaves = result.leaves
+        wave_file = ""
+        for f in downloaded_data_test_files:
+            if "wave_spectra.grib" in f.name:
+                wave_file = f
         for i, leaf in enumerate(leaves):
             cubepath = leaf.flatten()
             lat = cubepath["latitude"][0]
@@ -86,7 +90,7 @@ class TestWaveData:
             for j, lon in enumerate(new_lons):
                 lats.append(lat)
                 lons.append(lon)
-                nearest_points = find_nearest_latlon("./tests/data/wave_spectra.grib", lat, lon)
+                nearest_points = find_nearest_latlon(wave_file, lat, lon)
                 eccodes_lat = nearest_points[0][0]["lat"]
                 eccodes_lon = nearest_points[0][0]["lon"]
                 assert eccodes_lat - tol <= lat

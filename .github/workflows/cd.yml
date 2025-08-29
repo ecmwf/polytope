@@ -28,3 +28,6 @@ jobs:
           "USE_RUST": "0",
           "SETUPTOOLS_RUST_CARGO_PROFILE": "release"
         }
+  deploy:
+    uses: ecmwf-actions/reusable-workflows/.github/workflows/create-package.yml@v2
+    secrets: inherit
