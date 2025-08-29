@@ -1,8 +1,9 @@
 from abc import ABC
-from typing import Dict, List, Literal, Optional, Union, Tuple
+from enum import Enum
+from typing import Annotated, Dict, List, Literal, Optional, Tuple, Union
 
 from conflator import ConfigModel
-from pydantic import ConfigDict
+from pydantic import ConfigDict, Field
 
 
 class TransformationConfig(ConfigModel):
@@ -15,15 +16,50 @@ class CyclicConfig(TransformationConfig):
     range: List[float] = [0]
 
 
-class MapperConfig(TransformationConfig):
+# possible_grids = Enum("possible_grids", {v: v for v in list(_type_to_datacube_mapper_lookup.keys())}, type=str)
+
+
+class PossibleGrids(str, Enum):
+    LAMBERT = "lambert_conformal"
+    ICON = "icon"
+    UNSTRUCTURED = "unstructured"
+    OCTAHEDRAL = "octahedral"
+
+
+class BaseMapperConfig(TransformationConfig):
     name: Literal["mapper"]
-    type: str = ""
+    # type: str = ""
+    # type: Literal[possible_grids]
+    type: PossibleGrids
     resolution: Optional[Union[int, List[int]]] = 0
     axes: List[str] = [""]
     md5_hash: Optional[str] = None
     local: Optional[List[float]] = None
     axis_reversed: Optional[Dict[str, bool]] = None
-    is_spherical: Optional[bool] = None
+    # is_spherical: Optional[bool] = None
+    # radius: Optional[float] = None
+    # earthMinorAxisInMetres: Optional[float] = None
+    # earthMajorAxisInMetres: Optional[float] = None
+    # nv: Optional[int] = None
+    # nx: Optional[int] = None
+    # ny: Optional[int] = None
+    # LoVInDegrees: Optional[float] = None
+    # Dx: Optional[float] = None
+    # Dy: Optional[float] = None
+    # latFirstInRadians: Optional[float] = None
+    # lonFirstInRadians: Optional[float] = None
+    # LoVInRadians: Optional[float] = None
+    # Latin1InRadians: Optional[float] = None
+    # Latin2InRadians: Optional[float] = None
+    # LaDInRadians: Optional[float] = None
+    # points: Optional[List[List[float]]] = None
+    # points: Optional[List[Tuple[float, float]]] = None
+    # uuid: Optional[str] = None
+
+
+class LambertGridConfig(BaseMapperConfig):
+    type: Literal["lambert_conformal"]
+    is_spherical: bool = None
     radius: Optional[float] = None
     earthMinorAxisInMetres: Optional[float] = None
     earthMajorAxisInMetres: Optional[float] = None
@@ -39,9 +75,23 @@ class MapperConfig(TransformationConfig):
     Latin1InRadians: Optional[float] = None
     Latin2InRadians: Optional[float] = None
     LaDInRadians: Optional[float] = None
-    # points: Optional[List[List[float]]] = None
+
+
+class ICONGridConfig(BaseMapperConfig):
+    type: Literal["icon"]
+    uuid: str = None
     points: Optional[List[Tuple[float, float]]] = None
-    uuid: Optional[str] = None
+
+
+class UnstructuredGridConfig(BaseMapperConfig):
+    type: Literal["unstructured"]
+    points: List[Tuple[float, float]] = None
+
+
+MapperConfig = Annotated[
+    Union[BaseMapperConfig, LambertGridConfig, ICONGridConfig, UnstructuredGridConfig],
+    Field(discriminator="type"),
+]
 
 
 class ReverseConfig(TransformationConfig):
