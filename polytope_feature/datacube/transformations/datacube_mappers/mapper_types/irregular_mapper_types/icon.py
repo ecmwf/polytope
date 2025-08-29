@@ -1,19 +1,25 @@
 import math
+import os
 
+import requests
 import xarray as xr
 
-from ..irregular import IrregularGridMapper
-
-import os
-import requests
-
 from ......utility.exceptions import HTTPError
+from ..irregular import IrregularGridMapper
 
 
 class ICONGridMapper(IrregularGridMapper):
     def __init__(
-        self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None, mapper_options=None, grid_online_path=None,
-        grid_local_directory=None
+        self,
+        base_axis,
+        mapped_axes,
+        resolution,
+        md5_hash=None,
+        local_area=[],
+        axis_reversed=None,
+        mapper_options=None,
+        grid_online_path=None,
+        grid_local_directory=None,
     ):
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
@@ -32,11 +38,7 @@ class ICONGridMapper(IrregularGridMapper):
         self.uuid_map = {"icon_grid_0026_R03B07_G": "icon_grid_0026_R03B07_G.nc"}
 
     def get_icon_grid_path(self, filename):
-
-        # script_dir = os.path.dirname(os.path.abspath(__file__))
         script_dir = self.grid_local_directory
-
-        # TODO: control this too as option to mapper
 
         local_directory = os.path.join(script_dir, "icon_grids")
 

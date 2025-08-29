@@ -3,7 +3,6 @@ import os
 import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
-from earthkit import data
 
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
@@ -22,11 +21,6 @@ class TestQuadTreeSlicer:
             "longitude": "quadtree",
         }
 
-        ds = data.from_source("file", "../../Downloads/icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2")
-
-        self.arr = ds.to_xarray(engine="cfgrib").t2m
-
-        # uuid = "../../Downloads/icon_grid_0026_R03B07_G.nc"
         uuid = "icon_grid_0026_R03B07_G"
 
         self.options = {
@@ -51,9 +45,7 @@ class TestQuadTreeSlicer:
                 },
             ],
             "pre_path": {"date": "20250110"},
-            # TODO: add "grid_url" + "grid_local_path"
             "grid_online_path": "https://get.ecmwf.int/test-data/polytope/test-data/icon_grid_0026_R03B07_G.nc",
-            # "grid_local_directory": "downloaded_files",
             "grid_local_directory": "",
         }
 

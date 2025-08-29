@@ -25,10 +25,6 @@ class TestQuadTreeSlicer:
             "param": "hullslicer",
             "latitude": "optimised_quadtree",
             "longitude": "optimised_quadtree",
-            # "latitude": "quadtree",
-            # "longitude": "quadtree",
-            # "latitude": "optimised_point_in_polygon",
-            # "longitude": "optimised_point_in_polygon",
         }
 
         ds = data.from_source("file", "tests/data/lambert_lam_one_message.grib")
@@ -96,7 +92,6 @@ class TestQuadTreeSlicer:
             Select("step", [0]),
             Select("param", ["130"]),
             Select("levtype", ["sfc"]),
-            # Box(["latitude", "longitude"], [44, 5.5], [44.55, 5.65]),
             Polygon(["latitude", "longitude"], [[44, 5.5], [44, 5.55], [44.25, 5.55], [44.25, 5.5]]),
         )
 
