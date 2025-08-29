@@ -1,17 +1,16 @@
 import csv
 import math
 
+import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 from earthkit import data
 from helper_functions import find_nearest_latlon
 
 from polytope_feature.polytope import Polytope, Request
-from polytope_feature.shapes import Box, Select, Polygon
+from polytope_feature.shapes import Polygon, Select
 
 # import os
-
-import matplotlib.pyplot as plt
 
 
 # os.environ["FDB_HOME"] = "/Users/male/git/fdb-de330-home"
@@ -88,6 +87,7 @@ class TestQuadTreeSlicer:
         }
 
     @pytest.mark.fdb
+    @pytest.mark.non_stored_data
     def test_quad_tree_slicer_extract(self):
         import pygribjump as gj
 

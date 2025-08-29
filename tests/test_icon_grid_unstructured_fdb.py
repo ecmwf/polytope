@@ -58,6 +58,7 @@ class TestQuadTreeSlicer:
         }
 
     @pytest.mark.fdb
+    @pytest.mark.non_stored_data
     def test_quad_tree_slicer_extract(self):
         import pygribjump as gj
 

@@ -68,7 +68,7 @@ class TestRegularGrid:
 
     @pytest.mark.fdb
     @pytest.mark.internet
-    def test_regular_grid(self):
+    def test_regular_grid(self, fdb_store_operational_setup):
         import pygribjump as gj
 
         request = Request(

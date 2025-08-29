@@ -84,7 +84,8 @@ readme = {file = ["README.md"], content-type = "text/markdown"}
 
 [tool.pytest.ini_options]
 markers = ["internet: downloads test data from the internet (deselect with '-m \"not internet\"')",
-           "fdb: test which uses fdb (deselect with '-m \"not fdb\"')",]
+           "fdb: test which uses fdb (deselect with '-m \"not fdb\"')",
+           "non_stored_data: test which uses special data not stored in test fdb (deselect with '-m \"not non_stored_data\"')",]
 log_cli_level = "INFO"
 
 # takes inspiration from https://github.com/pypa/cibuildwheel/discussions/1814
