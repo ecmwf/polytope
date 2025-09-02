@@ -45,7 +45,7 @@ class TestQuadTreeSlicer:
                 },
             ],
             "pre_path": {"date": "20250110"},
-            "grid_online_path": "https://get.ecmwf.int/test-data/polytope/test-data/icon_grid_0026_R03B07_G.nc",
+            "grid_online_path": "https://sites.ecmwf.int/repository/polytope/test-data/icon_grid_0026_R03B07_G.nc",
             "grid_local_directory": "",
         }
 
