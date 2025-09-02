@@ -60,6 +60,12 @@ class DatacubeAxis(ABC):
             ranges = transformation.remap(range, ranges, self)
         return ranges
 
+    def remap_polytope(self, polytope) -> Any:
+        polytopes = [polytope]
+        for transformation in self.transformations[::-1]:
+            polytopes = transformation.remap_polytope(polytope, polytopes, self)
+        return polytopes
+
     def unmap_to_datacube(self, path, unmapped_path):
         return (path, unmapped_path)
 

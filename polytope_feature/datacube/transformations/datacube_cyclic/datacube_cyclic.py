@@ -98,6 +98,14 @@ class DatacubeAxisCyclic(DatacubeAxisTransformation):
                     ranges.append([low - axis.tol, up + axis.tol])
         return ranges
 
+    def remap_polytope(self, polytope, polytopes, axis):
+        # TODO: find the different cyclic polytopes within the right axis ranges
+        # TODO: will need to go through the values in increasing order and
+        # TODO: make sure that if the polygon wraps around completely, we interpolate on the other axis
+        # TODO: to the right value....
+        # TODO: MAYBE EASIER if, as a first step, we ensure we only wrap around the cyclic axis once max
+        pass
+
     def to_intervals(self, range, intervals, axis):
         self.update_range(axis)
         if range[0] == -math.inf:
