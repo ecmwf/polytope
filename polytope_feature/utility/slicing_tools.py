@@ -5,8 +5,8 @@ import scipy
 import scipy.spatial
 
 from ..shapes import ConvexPolytope
-from ..utility.geometry import lerp
-from ..utility.list_tools import argmax, argmin
+from .geometry import lerp
+from .list_tools import argmax, argmin
 
 
 def cut_polygon_in_interval(polygon: ConvexPolytope, interval, slice_axis_idx):

@@ -2,8 +2,8 @@ import math
 from copy import copy
 
 from ..utility.exceptions import UnsliceableShapeError
+from ..utility.slicing_tools import slice
 from .engine import Engine
-from .slicing_tools import slice
 
 
 class HullSlicer(Engine):

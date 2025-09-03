@@ -27,9 +27,11 @@ class QuadTreeSlicer(Engine):
 
     def remap_polytope(self, datacube, polytope):
         polytope_datacube_axes = [datacube._axes[ax] for ax in polytope._axes]
-        if any([ax.is_cyclic for ax in polytope_datacube_axes]):
-            # TODO: Need to remap the polytope to the cyclic range on the axis that is cyclic
-            pass
+        first_cyclic_axis = next((ax for ax in polytope_datacube_axes if ax.is_cyclic), None)
+        if first_cyclic_axis:
+            # Need to remap the polytope to the cyclic range on the axis that is cyclic
+            remapped_polygon = first_cyclic_axis.remap_polytope(polytope)
+        return remapped_polygon
 
     def extract_single(self, datacube, polytope):
         # extract a single polygon
@@ -41,8 +43,14 @@ class QuadTreeSlicer(Engine):
         return polygon_points
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):
-        # TODO: do a pre-processing step where we remap the unsliced polytopes to the cyclic range if needed
+        unsliced_polytopes_set = copy(node["unsliced_polytopes"])
+        for polytope in unsliced_polytopes_set:
+            # do a pre-processing step where we remap the unsliced polytopes to the cyclic range if needed
+            remapped_polytopes = self.remap_polytope(datacube, polytope)
+            node["unsliced_polytopes"].remove(polytope)
+            node["unsliced_polytopes"].update(remapped_polytopes)
         for polytope in node["unsliced_polytopes"]:
+
             if ax.name in polytope._axes:
                 self._build_sliceable_child(polytope, ax, node, datacube, next_nodes, api)
         del node["unsliced_polytopes"]

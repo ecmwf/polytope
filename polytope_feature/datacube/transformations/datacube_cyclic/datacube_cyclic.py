@@ -1,9 +1,9 @@
 import math
 from copy import deepcopy
 
-from ....engine.slicing_tools import cut_polygon_in_interval
 from ....shapes import ConvexPolytope
 from ....utility.list_tools import unique
+from ....utility.slicing_tools import cut_polygon_in_interval
 from ..datacube_transformations import DatacubeAxisTransformation
 
 
@@ -117,7 +117,7 @@ class DatacubeAxisCyclic(DatacubeAxisTransformation):
     def remap_polytope(self, polytope, polytopes, axis):
         # Find the different cyclic polytopes within the right axis ranges
         self.update_range(axis)
-        polygon_axis_extents = polytope.extents(axis)
+        polygon_axis_extents = polytope.extents(axis.name)
         range = [polygon_axis_extents[0], polygon_axis_extents[1]]
         axis_idx = polygon_axis_extents[2]
 

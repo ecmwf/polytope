@@ -6,9 +6,9 @@ from polytope_feature.datacube.quadtree.quadtree_additional_operations import (
 )
 from polytope_feature.datacube.tensor_index_tree import TensorIndexTree
 from polytope_feature.engine.quadtree_slicer import QuadTreeSlicer
-from polytope_feature.engine.slicing_tools import slice_in_two
 from polytope_feature.polytope import Polytope
 from polytope_feature.shapes import Box, ConvexPolytope
+from polytope_feature.utility.slicing_tools import slice_in_two
 
 
 class TestQuadTreeSlicer:
