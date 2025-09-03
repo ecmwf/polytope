@@ -9,6 +9,43 @@ from ..utility.geometry import lerp
 from ..utility.list_tools import argmax, argmin
 
 
+def cut_polygon_in_interval(polygon: ConvexPolytope, interval, slice_axis_idx):
+    if polygon is None:
+        return None
+    else:
+        assert len(polygon.points[0]) == 2
+
+        x_lower, x_upper, _ = polygon.extents(polygon._axes[slice_axis_idx])
+
+        if x_lower >= interval[0] and x_upper <= interval[1]:
+            # Polygon is completely in interval so return it
+            return polygon
+
+        intersects_left_interval = _find_intersects(polygon, slice_axis_idx, interval[0])
+        intersects_right_interval = _find_intersects(polygon, slice_axis_idx, interval[1])
+
+        interval_points = [p for p in polygon.points if interval[0] <= p[slice_axis_idx] <= interval[1]]
+
+        interval_points.extend(intersects_left_interval)
+        interval_points.extend(intersects_right_interval)
+
+        try:
+            hull = scipy.spatial.ConvexHull(interval_points)
+            vertices = hull.vertices
+        except scipy.spatial.qhull.QhullError as e:
+            if "less than" or "is flat" in str(e):
+                # NOTE: this would imply that the intersects on both edges of the interval are the same,
+                # ie we have a zero length interval
+                vertices = None
+
+        if vertices is not None:
+            interval_polygon = ConvexPolytope(polygon._axes, [interval_points[i] for i in vertices])
+        else:
+            interval_polygon = None
+
+        return interval_polygon
+
+
 def slice_in_two(polytope: ConvexPolytope, value, slice_axis_idx):
     if polytope is None:
         return (None, None)
