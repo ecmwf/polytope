@@ -1,7 +1,7 @@
 import math
 from copy import deepcopy
 
-# from ....engine.slicing_tools import cut_polygon_in_interval
+from ....engine.slicing_tools import cut_polygon_in_interval
 from ....shapes import ConvexPolytope
 from ....utility.list_tools import unique
 from ..datacube_transformations import DatacubeAxisTransformation
@@ -115,43 +115,34 @@ class DatacubeAxisCyclic(DatacubeAxisTransformation):
         return new_polygon
 
     def remap_polytope(self, polytope, polytopes, axis):
-        # TODO: find the different cyclic polytopes within the right axis ranges
-        # TODO: will need to go through the values in increasing order and
-        # TODO: make sure that if the polygon wraps around completely, we interpolate on the other axis
-        # TODO: to the right value....
-        # TODO: MAYBE EASIER if, as a first step, we ensure we only wrap around the cyclic axis once max
+        # Find the different cyclic polytopes within the right axis ranges
         self.update_range(axis)
-        # polygon_axis_extents = polytope.extents(axis)
-        # range = [polygon_axis_extents[0], polygon_axis_extents[1]]
-        # axis_idx = polygon_axis_extents[2]
+        polygon_axis_extents = polytope.extents(axis)
+        range = [polygon_axis_extents[0], polygon_axis_extents[1]]
+        axis_idx = polygon_axis_extents[2]
 
-        # if axis.range[0] - axis.tol <= range[0] <= axis.range[1] + axis.tol:
-        #     if axis.range[0] - axis.tol <= range[1] <= axis.range[1] + axis.tol:
-        #         # If we are already in the cyclic range, return it
-        #         return [range]
-        # elif abs(range[0] - range[1]) <= 2 * axis.tol:
-        #     # If we have a range that is just one point, then it should still be counted
-        #     # and so we should take a small interval around it to find values inbetween
-        #     range = [
-        #         self._remap_val_to_axis_range(range[0], axis) - axis.tol,
-        #         self._remap_val_to_axis_range(range[0], axis) + axis.tol,
-        #     ]
-        #     return [range]
-        # range_intervals = self.to_intervals(range, [[]], axis)
-        # ranges = []
-        # for interval in range_intervals:
-        #     if abs(interval[0] - interval[1]) > 0:
-        #         # If the interval is not just a single point, we remap it to the axis range
-        #         range = self._remap_range_to_axis_range([interval[0], interval[1]], axis)
-        #         up = range[1]
-        #         low = range[0]
-        #         if up < low:
-        #             # Make sure we remap in the right order
-        #             ranges.append([up - axis.tol, low + axis.tol])
-        #         else:
-        #             ranges.append([low - axis.tol, up + axis.tol])
-        # return ranges
-        pass
+        if axis.range[0] - axis.tol <= range[0] <= axis.range[1] + axis.tol:
+            if axis.range[0] - axis.tol <= range[1] <= axis.range[1] + axis.tol:
+                # If we are already in the cyclic range, return polytope
+                return [polytope]
+        elif abs(range[0] - range[1]) <= 2 * axis.tol:
+            # If we have a range that is just one point, then we should remap the polygon completely
+            # within the expected range
+            # TODO: we should pad the polygon slightly in the axis dimension too in this case??
+            return [self.create_new_polygon_in_range(polytope, axis_idx, axis)]
+
+        range_intervals = self.to_intervals(range, [[]], axis)
+        polytopes = []
+
+        for interval in range_intervals:
+            if abs(interval[0] - interval[1]) > 0:
+                # If the interval is not just a single point, find polygon within interval
+                # and remap it to the axis range
+                interval_polygon = cut_polygon_in_interval(polytope, interval, axis_idx)
+                remapped_polygon = self.create_new_polygon_in_range(interval_polygon, axis_idx, axis)
+                polytopes.append(remapped_polygon)
+
+        return polytopes
 
     def to_intervals(self, range, intervals, axis):
         self.update_range(axis)
