@@ -37,6 +37,7 @@ def downloaded_data_test_files(shared_temp_data_dir):
         ("https://sites.ecmwf.int/repository/polytope/test-data/t2m_jan_3_v2.grib", "t2m_jan_3_v2.grib"),
         ("https://sites.ecmwf.int/repository/polytope/test-data/wave_spectra.grib", "wave_spectra.grib"),
         ("https://sites.ecmwf.int/repository/polytope/test-data/era5-levels-members.grib", "era5-levels-members.grib"),
+        ("https://sites.ecmwf.int/repository/polytope/lambert_lam_one_message.grib", "lambert_lam_one_message.grib"),
     ]
 
     downloaded_paths = []

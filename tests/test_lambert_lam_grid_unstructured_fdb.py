@@ -1,4 +1,3 @@
-import csv
 import math
 
 # import matplotlib.pyplot as plt
@@ -30,19 +29,6 @@ class TestQuadTreeSlicer:
         ds = data.from_source("file", "tests/data/lambert_lam_one_message.grib")
         self.arr = ds.to_xarray(engine="cfgrib").t
 
-        def open_vals(file_name):
-            values = []
-            with open(file_name, "r") as file:
-                reader = csv.reader(file, delimiter=" ")
-                for row in reader:
-                    row = [val for val in row if val]  # Remove empty values (caused by extra spaces)
-                    values.append(float(row[0]))
-            return values
-
-        self.longitudes = open_vals("tests/data/lambert_lam_longitudes.txt")
-        self.latitudes = open_vals("tests/data/lambert_lam_latitudes.txt")
-
-        self.points = list(zip(self.latitudes, self.longitudes))
         self.options = {
             "axis_config": [
                 {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},

@@ -1,6 +1,6 @@
 # import os
 
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 
@@ -82,8 +82,8 @@ class TestQuadTreeSlicer:
 
         lats = []
         lons = []
-        eccodes_lats = []
-        eccodes_lons = []
+        # eccodes_lats = []
+        # eccodes_lons = []
         # tol = 1e-8
         leaves = result.leaves
         for i in range(len(leaves)):
@@ -111,7 +111,7 @@ class TestQuadTreeSlicer:
         # fig, ax = plt.subplots(figsize=(12, 6))
         # worldmap.plot(color="darkgrey", ax=ax)
 
-        plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
-        plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
-        plt.colorbar(label="Temperature")
-        plt.show()
+        # plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
+        # plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
+        # plt.colorbar(label="Temperature")
+        # plt.show()
