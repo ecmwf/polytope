@@ -21,7 +21,7 @@ class TestQuadTreeSlicer:
             "valid_time": "hullslicer",
         }
 
-        ds = data.from_source("file", "../../Downloads/Reference_eORCA12_U_to_HEALPix_32.grib")
+        ds = data.from_source("file", "tests/data/Reference_eORCA12_U_to_HEALPix_32.grib")
         self.arr = ds.to_xarray(engine="cfgrib").avg_uox
 
         self.latitudes = self.arr.latitude.values
@@ -79,7 +79,7 @@ class TestQuadTreeSlicer:
             lon = cubepath["longitude"][0] - 360
             lats.append(lat)
             lons.append(lon)
-            nearest_points = find_nearest_latlon("../../Downloads/Reference_eORCA12_U_to_HEALPix_32.grib", lat, lon)
+            nearest_points = find_nearest_latlon("tests/data/Reference_eORCA12_U_to_HEALPix_32.grib", lat, lon)
             eccodes_lat = nearest_points[0][0]["lat"]
             eccodes_lon = nearest_points[0][0]["lon"] - 360
             eccodes_lats.append(eccodes_lat)

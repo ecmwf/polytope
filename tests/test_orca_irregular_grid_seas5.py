@@ -2,6 +2,7 @@
 import numpy as np
 import pytest
 import xarray as xr
+from helper_functions import find_nearest_latlon
 
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
@@ -87,9 +88,9 @@ class TestQuadTreeSlicer:
 
         lats = []
         lons = []
-        # eccodes_lats = []
-        # eccodes_lons = []
-        # tol = 1e-8
+        eccodes_lats = []
+        eccodes_lons = []
+        tol = 1e-8
         leaves = result.leaves
         for i in range(len(leaves)):
             cubepath = leaves[i].flatten()
@@ -98,15 +99,15 @@ class TestQuadTreeSlicer:
             lats.append(lat)
             lons.append(lon)
 
-            # nearest_points = find_nearest_latlon("../../Downloads/votemper_ORAS5_1m_197902_grid_T_02.grib2", lat, lon)
-            # eccodes_lat = nearest_points[0][0]["lat"]
-            # eccodes_lon = nearest_points[0][0]["lon"] - 360
-            # eccodes_lats.append(eccodes_lat)
-            # eccodes_lons.append(eccodes_lon)
-            # assert eccodes_lat - tol <= lat
-            # assert lat <= eccodes_lat + tol
-            # assert eccodes_lon - tol <= lon
-            # assert lon <= eccodes_lon + tol
+            nearest_points = find_nearest_latlon("../../Downloads/votemper_ORAS5_1m_197902_grid_T_02.grib2", lat, lon)
+            eccodes_lat = nearest_points[0][0]["lat"]
+            eccodes_lon = nearest_points[0][0]["lon"] - 360
+            eccodes_lats.append(eccodes_lat)
+            eccodes_lons.append(eccodes_lon)
+            assert eccodes_lat - tol <= lat
+            assert lat <= eccodes_lat + tol
+            assert eccodes_lon - tol <= lon
+            assert lon <= eccodes_lon + tol
 
         # worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
         # fig, ax = plt.subplots(figsize=(12, 6))

@@ -38,6 +38,10 @@ def downloaded_data_test_files(shared_temp_data_dir):
         ("https://sites.ecmwf.int/repository/polytope/test-data/wave_spectra.grib", "wave_spectra.grib"),
         ("https://sites.ecmwf.int/repository/polytope/test-data/era5-levels-members.grib", "era5-levels-members.grib"),
         ("https://sites.ecmwf.int/repository/polytope/lambert_lam_one_message.grib", "lambert_lam_one_message.grib"),
+        (
+            "https://sites.ecmwf.int/repository/polytope/Reference_eORCA12_U_to_HEALPix_32.grib",
+            "Reference_eORCA12_U_to_HEALPix_32.grib",
+        ),
     ]
 
     downloaded_paths = []
