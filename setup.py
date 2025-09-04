@@ -11,21 +11,25 @@ if use_rust == 0:  # pure python
 elif use_rust == 1:  # rust extension
     print("Building rust bindings version.")
     # rust_extensions = [RustExtension("polytope_feature.polytope_rs", "polytope_feature/datacube/quadtree/Cargo.toml")]
-    rust_extensions = [RustExtension(
-        "polytope_feature.polytope_rs",
-        path="polytope_feature/datacube/quadtree/Cargo.toml",
-        debug=False,
-    )]
+    rust_extensions = [
+        RustExtension(
+            "polytope_feature.polytope_rs",
+            path="polytope_feature/datacube/quadtree/Cargo.toml",
+            debug=False,
+        )
+    ]
 else:  # (default) try rust extension, if fail fallback to python
     print("Building with rust bindings, and if failing reverting to pure Python.")
     # rust_extensions = [
     #     RustExtension("polytope_feature.polytope_rs", "polytope_feature/datacube/quadtree/Cargo.toml", optional=True)
     # ]
-    rust_extensions = [RustExtension(
-        "polytope_feature.polytope_rs",
-        path="polytope_feature/datacube/quadtree/Cargo.toml",
-        debug=False,
-        optional=True,
-    )]
+    rust_extensions = [
+        RustExtension(
+            "polytope_feature.polytope_rs",
+            path="polytope_feature/datacube/quadtree/Cargo.toml",
+            debug=False,
+            optional=True,
+        )
+    ]
 
 setup(rust_extensions=rust_extensions)
