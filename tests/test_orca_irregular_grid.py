@@ -2,9 +2,8 @@
 # import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import pytest
 from earthkit import data
-from helper_functions import find_nearest_latlon
+from helper_functions import download_test_data, find_nearest_latlon
 
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Polygon, Select
@@ -20,6 +19,9 @@ class TestQuadTreeSlicer:
             "oceanModelLayer": "hullslicer",
             "valid_time": "hullslicer",
         }
+
+        nexus_url = "https://sites.ecmwf.int/repository/polytope/Reference_eORCA12_U_to_HEALPix_32.grib"
+        download_test_data(nexus_url, "Reference_eORCA12_U_to_HEALPix_32.grib")
 
         ds = data.from_source("file", "tests/data/Reference_eORCA12_U_to_HEALPix_32.grib")
         self.arr = ds.to_xarray(engine="cfgrib").avg_uox
@@ -44,7 +46,6 @@ class TestQuadTreeSlicer:
             ],
         }
 
-    @pytest.mark.fdb
     def test_quad_tree_slicer_extract(self):
         request = Request(
             Select("step", [np.timedelta64(0, "ns")]),
