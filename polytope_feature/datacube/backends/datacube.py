@@ -13,7 +13,6 @@ from ..transformations.datacube_transformations import (
 
 
 class Datacube(ABC):
-
     def __init__(self, axis_options=None, compressed_axes_options=[], grid_online_path="", grid_local_directory=""):
         if axis_options is None:
             self.axis_options = {}
@@ -170,8 +169,9 @@ class Datacube(ABC):
         if type(datacube).__name__ == "DataArray":
             from .xarray import XArrayDatacube
 
-            xadatacube = XArrayDatacube(datacube, axis_options, compressed_axes_options, context, grid_online_path,
-                                        grid_local_directory)
+            xadatacube = XArrayDatacube(
+                datacube, axis_options, compressed_axes_options, context, grid_online_path, grid_local_directory
+            )
             return xadatacube
         if type(datacube).__name__ == "GribJump":
             from .fdb import FDBDatacube
@@ -184,7 +184,7 @@ class Datacube(ABC):
                 alternative_axes,
                 context,
                 grid_online_path,
-                grid_local_directory
+                grid_local_directory,
             )
             return fdbdatacube
         if type(datacube).__name__ == "MockDatacube":

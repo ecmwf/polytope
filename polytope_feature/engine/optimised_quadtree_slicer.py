@@ -33,8 +33,11 @@ class OptimisedQuadTreeSlicer(Engine):
         x_min, x_max = polytope.extents(polytope.axes()[0])[:2]
         y_min, y_max = polytope.extents(polytope.axes()[1])[:2]
 
-        filtered = [(i, point) for i, point in enumerate(self.points)
-                    if x_min <= point[0] <= x_max and y_min <= point[1] <= y_max]
+        filtered = [
+            (i, point)
+            for i, point in enumerate(self.points)
+            if x_min <= point[0] <= x_max and y_min <= point[1] <= y_max
+        ]
 
         self.bbox_indexes, self.bbox_points = zip(*filtered) if filtered else ([], [])
 

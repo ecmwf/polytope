@@ -66,9 +66,14 @@ class Polytope:
         self.compressed_axes = []
         self.context = context
 
-        axis_options, compressed_axes_options, config, alternative_axes, grid_online_path, grid_local_directory = (
-            PolytopeOptions.get_polytope_options(options)
-        )
+        (
+            axis_options,
+            compressed_axes_options,
+            config,
+            alternative_axes,
+            grid_online_path,
+            grid_local_directory,
+        ) = PolytopeOptions.get_polytope_options(options)
         self.datacube = Datacube.create(
             datacube,
             config,
