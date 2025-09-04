@@ -7,7 +7,7 @@ on:
 
 jobs:
   pypi_binwheels:
-    uses: ecmwf/reusable-workflows/.github/workflows/cd-pypi-binwheel.yml@feat/rust_wheels_with_clang
+    uses: ecmwf/reusable-workflows/.github/workflows/cd-pypi-binwheel.yml@v2
     secrets: inherit
     with:
       platforms: "['ubuntu-latest','macos-latest','windows-latest']"
@@ -20,7 +20,7 @@ jobs:
 
   pypi_purepython:
     needs: pypi_binwheels
-    uses: ecmwf/reusable-workflows/.github/workflows/cd-pypi.yml@feat/rust_wheels_with_clang
+    uses: ecmwf/reusable-workflows/.github/workflows/cd-pypi.yml@v2
     secrets: inherit
     with:
       env_vars: |
@@ -28,6 +28,3 @@ jobs:
           "USE_RUST": "0",
           "SETUPTOOLS_RUST_CARGO_PROFILE": "release"
         }
-  deploy:
-    uses: ecmwf-actions/reusable-workflows/.github/workflows/create-package.yml@v2
-    secrets: inherit
