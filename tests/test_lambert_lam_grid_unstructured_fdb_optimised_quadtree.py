@@ -1,7 +1,7 @@
 import csv
 import math
 
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 from earthkit import data
@@ -43,8 +43,6 @@ class TestQuadTreeSlicer:
         self.latitudes = open_vals("tests/data/lambert_lam_latitudes.txt")
 
         self.points = list(zip(self.latitudes, self.longitudes))
-        print("HOW MANY POINTS IN GRID")
-        print(len(self.points))
         self.options = {
             "axis_config": [
                 {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
@@ -136,7 +134,7 @@ class TestQuadTreeSlicer:
             assert eccodes_lon - tol <= lon
             assert lon <= eccodes_lon + tol
 
-        plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
-        plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
-        plt.colorbar(label="Temperature")
-        plt.show()
+        # plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
+        # plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
+        # plt.colorbar(label="Temperature")
+        # plt.show()

@@ -1,7 +1,7 @@
 import csv
 import math
 
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 from earthkit import data
@@ -43,8 +43,6 @@ class TestQuadTreeSlicer:
         self.latitudes = open_vals("tests/data/lambert_lam_latitudes.txt")
 
         self.points = list(zip(self.latitudes, self.longitudes))
-        print("HOW MANY POINTS IN GRID")
-        print(len(self.points))
         self.options = {
             "axis_config": [
                 {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
@@ -140,17 +138,7 @@ class TestQuadTreeSlicer:
         # fig, ax = plt.subplots(figsize=(12, 6))
         # worldmap.plot(color="darkgrey", ax=ax)
 
-        # Create boolean masks for each condition
-        # lon_mask = (self.lons >= 5.5) & (self.lons <= 6.5)
-        # lat_mask = (self.lats >= 44.0) & (self.lats <= 44.5)
-
-        # Combine both masks
-        # combined_mask = lon_mask & lat_mask
-
-        # Get indices where both conditions hold
-        # indices = np.where(combined_mask)[0]
-
-        plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
-        plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
-        plt.colorbar(label="Temperature")
-        plt.show()
+        # plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
+        # plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
+        # plt.colorbar(label="Temperature")
+        # plt.show()
