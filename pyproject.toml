@@ -52,6 +52,7 @@ dependencies = [
         "h5py",
         "earthkit-data",
         "matplotlib",
+        "pyfdb"
         ]
 
 [project.urls]
