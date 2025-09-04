@@ -1,5 +1,5 @@
 # import geopandas as gpd
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
@@ -7,7 +7,7 @@ from earthkit import data
 from helper_functions import find_nearest_latlon
 
 from polytope_feature.polytope import Polytope, Request
-from polytope_feature.shapes import Box, Select, Polygon
+from polytope_feature.shapes import Polygon, Select
 
 
 class TestQuadTreeSlicer:
@@ -50,7 +50,6 @@ class TestQuadTreeSlicer:
             Select("step", [np.timedelta64(0, "ns")]),
             Select("oceanModelLayer", [65.0]),
             Select("time", [pd.Timestamp("2017-09-06T00:00:00.000000000")]),
-            # Box(["latitude", "longitude"], [65, 270], [75, 300]),
             Polygon(["latitude", "longitude"], [[65, 270], [65, 300], [75, 300], [75, 270]]),
         )
 
@@ -94,7 +93,7 @@ class TestQuadTreeSlicer:
         # fig, ax = plt.subplots(figsize=(12, 6))
         # worldmap.plot(color="darkgrey", ax=ax)
 
-        plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
-        plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
-        plt.colorbar(label="Temperature")
-        plt.show()
+        # plt.scatter(lons, lats, s=18, c="red", cmap="YlOrRd")
+        # plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
+        # plt.colorbar(label="Temperature")
+        # plt.show()
