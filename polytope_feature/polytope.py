@@ -5,10 +5,10 @@ from .datacube.backends.datacube import Datacube
 from .datacube.datacube_axis import UnsliceableDatacubeAxis
 from .datacube.tensor_index_tree import TensorIndexTree
 from .engine.hullslicer import HullSlicer
-from .engine.quadtree_slicer import QuadTreeSlicer
-from .engine.point_in_polygon_slicer import PointInPolygonSlicer
 from .engine.optimised_point_in_polygon_slicer import OptimisedPointInPolygonSlicer
 from .engine.optimised_quadtree_slicer import OptimisedQuadTreeSlicer
+from .engine.point_in_polygon_slicer import PointInPolygonSlicer
+from .engine.quadtree_slicer import QuadTreeSlicer
 from .options import PolytopeOptions
 from .shapes import ConvexPolytope, Product
 from .utility.combinatorics import group, tensor_product
@@ -66,8 +66,9 @@ class Polytope:
         self.compressed_axes = []
         self.context = context
 
-        axis_options, compressed_axes_options, config, alternative_axes, grid_online_path, grid_local_directory = PolytopeOptions.get_polytope_options(
-            options)
+        axis_options, compressed_axes_options, config, alternative_axes, grid_online_path, grid_local_directory = (
+            PolytopeOptions.get_polytope_options(options)
+        )
         self.datacube = Datacube.create(
             datacube,
             config,

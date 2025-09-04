@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Dict, List, Literal, Optional, Union, Tuple
+from typing import Dict, List, Literal, Optional, Tuple, Union
 
 from conflator import ConfigModel
 from pydantic import ConfigDict

@@ -1,8 +1,8 @@
-from .engine import Engine
-from ..datacube.tensor_index_tree import TensorIndexTree
-from ..datacube.datacube_axis import IntDatacubeAxis
 from copy import copy
 
+from ..datacube.datacube_axis import IntDatacubeAxis
+from ..datacube.tensor_index_tree import TensorIndexTree
+from .engine import Engine
 
 use_rust = False
 try:

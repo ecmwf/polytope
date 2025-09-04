@@ -4,7 +4,7 @@ from ...datacube_mappers import DatacubeMapper
 
 use_rust = False
 try:
-    from polytope_feature.polytope_rs import get_latlons_sphere, get_latlons_oblate
+    from polytope_feature.polytope_rs import get_latlons_oblate, get_latlons_sphere
 
     use_rust = True
 except (ModuleNotFoundError, ImportError):
@@ -13,8 +13,16 @@ except (ModuleNotFoundError, ImportError):
 
 class LambertConformalGridMapper(DatacubeMapper):
     def __init__(
-        self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None, mapper_options=None, grid_online_path=None,
-        grid_local_directory=None
+        self,
+        base_axis,
+        mapped_axes,
+        resolution,
+        md5_hash=None,
+        local_area=[],
+        axis_reversed=None,
+        mapper_options=None,
+        grid_online_path=None,
+        grid_local_directory=None,
     ):
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
