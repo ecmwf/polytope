@@ -3,7 +3,6 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
 from polytope_feature.utility.exceptions import UnsliceableShapeError
@@ -21,9 +20,8 @@ class TestSlicingUnsliceableAxis:
                 "level": range(1, 130),
             },
         )
-        self.slicer = HullSlicer()
         options = {"compressed_axes_config": ["date", "variable", "level"]}
-        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
+        self.API = Polytope(datacube=array, options=options)
 
     # Testing different shapes
 

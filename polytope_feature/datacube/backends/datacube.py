@@ -13,7 +13,7 @@ from ..transformations.datacube_transformations import (
 
 
 class Datacube(ABC):
-    def __init__(self, axis_options=None, compressed_axes_options=[]):
+    def __init__(self, axis_options=None, compressed_axes_options=[], grid_online_path="", grid_local_directory=""):
         if axis_options is None:
             self.axis_options = {}
         else:
@@ -32,6 +32,8 @@ class Datacube(ABC):
         self.unwanted_path = {}
         self.compressed_axes = compressed_axes_options
         self.grid_md5_hash = None
+        self.grid_online_path = grid_online_path
+        self.grid_local_directory = grid_local_directory
 
     @abstractmethod
     def get(self, requests: TensorIndexTree, context: Dict) -> Any:
@@ -68,6 +70,7 @@ class Datacube(ABC):
             for compressed_grid_axis in transformation.compressed_grid_axes:
                 self.compressed_grid_axes.append(compressed_grid_axis)
                 self.grid_md5_hash = transformation.md5_hash
+                self.grid_transformation = transformation
         if len(final_axis_names) > 1:
             self.coupled_axes.append(final_axis_names)
             for axis in final_axis_names:
@@ -152,20 +155,44 @@ class Datacube(ABC):
         return path
 
     @staticmethod
-    def create(datacube, config={}, axis_options={}, compressed_axes_options=[], alternative_axes=[], context=None):
+    def create(
+        datacube,
+        config={},
+        axis_options={},
+        compressed_axes_options=[],
+        alternative_axes=[],
+        grid_online_path="",
+        grid_local_directory="",
+        context=None,
+    ):
         # TODO: get the configs as None for pre-determined value and change them to empty dictionary inside the function
         if type(datacube).__name__ == "DataArray":
             from .xarray import XArrayDatacube
 
-            xadatacube = XArrayDatacube(datacube, axis_options, compressed_axes_options, context)
+            xadatacube = XArrayDatacube(
+                datacube, axis_options, compressed_axes_options, context, grid_online_path, grid_local_directory
+            )
             return xadatacube
         if type(datacube).__name__ == "GribJump":
             from .fdb import FDBDatacube
 
             fdbdatacube = FDBDatacube(
-                datacube, config, axis_options, compressed_axes_options, alternative_axes, context
+                datacube,
+                config,
+                axis_options,
+                compressed_axes_options,
+                alternative_axes,
+                context,
+                grid_online_path,
+                grid_local_directory,
             )
             return fdbdatacube
+        if type(datacube).__name__ == "MockDatacube":
+            return datacube
 
     def check_branching_axes(self, request):
+        pass
+
+    @abstractmethod
+    def find_point_cloud(self):
         pass

@@ -1,3 +1,4 @@
+import logging
 import os
 import pathlib
 import shutil
@@ -37,6 +38,12 @@ def downloaded_data_test_files(shared_temp_data_dir):
         ("https://sites.ecmwf.int/repository/polytope/test-data/t2m_jan_3_v2.grib", "t2m_jan_3_v2.grib"),
         ("https://sites.ecmwf.int/repository/polytope/test-data/wave_spectra.grib", "wave_spectra.grib"),
         ("https://sites.ecmwf.int/repository/polytope/test-data/era5-levels-members.grib", "era5-levels-members.grib"),
+        ("https://sites.ecmwf.int/repository/polytope/lambert_lam_one_message.grib", "lambert_lam_one_message.grib"),
+        (
+            "https://sites.ecmwf.int/repository/polytope/"
+            "icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2",
+            "icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2",
+        ),
     ]
 
     downloaded_paths = []
@@ -64,11 +71,12 @@ def fdb_path(request) -> pathlib.Path:
     return path
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def fdb_store_operational_setup(fdb_path, tmp_path_factory, downloaded_data_test_files) -> pathlib.Path:
     """
     Creates an operational FDB store for tests, loading downloaded test files.
     """
+
     tmp_dir = tmp_path_factory.mktemp("shared_path")
     db_store_path = tmp_dir / "db_store"
     db_store_path.mkdir(exist_ok=True)
@@ -91,6 +99,10 @@ def fdb_store_operational_setup(fdb_path, tmp_path_factory, downloaded_data_test
     config_path = tmp_dir / "config.yaml"
     config_path.write_text(yaml.dump(config))
     shutil.copy(fdb_path / "schema", schema_path)
+
+    with open(schema_path, "r") as f:
+        print(f.read())
+        logging.info(f.read())
 
     os.environ["FDB5_CONFIG_FILE"] = str(config_path)
 

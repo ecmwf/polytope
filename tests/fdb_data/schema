@@ -47,3 +47,9 @@ number:     Integer;
        [ type, levtype
                [ step, number?, levelist?, param ]]
 ]
+
+# Lambert 
+[ date, time
+       [levtype
+               [ step, param, frequency?, direction?]]
+]

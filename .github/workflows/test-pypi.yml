@@ -1,0 +1,31 @@
+
+name: test-cd
+
+on:
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  pypi_binwheels:
+    uses: ecmwf/reusable-workflows/.github/workflows/cd-pypi-binwheel.yml@v2
+    secrets: inherit
+    with:
+      platforms: "['ubuntu-latest','macos-latest']"
+      pyversions: "['38','39','310','311','312']"
+      testpypi: true
+      env_vars: |
+        {
+          "USE_RUST": "1",
+          "SETUPTOOLS_RUST_CARGO_PROFILE": "release"
+        }
+  pypi_purepython:
+    needs: pypi_binwheels
+    uses: ecmwf/reusable-workflows/.github/workflows/cd-pypi.yml@v2
+    secrets: inherit
+    with:
+      testpypi: true
+      env_vars: |
+        {
+          "USE_RUST": "0",
+          "SETUPTOOLS_RUST_CARGO_PROFILE": "release"
+        }

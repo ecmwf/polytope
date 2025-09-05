@@ -9,8 +9,17 @@ from .datacube import Datacube
 class XArrayDatacube(Datacube):
     """Xarray arrays are labelled, axes can be defined as strings or integers (e.g. "time" or 0)."""
 
-    def __init__(self, dataarray: xr.DataArray, axis_options=None, compressed_axes_options=[], context=None):
-        super().__init__(axis_options, compressed_axes_options)
+    def __init__(
+        self,
+        dataarray: xr.DataArray,
+        axis_options=None,
+        compressed_axes_options=[],
+        context=None,
+        grid_online_path="",
+        grid_local_directory="",
+    ):
+        super().__init__(axis_options, compressed_axes_options, grid_online_path, grid_local_directory)
+
         if axis_options is None:
             axis_options = {}
         self.axis_options = axis_options
@@ -50,9 +59,12 @@ class XArrayDatacube(Datacube):
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
 
+    def find_point_cloud(self):
+        # find the point cloud of irregular grid if it exists
+        if self.grid_transformation.is_irregular:
+            return self.grid_transformation._final_transformation.grid_latlon_points()
+
     def get(self, requests, context=None, leaf_path=None, axis_counter=0):
-        if context is None:
-            context = {}
         if leaf_path is None:
             leaf_path = {}
         if requests.axis.name == "root":
@@ -68,6 +80,8 @@ class XArrayDatacube(Datacube):
             if len(requests.children) != 0:
                 # We are not a leaf and we loop over
                 for c in requests.children:
+                    if axis_counter == self.axis_counter - 1:
+                        leaf_path["index"] = c.indexes
                     self.get(c, context, leaf_path, axis_counter + 1)
             else:
                 if self.axis_counter != axis_counter:
@@ -78,7 +92,8 @@ class XArrayDatacube(Datacube):
                     unmapped_path = {}
                     self.refit_path(leaf_path_copy, unmapped_path, leaf_path)
                     for key in leaf_path_copy:
-                        leaf_path_copy[key] = list(leaf_path_copy[key])
+                        if isinstance(leaf_path_copy[key], tuple):
+                            leaf_path_copy[key] = list(leaf_path_copy[key])
                     for key in unmapped_path:
                         if isinstance(unmapped_path[key], tuple):
                             unmapped_path[key] = list(unmapped_path[key])
@@ -108,9 +123,9 @@ class XArrayDatacube(Datacube):
         for key in path.keys():
             if key not in self.dataarray.dims:
                 path_copy.pop(key)
-            if key not in self.dataarray.coords.dtypes:
+            elif key not in self.dataarray.coords.dtypes:
                 unmapped_path.update({key: path[key]})
-                path_copy.pop(key)
+                path_copy.pop(key, None)
             for key in self.dataarray.coords.dtypes:
                 key_dtype = self.dataarray.coords.dtypes[key]
                 if key_dtype.type is np.str_ and key in path.keys():

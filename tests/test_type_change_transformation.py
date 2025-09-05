@@ -6,7 +6,6 @@ from polytope_feature.datacube.transformations.datacube_type_change.datacube_typ
     TypeChangeSubHourlyTimeSteps,
     TypeChangeSubHourlyTimeStepsCompact,
 )
-from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Select
 
@@ -26,8 +25,7 @@ class TestIntTypeChangeTransformation:
             "axis_config": [{"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]}],
             "compressed_axes_config": ["step"],
         }
-        self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
+        self.API = Polytope(datacube=array, options=options)
 
     def test_int_type_change_axis(self):
         request = Request(Select("step", [0]))
