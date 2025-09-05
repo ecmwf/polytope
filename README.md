@@ -6,7 +6,7 @@
 </h3>
 
 <p align="center">
-  <a href="https://github.com/ecmwf/polytope/actions/workflows/ci.yaml">
+  <a href="https://github.com/ecmwf/polytope/actions/workflows/downstream-ci.yml">
   <img src="https://github.com/ecmwf/polytope/actions/workflows/ci.yaml/badge.svg" alt="ci">
 </a>
   <a href="https://codecov.io/gh/ecmwf/polytope"><img src="https://codecov.io/gh/ecmwf/polytope/branch/develop/graph/badge.svg"></a>
