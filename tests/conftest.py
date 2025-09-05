@@ -99,6 +99,9 @@ def fdb_store_operational_setup(fdb_path, tmp_path_factory, downloaded_data_test
     config_path.write_text(yaml.dump(config))
     shutil.copy(fdb_path / "schema", schema_path)
 
+    with open(schema_path, "r") as f:
+        print(f.read())
+
     os.environ["FDB5_CONFIG_FILE"] = str(config_path)
 
     fdb = pyfdb.FDB()

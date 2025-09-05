@@ -8,7 +8,6 @@ grid:       Grid;
 expver:     Expver;
 time:       Time;
 number:     Integer;
-timespan:   Integer;
 
 ########################################################
 # The are the rules matching most of the fields
@@ -52,5 +51,5 @@ timespan:   Integer;
 # Lambert 
 [ date, time
        [levtype
-               [ step, param, frequency?, direction?, timespan? ]]
+               [ step, param, frequency?, direction?]]
 ]
