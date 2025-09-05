@@ -1,6 +1,5 @@
 # import matplotlib.pyplot as plt
 import pandas as pd
-import pytest
 from earthkit import data
 from helper_functions import download_test_data
 
@@ -18,7 +17,12 @@ class TestQuadTreeSlicer:
             "longitude": "quadtree",
         }
 
-        ds = data.from_source("file", "../../Downloads/icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2")
+        nexus_url = (
+            "https://sites.ecmwf.int/repository/polytope/icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2"
+        )
+        download_test_data(nexus_url, "icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2")
+
+        ds = data.from_source("file", "tests/data/icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2")
 
         self.arr = ds.to_xarray(engine="cfgrib").t2m
 
@@ -51,7 +55,6 @@ class TestQuadTreeSlicer:
             ],
         }
 
-    @pytest.mark.fdb
     def test_quad_tree_slicer_extract(self):
         import datetime
 

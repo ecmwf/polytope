@@ -1,13 +1,9 @@
-# import os
-
 # import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
-
-# os.environ["FDB_HOME"] = "/Users/male/git/fdb-new-home"
 
 
 class TestQuadTreeSlicer:
@@ -58,7 +54,7 @@ class TestQuadTreeSlicer:
             Select("step", [0]),
             Select("param", ["167"]),
             Select("levtype", ["sfc"]),
-            Box(["latitude", "longitude"], [0, 0], [80, 80]),
+            Box(["latitude", "longitude"], [0, 0], [10, 10]),
         )
 
         self.fdbdatacube = gj.GribJump()
@@ -71,7 +67,7 @@ class TestQuadTreeSlicer:
 
         result = self.API.retrieve(request)
 
-        assert len(result.leaves) == 321304
+        assert len(result.leaves) == 6882
         result.pprint()
 
         lats = []
@@ -88,7 +84,7 @@ class TestQuadTreeSlicer:
             lons.append(lon)
 
             # nearest_points = find_nearest_latlon(
-            #     "../../Downloads/icon-d2_germany_icosahedral_single-level_2025011000_024_2d_t_2m.grib2", lat, lon)
+            #     "tests/data/icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2", lat, lon)
             # eccodes_lat = nearest_points[0][0]["lat"]
             # eccodes_lon = nearest_points[0][0]["lon"] - 360
             # eccodes_lats.append(eccodes_lat)
