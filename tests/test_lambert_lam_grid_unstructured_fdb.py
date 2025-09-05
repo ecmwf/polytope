@@ -3,7 +3,6 @@ import math
 # import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
-from earthkit import data
 from helper_functions import find_nearest_latlon
 
 from polytope_feature.polytope import Polytope, Request
@@ -25,9 +24,6 @@ class TestQuadTreeSlicer:
             "latitude": "quadtree",
             "longitude": "quadtree",
         }
-
-        ds = data.from_source("file", "tests/data/lambert_lam_one_message.grib")
-        self.arr = ds.to_xarray(engine="cfgrib").t
 
         self.options = {
             "axis_config": [
@@ -67,7 +63,6 @@ class TestQuadTreeSlicer:
         }
 
     @pytest.mark.fdb
-    @pytest.mark.non_stored_data
     def test_quad_tree_slicer_extract(self):
         import pygribjump as gj
 
@@ -81,18 +76,11 @@ class TestQuadTreeSlicer:
 
         self.fdbdatacube = gj.GribJump()
 
-        import time
-
-        time1 = time.time()
-
         self.API = Polytope(
             datacube=self.fdbdatacube,
             options=self.options,
             engine_options=self.engine_options,
         )
-
-        print("TIME TAKEN TO EXTRACT")
-        print(time.time() - time1)
 
         result = self.API.retrieve(request)
         assert len(result.leaves) == 440

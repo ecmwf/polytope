@@ -50,7 +50,6 @@ class TestQuadTreeSlicer:
         }
 
     @pytest.mark.fdb
-    @pytest.mark.non_stored_data
     def test_quad_tree_slicer_extract(self):
         import pygribjump as gj
 
@@ -70,13 +69,8 @@ class TestQuadTreeSlicer:
             engine_options=self.engine_options,
         )
 
-        import time
-
-        time1 = time.time()
-
         result = self.API.retrieve(request)
 
-        print(time.time() - time1)
         assert len(result.leaves) == 321304
         result.pprint()
 
@@ -93,9 +87,6 @@ class TestQuadTreeSlicer:
             lats.append(lat)
             lons.append(lon)
 
-            # # each variable in the netcdf file is a cube
-            # # cubes = iris.load('../../Downloads/votemper_ORAS5_1m_197902_grid_T_02.nc')
-            # # iris.save(cubes, '../../Downloads/votemper_ORAS5_1m_197902_grid_T_02.grib2')
             # nearest_points = find_nearest_latlon(
             #     "../../Downloads/icon-d2_germany_icosahedral_single-level_2025011000_024_2d_t_2m.grib2", lat, lon)
             # eccodes_lat = nearest_points[0][0]["lat"]

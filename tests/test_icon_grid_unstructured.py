@@ -1,10 +1,8 @@
-import math
-
 # import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
-import xarray as xr
 from earthkit import data
+from helper_functions import download_test_data
 
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
@@ -22,13 +20,19 @@ class TestQuadTreeSlicer:
 
         ds = data.from_source("file", "../../Downloads/icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2")
 
-        grid_file_name = "../../Downloads/icon_extpar_0026_R03B07_G_20231113_tiles.nc"
-        grid = xr.open_dataset(grid_file_name, engine="netcdf4")
-
         self.arr = ds.to_xarray(engine="cfgrib").t2m
 
-        self.longitudes = grid.clon.values * 180 / math.pi
-        self.latitudes = grid.clat.values * 180 / math.pi
+        nexus_url = "https://sites.ecmwf.int/repository/polytope/icon_lons.txt"
+        download_test_data(nexus_url, "icon_lons.txt")
+        nexus_url = "https://sites.ecmwf.int/repository/polytope/icon_lats.txt"
+        download_test_data(nexus_url, "icon_lats.txt")
+
+        import json
+
+        with open("icon_lons.txt", "r") as f:
+            self.longitudes = json.load(f)
+        with open("icon_lats.txt", "r") as f:
+            self.latitudes = json.load(f)
 
         self.points = list(zip(self.latitudes, self.longitudes))
         self.options = {
@@ -39,7 +43,6 @@ class TestQuadTreeSlicer:
                         {
                             "name": "mapper",
                             "type": "unstructured",
-                            "resolution": 1280,
                             "axes": ["latitude", "longitude"],
                             "points": self.points,
                         }
@@ -66,7 +69,7 @@ class TestQuadTreeSlicer:
         )
 
         result = self.API.retrieve(request)
-        print(len(result.leaves))
+        assert len(result.leaves) == 69
         result.pprint()
 
         lats = []
@@ -82,9 +85,6 @@ class TestQuadTreeSlicer:
             lats.append(lat)
             lons.append(lon)
 
-            # # each variable in the netcdf file is a cube
-            # # cubes = iris.load('../../Downloads/votemper_ORAS5_1m_197902_grid_T_02.nc')
-            # # iris.save(cubes, '../../Downloads/votemper_ORAS5_1m_197902_grid_T_02.grib2')
             # nearest_points = find_nearest_latlon(
             #     "../../Downloads/icon-d2_germany_icosahedral_single-level_2025011000_024_2d_t_2m.grib2", lat, lon)
             # eccodes_lat = nearest_points[0][0]["lat"]

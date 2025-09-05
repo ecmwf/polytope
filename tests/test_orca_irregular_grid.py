@@ -37,7 +37,6 @@ class TestQuadTreeSlicer:
                         {
                             "name": "mapper",
                             "type": "unstructured",
-                            "resolution": 1280,
                             "axes": ["latitude", "longitude"],
                             "points": self.points,
                         }
