@@ -33,9 +33,9 @@ class TestQuadTreeSlicer:
 
         import json
 
-        with open("icon_lons.txt", "r") as f:
+        with open("tests/data/icon_lons.txt", "r") as f:
             self.longitudes = json.load(f)
-        with open("icon_lats.txt", "r") as f:
+        with open("tests/data/icon_lats.txt", "r") as f:
             self.latitudes = json.load(f)
 
         self.points = list(zip(self.latitudes, self.longitudes))
@@ -89,7 +89,7 @@ class TestQuadTreeSlicer:
             lons.append(lon)
 
             # nearest_points = find_nearest_latlon(
-            #     "../../Downloads/icon-d2_germany_icosahedral_single-level_2025011000_024_2d_t_2m.grib2", lat, lon)
+            #     "ictests/data/icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2", lat, lon)
             # eccodes_lat = nearest_points[0][0]["lat"]
             # eccodes_lon = nearest_points[0][0]["lon"] - 360
             # eccodes_lats.append(eccodes_lat)
