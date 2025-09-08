@@ -67,8 +67,9 @@ class TestQuadTreeSlicer:
         eccodes_lats = []
         eccodes_lons = []
         tol = 1e-8
-        for i in range(len(result.leaves)):
-            cubepath = result.leaves[i].flatten()
+        leaves = result.leaves
+        for i in range(len(leaves)):
+            cubepath = leaves[i].flatten()
             lat = cubepath["latitude"][0]
             lon = cubepath["longitude"][0] - 360
             lats.append(lat)
