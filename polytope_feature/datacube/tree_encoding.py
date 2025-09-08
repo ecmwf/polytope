@@ -33,12 +33,12 @@ def encode_child(tree: TensorIndexTree, child: TensorIndexTree, node, result_siz
     child_node = pb2.Node()
 
     new_result_size = deepcopy(result_size)
-    # new_result_size = result_size
     new_result_size.append(len(child.values))
 
     if child.hidden:
         # add indexes to parent and add also indexes size...
-        node.indexes.extend(tree.indexes)
+        for tree_indexes in tree.indexes:
+            node.indexes.extend(tree_indexes)
         break_tag = False
         return break_tag
 

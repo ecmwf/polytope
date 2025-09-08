@@ -40,7 +40,6 @@ class TestSlicingFDBDatacube:
             "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "type": "fc", "stream": "oper"},
         }
 
-    # Testing different shapes
     @pytest.mark.fdb
     def test_fdb_datacube(self):
         import pygribjump as gj
@@ -48,7 +47,7 @@ class TestSlicingFDBDatacube:
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
-            Select("date", [pd.Timestamp("20231102T000000")]),
+            Select("date", [pd.Timestamp("20240103T0000")]),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
             Select("param", ["167"]),

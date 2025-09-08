@@ -9,7 +9,7 @@ from polytope_feature.shapes import Point, Select
 
 class TestRegularGrid:
     def setup_method(self, method):
-        nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/era5-levels-members.grib"
+        nexus_url = "https://sites.ecmwf.int/repository/polytope/test-data/era5-levels-members.grib"
         download_test_data(nexus_url, "era5-levels-members.grib")
         self.options = {
             "axis_config": [
@@ -68,13 +68,13 @@ class TestRegularGrid:
 
     @pytest.mark.fdb
     @pytest.mark.internet
-    def test_regular_grid(self):
+    def test_regular_grid(self, fdb_store_operational_setup):
         import pygribjump as gj
 
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
-            Select("date", [pd.Timestamp("20231102T000000")]),
+            Select("date", [pd.Timestamp("20240103T0000")]),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
             Select("param", ["167"]),
@@ -96,7 +96,7 @@ class TestRegularGrid:
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
-            Select("date", [pd.Timestamp("20231102T000000")]),
+            Select("date", [pd.Timestamp("20240103T0000")]),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
             Select("param", ["167"]),

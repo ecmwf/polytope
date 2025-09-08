@@ -11,7 +11,7 @@ from polytope_feature.shapes import Disk, Select
 
 class TestRegularGrid:
     def setup_method(self, method):
-        nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/era5-levels-members.grib"
+        nexus_url = "https://sites.ecmwf.int/repository/polytope/test-data/era5-levels-members.grib"
         download_test_data(nexus_url, "era5-levels-members.grib")
         self.options = {
             "axis_config": [
@@ -113,7 +113,7 @@ class TestRegularGrid:
             eccodes_lats.append(eccodes_lat)
 
             mapper = RegularGridMapper("base", ["base1", "base2"], 30)
-            assert nearest_points[121][0]["index"] == mapper.unmap((lat,), (lon,))
+            assert nearest_points[121][0]["index"] == mapper.unmap((lat,), (lon,))[0]
 
             assert eccodes_lat - tol <= lat
             assert lat <= eccodes_lat + tol

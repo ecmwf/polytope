@@ -111,6 +111,7 @@ class TensorIndexTree(object):
     def create_child(self, axis, value, next_nodes):
         # TODO: what if we remove the next nodes here?
         node = TensorIndexTree(axis, (value,))
+        # TODO: do we really need to find the child now in the compressed tree since we will have duplicates anyway?
         existing_child = self.find_child(node)
         if not existing_child:
             self.add_child(node)

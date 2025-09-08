@@ -102,6 +102,6 @@ class TestMapper:
         base_axis = "base"
         resolution = 1280
         octahedral_mapper = OctahedralGridMapper(base_axis, mapped_axes, resolution)
-        assert octahedral_mapper.unmap((89.94618771566562,), (0,)) == 0
-        assert octahedral_mapper.unmap((0.035149384215604956,), (0,)) == 3299840 - 5136
-        assert octahedral_mapper.unmap((-0.035149384215604956,), (0,)) == 3299840
+        assert octahedral_mapper.unmap((89.94618771566562,), (0,))[0] == 0
+        assert octahedral_mapper.unmap((0.035149384215604956,), (0,))[0] == 3299840 - 5136
+        assert octahedral_mapper.unmap((-0.035149384215604956,), (0,))[0] == 3299840

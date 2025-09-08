@@ -1,4 +1,4 @@
-from copy import deepcopy
+from copy import copy, deepcopy
 
 import numpy as np
 import xarray as xr
@@ -14,17 +14,18 @@ class XArrayDatacube(Datacube):
         dataarray: xr.DataArray,
         axis_options=None,
         compressed_axes_options=[],
-        point_cloud_options=None,
         context=None,
+        grid_online_path="",
+        grid_local_directory="",
     ):
-        super().__init__(axis_options, compressed_axes_options)
+        super().__init__(axis_options, compressed_axes_options, grid_online_path, grid_local_directory)
+
         if axis_options is None:
             axis_options = {}
         self.axis_options = axis_options
         self.axis_counter = 0
         self._axes = None
         self.dataarray = dataarray
-        self.has_point_cloud = point_cloud_options
 
         for name, values in dataarray.coords.variables.items():
             options = None
@@ -59,9 +60,9 @@ class XArrayDatacube(Datacube):
                 self._check_and_add_axes(options, name, val)
 
     def find_point_cloud(self):
-        # TODO: somehow, find the point cloud of irregular grid if it exists
-        if self.has_point_cloud:
-            return self.has_point_cloud
+        # find the point cloud of irregular grid if it exists
+        if self.grid_transformation.is_irregular:
+            return self.grid_transformation._final_transformation.grid_latlon_points()
 
     def get(self, requests, context=None, leaf_path=None, axis_counter=0):
         if leaf_path is None:
@@ -132,15 +133,16 @@ class XArrayDatacube(Datacube):
                     path_copy.pop(key, None)
 
     def select(self, path, unmapped_path):
-        for key in path:
-            key_value = path[key][0]
-            path[key] = key_value
+        path_copy = copy(path)
+        for key in path_copy:
+            key_value = path_copy[key][0]
+            path_copy[key] = key_value
         for key in unmapped_path:
             key_value = unmapped_path[key][0]
             unmapped_path[key] = key_value
-        path_copy = deepcopy(path)
-        self.refit_path(path_copy, unmapped_path, path)
-        subarray = self.dataarray.sel(path_copy, method="nearest")
+        path_second_copy = deepcopy(path_copy)
+        self.refit_path(path_second_copy, unmapped_path, path_copy)
+        subarray = self.dataarray.sel(path_second_copy, method="nearest")
         subarray = subarray.sel(unmapped_path)
         return subarray
 
