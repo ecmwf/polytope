@@ -121,7 +121,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
         else:
             return sum1 + (2 * res + 1) * (4 * res) + sum2 + second_idx
 
-    def unmap(self, first_val, second_vals):
+    def unmap(self, first_val, second_vals, unmapped_idx=None):
         if use_rust:
             # tol = 1e-8
             # first_idx = next(

@@ -7900,7 +7900,7 @@ class OctahedralGridMapper(DatacubeMapper):
             second_idx = int(second_val / second_axis_spacing)
         return (first_idx, second_idx)
 
-    def unmap(self, first_val, second_vals):
+    def unmap(self, first_val, second_vals, unmapped_idx=None):
         if use_rust:
             return unmap_octahedral(self._resolution, first_val, second_vals)
         else:
