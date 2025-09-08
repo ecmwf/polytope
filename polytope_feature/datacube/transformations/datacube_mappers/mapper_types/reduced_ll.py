@@ -4,11 +4,14 @@ from ..datacube_mappers import DatacubeMapper
 
 
 class ReducedLatLonMapper(DatacubeMapper):
-    def __init__(self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None):
+    def __init__(
+        self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None, mapper_options=None
+    ):
         # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
         self._resolution = resolution
+        self.is_irregular = False
         self._axis_reversed = {mapped_axes[0]: False, mapped_axes[1]: False}
         self._first_axis_vals = self.first_axis_vals()
         self.compressed_grid_axes = [self._mapped_axes[1]]
@@ -5114,7 +5117,7 @@ class ReducedLatLonMapper(DatacubeMapper):
         second_idx = bisect.bisect_left(second_axis_vals, second_val - tol)
         return second_idx
 
-    def unmap(self, first_val, second_vals):
+    def unmap(self, first_val, second_vals, unmapped_idx=None):
         tol = 1e-8
         first_value = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
         first_idx = self._first_axis_vals.index(first_value)
@@ -5128,4 +5131,4 @@ class ReducedLatLonMapper(DatacubeMapper):
 
 
 # md5 grid hash in form {resolution : hash}
-_md5_hash = {3601: "386742a2dd1201b67f2d19ed421353ea"}
+_md5_hash = {3601: "225e56fb2fdee272ca226dc265d08a0a"}

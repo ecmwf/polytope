@@ -4,9 +4,6 @@ from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.polytope import Polytope
 from polytope_feature.utility.exceptions import BadRequestError
 
-# import geopandas as gpd
-# import matplotlib.pyplot as plt
-
 
 class TestSlicingFDBDatacube:
     def setup_method(self, method):
@@ -50,7 +47,6 @@ class TestSlicingFDBDatacube:
             },
         }
 
-    # Testing different shapes
     @pytest.mark.fdb
     def test_fdb_datacube(self):
         import pygribjump as gj
@@ -60,6 +56,5 @@ class TestSlicingFDBDatacube:
             self.slicer = HullSlicer()
             self.API = Polytope(
                 datacube=self.fdbdatacube,
-                engine=self.slicer,
                 options=self.options,
             )

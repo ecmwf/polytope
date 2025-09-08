@@ -1,8 +1,99 @@
+[build-system]
+requires = ["setuptools>=65", "setuptools-rust", "setuptools_scm[toml]>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "polytope-python"
+requires-python = ">3.8"
+authors = [
+    { name = "European Centre for Medium-Range Weather Forecasts (ECMWF)", email = "software.support@ecmwf.int" }
+    ]
+maintainers = [
+    { name = "James Hawkes", email="James.Hawkes@ecmwf.int"},
+    { name = "Mathilde Leuridan", email="Mathilde.Leuridan@ecmwf.int"}
+]
+description = "Polytope datacube feature extraction library"
+license = { text = "Apache License Version 2.0" }
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering"
+    ]
+dynamic = ["version", "readme"]
+
+dependencies = [
+    "numpy==1.26.4",
+    "pandas",
+    "scipy",
+    "sortedcontainers",
+    "tripy",
+    "xarray",
+    "conflator",
+    "protobuf"
+]
+
+[project.optional-dependencies]
+    tests = [
+        "pytest",
+        "pytest-cov",
+        "cffi",
+        "eccodes",
+        "h5netcdf",
+        "h5py",
+        "earthkit-data",
+        "matplotlib",
+        "pyfdb"
+        ]
+
+[project.urls]
+    repository = "https://github.com/ecmwf/polytope"
+    documentation = "https://polytope.readthedocs.io/en/latest/"
+    issues = "https://github.com/ecmwf/polytope/issues"
+
+# Packaging/setuptools options
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = [ "polytope_feature" ]
+where = [ "./" ]
+
+[tool.setuptools_scm]
+version_file = "polytope_feature/_version.py"
+version_file_template = '''# Do not change! Do not track in version control!
+__version__ = "{version}"
+'''
+parentdir_prefix_version='polytope-'  # get version from GitHub-like tarballs
+fallback_version='0.1.0'
+local_scheme = "no-local-version"
+
 [tool.black]
 line-length = 120
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+readme = {file = ["README.md"], content-type = "text/markdown"}
+
 [tool.pytest.ini_options]
 markers = ["internet: downloads test data from the internet (deselect with '-m \"not internet\"')",
-           "fdb: test which uses fdb (deselect with '-m \"not fdb\"')",]
+           "fdb: test which uses fdb (deselect with '-m \"not fdb\"')",
+           "non_stored_data: test which uses special data not stored in test fdb (deselect with '-m \"not non_stored_data\"')",]
+log_cli_level = "INFO"
+
+# takes inspiration from https://github.com/pypa/cibuildwheel/discussions/1814
+[tool.cibuildwheel]
+skip = ["*musl*", "*-win_arm64"] # ignore some problematic platforms
+linux.before-all = "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal"
+linux.environment = { PATH="$HOME/.cargo/bin:$PATH" }
+macos.before-all = "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal"
+windows.before-all = "rustup target add aarch64-pc-windows-msvc i686-pc-windows-msvc x86_64-pc-windows-msvc"
+windows.archs = "all"

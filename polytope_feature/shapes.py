@@ -31,6 +31,7 @@ class ConvexPolytope(Shape):
         self.is_flat = False
         if len(self._axes) == 1 and len(points) == 1:
             self.is_flat = True
+            self.values = points
         self.points = points
         self.method = method
         self.is_orthogonal = is_orthogonal

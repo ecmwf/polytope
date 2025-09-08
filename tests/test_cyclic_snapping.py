@@ -21,9 +21,7 @@ class TestSlicing3DXarrayDatacube:
             "compressed_axes_config": ["long"],
         }
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
-
-    # Testing different shapes
+        self.API = Polytope(datacube=array, options=options)
 
     def test_cyclic_float_axis_across_seam(self):
         request = Request(Select("long", [-0.2], method="surrounding"))

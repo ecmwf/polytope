@@ -1,7 +1,6 @@
 import pandas as pd
 import pytest
 
-from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Point, Select, Union
 
@@ -42,7 +41,6 @@ class TestSlicingFDBDatacube:
             ],
         }
 
-    # Testing different shapes
     @pytest.mark.fdb
     @pytest.mark.skip(reason="point and box are not same dimensions")
     def test_fdb_datacube(self):
@@ -64,9 +62,7 @@ class TestSlicingFDBDatacube:
             Union(["latitude", "longitude"], box, point),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
-            request=request,
             datacube=self.fdbdatacube,
             engine=self.slicer,
             options=self.options,

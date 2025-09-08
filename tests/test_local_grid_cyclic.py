@@ -1,7 +1,6 @@
 import pandas as pd
 import pytest
 
-from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Point, Select
 
@@ -50,7 +49,6 @@ class TestSlicingFDBDatacube:
             ],
         }
 
-    # Testing different shapes
     @pytest.mark.fdb
     def test_fdb_datacube(self):
         import pygribjump as gj
@@ -68,10 +66,8 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[-20, -20]]),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -97,10 +93,8 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[-20, 50 + 360]]),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
