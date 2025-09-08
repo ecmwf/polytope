@@ -145,7 +145,7 @@ class Datacube(ABC):
         """
         ax = self._axes.get(axis, None)
         if ax is None:
-            raise KeyError("The datacube does not contain a {} axis", axis)
+            raise KeyError(f"The datacube does not contain a {axis} axis")
         return ax
 
     def remap_path(self, path: DatacubePath):
