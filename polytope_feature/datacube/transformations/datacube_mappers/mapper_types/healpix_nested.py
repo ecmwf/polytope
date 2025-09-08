@@ -18,11 +18,14 @@ except (ModuleNotFoundError, ImportError):
 
 
 class NestedHealpixGridMapper(DatacubeMapper):
-    def __init__(self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None):
+    def __init__(
+        self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None, mapper_options=None
+    ):
         # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
         self._resolution = resolution
+        self.is_irregular = False
         self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
         self._first_axis_vals = self.first_axis_vals()
         self._first_axis_vals_np_rounded = -np.round(np.array(self._first_axis_vals), decimals=8)

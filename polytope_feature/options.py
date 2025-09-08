@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Dict, List, Literal, Optional, Union
+from typing import Dict, List, Literal, Optional, Tuple, Union
 
 from conflator import ConfigModel
 from pydantic import ConfigDict
@@ -18,11 +18,30 @@ class CyclicConfig(TransformationConfig):
 class MapperConfig(TransformationConfig):
     name: Literal["mapper"]
     type: str = ""
-    resolution: Union[int, List[int]] = 0
+    resolution: Optional[Union[int, List[int]]] = 0
     axes: List[str] = [""]
     md5_hash: Optional[str] = None
     local: Optional[List[float]] = None
     axis_reversed: Optional[Dict[str, bool]] = None
+    is_spherical: Optional[bool] = None
+    radius: Optional[float] = None
+    earthMinorAxisInMetres: Optional[float] = None
+    earthMajorAxisInMetres: Optional[float] = None
+    nv: Optional[int] = None
+    nx: Optional[int] = None
+    ny: Optional[int] = None
+    LoVInDegrees: Optional[float] = None
+    Dx: Optional[float] = None
+    Dy: Optional[float] = None
+    latFirstInRadians: Optional[float] = None
+    lonFirstInRadians: Optional[float] = None
+    LoVInRadians: Optional[float] = None
+    Latin1InRadians: Optional[float] = None
+    Latin2InRadians: Optional[float] = None
+    LaDInRadians: Optional[float] = None
+    # points: Optional[List[List[float]]] = None
+    points: Optional[List[Tuple[float, float]]] = None
+    uuid: Optional[str] = None
 
 
 class ReverseConfig(TransformationConfig):
@@ -61,7 +80,9 @@ class Config(ConfigModel):
     axis_config: List[AxisConfig] = []
     compressed_axes_config: List[str] = [""]
     pre_path: Optional[Dict[str, path_subclasses_union]] = {}
-    alternative_axes: List[GribJumpAxesConfig] = []
+    alternative_axes: Optional[List[GribJumpAxesConfig]] = []
+    grid_online_path: Optional[str] = ""
+    grid_local_directory: Optional[str] = ""
 
 
 class PolytopeOptions(ABC):
@@ -73,5 +94,7 @@ class PolytopeOptions(ABC):
         compressed_axes_config = config_options.compressed_axes_config
         pre_path = config_options.pre_path
         alternative_axes = config_options.alternative_axes
+        grid_online_path = config_options.grid_online_path
+        grid_local_directory = config_options.grid_local_directory
 
-        return (axis_config, compressed_axes_config, pre_path, alternative_axes)
+        return (axis_config, compressed_axes_config, pre_path, alternative_axes, grid_online_path, grid_local_directory)

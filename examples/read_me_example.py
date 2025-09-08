@@ -1,8 +1,8 @@
 import numpy as np
 from earthkit import data
 
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, Select
 
 ds = data.from_source("file", "./examples/data/winds.grib")
 array = ds.to_xarray()

@@ -4,10 +4,10 @@ import numpy as np
 from earthkit import data
 from shapely.geometry import shape
 
-from polytope.datacube.backends.xarray import XArrayDatacube
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Polygon, Select, Union
+from polytope_feature.datacube.backends.xarray import XArrayDatacube
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Polygon, Select, Union
 
 
 class Test:

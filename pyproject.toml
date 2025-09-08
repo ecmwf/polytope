@@ -43,7 +43,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-    test = [
+    tests = [
         "pytest",
         "pytest-cov",
         "cffi",
@@ -52,6 +52,7 @@ dependencies = [
         "h5py",
         "earthkit-data",
         "matplotlib",
+        "pyfdb"
         ]
 
 [project.urls]
@@ -84,12 +85,15 @@ readme = {file = ["README.md"], content-type = "text/markdown"}
 
 [tool.pytest.ini_options]
 markers = ["internet: downloads test data from the internet (deselect with '-m \"not internet\"')",
-           "fdb: test which uses fdb (deselect with '-m \"not fdb\"')",]
+           "fdb: test which uses fdb (deselect with '-m \"not fdb\"')",
+           "non_stored_data: test which uses special data not stored in test fdb (deselect with '-m \"not non_stored_data\"')",]
 log_cli_level = "INFO"
 
 # takes inspiration from https://github.com/pypa/cibuildwheel/discussions/1814
 [tool.cibuildwheel]
-skip = ["*musl*", "*-manylinux_i686"]
+skip = ["*musl*", "*-win_arm64"] # ignore some problematic platforms
+linux.before-all = "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal"
+linux.environment = { PATH="$HOME/.cargo/bin:$PATH" }
 macos.before-all = "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal"
-windows.before-all = "rustup target add aarch64-pc-windows-msvc i586-pc-windows-msvc i686-pc-windows-msvc x86_64-pc-windows-msvc"
+windows.before-all = "rustup target add aarch64-pc-windows-msvc i686-pc-windows-msvc x86_64-pc-windows-msvc"
 windows.archs = "all"
