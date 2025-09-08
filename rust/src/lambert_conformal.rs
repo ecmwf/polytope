@@ -1,4 +1,4 @@
-use std::f64::consts::{PI, FRAC_PI_2};
+use std::f64::consts::{FRAC_PI_2, PI};
 
 use pyo3::prelude::*;
 
@@ -90,23 +90,30 @@ fn xy2lonlat(
 }
 
 #[pyfunction]
-pub fn get_latlons_sphere(latin1inradians: f64, latin2inradians: f64, radius: f64, latfirstinradians: f64, ladinradians: f64,
-lonfirstinradians: f64, lovinradians: f64, ny: i32, nx: i32, dy: f64, dx: f64) -> PyResult<Vec<[f64; 2]>> {
+pub fn get_latlons_sphere(
+    latin1inradians: f64,
+    latin2inradians: f64,
+    radius: f64,
+    latfirstinradians: f64,
+    ladinradians: f64,
+    lonfirstinradians: f64,
+    lovinradians: f64,
+    ny: i32,
+    nx: i32,
+    dy: f64,
+    dx: f64,
+) -> PyResult<Vec<[f64; 2]>> {
     let n = if (latin1inradians - latin2inradians).abs() < 1e-9 {
         latin1inradians.sin()
     } else {
         let num = (latin1inradians.cos() / latin2inradians.cos()).ln();
-         let denom = ((PI / 4.0 + latin2inradians / 2.0).tan()
+        let denom = ((PI / 4.0 + latin2inradians / 2.0).tan()
             / (PI / 4.0 + latin1inradians / 2.0).tan())
-            .ln();
+        .ln();
         num / denom
     };
-    let f = (latin1inradians.cos()
-        * (PI / 4.0 + latin1inradians / 2.0).tan().powf(n))
-        / n;
-    let rho = radius
-        * f
-        * (PI / 4.0 + latfirstinradians / 2.0).tan().powf(-n);
+    let f = (latin1inradians.cos() * (PI / 4.0 + latin1inradians / 2.0).tan().powf(n)) / n;
+    let rho = radius * f * (PI / 4.0 + latfirstinradians / 2.0).tan().powf(-n);
     let rho0_bare = f * (PI / 4.0 + ladinradians / 2.0).tan().powf(-n);
     let rho0 = radius * rho0_bare;
     let mut lon_diff = lonfirstinradians - lovinradians;
@@ -125,8 +132,7 @@ lonfirstinradians: f64, lovinradians: f64, ny: i32, nx: i32, dy: f64, dx: f64) -
         let y = y0 + (j as f64) * dy;
         for i in 0..nx {
             let x = x0 + (i as f64) * dx;
-            let (mut lon_deg, lat_deg) =
-                xy2lonlat(radius, n, f, rho0_bare, lovinradians, x, y);
+            let (mut lon_deg, lat_deg) = xy2lonlat(radius, n, f, rho0_bare, lovinradians, x, y);
             lon_deg = normalise_longitude_in_degrees(lon_deg);
             coords.push([lat_deg, lon_deg]);
         }
@@ -135,9 +141,20 @@ lonfirstinradians: f64, lovinradians: f64, ny: i32, nx: i32, dy: f64, dx: f64) -
 }
 
 #[pyfunction]
-pub fn get_latlons_oblate(latin1inradians: f64, latin2inradians: f64, earthminoraxisinmetres: f64, earthmajoraxisinmetres: f64,
-latfirstinradians: f64, ladinradians: f64,
-lonfirstinradians: f64, lovinradians: f64, ny: i32, nx: i32, dy: f64, dx: f64) -> Vec<[f64; 2]> {
+pub fn get_latlons_oblate(
+    latin1inradians: f64,
+    latin2inradians: f64,
+    earthminoraxisinmetres: f64,
+    earthmajoraxisinmetres: f64,
+    latfirstinradians: f64,
+    ladinradians: f64,
+    lonfirstinradians: f64,
+    lovinradians: f64,
+    ny: i32,
+    nx: i32,
+    dy: f64,
+    dx: f64,
+) -> Vec<[f64; 2]> {
     let e = calculate_eccentricity(earthminoraxisinmetres, earthmajoraxisinmetres);
     let mut sin_po = latin1inradians.sin();
     let mut cos_po = latin1inradians.cos();
@@ -205,5 +222,3 @@ lonfirstinradians: f64, lovinradians: f64, ny: i32, nx: i32, dy: f64, dx: f64) -
     }
     coords
 }
-
-
