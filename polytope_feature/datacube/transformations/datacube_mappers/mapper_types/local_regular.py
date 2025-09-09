@@ -10,6 +10,10 @@ class LocalRegularGridMapper(DatacubeMapper):
         # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
+
+        if local_area == [] or len(local_area) != 4:
+            raise TypeError("Local area grid region not or wrongly specified")
+
         self.is_irregular = False
         self._first_axis_min = local_area[0]
         self._first_axis_max = local_area[1]

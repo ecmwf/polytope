@@ -43,6 +43,9 @@ class NestedHealpixGridMapper(DatacubeMapper):
         if not self._axis_reversed[mapped_axes[0]]:
             raise NotImplementedError("Healpix grid with first axis in increasing order is not supported")
 
+        if local_area != []:
+            raise NotImplementedError("Local area grid not implemented for healpix grids")
+
     def first_axis_vals(self):
         if use_rust:
             vals = first_axis_vals_healpix_nested(self._resolution)

@@ -39,6 +39,9 @@ class OctahedralGridMapper(DatacubeMapper):
         else:
             self.md5_hash = _md5_hash.get(resolution, None)
 
+        if local_area != []:
+            raise NotImplementedError("Local area grid not implemented for octahedral grids")
+
     def gauss_first_guess(self):
         i = 0
         gvals = [

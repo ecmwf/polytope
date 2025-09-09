@@ -24,6 +24,9 @@ class ReducedLatLonMapper(DatacubeMapper):
         if self._axis_reversed[mapped_axes[0]]:
             raise NotImplementedError("Reduced lat-lon grid with first axis in decreasing order is not supported")
 
+        if local_area != []:
+            raise NotImplementedError("Local area grid not implemented for reduced latitude-longitude grids")
+
     def first_axis_vals(self):
         start_lat = 90
         if self._resolution == 3601:
