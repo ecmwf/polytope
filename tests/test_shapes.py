@@ -3,9 +3,8 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import All, Select, Span
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import All, Select, Span
 
 
 class TestSlicing3DXarrayDatacube:
@@ -25,10 +24,8 @@ class TestSlicing3DXarrayDatacube:
             "axis_config": [{"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]}],
             "compressed_axes_config": ["date", "step", "level", "longitude"],
         }
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=array,
-            engine=self.slicer,
             options=self.options,
         )
 
@@ -61,31 +58,35 @@ class TestSlicing3DXarrayDatacube:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                        {
+                            "name": "mapper",
+                            "type": "octahedral",
+                            "resolution": 1280,
+                            "axes": ["latitude", "longitude"],
+                        }
                     ],
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
                 {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
             ],
-            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
+            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "type": "fc", "stream": "oper"},
         }
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
 
         request = Request(
-            Select("step", [11]),
+            Select("step", [0]),
             Select("levtype", ["sfc"]),
-            Select("date", [pd.Timestamp("20230710T120000")]),
+            Select("date", [pd.Timestamp("20240103T0000")]),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
-            Select("param", ["151130"]),
+            Select("param", ["167"]),
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["fc"]),
             Span("latitude", 89.9, 90),
             All("longitude"),
         )
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, options=self.options)
+        self.API = Polytope(datacube=self.fdbdatacube, options=self.options)
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 1

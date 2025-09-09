@@ -3,10 +3,9 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from polytope.datacube.tensor_index_tree import TensorIndexTree
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import (
+from polytope_feature.datacube.tensor_index_tree import TensorIndexTree
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import (
     Box,
     Disk,
     Ellipsoid,
@@ -17,7 +16,10 @@ from polytope.shapes import (
     Span,
     Union,
 )
-from polytope.utility.exceptions import AxisOverdefinedError, AxisUnderdefinedError
+from polytope_feature.utility.exceptions import (
+    AxisOverdefinedError,
+    AxisUnderdefinedError,
+)
 
 
 class TestSlicing4DXarrayDatacube:
@@ -33,9 +35,8 @@ class TestSlicing4DXarrayDatacube:
                 "lat": np.around(np.arange(0.0, 10.0, 0.1), 15),
             },
         )
-        self.slicer = HullSlicer()
         options = {"compressed_axes_config": ["date", "step", "level", "lat"]}
-        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
+        self.API = Polytope(datacube=array, options=options)
 
     # Testing different shapes
 

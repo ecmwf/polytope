@@ -1,15 +1,15 @@
 import pytest
 
-from polytope.datacube.backends.mock import MockDatacube
-from polytope.datacube.datacube_axis import (
+from polytope_feature.datacube.backends.mock import MockDatacube
+from polytope_feature.datacube.datacube_axis import (
     FloatDatacubeAxis,
     IntDatacubeAxis,
     PandasTimedeltaDatacubeAxis,
     PandasTimestampDatacubeAxis,
     UnsliceableDatacubeAxis,
 )
-from polytope.datacube.tensor_index_tree import TensorIndexTree
-from polytope.datacube.tree_encoding import decode_tree, encode_tree
+from polytope_feature.datacube.tensor_index_tree import TensorIndexTree
+from polytope_feature.datacube.tree_encoding import decode_tree, encode_tree
 
 
 class TestEncoder:
@@ -49,17 +49,14 @@ class TestEncoder:
     def test_encoding(self):
         import pygribjump as gj
 
-        from polytope.engine.hullslicer import HullSlicer
-        from polytope.polytope import Polytope
+        from polytope_feature.polytope import Polytope
 
         self.options = {
             "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
         }
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         fdb_datacube = self.API.datacube

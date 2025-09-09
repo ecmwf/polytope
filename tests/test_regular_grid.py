@@ -2,9 +2,8 @@ import pandas as pd
 import pytest
 from helper_functions import download_test_data, find_nearest_latlon
 
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Disk, Select
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Disk, Select
 
 # import geopandas as gpd
 # import matplotlib.pyplot as plt
@@ -12,7 +11,7 @@ from polytope.shapes import Disk, Select
 
 class TestRegularGrid:
     def setup_method(self, method):
-        nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/era5-levels-members.grib"
+        nexus_url = "https://sites.ecmwf.int/repository/polytope/test-data/era5-levels-members.grib"
         download_test_data(nexus_url, "era5-levels-members.grib")
         self.options = {
             "axis_config": [
@@ -25,7 +24,14 @@ class TestRegularGrid:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "regular", "resolution": 30, "axes": ["latitude", "longitude"]}
+                        {
+                            "name": "mapper",
+                            "type": "regular",
+                            "resolution": 30,
+                            "axes": ["latitude", "longitude"],
+                            "axis_reversed": {"latitude": True, "longitude": False},
+                            "md5_hash": "15372eaafa9d744000df708d63f69284",
+                        }
                     ],
                 },
                 {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
@@ -69,10 +75,8 @@ class TestRegularGrid:
             Select("number", ["0", "1"]),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -85,7 +89,7 @@ class TestRegularGrid:
         assert len(result.leaves[1].values) == 3
         assert len(result.leaves[2].values) == 1
 
-        from polytope.datacube.transformations.datacube_mappers.mapper_types.regular import (
+        from polytope_feature.datacube.transformations.datacube_mappers.mapper_types.regular import (
             RegularGridMapper,
         )
 
@@ -108,8 +112,8 @@ class TestRegularGrid:
             eccodes_value = nearest_points[121][0]["value"]
             eccodes_lats.append(eccodes_lat)
 
-            mapper = RegularGridMapper("base", ["base", "base"], 30)
-            assert nearest_points[121][0]["index"] == mapper.unmap((lat,), (lon,))
+            mapper = RegularGridMapper("base", ["base1", "base2"], 30)
+            assert nearest_points[121][0]["index"] == mapper.unmap((lat,), (lon,))[0]
 
             assert eccodes_lat - tol <= lat
             assert lat <= eccodes_lat + tol

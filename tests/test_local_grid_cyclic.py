@@ -1,9 +1,8 @@
 import pandas as pd
 import pytest
 
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Point, Select
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Point, Select
 
 
 class TestSlicingFDBDatacube:
@@ -26,6 +25,8 @@ class TestSlicingFDBDatacube:
                             "resolution": [80, 80],
                             "axes": ["latitude", "longitude"],
                             "local": [-40, 40, -20, 60],
+                            "axis_reversed": {"latitude": True, "longitude": False},
+                            "md5_hash": "47ee1554a9aebbc4f8197f19449bdc0c",
                         }
                     ],
                 },
@@ -48,7 +49,6 @@ class TestSlicingFDBDatacube:
             ],
         }
 
-    # Testing different shapes
     @pytest.mark.fdb
     def test_fdb_datacube(self):
         import pygribjump as gj
@@ -66,10 +66,8 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[-20, -20]]),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -95,10 +93,8 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[-20, 50 + 360]]),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)

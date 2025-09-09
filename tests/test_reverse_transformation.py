@@ -1,9 +1,9 @@
 import numpy as np
 import xarray as xr
 
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Select
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Select
 
 
 class TestSlicingReverseTransformation:
@@ -21,7 +21,7 @@ class TestSlicingReverseTransformation:
             "compressed_axes_config": ["lat"],
         }
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
+        self.API = Polytope(datacube=array, options=options)
 
     def test_reverse_transformation(self):
         request = Request(Select("lat", [1, 2, 3]))

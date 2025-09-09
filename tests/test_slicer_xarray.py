@@ -2,9 +2,8 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select, Span
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, Select, Span
 
 
 class TestXarraySlicing:
@@ -19,9 +18,8 @@ class TestXarraySlicing:
                 "level": range(1, 130),
             },
         )
-        self.slicer = HullSlicer()
         options = {"compressed_axes_config": ["date", "step", "level"]}
-        self.API = Polytope(datacube=array, engine=self.slicer, options=options)
+        self.API = Polytope(datacube=array, options=options)
 
     def test_2D_box(self):
         request = Request(Box(["step", "level"], [3, 10], [6, 11]), Select("date", ["2000-01-01"]))

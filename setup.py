@@ -1,29 +1,31 @@
-import io
-import re
+import os
 
-from setuptools import find_packages, setup
+from setuptools import setup
+from setuptools_rust import RustExtension
 
-__version__ = re.search(
-    r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
-    io.open("polytope/version.py", encoding="utf_8_sig").read(),
-).group(1)
+use_rust = int(os.environ.get("USE_RUST", "-1"))
 
-with open("requirements.txt") as f:
-    requirements = f.read().splitlines()
+if use_rust == 0:  # pure python
+    print("Building pure Python version.")
+    rust_extensions = []
+elif use_rust == 1:  # rust extension
+    print("Building rust bindings version.")
+    rust_extensions = [
+        RustExtension(
+            "polytope_feature.polytope_rs",
+            path="rust/Cargo.toml",
+            debug=False,
+        )
+    ]
+else:  # (default) try rust extension, if fail fallback to python
+    print("Building with rust bindings, and if failing reverting to pure Python.")
+    rust_extensions = [
+        RustExtension(
+            "polytope_feature.polytope_rs",
+            path="rust/Cargo.toml",
+            debug=False,
+            optional=True,
+        )
+    ]
 
-setup(
-    name="polytope-python",
-    version=__version__,
-    description="Polytope datacube feature extraction library",
-    long_description="""Polytope is a library for extracting complex data from datacubes. It provides an API for
-                        non-orthogonal access to data, where the stencil used to extract data from the datacube can be
-                        any arbitrary n-dimensional polygon (called a polytope). This can be used to efficiently
-                        extract complex features from a datacube, such as polygon regions or spatio-temporal paths.""",
-    url="https://github.com/ecmwf/polytope",
-    author="ECMWF",
-    author_email="James.Hawkes@ecmwf.int, Mathilde.Leuridan@ecmwf.int",
-    packages=find_packages(),
-    zip_safe=False,
-    include_package_data=True,
-    install_requires=requirements,
-)
+setup(rust_extensions=rust_extensions)

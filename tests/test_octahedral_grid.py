@@ -2,18 +2,17 @@ import pytest
 from earthkit import data
 from helper_functions import download_test_data, find_nearest_latlon
 
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, Select
 
 
 class TestOctahedralGrid:
     def setup_method(self, method):
-        nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/foo.grib"
+        nexus_url = "https://sites.ecmwf.int/repository/polytope/test-data/foo.grib"
         download_test_data(nexus_url, "foo.grib")
 
         ds = data.from_source("file", "./tests/data/foo.grib")
-        self.latlon_array = ds.to_xarray().isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
+        self.latlon_array = ds.to_xarray(engine="cfgrib").isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
         self.latlon_array = self.latlon_array.t2m
         self.options = {
             "axis_config": [
@@ -27,10 +26,8 @@ class TestOctahedralGrid:
             ],
             "compressed_axes_config": ["longitude", "latitude", "number", "step", "time", "surface", "valid_time"],
         }
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.latlon_array,
-            engine=self.slicer,
             options=self.options,
         )
 
