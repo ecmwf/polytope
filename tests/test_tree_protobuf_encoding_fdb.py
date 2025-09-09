@@ -12,7 +12,6 @@ class TestEncoder:
     def test_encoding(self):
         import pygribjump as gj
 
-        from polytope_feature.engine.hullslicer import HullSlicer
         from polytope_feature.polytope import Polytope, Request
         from polytope_feature.shapes import Box, Select
 
@@ -61,10 +60,8 @@ class TestEncoder:
             "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
         }
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -75,7 +72,6 @@ class TestEncoder:
         fdb_datacube = self.API.datacube
         fdb_datacube.prep_tree_encoding(result)
         encoded_bytes = encode_tree(result)
-        # write_encoded_tree_to_file(encoded_bytes)
         decoded_tree = decode_tree(fdb_datacube, encoded_bytes)
         decoded_tree.pprint()
         assert decoded_tree.leaves[0].result_size == [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]

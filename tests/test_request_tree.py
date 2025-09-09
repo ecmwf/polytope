@@ -177,69 +177,6 @@ class TestIndexTree:
         child1.remove_branch()
         assert root_node.children == SortedList([child2])
 
-    # def test_intersect(self):
-    #     axis1 = IntDatacubeAxis()
-    #     axis2 = IntDatacubeAxis()
-    #     axis3 = IntDatacubeAxis()
-    #     axis4 = IntDatacubeAxis()
-    #     axis5 = IntDatacubeAxis()
-    #     axis6 = IntDatacubeAxis()
-    #     axis1.name = "grandchild1"
-    #     axis2.name = "grandchild2"
-    #     axis3.name = "grandchild3"
-    #     axis4.name = "grandchild4"
-    #     axis5.name = "child1"
-    #     axis6.name = "child2"
-    #     grandchild1_1 = TensorIndexTree(axis=axis1)
-    #     grandchild2_1 = TensorIndexTree(axis=axis2)
-    #     grandchild3_1 = TensorIndexTree(axis=axis3)
-    #     grandchild4_1 = TensorIndexTree(axis=axis4)
-    #     child1_1 = TensorIndexTree(axis=axis5)
-    #     child1_1.add_child(grandchild1_1)
-    #     child1_1.add_child(grandchild2_1)
-    #     child2_1 = TensorIndexTree(axis=axis6)
-    #     child2_1.add_child(grandchild3_1)
-    #     child2_1.add_child(grandchild4_1)
-    #     root_node1 = TensorIndexTree()
-    #     root_node1.add_child(child1_1)
-    #     root_node1.add_child(child2_1)
-
-    #     axis1 = IntDatacubeAxis()
-    #     axis2 = IntDatacubeAxis()
-    #     axis3 = IntDatacubeAxis()
-    #     axis4 = IntDatacubeAxis()
-    #     axis5 = IntDatacubeAxis()
-    #     axis6 = IntDatacubeAxis()
-    #     axis1.name = "grandchild1"
-    #     axis2.name = "grandchild5"
-    #     axis3.name = "grandchild6"
-    #     axis4.name = "grandchild7"
-    #     axis5.name = "child1"
-    #     axis6.name = "child3"
-    #     grandchild1_2 = TensorIndexTree(axis=axis1)
-    #     grandchild2_2 = TensorIndexTree(axis=axis2)
-    #     grandchild3_2 = TensorIndexTree(axis=axis3)
-    #     grandchild4_2 = TensorIndexTree(axis=axis4)
-    #     child1_2 = TensorIndexTree(axis=axis5)
-    #     child1_2.add_child(grandchild1_2)
-    #     child1_2.add_child(grandchild2_2)
-    #     child2_2 = TensorIndexTree(axis=axis6)
-    #     child2_2.add_child(grandchild3_2)
-    #     child2_2.add_child(grandchild4_2)
-    #     root_node2 = TensorIndexTree()
-    #     root_node2.add_child(child1_2)
-    #     root_node2.add_child(child2_2)
-    #     root_node1.pprint()
-    #     root_node2.pprint()
-
-    #     root_node1.intersect(root_node2)
-
-    #     root_node1.pprint()
-    #     assert len(root_node1.children) == 1
-    #     assert list(root_node1.children)[0].axis.name == "child1"
-    #     assert len(list(root_node1.children)[0].children) == 1
-    #     assert list(list(root_node1.children)[0].children)[0].axis.name == "grandchild1"
-
     def test_flatten(self):
         axis1 = IntDatacubeAxis()
         axis2 = IntDatacubeAxis()
@@ -274,7 +211,8 @@ class TestIndexTree:
         child1.add_child(grandchild1)
         root_node1 = TensorIndexTree()
         root_node1.add_child(child1)
-        assert greatgrandchild1.get_ancestors() == SortedList([greatgrandchild1, grandchild1, child1])
+        # assert greatgrandchild1.get_ancestors() == SortedList([greatgrandchild1, grandchild1, child1])
+        assert greatgrandchild1.get_ancestors() == SortedList([child1, grandchild1, greatgrandchild1])
 
     def test_add_or_get_child(self):
         axis1 = IntDatacubeAxis()
@@ -290,7 +228,7 @@ class TestIndexTree:
         root_node = TensorIndexTree()
         root_node.add_child(child1)
         assert root_node.create_child(axis1, 0, [])[0] == child1
-        assert root_node.create_child(axis2, (), [])[0].parent == root_node
+        assert root_node.create_child(axis2, 0, [])[0].parent == root_node
 
     def test_eq(self):
         axis1 = IntDatacubeAxis()

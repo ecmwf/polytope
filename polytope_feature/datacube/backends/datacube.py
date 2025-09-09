@@ -13,7 +13,7 @@ from ..transformations.datacube_transformations import (
 
 
 class Datacube(ABC):
-    def __init__(self, axis_options=None, compressed_axes_options=[]):
+    def __init__(self, axis_options=None, compressed_axes_options=[], grid_online_path="", grid_local_directory=""):
         if axis_options is None:
             self.axis_options = {}
         else:
@@ -32,6 +32,8 @@ class Datacube(ABC):
         self.unwanted_path = {}
         self.compressed_axes = compressed_axes_options
         self.grid_md5_hash = None
+        self.grid_online_path = grid_online_path
+        self.grid_local_directory = grid_local_directory
 
     @abstractmethod
     def get(self, requests: TensorIndexTree, context: Dict) -> Any:
@@ -48,11 +50,8 @@ class Datacube(ABC):
     def _create_axes(self, name, values, transformation_type_key, transformation_options):
         # first check what the final axes are for this axis name given transformations
         transformation_options = transformation_type_key
-        final_axis_names = DatacubeAxisTransformation.get_final_axes(
-            name, transformation_type_key.name, transformation_options
-        )
-        transformation = DatacubeAxisTransformation.create_transform(
-            name, transformation_type_key.name, transformation_options
+        (final_axis_names, transformation) = DatacubeAxisTransformation.get_final_axes(
+            name, transformation_type_key.name, transformation_options, self
         )
 
         # do not compress merged axes
@@ -71,6 +70,7 @@ class Datacube(ABC):
             for compressed_grid_axis in transformation.compressed_grid_axes:
                 self.compressed_grid_axes.append(compressed_grid_axis)
                 self.grid_md5_hash = transformation.md5_hash
+                self.grid_transformation = transformation
         if len(final_axis_names) > 1:
             self.coupled_axes.append(final_axis_names)
             for axis in final_axis_names:
@@ -79,19 +79,23 @@ class Datacube(ABC):
         for axis_name in final_axis_names:
             self.fake_axes.append(axis_name)
             # if axis does not yet exist, create it
+            if transformation.change_val_type(axis_name, values) is not None:
+                # first need to change the values so that we have right type
+                values = transformation.change_val_type(axis_name, values)
+                if self._axes is None or axis_name not in self._axes.keys():
+                    DatacubeAxis.create_standard(axis_name, values, self)
+                # add transformation tag to axis, as well as transformation options for later
+                setattr(self._axes[axis_name], has_transform[transformation_type_key.name], True)
+                # where has_transform is a factory inside datacube_transformations to set the has_transform, is_cyclic
+                # etc axis properties add the specific transformation handled here to the relevant axes
+                # Modify the axis to update with the tag
 
-            # first need to change the values so that we have right type
-            values = transformation.change_val_type(axis_name, values)
-            if self._axes is None or axis_name not in self._axes.keys():
-                DatacubeAxis.create_standard(axis_name, values, self)
-            # add transformation tag to axis, as well as transformation options for later
-            setattr(self._axes[axis_name], has_transform[transformation_type_key.name], True)  # where has_transform is
-            # a factory inside datacube_transformations to set the has_transform, is_cyclic etc axis properties
-            # add the specific transformation handled here to the relevant axes
-            # Modify the axis to update with the tag
-
-            if transformation not in self._axes[axis_name].transformations:  # Avoids duplicates being stored
-                self._axes[axis_name].transformations.append(transformation)
+                if transformation not in self._axes[axis_name].transformations:  # Avoids duplicates being stored
+                    self._axes[axis_name].transformations.append(transformation)
+            else:
+                # Means we have an unsliceable axis since we couln't transform values to desired type
+                if self._axes is None or axis_name not in self._axes.keys():
+                    DatacubeAxis.create_standard(axis_name, values, self)
 
     def _add_all_transformation_axes(self, options, name, values):
         for transformation_type_key in options.transformations:
@@ -139,7 +143,10 @@ class Datacube(ABC):
         """
         Get the type mapper for a subaxis of the datacube given by label
         """
-        return self._axes[axis]
+        ax = self._axes.get(axis, None)
+        if ax is None:
+            raise KeyError(f"The datacube does not contain a {axis} axis")
+        return ax
 
     def remap_path(self, path: DatacubePath):
         for key in path:
@@ -148,20 +155,44 @@ class Datacube(ABC):
         return path
 
     @staticmethod
-    def create(datacube, config={}, axis_options={}, compressed_axes_options=[], alternative_axes=[], context=None):
+    def create(
+        datacube,
+        config={},
+        axis_options={},
+        compressed_axes_options=[],
+        alternative_axes=[],
+        grid_online_path="",
+        grid_local_directory="",
+        context=None,
+    ):
         # TODO: get the configs as None for pre-determined value and change them to empty dictionary inside the function
         if type(datacube).__name__ == "DataArray":
             from .xarray import XArrayDatacube
 
-            xadatacube = XArrayDatacube(datacube, axis_options, compressed_axes_options, context)
+            xadatacube = XArrayDatacube(
+                datacube, axis_options, compressed_axes_options, context, grid_online_path, grid_local_directory
+            )
             return xadatacube
         if type(datacube).__name__ == "GribJump":
             from .fdb import FDBDatacube
 
             fdbdatacube = FDBDatacube(
-                datacube, config, axis_options, compressed_axes_options, alternative_axes, context
+                datacube,
+                config,
+                axis_options,
+                compressed_axes_options,
+                alternative_axes,
+                context,
+                grid_online_path,
+                grid_local_directory,
             )
             return fdbdatacube
+        if type(datacube).__name__ == "MockDatacube":
+            return datacube
 
     def check_branching_axes(self, request):
+        pass
+
+    @abstractmethod
+    def find_point_cloud(self):
         pass
