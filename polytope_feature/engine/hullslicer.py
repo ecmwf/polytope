@@ -210,7 +210,8 @@ class HullSlicer(Engine):
             if p.is_in_union:
                 for axis in p.axes():
                     if axis == self.compressed_axes[-1]:
-                        self.compressed_axes.remove(axis)
+                        # self.compressed_axes.remove(axis)
+                        pass
 
     @timing_fn
     def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]):
@@ -218,7 +219,7 @@ class HullSlicer(Engine):
         self.find_compressed_axes(datacube, polytopes)
 
         # remove compressed axes which are in a union
-        self.remove_compressed_axis_in_union(polytopes)
+        # self.remove_compressed_axis_in_union(polytopes)
 
         # Convert the polytope points to float type to support triangulation and interpolation
         for p in polytopes:
@@ -232,7 +233,6 @@ class HullSlicer(Engine):
         # NOTE: could optimise here if we know combinations will always be for one request.
         # Then we do not need to create a new index tree and merge it to request, but can just
         # directly work on request and return it...
-
         for c in combinations:
             r = TensorIndexTree()
             new_c = []

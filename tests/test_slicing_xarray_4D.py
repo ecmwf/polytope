@@ -71,14 +71,16 @@ class TestSlicing4DXarrayDatacube:
         disk2 = Disk(["step", "lat"], [15, 2.0], [4.99, 0.3])
         request = Request(Union(["step", "lat"], disk1, disk2), Select("date", ["2000-01-01"]), Select("level", [10]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 24
+        result.pprint()
+        assert len(result.leaves) == 8
 
     def test_circles_touching_float(self):
         disk1 = Disk(["step", "lat"], [6, 4.0], [3, 1.9])
         disk2 = Disk(["step", "lat"], [15, 2.0], [3, 2.1])
         request = Request(Union(["step", "lat"], disk1, disk2), Select("date", ["2000-01-01"]), Select("level", [10]))
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 101
+        result.pprint()
+        assert len(result.leaves) == 6
 
     def test_pathsegment_swept_2D_box(self):
         box1 = Box(["step", "level"], [3, 0], [6, 1])
