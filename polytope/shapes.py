@@ -2,8 +2,10 @@ import copy
 import math
 from abc import ABC, abstractmethod
 from typing import List
+import matplotlib.path as mpltPath
 
 import tripy
+import scipy.spatial
 
 """
 Shapes used for the constructive geometry API of Polytope
@@ -384,7 +386,7 @@ class Polygon(Shape):
         if len(points) <= 3*10e2:
             self._points = points
         else:
-            tol = 1e-2  # NOTE: 1e-2 should be sufficient for most grids
+            tol = 1e-3  # NOTE: 1e-2 should be sufficient for most grids
             self.reduce_polygon(points, tol)
         # triangles = tripy.earclip(points)
         # self.polytopes = []
@@ -420,10 +422,45 @@ class Polygon(Shape):
 
     def __repr__(self):
         return f"Polygon in {self._axes} with points {self._points}"
+    
+    def area_polygon(self, points):
+        # Use Green's theorem, see
+        # https://stackoverflow.com/questions/256222/which-exception-should-i-raise-on-bad-illegal-argument-combinations-in-python
+        return 0.5 * abs(sum(x0*y1 - x1*y0
+                            for ((x0, y0), (x1, y1)) in self.segments(points)))
+
+
+    def segments(self, points):
+        return zip(points, points[1:] + [points[0]])
+
 
     def reduce_polygon(self, points, epsilon):
+        try:
+            hull = scipy.spatial.ConvexHull(points)
+            vertices = hull.vertices
+
+        except scipy.spatial.qhull.QhullError as e:
+            if "less than" or "flat" in str(e):
+                vertices = [0, 1]
+        vertices_diff = [vertices[i+1] - vertices[i] for i in range(len(vertices)-1)]
+        return_points = [points[0]]
+        for j in range(len(vertices_diff)):
+            if vertices_diff[j] > 1:
+                first_point_idx = vertices[j]
+                last_point_idx = vertices[j+1]
+                concavity_area = self.area_polygon(points[first_point_idx:last_point_idx+1])
+                polygon_area = self.area_polygon(points)
+                # If area of polygon between these two idxs is small, then can remove these points from polygon, else we keep them
+                if concavity_area/polygon_area < 0.1:
+                    return_points.extend([points[first_point_idx], points[last_point_idx]])
+                else:
+                    return_points.extend(points[first_point_idx:last_point_idx])
+        return_points.append(points[-1])
+        self._points = return_points
+
+    def reduce_polygon_old(self, points, epsilon):
         # Implement Douglas-Peucker algorithm
-        k = 50  # number of polylines we divide the polygon into
+        k = 2  # number of polylines we divide the polygon into
         # First need to break down polygon into two polylines
         n = int(len(points)/k)
         # poly1_points = points[:n]
@@ -439,59 +476,300 @@ class Polygon(Shape):
         reduced_points = []
 
         for poly in sub_polys:
-            reduced_points.extend(self.douglas_peucker_algo(poly, epsilon))
+            reduced_points.extend(self.variation_douglas_peucker_algo(poly, epsilon, poly))
         # reduced_points = red_points_poly1
         # reduced_points.extend(red_points_poly2)
-        self._points = reduced_points
+        # reduced_points_hull = self.do_convex_hull(reduced_points)
+        reduced_points_hull = reduced_points
+        self._points = reduced_points_hull
 
-    def douglas_peucker_algo(self, points, epsilon):
-        max_dist = 0
+    def find_max_dist(self, points):
         index = 0
-        end = len(points)
-        # max_point_is_removable = 0
+        dists = []
+        max_dist = 0
+        line_points = [points[0], points[len(points)-1]]
 
+        for i in range(1, len(points)-1):
+            point = points[i]
+            dist = self.perp_dist(point, line_points)
+            dists.append(dist)
+            if dist > max_dist:
+                max_dist = dist
+                index = i
+
+        return (max_dist, dists, index)
+    
+    def variation_douglas_peucker_algo(self, points, epsilon, original_poly):
+        # TODO: what if when the tolerance is small, we take the convex hull of the two semi-triangles points[0], p[1:index], p[index] and p[index], p[index+1:-1], p[-1]
+        # Note that this could remove p[0], p[index] and p[-1] so need to ensure that we keep those
         results = []
 
         # find point with largest distance to line between first and last point of polyline
-        for i in range(1, end-1):
-            line_points = [points[0], points[end-1]]
-            point = points[i]
-            dist = self.perp_dist(point, line_points)
-            point_is_removable = (points[end-1][0]-points[0][0]) * (point[1]-points[0][1]) - (points[end-1][1]-points[0][1]) * (point[0] - points[0][0])
-            if dist > max_dist and point_is_removable >= 0:
-                max_dist = dist
-                index = i
+        if len(points) < 4:
+            results = points
+            return results
         
-        # This is negative when we can remove points[index], otherwise we need to keep the point
-        point_is_removable = (points[end-1][0]-points[0][0]) * (points[index][1]-points[0][1]) - (points[end-1][1]-points[0][1]) * (points[index][0] - points[0][0])
+        max_dist, dists, index = self.find_max_dist(points)
+        line_points = [points[0], points[len(points)-1]]
 
-        # now compare this against the tol and recurse
+        if max(dists) == 0:
+            results = line_points
+            return results
+
         if max_dist > epsilon:
             # this means that we need to keep the max dist point in the polyline
             # and so we then need to recurse
             sub_polyline1_points = points[: index + 1]  # NOTE we include the max dist point
             sub_polyline2_points = points[index :]  # NOTE: we include the max dist point
-            red_sub_polyline1 = self.douglas_peucker_algo(sub_polyline1_points, epsilon)
-            red_sub_polyline2 = self.douglas_peucker_algo(sub_polyline2_points, epsilon)
-            results.extend(red_sub_polyline1)
-            results.extend(red_sub_polyline2)
+            red_sub_polyline1 = self.variation_douglas_peucker_algo(sub_polyline1_points, epsilon, original_poly)
+            red_sub_polyline2 = self.variation_douglas_peucker_algo(sub_polyline2_points, epsilon, original_poly)
+            # results.extend(red_sub_polyline1)
+            # results.extend(red_sub_polyline2)
+            self.extend_without_duplicates(results, red_sub_polyline1)
+            self.extend_without_duplicates(results, red_sub_polyline2)
         else:
-            if point_is_removable <= 0:
-                results = [points[0], points[-1]]
+            forward_vec = [points[-1][0]- points[index][0], points[-1][1] - points[index][1]]
+            backward_vec = [points[0][0]- points[index][0], points[0][1] - points[index][1]]
+            local_concavity = backward_vec[0] * forward_vec[1] - backward_vec[1] * forward_vec[0]
+            projected_points = [self.projected_point(point, line_points) for point in points]
+            if local_concavity > 0:
+                proj_point_in_poly = [mpltPath.Path(original_poly).contains_point(proj_point) for proj_point in projected_points]
+                # indexes_to_keep = [i for i, cond in enumerate(proj_point_in_poly) if cond]
+                # results = [points[i] for i in indexes_to_keep]
+                results = points
             else:
-                # we need to keep the point
-                if len(points) > 3:
-                    sub_polyline1_points = points[: index + 1]  # NOTE we include the max dist point
-                    sub_polyline2_points = points[index :]  # NOTE: we include the max dist point
-                    red_sub_polyline1 = self.douglas_peucker_algo(sub_polyline1_points, epsilon)
-                    red_sub_polyline2 = self.douglas_peucker_algo(sub_polyline2_points, epsilon)
-                    results.extend(red_sub_polyline1)
-                    results.extend(red_sub_polyline2)
-                else:
-
-                    results = [points[0], points[index], points[-1]]
+                proj_point_in_poly = [1-mpltPath.Path(original_poly).contains_point(proj_point) for proj_point in projected_points]
+                indexes_to_keep = [i for i, cond in enumerate(proj_point_in_poly) if cond]
+                results = [points[i] for i in indexes_to_keep]
                 # results = points
+            # NOW KEEP POINTS IF THEIR PROJECTION IS INSIDE POLYGON
+            # indexes_to_keep = [i for i, cond in enumerate(proj_point_in_poly) if cond]
+            # results = [points[i] for i in indexes_to_keep]
+            # # TODO: project all points onto the line p0pN
+            # # Determine if projected point with max dist is within original polygon
+            # # If it is in polygon, then add points[index] to results and iterate
+            # # Else, add p0pN to results
+            # projected_max_points = self.projected_point(points[index], line_points)
+            # if mpltPath.Path(original_poly).contains_point(projected_max_points, radius=1e-2):
+            #     # self.extend_without_duplicates(results, points[index])
+            #     sub_polyline1_points = points[: index + 1]  # NOTE we include the max dist point
+            #     sub_polyline2_points = points[index :]  # NOTE: we include the max dist point
+            #     red_sub_polyline1 = self.variation_douglas_peucker_algo(sub_polyline1_points, epsilon, original_poly)
+            #     red_sub_polyline2 = self.variation_douglas_peucker_algo(sub_polyline2_points, epsilon, original_poly)
+            #     self.extend_without_duplicates(results, red_sub_polyline1)
+            #     self.extend_without_duplicates(results, red_sub_polyline2)
+            # else:
+            #     self.extend_without_duplicates(results, [points[0], points[-1]])
+
+            # centroid_max_triangle = [(points[index-1][0] + points[index][0] + points[index+1][0])/3, (points[index-1][1] + points[index][1] + points[index+1][1])/3]
+            # # if mpltPath.Path(original_poly).contains_point(points[index]):
+            # if mpltPath.Path(original_poly).contains_point(centroid_max_triangle):
+            #     sub_polyline1_points = points[: index + 1]  # NOTE we include the max dist point
+            #     sub_polyline2_points = points[index :]  # NOTE: we include the max dist point
+            #     red_sub_polyline1 = self.variation_douglas_peucker_algo(sub_polyline1_points, epsilon, original_poly)
+            #     red_sub_polyline2 = self.variation_douglas_peucker_algo(sub_polyline2_points, epsilon, original_poly)
+            #     self.extend_without_duplicates(results, red_sub_polyline1)
+            #     self.extend_without_duplicates(results, red_sub_polyline2)
+            # else:
+            #     self.extend_without_duplicates(results, [points[0], points[-1]])
+            # # left_midpoint = [(points[0][0] + points[index][0])/2, (points[0][1] + points[index][1])/2]
+            # # right_midpoint = [(points[-1][0] + points[index][0])/2, (points[-1][0] + points[index][0])/2]
+            # # if mpltPath.Path(original_poly).contains_point(left_midpoint):
+            # #     left_hull = self.do_convex_hull(points[:index+1])
+            # #     results.extend(left_hull)
+            # # else:
+            # #     results.extend([points[0], points[index]])
+            # # if mpltPath.Path(original_poly).contains_point(right_midpoint):
+            # #     right_hull = self.do_convex_hull(points[index:])
+            # #     results.extend(right_hull)
+            # # else:
+            # #     results.extend([points[index], points[-1]])
+            
+            # # left_hull = self.do_convex_hull(points[:index+1])  
+            # # right_hull = self.do_convex_hull(points[index:])
+            # # # hull = self.do_convex_hull(points)
+            # # # self.extend_without_duplicates(results, left_hull)
+            # # # self.extend_without_duplicates(results, right_hull)
+            # # results.extend(left_hull)
+            # # results.extend(right_hull)
+            # # # self.extend_without_duplicates(results, hull)
+            # # # self.extend_without_duplicates(results, [points[0], points[-1]])
         return results
+
+    def do_convex_hull(self, intersects):
+        # intersects.append(intersects[0])
+        try:
+            hull = scipy.spatial.ConvexHull(intersects)
+            vertices = hull.vertices
+
+        except scipy.spatial.qhull.QhullError as e:
+            if "less than" or "flat" in str(e):
+                vertices = [0, 1]
+        # return_points = [intersects[0]]
+        return_points = []
+        return_points.extend([intersects[i] for i in vertices])
+        print(vertices)
+        # if len(intersects) - 1 not in vertices:
+        #     return_points.append([intersects[-1]])
+        # return [intersects[i] for i in vertices]
+        return return_points
+
+    def douglas_peucker_algo(self, points, epsilon, iter=False):
+        results = []
+
+        # print(len(points))
+        if len(points) < 4:
+            results = points
+            return results
+
+        # find point with largest distance to line between first and last point of polyline
+        max_dist, dists, index = self.find_max_dist(points)
+        line_points = [points[0], points[len(points)-1]]
+
+        if max(dists) == 0:
+            results = line_points
+            return results
+
+        # print("NOW")
+        # print(index)
+        # print(len(points) -1)
+
+        triangle_base_polygon = [points[0], points[index], points[-1]]
+
+        points1_are_not_removable = []
+        points2_are_not_removable = []
+        for i in range(1, index):
+            points1_are_not_removable.append(bool(True - mpltPath.Path(triangle_base_polygon).contains_point(points[i])))
+        for i in range(index+1, len(points)-1):
+            points2_are_not_removable.append(bool(True - mpltPath.Path(triangle_base_polygon).contains_point(points[i])))
+        # This is negative when we can remove points[index], otherwise we need to keep the point
+        # can remove point if the line_midpoint is outside of the polygon
+
+        # point_is_removable = []
+        # point_is_removable_idx = list(range(1, index))
+        # point_is_removable_idx.extend(list(range(index+1, len(points)-1)))
+        # for i in range(1, index):
+        #     point_is_removable.append(mpltPath.Path(triangle_base_polygon).contains_point(points[i]))
+        # for i in range(index+1, len(points)-1):
+        #     point_is_removable.append(mpltPath.Path(triangle_base_polygon).contains_point(points[i]))
+
+        # if len(point_is_removable) == 0:
+        #     need_to_iterate = False
+        # elif all(point_is_removable):
+        #     need_to_iterate = False
+        # else:
+        #     need_to_iterate = True
+        
+        # TODO: find the point that is not removable that is furthest away from line, note can use dists
+        # point_is_removable.index()
+        # if max_dist > epsilon or need_to_iterate:
+        if max_dist > epsilon:
+            # this means that we need to keep the max dist point in the polyline
+            # and so we then need to recurse
+            sub_polyline1_points = points[: index + 1]  # NOTE we include the max dist point
+            sub_polyline2_points = points[index :]  # NOTE: we include the max dist point
+            red_sub_polyline1 = self.douglas_peucker_algo(sub_polyline1_points, epsilon, iter)
+            red_sub_polyline2 = self.douglas_peucker_algo(sub_polyline2_points, epsilon, iter)
+            # results.extend(red_sub_polyline1)
+            # results.extend(red_sub_polyline2)
+            self.extend_without_duplicates(results, red_sub_polyline1)
+            self.extend_without_duplicates(results, red_sub_polyline2)
+        else:
+            if index != 0:
+                new_p1 = self.find_new_p1(points[0], points[index], points[1:index], points1_are_not_removable, points[-1])
+            else:
+                new_p1 = points[0]
+            if index != len(points):
+                new_p3 = self.find_new_p1(points[-1], points[index], points[index+1:-1], points2_are_not_removable, points[0])
+            else:
+                new_p3 = points[-1]
+            print(new_p3)
+            self.extend_without_duplicates(results, [new_p1, points[index], new_p3])
+            # if not need_to_iterate:
+            #     results = [points[0], points[index], points[-1]]
+            # else:
+            #     sub_polyline1_points = points[: index + 1]  # NOTE we include the max dist point
+            #     sub_polyline2_points = points[index :]  # NOTE: we include the max dist point
+            #     red_sub_polyline1 = self.douglas_peucker_algo(sub_polyline1_points, epsilon, True)
+            #     red_sub_polyline2 = self.douglas_peucker_algo(sub_polyline2_points, epsilon, True)
+            #     # results.extend(red_sub_polyline1)
+            #     # results.extend(red_sub_polyline2)
+            #     self.extend_without_duplicates(results, red_sub_polyline1)
+            #     self.extend_without_duplicates(results, red_sub_polyline2)
+        return results
+
+    def extend_without_duplicates(self, points, points_collection):
+        for point in points_collection:
+            assert len(point) == 2
+            if point not in points:
+                points.append(point)
+
+    def iterate_under_tol(self):
+        pass
+
+    def find_max_angle_points(self, p1, p2, points, mask):
+        # find the max angle between p1, p2 and a point in points
+        # Note that we have a mask for the points however with some which shouldn't be taken into account
+
+        new_points = [points[i]*mask[i] for i in range(len(mask))]
+
+        max_angle = 0
+        index = 0
+
+        for i, point in enumerate(new_points):
+            if len(point) != 0:
+                angle = self.calc_angle(p1, p2, point)
+                if angle > max_angle:
+                    max_angle = angle
+                    index = i
+
+        return (max_angle, points[index])
+
+    def find_intersection(self, line_seg1, line_seg2):
+        # Find the intersection point between two line segments
+
+        # find equation Ax + By + C = 0 of each line
+        A1 = (line_seg1[0][1] - line_seg1[1][1])
+        B1 = (line_seg1[1][0] - line_seg1[0][0])
+        C1 = -(line_seg1[0][0] * line_seg1[1][1] - line_seg1[1][0]*line_seg1[0][1])
+
+        A2 = (line_seg2[0][1] - line_seg2[1][1])
+        B2 = (line_seg2[1][0] - line_seg2[0][0])
+        C2 = -(line_seg2[0][0] * line_seg2[1][1] - line_seg2[1][0]*line_seg2[0][1])
+
+        D = A1 * B2 - B1 * A2
+        Dx = C1 * B2 - B1 * C2
+        Dy = A1 * C2 - C1 * A2
+        if D != 0:
+            return [Dx/D, Dy/D]
+        else:
+            return line_seg1[1]
+
+    def find_new_p1(self, p1, p2, points, mask, p3):
+        # find the replacement point of p1, p1', between points such that this replacement point has all points under line p1'p2
+        if len(points) == 0:
+            return p1
+        (max_angle, max_point) = self.find_max_angle_points(p1, p2, points, mask)
+        if max_angle < 1e-8:
+            return p1
+        line_seg1 = [p1, p3]
+        line_seg2 = [p2, max_point]
+        p1p = self.find_intersection(line_seg1, line_seg2)
+        return p1p
+
+    def calc_angle(self, p1, p2, p3):
+        # Calculates the angle at p2 using the law of cosines
+
+        p1p2 = math.sqrt((p2[0]-p1[0])**2 + (p2[1]-p1[1])**2)
+        p2p3 = math.sqrt((p2[0]-p3[0])**2 + (p2[1]-p3[1])**2)
+        p1p3 = math.sqrt((p3[0]-p1[0])**2 + (p3[1]-p1[1])**2)
+
+        enum = p1p2**2 + p2p3**2 - p1p3**2
+        denom = 2 * p1p2 * p2p3
+        if abs(enum/denom - 1) < 1e-8:
+            return 0
+        theta = math.acos(enum/denom)
+        return theta
 
     def perp_dist(self, point, line_points):
         # project point onto the line
@@ -517,3 +795,20 @@ class Polygon(Shape):
 
         dist = math.sqrt((point[0] - proj_x)**2 + (point[1] - proj_y)**2)
         return dist
+
+    def projected_point(self, point, line_points):
+        if line_points[0][0] != line_points[1][0]:
+
+            a = (line_points[0][1] - line_points[1][1]) / (line_points[0][0] - line_points[1][0])
+            b = line_points[0][1] - a * line_points[0][0]
+
+            # Then the coordinates of the projected point on y = ax + b is given by
+            # x = (point[x] + a* point[y] - ab)/ (1 + a^2) and
+            # y = (a* point[x] + a^2 * point[y] + b) / (1 + a^2)
+
+            proj_x = (point[0] + a * point[1] - a*b) / (1 + a**2)
+            proj_y = (a * point[0] + (a**2) * point[1] + b) / (1 + a**2)
+        else:
+            proj_x = line_points[0][0]
+            proj_y = point[1]
+        return [proj_x, proj_y]
