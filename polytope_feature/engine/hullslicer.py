@@ -21,6 +21,8 @@ class HullSlicer(Engine):
             if path.get(datacube.coupled_axes[0][0], None) is not None:
                 flattened_tuple = (datacube.coupled_axes[0][0], path.get(datacube.coupled_axes[0][0], None))
                 path = {flattened_tuple[0]: flattened_tuple[1]}
+
+        # TODO: Restructure this to add all compressed values at once in the tree
         for i, lower in enumerate(lowers):
             if self.axis_values_between.get((flattened_tuple, ax.name, lower), None) is None:
                 self.axis_values_between[(flattened_tuple, ax.name, lower)] = datacube.has_index(path, ax, lower)
@@ -80,6 +82,7 @@ class HullSlicer(Engine):
         return remapped_val
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, values, next_nodes, slice_axis_idx, api):
+        # TODO: Restructure this to add all compressed values at once in the tree
         for i, value in enumerate(values):
             if i == 0 or ax.name not in api.compressed_axes:
                 fvalue = ax.to_float(value)
