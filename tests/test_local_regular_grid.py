@@ -48,7 +48,6 @@ class TestSlicingFDBDatacube:
             ],
         }
 
-    # Testing different shapes
     @pytest.mark.fdb
     def test_fdb_datacube(self):
         import pygribjump as gj

@@ -4,11 +4,13 @@ from ..datacube_mappers import DatacubeMapper
 
 
 class RegularGridMapper(DatacubeMapper):
-    def __init__(self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None):
-        # TODO: if local area is not empty list, raise NotImplemented
+    def __init__(
+        self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None, mapper_options=None
+    ):
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
         self._resolution = resolution
+        self.is_irregular = False
         self.deg_increment = 90 / self._resolution
         if axis_reversed is None:
             self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
@@ -23,6 +25,9 @@ class RegularGridMapper(DatacubeMapper):
             self.md5_hash = _md5_hash.get(resolution, None)
         if self._axis_reversed[mapped_axes[1]]:
             raise NotImplementedError("Regular grid with second axis in decreasing order is not supported")
+
+        if local_area != []:
+            raise TypeError("Use local_regular grid type for local area regular lat-lon grids")
 
     def first_axis_vals(self):
         if self._axis_reversed[self._mapped_axes[0]]:
@@ -61,14 +66,17 @@ class RegularGridMapper(DatacubeMapper):
         first_idx = self._first_axis_vals.index(first_val)
         return first_idx * 4 * self._resolution
 
-    def unmap(self, first_val, second_val, unmapped_idx=None):
+    def unmap(self, first_val, second_vals, unmapped_idx=None):
         tol = 1e-8
         first_val = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
         first_idx = self._first_axis_vals.index(first_val)
-        second_val = [i for i in self.second_axis_vals(first_val) if second_val[0] - tol <= i <= second_val[0] + tol][0]
-        second_idx = self.second_axis_vals(first_val).index(second_val)
-        final_index = self.axes_idx_to_regular_idx(first_idx, second_idx)
-        return final_index
+        return_idxs = []
+        for second_val in second_vals:
+            second_val = [i for i in self.second_axis_vals(first_val) if second_val - tol <= i <= second_val + tol][0]
+            second_idx = self.second_axis_vals(first_val).index(second_val)
+            final_index = self.axes_idx_to_regular_idx(first_idx, second_idx)
+            return_idxs.append(final_index)
+        return return_idxs
 
 
 # md5 grid hash in form {resolution : hash}

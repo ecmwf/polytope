@@ -3,7 +3,7 @@ import operator
 from copy import deepcopy
 from itertools import product
 
-from ...utility.exceptions import BadGridError, BadRequestError
+from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
 from ...utility.geometry import nearest_pt
 from .datacube import Datacube, TensorIndexTree
 
@@ -15,22 +15,22 @@ class FDBDatacube(Datacube):
         config=None,
         axis_options=None,
         compressed_axes_options=[],
-        point_cloud_options=None,
         alternative_axes=[],
         context=None,
+        grid_online_path="",
+        grid_local_directory="",
     ):
         if config is None:
             config = {}
         if context is None:
             context = {}
 
-        super().__init__(axis_options, compressed_axes_options)
+        super().__init__(axis_options, compressed_axes_options, grid_online_path, grid_local_directory)
 
         logging.info("Created an FDB datacube with options: " + str(axis_options))
 
         self.unwanted_path = {}
         self.axis_options = axis_options
-        self.has_point_cloud = point_cloud_options  # NOTE: here, will be True/False
 
         partial_request = config
         # Find values in the level 3 FDB datacube
@@ -40,7 +40,7 @@ class FDBDatacube(Datacube):
             logging.info("Find GribJump axes for %s", context)
             self.fdb_coordinates = self.gj.axes(partial_request, ctx=context)
             logging.info("Retrieved available GribJump axes for %s", context)
-            if len(self.fdb_coordinates) == 0:
+            if len(self.fdb_coordinates) == 0 or set(partial_request) > set(self.fdb_coordinates):
                 raise BadRequestError(partial_request)
         else:
             self.fdb_coordinates = {}
@@ -81,9 +81,9 @@ class FDBDatacube(Datacube):
         logging.info("Polytope created axes for: " + str(self._axes.keys()))
 
     def find_point_cloud(self):
-        # TODO: somehow, find the point cloud of irregular grid if it exists
-        if self.has_point_cloud:
-            return self.has_point_cloud
+        # find the point cloud of irregular grid if it exists
+        if self.grid_transformation.is_irregular:
+            return self.grid_transformation._final_transformation.grid_latlon_points()
 
     def check_branching_axes(self, request):
         polytopes = request.polytopes()
@@ -93,10 +93,21 @@ class FDBDatacube(Datacube):
                     (upper, lower, idx) = polytope.extents(ax)
                     if "sfc" in polytope.points[idx]:
                         self.fdb_coordinates.pop("levelist", None)
+
+                if ax == "param":
+                    (upper, lower, idx) = polytope.extents(ax)
+                    if "140251" not in polytope.points[idx]:
+                        self.fdb_coordinates.pop("direction", None)
+                        self.fdb_coordinates.pop("frequency", None)
+                    else:
+                        # special param with direction and frequency
+                        if len(polytope.points[idx]) > 1:
+                            raise ValueError(
+                                "Param 251 is part of a special branching of the datacube. Please request it separately."  # noqa: E501
+                            )
         self.fdb_coordinates.pop("quantile", None)
-        # TODO: When do these not appear??
-        self.fdb_coordinates.pop("direction", None)
-        self.fdb_coordinates.pop("frequency", None)
+        self.fdb_coordinates.pop("year", None)
+        self.fdb_coordinates.pop("month", None)
 
         # NOTE: verify that we also remove the axis object for axes we've removed here
         axes_to_remove = set(self.complete_axes) - set(self.fdb_coordinates.keys())
@@ -142,19 +153,19 @@ class FDBDatacube(Datacube):
             logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
         logging.info("Requests given to GribJump extract for %s", context)
         try:
-            output_values = self.gj.extract(complete_list_complete_uncompressed_requests, context)
+            iterator = self.gj.extract(complete_list_complete_uncompressed_requests, context)
         except Exception as e:
             if "BadValue: Grid hash mismatch" in str(e):
                 logging.info("Error is: %s", e)
                 raise BadGridError()
+            if "Missing JumpInfo" in str(e):
+                logging.info("Error is: %s", e)
+                raise GribJumpNoIndexError()
             else:
                 raise e
 
         logging.info("Requests extracted from GribJump for %s", context)
-        if logging.root.level <= logging.DEBUG:
-            printed_output_values = output_values[::1000]
-            logging.debug("GribJump outputs: %s", printed_output_values)
-        self.assign_fdb_output_to_nodes(output_values, complete_fdb_decoding_info)
+        self.assign_fdb_output_to_nodes(iterator, complete_fdb_decoding_info)
 
     def get_fdb_requests(
         self,
@@ -226,17 +237,25 @@ class FDBDatacube(Datacube):
             first_ax_name = requests.children[0].axis.name
             second_ax_name = requests.children[0].children[0].axis.name
 
-            if first_ax_name not in self.nearest_search.keys() or second_ax_name not in self.nearest_search.keys():
+            axes_in_nearest_search = [
+                first_ax_name not in self.nearest_search.keys(),
+                second_ax_name not in self.nearest_search.keys(),
+            ]
+
+            if all(not item for item in axes_in_nearest_search):
                 raise Exception("nearest point search axes are wrong")
 
             second_ax = requests.children[0].children[0].axis
 
-            nearest_pts = [
-                [lat_val, second_ax._remap_val_to_axis_range(lon_val)]
-                for (lat_val, lon_val) in zip(
-                    self.nearest_search[first_ax_name][0], self.nearest_search[second_ax_name][0]
-                )
-            ]
+            nearest_pts = self.nearest_search.get((first_ax_name, second_ax_name), None)
+            if nearest_pts is None:
+                nearest_pts = self.nearest_search.get((second_ax_name, first_ax_name), None)
+                for i, pt in enumerate(nearest_pts):
+                    nearest_pts[i] = [pt[1], pt[0]]
+
+            transformed_nearest_pts = []
+            for point in nearest_pts:
+                transformed_nearest_pts.append([point[0], second_ax._remap_val_to_axis_range(point[1])])
 
             found_latlon_pts = []
             for lat_child in requests.children:
@@ -245,7 +264,7 @@ class FDBDatacube(Datacube):
 
             # now find the nearest lat lon to the points requested
             nearest_latlons = []
-            for pt in nearest_pts:
+            for pt in transformed_nearest_pts:
                 nearest_latlon = nearest_pt(found_latlon_pts, pt)
                 nearest_latlons.append(nearest_latlon)
 
@@ -314,9 +333,8 @@ class FDBDatacube(Datacube):
             fdb_range_n[i].append(c)
         return (current_idx, fdb_range_n)
 
-    def assign_fdb_output_to_nodes(self, output_values, fdb_requests_decoding_info):
-        for k in range(len(output_values)):
-            request_output_values = output_values[k]
+    def assign_fdb_output_to_nodes(self, output_iterator, fdb_requests_decoding_info):
+        for k, result in enumerate(output_iterator):
             (
                 original_indices,
                 fdb_node_ranges,
@@ -324,13 +342,12 @@ class FDBDatacube(Datacube):
             sorted_fdb_range_nodes = [fdb_node_ranges[i] for i in original_indices]
             for i in range(len(sorted_fdb_range_nodes)):
                 n = sorted_fdb_range_nodes[i][0]
-                if len(request_output_values[0]) == 0:
+                if len(result.values) == 0:
                     # If we are here, no data was found for this path in the fdb
                     none_array = [None] * len(n.values)
                     n.result.extend(none_array)
                 else:
-                    interm_request_output_values = request_output_values[0][i][0]
-                    n.result.extend(interm_request_output_values)
+                    n.result.extend(result.values[i])
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
         (new_fdb_node_ranges, new_current_start_idx) = self.remove_duplicates_in_request_ranges(

@@ -1,7 +1,6 @@
-from quadtree import QuadTree
+from ...engine.slicing_tools import slice, slice_in_two
 
-from ..engine.hullslicer import slice
-from ..engine.slicing_tools import slice_in_two
+# TODO: make this as methods of the python quadtree?
 
 
 def is_contained_in(point, polygon):
@@ -16,19 +15,18 @@ def is_contained_in(point, polygon):
     return False
 
 
-def query_polygon(quadtree_points, quadtree: QuadTree, node_idx, polygon, results=None):
-    # intersect quad tree with a 2D polygon
-    if results is None:
-        results = set()
+def query_polygon(quadtree_points, quadtree, node_idx, polygon):
+    results = set()
+    _query_polygon(quadtree_points, quadtree, node_idx, polygon, results)
+    return results
 
+
+def _query_polygon(quadtree_points, quadtree, node_idx, polygon, results):
     # intersect the children with the polygon
-    # TODO: here, we create None polygons... think about how to handle them
     if polygon is None:
         return results
     else:
         polygon_points = {tuple(point) for point in polygon.points}
-        # TODO: are these the right points which we are comparing, ie the points on the polygon
-        # and the points on the rectangle quadrant?
         if sorted(list(polygon_points)) == quadtree.quadrant_rectangle_points(node_idx):
             results.update(quadtree.find_nodes_in(node_idx))
         else:
@@ -45,14 +43,15 @@ def query_polygon(quadtree_points, quadtree: QuadTree, node_idx, polygon, result
                 q3_polygon, q4_polygon = slice_in_two(right_polygon, quadtree_center[1], 1)
 
                 # now query these 4 polygons further down the quadtree
-                query_polygon(quadtree_points, quadtree, children_idxs[0], q1_polygon, results)
-                query_polygon(quadtree_points, quadtree, children_idxs[1], q2_polygon, results)
-                query_polygon(quadtree_points, quadtree, children_idxs[2], q3_polygon, results)
-                query_polygon(quadtree_points, quadtree, children_idxs[3], q4_polygon, results)
+                _query_polygon(quadtree_points, quadtree, children_idxs[0], q1_polygon, results)
+                _query_polygon(quadtree_points, quadtree, children_idxs[1], q2_polygon, results)
+                _query_polygon(quadtree_points, quadtree, children_idxs[2], q3_polygon, results)
+                _query_polygon(quadtree_points, quadtree, children_idxs[3], q4_polygon, results)
 
             # TODO: try optimisation: take bbox of polygon and quickly remove the results that are not in bbox already
-
-            results.update(
-                node for node in quadtree.get_point_idxs(node_idx) if is_contained_in(quadtree_points[node], polygon)
-            )
-        return results
+            else:
+                results.update(
+                    node
+                    for node in quadtree.get_point_idxs(node_idx)
+                    if is_contained_in(quadtree_points[node], polygon)
+                )

@@ -70,13 +70,13 @@ class TestSlicingFDBDatacube:
             assert leaf.hidden
             assert leaf._parent.hidden
             assert leaf._parent._parent.indexes == [
-                3294704,
-                3294705,
-                3294706,
-                3289572,
-                3289573,
-                3289574,
-                3284444,
-                3284445,
-                3284446,
+                [3294704],
+                [3294705],
+                [3294706],
+                [3289572],
+                [3289573],
+                [3289574],
+                [3284444],
+                [3284445],
+                [3284446],
             ]

@@ -1,5 +1,4 @@
-from ..engine.hullslicer import slice
-from ..engine.slicing_tools import slice_in_two
+from ...engine.slicing_tools import slice, slice_in_two
 
 """
 
@@ -19,6 +18,7 @@ class QuadNode:
 
     def is_contained_in(self, polygon):
         # implement method to check if the node point is inside the polygon
+        # TODO: could consider doing this through a point in polygon check?
         node_x, node_y = self.item
 
         sliced_vertical_polygon = slice(polygon, polygon._axes[0], node_x, 0)
@@ -127,18 +127,16 @@ class QuadTree:
             self.insert_into_children(node.item, node.index)
 
     def query_polygon(self, polygon, results=None):
+        # TODO: would be like uniform rust + python API with
         # intersect quad tree with a 2D polygon
         if results is None:
             results = set()
 
         # intersect the children with the polygon
-        # TODO: here, we create None polygons... think about how to handle them
         if polygon is None:
             pass
         else:
             polygon_points = set([tuple(point) for point in polygon.points])
-            # TODO: are these the right points which we are comparing, ie the points on the polygon
-            # and the points on the rectangle quadrant?
             if polygon_points == self.quadrant_rectangle_points():
                 for node in self.find_nodes_in():
                     results.add(node)

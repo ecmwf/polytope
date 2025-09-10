@@ -2,12 +2,11 @@
 # import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import pytest
 from earthkit import data
-from helper_functions import find_nearest_latlon
+from helper_functions import download_test_data, find_nearest_latlon
 
 from polytope_feature.polytope import Polytope, Request
-from polytope_feature.shapes import Box, Select
+from polytope_feature.shapes import Polygon, Select
 
 
 class TestQuadTreeSlicer:
@@ -21,7 +20,10 @@ class TestQuadTreeSlicer:
             "valid_time": "hullslicer",
         }
 
-        ds = data.from_source("file", "../../Downloads/Reference_eORCA12_U_to_HEALPix_32.grib")
+        nexus_url = "https://sites.ecmwf.int/repository/polytope/Reference_eORCA12_U_to_HEALPix_32.grib"
+        download_test_data(nexus_url, "Reference_eORCA12_U_to_HEALPix_32.grib")
+
+        ds = data.from_source("file", "tests/data/Reference_eORCA12_U_to_HEALPix_32.grib")
         self.arr = ds.to_xarray(engine="cfgrib").avg_uox
 
         self.latitudes = self.arr.latitude.values
@@ -32,35 +34,32 @@ class TestQuadTreeSlicer:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "irregular", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                        {
+                            "name": "mapper",
+                            "type": "unstructured",
+                            "axes": ["latitude", "longitude"],
+                            "points": self.points,
+                        }
                     ],
                 },
             ],
         }
 
-    @pytest.mark.fdb
     def test_quad_tree_slicer_extract(self):
         request = Request(
             Select("step", [np.timedelta64(0, "ns")]),
             Select("oceanModelLayer", [65.0]),
             Select("time", [pd.Timestamp("2017-09-06T00:00:00.000000000")]),
-            Box(["latitude", "longitude"], [65, 270], [75, 300]),
+            Polygon(["latitude", "longitude"], [[65, 270], [65, 300], [75, 300], [75, 270]]),
         )
 
         self.API = Polytope(
             datacube=self.arr,
             options=self.options,
             engine_options=self.engine_options,
-            point_cloud_options=self.points,
         )
-        import time
-
-        time0 = time.time()
         result = self.API.retrieve(request)
-        time1 = time.time()
-        print("TIME TAKEN TO EXTRACT")
-        print(time1 - time0)
-        print(len(result.leaves))
+        assert len(result.leaves) == 27
         result.pprint()
 
         lats = []
@@ -68,13 +67,14 @@ class TestQuadTreeSlicer:
         eccodes_lats = []
         eccodes_lons = []
         tol = 1e-8
-        for i in range(len(result.leaves)):
-            cubepath = result.leaves[i].flatten()
+        leaves = result.leaves
+        for i in range(len(leaves)):
+            cubepath = leaves[i].flatten()
             lat = cubepath["latitude"][0]
             lon = cubepath["longitude"][0] - 360
             lats.append(lat)
             lons.append(lon)
-            nearest_points = find_nearest_latlon("../../Downloads/Reference_eORCA12_U_to_HEALPix_32.grib", lat, lon)
+            nearest_points = find_nearest_latlon("tests/data/Reference_eORCA12_U_to_HEALPix_32.grib", lat, lon)
             eccodes_lat = nearest_points[0][0]["lat"]
             eccodes_lon = nearest_points[0][0]["lon"] - 360
             eccodes_lats.append(eccodes_lat)

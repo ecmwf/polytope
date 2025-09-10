@@ -8,25 +8,25 @@ class DatacubeAxisTransformation(ABC):
         self.parent = None
 
     @staticmethod
-    def create_transform(name, transformation_type_key, transformation_options):
+    def create_transform(name, transformation_type_key, transformation_options, datacube):
         transformation_type = _type_to_datacube_transformation_lookup[transformation_type_key]
         transformation_file_name = _type_to_transformation_file_lookup[transformation_type_key]
         file_name = ".datacube_" + transformation_file_name
         module = import_module("polytope_feature.datacube.transformations" + file_name + file_name)
         constructor = getattr(module, transformation_type)
         transformation_type_option = transformation_options
-        new_transformation = deepcopy(constructor(name, transformation_type_option))
+        new_transformation = deepcopy(constructor(name, transformation_type_option, datacube))
 
         new_transformation.name = name
         return new_transformation
 
     @staticmethod
-    def get_final_axes(name, transformation_type_key, transformation_options):
+    def get_final_axes(name, transformation_type_key, transformation_options, datacube):
         new_transformation = DatacubeAxisTransformation.create_transform(
-            name, transformation_type_key, transformation_options
+            name, transformation_type_key, transformation_options, datacube
         )
         transformation_axis_names = new_transformation.transformation_axes_final()
-        return transformation_axis_names
+        return (transformation_axis_names, new_transformation)
 
     def name(self):
         pass

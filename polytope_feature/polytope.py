@@ -1,12 +1,16 @@
+import logging
 from typing import List
 
 from .datacube.backends.datacube import Datacube
 from .datacube.datacube_axis import UnsliceableDatacubeAxis
 from .datacube.tensor_index_tree import TensorIndexTree
 from .engine.hullslicer import HullSlicer
+from .engine.optimised_point_in_polygon_slicer import OptimisedPointInPolygonSlicer
+from .engine.optimised_quadtree_slicer import OptimisedQuadTreeSlicer
+from .engine.point_in_polygon_slicer import PointInPolygonSlicer
 from .engine.quadtree_slicer import QuadTreeSlicer
 from .options import PolytopeOptions
-from .shapes import ConvexPolytope
+from .shapes import ConvexPolytope, Product
 from .utility.combinatorics import group, tensor_product
 from .utility.exceptions import AxisOverdefinedError
 from .utility.list_tools import unique
@@ -50,7 +54,6 @@ class Polytope:
         datacube,
         options=None,
         engine_options=None,
-        point_cloud_options=None,
         context=None,
     ):
         from .datacube import Datacube
@@ -63,14 +66,22 @@ class Polytope:
         self.compressed_axes = []
         self.context = context
 
-        axis_options, compressed_axes_options, config, alternative_axes = PolytopeOptions.get_polytope_options(options)
+        (
+            axis_options,
+            compressed_axes_options,
+            config,
+            alternative_axes,
+            grid_online_path,
+            grid_local_directory,
+        ) = PolytopeOptions.get_polytope_options(options)
         self.datacube = Datacube.create(
             datacube,
             config,
             axis_options,
             compressed_axes_options,
-            point_cloud_options,
             alternative_axes,
+            grid_online_path,
+            grid_local_directory,
             self.context,
         )
         if engine_options == {}:
@@ -87,8 +98,18 @@ class Polytope:
             # TODO: need to get the corresponding point cloud from the datacube
             quadtree_points = self.datacube.find_point_cloud()
             engines["quadtree"] = QuadTreeSlicer(quadtree_points)
+        if "optimised_quadtree" in engine_types:
+            # TODO: need to get the corresponding point cloud from the datacube
+            quadtree_points = self.datacube.find_point_cloud()
+            engines["optimised_quadtree"] = OptimisedQuadTreeSlicer(quadtree_points)
         if "hullslicer" in engine_types:
             engines["hullslicer"] = HullSlicer()
+        if "point_in_polygon" in engine_types:
+            points = self.datacube.find_point_cloud()
+            engines["point_in_polygon"] = PointInPolygonSlicer(points)
+        if "optimised_point_in_polygon" in engine_types:
+            points = self.datacube.find_point_cloud()
+            engines["optimised_point_in_polygon"] = OptimisedPointInPolygonSlicer(points)
         return engines
 
     def _unique_continuous_points(self, p: ConvexPolytope, datacube: Datacube):
@@ -111,7 +132,11 @@ class Polytope:
 
         # Convert the polytope points to float type to support triangulation and interpolation
         for p in polytopes:
-            self._unique_continuous_points(p, datacube)
+            if isinstance(p, Product):
+                for poly in p.polytope():
+                    self._unique_continuous_points(poly, datacube)
+            else:
+                self._unique_continuous_points(p, datacube)
 
         groups, input_axes = group(polytopes)
         datacube.validate(input_axes)
@@ -130,7 +155,13 @@ class Polytope:
                     new_c.extend(combi)
                 else:
                     new_c.append(combi)
-            r["unsliced_polytopes"] = set(new_c)
+            final_polys = []
+            for poly in new_c:
+                if isinstance(poly, Product):
+                    final_polys.extend(poly.polytope())
+                else:
+                    final_polys.append(poly)
+            r["unsliced_polytopes"] = set(final_polys)
             current_nodes = [r]
             for ax in datacube.axes.values():
                 engine = self.find_engine(ax)
@@ -149,17 +180,21 @@ class Polytope:
         slicer_type = self.engine_options[ax.name]
         return self.engines[slicer_type]
 
-    def old_retrieve(self, request: Request, method="standard"):
-        """Higher-level API which takes a request and uses it to slice the datacube"""
-        # self.datacube.check_branching_axes(request)
-        request_tree = self.engine.extract(self.datacube, request.polytopes())
-        self.datacube.get(request_tree)
-        return request_tree
-
     def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
+        logging.info("Starting request for %s ", self.context)
+        self.datacube.check_branching_axes(request)
+        for polytope in request.polytopes():
+            method = polytope.method
+            if method == "nearest":
+                if self.datacube.nearest_search.get(tuple(polytope.axes()), None) is None:
+                    self.datacube.nearest_search[tuple(polytope.axes())] = polytope.values
+                else:
+                    self.datacube.nearest_search[tuple(polytope.axes())].append(polytope.values[0])
         request_tree = self.slice(self.datacube, request.polytopes())
-        self.datacube.get(request_tree)
+        logging.info("Created request tree for %s ", self.context)
+        self.datacube.get(request_tree, self.context)
+        logging.info("Retrieved data for %s ", self.context)
         return request_tree
 
     def find_compressed_axes(self, datacube, polytopes):

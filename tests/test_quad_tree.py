@@ -1,7 +1,10 @@
 import pytest
 
-from polytope_feature.datacube.quad_tree import QuadNode
-from polytope_feature.datacube.quadtree_additional_operations import query_polygon
+from polytope_feature.datacube.quadtree.quad_tree import QuadNode
+from polytope_feature.datacube.quadtree.quadtree_additional_operations import (
+    query_polygon,
+)
+from polytope_feature.datacube.tensor_index_tree import TensorIndexTree
 from polytope_feature.engine.quadtree_slicer import QuadTreeSlicer
 from polytope_feature.engine.slicing_tools import slice_in_two
 from polytope_feature.polytope import Polytope
@@ -12,52 +15,14 @@ class TestQuadTreeSlicer:
     def setup_method(self, method):
         import pygribjump as gj
 
-        self.options = {
-            "axis_config": [
-                {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
-                {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
-                {
-                    "axis_name": "date",
-                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
-                },
-                {
-                    "axis_name": "values",
-                    "transformations": [
-                        {"name": "mapper", "type": "irregular", "resolution": 1280, "axes": ["latitude", "longitude"]}
-                    ],
-                },
-            ],
-            "compressed_axes_config": [
-                "longitude",
-                "latitude",
-                "levtype",
-                "step",
-                "date",
-                "domain",
-                "expver",
-                "param",
-                "class",
-                "stream",
-                "type",
-            ],
-            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
-        }
         self.fdbdatacube = gj.GribJump()
-
-    @pytest.mark.fdb
-    def test_quad_tree_slicer(self):
-        points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
-        slicer = QuadTreeSlicer(points)
-        # slicer.quad_tree.pprint()
-        pass
 
     @pytest.mark.fdb
     def test_quad_tree_query_polygon(self):
         points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
         slicer = QuadTreeSlicer(points)
         polytope = Box(["lat", "lon"], [1, 1], [20, 30]).polytope()[0]
-        # results = slicer.quad_tree.query_polygon(polytope)
-        results = query_polygon(points, slicer.quad_tree, 0, polytope, results=None)
+        results = query_polygon(points, slicer.quad_tree, 0, polytope)
         assert len(results) == 3
         assert (10, 10) in [slicer.points[node] for node in results]
         assert (5, 10) in [slicer.points[node] for node in results]
@@ -65,8 +30,7 @@ class TestQuadTreeSlicer:
         points = [[10, 10], [80, 10], [-5, 5], [5, 50], [5, 10], [50, 10], [2, 10], [15, 15]]
         slicer = QuadTreeSlicer(points)
         polytope = ConvexPolytope(["lat", "lon"], [[-10, 1], [20, 1], [5, 20]])
-        # results = slicer.quad_tree.query_polygon(polytope)
-        results = query_polygon(points, slicer.quad_tree, 0, polytope, results=None)
+        results = query_polygon(points, slicer.quad_tree, 0, polytope)
         assert len(results) == 4
         assert (-5, 5) in [slicer.points[node] for node in results]
         assert (5, 10) in [slicer.points[node] for node in results]
@@ -115,22 +79,60 @@ class TestQuadTreeSlicer:
     def test_quad_tree_slicer_extract(self):
         points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
         polytope = Box(["latitude", "longitude"], [1, 1], [20, 30]).polytope()[0]
+        self.options = {
+            "axis_config": [
+                {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
+                {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
+                {
+                    "axis_name": "date",
+                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
+                },
+                {
+                    "axis_name": "values",
+                    "transformations": [
+                        {
+                            "name": "mapper",
+                            "type": "unstructured",
+                            "resolution": 1280,
+                            "axes": ["latitude", "longitude"],
+                            "points": points,
+                        }
+                    ],
+                },
+            ],
+            "compressed_axes_config": [
+                "longitude",
+                "latitude",
+                "levtype",
+                "step",
+                "date",
+                "domain",
+                "expver",
+                "param",
+                "class",
+                "stream",
+                "type",
+            ],
+            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
+        }
         self.API = Polytope(
             datacube=self.fdbdatacube,
             options=self.options,
             engine_options={"latitude": "quadtree", "longitude": "quadtree"},
-            point_cloud_options=points,
         )
-        tree = self.API.engines["quadtree"].extract(self.API.datacube, [polytope])
+        lat_ax = self.API.datacube.axes["latitude"]
+        tree = TensorIndexTree()
+        tree["unsliced_polytopes"] = [polytope]
+        self.API.engines["quadtree"]._build_sliceable_child(polytope, lat_ax, tree, self.API.datacube, [], None)
         assert len(tree.leaves) == 3
-        # tree.pprint()
         points = [[10, 10], [80, 10], [-5, 5], [5, 50], [5, 10], [50, 10], [2, 10], [15, 15]]
         polytope = ConvexPolytope(["latitude", "longitude"], [[-10, 1], [20, 1], [5, 20]])
-        tree = self.API.engines["quadtree"].extract(self.API.datacube, [polytope])
+        tree = TensorIndexTree()
+        tree["unsliced_polytopes"] = [polytope]
+        self.API.engines["quadtree"]._build_sliceable_child(polytope, lat_ax, tree, self.API.datacube, [], None)
         assert len(tree.leaves) == 4
-        # tree.pprint()
 
-    # @pytest.mark.skip("performance test")
+    @pytest.mark.skip("performance test")
     @pytest.mark.fdb
     def test_large_scale_extraction(self):
         import time
@@ -145,18 +147,54 @@ class TestQuadTreeSlicer:
         Y = Y.reshape((np.prod(Y.shape),))
         coords = zip(X, Y)
         points = [list(coord) for coord in coords]
+        self.options = {
+            "axis_config": [
+                {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
+                {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
+                {
+                    "axis_name": "date",
+                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
+                },
+                {
+                    "axis_name": "values",
+                    "transformations": [
+                        {
+                            "name": "mapper",
+                            "type": "unstructured",
+                            "resolution": 1280,
+                            "axes": ["latitude", "longitude"],
+                            "points": points,
+                        }
+                    ],
+                },
+            ],
+            "compressed_axes_config": [
+                "longitude",
+                "latitude",
+                "levtype",
+                "step",
+                "date",
+                "domain",
+                "expver",
+                "param",
+                "class",
+                "stream",
+                "type",
+            ],
+            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
+        }
         time0 = time.time()
         polytope = Box(["latitude", "longitude"], [1, 1], [20, 30]).polytope()[0]
         self.API = Polytope(
             datacube=self.fdbdatacube,
             options=self.options,
             engine_options={"latitude": "quadtree", "longitude": "quadtree"},
-            point_cloud_options=points,
         )
         print(time.time() - time0)
         time1 = time.time()
-        tree = self.API.engines["quadtree"].extract(self.API.datacube, [polytope])
-        print(time.time() - time1)  # = 5.919436931610107
-        print(len(tree.leaves))  # = 55100
-        # NOTE: maybe for 2D qhull here, scipy is not the fastest
-        # but use shewchuk's triangle algo: https://www.cs.cmu.edu/~quake/triangle.html?
+        lat_ax = self.API.datacube.axes["latitude"]
+        tree = TensorIndexTree()
+        tree["unsliced_polytopes"] = [polytope]
+        self.API.engines["quadtree"]._build_sliceable_child(polytope, lat_ax, tree, self.API.datacube, [], None)
+        print(time.time() - time1)
+        assert len(tree.leaves) == 55100
