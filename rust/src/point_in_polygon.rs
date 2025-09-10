@@ -100,17 +100,3 @@ pub fn extract_point_in_poly_bbox(
         "Polygon has no points, cannot compute bounding box.",
     ))
 }
-
-// fn main() {
-//     // Create a polygon from raw coordinates
-//     let poly = polygon![
-//         (x: 0.0, y: 0.0),
-//         (x: 5.0, y: 0.0),
-//         (x: 5.0, y: 5.0),
-//         (x: 0.0, y: 5.0),
-//         (x: 0.0, y: 0.0), // must be closed
-//     ];
-
-//     let point = Point::new(3.0, 3.0);
-//     println!("Point in polygon? {}", poly.contains(&point)); // true
-// }

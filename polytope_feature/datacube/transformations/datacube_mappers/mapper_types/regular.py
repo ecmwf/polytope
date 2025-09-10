@@ -7,7 +7,6 @@ class RegularGridMapper(DatacubeMapper):
     def __init__(
         self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None, mapper_options=None
     ):
-        # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
         self._resolution = resolution
@@ -26,6 +25,9 @@ class RegularGridMapper(DatacubeMapper):
             self.md5_hash = _md5_hash.get(resolution, None)
         if self._axis_reversed[mapped_axes[1]]:
             raise NotImplementedError("Regular grid with second axis in decreasing order is not supported")
+
+        if local_area != []:
+            raise TypeError("Use local_regular grid type for local area regular lat-lon grids")
 
     def first_axis_vals(self):
         if self._axis_reversed[self._mapped_axes[0]]:

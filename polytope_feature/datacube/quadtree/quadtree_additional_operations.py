@@ -1,4 +1,3 @@
-# from ...engine.hullslicer import slice
 from ...engine.slicing_tools import slice, slice_in_two
 
 # TODO: make this as methods of the python quadtree?
