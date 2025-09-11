@@ -32,7 +32,7 @@ classifiers = [
 dynamic = ["version", "readme"]
 
 dependencies = [
-    "numpy==1.26.4",
+    "numpy>=1.26",
     "pandas",
     "scipy",
     "sortedcontainers",
@@ -43,22 +43,22 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-    tests = [
-        "pytest",
-        "pytest-cov",
-        "cffi",
-        "eccodes",
-        "h5netcdf",
-        "h5py",
-        "earthkit-data",
-        "matplotlib",
-        "pyfdb"
-        ]
+tests = [
+    "pytest",
+    "pytest-cov",
+    "cffi",
+    "eccodes",
+    "h5netcdf",
+    "h5py",
+    "earthkit-data",
+    "matplotlib",
+    "pyfdb"
+]
 
 [project.urls]
-    repository = "https://github.com/ecmwf/polytope"
-    documentation = "https://polytope.readthedocs.io/en/latest/"
-    issues = "https://github.com/ecmwf/polytope/issues"
+repository = "https://github.com/ecmwf/polytope"
+documentation = "https://polytope.readthedocs.io/en/latest/"
+issues = "https://github.com/ecmwf/polytope/issues"
 
 # Packaging/setuptools options
 [tool.setuptools]
