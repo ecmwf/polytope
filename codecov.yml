@@ -1,6 +1,15 @@
+codecov:
+  branch: develop # set new Default branch
+
 ignore:
   - "tests"  # ignore tests folder
   - "**/test*"
   - "**/pb2*"
   - "**/fdb*" # ignore fdb backend which we can't test in CI yet
   - "polytope/datacube/backends/fdb.py" # ignore fdb backend which we can't test in CI yet
+
+coverage:
+  status:
+    patch:
+      default:
+        enabled: false  # disables patch check

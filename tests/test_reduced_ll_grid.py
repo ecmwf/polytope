@@ -5,14 +5,14 @@ import pytest
 from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
 from helper_functions import download_test_data
 
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, Select
 
 
 class TestReducedLatLonGrid:
     def setup_method(self, method):
-        nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/wave.grib"
+        nexus_url = "https://sites.ecmwf.int/repository/polytope/test-data/wave.grib"
         download_test_data(nexus_url, "wave.grib")
         self.options = {
             "axis_config": [

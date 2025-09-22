@@ -1,9 +1,8 @@
 import pandas as pd
 import pytest
 
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, Select
 
 
 class TestSlicingFDBDatacube:
@@ -60,10 +59,8 @@ class TestSlicingFDBDatacube:
             Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -73,13 +70,13 @@ class TestSlicingFDBDatacube:
             assert leaf.hidden
             assert leaf._parent.hidden
             assert leaf._parent._parent.indexes == [
-                3294704,
-                3294705,
-                3294706,
-                3289572,
-                3289573,
-                3289574,
-                3284444,
-                3284445,
-                3284446,
+                [3294704],
+                [3294705],
+                [3294706],
+                [3289572],
+                [3289573],
+                [3289574],
+                [3284444],
+                [3284445],
+                [3284446],
             ]

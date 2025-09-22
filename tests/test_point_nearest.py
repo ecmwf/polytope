@@ -1,9 +1,8 @@
 import pandas as pd
 import pytest
 
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Point, Select
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Point, Select
 
 
 class TestSlicingFDBDatacube:
@@ -42,7 +41,6 @@ class TestSlicingFDBDatacube:
             ],
         }
 
-    # Testing different shapes
     @pytest.mark.fdb
     def test_fdb_datacube(self):
         import pygribjump as gj
@@ -60,10 +58,8 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[0.16, 0.176]], method="nearest"),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -86,10 +82,8 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[0.175746921078, 0.210608424337]], method="nearest"),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -113,10 +107,8 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[0.035149384216, 0.0]], method="nearest"),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -128,22 +120,20 @@ class TestSlicingFDBDatacube:
         import pygribjump as gj
 
         request = Request(
-            Select("step", [21]),
+            Select("step", [0]),
             Select("levtype", ["sfc"]),
-            Select("date", [pd.Timestamp("20231102T000000")]),
+            Select("date", [pd.Timestamp("20230625T120000")]),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
             Select("param", ["167"]),
             Select("class", ["od"]),
             Select("stream", ["oper"]),
-            Select("type", ["fc"]),
+            Select("type", ["an"]),
             Point(["latitude", "longitude"], [[0.035149384216, -0.01]], method="nearest"),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -157,22 +147,20 @@ class TestSlicingFDBDatacube:
         import pygribjump as gj
 
         request = Request(
-            Select("step", [21]),
+            Select("step", [0]),
             Select("levtype", ["sfc"]),
-            Select("date", [pd.Timestamp("20231102T000000")]),
+            Select("date", [pd.Timestamp("20230625T120000")]),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
             Select("param", ["167"]),
             Select("class", ["od"]),
             Select("stream", ["oper"]),
-            Select("type", ["fc"]),
+            Select("type", ["an"]),
             Point(["latitude", "longitude"], [[0.035149384216, 360 - 0.01]], method="nearest"),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -186,26 +174,23 @@ class TestSlicingFDBDatacube:
         import pygribjump as gj
 
         request = Request(
-            Select("step", [21]),
+            Select("step", [0]),
             Select("levtype", ["sfc"]),
-            Select("date", [pd.Timestamp("20231102T000000")]),
+            Select("date", [pd.Timestamp("20230625T120000")]),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
             Select("param", ["167"]),
             Select("class", ["od"]),
             Select("stream", ["oper"]),
-            Select("type", ["fc"]),
+            Select("type", ["an"]),
             Point(["latitude", "longitude"], [[0.035149384216, 359.97]], method="nearest"),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
-        # result.pprint_2()
         assert len(result.leaves) == 1
         assert result.leaves[0].values == (359.929906542056,)
         assert result.leaves[0].axis.name == "longitude"
