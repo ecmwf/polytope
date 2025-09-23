@@ -16,7 +16,7 @@ class TestTypeChangeTransformation:
             np.random.randn(2),
             dims=("step"),
             coords={
-                "step": ["0", "0.5", "1"],
+                "step": ["0", "1"],
             },
         )
         self.array = array
