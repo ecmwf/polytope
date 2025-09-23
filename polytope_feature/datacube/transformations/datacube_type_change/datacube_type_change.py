@@ -91,7 +91,13 @@ class TypeChangeStrToFloat(DatacubeAxisTypeChange):
     def make_str(self, value):
         values = []
         for val in value:
-            values.append(str(val))
+            int_val = int(val)
+            if val == int_val:
+                # we return a str of the integer value
+                values.append(str(int_val))
+            else:
+                # we return a str of the float value
+                values.append(str(val))
         return tuple(values)
 
 
