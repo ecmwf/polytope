@@ -39,5 +39,5 @@ class TestTypeChangeTransformation:
         assert type_change_transform.transform_type("0.5") == 0.5
         assert type_change_transform.transform_type("0") == 0.0
 
-        assert type_change_transform.make_str([0.1]) == "0.1"
-        assert type_change_transform.make_str([0.0]) == "0"
+        assert type_change_transform.make_str([0.1]) == ("0.1",)
+        assert type_change_transform.make_str([0.0]) == ("0",)
