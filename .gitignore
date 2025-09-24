@@ -36,6 +36,7 @@ example_eo
 example_mri
 new_test_venv_polytope
 new_venv_polytope
+new_polytope_venv
 polytope_venv
 polytope_venv_latest
 new_updated_numpy_venv

@@ -388,6 +388,75 @@ class Path(Shape):
             between the points {self._points}"
 
 
+class Segment(Shape):
+    """N-D polytope defined as the space between two shapes"""
+
+    def __init__(self, axes, shape1: Shape, shape2: Shape):
+        self._axes = axes
+        self._shape1 = shape1
+        self._shape2 = shape2
+
+        assert shape1.axes() == self.axes()
+        assert shape2.axes() == self.axes()
+
+        self.polytopes = []
+
+        for polytope1 in shape1.polytope():
+            # check that we do not have special "augmented" shapes like Point
+            assert polytope1.axes() == shape1.axes()
+            # Check that the shapes are not in a union
+            assert not polytope1.is_in_union
+            for polytope2 in shape2.polytope():
+                assert polytope2.axes() == shape2.axes()
+                assert not polytope2.is_in_union
+                assert polytope1.axes() == polytope2.axes()
+                points = polytope1.points
+                points.extend(polytope2.points)
+                poly = ConvexPolytope(polytope1.axes(), points)
+                poly.add_to_union()
+                self.polytopes.append(poly)
+
+    def axes(self):
+        return self._axes
+
+    def polytope(self):
+        return self.polytopes
+
+    def __repr__(self):
+        return f"Segment in {self._axes} obtained between a {self._shape1.__repr__()} \
+            and a {self._shape2.__repr__()} "
+
+
+class ShapePath(Shape):
+    # TODO
+    """N-D polytope defined by the space between multiple shapes"""
+
+    def __init__(self, axes, *shapes):
+        self._axes = axes
+        self._shapes = shapes
+
+        for shape in shapes:
+            assert shape.axes() == self.axes()
+
+        path_segments = []
+
+        for i in range(0, len(shapes) - 1):
+            new_segment = Segment(axes, shapes[i], shapes[i + 1])
+            path_segments.append(new_segment)
+
+        self.union = Union(self.axes(), *path_segments)
+
+    def axes(self):
+        return self._axes
+
+    def polytope(self):
+        return self.union.polytope()
+
+    def __repr__(self):
+        return f"Path in {self._axes} obtained by sweeping a {self._shape.__repr__()} \
+            between the points {self._points}"
+
+
 class Union(Shape):
     """N-D union of two shapes with the same axes"""
 
