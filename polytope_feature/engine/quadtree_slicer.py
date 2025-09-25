@@ -54,8 +54,11 @@ class QuadTreeSlicer(Engine):
                 lat_val = value.item[0]
                 lon_val = value.item[1]
             # store the native type
-            (child, _) = node.create_child(lat_ax, lat_val, [])
-            (grand_child, _) = child.create_child(lon_ax, lon_val, [])
+            # (child, _) = node.create_child(lat_ax, lat_val, [])
+            # (grand_child, _) = child.create_child(lon_ax, lon_val, [])
+
+            grand_child = node.create_grid_child((lat_ax, lon_ax), (lat_val, lon_val))
+            # (grand_child, _) = child.create_child(lon_ax, lon_val, [])
             # NOTE: the index of the point is stashed in the branches' result
             if use_rust:
                 grand_child.indexes = [value]

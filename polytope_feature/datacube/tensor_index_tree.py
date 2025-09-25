@@ -118,6 +118,12 @@ class TensorIndexTree(object):
             return (node, next_nodes)
         return (existing_child, next_nodes)
 
+    def create_grid_child(self, axes, values):
+        # TODO: what if we remove the next nodes here?
+        node = GridNode(axes, values)
+        self.add_child(node)
+        return node
+
     @property
     def parent(self):
         return self._parent
@@ -225,3 +231,82 @@ class TensorIndexTree(object):
             ancestors.append(current_node)
             current_node = current_node.parent
         return ancestors[::-1]
+
+
+class GridNode(object):
+    def __init__(self, axes, values=tuple()):
+        # NOTE: the values here is a tuple so we can hash it
+        self.values = values
+        self.children = None
+        self._parent = None
+        self.result = []
+        self.axes = axes
+        self.ancestors = []
+        self.indexes = []
+        self.hidden = False
+
+    @property
+    def parent(self):
+        return self._parent
+
+    @parent.setter
+    def set_parent(self, node):
+        if self.parent is not None:
+            self.parent.children.remove(self)
+        self._parent = node
+        self._parent.children.add(self)
+
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def __delitem__(self, key):
+        return delattr(self, key)
+
+    def __lt__(self, other):
+        return self.values < other.values
+
+    def _collect_leaf_nodes(self, leaves):
+        if not self.children:
+            leaves.append(self)
+            self.ancestors.append(self)
+        else:
+            if len(self.children) == 0:
+                leaves.append(self)
+                self.ancestors.append(self)
+            for n in self.children:
+                for ancestor in self.ancestors:
+                    n.ancestors.append(ancestor)
+                if self.axes != TensorIndexTree.root:
+                    n.ancestors.append(self)
+                n._collect_leaf_nodes(leaves)
+
+    def pprint(self, level=0):
+        if self.axes[0].name == "root":
+            logging.debug("\n")
+        logging.debug("\t" * level + "\u21b3" + str(self))
+        if not self.children:
+            logging.debug("\t" * (level + 1) + "\u21b3" + str(self.result))
+        else:
+            for child in self.children:
+                if not child.hidden:
+                    child.pprint(level + 1)
+            if len(self.children) == 0:
+                logging.debug("\t" * (level + 1) + "\u21b3" + str(self.result))
+
+    def flatten(self):
+        path = DatacubePath()
+        path[self.axes[0].name] = (self.values[0],)
+        path[self.axes[1].name] = (self.values[1],)
+        # ancestors = self.get_ancestors()
+        # for ancestor in ancestors:
+        #     path[ancestor.axis.name] = ancestor.values
+        return path
+
+    def __repr__(self):
+        if self.axes != "root":
+            return f"{(self.axes[0].name, self.axes[1].name)}={self.values}"
+        else:
+            return f"{self.axes}"
