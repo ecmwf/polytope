@@ -6,6 +6,13 @@
 </h3>
 
 <p align="center">
+<a href="https://github.com/ecmwf/codex/raw/refs/heads/main/Project%20Maturity">
+    <img src="https://github.com/ecmwf/codex/raw/refs/heads/main/Project%20Maturity/incubating_badge.svg" alt="Project Maturity">
+  </a>
+<a href="https://github.com/ecmwf/codex/raw/refs/heads/main/ESEE"> <img src="https://github.com/ecmwf/codex/raw/refs/heads/main/ESEE/data_provision_badge.svg" alt="ESEE">
+</p>
+
+<p align="center">
   <a href="https://github.com/ecmwf/polytope/actions/workflows/downstream-ci.yml">
   <img src="https://github.com/ecmwf/polytope/actions/workflows/downstream-ci.yml/badge.svg" alt="ci">
 </a>
@@ -13,9 +20,6 @@
   <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
   <a href="https://github.com/ecmwf/polytope/releases"><img src="https://img.shields.io/github/v/release/ecmwf/polytope?color=blue&label=Release&style=flat-square"></a>
   <a href='https://polytope.readthedocs.io/en/latest/?badge=latest'><img src='https://readthedocs.org/projects/polytope/badge/?version=latest' alt='Documentation Status' /></a>
-  <a href="https://github.com/ecmwf/codex/raw/refs/heads/main/Project%20Maturity">
-    <img src="https://github.com/ecmwf/codex/raw/refs/heads/main/Project%20Maturity/incubating_badge.svg" alt="Project Maturity">
-  </a>
 </p>
 <p align="center">
   <a href="#concept">Concept</a> •
