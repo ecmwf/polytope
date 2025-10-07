@@ -135,6 +135,11 @@ class QubedDatacube(Datacube):
         else:
             return []
 
+    def find_point_cloud(self):
+        # find the point cloud of irregular grid if it exists
+        if self.grid_transformation.is_irregular:
+            return self.grid_transformation._final_transformation.grid_latlon_points()
+
     def get_indices(self, path, path_node, axis, lower, upper, method=None):
         """
         Given a path to a subset of the datacube, return the discrete indexes which exist between

@@ -168,12 +168,13 @@ qubeddatacube = QubedDatacube(fdb_tree, datacube_axes, datacube_transformations)
 slicer = QubedSlicer()
 self_API = Polytope(
     datacube=fdb_tree,
-    engine=slicer,
+    # engine=slicer,
+    engine_options="qubed",
     options=options,
 )
 time1 = time.time()
 # result = self_API.retrieve(request)
-result = self_API.slice(request.polytopes())
+result = self_API.slice(self_API.datacube, request.polytopes())
 time2 = time.time()
 
 print(result)

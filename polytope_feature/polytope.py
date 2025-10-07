@@ -65,13 +65,6 @@ class Polytope:
 
         self.compressed_axes = []
 
-        (
-            axis_options,
-            compressed_axes_options,
-            config,
-            alternative_axes,
-            datacube_axes,
-        ) = PolytopeOptions.get_polytope_options(options)
         self.context = context
 
         (
@@ -81,6 +74,7 @@ class Polytope:
             alternative_axes,
             grid_online_path,
             grid_local_directory,
+            datacube_axes,
         ) = PolytopeOptions.get_polytope_options(options)
         self.datacube = Datacube.create(
             datacube,
@@ -96,6 +90,10 @@ class Polytope:
         if engine_options == {}:
             for ax_name in self.datacube._axes.keys():
                 engine_options[ax_name] = "hullslicer"
+        if engine_options == "qubed":
+            engine_options = {}
+            for ax_name in self.datacube._axes.keys():
+                engine_options[ax_name] = "qubed"
         self.engine_options = engine_options
         self.engines = self.create_engines()
         self.ax_is_unsliceable = {}
@@ -119,6 +117,8 @@ class Polytope:
         if "optimised_point_in_polygon" in engine_types:
             points = self.datacube.find_point_cloud()
             engines["optimised_point_in_polygon"] = OptimisedPointInPolygonSlicer(points)
+        if "qubed" in engine_types:
+            engines["qubed"] = HullSlicer()
         return engines
 
     def _unique_continuous_points(self, p: ConvexPolytope, datacube: Datacube):
