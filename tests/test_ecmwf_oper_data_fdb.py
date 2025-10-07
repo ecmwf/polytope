@@ -1,7 +1,6 @@
 import pandas as pd
 import pytest
 
-from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Point, Select, Span
 
@@ -59,10 +58,8 @@ class TestSlicingFDBDatacube:
             Box(["latitude", "longitude"], [0, 0], [80, 80]),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -70,6 +67,7 @@ class TestSlicingFDBDatacube:
         # assert len(result.leaves) == 3
         # assert len(result.leaves[0].result) == 3
 
+    @pytest.mark.fdb
     def test_fdb_datacube_point(self):
         import pygribjump as gj
 
@@ -86,10 +84,8 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[0.035149384216, 0.0]], method="surrounding"),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -115,10 +111,8 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[0.035149384216, 0.0]], method="surrounding"),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -173,10 +167,8 @@ class TestSlicingFDBDatacube:
             Point(["latitude", "longitude"], [[0.035149384216, 0.0]], method="surrounding"),
         )
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)

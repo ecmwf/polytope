@@ -1,17 +1,31 @@
-import bisect
 import math
 
 import numpy as np
 
 from ..datacube_mappers import DatacubeMapper
 
+use_rust = False
+try:
+    from polytope_feature.polytope_rs import (
+        first_axis_vals_healpix_nested,
+        healpix_longitudes,
+        unmap,
+    )
+
+    use_rust = True
+except (ModuleNotFoundError, ImportError):
+    print("Failed to load Rust extension, falling back to Python implementation.")
+
 
 class NestedHealpixGridMapper(DatacubeMapper):
-    def __init__(self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None):
+    def __init__(
+        self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None, mapper_options=None
+    ):
         # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
         self._resolution = resolution
+        self.is_irregular = False
         self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
         self._first_axis_vals = self.first_axis_vals()
         self._first_axis_vals_np_rounded = -np.round(np.array(self._first_axis_vals), decimals=8)
@@ -29,22 +43,28 @@ class NestedHealpixGridMapper(DatacubeMapper):
         if not self._axis_reversed[mapped_axes[0]]:
             raise NotImplementedError("Healpix grid with first axis in increasing order is not supported")
 
-    def first_axis_vals(self):
-        rad2deg = 180 / math.pi
-        vals = [0] * (4 * self._resolution - 1)
+        if local_area != []:
+            raise NotImplementedError("Local area grid not implemented for healpix grids")
 
-        # Polar caps
-        for i in range(1, self._resolution):
-            val = 90 - (rad2deg * math.acos(1 - (i * i / (3 * self._resolution * self._resolution))))
-            vals[i - 1] = val
-            vals[4 * self._resolution - 1 - i] = -val
-        # Equatorial belts
-        for i in range(self._resolution, 2 * self._resolution):
-            val = 90 - (rad2deg * math.acos((4 * self._resolution - 2 * i) / (3 * self._resolution)))
-            vals[i - 1] = val
-            vals[4 * self._resolution - 1 - i] = -val
-        # Equator
-        vals[2 * self._resolution - 1] = 0
+    def first_axis_vals(self):
+        if use_rust:
+            vals = first_axis_vals_healpix_nested(self._resolution)
+        else:
+            rad2deg = 180 / math.pi
+            vals = [0] * (4 * self._resolution - 1)
+
+            # Polar caps
+            for i in range(1, self._resolution):
+                val = 90 - (rad2deg * math.acos(1 - (i * i / (3 * self._resolution * self._resolution))))
+                vals[i - 1] = val
+                vals[4 * self._resolution - 1 - i] = -val
+            # Equatorial belts
+            for i in range(self._resolution, 2 * self._resolution):
+                val = 90 - (rad2deg * math.acos((4 * self._resolution - 2 * i) / (3 * self._resolution)))
+                vals[i - 1] = val
+                vals[4 * self._resolution - 1 - i] = -val
+            # Equator
+            vals[2 * self._resolution - 1] = 0
         return vals
 
     def map_first_axis(self, lower, upper):
@@ -77,6 +97,8 @@ class NestedHealpixGridMapper(DatacubeMapper):
             return self.HEALPix_nj(ni - 1 - i)
 
     def HEALPix_longitudes(self, i):
+        if use_rust:
+            return healpix_longitudes(i, self._resolution)
         Nj = self.HEALPix_nj(i)
         step = 360.0 / Nj
         start = np.where(
@@ -102,19 +124,32 @@ class NestedHealpixGridMapper(DatacubeMapper):
         else:
             return sum1 + (2 * res + 1) * (4 * res) + sum2 + second_idx
 
-    def unmap(self, first_val, second_vals):
-        # Convert to NumPy array for fast computation
-        idx = np.searchsorted(self._first_axis_vals_np_rounded, -np.round(first_val[0], decimals=8))
-        if idx >= len(self._first_axis_vals_np_rounded):
-            return None
-        second_axis_vals = np.round(np.array(self.second_axis_vals_from_idx(idx)), decimals=8)
-        second_vals = np.round(np.array(second_vals), decimals=8)
-        second_idxs = np.searchsorted(second_axis_vals, second_vals)
-        valid_mask = second_idxs < len(second_axis_vals)
-        if not np.all(valid_mask):
-            return None
-        healpix_idxs = [self.axes_idx_to_healpix_idx(idx, sec_idx) for sec_idx in second_idxs]
-        return self.ring_to_nested(np.asarray(healpix_idxs)).tolist()
+    def unmap(self, first_val, second_vals, unmapped_idx=None):
+        if use_rust:
+            return unmap(
+                self._first_axis_vals,
+                first_val[0],
+                second_vals,
+                self.Nside,
+                self.Npix,
+                self.Ncap,
+                self.k,
+                self._resolution,
+            )
+        else:
+            # Convert to NumPy array for fast computation
+            idx = np.searchsorted(self._first_axis_vals_np_rounded, -np.round(first_val[0], decimals=8))
+            if idx >= len(self._first_axis_vals_np_rounded):
+                return None
+            second_axis_vals = np.round(np.array(self.second_axis_vals_from_idx(idx)), decimals=8)
+            second_vals = np.round(np.array(second_vals), decimals=8)
+            second_idxs = np.searchsorted(second_axis_vals, second_vals)
+            valid_mask = second_idxs < len(second_axis_vals)
+            if not np.all(valid_mask):
+                return None
+            healpix_idxs = [self.axes_idx_to_healpix_idx(idx, sec_idx) for sec_idx in second_idxs]
+            return_idxs = self.ring_to_nested(np.asarray(healpix_idxs)).tolist()
+        return return_idxs
 
     def div_03(self, a, b):
         """Vectorized version of div_03"""

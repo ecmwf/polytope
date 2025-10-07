@@ -6,16 +6,20 @@
 </h3>
 
 <p align="center">
-  <a href="https://github.com/ecmwf/polytope/actions/workflows/ci.yaml">
-  <img src="https://github.com/ecmwf/polytope/actions/workflows/ci.yaml/badge.svg" alt="ci">
+<a href="https://github.com/ecmwf/codex/raw/refs/heads/main/Project%20Maturity">
+    <img src="https://github.com/ecmwf/codex/raw/refs/heads/main/Project%20Maturity/incubating_badge.svg" alt="Project Maturity">
+  </a>
+<a href="https://github.com/ecmwf/codex/raw/refs/heads/main/ESEE"> <img src="https://github.com/ecmwf/codex/raw/refs/heads/main/ESEE/data_provision_badge.svg" alt="ESEE">
+</p>
+
+<p align="center">
+  <a href="https://github.com/ecmwf/polytope/actions/workflows/downstream-ci.yml">
+  <img src="https://github.com/ecmwf/polytope/actions/workflows/downstream-ci.yml/badge.svg" alt="ci">
 </a>
   <a href="https://codecov.io/gh/ecmwf/polytope"><img src="https://codecov.io/gh/ecmwf/polytope/branch/develop/graph/badge.svg"></a>
   <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
   <a href="https://github.com/ecmwf/polytope/releases"><img src="https://img.shields.io/github/v/release/ecmwf/polytope?color=blue&label=Release&style=flat-square"></a>
   <a href='https://polytope.readthedocs.io/en/latest/?badge=latest'><img src='https://readthedocs.org/projects/polytope/badge/?version=latest' alt='Documentation Status' /></a>
-  <a href="https://github.com/ecmwf/codex/raw/refs/heads/main/Project%20Maturity">
-    <img src="https://github.com/ecmwf/codex/raw/refs/heads/main/Project%20Maturity/incubating_badge.svg" alt="Project Maturity">
-  </a>
 </p>
 <p align="center">
   <a href="#concept">Concept</a> •
@@ -164,6 +168,7 @@ See also the [contributors](https://github.com/ecmwf/polytope/contributors) for 
 
 ## License 
 
+```
 Copyright 2021 European Centre for Medium-Range Weather Forecasts (ECMWF)
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -179,16 +184,17 @@ limitations under the License.
 In applying this licence, ECMWF does not waive the privileges and immunities
 granted to it by virtue of its status as an intergovernmental organisation nor
 does it submit to any jurisdiction.
+```
 
 ## Citing 
 
-If this software is useful in your work, please consider citing our [paper](https://arxiv.org/abs/2306.11553) as 
+If this software is useful in your work, please consider citing our paper as 
 
-> Leuridan, M., Hawkes, J., Smart, S., Danovaro, E., and Quintino, T., “Polytope: An Algorithm for Efficient Feature Extraction on Hypercubes”, <i>arXiv e-prints</i>, 2023. doi:10.48550/arXiv.2306.11553.
+> Leuridan, M., Hawkes, J., Smart, S., Danovaro, E., and Quintino, T., [“Polytope: An Algorithm for Efficient Feature Extraction on Hypercubes”](https://arxiv.org/abs/2306.11553), <i>arXiv e-prints</i>, 2023. doi:10.48550/arXiv.2306.11553.
 
-Other papers in preparation include: 
+Other papers include: 
 
-> Leuridan, M., Bradley, C., Hawkes, J., Quintino, T., and Schultz, M., "Performance Analysis of an Efficient Algorithm for Feature Extraction from Large Scale Meteorological Data Stores".
+> Leuridan, M., Bradley, C., Hawkes, J., Quintino, T., & Schultz, M. (2025, June). [Performance Analysis of an Efficient Algorithm for Feature Extraction from Large Scale Meteorological Data Stores.](https://dl.acm.org/doi/abs/10.1145/3732775.3733573) In Proceedings of the Platform for Advanced Scientific Computing Conference (pp. 1-9).
 
 ## Acknowledgements
 

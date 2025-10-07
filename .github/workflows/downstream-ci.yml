@@ -27,7 +27,7 @@ jobs:
     uses: ecmwf/downstream-ci/.github/workflows/downstream-ci.yml@main
     with:
       polytope: ecmwf/polytope@${{ github.event.pull_request.head.sha || github.sha }}
-      codecov_upload: true
+      # codecov_upload: true
       python_qa: true
     secrets: inherit
 
@@ -38,25 +38,3 @@ jobs:
     with:
       polytope: ecmwf/polytope@${{ github.event.pull_request.head.sha || github.sha }}
     secrets: inherit
-
-  deploy:
-    if: ${{ github.event_name == 'release' }}
-    name: Upload to Pypi
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.8'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install build twine
-      - name: Build and publish
-        env:
-          TWINE_USERNAME: "__token__"
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: |
-          python -m build
-          twine upload dist/*

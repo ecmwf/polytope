@@ -1,3 +1,4 @@
+import math
 from copy import copy
 
 from ..datacube.tensor_index_tree import TensorIndexTree
@@ -9,12 +10,7 @@ from .slicing_tools import slice
 
 class HullSlicer(Engine):
     def __init__(self):
-        self.ax_is_unsliceable = {}
-        self.axis_values_between = {}
-        self.has_value = {}
-        self.sliced_polytopes = {}
-        self.remapped_vals = {}
-        self.compressed_axes = []
+        super().__init__()
 
     def _build_unsliceable_child(self, polytope, ax, node, datacube, lowers, next_nodes, slice_axis_idx):
         if not polytope.is_flat:
@@ -28,6 +24,7 @@ class HullSlicer(Engine):
                 flattened_tuple = (datacube.coupled_axes[0][0], path.get(datacube.coupled_axes[0][0], None))
                 path = {flattened_tuple[0]: flattened_tuple[1]}
 
+        # TODO: Restructure this to add all compressed values at once in the tree
         for i, lower in enumerate(lowers):
             if self.axis_values_between.get((flattened_tuple, ax.name, lower), None) is None:
                 self.axis_values_between[(flattened_tuple, ax.name, lower)] = datacube.has_index(path, ax, lower)
@@ -74,9 +71,22 @@ class HullSlicer(Engine):
             self.axis_values_between[(flattened_tuple, ax.name, lower, upper, method)] = values
         return values
 
-    def _build_sliceable_child(self, polytope, ax, node, datacube, values, next_nodes, slice_axis_idx):
+    def remap_values(self, ax, value):
+        remapped_val = self.remapped_vals.get((value, ax.name), None)
+        if remapped_val is None:
+            remapped_val = value
+            if ax.is_cyclic:
+                remapped_val_interm = ax.remap([value, value])[0]
+                remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
+            if ax.can_round:
+                remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
+            self.remapped_vals[(value, ax.name)] = remapped_val
+        return remapped_val
+
+    def _build_sliceable_child(self, polytope, ax, node, datacube, values, next_nodes, slice_axis_idx, api):
+        # TODO: Restructure this to add all compressed values at once in the tree
         for i, value in enumerate(values):
-            if i == 0 or ax.name not in self.compressed_axes:
+            if i == 0 or ax.name not in api.compressed_axes:
                 fvalue = ax.to_float(value)
                 new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
                 remapped_val = self.remap_values(ax, value)
@@ -90,8 +100,8 @@ class HullSlicer(Engine):
                 remapped_val = self.remap_values(ax, value)
                 child.add_value(remapped_val)
 
-    def _build_branch(self, ax, node, datacube, next_nodes):
-        if ax.name not in self.compressed_axes:
+    def _build_branch(self, ax, node, datacube, next_nodes, api):
+        if ax.name not in api.compressed_axes:
             parent_node = node.parent
             right_unsliced_polytopes = []
             for polytope in node["unsliced_polytopes"]:
@@ -102,7 +112,7 @@ class HullSlicer(Engine):
                 lower, upper, slice_axis_idx = polytope.extents(ax.name)
                 # here, first check if the axis is an unsliceable axis and directly build node if it is
                 # NOTE: we should have already created the ax_is_unsliceable cache before
-                if self.ax_is_unsliceable[ax.name]:
+                if api.ax_is_unsliceable[ax.name]:
                     self._build_unsliceable_child(polytope, ax, node, datacube, [lower], next_nodes, slice_axis_idx)
                 else:
                     values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
@@ -113,7 +123,7 @@ class HullSlicer(Engine):
                         # we have iterated all polytopes and we can now remove the node if we need to
                         if len(values) == 0 and len(node.children) == 0:
                             node.remove_branch()
-                    self._build_sliceable_child(polytope, ax, node, datacube, values, next_nodes, slice_axis_idx)
+                    self._build_sliceable_child(polytope, ax, node, datacube, values, next_nodes, slice_axis_idx, api)
         else:
             all_values = []
             all_lowers = []
@@ -129,12 +139,12 @@ class HullSlicer(Engine):
                     lower, upper, slice_axis_idx = polytope.extents(ax.name)
                     if not first_slice_axis_idx:
                         first_slice_axis_idx = slice_axis_idx
-                    if self.ax_is_unsliceable[ax.name]:
+                    if api.ax_is_unsliceable[ax.name]:
                         all_lowers.append(lower)
                     else:
                         values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
                         all_values.extend(values)
-            if self.ax_is_unsliceable[ax.name]:
+            if api.ax_is_unsliceable[ax.name]:
                 self._build_unsliceable_child(
                     first_polytope, ax, node, datacube, all_lowers, next_nodes, first_slice_axis_idx
                 )
@@ -142,7 +152,7 @@ class HullSlicer(Engine):
                 if len(all_values) == 0:
                     node.remove_branch()
                 self._build_sliceable_child(
-                    first_polytope, ax, node, datacube, all_values, next_nodes, first_slice_axis_idx
+                    first_polytope, ax, node, datacube, all_values, next_nodes, first_slice_axis_idx, api
                 )
 
         del node["unsliced_polytopes"]

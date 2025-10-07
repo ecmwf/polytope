@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import numpy as np
 import pandas as pd
 from qubed import Qube
@@ -13,7 +15,6 @@ from ..utility.combinatorics import (
 )
 from .engine import Engine
 from .slicing_tools import slice
-from copy import deepcopy
 
 
 class QubedSlicer(Engine):
@@ -89,8 +90,9 @@ class QubedSlicer(Engine):
                 child_polytopes = self.find_children_polytopes(polytopes, poly, sliced_polys_)
                 if idxs:
                     current_metadata_idx_stack = metadata_idx_stack + [[idxs[i]]]
-                children = self._slice(child, child_polytopes, datacube, datacube_transformations,
-                                       current_metadata_idx_stack)
+                children = self._slice(
+                    child, child_polytopes, datacube, datacube_transformations, current_metadata_idx_stack
+                )
                 # If this node used to have children but now has none due to filtering, skip it.
                 if child.children and not children:
                     continue
@@ -108,8 +110,9 @@ class QubedSlicer(Engine):
             # create children
             if idxs:
                 current_metadata_idx_stack = metadata_idx_stack + [idxs]
-            children = self._slice(child, child_polytopes, datacube, datacube_transformations,
-                                   current_metadata_idx_stack)
+            children = self._slice(
+                child, child_polytopes, datacube, datacube_transformations, current_metadata_idx_stack
+            )
             # If this node used to have children but now has none due to filtering, skip it.
             if child.children and not children:
                 return None
@@ -150,7 +153,8 @@ class QubedSlicer(Engine):
                 # find values on child that are within extents
                 found_vals, idxs = self.find_values_between(poly, ax, child, datacube, lower, upper)
 
-                # TODO: find the indexes of the found_vals wrt child.values, to extract the right metadata that we want to keep inside self.build_branch
+                # TODO: find the indexes of the found_vals wrt child.values,
+                # to extract the right metadata that we want to keep inside self.build_branch
 
                 if len(found_vals) == 0:
                     continue
@@ -170,7 +174,7 @@ class QubedSlicer(Engine):
                     datacube_transformations,
                     ax,
                     idxs,
-                    metadata_idx_stack
+                    metadata_idx_stack,
                 )
 
                 if final_children_and_vals is None:
@@ -199,7 +203,8 @@ class QubedSlicer(Engine):
         return result
 
     def slice_grid_axes(self, q: Qube, datacube, datacube_transformations):
-        # TODO: here, instead of checking if the qube is at the leaves, we instead give it the sub-tree and go to its leaves
+        # TODO: here, instead of checking if the qube is at the leaves, we instead give it the sub-tree
+        # and go to its leaves
         # TODO: we then find the remaining sliced_polys to continue slicing and slice along lat + lon like before
         # TODO: we then return the completed tree
         compressed_leaves = [leaf for leaf in q.compressed_leaf_nodes()]
@@ -293,8 +298,9 @@ class QubedSlicer(Engine):
 
             # NOTE this was the last axis so we do not have children...
 
-            result.extend([Qube.make_node(key=axis_name, values=QEnum(
-                new_found_vals), metadata={"result": []}, children={})])
+            result.extend(
+                [Qube.make_node(key=axis_name, values=QEnum(new_found_vals), metadata={"result": []}, children={})]
+            )
         return result
 
     def slice_tree(self, datacube, final_polys):

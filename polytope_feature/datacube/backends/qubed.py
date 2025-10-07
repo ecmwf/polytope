@@ -9,9 +9,8 @@ from qubed.value_types import QEnum
 
 from ...utility.exceptions import BadGridError, GribJumpNoIndexError
 from ...utility.geometry import nearest_pt
+from ...utility.metadata_handling import find_metadata, flatten_metadata
 from .datacube import Datacube, TensorIndexTree
-
-from ...utility.metadata_handling import flatten_metadata, find_metadata
 
 
 class QubedDatacube(Datacube):
@@ -45,7 +44,8 @@ class QubedDatacube(Datacube):
         self.fdb_coordinates = {}
 
         # TODO: we instead now have a list of axes with the actual axes types...
-        # TODO: here use the qubed to find all axes names and then get the values from the first val of the qubed and then apply transformations to get the actual right axis type...
+        # TODO: here use the qubed to find all axes names and then get the values from the first val of the qubed and
+        # then apply transformations to get the actual right axis type...
         for axis_name in datacube_axes:
             axis = datacube_axes[axis_name]
             self.fdb_coordinates[axis_name] = [axis.type_eg]
@@ -74,8 +74,10 @@ class QubedDatacube(Datacube):
 
         # TODO: actually should separate axis creation with types from the transformations...
         # TODO: we should create all axes here first maybe?
-        # TODO: otherwise, we need to somehow get the axis type information/objects when we transform the polytope points into continuous types?
-        # TODO: Also, if we don't have the right axis types from the start here, then when we pre-process the polytopes, it will be wrong...
+        # TODO: otherwise, we need to somehow get the axis type information/objects when we transform the polytope
+        # points into continuous types?
+        # TODO: Also, if we don't have the right axis types from the start here, then when we pre-process the polytopes,
+        # it will be wrong...
 
     def add_axes_dynamically(self, qube_node):
         # TODO: here look if the options have changed and we need to modify the transformations
@@ -108,7 +110,8 @@ class QubedDatacube(Datacube):
 
             self._check_and_readd_axes(options, axis_name, vals)
 
-            # NOTE: now if we have created the additional grid axes, readd the additional transformations associated to them
+            # NOTE: now if we have created the additional grid axes, readd the additional transformations
+            # associated to them
             new_axes_names = list(self._axes.keys())
             for name in new_axes_names:
                 if name not in self.treated_axes:
@@ -120,8 +123,10 @@ class QubedDatacube(Datacube):
                     val = [self._axes[name].type_eg]
                     self._check_and_readd_axes(options, name, val)
 
-        # TODO: will this work?? How do we make sure we add the grid axes which come from the values transformation here??
-        # TODO: we can't do a "difference" of axes like before since we don't a priori have the final axes set available at once??
+        # TODO: will this work?? How do we make sure we add the grid axes which come from the values
+        # transformation here??
+        # TODO: we can't do a "difference" of axes like before since we don't a priori have the final axes
+        # set available at once??
         pass
 
     def datacube_natural_indexes(self, qube_node):
@@ -153,11 +158,15 @@ class QubedDatacube(Datacube):
     def get(self, requests, context=None):
         """
         We have a compressed tree of requests, which we need to decompress completely with its metadata indexes.
-        BUT the last two axes, we would like to "ignore" in the decompression and instead, we create grid index ranges from them.
-        WHILE we decompress, we need to keep some kind of map from decompressed request + grid index ranges to corresponding tree node.
-        This mapping will map potentially several decompressed request + grid index ranges tuples to the same tree nodes.
+        BUT the last two axes, we would like to "ignore" in the decompression and instead,
+        we create grid index ranges from them.
+        WHILE we decompress, we need to keep some kind of map from decompressed request + grid index ranges
+        to corresponding tree node.
+        This mapping will map potentially several decompressed request + grid index ranges tuples
+        to the same tree nodes.
 
-        ADDED DIFFICULTY: the grid index ranges MUST be ordered (which is not guaranteed from the tree) so we need to sort them, while also sorting the tree nodes so that they match up.
+        ADDED DIFFICULTY: the grid index ranges MUST be ordered (which is not guaranteed from the tree) so we need
+        to sort them, while also sorting the tree nodes so that they match up.
 
         UNTIL NOW, we had a map of compressed request + grid index ranges tuples to tree nodes.
         We could just add a map of compressed request -> list of decompressed request + associated metadata
@@ -199,7 +208,8 @@ class QubedDatacube(Datacube):
                 port = flatten_metadata(actual_metadata["port"])
 
                 gj_extraction_request = pygj.PathExtractionRequest(
-                    path, scheme, offset, host, port, compressed_request[1], self.grid_md5_hash)
+                    path, scheme, offset, host, port, compressed_request[1], self.grid_md5_hash
+                )
 
                 complete_list_complete_uncompressed_requests.append(gj_extraction_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
@@ -266,7 +276,8 @@ class QubedDatacube(Datacube):
                     new_vals.append(val[:4] + val[5:7] + val[8:10])
                 key_value_path[requests.key] = new_vals
             leaf_path.update(key_value_path)
-            # TODO: in the leaf metadata, try to instead store mapping leaf_path -> list(individual metadata dicts for each uncompressed value of tree)
+            # TODO: in the leaf metadata, try to instead store mapping leaf_path -> list(individual metadata dicts for
+            # each uncompressed value of tree)
             leaf_metadata.update(requests.metadata)
             if len(requests.children[0].children[0].children) == 0:
                 # find the fdb_requests and associated nodes to which to add results

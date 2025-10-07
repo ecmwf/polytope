@@ -109,7 +109,9 @@ class TensorIndexTree(object):
         self.values = tuple(new_values)
 
     def create_child(self, axis, value, next_nodes):
+        # TODO: what if we remove the next nodes here?
         node = TensorIndexTree(axis, (value,))
+        # TODO: do we really need to find the child now in the compressed tree since we will have duplicates anyway?
         existing_child = self.find_child(node)
         if not existing_child:
             self.add_child(node)
@@ -138,12 +140,9 @@ class TensorIndexTree(object):
 
     def find_child(self, node):
         index = self.children.bisect_left(node)
-        if index >= len(self.children):
-            return None
-        child = self.children[index]
-        if not child == node:
-            return None
-        return child
+        if index < len(self.children) and self.children[index] == node:
+            return self.children[index]
+        return None
 
     def add_node_layer_after(self, ax_name, vals):
         ax = IntDatacubeAxis()

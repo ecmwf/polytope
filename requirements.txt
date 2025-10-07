@@ -1,8 +1,0 @@
-numpy == 1.26.4
-pandas
-scipy
-sortedcontainers
-tripy
-xarray
-conflator
-protobuf

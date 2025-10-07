@@ -3,7 +3,6 @@ import pytest
 from helper_functions import download_test_data
 
 from polytope_feature.datacube.datacube_axis import FloatDatacubeAxis
-from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
 
@@ -41,10 +40,8 @@ class TestInitDatacubeAxes:
                 "type",
             ],
         }
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=latlon_array,
-            engine=self.slicer,
             options=self.options,
         )
         self.datacube = self.API.datacube

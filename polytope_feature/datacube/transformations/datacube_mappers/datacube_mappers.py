@@ -21,25 +21,55 @@ class DatacubeMapper(DatacubeAxisTransformation):
         self._axis_reversed = None
         if mapper_options.axis_reversed is not None:
             self._axis_reversed = mapper_options.axis_reversed
+        self.mapper_options = mapper_options
         self.old_axis = name
+        self.grid_online_path = datacube.grid_online_path
+        self.grid_local_directory = datacube.grid_local_directory
         self._final_transformation = self.generate_final_transformation()
         self._final_mapped_axes = self._final_transformation._mapped_axes
         self._axis_reversed = self._final_transformation._axis_reversed
         self.compressed_grid_axes = self._final_transformation.compressed_grid_axes
         self.md5_hash = self._final_transformation.md5_hash
+        self.is_irregular = self._final_transformation.is_irregular
 
     def generate_final_transformation(self):
         map_type = _type_to_datacube_mapper_lookup[self.grid_type]
-        module = import_module(
-            "polytope_feature.datacube.transformations.datacube_mappers.mapper_types." + self.grid_type
-        )
-        constructor = getattr(module, map_type)
-        transformation = deepcopy(
-            constructor(
-                self.old_axis, self.grid_axes, self.grid_resolution, self.md5_hash, self.local_area, self._axis_reversed
+        if map_type == "IrregularGridMapper":
+            module = import_module(
+                "polytope_feature.datacube.transformations.datacube_mappers.mapper_types." + "irregular"
             )
-        )
-        return transformation
+            constructor = getattr(module, map_type)
+            transformation = deepcopy(
+                constructor(
+                    self.old_axis,
+                    self.grid_axes,
+                    self.grid_resolution,
+                    self.md5_hash,
+                    self.local_area,
+                    self._axis_reversed,
+                    self.mapper_options,
+                    self.grid_online_path,
+                    self.grid_local_directory,
+                )
+            )
+            return transformation._final_irregular_transformation
+        else:
+            module = import_module(
+                "polytope_feature.datacube.transformations.datacube_mappers.mapper_types." + self.grid_type
+            )
+            constructor = getattr(module, map_type)
+            transformation = deepcopy(
+                constructor(
+                    self.old_axis,
+                    self.grid_axes,
+                    self.grid_resolution,
+                    self.md5_hash,
+                    self.local_area,
+                    self._axis_reversed,
+                    self.mapper_options,
+                )
+            )
+            return transformation
 
     def blocked_axes(self):
         return []
@@ -86,8 +116,8 @@ class DatacubeMapper(DatacubeAxisTransformation):
     def unmap_first_val_to_start_line_idx(self, first_val):
         return self._final_transformation.unmap_first_val_to_start_line_idx(first_val)
 
-    def unmap(self, first_val, second_val):
-        return self._final_transformation.unmap(first_val, second_val)
+    def unmap(self, first_val, second_val, unmapped_idx=None):
+        return self._final_transformation.unmap(first_val, second_val, unmapped_idx)
 
     def find_modified_indexes(self, indexes, path, datacube, axis):
         if axis.name == self._mapped_axes()[0]:
@@ -105,7 +135,11 @@ class DatacubeMapper(DatacubeAxisTransformation):
             unwanted_path[axis.name] = unwanted_val
         if axis.name == self._mapped_axes()[1]:
             first_val = unwanted_path[self._mapped_axes()[0]]
-            unmapped_idx = self.unmap(first_val, values)
+            unmapped_idx = leaf_path.get("index", None)
+            if unmapped_idx is not None and len(unmapped_idx) > 0:
+                unmapped_idx = list(unmapped_idx)
+            else:
+                unmapped_idx = self.unmap(first_val, values)
             leaf_path.pop(self._mapped_axes()[0], None)
             key_value_path.pop(axis.name)
             key_value_path[self.old_axis] = unmapped_idx
@@ -133,6 +167,9 @@ _type_to_datacube_mapper_lookup = {
     "regular": "RegularGridMapper",
     "reduced_ll": "ReducedLatLonMapper",
     "local_regular": "LocalRegularGridMapper",
+    "lambert_conformal": "IrregularGridMapper",
+    "unstructured": "IrregularGridMapper",
     "healpix_nested": "NestedHealpixGridMapper",
+    "icon": "IrregularGridMapper",
     "reduced_gaussian": "ReducedGaussianGridMapper",
 }

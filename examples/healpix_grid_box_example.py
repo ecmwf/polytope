@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 from earthkit import data
 from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
 
-from polytope.datacube.backends.xarray import XArrayDatacube
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Box, Select
+from polytope_feature.datacube.backends.xarray import XArrayDatacube
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Box, Select
 
 
 class TestOctahedralGrid:

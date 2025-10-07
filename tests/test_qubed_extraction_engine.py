@@ -14,7 +14,6 @@ from polytope_feature.datacube.datacube_axis import (
 from polytope_feature.datacube.transformations.datacube_mappers.mapper_types.healpix_nested import (
     NestedHealpixGridMapper,
 )
-
 from polytope_feature.datacube.transformations.datacube_type_change.datacube_type_change import (
     TypeChangeStrToTimedelta,
     TypeChangeStrToTimestamp,
@@ -162,7 +161,7 @@ request = Request(
     ConvexPolytope(["dataset"], [["climate-dt"]]),
     ConvexPolytope(["class"], [["d1"]]),
     ConvexPolytope(["date"], [[pd.Timestamp("20220811")]]),
-    ConvexPolytope(["latitude", "longitude"], [[0, 0], [0.5, 0.5], [0, 0.5]])
+    ConvexPolytope(["latitude", "longitude"], [[0, 0], [0.5, 0.5], [0, 0.5]]),
 )
 
 qubeddatacube = QubedDatacube(fdb_tree, datacube_axes, datacube_transformations)
