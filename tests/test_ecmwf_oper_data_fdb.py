@@ -54,8 +54,8 @@ class TestSlicingFDBDatacube:
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["fc"]),
-            # Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
-            Box(["latitude", "longitude"], [0, 0], [80, 80]),
+            Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
+            # Box(["latitude", "longitude"], [0, 0], [80, 80]),
         )
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(
@@ -64,8 +64,8 @@ class TestSlicingFDBDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        # assert len(result.leaves) == 3
-        # assert len(result.leaves[0].result) == 3
+        assert len(result.leaves) == 3
+        assert len(result.leaves[0].result) == 3
 
     @pytest.mark.fdb
     def test_fdb_datacube_point(self):

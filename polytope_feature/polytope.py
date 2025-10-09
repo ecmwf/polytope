@@ -9,6 +9,7 @@ from .engine.optimised_point_in_polygon_slicer import OptimisedPointInPolygonSli
 from .engine.optimised_quadtree_slicer import OptimisedQuadTreeSlicer
 from .engine.point_in_polygon_slicer import PointInPolygonSlicer
 from .engine.quadtree_slicer import QuadTreeSlicer
+from .engine.qubed_slicer import QubedSlicer
 from .options import PolytopeOptions
 from .shapes import ConvexPolytope, Product
 from .utility.combinatorics import group, tensor_product
@@ -118,7 +119,7 @@ class Polytope:
             points = self.datacube.find_point_cloud()
             engines["optimised_point_in_polygon"] = OptimisedPointInPolygonSlicer(points)
         if "qubed" in engine_types:
-            engines["qubed"] = HullSlicer()
+            engines["qubed"] = QubedSlicer()
         return engines
 
     def _unique_continuous_points(self, p: ConvexPolytope, datacube: Datacube):
