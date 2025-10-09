@@ -325,10 +325,6 @@ class FDBDatacube(Datacube):
             # now c are the leaves of the initial tree
             key_value_path = {c.axis.name: c.values}
             leaf_path["index"] = c.indexes
-            print(c.indexes)
-            print(key_value_path)
-            print(leaf_path)
-            print(self.unwanted_path)
             ax = c.axis
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
@@ -337,7 +333,6 @@ class FDBDatacube(Datacube):
             current_idx[i].extend(key_value_path["values"])
             if self.return_indexes:
                 c.indexes = key_value_path["values"]
-            print(current_idx[i])
             fdb_range_n[i].append(c)
         return (current_idx, fdb_range_n)
 
