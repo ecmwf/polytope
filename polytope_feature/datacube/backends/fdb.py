@@ -19,13 +19,14 @@ class FDBDatacube(Datacube):
         context=None,
         grid_online_path="",
         grid_local_directory="",
+        return_indexes=False,
     ):
         if config is None:
             config = {}
         if context is None:
             context = {}
 
-        super().__init__(axis_options, compressed_axes_options, grid_online_path, grid_local_directory)
+        super().__init__(axis_options, compressed_axes_options, grid_online_path, grid_local_directory, return_indexes)
 
         logging.info("Created an FDB datacube with options: " + str(axis_options))
 
@@ -324,12 +325,19 @@ class FDBDatacube(Datacube):
             # now c are the leaves of the initial tree
             key_value_path = {c.axis.name: c.values}
             leaf_path["index"] = c.indexes
+            print(c.indexes)
+            print(key_value_path)
+            print(leaf_path)
+            print(self.unwanted_path)
             ax = c.axis
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
             # TODO: change this to accommodate non consecutive indexes being compressed too
             current_idx[i].extend(key_value_path["values"])
+            if self.return_indexes:
+                c.indexes = key_value_path["values"]
+            print(current_idx[i])
             fdb_range_n[i].append(c)
         return (current_idx, fdb_range_n)
 

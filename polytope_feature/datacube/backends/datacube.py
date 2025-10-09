@@ -13,7 +13,14 @@ from ..transformations.datacube_transformations import (
 
 
 class Datacube(ABC):
-    def __init__(self, axis_options=None, compressed_axes_options=[], grid_online_path="", grid_local_directory=""):
+    def __init__(
+        self,
+        axis_options=None,
+        compressed_axes_options=[],
+        grid_online_path="",
+        grid_local_directory="",
+        return_indexes=False,
+    ):
         if axis_options is None:
             self.axis_options = {}
         else:
@@ -34,6 +41,7 @@ class Datacube(ABC):
         self.grid_md5_hash = None
         self.grid_online_path = grid_online_path
         self.grid_local_directory = grid_local_directory
+        self.return_indexes = return_indexes
 
     @abstractmethod
     def get(self, requests: TensorIndexTree, context: Dict) -> Any:
@@ -163,6 +171,7 @@ class Datacube(ABC):
         alternative_axes=[],
         grid_online_path="",
         grid_local_directory="",
+        return_indexes=False,
         context=None,
     ):
         # TODO: get the configs as None for pre-determined value and change them to empty dictionary inside the function
@@ -170,7 +179,13 @@ class Datacube(ABC):
             from .xarray import XArrayDatacube
 
             xadatacube = XArrayDatacube(
-                datacube, axis_options, compressed_axes_options, context, grid_online_path, grid_local_directory
+                datacube,
+                axis_options,
+                compressed_axes_options,
+                context,
+                grid_online_path,
+                grid_local_directory,
+                return_indexes,
             )
             return xadatacube
         if type(datacube).__name__ == "GribJump":
@@ -185,6 +200,7 @@ class Datacube(ABC):
                 context,
                 grid_online_path,
                 grid_local_directory,
+                return_indexes,
             )
             return fdbdatacube
         if type(datacube).__name__ == "MockDatacube":

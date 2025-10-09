@@ -84,6 +84,7 @@ class Config(ConfigModel):
     alternative_axes: Optional[List[GribJumpAxesConfig]] = []
     grid_online_path: Optional[str] = ""
     grid_local_directory: Optional[str] = ""
+    return_indexes: Optional[bool] = False
 
 
 class PolytopeOptions(ABC):
@@ -99,5 +100,14 @@ class PolytopeOptions(ABC):
         alternative_axes = config_options.alternative_axes
         grid_online_path = config_options.grid_online_path
         grid_local_directory = config_options.grid_local_directory
+        return_indexes = config_options.return_indexes
 
-        return (axis_config, compressed_axes_config, pre_path, alternative_axes, grid_online_path, grid_local_directory)
+        return (
+            axis_config,
+            compressed_axes_config,
+            pre_path,
+            alternative_axes,
+            grid_online_path,
+            grid_local_directory,
+            return_indexes,
+        )
