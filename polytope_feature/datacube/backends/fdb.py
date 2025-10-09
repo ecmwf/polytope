@@ -19,13 +19,14 @@ class FDBDatacube(Datacube):
         context=None,
         grid_online_path="",
         grid_local_directory="",
+        return_indexes=False,
     ):
         if config is None:
             config = {}
         if context is None:
             context = {}
 
-        super().__init__(axis_options, compressed_axes_options, grid_online_path, grid_local_directory)
+        super().__init__(axis_options, compressed_axes_options, grid_online_path, grid_local_directory, return_indexes)
 
         logging.info("Created an FDB datacube with options: " + str(axis_options))
 
@@ -330,6 +331,8 @@ class FDBDatacube(Datacube):
             )
             # TODO: change this to accommodate non consecutive indexes being compressed too
             current_idx[i].extend(key_value_path["values"])
+            if self.return_indexes:
+                c.indexes = key_value_path["values"]
             fdb_range_n[i].append(c)
         return (current_idx, fdb_range_n)
 
