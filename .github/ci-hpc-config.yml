@@ -18,4 +18,4 @@ build:
     - ECCODES_SAMPLES_PATH=$ECCODES_DIR/share/eccodes/samples
     - ECCODES_DEFINITION_PATH=$ECCODES_DIR/share/eccodes/definitions
   pytest_cmd: |
-    python -m pytest -m 'not fdb' tests --cov=./ --cov-report=xml
+    python -m pytest tests --cov=./ --cov-report=xml
