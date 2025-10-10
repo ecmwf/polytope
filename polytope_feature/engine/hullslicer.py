@@ -1,6 +1,8 @@
 import math
 from copy import copy
 
+from ..datacube.tensor_index_tree import TensorIndexTree
+from ..utility.combinatorics import find_polytope_combinations, group, tensor_product
 from ..utility.exceptions import UnsliceableShapeError
 from .engine import Engine
 from .slicing_tools import slice
@@ -154,3 +156,36 @@ class HullSlicer(Engine):
                 )
 
         del node["unsliced_polytopes"]
+
+    def slice_tree(self, datacube, final_polys):
+        r = TensorIndexTree()
+        r["unsliced_polytopes"] = set(final_polys)
+        current_nodes = [r]
+        for ax in datacube.axes.values():
+            next_nodes = []
+            interm_next_nodes = []
+            for node in current_nodes:
+                self._build_branch(ax, node, datacube, interm_next_nodes)
+                next_nodes.extend(interm_next_nodes)
+                interm_next_nodes = []
+            current_nodes = next_nodes
+        return r
+
+    def build_tree(self, polytopes, datacube):
+        groups, input_axes = group(polytopes)
+        datacube.validate(input_axes)
+        tree = TensorIndexTree()
+        combinations = tensor_product(groups)
+
+        sub_trees = []
+
+        for c in combinations:
+            r = TensorIndexTree()
+            final_polys = find_polytope_combinations(c)
+            r = self.slice_tree(datacube, final_polys)
+
+            sub_trees.append(r)
+
+        for sub_tree in sub_trees[0:]:
+            tree.merge(sub_tree)
+        return tree

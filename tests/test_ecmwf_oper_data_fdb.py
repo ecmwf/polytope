@@ -55,6 +55,7 @@ class TestSlicingFDBDatacube:
             Select("stream", ["oper"]),
             Select("type", ["fc"]),
             Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
+            # Box(["latitude", "longitude"], [0, 0], [80, 80]),
         )
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(

@@ -32,6 +32,7 @@ class Datacube(ABC):
         self.unwanted_path = {}
         self.compressed_axes = compressed_axes_options
         self.grid_md5_hash = None
+        self.datacube_transformations = []
         self.grid_online_path = grid_online_path
         self.grid_local_directory = grid_local_directory
 
@@ -92,6 +93,8 @@ class Datacube(ABC):
 
                 if transformation not in self._axes[axis_name].transformations:  # Avoids duplicates being stored
                     self._axes[axis_name].transformations.append(transformation)
+                if transformation not in self.datacube_transformations:
+                    self.datacube_transformations.append(transformation)
             else:
                 # Means we have an unsliceable axis since we couln't transform values to desired type
                 if self._axes is None or axis_name not in self._axes.keys():
@@ -110,6 +113,20 @@ class Datacube(ABC):
             if name not in self.blocked_axes:
                 if self._axes is None or name not in self._axes.keys():
                     DatacubeAxis.create_standard(name, values, self)
+
+    def _add_all_type_change_transformation_axes(self, options, name, values):
+        for transformation_type_key in options.transformations:
+            if transformation_type_key == "type_change":
+                self._create_axes(name, values, transformation_type_key, options)
+            else:
+                DatacubeAxis.create_standard(name, values, self)
+
+    def _check_and_readd_axes(self, options, name, values):
+        if options is not None:
+            self._add_all_transformation_axes(options, name, values)
+        else:
+            if self._axes is None or name not in self._axes.keys():
+                DatacubeAxis.create_standard(name, values, self)
 
     def has_index(self, path: DatacubePath, axis, index):
         "Given a path to a subset of the datacube, checks if the index exists on that sub-datacube axis"
@@ -163,6 +180,7 @@ class Datacube(ABC):
         alternative_axes=[],
         grid_online_path="",
         grid_local_directory="",
+        datacube_axes={},
         context=None,
     ):
         # TODO: get the configs as None for pre-determined value and change them to empty dictionary inside the function
@@ -189,6 +207,17 @@ class Datacube(ABC):
             return fdbdatacube
         if type(datacube).__name__ == "MockDatacube":
             return datacube
+        if type(datacube).__name__ == "Qube":
+            from ..datacube_axis import _str_to_axis
+            from .qubed import QubedDatacube
+
+            actual_datacube_axes = {}
+            for key, value in datacube_axes.items():
+                actual_datacube_axes[key] = _str_to_axis[value]
+            qubed_datacube = QubedDatacube(
+                datacube, actual_datacube_axes, config, axis_options, compressed_axes_options, alternative_axes, context
+            )
+            return qubed_datacube
 
     def check_branching_axes(self, request):
         pass

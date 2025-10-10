@@ -40,7 +40,6 @@ class MapperConfig(TransformationConfig):
     Latin1InRadians: Optional[float] = None
     Latin2InRadians: Optional[float] = None
     LaDInRadians: Optional[float] = None
-    # points: Optional[List[List[float]]] = None
     points: Optional[List[Tuple[float, float]]] = None
     uuid: Optional[str] = None
 
@@ -84,6 +83,7 @@ class Config(ConfigModel):
     alternative_axes: Optional[List[GribJumpAxesConfig]] = []
     grid_online_path: Optional[str] = ""
     grid_local_directory: Optional[str] = ""
+    datacube_axes: Optional[Dict[str, str]] = {}
 
 
 class PolytopeOptions(ABC):
@@ -99,5 +99,14 @@ class PolytopeOptions(ABC):
         alternative_axes = config_options.alternative_axes
         grid_online_path = config_options.grid_online_path
         grid_local_directory = config_options.grid_local_directory
+        datacube_axes = config_options.datacube_axes
 
-        return (axis_config, compressed_axes_config, pre_path, alternative_axes, grid_online_path, grid_local_directory)
+        return (
+            axis_config,
+            compressed_axes_config,
+            pre_path,
+            alternative_axes,
+            grid_online_path,
+            grid_local_directory,
+            datacube_axes,
+        )

@@ -9,6 +9,7 @@ from .engine.optimised_point_in_polygon_slicer import OptimisedPointInPolygonSli
 from .engine.optimised_quadtree_slicer import OptimisedQuadTreeSlicer
 from .engine.point_in_polygon_slicer import PointInPolygonSlicer
 from .engine.quadtree_slicer import QuadTreeSlicer
+from .engine.qubed_slicer import QubedSlicer
 from .options import PolytopeOptions
 from .shapes import ConvexPolytope, Product
 from .utility.combinatorics import group, tensor_product
@@ -64,6 +65,7 @@ class Polytope:
             engine_options = {}
 
         self.compressed_axes = []
+
         self.context = context
 
         (
@@ -73,6 +75,7 @@ class Polytope:
             alternative_axes,
             grid_online_path,
             grid_local_directory,
+            datacube_axes,
         ) = PolytopeOptions.get_polytope_options(options)
         self.datacube = Datacube.create(
             datacube,
@@ -82,11 +85,16 @@ class Polytope:
             alternative_axes,
             grid_online_path,
             grid_local_directory,
+            datacube_axes,
             self.context,
         )
         if engine_options == {}:
             for ax_name in self.datacube._axes.keys():
                 engine_options[ax_name] = "hullslicer"
+        if engine_options == "qubed":
+            engine_options = {}
+            for ax_name in self.datacube._axes.keys():
+                engine_options[ax_name] = "qubed"
         self.engine_options = engine_options
         self.engines = self.create_engines()
         self.ax_is_unsliceable = {}
@@ -110,6 +118,8 @@ class Polytope:
         if "optimised_point_in_polygon" in engine_types:
             points = self.datacube.find_point_cloud()
             engines["optimised_point_in_polygon"] = OptimisedPointInPolygonSlicer(points)
+        if "qubed" in engine_types:
+            engines["qubed"] = QubedSlicer()
         return engines
 
     def _unique_continuous_points(self, p: ConvexPolytope, datacube: Datacube):

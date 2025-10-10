@@ -85,14 +85,17 @@ class TypeChangeStrToTimestamp(DatacubeAxisTypeChange):
 
     def transform_type(self, value):
         try:
-            return pd.Timestamp(value)
+            return pd.Timestamp(str(value))
         except ValueError:
             return None
 
     def make_str(self, value):
         values = []
         for val in value:
-            values.append(val.strftime("%Y%m%d"))
+            if isinstance(val, str):
+                values.append(val)
+            else:
+                values.append(val.strftime("%Y%m%d"))
         return tuple(values)
 
 
@@ -112,9 +115,12 @@ class TypeChangeStrToTimedelta(DatacubeAxisTypeChange):
     def make_str(self, value):
         values = []
         for val in value:
-            hours = int(val.total_seconds() // 3600)
-            mins = int((val.total_seconds() % 3600) // 60)
-            values.append(f"{hours:02d}{mins:02d}")
+            if isinstance(val, str):
+                values.append(val)
+            else:
+                hours = int(val.total_seconds() // 3600)
+                mins = int((val.total_seconds() % 3600) // 60)
+                values.append(f"{hours:02d}{mins:02d}")
         return tuple(values)
 
 
