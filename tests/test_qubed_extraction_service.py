@@ -46,6 +46,10 @@ def get_fdb_tree(request):
     return fdb_tree
 
 
+# fdb_tree = Qube.from_json(
+#     requests.get("https://github.com/ecmwf/qubed/raw/refs/heads/main/tests/example_qubes/climate-dt.json").json()
+# )
+
 fdb_tree = Qube.from_json(
     requests.get("https://github.com/ecmwf/qubed/raw/refs/heads/main/tests/example_qubes/climate-dt.json").json()
 )
@@ -153,9 +157,17 @@ request = Request(
     ConvexPolytope(["latitude", "longitude"], [[0, 0], [5, 5], [0, 5]]),
 )
 
+# NOTE: this qube was deleted
+
 path_to_qube = "../qubed/"
-full_qube_path = path_to_qube + "tests/example_qubes/climate_dt_with_metadata.json"
+full_qube_path = path_to_qube + "tests/example_qubes/climate-dt_with_metadata.json"
 fdb_tree = Qube.load(full_qube_path)
+
+# fdb_tree = Qube.from_json(
+#     requests.get(
+#         "https://github.com/ecmwf/qubed/raw/refs/heads/main/tests/example_qubes/climate-dt_with_metadata.json"
+#     ).json()
+# )
 
 qubeddatacube = QubedDatacube(fdb_tree, datacube_axes, datacube_transformations)
 slicer = QubedSlicer()

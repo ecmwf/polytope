@@ -1,7 +1,6 @@
 import time
 
 import pandas as pd
-import pygribjump as gj
 import requests
 from qubed import Qube
 
@@ -18,7 +17,6 @@ from polytope_feature.datacube.transformations.datacube_type_change.datacube_typ
     TypeChangeStrToTimedelta,
     TypeChangeStrToTimestamp,
 )
-from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.engine.qubed_slicer import QubedSlicer
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import ConvexPolytope, Select
@@ -136,11 +134,14 @@ request = Request(
     ConvexPolytope(["latitude", "longitude"], [[0, 0], [0.5, 0.5], [0, 0.5]]),
 )
 
+print(fdb_tree)
+
 qubeddatacube = QubedDatacube(fdb_tree, datacube_axes, datacube_transformations)
 slicer = QubedSlicer()
 self_API = Polytope(
     datacube=fdb_tree,
-    engine=slicer,
+    # engine=slicer,
+    engine_options="qubed",
     options=options,
 )
 time1 = time.time()
@@ -155,54 +156,54 @@ print(time2 - time1)
 # USING NORMAL GJ
 
 
-options = {
-    "axis_config": [
-        {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
-        {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
-        {"axis_name": "date", "transformations": [{"name": "type_change", "type": "date"}]},
-        {"axis_name": "time", "transformations": [{"name": "type_change", "type": "time"}]},
-        {
-            "axis_name": "values",
-            "transformations": [
-                {"name": "mapper", "type": "healpix_nested", "resolution": 1024, "axes": ["latitude", "longitude"]}
-            ],
-        },
-        {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
-        {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
-    ],
-    "compressed_axes_config": [
-        "longitude",
-    ],
-    "pre_path": {"class": "d1", "model": "ifs-nemo", "resolution": "high"},
-}
+# options = {
+#     "axis_config": [
+#         {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
+#         {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
+#         {"axis_name": "date", "transformations": [{"name": "type_change", "type": "date"}]},
+#         {"axis_name": "time", "transformations": [{"name": "type_change", "type": "time"}]},
+#         {
+#             "axis_name": "values",
+#             "transformations": [
+#                 {"name": "mapper", "type": "healpix_nested", "resolution": 1024, "axes": ["latitude", "longitude"]}
+#             ],
+#         },
+#         {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
+#         {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
+#     ],
+#     "compressed_axes_config": [
+#         "longitude",
+#     ],
+#     "pre_path": {"class": "d1", "model": "ifs-nemo", "resolution": "high"},
+# }
 
-fdbdatacube = gj.GribJump()
-slicer = HullSlicer()
+# fdbdatacube = gj.GribJump()
+# slicer = HullSlicer()
 
 
-request = Request(
-    ConvexPolytope(["param"], [["164"]]),
-    ConvexPolytope(["time"], [[pd.Timedelta(hours=1, minutes=0)], [pd.Timedelta(hours=3, minutes=0)]]),
-    ConvexPolytope(["resolution"], [["high"]]),
-    ConvexPolytope(["type"], [["fc"]]),
-    ConvexPolytope(["model"], [["ifs-nemo"]]),
-    ConvexPolytope(["stream"], [["clte"]]),
-    ConvexPolytope(["realization"], ["1"]),
-    ConvexPolytope(["expver"], [["0001"]]),
-    ConvexPolytope(["experiment"], [["ssp3-7.0"]]),
-    ConvexPolytope(["generation"], [["1"]]),
-    ConvexPolytope(["levtype"], [["sfc"]]),
-    ConvexPolytope(["activity"], [["scenariomip"]]),
-    ConvexPolytope(["dataset"], [["climate-dt"]]),
-    ConvexPolytope(["class"], [["d1"]]),
-    ConvexPolytope(["date"], [[pd.Timestamp("20220811")]]),
-    ConvexPolytope(["latitude", "longitude"], [[0, 0], [0.5, 0.5], [0, 0.5]]),
-)
+# request = Request(
+#     ConvexPolytope(["param"], [["164"]]),
+#     ConvexPolytope(["time"], [[pd.Timedelta(hours=1, minutes=0)], [pd.Timedelta(hours=3, minutes=0)]]),
+#     ConvexPolytope(["resolution"], [["high"]]),
+#     ConvexPolytope(["type"], [["fc"]]),
+#     ConvexPolytope(["model"], [["ifs-nemo"]]),
+#     ConvexPolytope(["stream"], [["clte"]]),
+#     ConvexPolytope(["realization"], ["1"]),
+#     ConvexPolytope(["expver"], [["0001"]]),
+#     ConvexPolytope(["experiment"], [["ssp3-7.0"]]),
+#     ConvexPolytope(["generation"], [["1"]]),
+#     ConvexPolytope(["levtype"], [["sfc"]]),
+#     ConvexPolytope(["activity"], [["scenariomip"]]),
+#     ConvexPolytope(["dataset"], [["climate-dt"]]),
+#     ConvexPolytope(["class"], [["d1"]]),
+#     ConvexPolytope(["date"], [[pd.Timestamp("20220811")]]),
+#     ConvexPolytope(["latitude", "longitude"], [[0, 0], [0.5, 0.5], [0, 0.5]]),
+# )
 
-time3 = time.time()
-result = self_API.retrieve(request)
-# result = self_API.slice(request.polytopes())
-time4 = time.time()
+# time3 = time.time()
+# result = self_API.retrieve(request)
+# # result = self_API.slice(request.polytopes())
+# time4 = time.time()
 
-print("TIME EXTRACTING USING GJ NORMAL")
-print(time4 - time3)
+# print("TIME EXTRACTING USING GJ NORMAL")
+# print(time4 - time3)
