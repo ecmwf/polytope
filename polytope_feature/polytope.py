@@ -73,6 +73,7 @@ class Polytope:
             alternative_axes,
             grid_online_path,
             grid_local_directory,
+            use_catalogue,
         ) = PolytopeOptions.get_polytope_options(options)
         self.datacube = Datacube.create(
             datacube,
@@ -82,6 +83,7 @@ class Polytope:
             alternative_axes,
             grid_online_path,
             grid_local_directory,
+            use_catalogue,
             self.context,
         )
         if engine_options == {}:
