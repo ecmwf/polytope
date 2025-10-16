@@ -85,6 +85,7 @@ class Config(ConfigModel):
     grid_online_path: Optional[str] = ""
     grid_local_directory: Optional[str] = ""
     use_catalogue: Optional[bool] = False
+    engine_options: Optional[Dict[str, str]] = {}
 
 
 class PolytopeOptions(ABC):
@@ -100,8 +101,8 @@ class PolytopeOptions(ABC):
         alternative_axes = config_options.alternative_axes
         grid_online_path = config_options.grid_online_path
         grid_local_directory = config_options.grid_local_directory
-        use_catalogue = config_options.options.use_catalogue
-
+        use_catalogue = config_options.use_catalogue
+        engine_options = config_options.engine_options
         return (
             axis_config,
             compressed_axes_config,
@@ -110,4 +111,5 @@ class PolytopeOptions(ABC):
             grid_online_path,
             grid_local_directory,
             use_catalogue,
+            engine_options,
         )
