@@ -43,6 +43,7 @@ class TestQuadTreeSlicer:
             "pre_path": {"date": "20250110"},
             "grid_online_path": "https://sites.ecmwf.int/repository/polytope/test-data/icon_grid_0026_R03B07_G.nc",
             "grid_local_directory": "",
+            "engine_options": self.engine_options,
         }
 
     @pytest.mark.fdb
@@ -62,7 +63,6 @@ class TestQuadTreeSlicer:
         self.API = Polytope(
             datacube=self.fdbdatacube,
             options=self.options,
-            engine_options=self.engine_options,
         )
 
         result = self.API.retrieve(request)

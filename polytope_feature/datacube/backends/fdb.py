@@ -22,6 +22,7 @@ class FDBDatacube(Datacube):
         grid_local_directory="",
         use_catalogue=False,
     ):
+        self.use_catalogue = use_catalogue
         if config is None:
             config = {}
         if context is None:
@@ -160,6 +161,9 @@ class FDBDatacube(Datacube):
             logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
         logging.info("Requests given to GribJump extract for %s", context)
         try:
+            if self.use_catalogue:
+                for i, item in enumerate(complete_list_complete_uncompressed_requests):
+                    complete_list_complete_uncompressed_requests[i][0]["georef"] = "gcgkrb"
             iterator = self.gj.extract(complete_list_complete_uncompressed_requests, context)
         except Exception as e:
             if "BadValue: Grid hash mismatch" in str(e):

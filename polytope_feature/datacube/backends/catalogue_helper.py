@@ -26,12 +26,13 @@ def find_axes_from_qube(pre_path):
                 val = change_datetime_to_str(val)
                 new_vals.append(val)
             qube_axes[key] = new_vals
+        if key == "param":
+            new_vals = []
+            for val in qube_axes[key]:
+                val = str(val)
+                new_vals.append(val)
+            qube_axes[key] = new_vals
         qube_axes[key] = list(qube_axes[key])
+
+    qube_axes = dict(reversed(list(qube_axes.items())))
     return qube_axes
-
-
-print(
-    find_axes_from_qube(
-        {"class": "d1", "dataset": "on-demand-extremes-dt", "type": "fc", "levtype": "sfc", "param": "167"}
-    )
-)
