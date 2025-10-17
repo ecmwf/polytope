@@ -40,7 +40,6 @@ dependencies = [
     "xarray",
     "conflator",
     "protobuf",
-    "qubed"
 ]
 
 [project.optional-dependencies]
