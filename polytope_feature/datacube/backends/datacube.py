@@ -163,6 +163,7 @@ class Datacube(ABC):
         alternative_axes=[],
         grid_online_path="",
         grid_local_directory="",
+        use_catalogue=False,
         context=None,
     ):
         # TODO: get the configs as None for pre-determined value and change them to empty dictionary inside the function
@@ -185,6 +186,7 @@ class Datacube(ABC):
                 context,
                 grid_online_path,
                 grid_local_directory,
+                use_catalogue,
             )
             return fdbdatacube
         if type(datacube).__name__ == "MockDatacube":

@@ -5,6 +5,7 @@ from itertools import product
 
 from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
 from ...utility.geometry import nearest_pt
+from .catalogue_helper import find_axes_from_qube
 from .datacube import Datacube, TensorIndexTree
 
 
@@ -19,7 +20,9 @@ class FDBDatacube(Datacube):
         context=None,
         grid_online_path="",
         grid_local_directory="",
+        use_catalogue=False,
     ):
+        self.use_catalogue = use_catalogue
         if config is None:
             config = {}
         if context is None:
@@ -37,11 +40,16 @@ class FDBDatacube(Datacube):
 
         self.gj = gj
         if len(alternative_axes) == 0:
-            logging.info("Find GribJump axes for %s", context)
-            self.fdb_coordinates = self.gj.axes(partial_request, ctx=context)
-            logging.info("Retrieved available GribJump axes for %s", context)
-            if len(self.fdb_coordinates) == 0 or set(partial_request) > set(self.fdb_coordinates):
-                raise BadRequestError(partial_request)
+            if use_catalogue:
+                logging.info("Find GribJump axes for %s from catalogue", context)
+                self.fdb_coordinates = find_axes_from_qube(partial_request)
+                logging.info("Retrieved available GribJump axes for %s", context)
+            else:
+                logging.info("Find GribJump axes for %s", context)
+                self.fdb_coordinates = self.gj.axes(partial_request, ctx=context)
+                logging.info("Retrieved available GribJump axes for %s", context)
+                if len(self.fdb_coordinates) == 0 or set(partial_request) > set(self.fdb_coordinates):
+                    raise BadRequestError(partial_request)
         else:
             self.fdb_coordinates = {}
             for axis_config in alternative_axes:
@@ -153,6 +161,9 @@ class FDBDatacube(Datacube):
             logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
         logging.info("Requests given to GribJump extract for %s", context)
         try:
+            if self.use_catalogue:
+                for i, item in enumerate(complete_list_complete_uncompressed_requests):
+                    complete_list_complete_uncompressed_requests[i][0]["georef"] = "gcgkrb"
             iterator = self.gj.extract(complete_list_complete_uncompressed_requests, context)
         except Exception as e:
             if "BadValue: Grid hash mismatch" in str(e):

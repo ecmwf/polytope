@@ -53,15 +53,12 @@ class Polytope:
         self,
         datacube,
         options=None,
-        engine_options=None,
         context=None,
     ):
         from .datacube import Datacube
 
         if options is None:
             options = {}
-        if engine_options is None:
-            engine_options = {}
 
         self.compressed_axes = []
         self.context = context
@@ -73,6 +70,8 @@ class Polytope:
             alternative_axes,
             grid_online_path,
             grid_local_directory,
+            use_catalogue,
+            engine_options,
         ) = PolytopeOptions.get_polytope_options(options)
         self.datacube = Datacube.create(
             datacube,
@@ -82,6 +81,7 @@ class Polytope:
             alternative_axes,
             grid_online_path,
             grid_local_directory,
+            use_catalogue,
             self.context,
         )
         if engine_options == {}:

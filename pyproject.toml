@@ -39,7 +39,7 @@ dependencies = [
     "tripy",
     "xarray",
     "conflator",
-    "protobuf"
+    "protobuf",
 ]
 
 [project.optional-dependencies]

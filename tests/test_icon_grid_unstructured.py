@@ -53,6 +53,7 @@ class TestQuadTreeSlicer:
                     ],
                 },
             ],
+            "engine_options": self.engine_options,
         }
 
     def test_quad_tree_slicer_extract(self):
@@ -68,7 +69,6 @@ class TestQuadTreeSlicer:
         self.API = Polytope(
             datacube=self.arr,
             options=self.options,
-            engine_options=self.engine_options,
         )
 
         result = self.API.retrieve(request)
