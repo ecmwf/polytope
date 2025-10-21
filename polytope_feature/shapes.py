@@ -12,6 +12,9 @@ from .utility.list_tools import unique
 Shapes used for the constructive geometry API of Polytope
 """
 
+# TODO: store measure of polytopes info and add option to either decompose them or not
+# TODO: according to this into lower-dim shapes if needed
+
 
 class Shape(ABC):
     """Represents a multi-axis shape to be expanded"""
