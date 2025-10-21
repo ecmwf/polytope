@@ -71,8 +71,8 @@ class Polytope:
             compressed_axes_options,
             config,
             alternative_axes,
-            grid_online_path,
-            grid_local_directory,
+            # grid_online_path,
+            # grid_local_directory,
         ) = PolytopeOptions.get_polytope_options(options)
         self.datacube = Datacube.create(
             datacube,
@@ -80,8 +80,8 @@ class Polytope:
             axis_options,
             compressed_axes_options,
             alternative_axes,
-            grid_online_path,
-            grid_local_directory,
+            # grid_online_path,
+            # grid_local_directory,
             self.context,
         )
         if engine_options == {}:

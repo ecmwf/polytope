@@ -13,7 +13,12 @@ from ..transformations.datacube_transformations import (
 
 
 class Datacube(ABC):
-    def __init__(self, axis_options=None, compressed_axes_options=[], grid_online_path="", grid_local_directory=""):
+    def __init__(
+        self,
+        axis_options=None,
+        compressed_axes_options=[],
+        #  grid_online_path="", grid_local_directory=""
+    ):
         if axis_options is None:
             self.axis_options = {}
         else:
@@ -32,8 +37,8 @@ class Datacube(ABC):
         self.unwanted_path = {}
         self.compressed_axes = compressed_axes_options
         self.grid_md5_hash = None
-        self.grid_online_path = grid_online_path
-        self.grid_local_directory = grid_local_directory
+        # self.grid_online_path = grid_online_path
+        # self.grid_local_directory = grid_local_directory
 
     @abstractmethod
     def get(self, requests: TensorIndexTree, context: Dict) -> Any:
@@ -161,8 +166,8 @@ class Datacube(ABC):
         axis_options={},
         compressed_axes_options=[],
         alternative_axes=[],
-        grid_online_path="",
-        grid_local_directory="",
+        # grid_online_path="",
+        # grid_local_directory="",
         context=None,
     ):
         # TODO: get the configs as None for pre-determined value and change them to empty dictionary inside the function
@@ -170,7 +175,11 @@ class Datacube(ABC):
             from .xarray import XArrayDatacube
 
             xadatacube = XArrayDatacube(
-                datacube, axis_options, compressed_axes_options, context, grid_online_path, grid_local_directory
+                datacube,
+                axis_options,
+                compressed_axes_options,
+                context,
+                #   grid_online_path, grid_local_directory
             )
             return xadatacube
         if type(datacube).__name__ == "GribJump":
@@ -183,8 +192,8 @@ class Datacube(ABC):
                 compressed_axes_options,
                 alternative_axes,
                 context,
-                grid_online_path,
-                grid_local_directory,
+                # grid_online_path,
+                # grid_local_directory,
             )
             return fdbdatacube
         if type(datacube).__name__ == "MockDatacube":

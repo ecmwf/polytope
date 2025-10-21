@@ -14,8 +14,8 @@ class IrregularGridMapper(DatacubeMapper):
         local_area=[],
         axis_reversed=None,
         mapper_options=None,
-        grid_online_path=None,
-        grid_local_directory=None,
+        # grid_online_path=None,
+        # grid_local_directory=None,
     ):
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
@@ -27,8 +27,8 @@ class IrregularGridMapper(DatacubeMapper):
         self.local_area = local_area
         self.is_irregular = True
         self.md5_hash = md5_hash
-        self.grid_online_path = grid_online_path
-        self.grid_local_directory = grid_local_directory
+        # self.grid_online_path = grid_online_path
+        # self.grid_local_directory = grid_local_directory
         self._final_irregular_transformation = self.generate_final_irregular_transformation()
 
     def generate_final_irregular_transformation(self):
@@ -47,8 +47,8 @@ class IrregularGridMapper(DatacubeMapper):
                 self.local_area,
                 self._axis_reversed,
                 self.mapper_options,
-                self.grid_online_path,
-                self.grid_local_directory,
+                # self.grid_online_path,
+                # self.grid_local_directory,
             )
         )
         return transformation
