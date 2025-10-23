@@ -17,8 +17,6 @@ class FDBDatacube(Datacube):
         compressed_axes_options=[],
         alternative_axes=[],
         context=None,
-        # grid_online_path="",
-        # grid_local_directory="",
     ):
         if config is None:
             config = {}
@@ -28,7 +26,6 @@ class FDBDatacube(Datacube):
         super().__init__(
             axis_options,
             compressed_axes_options,
-            #  grid_online_path, grid_local_directory
         )
 
         logging.info("Created an FDB datacube with options: " + str(axis_options))
