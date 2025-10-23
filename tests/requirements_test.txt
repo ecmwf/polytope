@@ -1,7 +1,0 @@
--r ../requirements.txt
-pytest
-cffi
-eccodes
-h5netcdf
-h5py
-earthkit-data

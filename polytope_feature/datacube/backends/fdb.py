@@ -5,19 +5,30 @@ from itertools import product
 
 from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
 from ...utility.geometry import nearest_pt
+from .catalogue_helper import find_axes_from_qube
 from .datacube import Datacube, TensorIndexTree
 
 
 class FDBDatacube(Datacube):
     def __init__(
-        self, gj, config=None, axis_options=None, compressed_axes_options=[], alternative_axes=[], context=None
+        self,
+        gj,
+        config=None,
+        axis_options=None,
+        compressed_axes_options=[],
+        alternative_axes=[],
+        context=None,
+        grid_online_path="",
+        grid_local_directory="",
+        use_catalogue=False,
     ):
+        self.use_catalogue = use_catalogue
         if config is None:
             config = {}
         if context is None:
             context = {}
 
-        super().__init__(axis_options, compressed_axes_options)
+        super().__init__(axis_options, compressed_axes_options, grid_online_path, grid_local_directory)
 
         logging.info("Created an FDB datacube with options: " + str(axis_options))
 
@@ -29,11 +40,16 @@ class FDBDatacube(Datacube):
 
         self.gj = gj
         if len(alternative_axes) == 0:
-            logging.info("Find GribJump axes for %s", context)
-            self.fdb_coordinates = self.gj.axes(partial_request, ctx=context)
-            logging.info("Retrieved available GribJump axes for %s", context)
-            if len(self.fdb_coordinates) == 0 or set(partial_request) > set(self.fdb_coordinates):
-                raise BadRequestError(partial_request)
+            if use_catalogue:
+                logging.info("Find GribJump axes for %s from catalogue", context)
+                self.fdb_coordinates = find_axes_from_qube(partial_request)
+                logging.info("Retrieved available GribJump axes for %s", context)
+            else:
+                logging.info("Find GribJump axes for %s", context)
+                self.fdb_coordinates = self.gj.axes(partial_request, ctx=context)
+                logging.info("Retrieved available GribJump axes for %s", context)
+                if len(self.fdb_coordinates) == 0 or set(partial_request) > set(self.fdb_coordinates):
+                    raise BadRequestError(partial_request)
         else:
             self.fdb_coordinates = {}
             for axis_config in alternative_axes:
@@ -70,7 +86,12 @@ class FDBDatacube(Datacube):
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
 
-        logging.info("Polytope created axes for %s", self._axes.keys())
+        logging.info("Polytope created axes for: " + str(self._axes.keys()))
+
+    def find_point_cloud(self):
+        # find the point cloud of irregular grid if it exists
+        if self.grid_transformation.is_irregular:
+            return self.grid_transformation._final_transformation.grid_latlon_points()
 
     def check_branching_axes(self, request):
         polytopes = request.polytopes()
@@ -301,6 +322,7 @@ class FDBDatacube(Datacube):
 
         leaf_path_copy = deepcopy(leaf_path)
         leaf_path_copy.pop("values", None)
+        leaf_path_copy.pop("index")
         return (leaf_path_copy, current_start_idxs, fdb_node_ranges, lat_length)
 
     def get_last_layer_before_leaf(self, requests, leaf_path, current_idx, fdb_range_n):
@@ -309,6 +331,7 @@ class FDBDatacube(Datacube):
         for i, c in enumerate(requests.children):
             # now c are the leaves of the initial tree
             key_value_path = {c.axis.name: c.values}
+            leaf_path["index"] = c.indexes
             ax = c.axis
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path

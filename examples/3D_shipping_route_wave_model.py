@@ -4,10 +4,10 @@ import pandas as pd
 import pytest
 from eccodes import codes_grib_find_nearest, codes_grib_new_from_file
 
-from polytope.datacube.backends.fdb import FDBDatacube
-from polytope.engine.hullslicer import HullSlicer
-from polytope.polytope import Polytope, Request
-from polytope.shapes import Ellipsoid, Path, Select
+from polytope_feature.datacube.backends.fdb import FDBDatacube
+from polytope_feature.engine.hullslicer import HullSlicer
+from polytope_feature.polytope import Polytope, Request
+from polytope_feature.shapes import Ellipsoid, Path, Select
 from tests.helper_functions import download_test_data
 
 

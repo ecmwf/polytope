@@ -1,7 +1,6 @@
 import pandas as pd
 import pytest
 
-from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Disk, Select, Span
 
@@ -42,7 +41,6 @@ class TestSlicingFDBDatacube:
             ],
         }
 
-    # Testing different shapes
     @pytest.mark.fdb
     def test_fdb_datacube(self):
         import pygribjump as gj
@@ -61,10 +59,8 @@ class TestSlicingFDBDatacube:
         )
 
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -91,10 +87,8 @@ class TestSlicingFDBDatacube:
         )
 
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -121,10 +115,8 @@ class TestSlicingFDBDatacube:
         )
 
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -132,36 +124,6 @@ class TestSlicingFDBDatacube:
         assert len(result.leaves) == 3
         for i in range(len(result.leaves)):
             assert len(result.leaves[i].result) == 3
-
-    @pytest.mark.fdb
-    def test_fdb_datacube_select_completely_non_existing(self):
-        import pygribjump as gj
-
-        request = Request(
-            Select("step", [0]),
-            Select("levtype", ["sfc"]),
-            Select("date", [pd.Timestamp("20230624T120000"), pd.Timestamp("20230626T120000")]),
-            Select("domain", ["g"]),
-            Select("expver", ["0001"]),
-            Select("param", ["167"]),
-            Select("class", ["od"]),
-            Select("stream", ["oper"]),
-            Select("type", ["an"]),
-            Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
-        )
-
-        self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
-        self.API = Polytope(
-            datacube=self.fdbdatacube,
-            engine=self.slicer,
-            options=self.options,
-        )
-        result = self.API.retrieve(request)
-        result.pprint()
-        assert len(result.leaves) == 1
-        for i in range(len(result.leaves)):
-            assert len(result.leaves[i].result) == 0
 
     @pytest.mark.fdb
     def test_fdb_datacube_disk(self):
@@ -181,10 +143,8 @@ class TestSlicingFDBDatacube:
         )
 
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -213,10 +173,8 @@ class TestSlicingFDBDatacube:
         )
 
         self.fdbdatacube = gj.GribJump()
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -228,3 +186,31 @@ class TestSlicingFDBDatacube:
         assert len(result.leaves[0].values) == 3
         assert len(result.leaves[1].values) == 5
         assert len(result.leaves[2].values) == 3
+
+    @pytest.mark.fdb
+    def test_fdb_datacube_select_completely_non_existing(self):
+        import pygribjump as gj
+
+        request = Request(
+            Select("step", [0]),
+            Select("levtype", ["sfc"]),
+            Select("date", [pd.Timestamp("20230624T120000"), pd.Timestamp("20230626T120000")]),
+            Select("domain", ["g"]),
+            Select("expver", ["0001"]),
+            Select("param", ["167"]),
+            Select("class", ["od"]),
+            Select("stream", ["oper"]),
+            Select("type", ["an"]),
+            Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
+        )
+
+        self.fdbdatacube = gj.GribJump()
+        self.API = Polytope(
+            datacube=self.fdbdatacube,
+            options=self.options,
+        )
+        result = self.API.retrieve(request)
+        result.pprint()
+        assert len(result.leaves) == 1
+        for i in range(len(result.leaves)):
+            assert len(result.leaves[i].result) == 0
