@@ -74,10 +74,12 @@ class ICONGridMapper(IrregularGridMapper):
 
         grid = Grid({"grid": self.uuid})
 
-        latlons = grid.to_latlon()
+        latlons = grid.to_latlons()
 
-        latitudes = latlons["lat"]
-        longitudes = latlons["lon"]
+        # latitudes = latlons["lat"]
+        # longitudes = latlons["lon"]
+        latitudes = latlons[0]
+        longitudes = latlons[1]
 
         points = list(zip(latitudes, longitudes))
         return points
