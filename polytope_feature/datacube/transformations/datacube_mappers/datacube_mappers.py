@@ -23,8 +23,6 @@ class DatacubeMapper(DatacubeAxisTransformation):
             self._axis_reversed = mapper_options.axis_reversed
         self.mapper_options = mapper_options
         self.old_axis = name
-        self.grid_online_path = datacube.grid_online_path
-        self.grid_local_directory = datacube.grid_local_directory
         self._final_transformation = self.generate_final_transformation()
         self._final_mapped_axes = self._final_transformation._mapped_axes
         self._axis_reversed = self._final_transformation._axis_reversed
@@ -48,8 +46,6 @@ class DatacubeMapper(DatacubeAxisTransformation):
                     self.local_area,
                     self._axis_reversed,
                     self.mapper_options,
-                    self.grid_online_path,
-                    self.grid_local_directory,
                 )
             )
             return transformation._final_irregular_transformation

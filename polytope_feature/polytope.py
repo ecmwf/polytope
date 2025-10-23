@@ -68,8 +68,6 @@ class Polytope:
             compressed_axes_options,
             config,
             alternative_axes,
-            grid_online_path,
-            grid_local_directory,
             use_catalogue,
             engine_options,
         ) = PolytopeOptions.get_polytope_options(options)
@@ -79,8 +77,6 @@ class Polytope:
             axis_options,
             compressed_axes_options,
             alternative_axes,
-            grid_online_path,
-            grid_local_directory,
             use_catalogue,
             self.context,
         )
