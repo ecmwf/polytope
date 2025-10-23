@@ -41,6 +41,7 @@ class TestQuadTreeSlicer:
                 },
             ],
             "pre_path": {"date": "20250110"},
+            "engine_options": self.engine_options,
         }
 
     @pytest.mark.fdb
@@ -60,7 +61,6 @@ class TestQuadTreeSlicer:
         self.API = Polytope(
             datacube=self.fdbdatacube,
             options=self.options,
-            engine_options=self.engine_options,
         )
 
         result = self.API.retrieve(request)

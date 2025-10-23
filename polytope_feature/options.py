@@ -82,6 +82,8 @@ class Config(ConfigModel):
     compressed_axes_config: List[str] = [""]
     pre_path: Optional[Dict[str, path_subclasses_union]] = {}
     alternative_axes: Optional[List[GribJumpAxesConfig]] = []
+    use_catalogue: Optional[bool] = False
+    engine_options: Optional[Dict[str, str]] = {}
 
 
 class PolytopeOptions(ABC):
@@ -95,10 +97,13 @@ class PolytopeOptions(ABC):
         compressed_axes_config = config_options.compressed_axes_config
         pre_path = config_options.pre_path
         alternative_axes = config_options.alternative_axes
-
+        use_catalogue = config_options.use_catalogue
+        engine_options = config_options.engine_options
         return (
             axis_config,
             compressed_axes_config,
             pre_path,
             alternative_axes,
+            use_catalogue,
+            engine_options,
         )

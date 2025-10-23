@@ -163,6 +163,7 @@ class Datacube(ABC):
         axis_options={},
         compressed_axes_options=[],
         alternative_axes=[],
+        use_catalogue=False,
         context=None,
     ):
         # TODO: get the configs as None for pre-determined value and change them to empty dictionary inside the function
@@ -186,6 +187,7 @@ class Datacube(ABC):
                 compressed_axes_options,
                 alternative_axes,
                 context,
+                use_catalogue,
             )
             return fdbdatacube
         if type(datacube).__name__ == "MockDatacube":
