@@ -71,7 +71,7 @@ def fdb_path(request) -> pathlib.Path:
     return path
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="session", autouse=True)
 def fdb_store_operational_setup(fdb_path, tmp_path_factory, downloaded_data_test_files) -> pathlib.Path:
     """
     Creates an operational FDB store for tests, loading downloaded test files.
