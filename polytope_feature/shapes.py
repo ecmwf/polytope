@@ -19,6 +19,9 @@ Shapes used for the constructive geometry API of Polytope
 class Shape(ABC):
     """Represents a multi-axis shape to be expanded"""
 
+    def __init__(self):
+        self.has_volume = True
+
     @abstractmethod
     def polytope(self):
         raise NotImplementedError()
@@ -30,6 +33,7 @@ class Shape(ABC):
 
 class ConvexPolytope(Shape):
     def __init__(self, axes, points, method=None, is_orthogonal=False):
+        super.__init__()
         self._axes = list(axes)
         self.is_flat = False
         if len(self._axes) == 1 and len(points) == 1:
