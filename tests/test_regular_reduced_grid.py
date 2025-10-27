@@ -52,13 +52,13 @@ class TestSlicingFDBDatacube:
 
     # Testing different shapes
     @pytest.mark.fdb
-    def test_fdb_datacube(self):
+    def test_fdb_datacube(self, downloaded_data_test_files):
         import pygribjump as gj
 
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
-            Select("date", [pd.Timestamp("20231102T000000")]),
+            Select("date", [pd.Timestamp("20240103T0000")]),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
             Select("param", ["167"]),
@@ -71,7 +71,6 @@ class TestSlicingFDBDatacube:
         self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.fdbdatacube,
-            engine=self.slicer,
             options=self.options,
         )
         result = self.API.retrieve(request)
@@ -87,7 +86,11 @@ class TestSlicingFDBDatacube:
         eccodes_lats = []
         eccodes_lons = []
         tol = 1e-12
-        f = open("tests/data/aifs_data_from_fdb.grib", "rb")
+        aifs_file = ""
+        for f in downloaded_data_test_files:
+            if "aifs_data_from_fdb.grib" in f.name:
+                aifs_file = f
+        f = open(aifs_file, "rb")
         messages = []
         message = codes_grib_new_from_file(f)
         messages.append(message)

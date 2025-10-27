@@ -2,14 +2,13 @@ import pytest
 from earthkit import data
 from helper_functions import download_test_data
 
-from polytope_feature.engine.hullslicer import HullSlicer
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
 
 
 class TestSlicingMultipleTransformationsOneAxis:
     def setup_method(self, method):
-        nexus_url = "https://get.ecmwf.int/test-data/polytope/test-data/foo.grib"
+        nexus_url = "https://sites.ecmwf.int/repository/polytope/test-data/foo.grib"
         download_test_data(nexus_url, "foo.grib")
 
         ds = data.from_source("file", "./tests/data/foo.grib")
@@ -28,10 +27,8 @@ class TestSlicingMultipleTransformationsOneAxis:
             ],
             "compressed_axes_config": ["longitude", "latitude", "surface", "step", "time", "valid_time", "number"],
         }
-        self.slicer = HullSlicer()
         self.API = Polytope(
             datacube=self.latlon_array,
-            engine=self.slicer,
             options=self.options,
         )
 
