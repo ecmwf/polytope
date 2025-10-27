@@ -5,6 +5,8 @@ import pytest
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
 
+# from helper_functions import find_nearest_latlon
+
 
 class TestQuadTreeSlicer:
     def setup_method(self, method):
@@ -17,7 +19,7 @@ class TestQuadTreeSlicer:
             "longitude": "quadtree",
         }
 
-        uuid = "icon_grid_0026_R03B07_G"
+        uuid = "ICON_26_R03B07"
 
         self.options = {
             "axis_config": [
@@ -65,7 +67,7 @@ class TestQuadTreeSlicer:
 
         result = self.API.retrieve(request)
 
-        assert len(result.leaves) == 6882
+        assert len(result.leaves) == 6919
         result.pprint()
 
         lats = []
