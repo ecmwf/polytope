@@ -54,6 +54,16 @@ impl QuadTree {
         }
     }
 
+    fn nearest_neighbor(&self, query: (f64, f64)) -> Option<usize> {
+        if self.nodes.is_empty() {
+            return None;
+        }
+        let mut best_idx = None;
+        let mut best_dist2 = f64::INFINITY;
+        self.nn_search(0, query, &mut best_idx, &mut best_dist2);
+        best_idx
+    }
+
     fn sizeof(&self) -> usize {
         let mut size = size_of::<Self>();
         let nodes_size: usize = self.nodes.len() * size_of::<QuadTreeNode>();
@@ -143,6 +153,38 @@ impl QuadTree {
 
     fn process_points(&self, points: Vec<(f64, f64)>) -> Vec<[f64;2]> {
         points.into_iter().map(|(x, y)| [x,y]).collect()
+    }
+
+    fn nn_search(
+        &self,
+        node_idx: usize,
+        query: (f64, f64),
+        best_idx: &mut Option<usize>,
+        best_dist2: &mut f64,
+    ) {
+        let node = &self.nodes[node_idx];
+
+        // if this node is farther than the current best, ignore
+        if box_dist2(node.center, node.size, query) > *best_dist2 {
+            return;
+        }
+
+        // compare distance of points inside leaf node
+        if let Some(point_indices) = &node.points {
+            for &pi in point_indices {
+                let p = self.points[pi];
+                let d2 = dist2(p, query);
+                if d2 < *best_dist2 {
+                    *best_dist2 = d2;
+                    *best_idx = Some(pi);
+                }
+            }
+            return;
+        }
+        // else, recurse into children
+        for &child_idx in &node.children {
+            self.nn_search(child_idx, query, best_idx, best_dist2);
+        }
     }
 
     fn convert_polygon(&self, points: Option<Vec<(f64, f64)>>) -> Option<Vec<[f64; 2]>> {
