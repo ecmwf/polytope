@@ -9,6 +9,7 @@ use pyo3::exceptions::PyRuntimeError;
 // TODO: look at rust built in arena
 
 use crate::slicing_tools::{is_contained_in, slice_in_two};
+use crate::distance::{dist2, box_dist2};
 
 
 
@@ -54,13 +55,13 @@ impl QuadTree {
         }
     }
 
-    fn nearest_neighbor(&self, query: (f64, f64)) -> Option<usize> {
+    fn nearest_neighbor(&self, query: (f64, f64), quadtree_points: Vec<(f64, f64)>) -> Option<usize> {
         if self.nodes.is_empty() {
             return None;
         }
         let mut best_idx = None;
         let mut best_dist2 = f64::INFINITY;
-        self.nn_search(0, query, &mut best_idx, &mut best_dist2);
+        self.nn_search(0, query, &mut best_idx, &mut best_dist2, &quadtree_points);
         best_idx
     }
 
@@ -161,6 +162,7 @@ impl QuadTree {
         query: (f64, f64),
         best_idx: &mut Option<usize>,
         best_dist2: &mut f64,
+        quadtree_points: &Vec<(f64, f64)>
     ) {
         let node = &self.nodes[node_idx];
 
@@ -172,7 +174,7 @@ impl QuadTree {
         // compare distance of points inside leaf node
         if let Some(point_indices) = &node.points {
             for &pi in point_indices {
-                let p = self.points[pi];
+                let p = quadtree_points[pi];
                 let d2 = dist2(p, query);
                 if d2 < *best_dist2 {
                     *best_dist2 = d2;
@@ -183,7 +185,7 @@ impl QuadTree {
         }
         // else, recurse into children
         for &child_idx in &node.children {
-            self.nn_search(child_idx, query, best_idx, best_dist2);
+            self.nn_search(child_idx, query, best_idx, best_dist2, &quadtree_points);
         }
     }
 
