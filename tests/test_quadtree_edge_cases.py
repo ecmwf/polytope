@@ -50,11 +50,11 @@ class TestQuadTreeSlicer:
                 "type",
             ],
             "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
+            "engine_options": {"latitude": "quadtree", "longitude": "quadtree"},
         }
         self.API = Polytope(
             datacube=self.fdbdatacube,
             options=self.options,
-            engine_options={"latitude": "quadtree", "longitude": "quadtree"},
         )
         lat_ax = self.API.datacube.axes["latitude"]
         tree = TensorIndexTree()

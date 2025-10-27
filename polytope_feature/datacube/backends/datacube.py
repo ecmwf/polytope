@@ -17,8 +17,6 @@ class Datacube(ABC):
         self,
         axis_options=None,
         compressed_axes_options=[],
-        grid_online_path="",
-        grid_local_directory="",
         return_indexes=False,
     ):
         if axis_options is None:
@@ -39,8 +37,6 @@ class Datacube(ABC):
         self.unwanted_path = {}
         self.compressed_axes = compressed_axes_options
         self.grid_md5_hash = None
-        self.grid_online_path = grid_online_path
-        self.grid_local_directory = grid_local_directory
         self.return_indexes = return_indexes
 
     @abstractmethod
@@ -169,8 +165,7 @@ class Datacube(ABC):
         axis_options={},
         compressed_axes_options=[],
         alternative_axes=[],
-        grid_online_path="",
-        grid_local_directory="",
+        use_catalogue=False,
         return_indexes=False,
         context=None,
     ):
@@ -182,10 +177,8 @@ class Datacube(ABC):
                 datacube,
                 axis_options,
                 compressed_axes_options,
-                context,
-                grid_online_path,
-                grid_local_directory,
                 return_indexes,
+                context,
             )
             return xadatacube
         if type(datacube).__name__ == "GribJump":
@@ -197,10 +190,9 @@ class Datacube(ABC):
                 axis_options,
                 compressed_axes_options,
                 alternative_axes,
-                context,
-                grid_online_path,
-                grid_local_directory,
+                use_catalogue,
                 return_indexes,
+                context,
             )
             return fdbdatacube
         if type(datacube).__name__ == "MockDatacube":
