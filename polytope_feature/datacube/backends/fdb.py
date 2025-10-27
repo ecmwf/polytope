@@ -18,8 +18,6 @@ class FDBDatacube(Datacube):
         compressed_axes_options=[],
         alternative_axes=[],
         context=None,
-        grid_online_path="",
-        grid_local_directory="",
         use_catalogue=False,
     ):
         self.use_catalogue = use_catalogue
@@ -28,7 +26,10 @@ class FDBDatacube(Datacube):
         if context is None:
             context = {}
 
-        super().__init__(axis_options, compressed_axes_options, grid_online_path, grid_local_directory)
+        super().__init__(
+            axis_options,
+            compressed_axes_options,
+        )
 
         logging.info("Created an FDB datacube with options: " + str(axis_options))
 
@@ -40,7 +41,7 @@ class FDBDatacube(Datacube):
 
         self.gj = gj
         if len(alternative_axes) == 0:
-            if use_catalogue:
+            if self.use_catalogue:
                 logging.info("Find GribJump axes for %s from catalogue", context)
                 self.fdb_coordinates = find_axes_from_qube(partial_request)
                 logging.info("Retrieved available GribJump axes for %s", context)
