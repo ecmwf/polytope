@@ -10,7 +10,7 @@ from .engine.optimised_quadtree_slicer import OptimisedQuadTreeSlicer
 from .engine.point_in_polygon_slicer import PointInPolygonSlicer
 from .engine.quadtree_slicer import QuadTreeSlicer
 from .options import PolytopeOptions
-from .shapes import ConvexPolytope, Point, Product
+from .shapes import ConvexPolytope, Point, Product, Union
 from .utility.combinatorics import group, tensor_product
 from .utility.exceptions import AxisOverdefinedError
 from .utility.list_tools import unique
@@ -39,6 +39,9 @@ class Request:
         polytopes = []
         for shape in self.shapes:
             polytopes.extend(shape.polytope())
+        print("WHAT ARE THE REQUEST POLYTOPES")
+        print(self.shapes)
+        print(polytopes)
         return polytopes
 
     def __repr__(self):
@@ -186,8 +189,14 @@ class Polytope:
         for ax, slicer in self.engine_options.items():
             if slicer == "quadtree":
                 for shp in request.shapes:
+                    print("WHAT IS THE SHAPE HERE")
+                    print(shp)
                     if ax in shp.axes() and isinstance(shp, Point):
                         shp.decompose_1D = False
+                    elif isinstance(shp, Union):
+                        for s in shp._shapes:
+                            if ax in s.axes() and isinstance(s, Point):
+                                s.decompose_1D = False
 
     def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""

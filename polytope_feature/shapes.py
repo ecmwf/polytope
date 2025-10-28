@@ -470,18 +470,26 @@ class Union(Shape):
         for s in shapes:
             assert s.axes() == self.axes()
 
-        self.polytopes = []
-        self._shapes = shapes
+        # self.polytopes = []
+        # self._shapes = shapes
 
-        for s in shapes:
-            for poly in s.polytope():
-                poly.add_to_union()
-                self.polytopes.append(poly)
+        # for s in shapes:
+        #     for poly in s.polytope():
+        #         poly.add_to_union()
+        #         self.polytopes.append(poly)
+        self._shapes = shapes
 
     def axes(self):
         return self._axes
 
     def polytope(self):
+        # return self.polytopes
+        self.polytopes = []
+
+        for s in self._shapes:
+            for poly in s.polytope():
+                poly.add_to_union()
+                self.polytopes.append(poly)
         return self.polytopes
 
     def __repr__(self):
