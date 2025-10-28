@@ -78,6 +78,30 @@ class TypeChangeStrToInt(DatacubeAxisTypeChange):
         return tuple(values)
 
 
+class TypeChangeStrToFloat(DatacubeAxisTypeChange):
+    def __init__(self, axis_name, new_type):
+        self.axis_name = axis_name
+        self._new_type = new_type
+
+    def transform_type(self, value):
+        try:
+            return float(value)
+        except ValueError:
+            return None
+
+    def make_str(self, value):
+        values = []
+        for val in value:
+            int_val = int(val)
+            if val == int_val:
+                # we return a str of the integer value
+                values.append(str(int_val))
+            else:
+                # we return a str of the float value
+                values.append(str(val))
+        return tuple(values)
+
+
 class TypeChangeStrToTimestamp(DatacubeAxisTypeChange):
     def __init__(self, axis_name, new_type):
         self.axis_name = axis_name
@@ -195,6 +219,7 @@ _type_to_datacube_type_change_lookup = {
     "int": "TypeChangeStrToInt",
     "date": "TypeChangeStrToTimestamp",
     "time": "TypeChangeStrToTimedelta",
+    "float": "TypeChangeStrToFloat",
     "subhourly_step_compact": "TypeChangeSubHourlyTimeStepsCompact",
     "subhourly_step": "TypeChangeSubHourlyTimeSteps",
 }

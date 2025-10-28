@@ -39,6 +39,7 @@ class TestPolytopeExtract:
                     ],
                 },
             ],
+            "engine_options": self.engine_options,
         }
 
     # Testing different shapes
@@ -48,8 +49,6 @@ class TestPolytopeExtract:
         self.API = Polytope(
             datacube=self.array,
             options=self.options,
-            engine_options=self.engine_options,
-            # point_cloud_options=self.quadtree_points,
         )
         result = self.API.retrieve(request)
 

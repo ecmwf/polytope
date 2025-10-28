@@ -3,6 +3,7 @@ pub mod lambert_conformal;
 pub mod list_tools;
 use pyo3::wrap_pyfunction;
 
+pub mod distance;
 use crate::lambert_conformal::{get_latlons_oblate, get_latlons_sphere};
 
 pub mod healpix_nested;

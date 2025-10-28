@@ -5,6 +5,7 @@ from itertools import product
 
 from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
 from ...utility.geometry import nearest_pt
+from .catalogue_helper import find_axes_from_qube
 from .datacube import Datacube, TensorIndexTree
 
 
@@ -17,15 +18,18 @@ class FDBDatacube(Datacube):
         compressed_axes_options=[],
         alternative_axes=[],
         context=None,
-        grid_online_path="",
-        grid_local_directory="",
+        use_catalogue=False,
     ):
+        self.use_catalogue = use_catalogue
         if config is None:
             config = {}
         if context is None:
             context = {}
 
-        super().__init__(axis_options, compressed_axes_options, grid_online_path, grid_local_directory)
+        super().__init__(
+            axis_options,
+            compressed_axes_options,
+        )
 
         logging.info("Created an FDB datacube with options: " + str(axis_options))
 
@@ -37,11 +41,16 @@ class FDBDatacube(Datacube):
 
         self.gj = gj
         if len(alternative_axes) == 0:
-            logging.info("Find GribJump axes for %s", context)
-            self.fdb_coordinates = self.gj.axes(partial_request, ctx=context)
-            logging.info("Retrieved available GribJump axes for %s", context)
-            if len(self.fdb_coordinates) == 0 or set(partial_request) > set(self.fdb_coordinates):
-                raise BadRequestError(partial_request)
+            if self.use_catalogue:
+                logging.info("Find GribJump axes for %s from catalogue", context)
+                self.fdb_coordinates = find_axes_from_qube(partial_request)
+                logging.info("Retrieved available GribJump axes for %s", context)
+            else:
+                logging.info("Find GribJump axes for %s", context)
+                self.fdb_coordinates = self.gj.axes(partial_request, ctx=context)
+                logging.info("Retrieved available GribJump axes for %s", context)
+                if len(self.fdb_coordinates) == 0 or set(partial_request) > set(self.fdb_coordinates):
+                    raise BadRequestError(partial_request)
         else:
             self.fdb_coordinates = {}
             for axis_config in alternative_axes:
