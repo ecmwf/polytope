@@ -25,8 +25,8 @@ class QuadTreeSlicer(Engine):
         self.quad_tree = quad_tree
 
     def extract_single(self, datacube, polytope):
-        # TODO: if polytope has measure 0, then take alternative slicing method using quadtree to find nearest point
         # extract a single polygon
+        # if need to find nearest points, then take alternative slicing method using quadtree to find nearest point
         if use_rust:
             if len(datacube.nearest_search) == 0:
                 polytope_points = [tuple(point) for point in polytope.points]

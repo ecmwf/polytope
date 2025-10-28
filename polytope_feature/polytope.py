@@ -39,9 +39,6 @@ class Request:
         polytopes = []
         for shape in self.shapes:
             polytopes.extend(shape.polytope())
-        print("WHAT ARE THE REQUEST POLYTOPES")
-        print(self.shapes)
-        print(polytopes)
         return polytopes
 
     def __repr__(self):
@@ -126,9 +123,6 @@ class Polytope:
     def slice(self, datacube, polytopes: List[ConvexPolytope]):
         """Low-level API which takes a polytope geometry object and uses it to slice the datacube"""
 
-        # TODO: if polytope has measure 0 and if we have a higher-dimensional slicer, then keep the polytope as a
-        # TODO: higher-dim object somehow keep that polytope tagged with measure 0 as well, so we can then take
-        # TODO: alternative slicing mechanism
         self.find_compressed_axes(datacube, polytopes)
 
         self.remove_compressed_axis_in_union(polytopes)
