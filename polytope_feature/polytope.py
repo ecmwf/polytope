@@ -183,8 +183,6 @@ class Polytope:
         for ax, slicer in self.engine_options.items():
             if slicer == "quadtree":
                 for shp in request.shapes:
-                    print("WHAT IS THE SHAPE HERE")
-                    print(shp)
                     if ax in shp.axes() and isinstance(shp, Point):
                         shp.decompose_1D = False
                     elif isinstance(shp, Union):

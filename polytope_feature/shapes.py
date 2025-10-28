@@ -77,8 +77,12 @@ class Product(Shape):
         assert len(self._axes) == len(all_axes)
 
         self._polytopes = []
+        self.is_flat = True
         for poly in polytopes:
             self._polytopes.extend(poly.polytope())
+            for p in poly.polytope():
+                if len(p.axes()) > 1:
+                    self.is_flat = False
 
         self.is_in_union = False
         self.method = method
@@ -469,21 +473,12 @@ class Union(Shape):
         self._axes = axes
         for s in shapes:
             assert s.axes() == self.axes()
-
-        # self.polytopes = []
-        # self._shapes = shapes
-
-        # for s in shapes:
-        #     for poly in s.polytope():
-        #         poly.add_to_union()
-        #         self.polytopes.append(poly)
         self._shapes = shapes
 
     def axes(self):
         return self._axes
 
     def polytope(self):
-        # return self.polytopes
         self.polytopes = []
 
         for s in self._shapes:
