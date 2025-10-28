@@ -10,7 +10,7 @@ from .engine.optimised_quadtree_slicer import OptimisedQuadTreeSlicer
 from .engine.point_in_polygon_slicer import PointInPolygonSlicer
 from .engine.quadtree_slicer import QuadTreeSlicer
 from .options import PolytopeOptions
-from .shapes import ConvexPolytope, Product
+from .shapes import ConvexPolytope, Point, Product
 from .utility.combinatorics import group, tensor_product
 from .utility.exceptions import AxisOverdefinedError
 from .utility.list_tools import unique
@@ -184,17 +184,33 @@ class Polytope:
         slicer_type = self.engine_options[ax.name]
         return self.engines[slicer_type]
 
+    def switch_polytope_dim(self, request):
+        # If we see a 2-dim slicer on an axis
+        # then make sure that if the shape is a point, we set decompose_1D to False
+        for ax, slicer in self.engine_options.items():
+            if slicer == "quadtree":
+                for shp in request.shapes:
+                    if ax in shp.axes() and isinstance(shp, Point):
+                        shp.decompose_1D = False
+
     def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
         logging.info("Starting request for %s ", self.context)
         self.datacube.check_branching_axes(request)
+        self.switch_polytope_dim(request)
         for polytope in request.polytopes():
             method = polytope.method
             if method == "nearest":
-                if self.datacube.nearest_search.get(tuple(polytope.axes()), None) is None:
-                    self.datacube.nearest_search[tuple(polytope.axes())] = polytope.values
+                if polytope.is_flat:
+                    if self.datacube.nearest_search.get(tuple(polytope.axes()), None) is None:
+                        self.datacube.nearest_search[tuple(polytope.axes())] = polytope.values
+                    else:
+                        self.datacube.nearest_search[tuple(polytope.axes())].append(polytope.values[0])
                 else:
-                    self.datacube.nearest_search[tuple(polytope.axes())].append(polytope.values[0])
+                    if self.datacube.nearest_search.get(tuple(polytope.axes()), None) is None:
+                        self.datacube.nearest_search[tuple(polytope.axes())] = polytope.points
+                    else:
+                        self.datacube.nearest_search[tuple(polytope.axes())].append(polytope.points[0])
         request_tree = self.slice(self.datacube, request.polytopes())
         logging.info("Created request tree for %s ", self.context)
         self.datacube.get(request_tree, self.context)

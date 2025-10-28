@@ -121,7 +121,7 @@ class TestQuadTreeSlicer:
             Select("step", [0]),
             Select("param", ["130"]),
             Select("levtype", ["sfc"]),
-            Point(["latitude", "longitude"], [[44.25, 5.55]]),
+            Point(["latitude", "longitude"], [[44.25, 5.55]], method="nearest"),
         )
 
         self.fdbdatacube = gj.GribJump()
