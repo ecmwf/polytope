@@ -34,7 +34,6 @@ class TestQuadTreeSlicer:
                         {
                             "name": "mapper",
                             "type": "icon",
-                            "resolution": 0,
                             "axes": ["latitude", "longitude"],
                             "md5_hash": "f68071a8ac9bae4e965822afb963c04f",
                             "uuid": uuid,
