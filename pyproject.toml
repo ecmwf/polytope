@@ -54,6 +54,14 @@ tests = [
     "pyfdb"
 ]
 
+unstructured = [
+    "eckit"
+]
+
+catalogue = [
+    "qubed"
+]
+
 [project.urls]
 repository = "https://github.com/ecmwf/polytope"
 documentation = "https://polytope.readthedocs.io/en/latest/"
