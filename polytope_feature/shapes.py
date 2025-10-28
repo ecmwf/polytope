@@ -19,8 +19,8 @@ Shapes used for the constructive geometry API of Polytope
 class Shape(ABC):
     """Represents a multi-axis shape to be expanded"""
 
-    def __init__(self):
-        self.has_volume = True
+    # def __init__(self):
+    #     self.has_volume = True
 
     @abstractmethod
     def polytope(self):
@@ -33,7 +33,7 @@ class Shape(ABC):
 
 class ConvexPolytope(Shape):
     def __init__(self, axes, points, method=None, is_orthogonal=False):
-        super.__init__()
+        # super.__init__()
         self._axes = list(axes)
         self.is_flat = False
         if len(self._axes) == 1 and len(points) == 1:
@@ -135,6 +135,7 @@ class Point(Shape):
         self._axes = axes
         self.values = values
         self.method = method
+        self.decompose_1D = True
         assert len(values) == 1
 
     def axes(self):
@@ -144,11 +145,15 @@ class Point(Shape):
         # TODO: change this to use the Product instead and return a Product here of the two 1D selects
 
         polytopes = []
-        for point in self.values:
-            poly_to_mult = []
-            for i in range(len(self._axes)):
-                poly_to_mult.append(ConvexPolytope([self._axes[i]], [[point[i]]], self.method, is_orthogonal=True))
-            polytopes.append(Product(*poly_to_mult, method=self.method, value=[point]))
+        if self.decompose_1D:
+            for point in self.values:
+                poly_to_mult = []
+                for i in range(len(self._axes)):
+                    poly_to_mult.append(ConvexPolytope([self._axes[i]], [[point[i]]], self.method, is_orthogonal=True))
+                polytopes.append(Product(*poly_to_mult, method=self.method, value=[point]))
+        else:
+            for point in self.values:
+                polytopes.append(ConvexPolytope(self._axes, [point], self.method, is_orthogonal=True))
         self.polytopes = polytopes
 
         return self.polytopes
