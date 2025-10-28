@@ -12,15 +12,9 @@ from .utility.list_tools import unique
 Shapes used for the constructive geometry API of Polytope
 """
 
-# TODO: store measure of polytopes info and add option to either decompose them or not
-# TODO: according to this into lower-dim shapes if needed
-
 
 class Shape(ABC):
     """Represents a multi-axis shape to be expanded"""
-
-    # def __init__(self):
-    #     self.has_volume = True
 
     @abstractmethod
     def polytope(self):
@@ -33,7 +27,6 @@ class Shape(ABC):
 
 class ConvexPolytope(Shape):
     def __init__(self, axes, points, method=None, is_orthogonal=False):
-        # super.__init__()
         self._axes = list(axes)
         self.is_flat = False
         if len(self._axes) == 1 and len(points) == 1:
