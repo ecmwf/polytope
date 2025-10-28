@@ -31,14 +31,11 @@ class ICONGridMapper(IrregularGridMapper):
 
         grid = Grid({"grid": self.uuid})
 
-        print(grid)
-
         latlons = grid.to_latlons()
         latitudes = latlons[0]
         longitudes = latlons[1]
 
         points = list(zip(latitudes, longitudes))
-        print(len(points))
         return points
 
 
