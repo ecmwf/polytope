@@ -219,28 +219,32 @@ class FDBDatacube(Datacube):
 
     def remove_duplicates_in_request_ranges(self, fdb_node_ranges, current_start_idxs):
         seen_indices = set()
+        new_fdb_node_ranges = []
+        new_current_start_idxs = []
         for i, idxs_list in enumerate(current_start_idxs):
+            new_idx_group = []
+            new_fdb_group = []
             for k, sub_lat_idxs in enumerate(idxs_list):
                 actual_fdb_node = fdb_node_ranges[i][k]
-                original_fdb_node_range_vals = []
-                new_current_start_idx = []
+                original_vals = []
+                filtered_idxs = []
                 for j, idx in enumerate(sub_lat_idxs):
                     if idx not in seen_indices:
-                        # NOTE: need to remove it from the values in the corresponding tree node
-                        # NOTE: need to read just the range we give to gj
-                        original_fdb_node_range_vals.append(actual_fdb_node[0].values[j])
                         seen_indices.add(idx)
-                        new_current_start_idx.append(idx)
-                if original_fdb_node_range_vals != []:
-                    actual_fdb_node[0].values = tuple(original_fdb_node_range_vals)
+                        filtered_idxs.append(idx)
+                        original_vals.append(actual_fdb_node[0].values[j])
+                if filtered_idxs:
+                    # keep only if we had values still
+                    actual_fdb_node[0].values = tuple(original_vals)
+                    new_idx_group.append(filtered_idxs)
+                    new_fdb_group.append(actual_fdb_node)
                 else:
-                    # there are no values on this node anymore so can remove it
+                    # remove this node because we removed all values
                     actual_fdb_node[0].remove_branch()
-                if len(new_current_start_idx) == 0:
-                    current_start_idxs[i].pop(k)
-                else:
-                    current_start_idxs[i][k] = new_current_start_idx
-        return (fdb_node_ranges, current_start_idxs)
+            new_current_start_idxs.append(new_idx_group)
+            new_fdb_node_ranges.append(new_fdb_group)
+
+        return new_fdb_node_ranges, new_current_start_idxs
 
     def nearest_lat_lon_search(self, requests):
         if len(self.nearest_search) != 0:
@@ -341,6 +345,9 @@ class FDBDatacube(Datacube):
             # TODO: change this to accommodate non consecutive indexes being compressed too
             current_idx[i].extend(key_value_path["values"])
             fdb_range_n[i].append(c)
+        assert len(current_idx) == len(fdb_range_n)
+        for i, node in enumerate(fdb_range_n):
+            assert len(node[0].values) == len(current_idx[i])
         return (current_idx, fdb_range_n)
 
     def assign_fdb_output_to_nodes(self, output_iterator, fdb_requests_decoding_info):
@@ -363,6 +370,8 @@ class FDBDatacube(Datacube):
         (new_fdb_node_ranges, new_current_start_idx) = self.remove_duplicates_in_request_ranges(
             fdb_node_ranges, current_start_idx
         )
+        current_start_idx = new_current_start_idx
+        fdb_node_ranges = new_fdb_node_ranges
         interm_request_ranges = []
         # TODO: modify the start indexes to have as many arrays as the request ranges
         new_fdb_node_ranges = []
