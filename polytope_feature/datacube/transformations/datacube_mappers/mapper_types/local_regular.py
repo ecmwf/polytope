@@ -1,5 +1,7 @@
 import bisect
 
+import numpy as np
+
 from ..datacube_mappers import DatacubeMapper
 
 
@@ -45,15 +47,28 @@ class LocalRegularGridMapper(DatacubeMapper):
         if self._axis_reversed[mapped_axes[1]]:
             raise NotImplementedError("Local regular grid with second axis in decreasing order is not supported")
 
+        self._second_axis_vals = np.arange(
+            self._second_axis_min,
+            self._second_axis_min + self._second_deg_increment * (self.second_resolution + 1),
+            self._second_deg_increment,
+            dtype=np.float64,
+        )
+
     def first_axis_vals(self):
         if self._axis_reversed[self._mapped_axes[0]]:
-            first_ax_vals = [
-                self._first_axis_max - i * self._first_deg_increment for i in range(self.first_resolution + 1)
-            ]
+            first_ax_vals = np.arange(
+                self._first_axis_max,
+                self._first_axis_max - self._first_deg_increment * (self.first_resolution + 1),
+                -self._first_deg_increment,
+                dtype=np.float64,
+            )
         else:
-            first_ax_vals = [
-                self._first_axis_min + i * self._first_deg_increment for i in range(self.first_resolution + 1)
-            ]
+            first_ax_vals = np.arange(
+                self._first_axis_min,
+                self._first_axis_min + self._first_deg_increment * (self.first_resolution + 1),
+                self._first_deg_increment,
+                dtype=np.float64,
+            )
         return first_ax_vals
 
     def map_first_axis(self, lower, upper):
@@ -62,10 +77,7 @@ class LocalRegularGridMapper(DatacubeMapper):
         return return_vals
 
     def second_axis_vals(self, first_val):
-        second_ax_vals = [
-            self._second_axis_min + i * self._second_deg_increment for i in range(self.second_resolution + 1)
-        ]
-        return second_ax_vals
+        return self._second_axis_vals
 
     def map_second_axis(self, first_val, lower, upper):
         axis_lines = self.second_axis_vals(first_val)
@@ -89,16 +101,26 @@ class LocalRegularGridMapper(DatacubeMapper):
         return first_idx * self.second_resolution
 
     def unmap(self, first_val, second_vals, unmapped_idx=None):
-        tol = 1e-8
-        first_val = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
-        first_idx = self._first_axis_vals.index(first_val)
-        return_idxs = []
-        for second_val in second_vals:
-            second_val = [i for i in self.second_axis_vals(first_val) if second_val - tol <= i <= second_val + tol][0]
-            second_idx = self.second_axis_vals(first_val).index(second_val)
-            final_index = self.axes_idx_to_regular_idx(first_idx, second_idx)
-            return_idxs.append(final_index)
-        return return_idxs
+        first_array = self._first_axis_vals
+        second_array = self._second_axis_vals
+        second_vals = np.asarray(second_vals)
+        descending = self._axis_reversed[self._mapped_axes[0]]
+        if descending:
+            # right descending order for searchsorted
+            first_idx = np.searchsorted(first_array[::-1], first_val[0])
+            first_idx = len(first_array) - 1 - first_idx
+        else:
+            first_idx = np.searchsorted(first_array, first_val[0])
+        if first_idx > 0 and first_idx < len(first_array):
+            left_val = first_array[first_idx - 1]
+            right_val = first_array[first_idx]
+            if abs(first_val[0] - left_val) < abs(first_val[0] - right_val):
+                first_idx -= 1
+        second_idxs = np.searchsorted(second_array, second_vals)
+
+        # map to grid idx
+        final_idxs = first_idx * (self.second_resolution + 1) + second_idxs
+        return final_idxs
 
 
 # md5 grid hash in form {resolution : hash}

@@ -57,6 +57,7 @@ target
 rust_deployment_venv
 *.so
 *.nc
+*.grb
 
 test_w_qubed
 rust_venv
@@ -74,5 +75,7 @@ test_w_qubed
 performance_plots_qubed
 *.nc
 **/*venv*
+
+bugfix*
 
 icon_grids
