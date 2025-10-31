@@ -11,6 +11,10 @@ use pyo3::exceptions::PyRuntimeError;
 use crate::slicing_tools::{is_contained_in, slice_in_two};
 use crate::distance::{dist2, box_dist2};
 
+use std::collections::BinaryHeap;
+use std::cmp::Reverse;
+use ordered_float::OrderedFloat;
+
 
 
 #[derive(Debug)]
@@ -53,6 +57,24 @@ impl QuadTree {
         QuadTree {
             nodes: Vec::new(),
         }
+    }
+
+
+    fn k_nearest_neighbor(&self, query: (f64, f64), k: usize, quadtree_points: Vec<(f64, f64)>) -> Option<Vec<usize>> {
+        if self.nodes.is_empty() {
+            return None;
+        }
+        // let mut heap = BinaryHeap::new();
+        let mut heap = BinaryHeap::<Reverse<(OrderedFloat<f64>, usize)>>::new();
+        self.knn_search(0, query, k, &mut heap, &quadtree_points);
+
+        // keep only  point indexes from distance heap and sort from nearest to farthest
+        let mut results: Vec<_> = heap.into_sorted_vec()
+            .into_iter()
+            .map(|Reverse((OrderedFloat(_d2), idx))| idx)
+            .collect();
+
+        Some(results)
     }
 
     fn nearest_neighbor(&self, query: (f64, f64), quadtree_points: Vec<(f64, f64)>) -> Option<usize> {
@@ -154,6 +176,50 @@ impl QuadTree {
 
     fn process_points(&self, points: Vec<(f64, f64)>) -> Vec<[f64;2]> {
         points.into_iter().map(|(x, y)| [x,y]).collect()
+    }
+
+    fn knn_search(
+        &self,
+        node_idx: usize,
+        query: (f64, f64),
+        k: usize,
+        heap: &mut BinaryHeap<Reverse<(OrderedFloat<f64>, usize)>>, // min-heap of distances
+        quadtree_points: &Vec<(f64, f64)>,
+    ) {
+        let node = &self.nodes[node_idx];
+
+        // use farthest distance in the current heap to prune
+        let prune_dist2 = if heap.len() < k {
+            f64::INFINITY
+        } else {
+            heap.peek().unwrap().0 .0 .into_inner()
+        };
+
+        // if this node is farther than the k-th current best, ignore
+        if box_dist2(node.center, node.size, query) > prune_dist2 {
+            return;
+        }
+
+        // compare distance of points inside leaf node
+        if let Some(point_indices) = &node.points {
+            for &pi in point_indices {
+                let p = quadtree_points[pi];
+                let d2 = dist2(p, query);
+
+                if heap.len() < k {
+                    heap.push(Reverse((OrderedFloat(d2), pi)));
+                } else if d2 < heap.peek().unwrap().0 .0 .into_inner(){
+                    heap.pop();
+                    heap.push(Reverse((OrderedFloat(d2), pi)));
+                }
+            }
+            return;
+        }
+
+        // recurse into children
+        for &child_idx in &node.children {
+            self.knn_search(child_idx, query, k, heap, quadtree_points);
+        }
     }
 
     fn nn_search(
