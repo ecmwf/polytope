@@ -66,3 +66,5 @@ performance_plots_qubed
 **/*venv*
 
 icon_grids
+bugfix*
+*.grb
