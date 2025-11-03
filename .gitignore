@@ -53,9 +53,16 @@ polytope_feature/_version.py
 **/build
 **.lock
 **/target
-**/*venv*/
+**/*venv*/*.grb
+
 test_w_qubed
-performance_plots_qubed
+rust_venv
+new_rust_test_venv
+*.so
+rust_deployment_venv
+*.lock
+**/target
+**/build
 _version.py
 *.DS_Store
 icon_grids
@@ -65,6 +72,7 @@ performance_plots_qubed
 *.nc
 **/*venv*
 
-icon_grids
 bugfix*
 *.grb
+
+icon_grids

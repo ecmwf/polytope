@@ -77,8 +77,12 @@ class Product(Shape):
         assert len(self._axes) == len(all_axes)
 
         self._polytopes = []
+        self.is_flat = True
         for poly in polytopes:
             self._polytopes.extend(poly.polytope())
+            for p in poly.polytope():
+                if len(p.axes()) > 1:
+                    self.is_flat = False
 
         self.is_in_union = False
         self.method = method
@@ -128,6 +132,7 @@ class Point(Shape):
         self._axes = axes
         self.values = values
         self.method = method
+        self.decompose_1D = True
         assert len(values) == 1
 
     def axes(self):
@@ -137,11 +142,15 @@ class Point(Shape):
         # TODO: change this to use the Product instead and return a Product here of the two 1D selects
 
         polytopes = []
-        for point in self.values:
-            poly_to_mult = []
-            for i in range(len(self._axes)):
-                poly_to_mult.append(ConvexPolytope([self._axes[i]], [[point[i]]], self.method, is_orthogonal=True))
-            polytopes.append(Product(*poly_to_mult, method=self.method, value=[point]))
+        if self.decompose_1D:
+            for point in self.values:
+                poly_to_mult = []
+                for i in range(len(self._axes)):
+                    poly_to_mult.append(ConvexPolytope([self._axes[i]], [[point[i]]], self.method, is_orthogonal=True))
+                polytopes.append(Product(*poly_to_mult, method=self.method, value=[point]))
+        else:
+            for point in self.values:
+                polytopes.append(ConvexPolytope(self._axes, [point], self.method, is_orthogonal=True))
         self.polytopes = polytopes
 
         return self.polytopes
@@ -464,19 +473,18 @@ class Union(Shape):
         self._axes = axes
         for s in shapes:
             assert s.axes() == self.axes()
-
-        self.polytopes = []
         self._shapes = shapes
-
-        for s in shapes:
-            for poly in s.polytope():
-                poly.add_to_union()
-                self.polytopes.append(poly)
 
     def axes(self):
         return self._axes
 
     def polytope(self):
+        self.polytopes = []
+
+        for s in self._shapes:
+            for poly in s.polytope():
+                poly.add_to_union()
+                self.polytopes.append(poly)
         return self.polytopes
 
     def __repr__(self):

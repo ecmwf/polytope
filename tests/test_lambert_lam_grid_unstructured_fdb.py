@@ -6,7 +6,7 @@ import pytest
 from helper_functions import find_nearest_latlon
 
 from polytope_feature.polytope import Polytope, Request
-from polytope_feature.shapes import Box, Select
+from polytope_feature.shapes import Box, Point, Select, Union
 
 
 class TestQuadTreeSlicer:
@@ -55,6 +55,7 @@ class TestQuadTreeSlicer:
                 },
             ],
             "pre_path": {"date": "20250221"},
+            "engine_options": self.engine_options,
         }
 
     @pytest.mark.fdb
@@ -74,7 +75,6 @@ class TestQuadTreeSlicer:
         self.API = Polytope(
             datacube=self.fdbdatacube,
             options=self.options,
-            engine_options=self.engine_options,
         )
 
         result = self.API.retrieve(request)
@@ -111,3 +111,98 @@ class TestQuadTreeSlicer:
         # plt.scatter(eccodes_lons, eccodes_lats, s=6, c="green")
         # plt.colorbar(label="Temperature")
         # plt.show()
+
+    @pytest.mark.fdb
+    def test_quad_tree_slicer_extract_point(self):
+        import pygribjump as gj
+
+        request = Request(
+            Select("date", [pd.Timestamp("20250221T0000")]),
+            Select("step", [0]),
+            Select("param", ["130"]),
+            Select("levtype", ["sfc"]),
+            Point(["latitude", "longitude"], [[44.25, 5.55]], method="nearest"),
+        )
+
+        self.fdbdatacube = gj.GribJump()
+
+        self.API = Polytope(
+            datacube=self.fdbdatacube,
+            options=self.options,
+        )
+
+        result = self.API.retrieve(request)
+        assert len(result.leaves) == 1
+        result.pprint()
+
+        lats = []
+        lons = []
+        eccodes_lats = []
+        eccodes_lons = []
+        tol = 1e-3
+        leaves = result.leaves
+        for i in range(len(leaves)):
+            cubepath = leaves[i].flatten()
+            lat = cubepath["latitude"][0]
+            lon = cubepath["longitude"][0]
+            lats.append(lat)
+            lons.append(lon)
+            nearest_points = find_nearest_latlon("tests/data/lambert_lam_one_message.grib", lat, lon)
+            eccodes_lat = nearest_points[0][0]["lat"]
+            eccodes_lon = nearest_points[0][0]["lon"]
+            eccodes_lats.append(eccodes_lat)
+            eccodes_lons.append(eccodes_lon)
+            assert eccodes_lat - tol <= lat
+            assert lat <= eccodes_lat + tol
+            assert eccodes_lon - tol <= lon
+            assert lon <= eccodes_lon + tol
+
+    @pytest.mark.fdb
+    def test_quad_tree_slicer_extract_point_union(self):
+        import pygribjump as gj
+
+        pt1 = Point(["latitude", "longitude"], [[44.25, 5.55]], method="nearest")
+        pt2 = Point(["latitude", "longitude"], [[43.75, 5.35]], method="nearest")
+
+        pt_union = Union(["latitude", "longitude"], pt1, pt2)
+
+        request = Request(
+            Select("date", [pd.Timestamp("20250221T0000")]),
+            Select("step", [0]),
+            Select("param", ["130"]),
+            Select("levtype", ["sfc"]),
+            pt_union,
+        )
+
+        self.fdbdatacube = gj.GribJump()
+
+        self.API = Polytope(
+            datacube=self.fdbdatacube,
+            options=self.options,
+        )
+
+        result = self.API.retrieve(request)
+        assert len(result.leaves) == 2
+        result.pprint()
+
+        lats = []
+        lons = []
+        eccodes_lats = []
+        eccodes_lons = []
+        tol = 1e-3
+        leaves = result.leaves
+        for i in range(len(leaves)):
+            cubepath = leaves[i].flatten()
+            lat = cubepath["latitude"][0]
+            lon = cubepath["longitude"][0]
+            lats.append(lat)
+            lons.append(lon)
+            nearest_points = find_nearest_latlon("tests/data/lambert_lam_one_message.grib", lat, lon)
+            eccodes_lat = nearest_points[0][0]["lat"]
+            eccodes_lon = nearest_points[0][0]["lon"]
+            eccodes_lats.append(eccodes_lat)
+            eccodes_lons.append(eccodes_lon)
+            assert eccodes_lat - tol <= lat
+            assert lat <= eccodes_lat + tol
+            assert eccodes_lon - tol <= lon
+            assert lon <= eccodes_lon + tol

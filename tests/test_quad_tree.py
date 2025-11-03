@@ -114,11 +114,11 @@ class TestQuadTreeSlicer:
                 "type",
             ],
             "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
+            "engine_options": {"latitude": "quadtree", "longitude": "quadtree"},
         }
         self.API = Polytope(
             datacube=self.fdbdatacube,
             options=self.options,
-            engine_options={"latitude": "quadtree", "longitude": "quadtree"},
         )
         lat_ax = self.API.datacube.axes["latitude"]
         tree = TensorIndexTree()
@@ -182,13 +182,13 @@ class TestQuadTreeSlicer:
                 "type",
             ],
             "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
+            "engine_options": {"latitude": "quadtree", "longitude": "quadtree"},
         }
         time0 = time.time()
         polytope = Box(["latitude", "longitude"], [1, 1], [20, 30]).polytope()[0]
         self.API = Polytope(
             datacube=self.fdbdatacube,
             options=self.options,
-            engine_options={"latitude": "quadtree", "longitude": "quadtree"},
         )
         print(time.time() - time0)
         time1 = time.time()
