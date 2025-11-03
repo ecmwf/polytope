@@ -3,6 +3,8 @@ import operator
 from copy import deepcopy
 from itertools import product
 
+from qubed import Qube
+
 from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
 from ...utility.geometry import nearest_pt
 from .datacube import Datacube, TensorIndexTree
@@ -65,6 +67,7 @@ class FDBDatacube(Datacube):
 
         logging.info("Axes returned from GribJump are: " + str(self.fdb_coordinates))
 
+        self.q = Qube.from_datacube(self.fdb_coordinates)
         self.fdb_coordinates["values"] = []
         for name, values in self.fdb_coordinates.items():
             values.sort()
