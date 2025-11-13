@@ -1,4 +1,3 @@
-import math
 from copy import copy
 
 from ..datacube.tensor_index_tree import TensorIndexTree
@@ -70,18 +69,6 @@ class HullSlicer(Engine):
             values = datacube.get_indices(flattened, ax, lower, upper, method)
             self.axis_values_between[(flattened_tuple, ax.name, lower, upper, method)] = values
         return values
-
-    def remap_values(self, ax, value):
-        remapped_val = self.remapped_vals.get((value, ax.name), None)
-        if remapped_val is None:
-            remapped_val = value
-            if ax.is_cyclic:
-                remapped_val_interm = ax.remap([value, value])[0]
-                remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
-            if ax.can_round:
-                remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
-            self.remapped_vals[(value, ax.name)] = remapped_val
-        return remapped_val
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, values, next_nodes, slice_axis_idx, api):
         # TODO: Restructure this to add all compressed values at once in the tree
@@ -180,7 +167,6 @@ class HullSlicer(Engine):
         sub_trees = []
 
         for c in combinations:
-            r = TensorIndexTree()
             final_polys = find_polytope_combinations(c)
             r = self.slice_tree(datacube, final_polys)
 
