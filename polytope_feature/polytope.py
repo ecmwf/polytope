@@ -150,6 +150,8 @@ class Polytope:
         request = TensorIndexTree()
         combinations = tensor_product(groups)
 
+        print("WENT HERE??")
+
         # NOTE: could optimise here if we know combinations will always be for one request.
         # Then we do not need to create a new index tree and merge it to request, but can just
         # directly work on request and return it...

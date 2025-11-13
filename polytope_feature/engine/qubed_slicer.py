@@ -23,10 +23,6 @@ class QubedSlicer(Engine):
         self.compressed_axes = []
         self.remapped_vals = {}
 
-    def find_datacube_vals():
-        # TODO
-        pass
-
     def find_values_between(self, polytope, ax, node, datacube, lower, upper, path=None):
         if isinstance(ax, UnsliceableDatacubeAxis):
             filtered = [(i, v) for i, v in enumerate(node.values) if lower <= v <= upper]

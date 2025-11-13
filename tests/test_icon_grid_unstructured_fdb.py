@@ -46,6 +46,7 @@ class TestQuadTreeSlicer:
         }
 
     @pytest.mark.fdb
+    @pytest.mark.skip(reason="ICON eckit not supported locally")
     def test_quad_tree_slicer_extract(self):
         import pygribjump as gj
 

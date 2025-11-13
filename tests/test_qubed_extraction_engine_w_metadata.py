@@ -75,6 +75,21 @@ datacube_transformations = {
     "values": NestedHealpixGridMapper("values", ["latitude", "longitude"], 1024),
 }
 
+engine_options = {
+    "step": "qubed",
+    "date": "qubed",
+    "levtype": "qubed",
+    "param": "qubed",
+    "latitude": "qubed",
+    "longitude": "qubed",
+    "class": "qubed",
+    "time": "qubed",
+    "type": "qubed",
+    "expver": "qubed",
+    "stream": "qubed",
+    "dataset": "qubed",
+}
+
 
 options = {
     "axis_config": [
@@ -117,6 +132,7 @@ options = {
         "date": "PandasTimestampDatacubeAxis",
         "step": "IntDatacubeAxis",
     },
+    "engine_options": engine_options,
 }
 
 
@@ -141,7 +157,7 @@ slicer = QubedSlicer()
 self_API = Polytope(
     datacube=fdb_tree,
     # engine=slicer,
-    engine_options="qubed",
+    # engine_options="qubed",
     options=options,
 )
 time1 = time.time()

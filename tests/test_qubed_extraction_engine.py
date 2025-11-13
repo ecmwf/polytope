@@ -95,6 +95,28 @@ datacube_transformations = {
     "values": NestedHealpixGridMapper("values", ["latitude", "longitude"], 1024),
 }
 
+engine_options = {
+    "step": "qubed",
+    "date": "qubed",
+    "levtype": "qubed",
+    "param": "qubed",
+    "latitude": "qubed",
+    "longitude": "qubed",
+    "class": "qubed",
+    "time": "qubed",
+    "type": "qubed",
+    "expver": "qubed",
+    "stream": "qubed",
+    "dataset": "qubed",
+    "model": "qubed",
+    "resolution": "qubed",
+    "stream": "qubed",
+    "realization": "qubed",
+    "experiment": "qubed",
+    "generation": "qubed",
+    "activity": "qubed",
+}
+
 
 options = {
     "axis_config": [
@@ -124,7 +146,8 @@ options = {
         "stream",
         "type",
     ],
-    "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
+    # "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
+    "pre_path": {"param": "165", "activity": "baseline", "resolution": "high"},
     "datacube_axes": {
         "param": "UnsliceableDatacubeAxis",
         "time": "PandasTimedeltaDatacubeAxis",
@@ -142,34 +165,35 @@ options = {
         "class": "UnsliceableDatacubeAxis",
         "date": "PandasTimestampDatacubeAxis",
     },
+    "engine_options": engine_options,
 }
 
 
 request = Request(
-    ConvexPolytope(["param"], [[164]]),
+    ConvexPolytope(["param"], [[165]]),
     ConvexPolytope(["time"], [[pd.Timedelta(hours=1, minutes=0)], [pd.Timedelta(hours=3, minutes=0)]]),
     ConvexPolytope(["resolution"], [["high"]]),
     ConvexPolytope(["type"], [["fc"]]),
-    ConvexPolytope(["model"], [["ifs-nemo"]]),
+    ConvexPolytope(["model"], [["icon"]]),
     ConvexPolytope(["stream"], [["clte"]]),
     ConvexPolytope(["realization"], [[1]]),
     ConvexPolytope(["expver"], [["0001"]]),
-    ConvexPolytope(["experiment"], [["ssp3-7.0"]]),
-    ConvexPolytope(["generation"], [[1]]),
+    ConvexPolytope(["experiment"], [["cont"]]),
+    ConvexPolytope(["generation"], [[2]]),
     ConvexPolytope(["levtype"], [["sfc"]]),
-    ConvexPolytope(["activity"], [["scenariomip"]]),
+    ConvexPolytope(["activity"], [["baseline"]]),
     ConvexPolytope(["dataset"], [["climate-dt"]]),
     ConvexPolytope(["class"], [["d1"]]),
-    ConvexPolytope(["date"], [[pd.Timestamp("20220811")]]),
+    ConvexPolytope(["date"], [[pd.Timestamp("19950101")]]),
     ConvexPolytope(["latitude", "longitude"], [[0, 0], [0.5, 0.5], [0, 0.5]]),
 )
+
+# print(fdb_tree.select({"param": "165", "activity": "baseline", "resolution": "high"}))
 
 qubeddatacube = QubedDatacube(fdb_tree, datacube_axes, datacube_transformations)
 slicer = QubedSlicer()
 self_API = Polytope(
     datacube=fdb_tree,
-    # engine=slicer,
-    engine_options="qubed",
     options=options,
 )
 time1 = time.time()
