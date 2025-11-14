@@ -3,7 +3,6 @@ from typing import List
 
 from .datacube.backends.datacube import Datacube
 from .datacube.datacube_axis import UnsliceableDatacubeAxis
-from .datacube.tensor_index_tree import TensorIndexTree
 from .engine.hullslicer import HullSlicer
 from .engine.optimised_point_in_polygon_slicer import OptimisedPointInPolygonSlicer
 from .engine.optimised_quadtree_slicer import OptimisedQuadTreeSlicer
@@ -12,7 +11,7 @@ from .engine.quadtree_slicer import QuadTreeSlicer
 from .engine.qubed_slicer import QubedSlicer
 from .options import PolytopeOptions
 from .shapes import ConvexPolytope, Point, Product, Union
-from .utility.combinatorics import group, tensor_product
+from .utility.combinatorics import find_polytope_combinations, group, tensor_product
 from .utility.exceptions import AxisOverdefinedError
 from .utility.list_tools import unique
 
@@ -145,45 +144,64 @@ class Polytope:
             else:
                 self._unique_continuous_points(p, datacube)
 
+        self.engine = HullSlicer()
+
         groups, input_axes = group(polytopes)
-        datacube.validate(input_axes)
-        request = TensorIndexTree()
         combinations = tensor_product(groups)
 
-        print("WENT HERE??")
-
-        # NOTE: could optimise here if we know combinations will always be for one request.
-        # Then we do not need to create a new index tree and merge it to request, but can just
-        # directly work on request and return it...
+        sub_trees = []
 
         for c in combinations:
-            r = TensorIndexTree()
-            new_c = []
-            for combi in c:
-                if isinstance(combi, list):
-                    new_c.extend(combi)
-                else:
-                    new_c.append(combi)
-            final_polys = []
-            for poly in new_c:
-                if isinstance(poly, Product):
-                    final_polys.extend(poly.polytope())
-                else:
-                    final_polys.append(poly)
-            r["unsliced_polytopes"] = set(final_polys)
-            current_nodes = [r]
-            for ax in datacube.axes.values():
-                engine = self.find_engine(ax)
-                next_nodes = []
-                interm_next_nodes = []
-                for node in current_nodes:
-                    engine._build_branch(ax, node, datacube, interm_next_nodes, self)
-                    next_nodes.extend(interm_next_nodes)
-                    interm_next_nodes = []
-                current_nodes = next_nodes
+            final_polys = find_polytope_combinations(c)
 
-            request.merge(r)
-        return request
+            # Get the sliced Qube for each combi
+            r = self.engine.slice_tree(datacube, final_polys)
+            sub_trees.append(r)
+
+        final_tree = sub_trees[0]
+
+        for sub_tree in sub_trees[1:]:
+            final_tree | sub_tree
+        return final_tree
+        # groups, input_axes = group(polytopes)
+        # datacube.validate(input_axes)
+        # request = TensorIndexTree()
+        # combinations = tensor_product(groups)
+
+        # print("WENT HERE??")
+
+        # # NOTE: could optimise here if we know combinations will always be for one request.
+        # # Then we do not need to create a new index tree and merge it to request, but can just
+        # # directly work on request and return it...
+
+        # for c in combinations:
+        #     r = TensorIndexTree()
+        #     new_c = []
+        #     for combi in c:
+        #         if isinstance(combi, list):
+        #             new_c.extend(combi)
+        #         else:
+        #             new_c.append(combi)
+        #     final_polys = []
+        #     for poly in new_c:
+        #         if isinstance(poly, Product):
+        #             final_polys.extend(poly.polytope())
+        #         else:
+        #             final_polys.append(poly)
+        #     r["unsliced_polytopes"] = set(final_polys)
+        #     current_nodes = [r]
+        #     for ax in datacube.axes.values():
+        #         engine = self.find_engine(ax)
+        #         next_nodes = []
+        #         interm_next_nodes = []
+        #         for node in current_nodes:
+        #             engine._build_branch(ax, node, datacube, interm_next_nodes, self)
+        #             next_nodes.extend(interm_next_nodes)
+        #             interm_next_nodes = []
+        #         current_nodes = next_nodes
+
+        #     request.merge(r)
+        # return request
 
     def find_engine(self, ax):
         slicer_type = self.engine_options[ax.name]

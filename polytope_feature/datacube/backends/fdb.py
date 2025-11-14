@@ -3,6 +3,7 @@ import operator
 from copy import deepcopy
 from itertools import product
 
+import numpy as np
 from qubed import Qube
 
 from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
@@ -98,6 +99,56 @@ class FDBDatacube(Datacube):
         if self.grid_transformation.is_irregular:
             return self.grid_transformation._final_transformation.grid_latlon_points()
 
+    def add_axes_dynamically(self, qube_node):
+        # TODO: here look if the options have changed and we need to modify the transformations
+        changed_options = False
+        if not len(qube_node.metadata.items()) == 0:
+            changed_options = True
+
+        if changed_options:
+            if len(qube_node.children) == 0:
+                axis_name = "values"
+                vals = []
+            else:
+                axis_name = qube_node.key
+                self._axes.pop(axis_name, None)
+                vals = list(qube_node.values)
+
+            options = None
+
+            for opt in self.axis_options:
+                if opt.axis_name == axis_name:
+                    options = opt
+
+            # NOTE: be sure to remove the "fake" additional grid axes
+            if len(qube_node.children) == 0:
+                axes_names = list(self._axes.keys())
+
+                for name in axes_names:
+                    if name not in self.treated_axes:
+                        self._axes.pop(name, None)
+
+            self._check_and_readd_axes(options, axis_name, vals)
+
+            # NOTE: now if we have created the additional grid axes, readd the additional transformations
+            # associated to them
+            new_axes_names = list(self._axes.keys())
+            for name in new_axes_names:
+                if name not in self.treated_axes:
+                    options = None
+                    for opt in self.axis_options:
+                        if opt.axis_name == name:
+                            options = opt
+
+                    val = [self._axes[name].type_eg]
+                    self._check_and_readd_axes(options, name, val)
+
+        # TODO: will this work?? How do we make sure we add the grid axes which come from the values
+        # transformation here??
+        # TODO: we can't do a "difference" of axes like before since we don't a priori have the final axes
+        # set available at once??
+        pass
+
     def check_branching_axes(self, request):
         polytopes = request.polytopes()
         for polytope in polytopes:
@@ -128,6 +179,26 @@ class FDBDatacube(Datacube):
         # Remove the keys from self._axes
         for axis_name in axes_to_remove:
             self._axes.pop(axis_name, None)
+
+    def get_indices(self, path, path_node, axis, lower, upper, method=None):
+        """
+        Given a path to a subset of the datacube, return the discrete indexes which exist between
+        two non-discrete values (lower, upper) for a particular axis (given by label)
+        If lower and upper are equal, returns the index which exactly matches that value (if it exists)
+        e.g. returns integer discrete points between two floats
+        """
+        indexes = axis.find_indexes_node(path_node, self, path)
+
+        idx_between = axis.find_indices_between(indexes, lower, upper, self, method)
+
+        logging.debug(f"For axis {axis.name} between {lower} and {upper}, found indices {idx_between}")
+
+        if path_node:
+            indexes = [indexes.index(item) for item in idx_between]
+        else:
+            indexes = None
+
+        return (idx_between, indexes)
 
     def get(self, requests: TensorIndexTree, context=None):
         if context is None:
@@ -410,9 +481,14 @@ class FDBDatacube(Datacube):
         original_indices, sorted_request_ranges = zip(*sorted_list)
         return (original_indices, sorted_request_ranges, new_fdb_node_ranges)
 
-    def datacube_natural_indexes(self, axis, subarray):
-        indexes = subarray.get(axis.name, None)
-        return indexes
+    # def datacube_natural_indexes(self, axis, subarray):
+    #     indexes = subarray.get(axis.name, None)
+    #     return indexes
+    def datacube_natural_indexes(self, qube_node):
+        if qube_node is not None:
+            return np.asarray(list(qube_node.values))
+        else:
+            return []
 
     def select(self, path, unmapped_path):
         return self.fdb_coordinates
