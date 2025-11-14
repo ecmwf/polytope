@@ -193,6 +193,7 @@ from ..utility.combinatorics import (
     tensor_product,
 )
 from .engine import Engine
+from .qubed_tools import compress_w_leaf_attrs
 from .slicing_tools import slice
 
 
@@ -485,7 +486,7 @@ class HullSlicer(Engine):
         # create sub-qube without grid first
         request_qube = Qube.make_root(self._slice(q, final_polys, datacube, datacube_transformations))
         # recompress this sub-qube
-        request_qube = request_qube.compress_w_leaf_attrs("sliced_polys")
+        request_qube = compress_w_leaf_attrs(request_qube, "sliced_polys")
         # complete the qube with grid axes and return it
         self.slice_grid_axes(request_qube, datacube, datacube_transformations)
         return request_qube
