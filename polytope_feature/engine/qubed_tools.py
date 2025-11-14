@@ -1,4 +1,5 @@
 import functools
+from typing import Iterable
 
 from qubed import Qube, set_operations
 
@@ -60,3 +61,11 @@ def compress_w_leaf_attrs(q: Qube, attr_str) -> Qube:
     transfer_attr(attr_str, q.children, new_children)
 
     return q.replace(children=tuple(sorted(new_children)))
+
+
+def compressed_leaf_nodes(qube) -> "Iterable[tuple[dict[str, str], Qube]]":
+    if not qube.children:
+        yield qube
+    for child in qube.children:
+        for leaf in compressed_leaf_nodes(child):
+            yield leaf

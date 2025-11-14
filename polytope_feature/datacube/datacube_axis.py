@@ -83,6 +83,7 @@ class DatacubeAxis(ABC):
 
     def find_indexes_node(self, path_node, datacube, path):
         indexes = self.find_standard_indexes_node(path_node, datacube)
+        # print(indexes)
         # path = {self.name: tuple(path_node.values)}
         if not path:
             if path_node:

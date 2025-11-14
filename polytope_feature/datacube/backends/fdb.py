@@ -194,6 +194,8 @@ class FDBDatacube(Datacube):
         logging.debug(f"For axis {axis.name} between {lower} and {upper}, found indices {idx_between}")
 
         if path_node:
+            print(indexes)
+            print(idx_between)
             indexes = [indexes.index(item) for item in idx_between]
         else:
             indexes = None

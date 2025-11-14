@@ -193,7 +193,7 @@ from ..utility.combinatorics import (
     tensor_product,
 )
 from .engine import Engine
-from .qubed_tools import compress_w_leaf_attrs
+from .qubed_tools import compress_w_leaf_attrs, compressed_leaf_nodes
 from .slicing_tools import slice
 
 
@@ -383,7 +383,7 @@ class HullSlicer(Engine):
         # and go to its leaves
         # TODO: we then find the remaining sliced_polys to continue slicing and slice along lat + lon like before
         # TODO: we then return the completed tree
-        compressed_leaves = [leaf for leaf in q.compressed_leaf_nodes()]
+        compressed_leaves = [leaf for leaf in compressed_leaf_nodes(q)]
         actual_leaves = deepcopy(compressed_leaves)
         for j, leaf in enumerate(actual_leaves):
             # for leaf in q.compressed_leaf_nodes():
