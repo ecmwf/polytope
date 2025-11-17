@@ -64,7 +64,8 @@ class TestSlicingFDBDatacube:
             options=self.options,
         )
         result = self.API.retrieve(request)
-        result.pprint()
+        # result.pprint()
+        print(result)
         assert len(result.leaves) == 3
         for i in range(len(result.leaves)):
             assert len(result.leaves[i].result) == 3
@@ -92,7 +93,8 @@ class TestSlicingFDBDatacube:
             options=self.options,
         )
         result = self.API.retrieve(request)
-        result.pprint()
+        # result.pprint()
+        print(result)
         assert len(result.leaves) == 3
         for i in range(len(result.leaves)):
             assert len(result.leaves[i].result) == 3
@@ -120,7 +122,8 @@ class TestSlicingFDBDatacube:
             options=self.options,
         )
         result = self.API.retrieve(request)
-        result.pprint()
+        # result.pprint()
+        print(result)
         assert len(result.leaves) == 3
         for i in range(len(result.leaves)):
             assert len(result.leaves[i].result) == 3
@@ -148,7 +151,8 @@ class TestSlicingFDBDatacube:
             options=self.options,
         )
         result = self.API.retrieve(request)
-        result.pprint()
+        # result.pprint()
+        print(result)
         assert len(result.leaves) == 2
         assert len(result.leaves[0].result) == 3
         assert len(result.leaves[1].result) == 3
@@ -178,7 +182,8 @@ class TestSlicingFDBDatacube:
             options=self.options,
         )
         result = self.API.retrieve(request)
-        result.pprint()
+        # result.pprint()
+        print(result)
         assert len(result.leaves) == 3
         assert len(result.leaves[0].result) == 3
         assert len(result.leaves[1].result) == 5
@@ -210,7 +215,8 @@ class TestSlicingFDBDatacube:
             options=self.options,
         )
         result = self.API.retrieve(request)
-        result.pprint()
+        # result.pprint()
+        print(result)
         assert len(result.leaves) == 1
         for i in range(len(result.leaves)):
             assert len(result.leaves[i].result) == 0

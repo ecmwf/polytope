@@ -12,6 +12,8 @@ def compress_w_leaf_attrs(q: Qube, attr_str) -> Qube:
 
         for leaf in list(a.compressed_leaf_nodes()) + list(b.compressed_leaf_nodes()):
             attrs = getattr(leaf[0], attr_str, None)
+            print("EVER GOT ATTR??")
+            print(attrs)
             if attrs:
                 for attr in attrs:
                     if attr is not None and id(attr) not in seen:

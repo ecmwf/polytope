@@ -68,6 +68,7 @@ class FDBDatacube(Datacube):
 
         logging.info("Axes returned from GribJump are: " + str(self.fdb_coordinates))
 
+        # TODO: actually, we need to create self.q once we have applied the transformations, especially the merging...
         self.q = Qube.from_datacube(self.fdb_coordinates)
         self.fdb_coordinates["values"] = []
         for name, values in self.fdb_coordinates.items():
@@ -194,8 +195,8 @@ class FDBDatacube(Datacube):
         logging.debug(f"For axis {axis.name} between {lower} and {upper}, found indices {idx_between}")
 
         if path_node:
-            print(indexes)
-            print(idx_between)
+            # print(indexes)
+            # print(idx_between)
             indexes = [indexes.index(item) for item in idx_between]
         else:
             indexes = None

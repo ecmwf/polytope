@@ -290,6 +290,8 @@ class HullSlicer(Engine):
                 child, child_polytopes, datacube, datacube_transformations, current_metadata_idx_stack
             )
             # If this node used to have children but now has none due to filtering, skip it.
+            print("WHAT WERE THE CHILDREN EVEN")
+            print(child.children)
             if child.children and not children:
                 return None
 
@@ -299,7 +301,6 @@ class HullSlicer(Engine):
             else:
                 request_child_val = (children, new_found_vals)
             final_children_and_vals.append(request_child_val)
-
         if len(final_children_and_vals) == 0:
             return None
         return final_children_and_vals
@@ -327,7 +328,11 @@ class HullSlicer(Engine):
                 lower, upper, slice_axis_idx = poly.extents(child.key)
 
                 # find values on child that are within extents
+                print("LOOK NOW")
+                print(lower)
+                print(upper)
                 found_vals, idxs = self.find_values_between(poly, ax, child, datacube, lower, upper)
+                print(found_vals)
 
                 # TODO: find the indexes of the found_vals wrt child.values,
                 # to extract the right metadata that we want to keep inside self.build_branch
@@ -372,7 +377,6 @@ class HullSlicer(Engine):
                     )
                     if not children:
                         # We've reached the end of the qube
-                        # qube_node.sliced_polys = sliced_polys
                         qube_node.sliced_polys = polytopes
                     result.append(qube_node)
 
@@ -481,14 +485,17 @@ class HullSlicer(Engine):
 
     def slice_tree(self, datacube, final_polys):
         q = datacube.q
-        print(q)
+        # print(q)
         datacube_transformations = datacube.datacube_transformations
         # create sub-qube without grid first
-        request_qube = Qube.make_root(self._slice(q, final_polys, datacube, datacube_transformations))
-        # recompress this sub-qube
-        request_qube = compress_w_leaf_attrs(request_qube, "sliced_polys")
-        # complete the qube with grid axes and return it
-        self.slice_grid_axes(request_qube, datacube, datacube_transformations)
+        sliced_children = self._slice(q, final_polys, datacube, datacube_transformations)
+        request_qube = Qube.make_root(sliced_children)
+        if sliced_children:
+            # recompress this sub-qube
+            # print(request_qube)
+            request_qube = compress_w_leaf_attrs(request_qube, "sliced_polys")
+            # complete the qube with grid axes and return it
+            self.slice_grid_axes(request_qube, datacube, datacube_transformations)
         return request_qube
 
     def build_tree(self, polytopes_to_slice, datacube):
