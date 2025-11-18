@@ -37,6 +37,7 @@ class Datacube(ABC):
         self.compressed_axes = compressed_axes_options
         self.grid_md5_hash = None
         self.datacube_transformations = []
+        self.q_dict = {}
 
     @abstractmethod
     def get(self, requests: TensorIndexTree, context: Dict) -> Any:
@@ -61,6 +62,13 @@ class Datacube(ABC):
         if transformation_type_key.name == "merge":
             self.merged_axes.append(name)
             self.merged_axes.append(final_axis_names)
+            # print("WHAT ARE THE MERGED VALUES??")
+            # print(values)
+            # print(transformation._merged_values)
+            # values = [val.astype('datetime64[ms]').astype(object) for val in transformation._merged_values]
+            values = transformation._merged_values
+            # print([type(val) for val in values])
+            # t.astype('datetime64[ms]').astype(object)
             for axis in final_axis_names:
                 # remove the merged_axes from the possible compressed axes
                 if axis in self.compressed_axes:
@@ -87,6 +95,7 @@ class Datacube(ABC):
                 values = transformation.change_val_type(axis_name, values)
                 if self._axes is None or axis_name not in self._axes.keys():
                     DatacubeAxis.create_standard(axis_name, values, self)
+                    self.q_dict[axis_name] = values
                 # add transformation tag to axis, as well as transformation options for later
                 setattr(self._axes[axis_name], has_transform[transformation_type_key.name], True)
                 # where has_transform is a factory inside datacube_transformations to set the has_transform, is_cyclic
@@ -101,6 +110,7 @@ class Datacube(ABC):
                 # Means we have an unsliceable axis since we couln't transform values to desired type
                 if self._axes is None or axis_name not in self._axes.keys():
                     DatacubeAxis.create_standard(axis_name, values, self)
+                    self.q_dict[axis_name] = values
 
     def _add_all_transformation_axes(self, options, name, values):
         for transformation_type_key in options.transformations:
@@ -115,6 +125,7 @@ class Datacube(ABC):
             if name not in self.blocked_axes:
                 if self._axes is None or name not in self._axes.keys():
                     DatacubeAxis.create_standard(name, values, self)
+                    self.q_dict[name] = values
 
     def _add_all_type_change_transformation_axes(self, options, name, values):
         for transformation_type_key in options.transformations:
@@ -122,6 +133,7 @@ class Datacube(ABC):
                 self._create_axes(name, values, transformation_type_key, options)
             else:
                 DatacubeAxis.create_standard(name, values, self)
+                self.q_dict[name] = values
 
     def _check_and_readd_axes(self, options, name, values):
         if options is not None:
@@ -129,6 +141,7 @@ class Datacube(ABC):
         else:
             if self._axes is None or name not in self._axes.keys():
                 DatacubeAxis.create_standard(name, values, self)
+                # self.q_dict[name] = values
 
     def has_index(self, path: DatacubePath, axis, index):
         "Given a path to a subset of the datacube, checks if the index exists on that sub-datacube axis"

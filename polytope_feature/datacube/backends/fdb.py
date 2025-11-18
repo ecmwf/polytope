@@ -4,6 +4,7 @@ from copy import deepcopy
 from itertools import product
 
 import numpy as np
+import pandas as pd
 from qubed import Qube
 
 from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
@@ -68,8 +69,6 @@ class FDBDatacube(Datacube):
 
         logging.info("Axes returned from GribJump are: " + str(self.fdb_coordinates))
 
-        # TODO: actually, we need to create self.q once we have applied the transformations, especially the merging...
-        self.q = Qube.from_datacube(self.fdb_coordinates)
         self.fdb_coordinates["values"] = []
         for name, values in self.fdb_coordinates.items():
             values.sort()
@@ -92,6 +91,15 @@ class FDBDatacube(Datacube):
 
                 val = self._axes[name].type
                 self._check_and_add_axes(options, name, val)
+
+        # TODO: actually, we need to create self.q once we have applied the transformations, especially the merging...
+        self.q_dict.pop("latitude")
+        self.q_dict.pop("longitude")
+        for key, value in self.q_dict.items():
+            if isinstance(value[0], pd.Timestamp):
+                value = [val.to_pydatetime() for val in value]
+            self.q_dict[key] = value
+        self.q = Qube.from_datacube(self.q_dict)
 
         logging.info("Polytope created axes for: " + str(self._axes.keys()))
 
@@ -265,15 +273,15 @@ class FDBDatacube(Datacube):
             leaf_path = {}
 
         # First when request node is root, go to its children
-        if requests.axis.name == "root":
+        if requests.key == "root":
             logging.debug("Looking for data for the tree")
 
             for c in requests.children:
                 self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info)
         # If request node has no children, we have a leaf so need to assign fdb values to it
         else:
-            key_value_path = {requests.axis.name: requests.values}
-            ax = requests.axis
+            key_value_path = {requests.key: requests.values}
+            ax = self._axes[requests.key]
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
@@ -393,8 +401,8 @@ class FDBDatacube(Datacube):
             fdb_node_ranges[i] = [[TensorIndexTree.root for y in range(lon_length)] for x in range(lon_length)]
             current_start_idx = deepcopy(current_start_idxs[i])
             fdb_range_nodes = deepcopy(fdb_node_ranges[i])
-            key_value_path = {lat_child.axis.name: lat_child.values}
-            ax = lat_child.axis
+            key_value_path = {lat_child.key: lat_child.values}
+            ax = self._axes[lat_child.key]
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
@@ -413,9 +421,10 @@ class FDBDatacube(Datacube):
         fdb_range_n = [[] for i in range(len(requests.children))]
         for i, c in enumerate(requests.children):
             # now c are the leaves of the initial tree
-            key_value_path = {c.axis.name: c.values}
-            leaf_path["index"] = c.indexes
-            ax = c.axis
+            key_value_path = {c.key: list(c.values)}
+            # leaf_path["index"] = c.indexes
+            # ax = c.axis
+            ax = self._axes[c.key]
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
