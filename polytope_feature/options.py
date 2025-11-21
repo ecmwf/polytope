@@ -40,7 +40,6 @@ class MapperConfig(TransformationConfig):
     Latin1InRadians: Optional[float] = None
     Latin2InRadians: Optional[float] = None
     LaDInRadians: Optional[float] = None
-    # points: Optional[List[List[float]]] = None
     points: Optional[List[Tuple[float, float]]] = None
     uuid: Optional[str] = None
 
@@ -84,6 +83,7 @@ class Config(ConfigModel):
     alternative_axes: Optional[List[GribJumpAxesConfig]] = []
     use_catalogue: Optional[bool] = False
     engine_options: Optional[Dict[str, str]] = {}
+    datacube_axes: Optional[Dict[str, str]] = {}
 
 
 class PolytopeOptions(ABC):
@@ -99,6 +99,7 @@ class PolytopeOptions(ABC):
         alternative_axes = config_options.alternative_axes
         use_catalogue = config_options.use_catalogue
         engine_options = config_options.engine_options
+        datacube_axes = config_options.datacube_axes
         return (
             axis_config,
             compressed_axes_config,
@@ -106,4 +107,5 @@ class PolytopeOptions(ABC):
             alternative_axes,
             use_catalogue,
             engine_options,
+            datacube_axes,
         )

@@ -4,74 +4,54 @@ from copy import deepcopy
 from itertools import product
 
 import numpy as np
-import pandas as pd
-from qubed import Qube
+import pygribjump as pygj
+from qubed.value_types import QEnum
 
-from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
+from ...utility.exceptions import BadGridError, GribJumpNoIndexError
 from ...utility.geometry import nearest_pt
+from ...utility.metadata_handling import find_metadata, flatten_metadata
 from .datacube import Datacube, TensorIndexTree
 
 
-class FDBDatacube(Datacube):
+class QubedDatacube(Datacube):
     def __init__(
         self,
-        gj,
+        q,
+        datacube_axes,
         config=None,
         axis_options=None,
         compressed_axes_options=[],
         alternative_axes=[],
         context=None,
-        use_catalogue=False,
     ):
-        self.use_catalogue = use_catalogue
         if config is None:
             config = {}
-        if context is None:
-            context = {}
+        if axis_options is None:
+            axis_options = {}
 
-        super().__init__(
-            axis_options,
-            compressed_axes_options,
-        )
+        self.q = q
+        self.datacube_axes = datacube_axes
+        # TODO: should the gj object be passed in instead?
+        self.gj = pygj.GribJump()
+        super().__init__(axis_options, compressed_axes_options)
 
-        logging.info("Created an FDB datacube with options: " + str(axis_options))
-
+        # TODO: where do these come from and are they right?
         self.unwanted_path = {}
-        self.axis_options = axis_options
 
-        partial_request = config
+        self.axis_options = axis_options
         # Find values in the level 3 FDB datacube
 
-        self.gj = gj
-        if len(alternative_axes) == 0:
-            if self.use_catalogue:
-                from .catalogue_helper import find_axes_from_qube
+        self.fdb_coordinates = {}
 
-                logging.info("Find GribJump axes for %s from catalogue", context)
-                self.fdb_coordinates = find_axes_from_qube(partial_request)
-                logging.info("Retrieved available GribJump axes for %s", context)
-            else:
-                logging.info("Find GribJump axes for %s", context)
-                self.fdb_coordinates = self.gj.axes(partial_request, ctx=context)
-                logging.info("Retrieved available GribJump axes for %s", context)
-                if len(self.fdb_coordinates) == 0 or set(partial_request) > set(self.fdb_coordinates):
-                    raise BadRequestError(partial_request)
-        else:
-            self.fdb_coordinates = {}
-            for axis_config in alternative_axes:
-                self.fdb_coordinates[axis_config.axis_name] = axis_config.values
-
-        fdb_coordinates_copy = deepcopy(self.fdb_coordinates)
-        for axis, vals in fdb_coordinates_copy.items():
-            if len(vals) == 1:
-                if vals[0] == "":
-                    self.fdb_coordinates.pop(axis)
-
-        logging.info("Axes returned from GribJump are: " + str(self.fdb_coordinates))
+        # TODO: we instead now have a list of axes with the actual axes types...
+        # TODO: here use the qubed to find all axes names and then get the values from the first val of the qubed and
+        # then apply transformations to get the actual right axis type...
+        for axis_name in datacube_axes:
+            axis = datacube_axes[axis_name]
+            self.fdb_coordinates[axis_name] = [axis.type_eg]
 
         self.fdb_coordinates["values"] = []
         for name, values in self.fdb_coordinates.items():
-            values.sort()
             options = None
             for opt in self.axis_options:
                 if opt.axis_name == name:
@@ -81,7 +61,7 @@ class FDBDatacube(Datacube):
             self.treated_axes.append(name)
             self.complete_axes.append(name)
 
-        # add other options to axis which were just created above like "lat" for the mapper transformations for eg
+        # # add other options to axis which were just created above like "lat" for the mapper transformations for eg
         for name in self._axes:
             if name not in self.treated_axes:
                 options = None
@@ -89,24 +69,15 @@ class FDBDatacube(Datacube):
                     if opt.axis_name == name:
                         options = opt
 
-                val = self._axes[name].type
+                val = self._axes[name].type_eg
                 self._check_and_add_axes(options, name, val)
 
-        # TODO: actually, we need to create self.q once we have applied the transformations, especially the merging...
-        self.q_dict.pop("latitude")
-        self.q_dict.pop("longitude")
-        for key, value in self.q_dict.items():
-            if isinstance(value[0], pd.Timestamp):
-                value = [val.to_pydatetime() for val in value]
-            self.q_dict[key] = value
-        self.q = Qube.from_datacube(self.q_dict)
-
-        logging.info("Polytope created axes for: " + str(self._axes.keys()))
-
-    def find_point_cloud(self):
-        # find the point cloud of irregular grid if it exists
-        if self.grid_transformation.is_irregular:
-            return self.grid_transformation._final_transformation.grid_latlon_points()
+        # TODO: actually should separate axis creation with types from the transformations...
+        # TODO: we should create all axes here first maybe?
+        # TODO: otherwise, we need to somehow get the axis type information/objects when we transform the polytope
+        # points into continuous types?
+        # TODO: Also, if we don't have the right axis types from the start here, then when we pre-process the polytopes,
+        # it will be wrong...
 
     def add_axes_dynamically(self, qube_node):
         # TODO: here look if the options have changed and we need to modify the transformations
@@ -158,36 +129,16 @@ class FDBDatacube(Datacube):
         # set available at once??
         pass
 
-    def check_branching_axes(self, request):
-        polytopes = request.polytopes()
-        for polytope in polytopes:
-            for ax in polytope._axes:
-                if ax == "levtype":
-                    (upper, lower, idx) = polytope.extents(ax)
-                    if "sfc" in polytope.points[idx]:
-                        self.fdb_coordinates.pop("levelist", None)
+    def datacube_natural_indexes(self, qube_node):
+        if qube_node is not None:
+            return np.asarray(list(qube_node.values))
+        else:
+            return []
 
-                if ax == "param":
-                    (upper, lower, idx) = polytope.extents(ax)
-                    if "140251" not in polytope.points[idx]:
-                        self.fdb_coordinates.pop("direction", None)
-                        self.fdb_coordinates.pop("frequency", None)
-                    else:
-                        # special param with direction and frequency
-                        if len(polytope.points[idx]) > 1:
-                            raise ValueError(
-                                "Param 251 is part of a special branching of the datacube. Please request it separately."  # noqa: E501
-                            )
-        self.fdb_coordinates.pop("quantile", None)
-        self.fdb_coordinates.pop("year", None)
-        self.fdb_coordinates.pop("month", None)
-
-        # NOTE: verify that we also remove the axis object for axes we've removed here
-        axes_to_remove = set(self.complete_axes) - set(self.fdb_coordinates.keys())
-
-        # Remove the keys from self._axes
-        for axis_name in axes_to_remove:
-            self._axes.pop(axis_name, None)
+    def find_point_cloud(self):
+        # find the point cloud of irregular grid if it exists
+        if self.grid_transformation.is_irregular:
+            return self.grid_transformation._final_transformation.grid_latlon_points()
 
     def get_indices(self, path, path_node, axis, lower, upper, method=None):
         """
@@ -203,15 +154,29 @@ class FDBDatacube(Datacube):
         logging.debug(f"For axis {axis.name} between {lower} and {upper}, found indices {idx_between}")
 
         if path_node:
-            # print(indexes)
-            # print(idx_between)
             indexes = [indexes.index(item) for item in idx_between]
         else:
             indexes = None
 
         return (idx_between, indexes)
 
-    def get(self, requests: TensorIndexTree, context=None):
+    def get(self, requests, context=None):
+        """
+        We have a compressed tree of requests, which we need to decompress completely with its metadata indexes.
+        BUT the last two axes, we would like to "ignore" in the decompression and instead,
+        we create grid index ranges from them.
+        WHILE we decompress, we need to keep some kind of map from decompressed request + grid index ranges
+        to corresponding tree node.
+        This mapping will map potentially several decompressed request + grid index ranges tuples
+        to the same tree nodes.
+
+        ADDED DIFFICULTY: the grid index ranges MUST be ordered (which is not guaranteed from the tree) so we need
+        to sort them, while also sorting the tree nodes so that they match up.
+
+        UNTIL NOW, we had a map of compressed request + grid index ranges tuples to tree nodes.
+        We could just add a map of compressed request -> list of decompressed request + associated metadata
+        """
+
         if context is None:
             context = {}
         if len(requests.children) == 0:
@@ -224,23 +189,34 @@ class FDBDatacube(Datacube):
         complete_list_complete_uncompressed_requests = []
         complete_fdb_decoding_info = []
         for j, compressed_request in enumerate(fdb_requests):
-            uncompressed_request = {}
-
+            compressed_metadata = compressed_request[2]
             # Need to determine the possible decompressed requests
-
-            # find the possible combinations of compressed indices
+            # First, find the possible combinations of compressed indices
             interm_branch_tuple_values = []
             for key in compressed_request[0].keys():
                 interm_branch_tuple_values.append(compressed_request[0][key])
             request_combis = product(*interm_branch_tuple_values)
 
+            index_combis_raw = list(product(*[range(len(lst)) for lst in interm_branch_tuple_values]))
+            index_combis = [(0, *comb) for comb in index_combis_raw]
+
             # Need to extract the possible requests and add them to the right nodes
-            for combi in request_combis:
-                uncompressed_request = {}
-                for i, key in enumerate(compressed_request[0].keys()):
-                    uncompressed_request[key] = combi[i]
-                complete_uncompressed_request = (uncompressed_request, compressed_request[1], self.grid_md5_hash)
-                complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
+
+            for i, combi in enumerate(request_combis):
+                metadata_idxs = index_combis[i]
+                actual_metadata = find_metadata(metadata_idxs, compressed_metadata)
+
+                path = flatten_metadata(actual_metadata["path"])
+                scheme = flatten_metadata(actual_metadata["scheme"])
+                offset = flatten_metadata(actual_metadata["offset"])
+                host = flatten_metadata(actual_metadata["host"])
+                port = flatten_metadata(actual_metadata["port"])
+
+                gj_extraction_request = pygj.PathExtractionRequest(
+                    path, scheme, offset, host, port, compressed_request[1], self.grid_md5_hash
+                )
+
+                complete_list_complete_uncompressed_requests.append(gj_extraction_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
 
         if logging.root.level <= logging.DEBUG:
@@ -248,7 +224,7 @@ class FDBDatacube(Datacube):
             logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
         logging.info("Requests given to GribJump extract for %s", context)
         try:
-            iterator = self.gj.extract(complete_list_complete_uncompressed_requests, context)
+            output_values = self.gj.extract_from_paths(complete_list_complete_uncompressed_requests, context)
         except Exception as e:
             if "BadValue: Grid hash mismatch" in str(e):
                 logging.info("Error is: %s", e)
@@ -260,17 +236,25 @@ class FDBDatacube(Datacube):
                 raise e
 
         logging.info("Requests extracted from GribJump for %s", context)
-        self.assign_fdb_output_to_nodes(iterator, complete_fdb_decoding_info)
+        if logging.root.level <= logging.DEBUG:
+            printed_output_values = output_values[::1000]
+            logging.debug("GribJump outputs: %s", printed_output_values)
+        self.assign_fdb_output_to_nodes(output_values, complete_fdb_decoding_info)
 
     def get_fdb_requests(
         self,
-        requests: TensorIndexTree,
+        requests,
         fdb_requests=[],
         fdb_requests_decoding_info=[],
         leaf_path=None,
+        leaf_metadata=None,
     ):
+        # TODO: collect leaf metadata from qube here too
         if leaf_path is None:
             leaf_path = {}
+
+        if leaf_metadata is None:
+            leaf_metadata = {}
 
         # First when request node is root, go to its children
         if requests.key == "root":
@@ -285,7 +269,21 @@ class FDBDatacube(Datacube):
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
+            # TODO: change to use the datacube trasnformations instead...
+            if requests.key == "time":
+                new_vals = []
+                for val in key_value_path[requests.key]:
+                    new_vals.append(val[7:9] + val[10:12])
+                key_value_path[requests.key] = new_vals
+            if requests.key == "date":
+                new_vals = []
+                for val in key_value_path[requests.key]:
+                    new_vals.append(val[:4] + val[5:7] + val[8:10])
+                key_value_path[requests.key] = new_vals
             leaf_path.update(key_value_path)
+            # TODO: in the leaf metadata, try to instead store mapping leaf_path -> list(individual metadata dicts for
+            # each uncompressed value of tree)
+            leaf_metadata.update(requests.metadata)
             if len(requests.children[0].children[0].children) == 0:
                 # find the fdb_requests and associated nodes to which to add results
                 (path, current_start_idxs, fdb_node_ranges, lat_length) = self.get_2nd_last_values(requests, leaf_path)
@@ -294,47 +292,44 @@ class FDBDatacube(Datacube):
                     sorted_request_ranges,
                     fdb_node_ranges,
                 ) = self.sort_fdb_request_ranges(current_start_idxs, lat_length, fdb_node_ranges)
-                fdb_requests.append((path, sorted_request_ranges))
+                fdb_requests.append((path, sorted_request_ranges, deepcopy(leaf_metadata)))
+                # TODO: did we need to deepcopy the leaf metadata??
                 fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
 
             # Otherwise remap the path for this key and iterate again over children
             else:
                 for c in requests.children:
-                    self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path)
+                    self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path, leaf_metadata)
 
     def remove_duplicates_in_request_ranges(self, fdb_node_ranges, current_start_idxs):
-        seen_indices = set()
-        new_fdb_node_ranges = []
-        new_current_start_idxs = []
-        for i, idxs_list in enumerate(current_start_idxs):
-            new_idx_group = []
-            new_fdb_group = []
-            for k, sub_lat_idxs in enumerate(idxs_list):
-                actual_fdb_node = fdb_node_ranges[i][k]
-                original_vals = []
-                filtered_idxs = []
-                for j, idx in enumerate(sub_lat_idxs):
-                    if idx not in seen_indices:
-                        seen_indices.add(idx)
-                        filtered_idxs.append(idx)
-                        original_vals.append(actual_fdb_node[0].values[j])
-                if filtered_idxs:
-                    # keep only if we had values still
-                    actual_fdb_node[0].values = tuple(original_vals)
-                    new_idx_group.append(filtered_idxs)
-                    new_fdb_group.append(actual_fdb_node)
-                else:
-                    # remove this node because we removed all values
-                    actual_fdb_node[0].remove_branch()
-            new_current_start_idxs.append(new_idx_group)
-            new_fdb_node_ranges.append(new_fdb_group)
-
-        return new_fdb_node_ranges, new_current_start_idxs
+        # seen_indices = set()
+        # for i, idxs_list in enumerate(current_start_idxs):
+        #     for k, sub_lat_idxs in enumerate(idxs_list):
+        #         actual_fdb_node = fdb_node_ranges[i][k]
+        #         original_fdb_node_range_vals = []
+        #         new_current_start_idx = []
+        #         for j, idx in enumerate(sub_lat_idxs):
+        #             if idx not in seen_indices:
+        #                 # NOTE: need to remove it from the values in the corresponding tree node
+        #                 # NOTE: need to read just the range we give to gj
+        #                 original_fdb_node_range_vals.append(list(actual_fdb_node[0].values)[j])
+        #                 seen_indices.add(idx)
+        #                 new_current_start_idx.append(idx)
+        #         if original_fdb_node_range_vals != []:
+        #             actual_fdb_node[0].values = tuple(original_fdb_node_range_vals)
+        #         else:
+        #             # there are no values on this node anymore so can remove it
+        #             actual_fdb_node[0].remove_branch()
+        #         if len(new_current_start_idx) == 0:
+        #             current_start_idxs[i].pop(k)
+        #         else:
+        #             current_start_idxs[i][k] = new_current_start_idx
+        return (fdb_node_ranges, current_start_idxs)
 
     def nearest_lat_lon_search(self, requests):
         if len(self.nearest_search) != 0:
-            first_ax_name = requests.children[0].axis.name
-            second_ax_name = requests.children[0].children[0].axis.name
+            first_ax_name = requests.children[0].key
+            second_ax_name = requests.children[0].children[0].key
 
             axes_in_nearest_search = [
                 first_ax_name not in self.nearest_search.keys(),
@@ -344,7 +339,7 @@ class FDBDatacube(Datacube):
             if all(not item for item in axes_in_nearest_search):
                 raise Exception("nearest point search axes are wrong")
 
-            second_ax = requests.children[0].children[0].axis
+            second_ax = self._axes[requests.children[0].children[0].key]
 
             nearest_pts = self.nearest_search.get((first_ax_name, second_ax_name), None)
             if nearest_pts is None:
@@ -401,7 +396,7 @@ class FDBDatacube(Datacube):
             fdb_node_ranges[i] = [[TensorIndexTree.root for y in range(lon_length)] for x in range(lon_length)]
             current_start_idx = deepcopy(current_start_idxs[i])
             fdb_range_nodes = deepcopy(fdb_node_ranges[i])
-            key_value_path = {lat_child.key: lat_child.values}
+            key_value_path = {lat_child.key: list(lat_child.values)}
             ax = self._axes[lat_child.key]
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
@@ -413,7 +408,6 @@ class FDBDatacube(Datacube):
 
         leaf_path_copy = deepcopy(leaf_path)
         leaf_path_copy.pop("values", None)
-        leaf_path_copy.pop("index")
         return (leaf_path_copy, current_start_idxs, fdb_node_ranges, lat_length)
 
     def get_last_layer_before_leaf(self, requests, leaf_path, current_idx, fdb_range_n):
@@ -422,8 +416,6 @@ class FDBDatacube(Datacube):
         for i, c in enumerate(requests.children):
             # now c are the leaves of the initial tree
             key_value_path = {c.key: list(c.values)}
-            # leaf_path["index"] = c.indexes
-            # ax = c.axis
             ax = self._axes[c.key]
             (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
@@ -431,13 +423,10 @@ class FDBDatacube(Datacube):
             # TODO: change this to accommodate non consecutive indexes being compressed too
             current_idx[i].extend(key_value_path["values"])
             fdb_range_n[i].append(c)
-        assert len(current_idx) == len(fdb_range_n)
-        for i, node in enumerate(fdb_range_n):
-            assert len(node[0].values) == len(current_idx[i])
         return (current_idx, fdb_range_n)
 
-    def assign_fdb_output_to_nodes(self, output_iterator, fdb_requests_decoding_info):
-        for k, result in enumerate(output_iterator):
+    def assign_fdb_output_to_nodes(self, output_values, fdb_requests_decoding_info):
+        for k, request_output_values in enumerate(output_values):
             (
                 original_indices,
                 fdb_node_ranges,
@@ -445,19 +434,21 @@ class FDBDatacube(Datacube):
             sorted_fdb_range_nodes = [fdb_node_ranges[i] for i in original_indices]
             for i in range(len(sorted_fdb_range_nodes)):
                 n = sorted_fdb_range_nodes[i][0]
-                if len(result.values) == 0:
+                if len(request_output_values.values) == 0:
                     # If we are here, no data was found for this path in the fdb
                     none_array = [None] * len(n.values)
-                    n.result.extend(none_array)
+                    if n.metadata.get("result", None) is None:
+                        n.metadata["result"] = []
+                    n.metadata["result"].extend(none_array)
                 else:
-                    n.result.extend(result.values[i])
+                    if n.metadata.get("result", None) is None:
+                        n.metadata["result"] = []
+                    n.metadata["result"].extend(request_output_values.values[i])
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
         (new_fdb_node_ranges, new_current_start_idx) = self.remove_duplicates_in_request_ranges(
             fdb_node_ranges, current_start_idx
         )
-        current_start_idx = new_current_start_idx
-        fdb_node_ranges = new_fdb_node_ranges
         interm_request_ranges = []
         # TODO: modify the start indexes to have as many arrays as the request ranges
         new_fdb_node_ranges = []
@@ -470,7 +461,9 @@ class FDBDatacube(Datacube):
                 sorted_list = sorted(enumerate(old_interm_start_idx[j]), key=lambda x: x[1])
                 original_indices_idx, interm_start_idx = zip(*sorted_list)
                 for interm_fdb_nodes_obj in interm_fdb_nodes[j]:
-                    interm_fdb_nodes_obj.values = tuple([interm_fdb_nodes_obj.values[k] for k in original_indices_idx])
+                    interm_fdb_nodes_obj.values = QEnum(
+                        tuple([list(interm_fdb_nodes_obj.values)[k] for k in original_indices_idx])
+                    )
                 if abs(interm_start_idx[-1] + 1 - interm_start_idx[0]) <= len(interm_start_idx):
                     current_request_ranges = (interm_start_idx[0], interm_start_idx[-1] + 1)
                     interm_request_ranges.append(current_request_ranges)
@@ -492,36 +485,3 @@ class FDBDatacube(Datacube):
         sorted_list = sorted(request_ranges_with_idx, key=lambda x: x[1][0])
         original_indices, sorted_request_ranges = zip(*sorted_list)
         return (original_indices, sorted_request_ranges, new_fdb_node_ranges)
-
-    # def datacube_natural_indexes(self, axis, subarray):
-    #     indexes = subarray.get(axis.name, None)
-    #     return indexes
-    def datacube_natural_indexes(self, qube_node):
-        if qube_node is not None:
-            return np.asarray(list(qube_node.values))
-        else:
-            return []
-
-    def select(self, path, unmapped_path):
-        return self.fdb_coordinates
-
-    def ax_vals(self, name):
-        return self.fdb_coordinates.get(name, None)
-
-    def prep_tree_encoding(self, node, unwanted_path=None):
-        # TODO: prepare the tree for protobuf encoding
-        # ie transform all axes for gribjump and adding the index property on the leaves
-        if unwanted_path is None:
-            unwanted_path = {}
-
-        ax = node.axis
-        (new_node, unwanted_path) = ax.unmap_tree_node(node, unwanted_path)
-
-        if len(node.children) != 0:
-            for c in new_node.children:
-                self.prep_tree_encoding(c, unwanted_path)
-
-    def prep_tree_decoding(self, tree):
-        # TODO: transform the tree after decoding from protobuf
-        # ie unstransform all axes from gribjump and put the indexes back as a leaf/extra node
-        pass

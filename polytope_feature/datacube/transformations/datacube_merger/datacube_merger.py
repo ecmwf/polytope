@@ -40,7 +40,7 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
             f"Merged values {first_ax_vals} on axis {self.name} and \
                      values {second_ax_vals} on axis {second_ax_name} to values {merged_values}"
         )
-        return merged_values
+        return list(merged_values)
 
     def transformation_axes_final(self):
         return [self._first_axis]

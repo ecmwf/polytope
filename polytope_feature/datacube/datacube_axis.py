@@ -78,6 +78,23 @@ class DatacubeAxis(ABC):
             indexes = transformation.find_modified_indexes(indexes, path, datacube, self)
         return indexes
 
+    def find_standard_indexes_node(self, path_node, datacube):
+        return datacube.datacube_natural_indexes(path_node)
+
+    def find_indexes_node(self, path_node, datacube, path):
+        indexes = self.find_standard_indexes_node(path_node, datacube)
+        # print(indexes)
+        # path = {self.name: tuple(path_node.values)}
+        if not path:
+            if path_node:
+                path = {path_node.key: tuple(path_node.values)}
+            else:
+                path = {self.name: tuple()}
+        for transformation in self.transformations[::-1]:
+            indexes = transformation.find_modified_indexes(indexes, path, datacube, self)
+        # print(indexes)
+        return indexes
+
     def offset(self, value):
         offset = 0
         for transformation in self.transformations[::-1]:
@@ -85,6 +102,8 @@ class DatacubeAxis(ABC):
         return offset
 
     def unmap_path_key(self, key_value_path, leaf_path, unwanted_path):
+        # print("WHAT ARE THE AXIS TRANSFORMATIONS??")
+        # print(self.transformations)
         for transformation in self.transformations[::-1]:
             (key_value_path, leaf_path, unwanted_path) = transformation.unmap_path_key(
                 key_value_path, leaf_path, unwanted_path, self
@@ -196,6 +215,7 @@ class IntDatacubeAxis(DatacubeAxis):
         # TODO: Maybe here, store transformations as a dico instead
         self.transformations = []
         self.type = 0
+        self.type_eg = 0
         self.can_round = True
 
     def parse(self, value: Any) -> Any:
@@ -218,6 +238,7 @@ class FloatDatacubeAxis(DatacubeAxis):
         self.range = None
         self.transformations = []
         self.type = 0.0
+        self.type_eg = 0.0
         self.can_round = True
 
     def parse(self, value: Any) -> Any:
@@ -240,6 +261,7 @@ class PandasTimestampDatacubeAxis(DatacubeAxis):
         self.range = None
         self.transformations = []
         self.type = pd.Timestamp("2000-01-01T00:00:00")
+        self.type_eg = "20000101T000000"
         self.can_round = False
 
     def parse(self, value: Any) -> Any:
@@ -270,6 +292,7 @@ class PandasTimedeltaDatacubeAxis(DatacubeAxis):
         self.range = None
         self.transformations = []
         self.type = np.timedelta64(0, "s")
+        self.type_eg = "0000"
         self.can_round = False
 
     def parse(self, value: Any) -> Any:
@@ -300,6 +323,8 @@ class UnsliceableDatacubeAxis(DatacubeAxis):
         self.range = None
         self.transformations = []
         self.can_round = False
+        self.type = ""
+        self.type_eg = ""
 
     def parse(self, value: Any) -> Any:
         return value
@@ -329,4 +354,12 @@ _type_to_axis_lookup = {
     np.object_: UnsliceableDatacubeAxis(),
     int: IntDatacubeAxis(),
     float: FloatDatacubeAxis(),
+}
+
+_str_to_axis = {
+    "FloatDatacubeAxis": FloatDatacubeAxis(),
+    "IntDatacubeAxis": IntDatacubeAxis(),
+    "UnsliceableDatacubeAxis": UnsliceableDatacubeAxis(),
+    "PandasTimedeltaDatacubeAxis": PandasTimedeltaDatacubeAxis(),
+    "PandasTimestampDatacubeAxis": PandasTimestampDatacubeAxis(),
 }

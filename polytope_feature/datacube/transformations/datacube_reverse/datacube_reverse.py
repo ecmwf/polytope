@@ -1,3 +1,5 @@
+import numpy as np
+
 from ....utility.list_tools import bisect_left_cmp, bisect_right_cmp
 from ..datacube_transformations import DatacubeAxisTransformation
 
@@ -24,12 +26,17 @@ class DatacubeAxisReverse(DatacubeAxisTransformation):
 
     def find_modified_indexes(self, indexes, path, datacube, axis):
         if axis.name in datacube.complete_axes:
+            # if isinstance(indexes, list):
+            #     indexes.sort()
+            #     ordered_indices = indexes
+            # else:
             ordered_indices = indexes.sort_values()
         else:
             ordered_indices = indexes
         return ordered_indices
 
     def find_indices_between(self, indexes, low, up, datacube, method, indexes_between_ranges, axis):
+        # indexes = np.asarray(indexes)
         indexes_between_ranges = []
         if axis.name == self.name:
             if axis.name in datacube.complete_axes:
