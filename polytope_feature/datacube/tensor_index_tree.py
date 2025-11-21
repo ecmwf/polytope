@@ -205,11 +205,23 @@ class TensorIndexTree(object):
                 old_parent.remove_branch()
 
     def remove_compressed_branch(self, value):
-        if value in self.values:
-            if len(self.values) == 1:
-                self.remove_branch()
-            else:
-                self.values = tuple(val for val in self.values if val != value)
+        if value not in self.values:
+            return
+
+        if len(self.values) == 1:
+            self.remove_branch()
+            return
+
+        self.values = tuple(val for val in self.values if val != value)
+        parent = self.parent
+        if parent is None:
+            return
+
+        for sibling in parent.children:
+            if sibling is not self:
+                if self == sibling:
+                    self.remove_branch()
+                    return
 
     def flatten(self):
         path = DatacubePath()
