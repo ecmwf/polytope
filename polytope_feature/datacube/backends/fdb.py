@@ -16,8 +16,9 @@ class FDBDatacube(Datacube):
         axis_options=None,
         compressed_axes_options=[],
         alternative_axes=[],
-        context=None,
         use_catalogue=False,
+        return_indexes=False,
+        context=None,
     ):
         self.use_catalogue = use_catalogue
         if config is None:
@@ -25,10 +26,7 @@ class FDBDatacube(Datacube):
         if context is None:
             context = {}
 
-        super().__init__(
-            axis_options,
-            compressed_axes_options,
-        )
+        super().__init__(axis_options, compressed_axes_options, return_indexes)
 
         logging.info("Created an FDB datacube with options: " + str(axis_options))
 
@@ -344,6 +342,8 @@ class FDBDatacube(Datacube):
             )
             # TODO: change this to accommodate non consecutive indexes being compressed too
             current_idx[i].extend(key_value_path["values"])
+            if self.return_indexes:
+                c.indexes = key_value_path["values"]
             fdb_range_n[i].append(c)
         assert len(current_idx) == len(fdb_range_n)
         for i, node in enumerate(fdb_range_n):

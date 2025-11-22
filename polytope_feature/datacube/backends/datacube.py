@@ -17,6 +17,7 @@ class Datacube(ABC):
         self,
         axis_options=None,
         compressed_axes_options=[],
+        return_indexes=False,
     ):
         if axis_options is None:
             self.axis_options = {}
@@ -36,6 +37,7 @@ class Datacube(ABC):
         self.unwanted_path = {}
         self.compressed_axes = compressed_axes_options
         self.grid_md5_hash = None
+        self.return_indexes = return_indexes
 
     @abstractmethod
     def get(self, requests: TensorIndexTree, context: Dict) -> Any:
@@ -164,6 +166,7 @@ class Datacube(ABC):
         compressed_axes_options=[],
         alternative_axes=[],
         use_catalogue=False,
+        return_indexes=False,
         context=None,
     ):
         # TODO: get the configs as None for pre-determined value and change them to empty dictionary inside the function
@@ -174,6 +177,7 @@ class Datacube(ABC):
                 datacube,
                 axis_options,
                 compressed_axes_options,
+                return_indexes,
                 context,
             )
             return xadatacube
@@ -186,8 +190,9 @@ class Datacube(ABC):
                 axis_options,
                 compressed_axes_options,
                 alternative_axes,
-                context,
                 use_catalogue,
+                return_indexes,
+                context,
             )
             return fdbdatacube
         if type(datacube).__name__ == "MockDatacube":
