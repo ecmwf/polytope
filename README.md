@@ -190,7 +190,7 @@ does it submit to any jurisdiction.
 
 If this software is useful in your work, please consider citing our paper as 
 
-> Leuridan, M., Hawkes, J., Smart, S., Danovaro, E., and Quintino, T., [“Polytope: An Algorithm for Efficient Feature Extraction on Hypercubes”](https://arxiv.org/abs/2306.11553), <i>arXiv e-prints</i>, 2023. doi:10.48550/arXiv.2306.11553.
+> Leuridan, M., Hawkes, J., Smart, S., Danovaro, E., and Quintino, T., [“Polytope: An Algorithm for Efficient Feature Extraction on Hypercubes”](https://link.springer.com/article/10.1186/s40537-025-01306-3) In Journal of Big Data (pp. 1-25).
 
 Other papers include: 
 
