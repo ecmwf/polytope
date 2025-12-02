@@ -24,6 +24,7 @@ nav:
                 - Polygon: Service/Features/polygon.md
                 - Bounding Box: Service/Features/boundingbox.md
                 - Trajectory: Service/Features/trajectory.md
+          - Full Fields: Service/Full_Fields.md
           - Examples: Service/Examples/examples.md
           - Data Portfolio: Service/Data_Portfolio.md
     - Algorithm:
@@ -39,6 +40,14 @@ nav:
           - Slicer: Algorithm/Developer_Guide/Slicer.md
           - APIs:
                 Algorithm/Developer_Guide/API.md
+    - Client: 
+            - Overview: Client/Overview.md
+            - REST API: Client/Rest_api.md
+            - Python Client: Client/python_cli.md
+    - Server:
+            - Overview: Server/Overview.md
+            - Design: Server/Design.md
+
 plugins:
     - search
     - mkdocs-jupyter
