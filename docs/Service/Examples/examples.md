@@ -8,6 +8,8 @@
 * <a href="../boundingbox_example">Bounding Box</a>
 * <a href="../trajectory_example">Trajectory</a>
 * <a href="../country_example">Country Cut-Out</a>
+* <a href="../circle_example">Circle</a>
+* <a href="../position_example">Poisiton</a>
 
 ## Open Data
 
@@ -17,6 +19,8 @@
 * <a href="../OpenData/od_boundingbox_example">Bounding Box</a>
 * <a href="../OpenData/od_trajectory_example">Trajectory</a>
 * <a href="../OpenData/od_country_example">Country Cut-Out</a>
+* <a href="../OpenData/circle_example">Circle</a>
+* <a href="../OpenData/position_example">Position</a>
 
 For examples of Polytope Feature Extraction on Destination Earth Digital Twin Data please visit the following Github Repo: https://github.com/destination-earth-digital-twins/polytope-examples
 

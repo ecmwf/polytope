@@ -24,6 +24,8 @@ nav:
                 - Polygon: Service/Features/polygon.md
                 - Bounding Box: Service/Features/boundingbox.md
                 - Trajectory: Service/Features/trajectory.md
+                - Circle: Service/Features/circle.md
+                - Position: Service/Features/position.md
           - Full Fields: Service/Full_Fields.md
           - Examples: Service/Examples/examples.md
           - Data Portfolio: Service/Data_Portfolio.md
@@ -38,15 +40,14 @@ nav:
           - Overview: Algorithm/Developer_Guide/Overview.md
           - Datacube: Algorithm/Developer_Guide/Datacube.md
           - Slicer: Algorithm/Developer_Guide/Slicer.md
-          - APIs:
-                Algorithm/Developer_Guide/API.md
-    - Client: 
-            - Overview: Client/Overview.md
-            - REST API: Client/Rest_api.md
-            - Python Client: Client/python_cli.md
+          - APIs: Algorithm/Developer_Guide/API.md
+    - Client:
+          - Overview: Client/Overview.md
+          - REST API: Client/Rest_api.md
+          - Python Client: Client/python_cli.md
     - Server:
-            - Overview: Server/Overview.md
-            - Design: Server/Design.md
+          - Overview: Server/Overview.md
+          - Design: Server/Design.md
 
 plugins:
     - search
