@@ -1,6 +1,6 @@
 
 <h3 align="center">
-<img src="./docs/images/polytope_logo_new_animated_AdobeExpress_3.gif" width=60%>
+<img src="https://raw.githubusercontent.com/ecmwf/polytope/develop/docs/images/polytope_logo_new_animated_AdobeExpress_3.gif" width=60%>
 </br>
 
 </h3>
@@ -48,24 +48,24 @@ Polytope supports datacubes which have branching, non-uniform indexing, and even
 Polytope is designed to enable extraction of arbitrary extraction of data from a datacube. Instead of the typical range-based bounding-box approach, Polytope can extract any shape of data from a datacube using a "polytope" (*n*-dimensional polygon) stencil.
 
 <p align="center">
-  <img src="./docs/Algorithm/Overview/images_overview/ecmwf_polytope.png" alt="Polytope Concept" width="450"/>
+  <img src="https://raw.githubusercontent.com/ecmwf/polytope/develop//docs/Algorithm/Overview/images_overview/ecmwf_polytope.png" alt="Polytope Concept" width="450"/>
 </p>
 
 The Polytope algorithm can for example be used to extract:
 
 - 2D cut-outs, such as country cut-outs, from a datacube
     <p align="center">
-        <img src="./docs/images/greece.png" alt="Greece cut-out" width="250"/>
+        <img src="https://raw.githubusercontent.com/ecmwf/polytope/develop/docs/images/greece.png" alt="Greece cut-out" width="250"/>
     </p>
 
 - timeseries from a datacube
     <p align="center">
-        <img src="./docs/images/timeseries.png" alt="Timeseries" width="350"/>
+        <img src="https://raw.githubusercontent.com/ecmwf/polytope/develop/docs/images/timeseries.png" alt="Timeseries" width="350"/>
     </p>
 
 - more complicated spatio-temporal paths, such as flight paths, from a datacube
     <p align="center">
-        <img src="./docs/images/flight_path.png" alt="Flight path" width="350"/>
+        <img src="https://raw.githubusercontent.com/ecmwf/polytope/develop/docs/images/flight_path.png" alt="Flight path" width="350"/>
     </p>
 
 - and many more high-dimensional shapes in arbitrary dimensions...
@@ -190,7 +190,7 @@ does it submit to any jurisdiction.
 
 If this software is useful in your work, please consider citing our paper as 
 
-> Leuridan, M., Hawkes, J., Smart, S., Danovaro, E., and Quintino, T., [“Polytope: An Algorithm for Efficient Feature Extraction on Hypercubes”](https://arxiv.org/abs/2306.11553), <i>arXiv e-prints</i>, 2023. doi:10.48550/arXiv.2306.11553.
+> Leuridan, M., Hawkes, J., Smart, S., Danovaro, E., & Quintino, T. (2025, November). [Polytope: An Algorithm for Efficient Feature Extraction on Hypercubes.](https://link.springer.com/article/10.1186/s40537-025-01306-3) In Journal of Big Data (pp. 1-25).
 
 Other papers include: 
 
