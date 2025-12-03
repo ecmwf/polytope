@@ -32,10 +32,10 @@ nav:
     - Algorithm:
           - Overview: Algorithm/Overview/Overview.md
           - Polytope at ECMWF: Algorithm/Overview/Polytope_at_ECMWF.md
-    - User Guide:
-          - Overview: Algorithm/User_Guide/Overview.md
-          - Getting Started: Algorithm/User_Guide/Getting_started.md
-          - Example: Algorithm/User_Guide/Example.md
+    #- User Guide:
+    #      - Overview: Algorithm/User_Guide/Overview.md
+    #      - Getting Started: Algorithm/User_Guide/Getting_started.md
+    #      - Example: Algorithm/User_Guide/Example.md
     - Developer Guide:
           - Overview: Algorithm/Developer_Guide/Overview.md
           - Datacube: Algorithm/Developer_Guide/Datacube.md

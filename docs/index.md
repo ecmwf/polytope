@@ -1,6 +1,6 @@
 # Welcome to Polytope's documentation!
 
-Polytope is a data extraction service that provides both full field global data and feature extraction software developed by ECMWF. 
+Polytope is a data extraction service developed by ECMWF, which provides both access to full field global data and feature extraction capabilities.
 It uses concepts of computational geometry to extract n-dimensional polygons (also known as *polytopes*) from datacubes. 
 
 In particular, it can be used to request:
