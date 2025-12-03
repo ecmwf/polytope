@@ -36,6 +36,8 @@ class Datacube(ABC):
         self.unwanted_path = {}
         self.compressed_axes = compressed_axes_options
         self.grid_md5_hash = None
+        self.datacube_transformations = []
+        self.q_dict = {}
 
     @abstractmethod
     def get(self, requests: TensorIndexTree, context: Dict) -> Any:
@@ -60,6 +62,13 @@ class Datacube(ABC):
         if transformation_type_key.name == "merge":
             self.merged_axes.append(name)
             self.merged_axes.append(final_axis_names)
+            # print("WHAT ARE THE MERGED VALUES??")
+            # print(values)
+            # print(transformation._merged_values)
+            # values = [val.astype('datetime64[ms]').astype(object) for val in transformation._merged_values]
+            values = transformation._merged_values
+            # print([type(val) for val in values])
+            # t.astype('datetime64[ms]').astype(object)
             for axis in final_axis_names:
                 # remove the merged_axes from the possible compressed axes
                 if axis in self.compressed_axes:
@@ -86,6 +95,7 @@ class Datacube(ABC):
                 values = transformation.change_val_type(axis_name, values)
                 if self._axes is None or axis_name not in self._axes.keys():
                     DatacubeAxis.create_standard(axis_name, values, self)
+                    self.q_dict[axis_name] = values
                 # add transformation tag to axis, as well as transformation options for later
                 setattr(self._axes[axis_name], has_transform[transformation_type_key.name], True)
                 # where has_transform is a factory inside datacube_transformations to set the has_transform, is_cyclic
@@ -94,10 +104,13 @@ class Datacube(ABC):
 
                 if transformation not in self._axes[axis_name].transformations:  # Avoids duplicates being stored
                     self._axes[axis_name].transformations.append(transformation)
+                if transformation not in self.datacube_transformations:
+                    self.datacube_transformations.append(transformation)
             else:
                 # Means we have an unsliceable axis since we couln't transform values to desired type
                 if self._axes is None or axis_name not in self._axes.keys():
                     DatacubeAxis.create_standard(axis_name, values, self)
+                    self.q_dict[axis_name] = values
 
     def _add_all_transformation_axes(self, options, name, values):
         for transformation_type_key in options.transformations:
@@ -112,6 +125,23 @@ class Datacube(ABC):
             if name not in self.blocked_axes:
                 if self._axes is None or name not in self._axes.keys():
                     DatacubeAxis.create_standard(name, values, self)
+                    self.q_dict[name] = values
+
+    def _add_all_type_change_transformation_axes(self, options, name, values):
+        for transformation_type_key in options.transformations:
+            if transformation_type_key == "type_change":
+                self._create_axes(name, values, transformation_type_key, options)
+            else:
+                DatacubeAxis.create_standard(name, values, self)
+                self.q_dict[name] = values
+
+    def _check_and_readd_axes(self, options, name, values):
+        if options is not None:
+            self._add_all_transformation_axes(options, name, values)
+        else:
+            if self._axes is None or name not in self._axes.keys():
+                DatacubeAxis.create_standard(name, values, self)
+                # self.q_dict[name] = values
 
     def has_index(self, path: DatacubePath, axis, index):
         "Given a path to a subset of the datacube, checks if the index exists on that sub-datacube axis"
@@ -164,6 +194,7 @@ class Datacube(ABC):
         compressed_axes_options=[],
         alternative_axes=[],
         use_catalogue=False,
+        datacube_axes={},
         context=None,
     ):
         # TODO: get the configs as None for pre-determined value and change them to empty dictionary inside the function
@@ -192,6 +223,17 @@ class Datacube(ABC):
             return fdbdatacube
         if type(datacube).__name__ == "MockDatacube":
             return datacube
+        if type(datacube).__name__ == "Qube":
+            from ..datacube_axis import _str_to_axis
+            from .qubed import QubedDatacube
+
+            actual_datacube_axes = {}
+            for key, value in datacube_axes.items():
+                actual_datacube_axes[key] = _str_to_axis[value]
+            qubed_datacube = QubedDatacube(
+                datacube, actual_datacube_axes, config, axis_options, compressed_axes_options, alternative_axes, context
+            )
+            return qubed_datacube
 
     def check_branching_axes(self, request):
         pass

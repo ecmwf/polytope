@@ -1,0 +1,3 @@
+# TODO
+
+Separate backends into data_fetchers to get the data and then into a data_view component which stores the different info on the actual datacube like axes types and transformations, and also creates the initial view of the datacube that we use throughout
