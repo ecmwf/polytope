@@ -43,11 +43,9 @@ nav:
           - APIs: Algorithm/Developer_Guide/API.md
     - Client:
           - Overview: Client/Overview.md
-          - REST API: Client/Rest_api.md
-          - Python Client: Client/python_cli.md
-    - Server:
-          - Overview: Server/Overview.md
-          - Design: Server/Design.md
+    #- Server:
+    #      - Overview: Server/Overview.md
+    #      - Design: Server/Design.md
 
 plugins:
     - search
