@@ -1,6 +1,6 @@
 # Welcome to Polytope's documentation!
 
-Polytope is a feature extraction software developed by ECMWF. 
+Polytope is a data extraction service developed by ECMWF, which provides both access to full field global data and feature extraction capabilities.
 It uses concepts of computational geometry to extract n-dimensional polygons (also known as *polytopes*) from datacubes. 
 
 In particular, it can be used to request:
@@ -52,12 +52,22 @@ For a more in-depth explanation of how Polytope achieves its feature extraction,
   * <a href="./Service/Installation">Installation</a>
   * <a href="./Service/Quick_Start">Quick Start</a>
   * <a href="./Service/Features/feature">Features</a>
+  * <a href="./Service/Full_Fields/Full_Fields">Full Fields</a>
   * <a href="./Service/Examples/Index">Examples</a>
 
 ### <a href="./Algorithm/Overview/Overview">Algorithm</a>
   * <a href="./Algorithm/Overview/Overview">Overview</a>
   * <a href="./Algorithm/User_Guide/Getting_started">User Guide</a>
   * <a href="./Algorithm/Developer_Guide/Overview">Developer Guide</a>
+
+### <a href="./Client/Overview">Client</a>
+  * <a href="./Client/Overview">Overview</a>
+  * <a href="./Client/Rest_api">REST API</a>
+  * <a href="./Client/python_cli">Python Library and CLI</a>
+
+### <a href="./Server/Overview">Server</a>
+  * <a href="./Server/Overview">Overview</a>
+  * <a href="./Server/Design">Design</a>
 
     
 # License
