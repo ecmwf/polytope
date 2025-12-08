@@ -24,6 +24,6 @@ License
 
 *Polytope* is available under the open source `Apache License`. In applying this licence, ECMWF does not waive the privileges and immunities granted to it by virtue of its status as an intergovernmental organisation nor does it submit to any jurisdiction.
 
-__ http://www.apache.org/licenses/LICENSE-2.0.html
+http://www.apache.org/licenses/LICENSE-2.0.html
 
 Polytope has been developed at ECMWF as part of the EU projects [LEXIS](https://lexis-project.eu/web/) and [HiDALGO](https://hidalgo-project.eu/). The LEXIS and HiDALGO projects have received funding from the European Union’s Horizon 2020 research and innovation programme under grant agreements No. 825532 and No. 824115.

@@ -65,9 +65,9 @@ For a more in-depth explanation of how Polytope achieves its feature extraction,
   * <a href="./Client/Rest_api">REST API</a>
   * <a href="./Client/python_cli">Python Library and CLI</a>
 
-### <a href="./Server/Overview">Server</a>
+<!-- ### <a href="./Server/Overview">Server</a>
   * <a href="./Server/Overview">Overview</a>
-  * <a href="./Server/Design">Design</a>
+  * <a href="./Server/Design">Design</a> -->
 
     
 # License

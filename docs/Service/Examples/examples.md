@@ -26,7 +26,7 @@
 
 ## Full Fields
 
-* <a href="../operationalexample">Operational Data</a>
+* <a href="../operational_example">Operational Data</a>
 * <a href="../climate_dt_example">Climate DT</a>
 * <a href="../extremes_dt_example">Extremes DT</a>
 * <a href="../on-demand_dt_example">On-Demand DT</a>
