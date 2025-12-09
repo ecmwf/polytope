@@ -87,7 +87,15 @@ ds = earthkit.data.from_source("polytope", "ecmwf-mars", request, stream=False, 
 
 In the above example we interpolate from the native grid to an `0.25/0.25` degree grid.
 
-Further details about what girds are available to interpolate from and to can be found here: [grid keyword](https://confluence.ecmwf.int/pages/viewpage.action?pageId=123799065).
+Currently, only Octahedral (O), Full (regular) Gaussian grid (F), healpix (H), original ECMWF reduced Gausian grid (N), and lat/lon grids are supported. You can read more about our grids here [grid keyword](https://confluence.ecmwf.int/pages/viewpage.action?pageId=123799065).
+
+If the letter denoting the type of Gaussian grid is omitted, e.g. grid=320, a full (or regular) Gaussian grid with 320 grid lines is returned.
+
+A lat/lon grid can be requested with: grid = 0.1/0.2 where the first number is the longitude and the second the latitude
+
+grid=av (“archived value”) or ommited grid keyword, will retrieve data on the model grid.
+
+The grids listed here should also be available [https://earthkit-regrid.readthedocs.io/en/latest/inventory/index.html](https://earthkit-regrid.readthedocs.io/en/latest/inventory/index.html).
 
 ### Interpolation
 
