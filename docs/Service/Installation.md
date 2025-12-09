@@ -33,6 +33,24 @@ python3 -m pip install ipykernel
 python3 -m ipykernel install --user --name=$envname
 ```
 
+Users can also create a python venv using the following instructions and requirements file found here [https://github.com/destination-earth-digital-twins/polytope-examples/blob/main/requirements.txt](https://github.com/destination-earth-digital-twins/polytope-examples/blob/main/requirements.txt):
+
+```
+envname=earthkit
+
+# Create a virtual environment
+python3 -m venv $envname
+
+# Activate it
+source $envname/bin/activate      # macOS/Linux
+
+# Install dependencies
+pip install -r requirements.txt
+
+# If using Jupyter notebooks, register your environment as a kernel for ipykernel
+python3 -m ipykernel install --user --name=$envname
+```
+
 # Authentication
 
 To access ECMWF data you need an ECMWF account. This can be created <a href=https://www.ecmwf.int/>https://www.ecmwf.int/</a>. Once created, you can find your key at <a href=https://api.ecmwf.int/v1/key/>https://api.ecmwf.int/v1/key/</a>.
@@ -49,6 +67,9 @@ Copy your API key into your home directory, in a file called `~/.polytopeapirc`.
     "user_key" : "<user_key>"
 }
 ```
+
+**Warning**
+> *Your credentials may become outdated, if you are experiencing authentication issues please recheck your key at <a href=https://api.ecmwf.int/v1/key/>https://api.ecmwf.int/v1/key/</a> and update the `~/.polytopeapirc` if necessary.*
 
 You should now be automatically authenticated when using Polytope feature extraction via earthkit-data.
 

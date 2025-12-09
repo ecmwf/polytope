@@ -26,7 +26,7 @@ In particular, it can be used to request:
     </p>
     </div>
 
-- and many more high-dimensional shapes in arbitrary dimensions...
+- and many more high-dimensional shapes in arbitrary dimensions, as well as global field.
 
 <!-- <div style="text-align:center">
 <div class="note", style="border: 1px solid black">
@@ -35,7 +35,7 @@ Note that Polytope reads only the user-requested data, instead of whole fields. 
 </div> -->
 
 !!! important
-    Note that Polytope reads only the user-requested data, instead of whole fields. Importantly, this implies a significant decrease of the I/O usage when reading data from a datacube.
+    Note that Polytope Feature Extraction reads only the user-requested data, instead of whole fields. Importantly, this implies a significant decrease of the I/O usage when reading data from a datacube. Users can also leave out the feature dictionary to retrieve the whole field.
 
 Polytope feature extraction consists of the algorithm itself, and the service that uses the algorithm to extract features from ECMWF datacubes. Details on the service can be found in the Polytope service <a href="./Service/Overview">overview</a>, while details on the feature extraction algorithm can be found on the <a href="./Algorithm/Overview/Overview">Polytope algorithm overview</a>.
 

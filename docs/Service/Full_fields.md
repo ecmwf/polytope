@@ -53,7 +53,7 @@ The following are other examples of full field extraction on other datasets.
   - <a href="./Examples/opendata_example.ipynb">Open Data</a>
 
 
-More examples of DestinE data via Polytope can be found in the following [examples repo](https://github.com/destination-earth-digital-twins/polytope-examples/tree/main)
+More examples of DestinE data via Polytope can be found in the following [examples repo](https://github.com/destination-earth-digital-twins/polytope-examples/tree/main).
 
 
 ## Post Processing
@@ -117,12 +117,12 @@ ds = earthkit.data.from_source("polytope", "ecmwf-mars", request, stream=False, 
 
 The default interpolation is `linear`. The following options are available:
 
-* linear
-* bilinear
-* nearest neighbour
-* nearest lsm
-* grid-box-average
-* average
+* `linear`
+* `bilinear`
+* `nearest neighbour`
+* `nearest lsm`
+* `grid-box-average`
+* `average`
 
 Further information on interpolation options can be found here: [interpolation keys](https://confluence.ecmwf.int/pages/viewpage.action?pageId=153389795).
 

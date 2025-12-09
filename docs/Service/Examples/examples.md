@@ -32,6 +32,6 @@
 * <a href="../on-demand_dt_example">On-Demand DT</a>
 * <a href="../opendata_example">Open Data</a>
 
-For examples of Polytope Feature Extraction  and full field extraction on Destination Earth Digital Twin Data please visit the following Github Repo: https://github.com/destination-earth-digital-twins/polytope-examples
+For examples of Polytope Feature Extraction  and full field extraction on Destination Earth Digital Twin Data please visit the following Github Repo: [https://github.com/destination-earth-digital-twins/polytope-examples](https://github.com/destination-earth-digital-twins/polytope-examples)
 
 It contains examples for both the Climate DT and the Extremes DT.
