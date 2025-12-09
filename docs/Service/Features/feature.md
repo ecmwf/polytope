@@ -20,5 +20,5 @@ Follow the links below to see how to request different types of features.
 
 Some important notes that hold for all features are that:
 
-* The data has to exist in the fdb on the polytope server.
-* Further details on the `from_source` method can be found here: [https://earthkit-data.readthedocs.io/en/latest/guide/sources.html](https://earthkit-data.readthedocs.io/en/latest/guide/sources.html)
+* The data has to exist in the FDB on the polytope server.
+* Further details on the `from_source` method can be found [here](https://earthkit-data.readthedocs.io/en/latest/guide/sources.html).

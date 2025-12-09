@@ -17,9 +17,9 @@ nav:
     #- Overview: Service/Overview.md
     - Installation: Service/Installation.md
     - Quick Start: Service/Quick_Start.md
-    - Full Fields: Service/Full_Fields.md
-    - Examples: Service/Examples/examples.md
     - Data Portfolio: Service/Data_Portfolio.md
+    - Full Fields: 
+            - Full Fields: Service/Full_fields.md
     - Features:
           - Overview: Service/Features/feature.md
           - Time Series: Service/Features/timeseries.md
@@ -29,6 +29,8 @@ nav:
           - Trajectory: Service/Features/trajectory.md
           - Circle: Service/Features/circle.md
           - Position: Service/Features/position.md
+    - Examples: 
+            - Examples: Service/Examples/examples.md
     #- Algorithm:
     #      - Overview: Algorithm/Overview/Overview.md
     #      - Polytope at ECMWF: Algorithm/Overview/Polytope_at_ECMWF.md
