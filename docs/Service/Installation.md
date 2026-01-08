@@ -17,7 +17,7 @@ Installing like this gives you a **minimal** package which can talk to Polytope.
 
     python3 -m pip install earthkit-data[all]
 
-For further details on earthkit-data installation you can visit this page: <a href=https://earthkit-data.readthedocs.io/en/latest/install.html>https://earthkit-data.readthedocs.io/en/latest/install.html</a>.
+For further details on earthkit-data installation you can visit <a href=https://earthkit-data.readthedocs.io/en/latest/install.html>this dedicated explanation page</a>.
 
 We recommend to create a conda environment for your earthkit installation. This can be done as follows:
 
@@ -33,7 +33,7 @@ python3 -m pip install ipykernel
 python3 -m ipykernel install --user --name=$envname
 ```
 
-Users can also create a python venv using the following instructions and requirements file found here [https://github.com/destination-earth-digital-twins/polytope-examples/blob/main/requirements.txt](https://github.com/destination-earth-digital-twins/polytope-examples/blob/main/requirements.txt):
+Users can also create a python venv using the following instructions and requirements file found [here](https://github.com/destination-earth-digital-twins/polytope-examples/blob/main/requirements.txt):
 
 ```
 envname=earthkit
@@ -53,10 +53,10 @@ python3 -m ipykernel install --user --name=$envname
 
 # Authentication
 
-To access ECMWF data you need an ECMWF account. This can be created <a href=https://www.ecmwf.int/>https://www.ecmwf.int/</a>. Once created, you can find your key at <a href=https://api.ecmwf.int/v1/key/>https://api.ecmwf.int/v1/key/</a>.
+To access ECMWF data you need an ECMWF account. This can be created at <a href=https://www.ecmwf.int/>https://www.ecmwf.int/</a>. Once created, you can find your key at <a href=https://api.ecmwf.int/v1/key/>https://api.ecmwf.int/v1/key/</a>.
 
-**DISCLAIMER**
-> *Polytope is currently available for users at the national meteorological services of ECMWF’s Member and Co-operating States.*
+!!! note "Disclaimer"
+    > *Polytope is currently available for users at the national meteorological services of ECMWF’s Member and Co-operating States.*
 
 Copy your API key into your home directory, in a file called `~/.polytopeapirc`. Ths file should have the following format:
 
@@ -68,8 +68,8 @@ Copy your API key into your home directory, in a file called `~/.polytopeapirc`.
 }
 ```
 
-**Warning**
-> *Your credentials may become outdated, if you are experiencing authentication issues please recheck your key at <a href=https://api.ecmwf.int/v1/key/>https://api.ecmwf.int/v1/key/</a> and update the `~/.polytopeapirc` if necessary.*
+!!! warning "Warning"
+    > *Your credentials may become outdated, if you are experiencing authentication issues please recheck your key at <a href=https://api.ecmwf.int/v1/key/>https://api.ecmwf.int/v1/key/</a> and update the `~/.polytopeapirc` if necessary.*
 
 You should now be automatically authenticated when using Polytope feature extraction via earthkit-data.
 

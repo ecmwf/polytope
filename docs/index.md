@@ -42,8 +42,8 @@ Polytope feature extraction consists of the algorithm itself, and the service th
 To learn more about how to use Polytope, refer to the <a href="./Service/Quick_Start">Quickstart page</a>. In particular, see the Quickstart page for a step-by-step example of how to use the Polytope software.
 For a more in-depth explanation of how Polytope achieves its feature extraction, refer to the <a href="./Algorithm/Developer_Guide/Overview">Developer Guide</a>.
 
-!!! Warning
-    This project is BETA and will be experimental for the foreseeable future. Interfaces and functionality are likely to change. DO NOT use this software in any project/software that is operational.
+<!-- !!! Warning
+    This project is BETA and will be experimental for the foreseeable future. Interfaces and functionality are likely to change. DO NOT use this software in any project/software that is operational. -->
 
 # Index
 
@@ -52,10 +52,10 @@ For a more in-depth explanation of how Polytope achieves its feature extraction,
   * <a href="./Service/Installation">Installation</a>
   * <a href="./Service/Quick_Start">Quick Start</a>
   * <a href="./Service/Features/feature">Features</a>
-  * <a href="./Service/Full_Fields/Full_Fields">Full Fields</a>
+  * <a href="./Service/Full_fields">Full Fields</a>
   * <a href="./Service/Examples/Index">Examples</a>
 
-### <a href="./Algorithm/Overview/Overview">Algorithm</a>
+<!-- ### <a href="./Algorithm/Overview/Overview">Algorithm</a>
   * <a href="./Algorithm/Overview/Overview">Overview</a>
   * <a href="./Algorithm/User_Guide/Getting_started">User Guide</a>
   * <a href="./Algorithm/Developer_Guide/Overview">Developer Guide</a>
@@ -63,7 +63,7 @@ For a more in-depth explanation of how Polytope achieves its feature extraction,
 ### <a href="./Client/Overview">Client</a>
   * <a href="./Client/Overview">Overview</a>
   * <a href="./Client/Rest_api">REST API</a>
-  * <a href="./Client/python_cli">Python Library and CLI</a>
+  * <a href="./Client/python_cli">Python Library and CLI</a> -->
 
 <!-- ### <a href="./Server/Overview">Server</a>
   * <a href="./Server/Overview">Overview</a>

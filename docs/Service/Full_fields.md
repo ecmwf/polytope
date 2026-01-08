@@ -2,25 +2,25 @@
 
 ## Introduction
 
-Polytope allows users to download full field global data from a number of datasets such as the DestinE Climate Digital Twin, Extremes Digital Twin, and On-Demand Digital Twin. The best way to access this data is via [earthkit-data](https://earthkit-data.readthedocs.io/en/latest/guide/sources.html#polytope).
+Polytope allows users to download full field global data from a number of datasets, such as the DestinE Climate Digital Twin, Extremes Digital Twin, and On-Demand Digital Twin. The best way to access this data is via [earthkit-data](https://earthkit-data.readthedocs.io/en/latest/guide/sources.html#polytope).
 
 ## Datasets available
 
-Full field requests return GRIB data. They use the same keys as [MARS](https://confluence.ecmwf.int/display/UDOC/MARS+user+documentation), a user can make a request specified by these keys and data will be returned by the Polytope service. 
+Full field requests return GRIB data. They use the same keys as [MARS](https://confluence.ecmwf.int/display/UDOC/MARS+user+documentation). A user can make a request specified by these keys and data will be returned by the Polytope service. 
 
-For full field extraction the Polytope Service only supports the following:
+For full field extraction the Polytope service supports retrieval from the following datasets:
 
 * ECMWF Operational Data from the last two days [Further Details](https://apps.ecmwf.int/mars-catalogue/)
 * DestinE Climate Digital Twin [Further Details](https://confluence.ecmwf.int/display/DDCZArchive/Climate+DT+overview)
 * DestinE Extremes Digital Twin [Further Details](https://confluence.ecmwf.int/display/DDCZArchive/Extremes+DT+overview)
 * DestinE On-Demand Extremes Digital Twin
-* ECMWF opendata for ai datasets [Further Details](https://confluence.ecmwf.int/display/DAC/ECMWF+open+data%3A+real-time+forecasts+from+IFS+and+AIFS#ECMWFopendata:realtimeforecastsfromIFSandAIFS-IndexFilesIndexfiles)
+* ECMWF Opendata for AI datasets [Further Details](https://confluence.ecmwf.int/display/DAC/ECMWF+open+data%3A+real-time+forecasts+from+IFS+and+AIFS#ECMWFopendata:realtimeforecastsfromIFSandAIFS-IndexFilesIndexfiles)
 
-The following Catalogue can also be used to see what data is available and to generate requests for DestinE data: [https://catalogue.lumi.apps.dte.destination-earth.eu/](https://catalogue.lumi.apps.dte.destination-earth.eu/).
+The [DestinE catalogue](https://catalogue.lumi.apps.dte.destination-earth.eu/) can also be used to see what data is available and to generate requests for DestinE data.
 
 ## Examples
 
-An example of pulling operational full field data via Polytope.
+Below, we give an example of a full field extraction from ECMWF's operational data via Polytope.
 
 ```python
 import earthkit.data
@@ -53,7 +53,7 @@ The following are other examples of full field extraction on other datasets.
   - <a href="./Examples/opendata_example.ipynb">Open Data</a>
 
 
-More examples of DestinE data via Polytope can be found in the following [examples repo](https://github.com/destination-earth-digital-twins/polytope-examples/tree/main).
+More examples of DestinE data via Polytope can be found in the following [examples repository](https://github.com/destination-earth-digital-twins/polytope-examples/tree/main).
 
 
 ## Post Processing
@@ -87,13 +87,13 @@ ds = earthkit.data.from_source("polytope", "ecmwf-mars", request, stream=False, 
 
 In the above example we interpolate from the native grid to an `0.25/0.25` degree grid.
 
-Currently, only Octahedral (O), Full (regular) Gaussian grid (F), HEALPix (H), original ECMWF reduced Gausian grid (N), and lat/lon grids are supported. You can read more about our grids here [grid keyword](https://confluence.ecmwf.int/pages/viewpage.action?pageId=123799065).
+Currently, only the Octahedral (O), Full (regular) Gaussian (F), HEALPix (H), original ECMWF reduced Gausian grid (N), and regular latitude-longitude grids are supported. You can read more about our grids here [grid keyword](https://confluence.ecmwf.int/pages/viewpage.action?pageId=123799065).
 
 If the letter denoting the type of Gaussian grid is omitted, e.g. grid=320, a full (or regular) Gaussian grid with 320 grid lines is returned.
 
 A lat/lon grid can be requested with: grid = 0.1/0.2 where the first number is the longitude and the second the latitude.
 
-grid=av (“archived value”) or ommited grid keyword, will retrieve data on the model grid.
+An omitted grid keyword, or the selection grid=av (“archived value”), will retrieve data on the model grid.
 
 For HEALPix (H) grids the default when using `HXXX` is to return the data in ring ordering. One can explicitly request either nested or ring ordering in the following way.
 
@@ -137,7 +137,7 @@ The default interpolation is `linear`. The following options are available:
 * `grid-box-average`
 * `average`
 
-Further information on interpolation options can be found here: [interpolation keys](https://confluence.ecmwf.int/pages/viewpage.action?pageId=153389795).
+Further information on interpolation options can be found [here](https://confluence.ecmwf.int/pages/viewpage.action?pageId=153389795).
 
 ### Area
 
@@ -166,11 +166,11 @@ ds = earthkit.data.from_source("polytope", "ecmwf-mars", request, stream=False, 
 
 In this case only a subselection of Europe will be returned. The area coordinates are in the form `North/West/South/East`.
 
-Further information on the `area` keyword can be found here: [area keyword](https://confluence.ecmwf.int/pages/viewpage.action?pageId=151520973).
+Further information on the `area` keyword can be found [here](https://confluence.ecmwf.int/pages/viewpage.action?pageId=151520973).
 
 ## Notes
 
 Some important notes that hold for all features are that:
 
 * The data has to exist in the fdb on the polytope server.
-* Further details on the `from_source` method can be found here: [https://earthkit-data.readthedocs.io/en/latest/guide/sources.html](https://earthkit-data.readthedocs.io/en/latest/guide/sources.html)
+* Further details on the `from_source` method can be found [here](https://earthkit-data.readthedocs.io/en/latest/guide/sources.html).
