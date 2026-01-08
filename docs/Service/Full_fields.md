@@ -87,15 +87,20 @@ ds = earthkit.data.from_source("polytope", "ecmwf-mars", request, stream=False, 
 
 In the above example we interpolate from the native grid to an `0.25/0.25` degree grid.
 
-Currently, only Octahedral (O), Full (regular) Gaussian grid (F), healpix (H), original ECMWF reduced Gausian grid (N), and lat/lon grids are supported. You can read more about our grids here [grid keyword](https://confluence.ecmwf.int/pages/viewpage.action?pageId=123799065).
+Currently, only Octahedral (O), Full (regular) Gaussian grid (F), HEALPix (H), original ECMWF reduced Gausian grid (N), and lat/lon grids are supported. You can read more about our grids here [grid keyword](https://confluence.ecmwf.int/pages/viewpage.action?pageId=123799065).
 
 If the letter denoting the type of Gaussian grid is omitted, e.g. grid=320, a full (or regular) Gaussian grid with 320 grid lines is returned.
 
-A lat/lon grid can be requested with: grid = 0.1/0.2 where the first number is the longitude and the second the latitude
+A lat/lon grid can be requested with: grid = 0.1/0.2 where the first number is the longitude and the second the latitude.
 
 grid=av (“archived value”) or ommited grid keyword, will retrieve data on the model grid.
 
-The grids listed here should also be available [https://earthkit-regrid.readthedocs.io/en/latest/inventory/index.html](https://earthkit-regrid.readthedocs.io/en/latest/inventory/index.html).
+For HEALPix (H) grids the default when using `HXXX` is to return the data in ring ordering. One can explicitly request either nested or ring ordering in the following way.
+
+* Ring: `HRXXX`
+* Nested: `HNXXX`
+
+The grids listed here should also be documented in earthkit-regrid [https://earthkit-regrid.readthedocs.io/en/latest/inventory/index.html](https://earthkit-regrid.readthedocs.io/en/latest/inventory/index.html).
 
 ### Interpolation
 
