@@ -21,7 +21,12 @@ class TestSlicing3DXarrayDatacube:
             },
         )
         self.options = {
-            "axis_config": [{"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]}],
+            "axis_config": [
+                {
+                    "axis_name": "longitude",
+                    "transformations": [{"name": "cyclic", "range": [0, 360]}],
+                }
+            ],
             "compressed_axes_config": ["date", "step", "level", "longitude"],
         }
         self.API = Polytope(
@@ -30,14 +35,24 @@ class TestSlicing3DXarrayDatacube:
         )
 
     def test_all(self):
-        request = Request(Select("step", [3]), Select("date", ["2000-01-01"]), All("level"), Select("longitude", [1]))
+        request = Request(
+            Select("step", [3]),
+            Select("date", ["2000-01-01"]),
+            All("level"),
+            Select("longitude", [1]),
+        )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
         path = result.leaves[0].flatten()
         assert path["level"] == tuple(range(1, 130))
 
     def test_all_cyclic(self):
-        request = Request(Select("step", [3]), Select("date", ["2000-01-01"]), Select("level", [1]), All("longitude"))
+        request = Request(
+            Select("step", [3]),
+            Select("date", ["2000-01-01"]),
+            Select("level", [1]),
+            All("longitude"),
+        )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
         path = result.leaves[0].flatten()
@@ -49,8 +64,14 @@ class TestSlicing3DXarrayDatacube:
 
         self.options = {
             "axis_config": [
-                {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
-                {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
+                {
+                    "axis_name": "number",
+                    "transformations": [{"name": "type_change", "type": "int"}],
+                },
+                {
+                    "axis_name": "step",
+                    "transformations": [{"name": "type_change", "type": "int"}],
+                },
                 {
                     "axis_name": "date",
                     "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
@@ -66,10 +87,22 @@ class TestSlicing3DXarrayDatacube:
                         }
                     ],
                 },
-                {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
-                {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
+                {
+                    "axis_name": "latitude",
+                    "transformations": [{"name": "reverse", "is_reverse": True}],
+                },
+                {
+                    "axis_name": "longitude",
+                    "transformations": [{"name": "cyclic", "range": [0, 360]}],
+                },
             ],
-            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "type": "fc", "stream": "oper"},
+            "pre_path": {
+                "class": "od",
+                "expver": "0001",
+                "levtype": "sfc",
+                "type": "fc",
+                "stream": "oper",
+            },
         }
         self.fdbdatacube = gj.GribJump()
 

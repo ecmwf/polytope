@@ -10,19 +10,45 @@ class TestSlicingFDBDatacube:
         # Create a dataarray with 3 labelled axes using different index types
         self.options = {
             "axis_config": [
-                {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
-                {"axis_name": "date", "transformations": [{"name": "type_change", "type": "date"}]},
-                {"axis_name": "time", "transformations": [{"name": "type_change", "type": "time"}]},
+                {
+                    "axis_name": "step",
+                    "transformations": [{"name": "type_change", "type": "int"}],
+                },
+                {
+                    "axis_name": "date",
+                    "transformations": [{"name": "type_change", "type": "date"}],
+                },
+                {
+                    "axis_name": "time",
+                    "transformations": [{"name": "type_change", "type": "time"}],
+                },
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                        {
+                            "name": "mapper",
+                            "type": "octahedral",
+                            "resolution": 1280,
+                            "axes": ["latitude", "longitude"],
+                        }
                     ],
                 },
-                {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
-                {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
+                {
+                    "axis_name": "latitude",
+                    "transformations": [{"name": "reverse", "is_reverse": True}],
+                },
+                {
+                    "axis_name": "longitude",
+                    "transformations": [{"name": "cyclic", "range": [0, 360]}],
+                },
             ],
-            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper", "type": "fc"},
+            "pre_path": {
+                "class": "od",
+                "expver": "0001",
+                "levtype": "sfc",
+                "stream": "oper",
+                "type": "fc",
+            },
             "compressed_axes_config": [
                 "longitude",
                 "latitude",

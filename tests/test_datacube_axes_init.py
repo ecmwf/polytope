@@ -20,11 +20,22 @@ class TestInitDatacubeAxes:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                        {
+                            "name": "mapper",
+                            "type": "octahedral",
+                            "resolution": 1280,
+                            "axes": ["latitude", "longitude"],
+                        }
                     ],
                 },
-                {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
-                {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
+                {
+                    "axis_name": "latitude",
+                    "transformations": [{"name": "reverse", "is_reverse": True}],
+                },
+                {
+                    "axis_name": "longitude",
+                    "transformations": [{"name": "cyclic", "range": [0, 360]}],
+                },
             ],
             "compressed_axes_config": [
                 "longitude",
@@ -94,10 +105,10 @@ class TestInitDatacubeAxes:
         )
         lon_ax = self.datacube._axes["longitude"]
         lat_ax = self.datacube._axes["latitude"]
-        (path_key, path, unmapped_path) = lat_ax.unmap_path_key({"latitude": 89.94618771566562}, {}, {})
+        path_key, path, unmapped_path = lat_ax.unmap_path_key({"latitude": 89.94618771566562}, {}, {})
         assert path == {}
         assert unmapped_path == {"latitude": 89.94618771566562}
-        (path_key, path, unmapped_path) = lon_ax.unmap_path_key(
+        path_key, path, unmapped_path = lon_ax.unmap_path_key(
             {"longitude": (0.0,)}, {}, {"latitude": (89.94618771566562,)}
         )
         assert path == {}

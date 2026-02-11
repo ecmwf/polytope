@@ -23,7 +23,12 @@ class TestIntTypeChangeTransformation:
         )
         self.array = array
         options = {
-            "axis_config": [{"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]}],
+            "axis_config": [
+                {
+                    "axis_name": "step",
+                    "transformations": [{"name": "type_change", "type": "int"}],
+                }
+            ],
             "compressed_axes_config": ["step"],
         }
         self.API = Polytope(datacube=array, options=options)

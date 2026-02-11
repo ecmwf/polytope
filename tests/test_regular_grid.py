@@ -15,8 +15,14 @@ class TestRegularGrid:
         download_test_data(nexus_url, "era5-levels-members.grib")
         self.options = {
             "axis_config": [
-                {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
-                {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
+                {
+                    "axis_name": "number",
+                    "transformations": [{"name": "type_change", "type": "int"}],
+                },
+                {
+                    "axis_name": "step",
+                    "transformations": [{"name": "type_change", "type": "int"}],
+                },
                 {
                     "axis_name": "date",
                     "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
@@ -34,8 +40,14 @@ class TestRegularGrid:
                         }
                     ],
                 },
-                {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
-                {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
+                {
+                    "axis_name": "latitude",
+                    "transformations": [{"name": "reverse", "is_reverse": True}],
+                },
+                {
+                    "axis_name": "longitude",
+                    "transformations": [{"name": "cyclic", "range": [0, 360]}],
+                },
             ],
             "pre_path": {"class": "ea", "expver": "0001", "levtype": "pl", "step": "0"},
             "compressed_axes_config": [

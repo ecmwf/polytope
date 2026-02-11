@@ -14,7 +14,10 @@ class TestSlicingFDBDatacube:
         # BUT the validation against eccodes is OK because the GRIB file is the same grid as Polytope returns
         self.options = {
             "axis_config": [
-                {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
+                {
+                    "axis_name": "step",
+                    "transformations": [{"name": "type_change", "type": "int"}],
+                },
                 {
                     "axis_name": "date",
                     "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
@@ -31,8 +34,14 @@ class TestSlicingFDBDatacube:
                         }
                     ],
                 },
-                {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
-                {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
+                {
+                    "axis_name": "latitude",
+                    "transformations": [{"name": "reverse", "is_reverse": True}],
+                },
+                {
+                    "axis_name": "longitude",
+                    "transformations": [{"name": "cyclic", "range": [0, 360]}],
+                },
             ],
             "compressed_axes_config": [
                 "longitude",
@@ -47,7 +56,13 @@ class TestSlicingFDBDatacube:
                 "stream",
                 "type",
             ],
-            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "type": "fc", "stream": "oper"},
+            "pre_path": {
+                "class": "od",
+                "expver": "0001",
+                "levtype": "sfc",
+                "type": "fc",
+                "stream": "oper",
+            },
         }
 
     # Testing different shapes

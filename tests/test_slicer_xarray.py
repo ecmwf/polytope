@@ -29,14 +29,22 @@ class TestXarraySlicing:
     def test_2D_box_with_date_range(self):
         request = Request(
             Box(["step", "level"], [3, 10], [6, 11]),
-            Span("date", lower=pd.Timestamp("2000-01-01"), upper=pd.Timestamp("2000-01-05")),
+            Span(
+                "date",
+                lower=pd.Timestamp("2000-01-01"),
+                upper=pd.Timestamp("2000-01-05"),
+            ),
         )
         result = self.API.retrieve(request)
         result.pprint()
 
     def test_3D_box_with_date(self):
         request = Request(
-            Box(["step", "level", "date"], [3, 10, pd.Timestamp("2000-01-01")], [6, 11, pd.Timestamp("2000-01-01")])
+            Box(
+                ["step", "level", "date"],
+                [3, 10, pd.Timestamp("2000-01-01")],
+                [6, 11, pd.Timestamp("2000-01-01")],
+            )
         )
         result = self.API.retrieve(request)
         result.pprint()

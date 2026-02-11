@@ -15,8 +15,20 @@ class TestSlicingEra5Data:
         ds = data.from_source("file", "./tests/data/era5-levels-members.grib")
         array = ds.to_xarray(engine="cfgrib").isel(step=0).t
         options = {
-            "axis_config": [{"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]}],
-            "compressed_axes_config": ["number", "time", "latitude", "longitude", "step", "isobaricInhPa"],
+            "axis_config": [
+                {
+                    "axis_name": "latitude",
+                    "transformations": [{"name": "reverse", "is_reverse": True}],
+                }
+            ],
+            "compressed_axes_config": [
+                "number",
+                "time",
+                "latitude",
+                "longitude",
+                "step",
+                "isobaricInhPa",
+            ],
         }
         self.API = Polytope(
             datacube=array,
@@ -28,7 +40,11 @@ class TestSlicingEra5Data:
         request = Request(
             Box(["number", "isobaricInhPa"], [3, 0.0], [6, 1000.0]),
             Select("time", ["2017-01-02T12:00:00"]),
-            Box(["latitude", "longitude"], lower_corner=[0.0, 0.0], upper_corner=[10.0, 30.0]),
+            Box(
+                ["latitude", "longitude"],
+                lower_corner=[0.0, 0.0],
+                upper_corner=[10.0, 30.0],
+            ),
             Select("step", [np.timedelta64(0, "s")]),
         )
 

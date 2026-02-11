@@ -29,7 +29,11 @@ class TestSlicing3DXarrayDatacube:
 
     def test_multiple_points(self):
         request = Request(
-            Union(["step", "level"], Point(["step", "level"], [[3, 10]]), Point(["step", "level"], [[3, 12]])),
+            Union(
+                ["step", "level"],
+                Point(["step", "level"], [[3, 10]]),
+                Point(["step", "level"], [[3, 12]]),
+            ),
             Select("date", ["2000-01-01"]),
         )
         result = self.API.retrieve(request)
@@ -38,14 +42,20 @@ class TestSlicing3DXarrayDatacube:
         assert result.leaves[0].axis.name == "level"
 
     def test_point_surrounding_step(self):
-        request = Request(Point(["step", "level"], [[2, 10]], method="surrounding"), Select("date", ["2000-01-01"]))
+        request = Request(
+            Point(["step", "level"], [[2, 10]], method="surrounding"),
+            Select("date", ["2000-01-01"]),
+        )
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 1
         assert np.shape(result.leaves[0].result[1]) == (1, 2, 3)
 
     def test_point_surrounding_exact_step(self):
-        request = Request(Point(["step", "level"], [[3, 10]], method="surrounding"), Select("date", ["2000-01-01"]))
+        request = Request(
+            Point(["step", "level"], [[3, 10]], method="surrounding"),
+            Select("date", ["2000-01-01"]),
+        )
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 1

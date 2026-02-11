@@ -23,7 +23,10 @@ class TestMultipleTransformations:
 
         self.options = {
             "axis_config": [
-                {"axis_name": "step", "transformations": [{"name": "cyclic", "type": [0, 2]}]},
+                {
+                    "axis_name": "step",
+                    "transformations": [{"name": "cyclic", "type": [0, 2]}],
+                },
                 {
                     "axis_name": "date",
                     "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
@@ -31,7 +34,12 @@ class TestMultipleTransformations:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                        {
+                            "name": "mapper",
+                            "type": "octahedral",
+                            "resolution": 1280,
+                            "axes": ["latitude", "longitude"],
+                        }
                     ],
                 },
             ],
@@ -49,7 +57,9 @@ class TestMultipleTransformations:
         # NOTE: does not work because the date is a string in the merge option...
         date = np.datetime64("2000-01-01T06:00:00")
         request = Request(
-            Select("date", [date]), Span("step", 0, 3), Box(["latitude", "longitude"], [0, 0], [0.2, 0.2])
+            Select("date", [date]),
+            Span("step", 0, 3),
+            Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
         )
         result = self.API.retrieve(request)
         assert result.leaves[0].flatten()["date"] == np.datetime64("2000-01-01T06:00:00")

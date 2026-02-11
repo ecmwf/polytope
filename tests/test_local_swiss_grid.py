@@ -14,9 +14,18 @@ class TestSlicingFDBDatacube:
         # Create a dataarray with 3 labelled axes using different index types
         self.options = {
             "axis_config": [
-                {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
-                {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
-                {"axis_name": "levelist", "transformations": [{"name": "type_change", "type": "int"}]},
+                {
+                    "axis_name": "number",
+                    "transformations": [{"name": "type_change", "type": "int"}],
+                },
+                {
+                    "axis_name": "step",
+                    "transformations": [{"name": "type_change", "type": "int"}],
+                },
+                {
+                    "axis_name": "levelist",
+                    "transformations": [{"name": "type_change", "type": "int"}],
+                },
                 {
                     "axis_name": "date",
                     "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
@@ -35,7 +44,15 @@ class TestSlicingFDBDatacube:
                 },
             ],
             "pre_path": {"param": "3008"},
-            "compressed_axes_config": ["longitude", "latitude", "levtype", "levelist", "step", "date", "param"],
+            "compressed_axes_config": [
+                "longitude",
+                "latitude",
+                "levtype",
+                "levelist",
+                "step",
+                "date",
+                "param",
+            ],
         }
 
     @pytest.mark.fdb

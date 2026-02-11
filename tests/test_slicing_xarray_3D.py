@@ -74,7 +74,11 @@ class TestSlicing3DXarrayDatacube:
     def test_union_line_point(self):
         seg1 = Span("step", 4.3, 6.2)
         pt1 = Select("step", [6.20001])
-        request = Request(Union(["step"], seg1, pt1), Select("date", ["2000-01-01"]), Select("level", [100]))
+        request = Request(
+            Union(["step"], seg1, pt1),
+            Select("date", ["2000-01-01"]),
+            Select("level", [100]),
+        )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
 
@@ -87,7 +91,11 @@ class TestSlicing3DXarrayDatacube:
         assert len(result.leaves) == 2
 
     def test_mix_existing_nonexisting_data(self):
-        request = Request(Select("date", ["2000-01-03", "2000-01-04"]), Select("level", [100]), Select("step", [3]))
+        request = Request(
+            Select("date", ["2000-01-03", "2000-01-04"]),
+            Select("level", [100]),
+            Select("step", [3]),
+        )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
 
@@ -125,7 +133,10 @@ class TestSlicing3DXarrayDatacube:
 
         box2 = Box(["level", "step"], [1, 6], [5, 12])
         box3 = Box(["level", "step"], [1, 12], [7, 15])
-        request = Request(Select("date", ["2000-01-03"]), ShapePath(["level", "step"], box1, box2, box3))
+        request = Request(
+            Select("date", ["2000-01-03"]),
+            ShapePath(["level", "step"], box1, box2, box3),
+        )
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 30
@@ -168,19 +179,29 @@ class TestSlicing3DXarrayDatacube:
         # Slices non-existing step data
         seg1 = Span("step", 4, 5)
         seg2 = Span("step", 10, 11)
-        request = Request(Union(["step"], seg1, seg2), Select("date", ["2000-01-01"]), Select("level", [100]))
+        request = Request(
+            Union(["step"], seg1, seg2),
+            Select("date", ["2000-01-01"]),
+            Select("level", [100]),
+        )
         result = self.API.retrieve(request)
         assert result.leaves[0].axis == TensorIndexTree.root
 
     def test_empty_box_no_level(self):
         # Slices non-existing level data
-        request = Request(Box(["step", "level"], [3, 10.5], [7, 10.99]), Select("date", ["2000-01-01"]))
+        request = Request(
+            Box(["step", "level"], [3, 10.5], [7, 10.99]),
+            Select("date", ["2000-01-01"]),
+        )
         result = self.API.retrieve(request)
         assert result.leaves[0].axis == TensorIndexTree.root
 
     def test_empty_box_no_level_step(self):
         # Slices non-existing level and step data
-        request = Request(Box(["step", "level"], [4, 10.5], [5, 10.99]), Select("date", ["2000-01-01"]))
+        request = Request(
+            Box(["step", "level"], [4, 10.5], [5, 10.99]),
+            Select("date", ["2000-01-01"]),
+        )
         result = self.API.retrieve(request)
         assert result.leaves[0].axis == TensorIndexTree.root
 
@@ -192,13 +213,19 @@ class TestSlicing3DXarrayDatacube:
 
     def test_empty_box_floating_steps(self):
         # Slices through no step data and float type level data
-        request = Request(Box(["step", "level"], [4.1, 10.3], [5.7, 11.8]), Select("date", ["2000-01-01"]))
+        request = Request(
+            Box(["step", "level"], [4.1, 10.3], [5.7, 11.8]),
+            Select("date", ["2000-01-01"]),
+        )
         result = self.API.retrieve(request)
         assert result.leaves[0].axis == TensorIndexTree.root
 
     def test_empty_box_no_step_level_float(self):
         # Slices empty step and level box
-        request = Request(Box(["step", "level"], [4.1, 10.3], [5.7, 10.8]), Select("date", ["2000-01-01"]))
+        request = Request(
+            Box(["step", "level"], [4.1, 10.3], [5.7, 10.8]),
+            Select("date", ["2000-01-01"]),
+        )
         result = self.API.retrieve(request)
         assert result.leaves[0].axis == TensorIndexTree.root
 
@@ -218,7 +245,11 @@ class TestSlicing3DXarrayDatacube:
         # Slices two close points neither of which are available in the datacube
         pt1 = Select("step", [2.99])
         pt2 = Select("step", [3.001])
-        request = Request(Union(["step"], pt1, pt2), Select("level", [100]), Select("date", ["2000-01-01"]))
+        request = Request(
+            Union(["step"], pt1, pt2),
+            Select("level", [100]),
+            Select("date", ["2000-01-01"]),
+        )
         result = self.API.retrieve(request)
         assert result.leaves[0].axis == TensorIndexTree.root
 
@@ -227,7 +258,11 @@ class TestSlicing3DXarrayDatacube:
         # However if we round these points, we get points in the datacube
         pt1 = Select("step", [6.99])
         pt2 = Select("step", [3.001])
-        request = Request(Union(["step"], pt1, pt2), Select("level", [100]), Select("date", ["2000-01-01"]))
+        request = Request(
+            Union(["step"], pt1, pt2),
+            Select("level", [100]),
+            Select("date", ["2000-01-01"]),
+        )
         result = self.API.retrieve(request)
         assert result.leaves[0].axis == TensorIndexTree.root
 
@@ -235,7 +270,11 @@ class TestSlicing3DXarrayDatacube:
         # Slices non-existing step points and non-existing level
         pt1 = Select("step", [2.99])
         pt2 = Select("step", [3.001])
-        request = Request(Union(["step"], pt1, pt2), Select("level", [100.1]), Select("date", ["2000-01-01"]))
+        request = Request(
+            Union(["step"], pt1, pt2),
+            Select("level", [100.1]),
+            Select("date", ["2000-01-01"]),
+        )
         result = self.API.retrieve(request)
         assert result.leaves[0].axis == TensorIndexTree.root
 
@@ -247,7 +286,11 @@ class TestSlicing3DXarrayDatacube:
 
     def test_nonexisting_segment(self):
         # Slices non-existing step data
-        request = Request(Span("step", 3.2, 3.23), Select("level", [99]), Select("date", ["2000-01-01"]))
+        request = Request(
+            Span("step", 3.2, 3.23),
+            Select("level", [99]),
+            Select("date", ["2000-01-01"]),
+        )
         result = self.API.retrieve(request)
         assert result.leaves[0].axis == TensorIndexTree.root
 

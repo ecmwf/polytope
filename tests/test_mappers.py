@@ -70,7 +70,14 @@ class TestMapper:
         base_axis = "base"
         resolution = 1280
         octahedral_mapper = OctahedralGridMapper(base_axis, mapped_axes, resolution)
-        assert octahedral_mapper.map_second_axis((89.94618771566562,), 0, 90) == [0, 18, 36, 54, 72, 90]
+        assert octahedral_mapper.map_second_axis((89.94618771566562,), 0, 90) == [
+            0,
+            18,
+            36,
+            54,
+            72,
+            90,
+        ]
 
     def test_axes_idx_to_octahedral_idx(self):
         mapped_axes = ["lat", "lon"]

@@ -21,13 +21,31 @@ class TestHealpixGrid:
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "healpix", "resolution": 32, "axes": ["latitude", "longitude"]}
+                        {
+                            "name": "mapper",
+                            "type": "healpix",
+                            "resolution": 32,
+                            "axes": ["latitude", "longitude"],
+                        }
                     ],
                 },
-                {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
-                {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
+                {
+                    "axis_name": "longitude",
+                    "transformations": [{"name": "cyclic", "range": [0, 360]}],
+                },
+                {
+                    "axis_name": "latitude",
+                    "transformations": [{"name": "reverse", "is_reverse": True}],
+                },
             ],
-            "compressed_axes_config": ["longitude", "latitude", "step", "time", "isobaricInhPa", "valid_time"],
+            "compressed_axes_config": [
+                "longitude",
+                "latitude",
+                "step",
+                "time",
+                "isobaricInhPa",
+                "valid_time",
+            ],
         }
         self.API = Polytope(
             datacube=self.latlon_array,

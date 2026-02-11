@@ -21,8 +21,14 @@ class TestSlicing3DXarrayDatacube:
         )
         options = {
             "axis_config": [
-                {"axis_name": "long", "transformations": [{"name": "cyclic", "range": [0, 1.0]}]},
-                {"axis_name": "level", "transformations": [{"name": "cyclic", "range": [0, 129]}]},
+                {
+                    "axis_name": "long",
+                    "transformations": [{"name": "cyclic", "range": [0, 1.0]}],
+                },
+                {
+                    "axis_name": "level",
+                    "transformations": [{"name": "cyclic", "range": [0, 129]}],
+                },
             ],
             "compressed_axes_config": ["long", "level", "step", "date"],
         }
@@ -35,7 +41,9 @@ class TestSlicing3DXarrayDatacube:
 
     def test_cyclic_float_axis_across_seam(self):
         request = Request(
-            Box(["step", "long"], [0, 0.9], [0, 1.2]), Select("date", ["2000-01-01"]), Select("level", [128])
+            Box(["step", "long"], [0, 0.9], [0, 1.2]),
+            Select("date", ["2000-01-01"]),
+            Select("level", [128]),
         )
         result = self.API.retrieve(request)
         result.pprint()

@@ -21,7 +21,10 @@ class TestXarrayDatacube:
 
     def test_validate(self):
         dims = np.random.randn(1, 1, 1)
-        array = xr.Dataset(data_vars=dict(param=(["x", "y", "z"], dims)), coords={"x": [1], "y": [1], "z": [1]})
+        array = xr.Dataset(
+            data_vars=dict(param=(["x", "y", "z"], dims)),
+            coords={"x": [1], "y": [1], "z": [1]},
+        )
         array = array.to_array()
 
         datacube = Datacube.create(datacube=array, axis_options={})
@@ -73,14 +76,24 @@ class TestXarrayDatacube:
         # Check discretizing along 'date' axis with a range of dates
         label = PandasTimestampDatacubeAxis()
         label.name = "date"
-        idxs = datacube.get_indices(partial_request, label, pd.Timestamp("2000-01-02"), pd.Timestamp("2000-03-31"))
+        idxs = datacube.get_indices(
+            partial_request,
+            label,
+            pd.Timestamp("2000-01-02"),
+            pd.Timestamp("2000-03-31"),
+        )
         assert (idxs == pd.date_range(pd.Timestamp("2000-01-02"), pd.Timestamp("2000-01-03"), 2)).all()
         assert isinstance(idxs[0], pd.Timestamp)
 
         # Check discretizing along 'date' axis at a specific date gives one value
         label = PandasTimestampDatacubeAxis()
         label.name = "date"
-        idxs = datacube.get_indices(partial_request, label, pd.Timestamp("2000-01-02"), pd.Timestamp("2000-01-02"))
+        idxs = datacube.get_indices(
+            partial_request,
+            label,
+            pd.Timestamp("2000-01-02"),
+            pd.Timestamp("2000-01-02"),
+        )
         assert len(idxs) == 1
         assert isinstance(idxs[0], pd.Timestamp)
         assert idxs[0] == pd.Timestamp(pd.Timestamp("2000-01-02"))
@@ -89,7 +102,10 @@ class TestXarrayDatacube:
         label = PandasTimestampDatacubeAxis()
         label.name = "date"
         idxs = datacube.get_indices(
-            partial_request, label, pd.Timestamp("2000-01-01-1200"), pd.Timestamp("2000-01-01-1200")
+            partial_request,
+            label,
+            pd.Timestamp("2000-01-01-1200"),
+            pd.Timestamp("2000-01-01-1200"),
         )
         assert len(idxs) == 0
 

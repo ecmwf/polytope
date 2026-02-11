@@ -22,7 +22,10 @@ class TestQuadTreeSlicer:
 
         self.options = {
             "axis_config": [
-                {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
+                {
+                    "axis_name": "step",
+                    "transformations": [{"name": "type_change", "type": "int"}],
+                },
                 {
                     "axis_name": "date",
                     "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
@@ -67,7 +70,10 @@ class TestQuadTreeSlicer:
             Select("step", [0]),
             Select("param", ["130"]),
             Select("levtype", ["sfc"]),
-            Polygon(["latitude", "longitude"], [[44, 5.5], [44, 5.55], [44.25, 5.55], [44.25, 5.5]]),
+            Polygon(
+                ["latitude", "longitude"],
+                [[44, 5.5], [44, 5.55], [44.25, 5.55], [44.25, 5.5]],
+            ),
         )
 
         self.fdbdatacube = gj.GribJump()

@@ -52,7 +52,12 @@ class TestEncoder:
         from polytope_feature.polytope import Polytope
 
         self.options = {
-            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
+            "pre_path": {
+                "class": "od",
+                "expver": "0001",
+                "levtype": "sfc",
+                "stream": "oper",
+            },
         }
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(

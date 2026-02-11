@@ -27,7 +27,16 @@ class TestQuadTreeSlicer:
         assert (10, 10) in [slicer.points[node] for node in results]
         assert (5, 10) in [slicer.points[node] for node in results]
         assert (5, 20) in [slicer.points[node] for node in results]
-        points = [[10, 10], [80, 10], [-5, 5], [5, 50], [5, 10], [50, 10], [2, 10], [15, 15]]
+        points = [
+            [10, 10],
+            [80, 10],
+            [-5, 5],
+            [5, 50],
+            [5, 10],
+            [50, 10],
+            [2, 10],
+            [15, 15],
+        ]
         slicer = QuadTreeSlicer(points)
         polytope = ConvexPolytope(["lat", "lon"], [[-10, 1], [20, 1], [5, 20]])
         results = query_polygon(points, slicer.quad_tree, 0, polytope)
@@ -81,8 +90,14 @@ class TestQuadTreeSlicer:
         polytope = Box(["latitude", "longitude"], [1, 1], [20, 30]).polytope()[0]
         self.options = {
             "axis_config": [
-                {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
-                {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
+                {
+                    "axis_name": "step",
+                    "transformations": [{"name": "type_change", "type": "int"}],
+                },
+                {
+                    "axis_name": "number",
+                    "transformations": [{"name": "type_change", "type": "int"}],
+                },
                 {
                     "axis_name": "date",
                     "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
@@ -113,7 +128,12 @@ class TestQuadTreeSlicer:
                 "stream",
                 "type",
             ],
-            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
+            "pre_path": {
+                "class": "od",
+                "expver": "0001",
+                "levtype": "sfc",
+                "stream": "oper",
+            },
             "engine_options": {"latitude": "quadtree", "longitude": "quadtree"},
         }
         self.API = Polytope(
@@ -125,7 +145,16 @@ class TestQuadTreeSlicer:
         tree["unsliced_polytopes"] = [polytope]
         self.API.engines["quadtree"]._build_sliceable_child(polytope, lat_ax, tree, self.API.datacube, [], None)
         assert len(tree.leaves) == 3
-        points = [[10, 10], [80, 10], [-5, 5], [5, 50], [5, 10], [50, 10], [2, 10], [15, 15]]
+        points = [
+            [10, 10],
+            [80, 10],
+            [-5, 5],
+            [5, 50],
+            [5, 10],
+            [50, 10],
+            [2, 10],
+            [15, 15],
+        ]
         polytope = ConvexPolytope(["latitude", "longitude"], [[-10, 1], [20, 1], [5, 20]])
         tree = TensorIndexTree()
         tree["unsliced_polytopes"] = [polytope]
@@ -149,8 +178,14 @@ class TestQuadTreeSlicer:
         points = [list(coord) for coord in coords]
         self.options = {
             "axis_config": [
-                {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
-                {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
+                {
+                    "axis_name": "step",
+                    "transformations": [{"name": "type_change", "type": "int"}],
+                },
+                {
+                    "axis_name": "number",
+                    "transformations": [{"name": "type_change", "type": "int"}],
+                },
                 {
                     "axis_name": "date",
                     "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
@@ -181,7 +216,12 @@ class TestQuadTreeSlicer:
                 "stream",
                 "type",
             ],
-            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
+            "pre_path": {
+                "class": "od",
+                "expver": "0001",
+                "levtype": "sfc",
+                "stream": "oper",
+            },
             "engine_options": {"latitude": "quadtree", "longitude": "quadtree"},
         }
         time0 = time.time()
