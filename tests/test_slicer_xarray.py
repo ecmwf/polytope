@@ -22,7 +22,9 @@ class TestXarraySlicing:
         self.API = Polytope(datacube=array, options=options)
 
     def test_2D_box(self):
-        request = Request(Box(["step", "level"], [3, 10], [6, 11]), Select("date", ["2000-01-01"]))
+        request = Request(
+            Box(["step", "level"], [3, 10], [6, 11]), Select("date", ["2000-01-01"])
+        )
         result = self.API.retrieve(request)
         result.pprint()
 

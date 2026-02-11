@@ -21,7 +21,9 @@ class TestSlicingFDBDatacube:
                 },
                 {
                     "axis_name": "date",
-                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
+                    "transformations": [
+                        {"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}
+                    ],
                 },
                 {
                     "axis_name": "values",
@@ -71,7 +73,9 @@ class TestSlicingFDBDatacube:
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
-            Span("date", pd.Timestamp("20230625T120000"), pd.Timestamp("20230626T120000")),
+            Span(
+                "date", pd.Timestamp("20230625T120000"), pd.Timestamp("20230626T120000")
+            ),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
             Select("param", ["167"]),
@@ -108,7 +112,9 @@ class TestSlicingFDBDatacube:
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
-            Span("date", pd.Timestamp("20230625T120000"), pd.Timestamp("20230626T120000")),
+            Span(
+                "date", pd.Timestamp("20230625T120000"), pd.Timestamp("20230626T120000")
+            ),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
             Select("param", ["167"]),
@@ -143,7 +149,9 @@ class TestSlicingFDBDatacube:
         request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
-            Span("date", pd.Timestamp("20230625T120000"), pd.Timestamp("20230626T120000")),
+            Span(
+                "date", pd.Timestamp("20230625T120000"), pd.Timestamp("20230626T120000")
+            ),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
             Select("param", ["167"]),
@@ -159,7 +167,9 @@ class TestSlicingFDBDatacube:
         inverted_request = Request(
             Select("step", [0]),
             Select("levtype", ["sfc"]),
-            Span("date", pd.Timestamp("20230625T120000"), pd.Timestamp("20230626T120000")),
+            Span(
+                "date", pd.Timestamp("20230625T120000"), pd.Timestamp("20230626T120000")
+            ),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
             Select("param", ["167"]),

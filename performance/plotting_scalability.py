@@ -38,7 +38,13 @@ slicer_time_3d = [
     1674654736.72457 - 1674654722.4930408,
     1675184322.065717 - 1675184305.480412,
 ]
-total_time_3d = [247.2636013031006, 376.33102011680603, 689.4626791477203, 1083.933179140091, 1889.5270569324493]
+total_time_3d = [
+    247.2636013031006,
+    376.33102011680603,
+    689.4626791477203,
+    1083.933179140091,
+    1889.5270569324493,
+]
 
 ax[0].plot(number_points_3d, slicer_time_3d, marker="X", color="red", label="3D")
 ax[1].plot(number_points_3d, total_time_3d, marker="X", color="red")
@@ -59,13 +65,24 @@ slicer_time_4d = [
     1675177114.85664 - 1675177106.422187,
     1674659021.241025 - 1674659003.32431,
 ]
-total_time_4d = [197.0693700313568, 436.3116102218628, 845.9738457202911, 1471.0876429080963]
+total_time_4d = [
+    197.0693700313568,
+    436.3116102218628,
+    845.9738457202911,
+    1471.0876429080963,
+]
 
 ax[0].plot(number_points_4d, slicer_time_4d, marker="s", color="orange", label="4D")
 ax[1].plot(number_points_4d, total_time_4d, marker="s", color="orange")
 
 lines_labels = [ax.get_legend_handles_labels() for ax in fig.axes]
 lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
-fig.legend(lines, labels, loc="lower center", bbox_to_anchor=(0.5, 0), bbox_transform=plt.gcf().transFigure)
+fig.legend(
+    lines,
+    labels,
+    loc="lower center",
+    bbox_to_anchor=(0.5, 0),
+    bbox_transform=plt.gcf().transFigure,
+)
 
 plt.show()

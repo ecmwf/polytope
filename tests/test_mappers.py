@@ -90,7 +90,10 @@ class TestMapper:
         assert octahedral_mapper.axes_idx_to_octahedral_idx(1, 17) == 17
         assert octahedral_mapper.axes_idx_to_octahedral_idx(2, 0) == 20
         assert octahedral_mapper.axes_idx_to_octahedral_idx(3, 0) == 44
-        assert octahedral_mapper.axes_idx_to_octahedral_idx(1279, 0) == 3299840 - 5136 - 5136 + 4
+        assert (
+            octahedral_mapper.axes_idx_to_octahedral_idx(1279, 0)
+            == 3299840 - 5136 - 5136 + 4
+        )
         # at lat line 1280, we start the 1280th line, which has 5136 points
         assert octahedral_mapper.axes_idx_to_octahedral_idx(1280, 0) == 3299840 - 5136
         # the 1281th lat line also has 5136 points, and we are exactly at the half of the number of points in the grid
@@ -99,8 +102,14 @@ class TestMapper:
         # the 1281th lat line has 5136 points, so when we start the 1282nd lat line, we are at the half of the grid
         # points + 5136
         assert octahedral_mapper.axes_idx_to_octahedral_idx(1282, 0) == 3299840 + 5136
-        assert octahedral_mapper.axes_idx_to_octahedral_idx(1283, 0) == 3299840 + 5136 + 5136 - 4
-        assert octahedral_mapper.axes_idx_to_octahedral_idx(1284, 0) == 3299840 + 5136 + 5136 - 4 + 5136 - 8
+        assert (
+            octahedral_mapper.axes_idx_to_octahedral_idx(1283, 0)
+            == 3299840 + 5136 + 5136 - 4
+        )
+        assert (
+            octahedral_mapper.axes_idx_to_octahedral_idx(1284, 0)
+            == 3299840 + 5136 + 5136 - 4 + 5136 - 8
+        )
         # at the last lat line, we only have 20 points left in the grid
         assert octahedral_mapper.axes_idx_to_octahedral_idx(2560, 0) == 3299840 * 2 - 20
 
@@ -110,5 +119,7 @@ class TestMapper:
         resolution = 1280
         octahedral_mapper = OctahedralGridMapper(base_axis, mapped_axes, resolution)
         assert octahedral_mapper.unmap((89.94618771566562,), (0,))[0] == 0
-        assert octahedral_mapper.unmap((0.035149384215604956,), (0,))[0] == 3299840 - 5136
+        assert (
+            octahedral_mapper.unmap((0.035149384215604956,), (0,))[0] == 3299840 - 5136
+        )
         assert octahedral_mapper.unmap((-0.035149384215604956,), (0,))[0] == 3299840

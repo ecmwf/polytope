@@ -17,10 +17,10 @@ class TestQuadTreeSlicer:
             "longitude": "quadtree",
         }
 
-        nexus_url = (
-            "https://sites.ecmwf.int/repository/polytope/icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2"
+        nexus_url = "https://sites.ecmwf.int/repository/polytope/icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2"  # noqa: E501
+        download_test_data(
+            nexus_url, "icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2"
         )
-        download_test_data(nexus_url, "icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2")
 
         ds = data.from_source(
             "file",

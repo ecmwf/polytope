@@ -37,9 +37,13 @@ class OctahedralGridMapper(DatacubeMapper):
         self._second_axis_spacing = {}
         self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
         if self._axis_reversed[mapped_axes[1]]:
-            raise NotImplementedError("Octahedral grid with second axis in decreasing order is not supported")
+            raise NotImplementedError(
+                "Octahedral grid with second axis in decreasing order is not supported"
+            )
         if not self._axis_reversed[mapped_axes[0]]:
-            raise NotImplementedError("Octahedral grid with first axis in increasing order is not supported")
+            raise NotImplementedError(
+                "Octahedral grid with first axis in increasing order is not supported"
+            )
         self.compressed_grid_axes = [self._mapped_axes[1]]
         if md5_hash is not None:
             self.md5_hash = md5_hash
@@ -47,7 +51,9 @@ class OctahedralGridMapper(DatacubeMapper):
             self.md5_hash = _md5_hash.get(resolution, None)
 
         if local_area != []:
-            raise NotImplementedError("Local area grid not implemented for octahedral grids")
+            raise NotImplementedError(
+                "Local area grid not implemented for octahedral grids"
+            )
 
     def gauss_first_guess(self):
         i = 0
@@ -7826,10 +7832,14 @@ class OctahedralGridMapper(DatacubeMapper):
                         mem2 = 1
                         mem1 = root
                         for legi in range(nval):
-                            legfonc = ((2.0 * (legi + 1) - 1.0) * root * mem1 - legi * mem2) / (legi + 1)
+                            legfonc = (
+                                (2.0 * (legi + 1) - 1.0) * root * mem1 - legi * mem2
+                            ) / (legi + 1)
                             mem2 = mem1
                             mem1 = legfonc
-                        conv = legfonc / ((nval * (mem2 - root * legfonc)) / (1.0 - (root * root)))
+                        conv = legfonc / (
+                            (nval * (mem2 - root * legfonc)) / (1.0 - (root * root))
+                        )
                         root = root - conv
                         # add maybe a max iter here to make sure we converge at some point
                     new_vals[jval] = math.asin(root) * rad2deg
@@ -7846,7 +7856,9 @@ class OctahedralGridMapper(DatacubeMapper):
     def second_axis_vals(self, first_val):
         first_axis_vals = self._first_axis_vals
         tol = 1e-10
-        first_idx = bisect_left_cmp(first_axis_vals, first_val[0] - tol, cmp=lambda x, y: x > y)
+        first_idx = bisect_left_cmp(
+            first_axis_vals, first_val[0] - tol, cmp=lambda x, y: x > y
+        )
         if first_idx >= self._resolution:
             first_idx = (2 * self._resolution) - 1 - first_idx
         first_idx = first_idx + 1
@@ -7858,7 +7870,9 @@ class OctahedralGridMapper(DatacubeMapper):
     def second_axis_spacing(self, first_val):
         first_axis_vals = self._first_axis_vals
         tol = 1e-10
-        _first_idx = bisect_left_cmp(first_axis_vals, first_val[0] - tol, cmp=lambda x, y: x > y)
+        _first_idx = bisect_left_cmp(
+            first_axis_vals, first_val[0] - tol, cmp=lambda x, y: x > y
+        )
         first_idx = _first_idx
         if first_idx >= self._resolution:
             first_idx = (2 * self._resolution) - 1 - first_idx
@@ -7904,7 +7918,10 @@ class OctahedralGridMapper(DatacubeMapper):
     def find_second_axis_idx(self, first_val, second_val):
         second_axis_spacing, first_idx = self.second_axis_spacing(first_val)
         tol = 1e-8
-        if second_val / second_axis_spacing > int(second_val / second_axis_spacing) + 1 - tol:
+        if (
+            second_val / second_axis_spacing
+            > int(second_val / second_axis_spacing) + 1 - tol
+        ):
             second_idx = int(second_val / second_axis_spacing) + 1
         else:
             second_idx = int(second_val / second_axis_spacing)
@@ -7917,7 +7934,9 @@ class OctahedralGridMapper(DatacubeMapper):
             return_idxs = []
             for second_val in second_vals:
                 first_idx, second_idx = self.find_second_axis_idx(first_val, second_val)
-                octahedral_index = self.axes_idx_to_octahedral_idx(first_idx, second_idx)
+                octahedral_index = self.axes_idx_to_octahedral_idx(
+                    first_idx, second_idx
+                )
                 return_idxs.append(octahedral_index)
             return return_idxs
 

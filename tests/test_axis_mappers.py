@@ -120,7 +120,9 @@ class TestAxisMappers:
         assert axis.to_float(time1) == 86400.0
         assert axis.from_float(3600) == pd.Timedelta("0 days 01:00:00")
         assert axis.serialize(time1) == "1 days 00:00:00"
-        assert axis.remap([time1, time2]) == [[pd.Timedelta("1 days 00:00:00"), pd.Timedelta("1 days 02:00:00")]]
+        assert axis.remap([time1, time2]) == [
+            [pd.Timedelta("1 days 00:00:00"), pd.Timedelta("1 days 02:00:00")]
+        ]
 
     def test_timestamp_axis(self):
         axis = PandasTimestampDatacubeAxis()

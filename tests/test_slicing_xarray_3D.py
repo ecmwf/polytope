@@ -41,31 +41,41 @@ class TestSlicing3DXarrayDatacube:
     # Testing different shapes
 
     def test_2D_box(self):
-        request = Request(Box(["step", "level"], [3, 10], [6, 11]), Select("date", ["2000-01-01"]))
+        request = Request(
+            Box(["step", "level"], [3, 10], [6, 11]), Select("date", ["2000-01-01"])
+        )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
 
     def test_2D_box_union_disjoint_boxes(self):
         box1 = Box(["step", "level"], [3, 10], [6, 11])
         box2 = Box(["step", "level"], [7, 15], [12, 17])
-        request = Request(Union(["step", "level"], box1, box2), Select("date", ["2000-01-01"]))
+        request = Request(
+            Union(["step", "level"], box1, box2), Select("date", ["2000-01-01"])
+        )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 2
 
     def test_2D_box_union_overlapping_boxes(self):
         box1 = Box(["step", "level"], [3, 9], [6, 11])
         box2 = Box(["step", "level"], [6, 10], [12, 17])
-        request = Request(Union(["step", "level"], box1, box2), Select("date", ["2000-01-01"]))
+        request = Request(
+            Union(["step", "level"], box1, box2), Select("date", ["2000-01-01"])
+        )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 2
 
     def test_point(self):
-        request = Request(Select("date", ["2000-01-03"]), Select("level", [100]), Select("step", [3]))
+        request = Request(
+            Select("date", ["2000-01-03"]), Select("level", [100]), Select("step", [3])
+        )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
 
     def test_span(self):
-        request = Request(Span("level", 10, 11), Select("date", ["2000-01-01"]), Select("step", [9]))
+        request = Request(
+            Span("level", 10, 11), Select("date", ["2000-01-01"]), Select("step", [9])
+        )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
         path = result.leaves[0].flatten()
@@ -85,7 +95,9 @@ class TestSlicing3DXarrayDatacube:
     def test_union_boxes_intersect_one_point(self):
         box1 = Box(["step", "level"], [3, 10], [6, 11])
         box2 = Box(["step", "level"], [6, 11], [12, 17])
-        request = Request(Union(["step", "level"], box1, box2), Select("date", ["2000-01-01"]))
+        request = Request(
+            Union(["step", "level"], box1, box2), Select("date", ["2000-01-01"])
+        )
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 2
@@ -103,21 +115,27 @@ class TestSlicing3DXarrayDatacube:
         # TODO
         box1 = Box(["level", "step"], [1, 0], [2, 3])
         box2 = Box(["level", "step"], [1, 9], [3, 15])
-        request = Request(Select("date", ["2000-01-03"]), Segment(["level", "step"], box1, box2))
+        request = Request(
+            Select("date", ["2000-01-03"]), Segment(["level", "step"], box1, box2)
+        )
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 15
 
         box1 = Box(["level", "step"], [1, 0], [2, 3])
         box2 = Box(["level", "step"], [1, 12], [5, 15])
-        request = Request(Select("date", ["2000-01-03"]), Segment(["level", "step"], box1, box2))
+        request = Request(
+            Select("date", ["2000-01-03"]), Segment(["level", "step"], box1, box2)
+        )
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 21
 
         box1 = Box(["level", "step"], [1, 0], [2, 3])
         box2 = Box(["level", "step"], [1, 12], [10, 15])
-        request = Request(Select("date", ["2000-01-03"]), Segment(["level", "step"], box1, box2))
+        request = Request(
+            Select("date", ["2000-01-03"]), Segment(["level", "step"], box1, box2)
+        )
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 40
@@ -126,7 +144,9 @@ class TestSlicing3DXarrayDatacube:
         # TODO
         box1 = Box(["level", "step"], [1, 0], [2, 3])
         box2 = Box(["level", "step"], [1, 9], [3, 15])
-        request = Request(Select("date", ["2000-01-03"]), ShapePath(["level", "step"], box1, box2))
+        request = Request(
+            Select("date", ["2000-01-03"]), ShapePath(["level", "step"], box1, box2)
+        )
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 15
@@ -142,7 +162,9 @@ class TestSlicing3DXarrayDatacube:
         assert len(result.leaves) == 30
 
     def test_disk(self):
-        request = Request(Disk(["level", "step"], [6, 6], [3, 3]), Select("date", ["2000-01-01"]))
+        request = Request(
+            Disk(["level", "step"], [6, 6], [3, 3]), Select("date", ["2000-01-01"])
+        )
         result = self.API.retrieve(request)
         # result.pprint()
         assert len(result.leaves) == 3
@@ -156,7 +178,9 @@ class TestSlicing3DXarrayDatacube:
     def test_concave_polygon(self):
         # TODO: fix the overlapping branches?
         points = [[1, 0], [3, 0], [2, 3], [3, 6], [1, 6]]
-        request = Request(Polygon(["level", "step"], points), Select("date", ["2000-01-01"]))
+        request = Request(
+            Polygon(["level", "step"], points), Select("date", ["2000-01-01"])
+        )
         result = self.API.retrieve(request)
         self.xarraydatacube.get(result)
         # result.pprint()
@@ -164,7 +188,9 @@ class TestSlicing3DXarrayDatacube:
 
     def test_polytope(self):
         points = [[0, 1], [3, 1], [3, 2], [0, 2]]
-        request = Request(ConvexPolytope(["step", "level"], points), Select("date", ["2000-01-01"]))
+        request = Request(
+            ConvexPolytope(["step", "level"], points), Select("date", ["2000-01-01"])
+        )
         result = self.API.retrieve(request)
         result.pprint()
         self.xarraydatacube.get(result)
@@ -207,7 +233,9 @@ class TestSlicing3DXarrayDatacube:
 
     def test_empty_box_no_step(self):
         # Slices non-existing step and level data
-        request = Request(Box(["step", "level"], [4, 10], [5, 10.49]), Select("date", ["2000-01-01"]))
+        request = Request(
+            Box(["step", "level"], [4, 10], [5, 10.49]), Select("date", ["2000-01-01"])
+        )
         result = self.API.retrieve(request)
         assert result.leaves[0].axis == TensorIndexTree.root
 
@@ -231,13 +259,17 @@ class TestSlicing3DXarrayDatacube:
 
     def test_empty_no_step_unordered(self):
         # Slice empty box because no step is available
-        request = Request(Box(["level", "step"], [10, 4], [10, 5]), Select("date", ["2000-01-01"]))
+        request = Request(
+            Box(["level", "step"], [10, 4], [10, 5]), Select("date", ["2000-01-01"])
+        )
         result = self.API.retrieve(request)
         assert result.leaves[0].axis == TensorIndexTree.root
 
     def test_nonexisting_date(self):
         # Slices non-existing date data
-        request = Request(Select("date", ["2000-01-04"]), Select("level", [100]), Select("step", [3]))
+        request = Request(
+            Select("date", ["2000-01-04"]), Select("level", [100]), Select("step", [3])
+        )
         result = self.API.retrieve(request)
         assert result.leaves[0].axis == TensorIndexTree.root
 
@@ -280,7 +312,9 @@ class TestSlicing3DXarrayDatacube:
 
     def test_nonexisting_point_float_level(self):
         # Slices non-existing level data
-        request = Request(Select("step", [3]), Select("level", [99.1]), Select("date", ["2000-01-02"]))
+        request = Request(
+            Select("step", [3]), Select("level", [99.1]), Select("date", ["2000-01-02"])
+        )
         result = self.API.retrieve(request)
         assert result.leaves[0].axis == TensorIndexTree.root
 
@@ -298,13 +332,17 @@ class TestSlicing3DXarrayDatacube:
 
     def test_flat_box(self):
         # Should slice through a line in the step direction
-        request = Request(Box(["step", "level"], [4, 10], [7, 10]), Select("date", ["2000-01-01"]))
+        request = Request(
+            Box(["step", "level"], [4, 10], [7, 10]), Select("date", ["2000-01-01"])
+        )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
 
     def test_box(self):
         # Should slice a line in the level direction
-        request = Request(Box(["level", "step"], [3, 3], [6, 3]), Select("date", ["2000-01-01"]))
+        request = Request(
+            Box(["level", "step"], [3, 3], [6, 3]), Select("date", ["2000-01-01"])
+        )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
 
@@ -326,14 +364,24 @@ class TestSlicing3DXarrayDatacube:
 
         r1 = math.cos(math.pi / 12) * (8 - 4 * math.sqrt(3)) + sys.float_info.epsilon
         # note that we need a small perturbation to make up for rounding errors
-        r2 = 3 * math.cos(math.pi / 12) * (math.sqrt(3) - 2) * (8 - 4 * math.sqrt(3)) / (4 * math.sqrt(3) - 7)
-        request = Request(Disk(["level", "step"], [0, 0], [r1, r2]), Select("date", ["2000-01-01"]))
+        r2 = (
+            3
+            * math.cos(math.pi / 12)
+            * (math.sqrt(3) - 2)
+            * (8 - 4 * math.sqrt(3))
+            / (4 * math.sqrt(3) - 7)
+        )
+        request = Request(
+            Disk(["level", "step"], [0, 0], [r1, r2]), Select("date", ["2000-01-01"])
+        )
         result = self.API.retrieve(request)
         paths = [r.flatten().values() for r in result.leaves]
         assert ((pd.Timestamp("2000-01-01 00:00:00"),), (3,), (1,)) in paths
 
     def test_duplicate_values_select(self):
-        request = Request(Select("step", [3, 3]), Select("level", [1]), Select("date", ["2000-01-01"]))
+        request = Request(
+            Select("step", [3, 3]), Select("level", [1]), Select("date", ["2000-01-01"])
+        )
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 1

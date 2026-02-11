@@ -21,7 +21,9 @@ class TestSlicingFDBDatacube:
                 },
                 {
                     "axis_name": "date",
-                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
+                    "transformations": [
+                        {"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}
+                    ],
                 },
                 {
                     "axis_name": "values",
@@ -74,7 +76,9 @@ class TestSlicingFDBDatacube:
         request = Request(
             Select("step", [0]),
             Select("levtype", ["pl"]),
-            Span("date", pd.Timestamp("20170101T120000"), pd.Timestamp("20170102T120000")),
+            Span(
+                "date", pd.Timestamp("20170101T120000"), pd.Timestamp("20170102T120000")
+            ),
             Select("domain", ["g"]),
             Select("expver", ["0001"]),
             Select("param", ["129"]),

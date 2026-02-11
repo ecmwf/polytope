@@ -61,7 +61,9 @@ class TestSlicing3DXarrayDatacube:
             assert path["step"] == (5,)
 
     def test_1D_point_outside_datacube_right(self):
-        request = Request(Select("level", [1]), Select("step", [6], method="surrounding"))
+        request = Request(
+            Select("level", [1]), Select("step", [6], method="surrounding")
+        )
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 1
@@ -71,14 +73,18 @@ class TestSlicing3DXarrayDatacube:
             assert path["step"] == (5,)
 
     def test_1D_nonexisting_point(self):
-        request = Request(Select("level", [2]), Select("step", [6], method="surrounding"))
+        request = Request(
+            Select("level", [2]), Select("step", [6], method="surrounding")
+        )
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 1
         assert result.is_root()
 
     def test_1D_nonexisting_point_v2(self):
-        request = Request(Select("level", [2], method="surrounding"), Select("step", [6]))
+        request = Request(
+            Select("level", [2], method="surrounding"), Select("step", [6])
+        )
         result = self.API.retrieve(request)
         result.pprint()
         assert len(result.leaves) == 1
