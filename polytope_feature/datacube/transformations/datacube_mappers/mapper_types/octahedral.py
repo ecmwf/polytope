@@ -18,7 +18,14 @@ except (ModuleNotFoundError, ImportError):
 
 class OctahedralGridMapper(DatacubeMapper):
     def __init__(
-        self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None, mapper_options=None
+        self,
+        base_axis,
+        mapped_axes,
+        resolution,
+        md5_hash=None,
+        local_area=[],
+        axis_reversed=None,
+        mapper_options=None,
     ):
         # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
@@ -7895,7 +7902,7 @@ class OctahedralGridMapper(DatacubeMapper):
         return first_idx_list
 
     def find_second_axis_idx(self, first_val, second_val):
-        (second_axis_spacing, first_idx) = self.second_axis_spacing(first_val)
+        second_axis_spacing, first_idx = self.second_axis_spacing(first_val)
         tol = 1e-8
         if second_val / second_axis_spacing > int(second_val / second_axis_spacing) + 1 - tol:
             second_idx = int(second_val / second_axis_spacing) + 1
@@ -7909,7 +7916,7 @@ class OctahedralGridMapper(DatacubeMapper):
         else:
             return_idxs = []
             for second_val in second_vals:
-                (first_idx, second_idx) = self.find_second_axis_idx(first_val, second_val)
+                first_idx, second_idx = self.find_second_axis_idx(first_val, second_val)
                 octahedral_index = self.axes_idx_to_octahedral_idx(first_idx, second_idx)
                 return_idxs.append(octahedral_index)
             return return_idxs

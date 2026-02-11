@@ -146,7 +146,14 @@ class Point(Shape):
             for point in self.values:
                 poly_to_mult = []
                 for i in range(len(self._axes)):
-                    poly_to_mult.append(ConvexPolytope([self._axes[i]], [[point[i]]], self.method, is_orthogonal=True))
+                    poly_to_mult.append(
+                        ConvexPolytope(
+                            [self._axes[i]],
+                            [[point[i]]],
+                            self.method,
+                            is_orthogonal=True,
+                        )
+                    )
                 polytopes.append(Product(*poly_to_mult, method=self.method, value=[point]))
         else:
             for point in self.values:

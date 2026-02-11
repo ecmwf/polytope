@@ -52,7 +52,7 @@ class Datacube(ABC):
     def _create_axes(self, name, values, transformation_type_key, transformation_options):
         # first check what the final axes are for this axis name given transformations
         transformation_options = transformation_type_key
-        (final_axis_names, transformation) = DatacubeAxisTransformation.get_final_axes(
+        final_axis_names, transformation = DatacubeAxisTransformation.get_final_axes(
             name, transformation_type_key.name, transformation_options, self
         )
 
@@ -87,7 +87,11 @@ class Datacube(ABC):
                 if self._axes is None or axis_name not in self._axes.keys():
                     DatacubeAxis.create_standard(axis_name, values, self)
                 # add transformation tag to axis, as well as transformation options for later
-                setattr(self._axes[axis_name], has_transform[transformation_type_key.name], True)
+                setattr(
+                    self._axes[axis_name],
+                    has_transform[transformation_type_key.name],
+                    True,
+                )
                 # where has_transform is a factory inside datacube_transformations to set the has_transform, is_cyclic
                 # etc axis properties add the specific transformation handled here to the relevant axes
                 # Modify the axis to update with the tag

@@ -100,12 +100,12 @@ class FDBDatacube(Datacube):
         for polytope in polytopes:
             for ax in polytope._axes:
                 if ax == "levtype":
-                    (upper, lower, idx) = polytope.extents(ax)
+                    upper, lower, idx = polytope.extents(ax)
                     if "sfc" in polytope.points[idx]:
                         self.fdb_coordinates.pop("levelist", None)
 
                 if ax == "param":
-                    (upper, lower, idx) = polytope.extents(ax)
+                    upper, lower, idx = polytope.extents(ax)
                     if "140251" not in polytope.points[idx]:
                         self.fdb_coordinates.pop("direction", None)
                         self.fdb_coordinates.pop("frequency", None)
@@ -154,7 +154,11 @@ class FDBDatacube(Datacube):
                 uncompressed_request = {}
                 for i, key in enumerate(compressed_request[0].keys()):
                     uncompressed_request[key] = combi[i]
-                complete_uncompressed_request = (uncompressed_request, compressed_request[1], self.grid_md5_hash)
+                complete_uncompressed_request = (
+                    uncompressed_request,
+                    compressed_request[1],
+                    self.grid_md5_hash,
+                )
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
 
@@ -197,13 +201,18 @@ class FDBDatacube(Datacube):
         else:
             key_value_path = {requests.axis.name: requests.values}
             ax = requests.axis
-            (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
+            key_value_path, leaf_path, self.unwanted_path = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
             leaf_path.update(key_value_path)
             if len(requests.children[0].children[0].children) == 0:
                 # find the fdb_requests and associated nodes to which to add results
-                (path, current_start_idxs, fdb_node_ranges, lat_length) = self.get_2nd_last_values(requests, leaf_path)
+                (
+                    path,
+                    current_start_idxs,
+                    fdb_node_ranges,
+                    lat_length,
+                ) = self.get_2nd_last_values(requests, leaf_path)
                 (
                     original_indices,
                     sorted_request_ranges,
@@ -318,13 +327,14 @@ class FDBDatacube(Datacube):
             fdb_range_nodes = deepcopy(fdb_node_ranges[i])
             key_value_path = {lat_child.axis.name: lat_child.values}
             ax = lat_child.axis
-            (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
+            key_value_path, leaf_path, self.unwanted_path = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
             leaf_path.update(key_value_path)
-            (current_start_idxs[i], fdb_node_ranges[i]) = self.get_last_layer_before_leaf(
-                lat_child, leaf_path, current_start_idx, fdb_range_nodes
-            )
+            (
+                current_start_idxs[i],
+                fdb_node_ranges[i],
+            ) = self.get_last_layer_before_leaf(lat_child, leaf_path, current_start_idx, fdb_range_nodes)
 
         leaf_path_copy = deepcopy(leaf_path)
         leaf_path_copy.pop("values", None)
@@ -339,7 +349,7 @@ class FDBDatacube(Datacube):
             key_value_path = {c.axis.name: c.values}
             leaf_path["index"] = c.indexes
             ax = c.axis
-            (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
+            key_value_path, leaf_path, self.unwanted_path = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
             # TODO: change this to accommodate non consecutive indexes being compressed too
@@ -367,9 +377,10 @@ class FDBDatacube(Datacube):
                     n.result.extend(result.values[i])
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
-        (new_fdb_node_ranges, new_current_start_idx) = self.remove_duplicates_in_request_ranges(
-            fdb_node_ranges, current_start_idx
-        )
+        (
+            new_fdb_node_ranges,
+            new_current_start_idx,
+        ) = self.remove_duplicates_in_request_ranges(fdb_node_ranges, current_start_idx)
         current_start_idx = new_current_start_idx
         fdb_node_ranges = new_fdb_node_ranges
         interm_request_ranges = []
@@ -386,7 +397,10 @@ class FDBDatacube(Datacube):
                 for interm_fdb_nodes_obj in interm_fdb_nodes[j]:
                     interm_fdb_nodes_obj.values = tuple([interm_fdb_nodes_obj.values[k] for k in original_indices_idx])
                 if abs(interm_start_idx[-1] + 1 - interm_start_idx[0]) <= len(interm_start_idx):
-                    current_request_ranges = (interm_start_idx[0], interm_start_idx[-1] + 1)
+                    current_request_ranges = (
+                        interm_start_idx[0],
+                        interm_start_idx[-1] + 1,
+                    )
                     interm_request_ranges.append(current_request_ranges)
                     new_fdb_node_ranges.append(interm_fdb_nodes[j])
                 else:
@@ -394,12 +408,18 @@ class FDBDatacube(Datacube):
                     last_idx = 0
                     for k, jump in enumerate(jumps):
                         if jump > 1:
-                            current_request_ranges = (interm_start_idx[last_idx], interm_start_idx[k] + 1)
+                            current_request_ranges = (
+                                interm_start_idx[last_idx],
+                                interm_start_idx[k] + 1,
+                            )
                             new_fdb_node_ranges.append(interm_fdb_nodes[j])
                             last_idx = k + 1
                             interm_request_ranges.append(current_request_ranges)
                         if k == len(interm_start_idx) - 2:
-                            current_request_ranges = (interm_start_idx[last_idx], interm_start_idx[-1] + 1)
+                            current_request_ranges = (
+                                interm_start_idx[last_idx],
+                                interm_start_idx[-1] + 1,
+                            )
                             interm_request_ranges.append(current_request_ranges)
                             new_fdb_node_ranges.append(interm_fdb_nodes[j])
         request_ranges_with_idx = list(enumerate(interm_request_ranges))
@@ -424,7 +444,7 @@ class FDBDatacube(Datacube):
             unwanted_path = {}
 
         ax = node.axis
-        (new_node, unwanted_path) = ax.unmap_tree_node(node, unwanted_path)
+        new_node, unwanted_path = ax.unmap_tree_node(node, unwanted_path)
 
         if len(node.children) != 0:
             for c in new_node.children:

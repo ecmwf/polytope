@@ -19,7 +19,14 @@ except (ModuleNotFoundError, ImportError):
 
 class NestedHealpixGridMapper(DatacubeMapper):
     def __init__(
-        self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None, mapper_options=None
+        self,
+        base_axis,
+        mapped_axes,
+        resolution,
+        md5_hash=None,
+        local_area=[],
+        axis_reversed=None,
+        mapper_options=None,
     ):
         # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
@@ -102,7 +109,9 @@ class NestedHealpixGridMapper(DatacubeMapper):
         Nj = self.HEALPix_nj(i)
         step = 360.0 / Nj
         start = np.where(
-            (i < self._resolution) | (3 * self._resolution - 1 < i) | ((i + self._resolution) % 2 == 1), step / 2.0, 0.0
+            (i < self._resolution) | (3 * self._resolution - 1 < i) | ((i + self._resolution) % 2 == 1),
+            step / 2.0,
+            0.0,
         )
         longitudes = start + np.arange(Nj) * step
         return longitudes
@@ -238,7 +247,13 @@ class NestedHealpixGridMapper(DatacubeMapper):
         ifp = 1 + ((phi_equatorial - 1 - ((1 - tmp + 2 * self.Nside) >> 1)) >> self.k)
         f_equatorial = np.where(ifp == ifm, ifp | 4, np.where(ifp < ifm, ifp, ifm + 8))
 
-        nested_equatorial = self.to_nest(f_equatorial, ring_equatorial, self.Nside, phi_equatorial, ring_equatorial & 1)
+        nested_equatorial = self.to_nest(
+            f_equatorial,
+            ring_equatorial,
+            self.Nside,
+            phi_equatorial,
+            ring_equatorial & 1,
+        )
         nested_result = np.empty_like(idx)  # Preallocate array for performance
         nested_result[north_mask] = nested_north[north_mask]
         nested_result[south_mask] = nested_south[south_mask]

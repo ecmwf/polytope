@@ -19,7 +19,10 @@ class HullSlicer(Engine):
         flattened_tuple = tuple()
         if len(datacube.coupled_axes) > 0:
             if path.get(datacube.coupled_axes[0][0], None) is not None:
-                flattened_tuple = (datacube.coupled_axes[0][0], path.get(datacube.coupled_axes[0][0], None))
+                flattened_tuple = (
+                    datacube.coupled_axes[0][0],
+                    path.get(datacube.coupled_axes[0][0], None),
+                )
                 path = {flattened_tuple[0]: flattened_tuple[1]}
 
         # TODO: Restructure this to add all compressed values at once in the tree
@@ -30,7 +33,7 @@ class HullSlicer(Engine):
 
             if datacube_has_index:
                 if i == 0:
-                    (child, next_nodes) = node.create_child(ax, lower, next_nodes)
+                    child, next_nodes = node.create_child(ax, lower, next_nodes)
                     child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
                     child["unsliced_polytopes"].remove(polytope)
                     next_nodes.append(child)
@@ -60,7 +63,10 @@ class HullSlicer(Engine):
         flattened_tuple = tuple()
         if len(datacube.coupled_axes) > 0:
             if flattened.get(datacube.coupled_axes[0][0], None) is not None:
-                flattened_tuple = (datacube.coupled_axes[0][0], flattened.get(datacube.coupled_axes[0][0], None))
+                flattened_tuple = (
+                    datacube.coupled_axes[0][0],
+                    flattened.get(datacube.coupled_axes[0][0], None),
+                )
                 flattened = {flattened_tuple[0]: flattened_tuple[1]}
 
         values = self.axis_values_between.get((flattened_tuple, ax.name, lower, upper, method), None)
@@ -88,7 +94,7 @@ class HullSlicer(Engine):
                 fvalue = ax.to_float(value)
                 new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
                 remapped_val = self.remap_values(ax, value)
-                (child, next_nodes) = node.create_child(ax, remapped_val, next_nodes)
+                child, next_nodes = node.create_child(ax, remapped_val, next_nodes)
                 child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
                 child["unsliced_polytopes"].remove(polytope)
                 if new_polytope is not None:
@@ -111,7 +117,15 @@ class HullSlicer(Engine):
                 # here, first check if the axis is an unsliceable axis and directly build node if it is
                 # NOTE: we should have already created the ax_is_unsliceable cache before
                 if api.ax_is_unsliceable[ax.name]:
-                    self._build_unsliceable_child(polytope, ax, node, datacube, [lower], next_nodes, slice_axis_idx)
+                    self._build_unsliceable_child(
+                        polytope,
+                        ax,
+                        node,
+                        datacube,
+                        [lower],
+                        next_nodes,
+                        slice_axis_idx,
+                    )
                 else:
                     values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
                     # NOTE: need to only remove the branches if the values are empty,
@@ -121,7 +135,16 @@ class HullSlicer(Engine):
                         # we have iterated all polytopes and we can now remove the node if we need to
                         if len(values) == 0 and len(node.children) == 0:
                             node.remove_branch()
-                    self._build_sliceable_child(polytope, ax, node, datacube, values, next_nodes, slice_axis_idx, api)
+                    self._build_sliceable_child(
+                        polytope,
+                        ax,
+                        node,
+                        datacube,
+                        values,
+                        next_nodes,
+                        slice_axis_idx,
+                        api,
+                    )
         else:
             all_values = []
             all_lowers = []
@@ -144,13 +167,26 @@ class HullSlicer(Engine):
                         all_values.extend(values)
             if api.ax_is_unsliceable[ax.name]:
                 self._build_unsliceable_child(
-                    first_polytope, ax, node, datacube, all_lowers, next_nodes, first_slice_axis_idx
+                    first_polytope,
+                    ax,
+                    node,
+                    datacube,
+                    all_lowers,
+                    next_nodes,
+                    first_slice_axis_idx,
                 )
             else:
                 if len(all_values) == 0:
                     node.remove_branch()
                 self._build_sliceable_child(
-                    first_polytope, ax, node, datacube, all_values, next_nodes, first_slice_axis_idx, api
+                    first_polytope,
+                    ax,
+                    node,
+                    datacube,
+                    all_values,
+                    next_nodes,
+                    first_slice_axis_idx,
+                    api,
                 )
 
         del node["unsliced_polytopes"]
