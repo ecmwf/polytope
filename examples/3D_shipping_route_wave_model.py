@@ -18,7 +18,11 @@ class TestReducedLatLonGrid:
         self.options = {
             "values": {
                 "transformation": {
-                    "mapper": {"type": "reduced_ll", "resolution": 1441, "axes": ["latitude", "longitude"]}
+                    "mapper": {
+                        "type": "reduced_ll",
+                        "resolution": 1441,
+                        "axes": ["latitude", "longitude"],
+                    }
                 }
             },
             "date": {"transformation": {"merge": {"with": "time", "linkers": ["T", "00"]}}},

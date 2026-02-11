@@ -63,15 +63,25 @@ class Test:
     def test_scalability_2D_v3(self):
         union = Box(["latitude", "longitude"], [0 - 50, 0], [15 - 50, 36])
         for i in range(9):
-            box = Box(["latitude", "longitude"], [15 * (i + 1) - 50, 0], [15 * (i + 2) - 50, 36])
+            box = Box(
+                ["latitude", "longitude"],
+                [15 * (i + 1) - 50, 0],
+                [15 * (i + 2) - 50, 36],
+            )
             union = Union(["latitude", "longitude"], union, box)
         for j in range(9):
-            box = Box(["latitude", "longitude"], [0 - 50, 36 * (j + 1)], [15 - 50, 36 * (j + 2)])
+            box = Box(
+                ["latitude", "longitude"],
+                [0 - 50, 36 * (j + 1)],
+                [15 - 50, 36 * (j + 2)],
+            )
             union = Union(["latitude", "longitude"], union, box)
         for i in range(9):
             for j in range(9):
                 box = Box(
-                    ["latitude", "longitude"], [15 * (i + 1) - 50, 36 * (j + 1)], [15 * (i + 2) - 50, 36 * (j + 2)]
+                    ["latitude", "longitude"],
+                    [15 * (i + 1) - 50, 36 * (j + 1)],
+                    [15 * (i + 2) - 50, 36 * (j + 2)],
                 )
                 union = Union(["latitude", "longitude"], union, box)
         time_start = time.time()

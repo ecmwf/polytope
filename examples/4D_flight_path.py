@@ -80,9 +80,17 @@ class Test:
         route_point_CDG_LHR = route_point_CDG_LHR[::-1]
         padded_point_upper = [0.23, 0.23, np.timedelta64(1850, "s"), 1.0]
         padded_point_lower = [-0.23, -0.23, np.timedelta64(-1850, "s"), 1.0]
-        initial_shape = Box(["latitude", "longitude", "step", "hybrid"], padded_point_lower, padded_point_upper)
+        initial_shape = Box(
+            ["latitude", "longitude", "step", "hybrid"],
+            padded_point_lower,
+            padded_point_upper,
+        )
 
-        flight_route_polytope = Path(["latitude", "longitude", "step", "hybrid"], initial_shape, *route_point_CDG_LHR)
+        flight_route_polytope = Path(
+            ["latitude", "longitude", "step", "hybrid"],
+            initial_shape,
+            *route_point_CDG_LHR,
+        )
 
         request = Request(flight_route_polytope, Select("time", ["2022-12-02T12:00:00"]))
         result = self.API.retrieve(request)
@@ -121,7 +129,11 @@ class Test:
 
         # Plot it using plotly in 3D shape
         flight_path = go.Scatter3d(
-            x=x, y=y, z=z, mode="markers", marker=dict(size=1.5, color=parameter_values, colorscale="YlOrRd")
+            x=x,
+            y=y,
+            z=z,
+            mode="markers",
+            marker=dict(size=1.5, color=parameter_values, colorscale="YlOrRd"),
         )
 
         data.append(flight_path)

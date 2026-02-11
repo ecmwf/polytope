@@ -14,7 +14,11 @@ class TestSlicingFDBDatacube:
         self.options = {
             "values": {
                 "transformation": {
-                    "mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                    "mapper": {
+                        "type": "octahedral",
+                        "resolution": 1280,
+                        "axes": ["latitude", "longitude"],
+                    }
                 }
             },
             "date": {"transformation": {"merge": {"with": "time", "linkers": [" ", "00"]}}},

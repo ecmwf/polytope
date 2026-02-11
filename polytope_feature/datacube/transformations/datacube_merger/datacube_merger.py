@@ -37,8 +37,10 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         merged_values = pd.to_datetime(combined_strings).to_numpy().astype("datetime64[s]")
         merged_values = np.array(merged_values)
         merged_values.sort()
-        logging.info(f"Merged values {first_ax_vals} on axis {self.name} and \
-                     values {second_ax_vals} on axis {second_ax_name} to values {merged_values}")
+        logging.info(
+            f"Merged values {first_ax_vals} on axis {self.name} and \
+                     values {second_ax_vals} on axis {second_ax_name} to values {merged_values}"
+        )
         return merged_values
 
     def transformation_axes_final(self):
@@ -61,8 +63,10 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
             # TODO: maybe replacing like this is too specific to time/dates?
             first_val = str(first_val).replace("-", "")
             second_val = second_val.replace(":", "")
-            logging.info(f"Unmerged value {merged_val} to values {first_val} on axis {self.name} \
-                        and {second_val} on axis {self._second_axis}")
+            logging.info(
+                f"Unmerged value {merged_val} to values {first_val} on axis {self.name} \
+                        and {second_val} on axis {self._second_axis}"
+            )
             first_values.append(first_val)
             second_values.append(second_val)
         return (tuple(first_values), tuple(second_values))

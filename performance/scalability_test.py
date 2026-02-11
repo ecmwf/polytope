@@ -88,7 +88,9 @@ class Test:
         time_start = time.time()
         print(time_start)
         box = Box(
-            ["latitude", "longitude", "step"], [0, 0, np.timedelta64(0, "s")], [50, 360, np.timedelta64(3600, "s")]
+            ["latitude", "longitude", "step"],
+            [0, 0, np.timedelta64(0, "s")],
+            [50, 360, np.timedelta64(3600, "s")],
         )
         request = Request(box, Select("hybrid", [1]))
         result = self.API.retrieve(request)
@@ -99,7 +101,9 @@ class Test:
         time_start = time.time()
         print(time_start)
         box = Box(
-            ["latitude", "longitude", "step"], [0, 0, np.timedelta64(0, "s")], [90, 360, np.timedelta64(3600, "s")]
+            ["latitude", "longitude", "step"],
+            [0, 0, np.timedelta64(0, "s")],
+            [90, 360, np.timedelta64(3600, "s")],
         )
         request = Request(box, Select("hybrid", [1]))
         result = self.API.retrieve(request)
@@ -110,7 +114,9 @@ class Test:
         time_start = time.time()
         print(time_start)
         box = Box(
-            ["latitude", "longitude", "step"], [0, 0, np.timedelta64(0, "s")], [100, 360, np.timedelta64(3600, "s")]
+            ["latitude", "longitude", "step"],
+            [0, 0, np.timedelta64(0, "s")],
+            [100, 360, np.timedelta64(3600, "s")],
         )
         request = Request(box, Select("hybrid", [1]))
         result = self.API.retrieve(request)
@@ -121,7 +127,9 @@ class Test:
         time_start = time.time()
         print(time_start)
         box = Box(
-            ["latitude", "longitude", "step"], [0, 0, np.timedelta64(0, "s")], [50, 180, np.timedelta64(3600, "s")]
+            ["latitude", "longitude", "step"],
+            [0, 0, np.timedelta64(0, "s")],
+            [50, 180, np.timedelta64(3600, "s")],
         )
         request = Request(box, Select("hybrid", [1]))
         result = self.API.retrieve(request)
@@ -162,7 +170,9 @@ class Test:
         time_start = time.time()
         print(time_start)
         box = Ellipsoid(
-            ["latitude", "longitude", "step"], [0, 0, np.timedelta64(0, "s")], [25, 180, np.timedelta64(3600, "s")]
+            ["latitude", "longitude", "step"],
+            [0, 0, np.timedelta64(0, "s")],
+            [25, 180, np.timedelta64(3600, "s")],
         )
         request = Request(box, Select("hybrid", [1]))
         result = self.API.retrieve(request)
@@ -173,7 +183,9 @@ class Test:
         time_start = time.time()
         print(time_start)
         box = Box(
-            ["latitude", "longitude", "step"], [-50, 0, np.timedelta64(0, "s")], [90, 360, np.timedelta64(3600, "s")]
+            ["latitude", "longitude", "step"],
+            [-50, 0, np.timedelta64(0, "s")],
+            [90, 360, np.timedelta64(3600, "s")],
         )
         request = Request(box, Select("hybrid", [1]))
         result = self.API.retrieve(request)
@@ -184,7 +196,9 @@ class Test:
         time_start = time.time()
         print(time_start)
         box = Box(
-            ["latitude", "longitude", "step"], [-50, -180, np.timedelta64(0, "s")], [90, 360, np.timedelta64(3600, "s")]
+            ["latitude", "longitude", "step"],
+            [-50, -180, np.timedelta64(0, "s")],
+            [90, 360, np.timedelta64(3600, "s")],
         )
         request = Request(box, Select("hybrid", [1]))
         result = self.API.retrieve(request)

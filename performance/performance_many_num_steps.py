@@ -11,7 +11,13 @@ from polytope_feature.shapes import All, Point, Select, Span
 time1 = time.time()
 # Create a dataarray with 3 labelled axes using different index types
 options = {
-    "values": {"mapper": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}},
+    "values": {
+        "mapper": {
+            "type": "octahedral",
+            "resolution": 1280,
+            "axes": ["latitude", "longitude"],
+        }
+    },
     "longitude": {"cyclic": [0, 360]},
     "latitude": {"reverse": {True}},
 }
