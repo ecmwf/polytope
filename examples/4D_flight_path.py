@@ -21,7 +21,9 @@ class Test:
             array = array.sortby(dim)
         self.array = array
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=axis_options)
+        self.API = Polytope(
+            datacube=array, engine=self.slicer, axis_options=axis_options
+        )
 
     def test_slice_shipping_route(self):
         colorscale = [
@@ -54,7 +56,9 @@ class Test:
         texture = np.asarray(Image.open("./examples/data/earth_image.jpg")).T
         radius = 1
         x, y, z = sphere(radius, texture)
-        surf = go.Surface(x=x, y=y, z=z, surfacecolor=texture, colorscale=colorscale, hoverinfo="none")
+        surf = go.Surface(
+            x=x, y=y, z=z, surfacecolor=texture, colorscale=colorscale, hoverinfo="none"
+        )
         layout = go.Layout(scene=dict(aspectratio=dict(x=1, y=1, z=1)), spikedistance=0)
         fig = go.Figure(data=[surf], layout=layout)
         fig.update_layout(scene=dict(xaxis_showspikes=False, yaxis_showspikes=False))
@@ -80,11 +84,21 @@ class Test:
         route_point_CDG_LHR = route_point_CDG_LHR[::-1]
         padded_point_upper = [0.23, 0.23, np.timedelta64(1850, "s"), 1.0]
         padded_point_lower = [-0.23, -0.23, np.timedelta64(-1850, "s"), 1.0]
-        initial_shape = Box(["latitude", "longitude", "step", "hybrid"], padded_point_lower, padded_point_upper)
+        initial_shape = Box(
+            ["latitude", "longitude", "step", "hybrid"],
+            padded_point_lower,
+            padded_point_upper,
+        )
 
-        flight_route_polytope = Path(["latitude", "longitude", "step", "hybrid"], initial_shape, *route_point_CDG_LHR)
+        flight_route_polytope = Path(
+            ["latitude", "longitude", "step", "hybrid"],
+            initial_shape,
+            *route_point_CDG_LHR,
+        )
 
-        request = Request(flight_route_polytope, Select("time", ["2022-12-02T12:00:00"]))
+        request = Request(
+            flight_route_polytope, Select("time", ["2022-12-02T12:00:00"])
+        )
         result = self.API.retrieve(request)
 
         lats = []
@@ -114,14 +128,20 @@ class Test:
         for i in range(len(lats)):
             x1 = radius * np.cos(longs[i]) * np.cos(lats[i])
             y1 = radius * np.sin(longs[i]) * np.cos(lats[i])
-            z1 = radius * np.sin(lats[i]) + alts[i] / 300  # the 300 here should really be the earth of the radius
+            z1 = (
+                radius * np.sin(lats[i]) + alts[i] / 300
+            )  # the 300 here should really be the earth of the radius
             x.append(x1)
             y.append(y1)
             z.append(z1)
 
         # Plot it using plotly in 3D shape
         flight_path = go.Scatter3d(
-            x=x, y=y, z=z, mode="markers", marker=dict(size=1.5, color=parameter_values, colorscale="YlOrRd")
+            x=x,
+            y=y,
+            z=z,
+            mode="markers",
+            marker=dict(size=1.5, color=parameter_values, colorscale="YlOrRd"),
         )
 
         data.append(flight_path)
@@ -137,9 +157,15 @@ class Test:
                 landcolor="rgb(230, 145, 56)",
                 lakecolor="rgb(0, 255, 255)",
                 oceancolor="rgb(0, 255, 255)",
-                projection=dict(type="orthographic", rotation=dict(lon=-100, lat=40, roll=0)),
-                lonaxis=dict(showgrid=True, gridcolor="rgb(102, 102, 102)", gridwidth=0.5),
-                lataxis=dict(showgrid=True, gridcolor="rgb(102, 102, 102)", gridwidth=0.5),
+                projection=dict(
+                    type="orthographic", rotation=dict(lon=-100, lat=40, roll=0)
+                ),
+                lonaxis=dict(
+                    showgrid=True, gridcolor="rgb(102, 102, 102)", gridwidth=0.5
+                ),
+                lataxis=dict(
+                    showgrid=True, gridcolor="rgb(102, 102, 102)", gridwidth=0.5
+                ),
             ),
         )
 

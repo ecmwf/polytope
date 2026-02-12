@@ -1,16 +1,19 @@
+default_language_version:
+  python: python3.10
+
 repos:
   - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
+    rev: 7.0.0
     hooks:
       - id: isort
         name: isort (python)
 
   - repo: https://github.com/psf/black
-    rev: 24.8.0 # Use the latest version of black
+    rev: 26.1.0 # Use the latest version of black
     hooks:
       - id: black
 
   - repo: https://github.com/pycqa/flake8
-    rev: 7.1.1 # Use the latest version of flake8
+    rev: 7.3.0 # Use the latest version of flake8
     hooks:
       - id: flake8

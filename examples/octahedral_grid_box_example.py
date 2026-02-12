@@ -45,7 +45,15 @@ latlon_xarray_datacube = XArrayDatacube(latlon_array)
 
 slicer = HullSlicer()
 
-grid_options = {"values": {"grid_map": {"type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}}}
+grid_options = {
+    "values": {
+        "grid_map": {
+            "type": "octahedral",
+            "resolution": 1280,
+            "axes": ["latitude", "longitude"],
+        }
+    }
+}
 
 API = Polytope(datacube=latlon_array, engine=slicer, axis_options=grid_options)
 

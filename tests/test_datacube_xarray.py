@@ -21,7 +21,10 @@ class TestXarrayDatacube:
 
     def test_validate(self):
         dims = np.random.randn(1, 1, 1)
-        array = xr.Dataset(data_vars=dict(param=(["x", "y", "z"], dims)), coords={"x": [1], "y": [1], "z": [1]})
+        array = xr.Dataset(
+            data_vars=dict(param=(["x", "y", "z"], dims)),
+            coords={"x": [1], "y": [1], "z": [1]},
+        )
         array = array.to_array()
 
         datacube = Datacube.create(datacube=array, axis_options={})
@@ -73,14 +76,27 @@ class TestXarrayDatacube:
         # Check discretizing along 'date' axis with a range of dates
         label = PandasTimestampDatacubeAxis()
         label.name = "date"
-        idxs = datacube.get_indices(partial_request, label, pd.Timestamp("2000-01-02"), pd.Timestamp("2000-03-31"))
-        assert (idxs == pd.date_range(pd.Timestamp("2000-01-02"), pd.Timestamp("2000-01-03"), 2)).all()
+        idxs = datacube.get_indices(
+            partial_request,
+            label,
+            pd.Timestamp("2000-01-02"),
+            pd.Timestamp("2000-03-31"),
+        )
+        assert (
+            idxs
+            == pd.date_range(pd.Timestamp("2000-01-02"), pd.Timestamp("2000-01-03"), 2)
+        ).all()
         assert isinstance(idxs[0], pd.Timestamp)
 
         # Check discretizing along 'date' axis at a specific date gives one value
         label = PandasTimestampDatacubeAxis()
         label.name = "date"
-        idxs = datacube.get_indices(partial_request, label, pd.Timestamp("2000-01-02"), pd.Timestamp("2000-01-02"))
+        idxs = datacube.get_indices(
+            partial_request,
+            label,
+            pd.Timestamp("2000-01-02"),
+            pd.Timestamp("2000-01-02"),
+        )
         assert len(idxs) == 1
         assert isinstance(idxs[0], pd.Timestamp)
         assert idxs[0] == pd.Timestamp(pd.Timestamp("2000-01-02"))
@@ -89,12 +105,17 @@ class TestXarrayDatacube:
         label = PandasTimestampDatacubeAxis()
         label.name = "date"
         idxs = datacube.get_indices(
-            partial_request, label, pd.Timestamp("2000-01-01-1200"), pd.Timestamp("2000-01-01-1200")
+            partial_request,
+            label,
+            pd.Timestamp("2000-01-01-1200"),
+            pd.Timestamp("2000-01-01-1200"),
         )
         assert len(idxs) == 0
 
         # Tests on "step" axis, path is a sub-datacube at a specific date
-        partial_request["date"] = (datetime.datetime.strptime("2000-01-01", "%Y-%m-%d"),)
+        partial_request["date"] = (
+            datetime.datetime.strptime("2000-01-01", "%Y-%m-%d"),
+        )
 
         # Check parsing a step correctly converts type to int
         assert type(datacube.get_mapper("step").parse(3)) == float
@@ -107,7 +128,9 @@ class TestXarrayDatacube:
         assert idxs == [0, 3, 6, 9]
         assert isinstance(idxs[0], int)
 
-        partial_request["date"] = (datetime.datetime.strptime("2000-01-01", "%Y-%m-%d"),)
+        partial_request["date"] = (
+            datetime.datetime.strptime("2000-01-01", "%Y-%m-%d"),
+        )
 
         # Check discretizing along 'step' axis at a specific step gives one value
         idxs = datacube.get_indices(partial_request, label, 3, 3)
@@ -115,14 +138,18 @@ class TestXarrayDatacube:
         assert idxs[0] == 3
         assert isinstance(idxs[0], int)
 
-        partial_request["date"] = (datetime.datetime.strptime("2000-01-01", "%Y-%m-%d"),)
+        partial_request["date"] = (
+            datetime.datetime.strptime("2000-01-01", "%Y-%m-%d"),
+        )
 
         # Check discretizing along 'step' axis at a step which does not exist in discrete space gives no values
         idxs = datacube.get_indices(partial_request, label, 4, 4)
         assert len(idxs) == 0
 
         # Tests on "level" axis, path is a sub-datacube at a specific date/step
-        partial_request["date"] = (datetime.datetime.strptime("2000-01-01", "%Y-%m-%d"),)
+        partial_request["date"] = (
+            datetime.datetime.strptime("2000-01-01", "%Y-%m-%d"),
+        )
         partial_request["step"] = (3,)
 
         # Check parsing a level correctly converts type to int

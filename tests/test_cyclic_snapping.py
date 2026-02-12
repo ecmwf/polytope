@@ -17,7 +17,12 @@ class TestSlicing3DXarrayDatacube:
         )
 
         options = {
-            "axis_config": [{"axis_name": "long", "transformations": [{"name": "cyclic", "range": [0, 1.0]}]}],
+            "axis_config": [
+                {
+                    "axis_name": "long",
+                    "transformations": [{"name": "cyclic", "range": [0, 1.0]}],
+                }
+            ],
             "compressed_axes_config": ["long"],
         }
         self.slicer = HullSlicer()

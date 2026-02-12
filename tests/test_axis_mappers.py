@@ -41,7 +41,10 @@ class TestAxisMappers:
 
         options = {
             "axis_config": [
-                {"axis_name": "long", "transformations": [{"name": "cyclic", "range": [0, 1.0]}]},
+                {
+                    "axis_name": "long",
+                    "transformations": [{"name": "cyclic", "range": [0, 1.0]}],
+                },
             ],
         }
         transformation = PolytopeOptions.get_polytope_options(options)[0][0]
@@ -49,11 +52,18 @@ class TestAxisMappers:
         transformation = DatacubeAxisCyclic("", transformation_option)
         # Test the to_intervals function
         transformation.range = [1, 3]
-        assert transformation.to_intervals([4, 7], [[]], axis) == [[4, 5], [5, 7], [7, 7]]
+        assert transformation.to_intervals([4, 7], [[]], axis) == [
+            [4, 5],
+            [5, 7],
+            [7, 7],
+        ]
         # Test the cyclic_remap function
 
         transformation.range = [0, 1]
-        assert transformation.remap([0, 2], [[]], axis) == [[-1e-12, 1.000000000001], [-1e-12, 1.000000000001]]
+        assert transformation.remap([0, 2], [[]], axis) == [
+            [-1e-12, 1.000000000001],
+            [-1e-12, 1.000000000001],
+        ]
 
         transformation.range = [1, 2]
         assert transformation.remap([1, 3], [[]], axis) == [
@@ -91,7 +101,10 @@ class TestAxisMappers:
             [0.999999999999, 3.000000000001],
         ]
         remapped = transformation.remap([-1, 2], [[]], axis)
-        assert remapped == [[0.999999999999, 3.000000000001], [0.999999999999, 2.000000000001]]
+        assert remapped == [
+            [0.999999999999, 3.000000000001],
+            [0.999999999999, 2.000000000001],
+        ]
 
         # Test the cyclic_offset function
         assert transformation.offset([3.05, 3.1], axis, 0) == 2
@@ -107,7 +120,9 @@ class TestAxisMappers:
         assert axis.to_float(time1) == 86400.0
         assert axis.from_float(3600) == pd.Timedelta("0 days 01:00:00")
         assert axis.serialize(time1) == "1 days 00:00:00"
-        assert axis.remap([time1, time2]) == [[pd.Timedelta("1 days 00:00:00"), pd.Timedelta("1 days 02:00:00")]]
+        assert axis.remap([time1, time2]) == [
+            [pd.Timedelta("1 days 00:00:00"), pd.Timedelta("1 days 02:00:00")]
+        ]
 
     def test_timestamp_axis(self):
         axis = PandasTimestampDatacubeAxis()

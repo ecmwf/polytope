@@ -20,7 +20,9 @@ class TestEngineSlicer:
 
     def test_3D_box(self):
         datacube = MockDatacube({"x": 100, "y": 100, "z": 100})
-        polytopes = Box(["x", "y", "z"], lower_corner=[3, 3, 3], upper_corner=[6, 6, 6]).polytope()
+        polytopes = Box(
+            ["x", "y", "z"], lower_corner=[3, 3, 3], upper_corner=[6, 6, 6]
+        ).polytope()
         API = Polytope(datacube=datacube, options={})
         result = API.slice(datacube, polytopes)
         assert len(result.leaves) == 4 * 4
@@ -31,7 +33,9 @@ class TestEngineSlicer:
 
     def test_4D_box(self):
         datacube = MockDatacube({"x": 100, "y": 100, "z": 100, "q": 100})
-        polytopes = Box(["x", "y", "z", "q"], lower_corner=[3, 3, 3, 3], upper_corner=[6, 6, 6, 6]).polytope()
+        polytopes = Box(
+            ["x", "y", "z", "q"], lower_corner=[3, 3, 3, 3], upper_corner=[6, 6, 6, 6]
+        ).polytope()
         API = Polytope(datacube=datacube, options={})
         result = API.slice(datacube, polytopes)
         assert len(result.leaves) == 4 * 4 * 4
@@ -59,7 +63,9 @@ class TestEngineSlicer:
 
     def test_2D_box_get_function(self):
         datacube = MockDatacube({"x": 100, "y": 100})
-        polytopes = Box(["x", "y"], lower_corner=[2, -2], upper_corner=[4, -1]).polytope()
+        polytopes = Box(
+            ["x", "y"], lower_corner=[2, -2], upper_corner=[4, -1]
+        ).polytope()
         API = Polytope(datacube=datacube, options={})
         result = API.slice(datacube, polytopes)
         datacube.get(result)
@@ -67,7 +73,9 @@ class TestEngineSlicer:
 
     def test_3D_box_get_function(self):
         datacube = MockDatacube({"x": 100, "y": 100, "z": 100})
-        polytopes = Box(["x", "y", "z"], lower_corner=[3, 2, -2], upper_corner=[6, 2, -1]).polytope()
+        polytopes = Box(
+            ["x", "y", "z"], lower_corner=[3, 2, -2], upper_corner=[6, 2, -1]
+        ).polytope()
         API = Polytope(datacube=datacube, options={})
         result = API.slice(datacube, polytopes)
         datacube.get(result)
@@ -75,7 +83,9 @@ class TestEngineSlicer:
 
     def test_3D_box_get_function2(self):
         datacube = MockDatacube({"x": 100, "y": 100, "z": 100})
-        polytopes = Box(["x", "y", "z"], lower_corner=[3, 2, 1], upper_corner=[6, 2, 1]).polytope()
+        polytopes = Box(
+            ["x", "y", "z"], lower_corner=[3, 2, 1], upper_corner=[6, 2, 1]
+        ).polytope()
         API = Polytope(datacube=datacube, options={})
         result = API.slice(datacube, polytopes)
         datacube.get(result)

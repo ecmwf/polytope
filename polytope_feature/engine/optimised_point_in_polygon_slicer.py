@@ -46,7 +46,7 @@ class OptimisedPointInPolygonSlicer(Engine):
             values_axis.name = "values"
             result = point.item
             # TODO: make finding the axes objects nicer?
-            (child, _) = request.create_child(values_axis, idx, [])
+            child, _ = request.create_child(values_axis, idx, [])
             child.result = result
 
         return request
@@ -89,7 +89,9 @@ class OptimisedPointInPolygonSlicer(Engine):
 
                 # NOTE: here, we only have sliceable children, since the unsliceable children are handled by the
                 # hullslicer engine? IS THIS TRUE?
-                self._build_sliceable_child(polytope, ax, node, datacube, next_nodes, api)
+                self._build_sliceable_child(
+                    polytope, ax, node, datacube, next_nodes, api
+                )
                 # TODO: what does this function actually return and what should it return?
                 # It just modifies the next_nodes?
         del node["unsliced_polytopes"]
@@ -110,8 +112,8 @@ class OptimisedPointInPolygonSlicer(Engine):
             lon_val = point[1]
 
             # store the native type
-            (child, _) = node.create_child(lat_ax, lat_val, [])
-            (grand_child, _) = child.create_child(lon_ax, lon_val, [])
+            child, _ = node.create_child(lat_ax, lat_val, [])
+            grand_child, _ = child.create_child(lon_ax, lon_val, [])
             # NOTE: the index of the point is stashed in the branches' result
             grand_child.indexes = [value]
             grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])

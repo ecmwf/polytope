@@ -29,11 +29,16 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         second_ax_name = self._second_axis
         second_ax_vals = np.array(datacube.ax_vals(second_ax_name))
         linkers = self._linkers
-        first_grid, second_grid = np.meshgrid(first_ax_vals, second_ax_vals, indexing="ij")
-        combined_strings = np.char.add(
-            np.char.add(first_grid.ravel(), linkers[0]), np.char.add(second_grid.ravel(), linkers[1])
+        first_grid, second_grid = np.meshgrid(
+            first_ax_vals, second_ax_vals, indexing="ij"
         )
-        merged_values = pd.to_datetime(combined_strings).to_numpy().astype("datetime64[s]")
+        combined_strings = np.char.add(
+            np.char.add(first_grid.ravel(), linkers[0]),
+            np.char.add(second_grid.ravel(), linkers[1]),
+        )
+        merged_values = (
+            pd.to_datetime(combined_strings).to_numpy().astype("datetime64[s]")
+        )
         merged_values = np.array(merged_values)
         merged_values.sort()
         logging.info(
@@ -82,14 +87,14 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         new_key_value_path = {}
         value = key_value_path[axis.name]
         if axis.name == self._first_axis:
-            (first_val, second_val) = self.unmerge(value)
+            first_val, second_val = self.unmerge(value)
             new_key_value_path[self._first_axis] = first_val
             new_key_value_path[self._second_axis] = second_val
         return (new_key_value_path, leaf_path, unwanted_path)
 
     def unmap_tree_node(self, node, unwanted_path):
         if node.axis.name == self._first_axis:
-            (new_first_vals, new_second_vals) = self.unmerge(node.values)
+            new_first_vals, new_second_vals = self.unmerge(node.values)
             node.values = new_first_vals
             interm_node = node.add_node_layer_after(self._second_axis, new_second_vals)
         return (interm_node, unwanted_path)

@@ -105,7 +105,9 @@ class Polytope:
             engines["point_in_polygon"] = PointInPolygonSlicer(points)
         if "optimised_point_in_polygon" in engine_types:
             points = self.datacube.find_point_cloud()
-            engines["optimised_point_in_polygon"] = OptimisedPointInPolygonSlicer(points)
+            engines["optimised_point_in_polygon"] = OptimisedPointInPolygonSlicer(
+                points
+            )
         return engines
 
     def _unique_continuous_points(self, p: ConvexPolytope, datacube: Datacube):
@@ -199,15 +201,29 @@ class Polytope:
             method = polytope.method
             if method == "nearest":
                 if polytope.is_flat:
-                    if self.datacube.nearest_search.get(tuple(polytope.axes()), None) is None:
-                        self.datacube.nearest_search[tuple(polytope.axes())] = polytope.values
+                    if (
+                        self.datacube.nearest_search.get(tuple(polytope.axes()), None)
+                        is None
+                    ):
+                        self.datacube.nearest_search[tuple(polytope.axes())] = (
+                            polytope.values
+                        )
                     else:
-                        self.datacube.nearest_search[tuple(polytope.axes())].append(polytope.values[0])
+                        self.datacube.nearest_search[tuple(polytope.axes())].append(
+                            polytope.values[0]
+                        )
                 else:
-                    if self.datacube.nearest_search.get(tuple(polytope.axes()), None) is None:
-                        self.datacube.nearest_search[tuple(polytope.axes())] = polytope.points
+                    if (
+                        self.datacube.nearest_search.get(tuple(polytope.axes()), None)
+                        is None
+                    ):
+                        self.datacube.nearest_search[tuple(polytope.axes())] = (
+                            polytope.points
+                        )
                     else:
-                        self.datacube.nearest_search[tuple(polytope.axes())].append(polytope.points[0])
+                        self.datacube.nearest_search[tuple(polytope.axes())].append(
+                            polytope.points[0]
+                        )
         request_tree = self.slice(self.datacube, request.polytopes())
         logging.info("Created request tree for %s ", self.context)
         self.datacube.get(request_tree, self.context)

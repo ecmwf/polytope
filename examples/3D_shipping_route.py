@@ -39,8 +39,13 @@ class Test:
                 lines.append(point_list)
 
         speed_km_hr = 100
-        initial_distance = math.sqrt(lines[0][0] ** 2 + lines[0][1] ** 2)  # This is technically only the degrees...
-        time_hours = [(math.sqrt(pt[0] ** 2 + pt[1] ** 2) - initial_distance) / speed_km_hr for pt in lines]
+        initial_distance = math.sqrt(
+            lines[0][0] ** 2 + lines[0][1] ** 2
+        )  # This is technically only the degrees...
+        time_hours = [
+            (math.sqrt(pt[0] ** 2 + pt[1] ** 2) - initial_distance) / speed_km_hr
+            for pt in lines
+        ]
         step_list_seconds = np.array(time_hours)
         step_list_seconds = step_list_seconds * 3600 * 1000 * 1000 * 1000
         step_list_seconds = [int(a) for a in step_list_seconds]
@@ -50,19 +55,28 @@ class Test:
 
         new_points = []
         for point, step in zip(lines[:7], step_list):
-            new_points.append([point[1], point[0], step + np.timedelta64(3600000000000, "ns")])
+            new_points.append(
+                [point[1], point[0], step + np.timedelta64(3600000000000, "ns")]
+            )
 
         # Pad the shipping route with an initial shape
 
         padded_point_upper = [0.24, 0.24, np.timedelta64(3590, "s")]
         padded_point_lower = [-0.24, -0.24, np.timedelta64(-3590, "s")]
-        initial_shape = Ellipsoid(["latitude", "longitude", "step"], padded_point_lower, padded_point_upper)
+        initial_shape = Ellipsoid(
+            ["latitude", "longitude", "step"], padded_point_lower, padded_point_upper
+        )
 
         # Then somehow make this list of points into just a sequence of points
 
-        ship_route_polytope = Path(["latitude", "longitude", "step"], initial_shape, *new_points)
+        ship_route_polytope = Path(
+            ["latitude", "longitude", "step"], initial_shape, *new_points
+        )
         request = Request(
-            ship_route_polytope, Select("number", [0]), Select("surface", [0]), Select("time", ["2022-09-30T12:00:00"])
+            ship_route_polytope,
+            Select("number", [0]),
+            Select("surface", [0]),
+            Select("time", ["2022-09-30T12:00:00"]),
         )
         result = self.API.retrieve(request)
 
@@ -87,7 +101,9 @@ class Test:
         fig, ax = plt.subplots(figsize=(12, 6))
         worldmap.plot(color="darkgrey", ax=ax)
         ax.scatter(longs, lats, s=8, c=parameter_values, cmap="viridis")
-        norm = mpl.colors.Normalize(vmin=min(parameter_values), vmax=max(parameter_values))
+        norm = mpl.colors.Normalize(
+            vmin=min(parameter_values), vmax=max(parameter_values)
+        )
 
         sm = plt.cm.ScalarMappable(cmap="viridis", norm=norm)
         sm.set_array([])

@@ -6,7 +6,14 @@ from ..datacube_mappers import DatacubeMapper
 
 class HealpixGridMapper(DatacubeMapper):
     def __init__(
-        self, base_axis, mapped_axes, resolution, md5_hash=None, local_area=[], axis_reversed=None, mapper_options=None
+        self,
+        base_axis,
+        mapped_axes,
+        resolution,
+        md5_hash=None,
+        local_area=[],
+        axis_reversed=None,
+        mapper_options=None,
     ):
         # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
@@ -21,12 +28,18 @@ class HealpixGridMapper(DatacubeMapper):
         else:
             self.md5_hash = _md5_hash.get(resolution, None)
         if self._axis_reversed[mapped_axes[1]]:
-            raise NotImplementedError("Healpix grid with second axis in decreasing order is not supported")
+            raise NotImplementedError(
+                "Healpix grid with second axis in decreasing order is not supported"
+            )
         if not self._axis_reversed[mapped_axes[0]]:
-            raise NotImplementedError("Healpix grid with first axis in increasing order is not supported")
+            raise NotImplementedError(
+                "Healpix grid with first axis in increasing order is not supported"
+            )
 
         if local_area != []:
-            raise NotImplementedError("Local area grid not implemented for healpix grids")
+            raise NotImplementedError(
+                "Local area grid not implemented for healpix grids"
+            )
 
     def first_axis_vals(self):
         rad2deg = 180 / math.pi
@@ -34,12 +47,18 @@ class HealpixGridMapper(DatacubeMapper):
 
         # Polar caps
         for i in range(1, self._resolution):
-            val = 90 - (rad2deg * math.acos(1 - (i * i / (3 * self._resolution * self._resolution))))
+            val = 90 - (
+                rad2deg
+                * math.acos(1 - (i * i / (3 * self._resolution * self._resolution)))
+            )
             vals[i - 1] = val
             vals[4 * self._resolution - 1 - i] = -val
         # Equatorial belts
         for i in range(self._resolution, 2 * self._resolution):
-            val = 90 - (rad2deg * math.acos((4 * self._resolution - 2 * i) / (3 * self._resolution)))
+            val = 90 - (
+                rad2deg
+                * math.acos((4 * self._resolution - 2 * i) / (3 * self._resolution))
+            )
             vals[i - 1] = val
             vals[4 * self._resolution - 1 - i] = -val
         # Equator
@@ -53,7 +72,11 @@ class HealpixGridMapper(DatacubeMapper):
 
     def second_axis_vals(self, first_val):
         tol = 1e-8
-        first_val = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
+        first_val = [
+            i
+            for i in self._first_axis_vals
+            if first_val[0] - tol <= i <= first_val[0] + tol
+        ][0]
         idx = self._first_axis_vals.index(first_val)
 
         values = self.HEALPix_longitudes(idx)
@@ -79,7 +102,11 @@ class HealpixGridMapper(DatacubeMapper):
         Nj = self.HEALPix_nj(i)
         step = 360.0 / Nj
         start = (
-            step / 2.0 if i < self._resolution or 3 * self._resolution - 1 < i or (i + self._resolution) % 2 else 0.0
+            step / 2.0
+            if i < self._resolution
+            or 3 * self._resolution - 1 < i
+            or (i + self._resolution) % 2
+            else 0.0
         )
 
         longitudes = [start + n * step for n in range(Nj)]
@@ -120,7 +147,9 @@ class HealpixGridMapper(DatacubeMapper):
 
     def unmap_first_val_to_start_line_idx(self, first_val):
         tol = 1e-8
-        first_val = [i for i in self._first_axis_vals if first_val - tol <= i <= first_val + tol][0]
+        first_val = [
+            i for i in self._first_axis_vals if first_val - tol <= i <= first_val + tol
+        ][0]
         first_idx = self._first_axis_vals.index(first_val)
         idx = 0
         for i in range(self._resolution - 1):
@@ -141,11 +170,19 @@ class HealpixGridMapper(DatacubeMapper):
 
     def unmap(self, first_val, second_vals, unmapped_idx=None):
         tol = 1e-8
-        first_value = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
+        first_value = [
+            i
+            for i in self._first_axis_vals
+            if first_val[0] - tol <= i <= first_val[0] + tol
+        ][0]
         first_idx = self._first_axis_vals.index(first_value)
         return_idxs = []
         for second_val in second_vals:
-            second_val = [i for i in self.second_axis_vals(first_val) if second_val - tol <= i <= second_val + tol][0]
+            second_val = [
+                i
+                for i in self.second_axis_vals(first_val)
+                if second_val - tol <= i <= second_val + tol
+            ][0]
             second_idx = self.second_axis_vals(first_val).index(second_val)
             healpix_index = self.axes_idx_to_healpix_idx(first_idx, second_idx)
             return_idxs.append(healpix_index)

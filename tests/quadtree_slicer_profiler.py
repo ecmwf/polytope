@@ -26,7 +26,10 @@ engine_options = {
 print("SETTING UP THE XARRAY")
 time_now = time.time()
 
-ds = data.from_source("file", "../../Downloads/icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2")
+ds = data.from_source(
+    "file",
+    "../../Downloads/icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2",
+)
 
 grid = xr.open_dataset("../../Downloads/icon_grid_0026_R03B07_G.nc", engine="netcdf4")
 
@@ -40,10 +43,15 @@ points = list(zip(latitudes, longitudes))
 print("FINISH SETTING UP POINTS")
 options = {
     "axis_config": [
-        {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
+        {
+            "axis_name": "step",
+            "transformations": [{"name": "type_change", "type": "int"}],
+        },
         {
             "axis_name": "date",
-            "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
+            "transformations": [
+                {"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}
+            ],
         },
         {
             "axis_name": "values",
@@ -94,4 +102,6 @@ time0 = time.time()
 # print(time1 - time0)
 # print(len(result.leaves))
 
-cProfile.runctx("API.retrieve(request)", globals(), locals(), "profiled_extract_quadtree.pstats")
+cProfile.runctx(
+    "API.retrieve(request)", globals(), locals(), "profiled_extract_quadtree.pstats"
+)

@@ -119,7 +119,10 @@ class Select(Shape):
         return [self.axis]
 
     def polytope(self):
-        return [ConvexPolytope([self.axis], [[v]], self.method, is_orthogonal=True) for v in self.values]
+        return [
+            ConvexPolytope([self.axis], [[v]], self.method, is_orthogonal=True)
+            for v in self.values
+        ]
 
     def __repr__(self):
         return f"Select in {self.axis} with points {self.values}"
@@ -146,11 +149,22 @@ class Point(Shape):
             for point in self.values:
                 poly_to_mult = []
                 for i in range(len(self._axes)):
-                    poly_to_mult.append(ConvexPolytope([self._axes[i]], [[point[i]]], self.method, is_orthogonal=True))
-                polytopes.append(Product(*poly_to_mult, method=self.method, value=[point]))
+                    poly_to_mult.append(
+                        ConvexPolytope(
+                            [self._axes[i]],
+                            [[point[i]]],
+                            self.method,
+                            is_orthogonal=True,
+                        )
+                    )
+                polytopes.append(
+                    Product(*poly_to_mult, method=self.method, value=[point])
+                )
         else:
             for point in self.values:
-                polytopes.append(ConvexPolytope(self._axes, [point], self.method, is_orthogonal=True))
+                polytopes.append(
+                    ConvexPolytope(self._axes, [point], self.method, is_orthogonal=True)
+                )
         self.polytopes = polytopes
 
         return self.polytopes
@@ -173,7 +187,11 @@ class Span(Shape):
         return [self.axis]
 
     def polytope(self):
-        return [ConvexPolytope([self.axis], [[self.lower], [self.upper]], is_orthogonal=True)]
+        return [
+            ConvexPolytope(
+                [self.axis], [[self.lower], [self.upper]], is_orthogonal=True
+            )
+        ]
 
     def __repr__(self):
         return f"Span in {self.axis} with range from {self.lower} to {self.upper}"
@@ -255,7 +273,10 @@ class Disk(Shape):
             self.points[i] = [x, y]
 
     def _points_on_circle(self, n, r):
-        return [[math.cos(2 * math.pi / n * x) * r, math.sin(2 * math.pi / n * x) * r] for x in range(0, n)]
+        return [
+            [math.cos(2 * math.pi / n * x) * r, math.sin(2 * math.pi / n * x) * r]
+            for x in range(0, n)
+        ]
 
     def _expansion_to_circumscribe_circle(self, n):
         half_angle_between_segments = math.pi / n

@@ -12,11 +12,23 @@ from polytope_feature.shapes import Box, Select
 class TestOctahedralGrid:
     def setup_method(self, method):
         ds = data.from_source("file", "./tests/data/healpix.grib")
-        self.latlon_array = ds.to_xarray().isel(step=0).isel(time=0).isel(isobaricInhPa=0).z
+        self.latlon_array = (
+            ds.to_xarray().isel(step=0).isel(time=0).isel(isobaricInhPa=0).z
+        )
         self.xarraydatacube = XArrayDatacube(self.latlon_array)
-        self.options = {"values": {"mapper": {"type": "healpix", "resolution": 32, "axes": ["latitude", "longitude"]}}}
+        self.options = {
+            "values": {
+                "mapper": {
+                    "type": "healpix",
+                    "resolution": 32,
+                    "axes": ["latitude", "longitude"],
+                }
+            }
+        }
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.latlon_array, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(
+            datacube=self.latlon_array, engine=self.slicer, axis_options=self.options
+        )
 
     def find_nearest_latlon(self, grib_file, target_lat, target_lon):
         # Open the GRIB file
@@ -63,7 +75,9 @@ class TestOctahedralGrid:
             lon = cubepath["longitude"]
             lats.append(lat)
             lons.append(lon)
-            nearest_points = self.find_nearest_latlon("./tests/data/healpix.grib", lat, lon)
+            nearest_points = self.find_nearest_latlon(
+                "./tests/data/healpix.grib", lat, lon
+            )
             eccodes_lat = nearest_points[0][0]["lat"]
             eccodes_lon = nearest_points[0][0]["lon"]
             eccodes_lats.append(eccodes_lat)
