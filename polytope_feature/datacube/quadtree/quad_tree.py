@@ -62,7 +62,13 @@ class QuadTree:
             print("\n")
         if len(self.children) == 0:
             for n in self.nodes:
-                print("\t" * (self.depth + 1) + "\u21b3" + str(n.item[0]) + " , " + str(n.item[1]))
+                print(
+                    "\t" * (self.depth + 1)
+                    + "\u21b3"
+                    + str(n.item[0])
+                    + " , "
+                    + str(n.item[1])
+                )
         for child in self.children:
             print(
                 "\t" * (self.depth + 1)
@@ -118,7 +124,8 @@ class QuadTree:
         ]
 
         self.children = [
-            QuadTree(new_center[0], new_center[1], half_size, self.depth + 1) for new_center in new_centers
+            QuadTree(new_center[0], new_center[1], half_size, self.depth + 1)
+            for new_center in new_centers
         ]
 
         nodes = self.nodes
@@ -143,13 +150,19 @@ class QuadTree:
             else:
                 if len(self.children) > 0:
                     # first slice vertically
-                    left_polygon, right_polygon = slice_in_two(polygon, self.center[0], 0)
+                    left_polygon, right_polygon = slice_in_two(
+                        polygon, self.center[0], 0
+                    )
 
                     # then slice horizontally
                     # ie need to slice the left and right polygons each in two to have the 4 quadrant polygons
 
-                    q1_polygon, q2_polygon = slice_in_two(left_polygon, self.center[1], 1)
-                    q3_polygon, q4_polygon = slice_in_two(right_polygon, self.center[1], 1)
+                    q1_polygon, q2_polygon = slice_in_two(
+                        left_polygon, self.center[1], 1
+                    )
+                    q3_polygon, q4_polygon = slice_in_two(
+                        right_polygon, self.center[1], 1
+                    )
 
                     # now query these 4 polygons further down the quadtree
                     self.children[0].query_polygon(q1_polygon, results)
@@ -157,7 +170,9 @@ class QuadTree:
                     self.children[2].query_polygon(q3_polygon, results)
                     self.children[3].query_polygon(q4_polygon, results)
 
-                results.update(node for node in self.nodes if node.is_contained_in(polygon))
+                results.update(
+                    node for node in self.nodes if node.is_contained_in(polygon)
+                )
 
             return results
 

@@ -34,6 +34,8 @@ For more in-depth information about the various features see the following pages
   - <a href="../Features/polygon">Polygon</a>
   - <a href="../Features/boundingbox">Bounding Box</a>
   - <a href="../Features/trajectory">Trajectory</a>
+  - <a href="../Feature/circle">Circle</a>
+  - <a href="../Feature/position">Position</a>
 
 <!-- A design document on the general principles of how requests can be generated can also be found <a href="../Design_Doc">here</a>. -->
 

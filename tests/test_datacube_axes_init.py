@@ -13,18 +13,35 @@ class TestInitDatacubeAxes:
         download_test_data(nexus_url, "foo.grib")
 
         ds = data.from_source("file", "./tests/data/foo.grib")
-        latlon_array = ds.to_xarray(engine="cfgrib").isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
+        latlon_array = (
+            ds.to_xarray(engine="cfgrib")
+            .isel(step=0)
+            .isel(number=0)
+            .isel(surface=0)
+            .isel(time=0)
+        )
         latlon_array = latlon_array.t2m
         self.options = {
             "axis_config": [
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                        {
+                            "name": "mapper",
+                            "type": "octahedral",
+                            "resolution": 1280,
+                            "axes": ["latitude", "longitude"],
+                        }
                     ],
                 },
-                {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
-                {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
+                {
+                    "axis_name": "latitude",
+                    "transformations": [{"name": "reverse", "is_reverse": True}],
+                },
+                {
+                    "axis_name": "longitude",
+                    "transformations": [{"name": "cyclic", "range": [0, 360]}],
+                },
             ],
             "compressed_axes_config": [
                 "longitude",
@@ -52,14 +69,18 @@ class TestInitDatacubeAxes:
         assert self.datacube._axes["longitude"].has_mapper
         assert isinstance(self.datacube._axes["longitude"], FloatDatacubeAxis)
         assert not ("values" in self.datacube._axes.keys())
-        assert list(self.datacube._axes["latitude"].find_indexes({}, self.datacube)[:5]) == [
+        assert list(
+            self.datacube._axes["latitude"].find_indexes({}, self.datacube)[:5]
+        ) == [
             89.94618771566562,
             89.87647835333229,
             89.80635731954224,
             89.73614327160958,
             89.6658939412157,
         ]
-        assert self.datacube._axes["longitude"].find_indexes({"latitude": (89.94618771566562,)}, self.datacube)[:8] == [
+        assert self.datacube._axes["longitude"].find_indexes(
+            {"latitude": (89.94618771566562,)}, self.datacube
+        )[:8] == [
             0.0,
             18.0,
             36.0,
@@ -70,7 +91,12 @@ class TestInitDatacubeAxes:
             126.0,
         ]
         assert (
-            len(self.datacube._axes["longitude"].find_indexes({"latitude": (89.94618771566562,)}, self.datacube)) == 20
+            len(
+                self.datacube._axes["longitude"].find_indexes(
+                    {"latitude": (89.94618771566562,)}, self.datacube
+                )
+            )
+            == 20
         )
         assert self.datacube._axes["latitude"].find_indexes({}, self.datacube)[:5] == [
             89.94618771566562,
@@ -79,7 +105,9 @@ class TestInitDatacubeAxes:
             89.73614327160958,
             89.6658939412157,
         ]
-        assert self.datacube._axes["longitude"].find_indexes({"latitude": (89.94618771566562,)}, self.datacube)[:8] == [
+        assert self.datacube._axes["longitude"].find_indexes(
+            {"latitude": (89.94618771566562,)}, self.datacube
+        )[:8] == [
             0.0,
             18.0,
             36.0,
@@ -90,20 +118,29 @@ class TestInitDatacubeAxes:
             126.0,
         ]
         assert (
-            len(self.datacube._axes["longitude"].find_indexes({"latitude": (89.94618771566562,)}, self.datacube)) == 20
+            len(
+                self.datacube._axes["longitude"].find_indexes(
+                    {"latitude": (89.94618771566562,)}, self.datacube
+                )
+            )
+            == 20
         )
         lon_ax = self.datacube._axes["longitude"]
         lat_ax = self.datacube._axes["latitude"]
-        (path_key, path, unmapped_path) = lat_ax.unmap_path_key({"latitude": 89.94618771566562}, {}, {})
+        path_key, path, unmapped_path = lat_ax.unmap_path_key(
+            {"latitude": 89.94618771566562}, {}, {}
+        )
         assert path == {}
         assert unmapped_path == {"latitude": 89.94618771566562}
-        (path_key, path, unmapped_path) = lon_ax.unmap_path_key(
+        path_key, path, unmapped_path = lon_ax.unmap_path_key(
             {"longitude": (0.0,)}, {}, {"latitude": (89.94618771566562,)}
         )
         assert path == {}
         assert unmapped_path == {"latitude": (89.94618771566562,)}
         assert path_key == {"values": [0]}
-        assert lat_ax.find_indices_between([89.94618771566562, 89.87647835333229], 89.87, 90, self.datacube, 0) == [
+        assert lat_ax.find_indices_between(
+            [89.94618771566562, 89.87647835333229], 89.87, 90, self.datacube, 0
+        ) == [
             89.94618771566562,
             89.87647835333229,
         ]

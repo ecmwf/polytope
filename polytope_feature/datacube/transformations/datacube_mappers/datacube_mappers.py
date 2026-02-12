@@ -34,7 +34,8 @@ class DatacubeMapper(DatacubeAxisTransformation):
         map_type = _type_to_datacube_mapper_lookup[self.grid_type]
         if map_type == "IrregularGridMapper":
             module = import_module(
-                "polytope_feature.datacube.transformations.datacube_mappers.mapper_types." + "irregular"
+                "polytope_feature.datacube.transformations.datacube_mappers.mapper_types."
+                + "irregular"
             )
             constructor = getattr(module, map_type)
             transformation = deepcopy(
@@ -51,7 +52,8 @@ class DatacubeMapper(DatacubeAxisTransformation):
             return transformation._final_irregular_transformation
         else:
             module = import_module(
-                "polytope_feature.datacube.transformations.datacube_mappers.mapper_types." + self.grid_type
+                "polytope_feature.datacube.transformations.datacube_mappers.mapper_types."
+                + self.grid_type
             )
             constructor = getattr(module, map_type)
             transformation = deepcopy(

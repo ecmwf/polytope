@@ -23,7 +23,9 @@ class TestQuadTreeSlicer:
         nexus_url = "https://sites.ecmwf.int/repository/polytope/Reference_eORCA12_U_to_HEALPix_32.grib"
         download_test_data(nexus_url, "Reference_eORCA12_U_to_HEALPix_32.grib")
 
-        ds = data.from_source("file", "tests/data/Reference_eORCA12_U_to_HEALPix_32.grib")
+        ds = data.from_source(
+            "file", "tests/data/Reference_eORCA12_U_to_HEALPix_32.grib"
+        )
         self.arr = ds.to_xarray(engine="cfgrib").avg_uox
 
         self.latitudes = self.arr.latitude.values
@@ -51,7 +53,9 @@ class TestQuadTreeSlicer:
             Select("step", [np.timedelta64(0, "ns")]),
             Select("oceanModelLayer", [65.0]),
             Select("time", [pd.Timestamp("2017-09-06T00:00:00.000000000")]),
-            Polygon(["latitude", "longitude"], [[65, 270], [65, 300], [75, 300], [75, 270]]),
+            Polygon(
+                ["latitude", "longitude"], [[65, 270], [65, 300], [75, 300], [75, 270]]
+            ),
         )
 
         self.API = Polytope(
@@ -75,7 +79,9 @@ class TestQuadTreeSlicer:
             lon = cubepath["longitude"][0] - 360
             lats.append(lat)
             lons.append(lon)
-            nearest_points = find_nearest_latlon("tests/data/Reference_eORCA12_U_to_HEALPix_32.grib", lat, lon)
+            nearest_points = find_nearest_latlon(
+                "tests/data/Reference_eORCA12_U_to_HEALPix_32.grib", lat, lon
+            )
             eccodes_lat = nearest_points[0][0]["lat"]
             eccodes_lon = nearest_points[0][0]["lon"] - 360
             eccodes_lats.append(eccodes_lat)

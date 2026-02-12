@@ -83,7 +83,11 @@ class LambertConformalGridMapper(DatacubeMapper):
         for i in range(max_iter + 1):
             sinpi = math.sin(phi)
             con = eccent * sinpi
-            dphi = self.M_PI_2 - 2 * math.atan(ts * (math.pow(((1 - con) / (1 + con)), eccnth))) - phi
+            dphi = (
+                self.M_PI_2
+                - 2 * math.atan(ts * (math.pow(((1 - con) / (1 + con)), eccnth)))
+                - phi
+            )
             phi += dphi
             if math.abs(dphi) <= 1e-10:
                 return phi
@@ -126,14 +130,24 @@ class LambertConformalGridMapper(DatacubeMapper):
         if abs(self.Latin1InRadians - self.Latin2InRadians) < 1e-09:
             n = math.sin(self.Latin1InRadians)
         else:
-            num = math.log(math.cos(self.Latin1InRadians) / math.cos(self.Latin2InRadians))
+            num = math.log(
+                math.cos(self.Latin1InRadians) / math.cos(self.Latin2InRadians)
+            )
             denom = math.log(
-                math.tan(self.M_PI_4 + self.Latin2InRadians / 2.0) / math.tan(self.M_PI_4 + self.Latin1InRadians / 2.0)
+                math.tan(self.M_PI_4 + self.Latin2InRadians / 2.0)
+                / math.tan(self.M_PI_4 + self.Latin1InRadians / 2.0)
             )
             n = num / denom
 
-        f = (math.cos(self.Latin1InRadians) * math.pow(math.tan(self.M_PI_4 + self.Latin1InRadians / 2.0), n)) / n
-        rho = self.radius * f * math.pow(math.tan(self.M_PI_4 + self.latFirstInRadians / 2.0), -n)
+        f = (
+            math.cos(self.Latin1InRadians)
+            * math.pow(math.tan(self.M_PI_4 + self.Latin1InRadians / 2.0), n)
+        ) / n
+        rho = (
+            self.radius
+            * f
+            * math.pow(math.tan(self.M_PI_4 + self.latFirstInRadians / 2.0), -n)
+        )
         rho0_bare = f * math.pow(math.tan(self.M_PI_4 + self.LaDInRadians / 2.0), -n)
         rho0 = self.radius * rho0_bare
         lonDiff = self.lonFirstInRadians - self.LoVInRadians
@@ -156,7 +170,9 @@ class LambertConformalGridMapper(DatacubeMapper):
             y = y0 + j * self.Dy
             for i in range(self.nx):
                 x = x0 + i * self.Dx
-                lonDeg, latDeg = self.xy2lonlat(self.radius, n, f, rho0_bare, self.LoVInRadians, x, y)
+                lonDeg, latDeg = self.xy2lonlat(
+                    self.radius, n, f, rho0_bare, self.LoVInRadians, x, y
+                )
                 lonDeg = self.normalise_longitude_in_degrees(lonDeg)
                 coords.append([latDeg, lonDeg])
 
@@ -165,7 +181,9 @@ class LambertConformalGridMapper(DatacubeMapper):
     def get_latlons_oblate_py(self):
         i = 0
         j = 0
-        e = self.calculate_eccentricity(self.earthMinorAxisInMetres, self.earthMajorAxisInMetres)
+        e = self.calculate_eccentricity(
+            self.earthMinorAxisInMetres, self.earthMajorAxisInMetres
+        )
         sin_po = math.sin(self.Latin1InRadians)
         cos_po = math.cos(self.Latin1InRadians)
         con = sin_po

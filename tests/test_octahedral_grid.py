@@ -12,19 +12,41 @@ class TestOctahedralGrid:
         download_test_data(nexus_url, "foo.grib")
 
         ds = data.from_source("file", "./tests/data/foo.grib")
-        self.latlon_array = ds.to_xarray(engine="cfgrib").isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
+        self.latlon_array = (
+            ds.to_xarray(engine="cfgrib")
+            .isel(step=0)
+            .isel(number=0)
+            .isel(surface=0)
+            .isel(time=0)
+        )
         self.latlon_array = self.latlon_array.t2m
         self.options = {
             "axis_config": [
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                        {
+                            "name": "mapper",
+                            "type": "octahedral",
+                            "resolution": 1280,
+                            "axes": ["latitude", "longitude"],
+                        }
                     ],
                 },
-                {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
+                {
+                    "axis_name": "latitude",
+                    "transformations": [{"name": "reverse", "is_reverse": True}],
+                },
             ],
-            "compressed_axes_config": ["longitude", "latitude", "number", "step", "time", "surface", "valid_time"],
+            "compressed_axes_config": [
+                "longitude",
+                "latitude",
+                "number",
+                "step",
+                "time",
+                "surface",
+                "valid_time",
+            ],
         }
         self.API = Polytope(
             datacube=self.latlon_array,
@@ -57,9 +79,15 @@ class TestOctahedralGrid:
             tree_result = leaf.result[1].tolist()
             lats.append(lat)
             lons.append(lon)
-            nearest_points = find_nearest_latlon("./tests/data/foo.grib", lat[0], lon[0])
-            nearest_points_2 = find_nearest_latlon("./tests/data/foo.grib", lat[0], lon[1])
-            nearest_points_3 = find_nearest_latlon("./tests/data/foo.grib", lat[0], lon[2])
+            nearest_points = find_nearest_latlon(
+                "./tests/data/foo.grib", lat[0], lon[0]
+            )
+            nearest_points_2 = find_nearest_latlon(
+                "./tests/data/foo.grib", lat[0], lon[1]
+            )
+            nearest_points_3 = find_nearest_latlon(
+                "./tests/data/foo.grib", lat[0], lon[2]
+            )
             eccodes_lat = nearest_points[0][0]["lat"]
             eccodes_lon = nearest_points[0][0]["lon"]
             eccodes_value = nearest_points[0][0]["value"]

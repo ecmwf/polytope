@@ -1,6 +1,6 @@
 # Welcome to Polytope's documentation!
 
-Polytope is a feature extraction software developed by ECMWF. 
+Polytope is a data extraction service developed by ECMWF, which provides both access to full field global data and feature extraction capabilities.
 It uses concepts of computational geometry to extract n-dimensional polygons (also known as *polytopes*) from datacubes. 
 
 In particular, it can be used to request:
@@ -26,7 +26,7 @@ In particular, it can be used to request:
     </p>
     </div>
 
-- and many more high-dimensional shapes in arbitrary dimensions...
+- and many more high-dimensional shapes in arbitrary dimensions, as well as global field.
 
 <!-- <div style="text-align:center">
 <div class="note", style="border: 1px solid black">
@@ -35,15 +35,15 @@ Note that Polytope reads only the user-requested data, instead of whole fields. 
 </div> -->
 
 !!! important
-    Note that Polytope reads only the user-requested data, instead of whole fields. Importantly, this implies a significant decrease of the I/O usage when reading data from a datacube.
+    Note that Polytope Feature Extraction reads only the user-requested data, instead of whole fields. Importantly, this implies a significant decrease of the I/O usage when reading data from a datacube. Users can also leave out the feature dictionary to retrieve the whole field.
 
 Polytope feature extraction consists of the algorithm itself, and the service that uses the algorithm to extract features from ECMWF datacubes. Details on the service can be found in the Polytope service <a href="./Service/Overview">overview</a>, while details on the feature extraction algorithm can be found on the <a href="./Algorithm/Overview/Overview">Polytope algorithm overview</a>.
 
 To learn more about how to use Polytope, refer to the <a href="./Service/Quick_Start">Quickstart page</a>. In particular, see the Quickstart page for a step-by-step example of how to use the Polytope software.
 For a more in-depth explanation of how Polytope achieves its feature extraction, refer to the <a href="./Algorithm/Developer_Guide/Overview">Developer Guide</a>.
 
-!!! Warning
-    This project is BETA and will be experimental for the foreseeable future. Interfaces and functionality are likely to change. DO NOT use this software in any project/software that is operational.
+<!-- !!! Warning
+    This project is BETA and will be experimental for the foreseeable future. Interfaces and functionality are likely to change. DO NOT use this software in any project/software that is operational. -->
 
 # Index
 
@@ -52,12 +52,22 @@ For a more in-depth explanation of how Polytope achieves its feature extraction,
   * <a href="./Service/Installation">Installation</a>
   * <a href="./Service/Quick_Start">Quick Start</a>
   * <a href="./Service/Features/feature">Features</a>
+  * <a href="./Service/Full_fields">Full Fields</a>
   * <a href="./Service/Examples/Index">Examples</a>
 
-### <a href="./Algorithm/Overview/Overview">Algorithm</a>
+<!-- ### <a href="./Algorithm/Overview/Overview">Algorithm</a>
   * <a href="./Algorithm/Overview/Overview">Overview</a>
   * <a href="./Algorithm/User_Guide/Getting_started">User Guide</a>
   * <a href="./Algorithm/Developer_Guide/Overview">Developer Guide</a>
+
+### <a href="./Client/Overview">Client</a>
+  * <a href="./Client/Overview">Overview</a>
+  * <a href="./Client/Rest_api">REST API</a>
+  * <a href="./Client/python_cli">Python Library and CLI</a> -->
+
+<!-- ### <a href="./Server/Overview">Server</a>
+  * <a href="./Server/Overview">Overview</a>
+  * <a href="./Server/Design">Design</a> -->
 
     
 # License

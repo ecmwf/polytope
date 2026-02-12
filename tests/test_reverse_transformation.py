@@ -17,7 +17,12 @@ class TestSlicingReverseTransformation:
             },
         )
         options = {
-            "axis_config": [{"axis_name": "lat", "transformations": [{"name": "reverse", "is_reverse": True}]}],
+            "axis_config": [
+                {
+                    "axis_name": "lat",
+                    "transformations": [{"name": "reverse", "is_reverse": True}],
+                }
+            ],
             "compressed_axes_config": ["lat"],
         }
         self.slicer = HullSlicer()

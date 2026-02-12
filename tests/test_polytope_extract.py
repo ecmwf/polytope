@@ -45,7 +45,10 @@ class TestPolytopeExtract:
     # Testing different shapes
 
     def test_2D_box(self):
-        request = Request(Box(["step", "level"], [3, 10], [6, 11]), Box(["latitude", "longitude"], [0, 0], [20, 20]))
+        request = Request(
+            Box(["step", "level"], [3, 10], [6, 11]),
+            Box(["latitude", "longitude"], [0, 0], [20, 20]),
+        )
         self.API = Polytope(
             datacube=self.array,
             options=self.options,

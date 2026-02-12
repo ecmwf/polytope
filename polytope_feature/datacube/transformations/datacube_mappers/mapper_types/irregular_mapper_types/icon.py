@@ -28,7 +28,6 @@ class ICONGridMapper(IrregularGridMapper):
         self.is_irregular = True
 
     def grid_latlon_points(self):
-
         grid = Grid({"grid": self.uuid})
 
         latlons = grid.to_latlons()

@@ -23,14 +23,30 @@ class TestPolytopeExtract:
             "expver": "hullslicer",
             "domain": "hullslicer",
         }
-        self.quadtree_points = [[10, 10], [0.035149384216, 0.0], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
+        self.quadtree_points = [
+            [10, 10],
+            [0.035149384216, 0.0],
+            [80, 10],
+            [-5, 5],
+            [5, 20],
+            [5, 10],
+            [50, 10],
+        ]
         self.options = {
             "axis_config": [
-                {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
-                {"axis_name": "number", "transformations": [{"name": "type_change", "type": "int"}]},
+                {
+                    "axis_name": "step",
+                    "transformations": [{"name": "type_change", "type": "int"}],
+                },
+                {
+                    "axis_name": "number",
+                    "transformations": [{"name": "type_change", "type": "int"}],
+                },
                 {
                     "axis_name": "date",
-                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
+                    "transformations": [
+                        {"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}
+                    ],
                 },
                 {
                     "axis_name": "values",
@@ -58,7 +74,12 @@ class TestPolytopeExtract:
                 "stream",
                 "type",
             ],
-            "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
+            "pre_path": {
+                "class": "od",
+                "expver": "0001",
+                "levtype": "sfc",
+                "stream": "oper",
+            },
             "engine_options": self.engine_options,
         }
 

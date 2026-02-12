@@ -88,7 +88,9 @@ class DatacubeAxisCyclic(DatacubeAxisTransformation):
         for interval in range_intervals:
             if abs(interval[0] - interval[1]) > 0:
                 # If the interval is not just a single point, we remap it to the axis range
-                range = self._remap_range_to_axis_range([interval[0], interval[1]], axis)
+                range = self._remap_range_to_axis_range(
+                    [interval[0], interval[1]], axis
+                )
                 up = range[1]
                 low = range[0]
                 if up < low:
@@ -138,7 +140,9 @@ class DatacubeAxisCyclic(DatacubeAxisTransformation):
         intervals.append([new_up, upper])
         return intervals
 
-    def find_indices_between(self, indexes_ranges, low, up, datacube, method, indexes_between_ranges, axis):
+    def find_indices_between(
+        self, indexes_ranges, low, up, datacube, method, indexes_between_ranges, axis
+    ):
         search_ranges = self.remap([low, up], [], axis)
         original_search_ranges = self.to_intervals([low, up], [], axis)
         # Find the offsets for each interval in the requested range, which we will need later
@@ -152,7 +156,9 @@ class DatacubeAxisCyclic(DatacubeAxisTransformation):
             offset = search_ranges_offset[i]
             low = r[0]
             up = r[1]
-            indexes_between = axis.find_standard_indices_between(indexes_ranges, low, up, datacube, method)
+            indexes_between = axis.find_standard_indices_between(
+                indexes_ranges, low, up, datacube, method
+            )
             # Now the indexes_between are values on the cyclic range so need to remap them to their original
             # values before returning them
             # if we have a special indexes between range that needs additional offset, treat it here
@@ -163,7 +169,9 @@ class DatacubeAxisCyclic(DatacubeAxisTransformation):
                     if offset is None:
                         indexes_between[k] = indexes_between[k]
                     else:
-                        indexes_between[k] = round(indexes_between[k] + offset, int(-math.log10(axis.tol)))
+                        indexes_between[k] = round(
+                            indexes_between[k] + offset, int(-math.log10(axis.tol))
+                        )
                     idx_between.append(indexes_between[k])
         if offset is not None:
             # Note that we can only do unique if not dealing with time values

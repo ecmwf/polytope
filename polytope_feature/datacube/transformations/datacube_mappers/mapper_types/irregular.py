@@ -25,7 +25,9 @@ class IrregularGridMapper(DatacubeMapper):
         self.local_area = local_area
         self.is_irregular = True
         self.md5_hash = md5_hash
-        self._final_irregular_transformation = self.generate_final_irregular_transformation()
+        self._final_irregular_transformation = (
+            self.generate_final_irregular_transformation()
+        )
 
     def generate_final_irregular_transformation(self):
         map_type = _type_to_datacube_irregular_mapper_lookup[self.grid_type]

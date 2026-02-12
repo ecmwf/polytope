@@ -15,19 +15,43 @@ class TestHealpixGrid:
         download_test_data(nexus_url, "healpix.grib")
 
         ds = data.from_source("file", "./tests/data/healpix.grib")
-        self.latlon_array = ds.to_xarray(engine="cfgrib").isel(step=0).isel(time=0).isel(isobaricInhPa=0).z
+        self.latlon_array = (
+            ds.to_xarray(engine="cfgrib")
+            .isel(step=0)
+            .isel(time=0)
+            .isel(isobaricInhPa=0)
+            .z
+        )
         self.options = {
             "axis_config": [
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "healpix", "resolution": 32, "axes": ["latitude", "longitude"]}
+                        {
+                            "name": "mapper",
+                            "type": "healpix",
+                            "resolution": 32,
+                            "axes": ["latitude", "longitude"],
+                        }
                     ],
                 },
-                {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
-                {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
+                {
+                    "axis_name": "longitude",
+                    "transformations": [{"name": "cyclic", "range": [0, 360]}],
+                },
+                {
+                    "axis_name": "latitude",
+                    "transformations": [{"name": "reverse", "is_reverse": True}],
+                },
             ],
-            "compressed_axes_config": ["longitude", "latitude", "step", "time", "isobaricInhPa", "valid_time"],
+            "compressed_axes_config": [
+                "longitude",
+                "latitude",
+                "step",
+                "time",
+                "isobaricInhPa",
+                "valid_time",
+            ],
         }
         self.API = Polytope(
             datacube=self.latlon_array,
@@ -61,7 +85,9 @@ class TestHealpixGrid:
             for j, lon in enumerate(new_lons):
                 lats.append(lat)
                 lons.append(lon)
-                nearest_points = find_nearest_latlon("./tests/data/healpix.grib", lat, lon)
+                nearest_points = find_nearest_latlon(
+                    "./tests/data/healpix.grib", lat, lon
+                )
                 eccodes_lat = nearest_points[0][0]["lat"]
                 eccodes_lon = nearest_points[0][0]["lon"]
                 eccodes_result = nearest_points[0][0]["value"]

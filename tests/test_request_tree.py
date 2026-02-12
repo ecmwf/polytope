@@ -212,7 +212,9 @@ class TestIndexTree:
         root_node1 = TensorIndexTree()
         root_node1.add_child(child1)
         # assert greatgrandchild1.get_ancestors() == SortedList([greatgrandchild1, grandchild1, child1])
-        assert greatgrandchild1.get_ancestors() == SortedList([child1, grandchild1, greatgrandchild1])
+        assert greatgrandchild1.get_ancestors() == SortedList(
+            [child1, grandchild1, greatgrandchild1]
+        )
 
     def test_add_or_get_child(self):
         axis1 = IntDatacubeAxis()

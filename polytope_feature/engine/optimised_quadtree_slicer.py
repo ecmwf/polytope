@@ -51,7 +51,9 @@ class OptimisedQuadTreeSlicer(Engine):
         # extract a single polygon
         if use_rust:
             polytope_points = [tuple(point) for point in polytope.points]
-            polygon_points = self.quad_tree.query_polygon(self.bbox_points, 0, polytope_points)
+            polygon_points = self.quad_tree.query_polygon(
+                self.bbox_points, 0, polytope_points
+            )
         else:
             polygon_points = self.quad_tree.query_polygon(polytope)
 
@@ -62,7 +64,9 @@ class OptimisedQuadTreeSlicer(Engine):
     def _build_branch(self, ax, node, datacube, next_nodes, api):
         for polytope in node["unsliced_polytopes"]:
             if ax.name in polytope._axes:
-                self._build_sliceable_child(polytope, ax, node, datacube, next_nodes, api)
+                self._build_sliceable_child(
+                    polytope, ax, node, datacube, next_nodes, api
+                )
         del node["unsliced_polytopes"]
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes, api):
@@ -82,8 +86,8 @@ class OptimisedQuadTreeSlicer(Engine):
                 lat_val = value.item[0]
                 lon_val = value.item[1]
             # store the native type
-            (child, _) = node.create_child(lat_ax, lat_val, [])
-            (grand_child, _) = child.create_child(lon_ax, lon_val, [])
+            child, _ = node.create_child(lat_ax, lat_val, [])
+            grand_child, _ = child.create_child(lon_ax, lon_val, [])
             # NOTE: the index of the point is stashed in the branches' result
             # if use_rust:
             #     grand_child.indexes = [value]
