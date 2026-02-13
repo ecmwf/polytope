@@ -32,10 +32,11 @@ class QuadTreeSlicer(Engine):
                 polytope_points = [tuple(point) for point in polytope.points]
                 polygon_points = self.quad_tree.query_polygon(self.points, 0, polytope_points)
             else:
-                nn_points = [tuple(pt) for pt in datacube.nearest_search[tuple(polytope.axes())]]
+                k = datacube.nearest_search[tuple(polytope.axes())][1]
+                nn_points = [tuple(pt) for pt in datacube.nearest_search[tuple(polytope.axes())][0]]
                 polygon_points = []
                 for nn_pt in nn_points:
-                    polygon_points.append(self.quad_tree.nearest_neighbor(nn_pt, self.points))
+                    polygon_points.extend(self.quad_tree.k_nearest_neighbor(nn_pt, k, self.points))
         else:
             polygon_points = self.quad_tree.query_polygon(polytope)
         return polygon_points

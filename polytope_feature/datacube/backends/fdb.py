@@ -261,14 +261,18 @@ class FDBDatacube(Datacube):
 
             second_ax = requests.children[0].children[0].axis
 
-            nearest_pts = self.nearest_search.get((first_ax_name, second_ax_name), None)
-            if nearest_pts is None:
-                nearest_pts = self.nearest_search.get((second_ax_name, first_ax_name), None)
-                for i, pt in enumerate(nearest_pts):
-                    nearest_pts[i] = [pt[1], pt[0]]
+            nearest_pts_k = self.nearest_search.get((first_ax_name, second_ax_name), None)
+            if nearest_pts_k is None:
+                nearest_pts_k = self.nearest_search.get((second_ax_name, first_ax_name), None)
+                for i, pt in enumerate(nearest_pts_k[0]):
+                    nearest_pts_k[0][i] = [pt[1], pt[0]]
+
+            k = nearest_pts_k[1]
+            if k != 1:
+                print("k nearest neighbour not supported in hullslicer, defaulting to nearest neighbour.")
 
             transformed_nearest_pts = []
-            for point in nearest_pts:
+            for point in nearest_pts_k[0]:
                 transformed_nearest_pts.append([point[0], second_ax._remap_val_to_axis_range(point[1])])
 
             found_latlon_pts = []
