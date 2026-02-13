@@ -36,7 +36,10 @@ class TestProfiling:
         pr = cProfile.Profile()
         pr.enable()
 
-        request = Request(Box(["step", "level", "lat"], [3, 10, 5.0], [6, 11, 6.0]), Select("date", ["2000-01-01"]))
+        request = Request(
+            Box(["step", "level", "lat"], [3, 10, 5.0], [6, 11, 6.0]),
+            Select("date", ["2000-01-01"]),
+        )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 2 * 2 * 11
 

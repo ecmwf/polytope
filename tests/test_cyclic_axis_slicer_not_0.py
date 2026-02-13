@@ -16,13 +16,31 @@ class TestSlicingCyclicAxisNotOverZero:
                 "date": pd.date_range("2000-01-01", "2000-01-03", 3),
                 "step": [0, 3, 6, 9, 12, 15],
                 "level": range(1, 130),
-                "long": [-0.1, -0.2, -0.3, -0.4, -0.5, -0.6, -0.7, -0.8, -0.9, -1.0, -1.1][::-1],
+                "long": [
+                    -0.1,
+                    -0.2,
+                    -0.3,
+                    -0.4,
+                    -0.5,
+                    -0.6,
+                    -0.7,
+                    -0.8,
+                    -0.9,
+                    -1.0,
+                    -1.1,
+                ][::-1],
             },
         )
         self.options = {
             "axis_config": [
-                {"axis_name": "long", "transformations": [{"name": "cyclic", "range": [-1.1, -0.1]}]},
-                {"axis_name": "level", "transformations": [{"name": "cyclic", "range": [1, 129]}]},
+                {
+                    "axis_name": "long",
+                    "transformations": [{"name": "cyclic", "range": [-1.1, -0.1]}],
+                },
+                {
+                    "axis_name": "level",
+                    "transformations": [{"name": "cyclic", "range": [1, 129]}],
+                },
             ],
             "compressed_axes_config": ["long", "level", "step", "date"],
         }
@@ -35,7 +53,9 @@ class TestSlicingCyclicAxisNotOverZero:
 
     def test_cyclic_float_axis_across_seam(self):
         request = Request(
-            Box(["step", "long"], [0, 0.8], [3, 1.7]), Select("date", ["2000-01-01"]), Select("level", [128])
+            Box(["step", "long"], [0, 0.8], [3, 1.7]),
+            Select("date", ["2000-01-01"]),
+            Select("level", [128]),
         )
         result = self.API.retrieve(request)
         result.pprint()
@@ -55,7 +75,9 @@ class TestSlicingCyclicAxisNotOverZero:
 
     def test_cyclic_float_axis_inside_cyclic_range(self):
         request = Request(
-            Box(["step", "long"], [0, 0.0], [3, 0.7]), Select("date", ["2000-01-01"]), Select("level", [128])
+            Box(["step", "long"], [0, 0.0], [3, 0.7]),
+            Select("date", ["2000-01-01"]),
+            Select("level", [128]),
         )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
@@ -72,7 +94,9 @@ class TestSlicingCyclicAxisNotOverZero:
 
     def test_cyclic_float_axis_above_axis_range(self):
         request = Request(
-            Box(["step", "long"], [0, 1.3], [3, 1.7]), Select("date", ["2000-01-01"]), Select("level", [128])
+            Box(["step", "long"], [0, 1.3], [3, 1.7]),
+            Select("date", ["2000-01-01"]),
+            Select("level", [128]),
         )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
@@ -86,7 +110,9 @@ class TestSlicingCyclicAxisNotOverZero:
 
     def test_cyclic_float_axis_two_range_loops(self):
         request = Request(
-            Box(["step", "long"], [0, 0.3], [3, 2.7]), Select("date", ["2000-01-01"]), Select("level", [128])
+            Box(["step", "long"], [0, 0.3], [3, 2.7]),
+            Select("date", ["2000-01-01"]),
+            Select("level", [128]),
         )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
@@ -120,7 +146,9 @@ class TestSlicingCyclicAxisNotOverZero:
 
     def test_cyclic_float_axis_below_axis_range(self):
         request = Request(
-            Box(["step", "long"], [0, -0.7], [3, -0.3]), Select("date", ["2000-01-01"]), Select("level", [128])
+            Box(["step", "long"], [0, -0.7], [3, -0.3]),
+            Select("date", ["2000-01-01"]),
+            Select("level", [128]),
         )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
@@ -134,7 +162,9 @@ class TestSlicingCyclicAxisNotOverZero:
 
     def test_cyclic_float_axis_below_axis_range_crossing_seam(self):
         request = Request(
-            Box(["step", "long"], [0, -0.7], [3, 0.3]), Select("date", ["2000-01-01"]), Select("level", [128])
+            Box(["step", "long"], [0, -0.7], [3, 0.3]),
+            Select("date", ["2000-01-01"]),
+            Select("level", [128]),
         )
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1

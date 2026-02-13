@@ -19,10 +19,23 @@ class TestSlicingEra5Data:
         self.array = ds.to_xarray(engine="cfgrib").isel(step=0).t
         self.options = {
             "axis_config": [
-                {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
-                {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
+                {
+                    "axis_name": "latitude",
+                    "transformations": [{"name": "reverse", "is_reverse": True}],
+                },
+                {
+                    "axis_name": "longitude",
+                    "transformations": [{"name": "cyclic", "range": [0, 360]}],
+                },
             ],
-            "compressed_axes_config": ["longitude", "latitude", "step", "time", "number", "isobaricInhPa"],
+            "compressed_axes_config": [
+                "longitude",
+                "latitude",
+                "step",
+                "time",
+                "number",
+                "isobaricInhPa",
+            ],
         }
 
     @pytest.mark.internet

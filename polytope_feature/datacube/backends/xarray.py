@@ -74,7 +74,7 @@ class XArrayDatacube(Datacube):
         else:
             key_value_path = {requests.axis.name: requests.values}
             ax = requests.axis
-            (key_value_path, leaf_path, self.unwanted_path) = ax.unmap_path_key(
+            key_value_path, leaf_path, self.unwanted_path = ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
             leaf_path.update(key_value_path)

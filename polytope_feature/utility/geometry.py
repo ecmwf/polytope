@@ -23,4 +23,6 @@ def nearest_pt(pts_list, pt):
 
 
 def l2_norm(pt1, pt2):
-    return math.sqrt((pt1[0] - pt2[0]) * (pt1[0] - pt2[0]) + (pt1[1] - pt2[1]) * (pt1[1] - pt2[1]))
+    return math.sqrt(
+        (pt1[0] - pt2[0]) * (pt1[0] - pt2[0]) + (pt1[1] - pt2[1]) * (pt1[1] - pt2[1])
+    )

@@ -18,10 +18,16 @@ class TestReducedLatLonGrid:
         self.options = {
             "values": {
                 "transformation": {
-                    "mapper": {"type": "reduced_ll", "resolution": 1441, "axes": ["latitude", "longitude"]}
+                    "mapper": {
+                        "type": "reduced_ll",
+                        "resolution": 1441,
+                        "axes": ["latitude", "longitude"],
+                    }
                 }
             },
-            "date": {"transformation": {"merge": {"with": "time", "linkers": ["T", "00"]}}},
+            "date": {
+                "transformation": {"merge": {"with": "time", "linkers": ["T", "00"]}}
+            },
             "step": {"transformation": {"type_change": "int"}},
             "number": {"transformation": {"type_change": "int"}},
             "longitude": {"transformation": {"cyclic": [0, 360]}},
@@ -29,7 +35,9 @@ class TestReducedLatLonGrid:
         self.config = {"class": "od", "stream": "wave"}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
         self.slicer = HullSlicer()
-        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
+        self.API = Polytope(
+            datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options
+        )
 
     def find_nearest_latlon(self, grib_file, target_lat, target_lon):
         messages = grib_file
@@ -69,11 +77,15 @@ class TestReducedLatLonGrid:
 
         padded_point_upper = [0.24, 0.24, 1]
         padded_point_lower = [-0.24, -0.24, 1]
-        initial_shape = Ellipsoid(["latitude", "longitude", "step"], padded_point_lower, padded_point_upper)
+        initial_shape = Ellipsoid(
+            ["latitude", "longitude", "step"], padded_point_lower, padded_point_upper
+        )
 
         # Then somehow make this list of points into just a sequence of points
 
-        ship_route_polytope = Path(["latitude", "longitude", "step"], initial_shape, *new_points)
+        ship_route_polytope = Path(
+            ["latitude", "longitude", "step"], initial_shape, *new_points
+        )
 
         request = Request(
             ship_route_polytope,

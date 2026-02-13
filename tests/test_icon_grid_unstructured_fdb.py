@@ -23,10 +23,15 @@ class TestQuadTreeSlicer:
 
         self.options = {
             "axis_config": [
-                {"axis_name": "step", "transformations": [{"name": "type_change", "type": "int"}]},
+                {
+                    "axis_name": "step",
+                    "transformations": [{"name": "type_change", "type": "int"}],
+                },
                 {
                     "axis_name": "date",
-                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
+                    "transformations": [
+                        {"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}
+                    ],
                 },
                 {
                     "axis_name": "values",

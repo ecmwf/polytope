@@ -108,6 +108,6 @@ Conversely at least one of `range` or `step` must be included.
 
 `axes` can also be provided which defines the spatial `axes` on which the request is made. For example if the user provides points in the order `longitude`, `latitude` they can add `axes` : `["longitude", "latitude"]`.
 
-## Note:
+## Note
 
 Previously the `axes` keyword was used for `time_axis`. We still allow this behavior to satisfy backwards compatibility with previous requests.

@@ -24,7 +24,9 @@ class DatacubeAxis(ABC):
     type_change = False
 
     def order_tranformations(self):
-        self.transformations = sorted(self.transformations, key=lambda x: transformations_order[type(x)])
+        self.transformations = sorted(
+            self.transformations, key=lambda x: transformations_order[type(x)]
+        )
 
     def give_transformations_parents(self):
         for i, transform in enumerate(self.transformations[1:]):
@@ -68,14 +70,16 @@ class DatacubeAxis(ABC):
         path_copy = deepcopy(path)
         for key in path_copy:
             axis = datacube._axes[key]
-            (path, unmapped_path) = axis.unmap_to_datacube(path, unmapped_path)
+            path, unmapped_path = axis.unmap_to_datacube(path, unmapped_path)
         subarray = datacube.select(path, unmapped_path)
         return datacube.datacube_natural_indexes(self, subarray)
 
     def find_indexes(self, path, datacube):
         indexes = self.find_standard_indexes(path, datacube)
         for transformation in self.transformations[::-1]:
-            indexes = transformation.find_modified_indexes(indexes, path, datacube, self)
+            indexes = transformation.find_modified_indexes(
+                indexes, path, datacube, self
+            )
         return indexes
 
     def offset(self, value):
@@ -86,14 +90,14 @@ class DatacubeAxis(ABC):
 
     def unmap_path_key(self, key_value_path, leaf_path, unwanted_path):
         for transformation in self.transformations[::-1]:
-            (key_value_path, leaf_path, unwanted_path) = transformation.unmap_path_key(
+            key_value_path, leaf_path, unwanted_path = transformation.unmap_path_key(
                 key_value_path, leaf_path, unwanted_path, self
             )
         return (key_value_path, leaf_path, unwanted_path)
 
     def unmap_tree_node(self, node, unwanted_path):
         for transformation in self.transformations[::-1]:
-            (node, unwanted_path) = transformation.unmap_tree_node(node, unwanted_path)
+            node, unwanted_path = transformation.unmap_tree_node(node, unwanted_path)
         return (node, unwanted_path)
 
     def _remap_val_to_axis_range(self, value):
@@ -104,7 +108,10 @@ class DatacubeAxis(ABC):
     def find_standard_indices_between(self, indexes, low, up, datacube, method=None):
         indexes_between_ranges = []
 
-        if self.name in datacube.complete_axes and self.name not in datacube.transformed_axes:
+        if (
+            self.name in datacube.complete_axes
+            and self.name not in datacube.transformed_axes
+        ):
             # Find the range of indexes between lower and upper
             # https://pandas.pydata.org/docs/reference/api/pandas.Index.searchsorted.html
             # Assumes the indexes are already sorted (could sort to be sure) and monotonically increasing
@@ -136,7 +143,9 @@ class DatacubeAxis(ABC):
         return indexes_between_ranges
 
     def find_indices_between(self, indexes_ranges, low, up, datacube, method=None):
-        indexes_between_ranges = self.find_standard_indices_between(indexes_ranges, low, up, datacube, method)
+        indexes_between_ranges = self.find_standard_indices_between(
+            indexes_ranges, low, up, datacube, method
+        )
         for transformation in self.transformations[::-1]:
             indexes_between_ranges = transformation.find_indices_between(
                 indexes_ranges, low, up, datacube, method, indexes_between_ranges, self
@@ -146,7 +155,9 @@ class DatacubeAxis(ABC):
     @staticmethod
     def values_type(values):
         type_ = None
-        if isinstance(values, xr.core.variable.IndexVariable) or isinstance(values, xr.core.variable.Variable):
+        if isinstance(values, xr.core.variable.IndexVariable) or isinstance(
+            values, xr.core.variable.Variable
+        ):
             # If we have some xarray variable, transform them to actual variable type
             values = np.array(values)
             type_ = values.dtype.type
@@ -175,7 +186,9 @@ class DatacubeAxis(ABC):
     @staticmethod
     def check_axis_type(name, val_type):
         if val_type not in _type_to_axis_lookup:
-            raise ValueError(f"Could not create a mapper for index type {val_type} for axis {name}")
+            raise ValueError(
+                f"Could not create a mapper for index type {val_type} for axis {name}"
+            )
 
 
 transformations_order = [

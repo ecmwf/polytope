@@ -12,20 +12,45 @@ class TestSlicingMultipleTransformationsOneAxis:
         download_test_data(nexus_url, "foo.grib")
 
         ds = data.from_source("file", "./tests/data/foo.grib")
-        self.latlon_array = ds.to_xarray(engine="cfgrib").isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
+        self.latlon_array = (
+            ds.to_xarray(engine="cfgrib")
+            .isel(step=0)
+            .isel(number=0)
+            .isel(surface=0)
+            .isel(time=0)
+        )
         self.latlon_array = self.latlon_array.t2m
         self.options = {
             "axis_config": [
                 {
                     "axis_name": "values",
                     "transformations": [
-                        {"name": "mapper", "type": "octahedral", "resolution": 1280, "axes": ["latitude", "longitude"]}
+                        {
+                            "name": "mapper",
+                            "type": "octahedral",
+                            "resolution": 1280,
+                            "axes": ["latitude", "longitude"],
+                        }
                     ],
                 },
-                {"axis_name": "latitude", "transformations": [{"name": "reverse", "is_reverse": True}]},
-                {"axis_name": "longitude", "transformations": [{"name": "cyclic", "range": [0, 360]}]},
+                {
+                    "axis_name": "latitude",
+                    "transformations": [{"name": "reverse", "is_reverse": True}],
+                },
+                {
+                    "axis_name": "longitude",
+                    "transformations": [{"name": "cyclic", "range": [0, 360]}],
+                },
             ],
-            "compressed_axes_config": ["longitude", "latitude", "surface", "step", "time", "valid_time", "number"],
+            "compressed_axes_config": [
+                "longitude",
+                "latitude",
+                "surface",
+                "step",
+                "time",
+                "valid_time",
+                "number",
+            ],
         }
         self.API = Polytope(
             datacube=self.latlon_array,

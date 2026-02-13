@@ -32,13 +32,34 @@ def downloaded_data_test_files(shared_temp_data_dir):
     """
     files_to_download = [
         ("https://sites.ecmwf.int/repository/polytope/test-data/foo.grib", "foo.grib"),
-        ("https://sites.ecmwf.int/repository/polytope/test-data/local.grib", "local.grib"),
-        ("https://sites.ecmwf.int/repository/polytope/test-data/aifs_data_from_fdb.grib", "aifs_data_from_fdb.grib"),
-        ("https://sites.ecmwf.int/repository/polytope/test-data/wind_gust_and_t2m.grib", "wind_gust_and_t2m.grib"),
-        ("https://sites.ecmwf.int/repository/polytope/test-data/t2m_jan_3_v2.grib", "t2m_jan_3_v2.grib"),
-        ("https://sites.ecmwf.int/repository/polytope/test-data/wave_spectra.grib", "wave_spectra.grib"),
-        ("https://sites.ecmwf.int/repository/polytope/test-data/era5-levels-members.grib", "era5-levels-members.grib"),
-        ("https://sites.ecmwf.int/repository/polytope/lambert_lam_one_message.grib", "lambert_lam_one_message.grib"),
+        (
+            "https://sites.ecmwf.int/repository/polytope/test-data/local.grib",
+            "local.grib",
+        ),
+        (
+            "https://sites.ecmwf.int/repository/polytope/test-data/aifs_data_from_fdb.grib",
+            "aifs_data_from_fdb.grib",
+        ),
+        (
+            "https://sites.ecmwf.int/repository/polytope/test-data/wind_gust_and_t2m.grib",
+            "wind_gust_and_t2m.grib",
+        ),
+        (
+            "https://sites.ecmwf.int/repository/polytope/test-data/t2m_jan_3_v2.grib",
+            "t2m_jan_3_v2.grib",
+        ),
+        (
+            "https://sites.ecmwf.int/repository/polytope/test-data/wave_spectra.grib",
+            "wave_spectra.grib",
+        ),
+        (
+            "https://sites.ecmwf.int/repository/polytope/test-data/era5-levels-members.grib",
+            "era5-levels-members.grib",
+        ),
+        (
+            "https://sites.ecmwf.int/repository/polytope/lambert_lam_one_message.grib",
+            "lambert_lam_one_message.grib",
+        ),
         (
             "https://sites.ecmwf.int/repository/polytope/"
             "icon_global_icosahedral_single-level_2025011000_000_T_2M.grib2",
@@ -72,7 +93,9 @@ def fdb_path(request) -> pathlib.Path:
 
 
 @pytest.fixture(scope="session")
-def fdb_store_operational_setup(fdb_path, tmp_path_factory, downloaded_data_test_files) -> pathlib.Path:
+def fdb_store_operational_setup(
+    fdb_path, tmp_path_factory, downloaded_data_test_files
+) -> pathlib.Path:
     """
     Creates an operational FDB store for tests, loading downloaded test files.
     """
