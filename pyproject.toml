@@ -71,6 +71,9 @@ issues = "https://github.com/ecmwf/polytope/issues"
 [tool.setuptools]
 include-package-data = true
 
+[tool.black]
+line-length = 120
+
 [tool.setuptools.packages.find]
 include = [ "polytope_feature" ]
 where = [ "./" ]
