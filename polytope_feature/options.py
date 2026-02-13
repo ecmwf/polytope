@@ -61,9 +61,7 @@ class MergeConfig(TransformationConfig):
     linkers: List[str] = [""]
 
 
-action_subclasses_union = Union[
-    CyclicConfig, MapperConfig, ReverseConfig, TypeChangeConfig, MergeConfig
-]
+action_subclasses_union = Union[CyclicConfig, MapperConfig, ReverseConfig, TypeChangeConfig, MergeConfig]
 
 
 class AxisConfig(ConfigModel):
@@ -92,9 +90,7 @@ class PolytopeOptions(ABC):
     @staticmethod
     def get_polytope_options(options):
         parser = argparse.ArgumentParser(allow_abbrev=False)
-        conflator = Conflator(
-            app_name="polytope", model=Config, cli=False, argparser=parser, **options
-        )
+        conflator = Conflator(app_name="polytope", model=Config, cli=False, argparser=parser, **options)
         config_options = conflator.load()
 
         axis_config = config_options.axis_config

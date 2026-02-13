@@ -13,26 +13,16 @@ from polytope_feature.shapes import Box, Select
 
 class TestHealpixNestedGrid:
     def setup_method(self, method):
-        nexus_url = (
-            "https://sites.ecmwf.int/repository/polytope/test-data/healpix_nested.grib"
-        )
+        nexus_url = "https://sites.ecmwf.int/repository/polytope/test-data/healpix_nested.grib"
         download_test_data(nexus_url, "healpix_nested.grib")
 
         ds = data.from_source("file", "./tests/data/healpix_nested.grib")[3]
-        self.latlon_array = (
-            ds.to_xarray(engine="cfgrib")
-            .isel(step=0)
-            .isel(time=0)
-            .isel(heightAboveGround=0)
-            .t2m
-        )
+        self.latlon_array = ds.to_xarray(engine="cfgrib").isel(step=0).isel(time=0).isel(heightAboveGround=0).t2m
         self.options = {
             "axis_config": [
                 {
                     "axis_name": "date",
-                    "transformations": [
-                        {"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}
-                    ],
+                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
                 },
                 {
                     "axis_name": "values",
@@ -169,28 +159,20 @@ class TestHealpixNestedGrid:
                 ]
                 lats.append(lat)
                 lons.append(lon)
-                nearest_points = find_nearest_latlon(
-                    "./tests/data/healpix_nested.grib", lat[0], lon[0]
-                )
+                nearest_points = find_nearest_latlon("./tests/data/healpix_nested.grib", lat[0], lon[0])
                 eccodes_lat = nearest_points[0][0]["lat"]
                 eccodes_lon = nearest_points[0][0]["lon"]
                 eccodes_result = nearest_points[3][0]["value"]
                 eccodes_lats.append(eccodes_lat)
                 eccodes_lons.append(eccodes_lon)
 
-                mapper = NestedHealpixGridMapper(
-                    "values", ["latitude", "longitude"], 128
-                )
+                mapper = NestedHealpixGridMapper("values", ["latitude", "longitude"], 128)
                 assert nearest_points[0][0]["index"] == mapper.unmap(lat, lon)[0]
                 assert eccodes_lat - tol <= lat[0]
                 assert lat[0] <= eccodes_lat + tol
                 assert eccodes_lon - tol <= lon[0]
                 assert lon[0] <= eccodes_lon + tol
-                assert (
-                    leaf.result[1][i] - 1e-4
-                    <= eccodes_result
-                    <= leaf.result[1][i] + 1e-4
-                )
+                assert leaf.result[1][i] - 1e-4 <= eccodes_result <= leaf.result[1][i] + 1e-4
         assert len(eccodes_lats) == 21
 
     @pytest.mark.internet
@@ -225,28 +207,20 @@ class TestHealpixNestedGrid:
                 ]
                 lats.append(lat)
                 lons.append(lon)
-                nearest_points = find_nearest_latlon(
-                    "./tests/data/healpix_nested.grib", lat[0], lon[0]
-                )
+                nearest_points = find_nearest_latlon("./tests/data/healpix_nested.grib", lat[0], lon[0])
                 eccodes_lat = nearest_points[0][0]["lat"]
                 eccodes_lon = nearest_points[0][0]["lon"]
                 eccodes_result = nearest_points[3][0]["value"]
                 eccodes_lats.append(eccodes_lat)
                 eccodes_lons.append(eccodes_lon)
 
-                mapper = NestedHealpixGridMapper(
-                    "values", ["latitude", "longitude"], 128
-                )
+                mapper = NestedHealpixGridMapper("values", ["latitude", "longitude"], 128)
                 assert nearest_points[0][0]["index"] == mapper.unmap(lat, lon)[0]
                 assert eccodes_lat - tol <= lat[0]
                 assert lat[0] <= eccodes_lat + tol
                 assert eccodes_lon - tol <= lon[0]
                 assert lon[0] <= eccodes_lon + tol
-                assert (
-                    leaf.result[1][i] - 1e-4
-                    <= eccodes_result
-                    <= leaf.result[1][i] + 1e-4
-                )
+                assert leaf.result[1][i] - 1e-4 <= eccodes_result <= leaf.result[1][i] + 1e-4
         assert len(eccodes_lats) == 5
 
     @pytest.mark.internet
@@ -281,26 +255,18 @@ class TestHealpixNestedGrid:
                 ]
                 lats.append(lat)
                 lons.append(lon)
-                nearest_points = find_nearest_latlon(
-                    "./tests/data/healpix_nested.grib", lat[0], lon[0]
-                )
+                nearest_points = find_nearest_latlon("./tests/data/healpix_nested.grib", lat[0], lon[0])
                 eccodes_lat = nearest_points[0][0]["lat"]
                 eccodes_lon = nearest_points[0][0]["lon"]
                 eccodes_result = nearest_points[3][0]["value"]
                 eccodes_lats.append(eccodes_lat)
                 eccodes_lons.append(eccodes_lon)
 
-                mapper = NestedHealpixGridMapper(
-                    "values", ["latitude", "longitude"], 128
-                )
+                mapper = NestedHealpixGridMapper("values", ["latitude", "longitude"], 128)
                 assert nearest_points[0][0]["index"] == mapper.unmap(lat, lon)[0]
                 assert eccodes_lat - tol <= lat[0]
                 assert lat[0] <= eccodes_lat + tol
                 assert eccodes_lon - tol <= lon[0]
                 assert lon[0] <= eccodes_lon + tol
-                assert (
-                    leaf.result[1][i] - 1e-4
-                    <= eccodes_result
-                    <= leaf.result[1][i] + 1e-4
-                )
+                assert leaf.result[1][i] - 1e-4 <= eccodes_result <= leaf.result[1][i] + 1e-4
         assert len(eccodes_lats) == 15

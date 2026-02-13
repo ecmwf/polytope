@@ -21,17 +21,13 @@ class TestSlicingFDBDatacube:
                     }
                 }
             },
-            "date": {
-                "transformation": {"merge": {"with": "time", "linkers": [" ", "00"]}}
-            },
+            "date": {"transformation": {"merge": {"with": "time", "linkers": [" ", "00"]}}},
             "step": {"transformation": {"type_change": "int"}},
         }
         self.config = {"class": "od", "expver": "0001", "levtype": "sfc", "step": 0}
         self.fdbdatacube = FDBDatacube(self.config, axis_options=self.options)
         self.slicer = HullSlicer()
-        self.API = Polytope(
-            datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options
-        )
+        self.API = Polytope(datacube=self.fdbdatacube, engine=self.slicer, axis_options=self.options)
 
     # Testing different shapes
     # @pytest.mark.skip(reason="can't install fdb branch on CI")

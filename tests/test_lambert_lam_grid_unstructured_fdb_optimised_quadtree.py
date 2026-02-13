@@ -28,9 +28,7 @@ class TestQuadTreeSlicer:
                 },
                 {
                     "axis_name": "date",
-                    "transformations": [
-                        {"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}
-                    ],
+                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
                 },
                 {
                     "axis_name": "values",
@@ -49,14 +47,8 @@ class TestQuadTreeSlicer:
                             "LoVInDegrees": 1.93697,
                             "Dx": 500,
                             "Dy": 500,
-                            "latFirstInRadians": (
-                                (43.6409 + 2.9710306719721302e-05) / 180
-                            )
-                            * math.pi,
-                            "lonFirstInRadians": (
-                                (357.32 - 0.00024761029651987343) / 180
-                            )
-                            * math.pi,
+                            "latFirstInRadians": ((43.6409 + 2.9710306719721302e-05) / 180) * math.pi,
+                            "lonFirstInRadians": ((357.32 - 0.00024761029651987343) / 180) * math.pi,
                             "LoVInRadians": (1.93697 / 180) * math.pi,
                             "Latin1InRadians": (47.082971 / 180) * math.pi,
                             "Latin2InRadians": (47.082971 / 180) * math.pi,
@@ -107,9 +99,7 @@ class TestQuadTreeSlicer:
             lon = cubepath["longitude"][0]
             lats.append(lat)
             lons.append(lon)
-            nearest_points = find_nearest_latlon(
-                "tests/data/lambert_lam_one_message.grib", lat, lon
-            )
+            nearest_points = find_nearest_latlon("tests/data/lambert_lam_one_message.grib", lat, lon)
             eccodes_lat = nearest_points[0][0]["lat"]
             eccodes_lon = nearest_points[0][0]["lon"]
             eccodes_lats.append(eccodes_lat)

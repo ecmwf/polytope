@@ -30,9 +30,7 @@ class QuadTreeSlicer(Engine):
         if use_rust:
             if len(datacube.nearest_search) == 0:
                 polytope_points = [tuple(point) for point in polytope.points]
-                polygon_points = self.quad_tree.query_polygon(
-                    self.points, 0, polytope_points
-                )
+                polygon_points = self.quad_tree.query_polygon(self.points, 0, polytope_points)
             else:
                 k = datacube.nearest_search[tuple(polytope.axes())][1]
                 nn_points = [tuple(pt) for pt in datacube.nearest_search[tuple(polytope.axes())][0]]
@@ -46,9 +44,7 @@ class QuadTreeSlicer(Engine):
     def _build_branch(self, ax, node, datacube, next_nodes, api):
         for polytope in node["unsliced_polytopes"]:
             if ax.name in polytope._axes:
-                self._build_sliceable_child(
-                    polytope, ax, node, datacube, next_nodes, api
-                )
+                self._build_sliceable_child(polytope, ax, node, datacube, next_nodes, api)
         del node["unsliced_polytopes"]
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes, api):

@@ -34,33 +34,19 @@ def _query_polygon(quadtree_points, quadtree, node_idx, polygon, results):
             if len(children_idxs) > 0:
                 # first slice vertically
                 quadtree_center = quadtree.get_center(node_idx)
-                left_polygon, right_polygon = slice_in_two(
-                    polygon, quadtree_center[0], 0
-                )
+                left_polygon, right_polygon = slice_in_two(polygon, quadtree_center[0], 0)
 
                 # then slice horizontally
                 # ie need to slice the left and right polygons each in two to have the 4 quadrant polygons
 
-                q1_polygon, q2_polygon = slice_in_two(
-                    left_polygon, quadtree_center[1], 1
-                )
-                q3_polygon, q4_polygon = slice_in_two(
-                    right_polygon, quadtree_center[1], 1
-                )
+                q1_polygon, q2_polygon = slice_in_two(left_polygon, quadtree_center[1], 1)
+                q3_polygon, q4_polygon = slice_in_two(right_polygon, quadtree_center[1], 1)
 
                 # now query these 4 polygons further down the quadtree
-                _query_polygon(
-                    quadtree_points, quadtree, children_idxs[0], q1_polygon, results
-                )
-                _query_polygon(
-                    quadtree_points, quadtree, children_idxs[1], q2_polygon, results
-                )
-                _query_polygon(
-                    quadtree_points, quadtree, children_idxs[2], q3_polygon, results
-                )
-                _query_polygon(
-                    quadtree_points, quadtree, children_idxs[3], q4_polygon, results
-                )
+                _query_polygon(quadtree_points, quadtree, children_idxs[0], q1_polygon, results)
+                _query_polygon(quadtree_points, quadtree, children_idxs[1], q2_polygon, results)
+                _query_polygon(quadtree_points, quadtree, children_idxs[2], q3_polygon, results)
+                _query_polygon(quadtree_points, quadtree, children_idxs[3], q4_polygon, results)
 
             # TODO: try optimisation: take bbox of polygon and quickly remove the results that are not in bbox already
             else:

@@ -105,9 +105,7 @@ class Polytope:
             engines["point_in_polygon"] = PointInPolygonSlicer(points)
         if "optimised_point_in_polygon" in engine_types:
             points = self.datacube.find_point_cloud()
-            engines["optimised_point_in_polygon"] = OptimisedPointInPolygonSlicer(
-                points
-            )
+            engines["optimised_point_in_polygon"] = OptimisedPointInPolygonSlicer(points)
         return engines
 
     def _unique_continuous_points(self, p: ConvexPolytope, datacube: Datacube):

@@ -179,11 +179,7 @@ class Span(Shape):
         return [self.axis]
 
     def polytope(self):
-        return [
-            ConvexPolytope(
-                [self.axis], [[self.lower], [self.upper]], is_orthogonal=True
-            )
-        ]
+        return [ConvexPolytope([self.axis], [[self.lower], [self.upper]], is_orthogonal=True)]
 
     def __repr__(self):
         return f"Span in {self.axis} with range from {self.lower} to {self.upper}"
@@ -265,10 +261,7 @@ class Disk(Shape):
             self.points[i] = [x, y]
 
     def _points_on_circle(self, n, r):
-        return [
-            [math.cos(2 * math.pi / n * x) * r, math.sin(2 * math.pi / n * x) * r]
-            for x in range(0, n)
-        ]
+        return [[math.cos(2 * math.pi / n * x) * r, math.sin(2 * math.pi / n * x) * r] for x in range(0, n)]
 
     def _expansion_to_circumscribe_circle(self, n):
         half_angle_between_segments = math.pi / n

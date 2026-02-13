@@ -25,9 +25,7 @@ class TestRegularGrid:
                 },
                 {
                     "axis_name": "date",
-                    "transformations": [
-                        {"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}
-                    ],
+                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
                 },
                 {
                     "axis_name": "values",
@@ -120,9 +118,7 @@ class TestRegularGrid:
             lon = cubepath["longitude"][0]
             lats.append(lat)
             lons.append(lon)
-            nearest_points = find_nearest_latlon(
-                "./tests/data/era5-levels-members.grib", lat, lon
-            )
+            nearest_points = find_nearest_latlon("./tests/data/era5-levels-members.grib", lat, lon)
             eccodes_lat = nearest_points[0][0]["lat"]
             eccodes_lon = nearest_points[0][0]["lon"]
             eccodes_value = nearest_points[121][0]["value"]

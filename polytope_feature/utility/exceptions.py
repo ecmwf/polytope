@@ -20,9 +20,7 @@ class AxisOverdefinedError(PolytopeError, KeyError):
 class AxisUnderdefinedError(PolytopeError, KeyError):
     def __init__(self, axis):
         self.axis = axis
-        self.message = (
-            f"Axis {axis} is underdefined. It does not appear in any input polytope."
-        )
+        self.message = f"Axis {axis} is underdefined. It does not appear in any input polytope."
 
 
 class AxisNotFoundError(PolytopeError, KeyError):
@@ -34,9 +32,7 @@ class AxisNotFoundError(PolytopeError, KeyError):
 class UnsliceableShapeError(PolytopeError, KeyError):
     def __init__(self, axis):
         self.axis = axis
-        self.message = (
-            f"Higher-dimensional shape does not support unsliceable axis {axis.name}."
-        )
+        self.message = f"Higher-dimensional shape does not support unsliceable axis {axis.name}."
 
 
 class BadGridError(PolytopeError, ValueError):
@@ -47,8 +43,7 @@ class BadGridError(PolytopeError, ValueError):
 class GribJumpNoIndexError(PolytopeError, ValueError):
     def __init__(self):
         self.message = (
-            "Feature extraction cannot be performed on this data because no GribJump index"
-            " has been generated."
+            "Feature extraction cannot be performed on this data because no GribJump index" " has been generated."
         )
 
 

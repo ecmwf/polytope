@@ -50,9 +50,7 @@ class FDBDatacube(Datacube):
                 logging.info("Find GribJump axes for %s", context)
                 self.fdb_coordinates = self.gj.axes(partial_request, ctx=context)
                 logging.info("Retrieved available GribJump axes for %s", context)
-                if len(self.fdb_coordinates) == 0 or set(partial_request) > set(
-                    self.fdb_coordinates
-                ):
+                if len(self.fdb_coordinates) == 0 or set(partial_request) > set(self.fdb_coordinates):
                     raise BadRequestError(partial_request)
         else:
             self.fdb_coordinates = {}
@@ -161,9 +159,7 @@ class FDBDatacube(Datacube):
                     compressed_request[1],
                     self.grid_md5_hash,
                 )
-                complete_list_complete_uncompressed_requests.append(
-                    complete_uncompressed_request
-                )
+                complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
 
         if logging.root.level <= logging.DEBUG:
@@ -171,9 +167,7 @@ class FDBDatacube(Datacube):
             logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
         logging.info("Requests given to GribJump extract for %s", context)
         try:
-            iterator = self.gj.extract(
-                complete_list_complete_uncompressed_requests, context
-            )
+            iterator = self.gj.extract(complete_list_complete_uncompressed_requests, context)
         except Exception as e:
             if "BadValue: Grid hash mismatch" in str(e):
                 logging.info("Error is: %s", e)
@@ -223,18 +217,14 @@ class FDBDatacube(Datacube):
                     original_indices,
                     sorted_request_ranges,
                     fdb_node_ranges,
-                ) = self.sort_fdb_request_ranges(
-                    current_start_idxs, lat_length, fdb_node_ranges
-                )
+                ) = self.sort_fdb_request_ranges(current_start_idxs, lat_length, fdb_node_ranges)
                 fdb_requests.append((path, sorted_request_ranges))
                 fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
 
             # Otherwise remap the path for this key and iterate again over children
             else:
                 for c in requests.children:
-                    self.get_fdb_requests(
-                        c, fdb_requests, fdb_requests_decoding_info, leaf_path
-                    )
+                    self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path)
 
     def remove_duplicates_in_request_ranges(self, fdb_node_ranges, current_start_idxs):
         seen_indices = set()
@@ -309,27 +299,15 @@ class FDBDatacube(Datacube):
             lat_children_values = [child.values for child in requests.children]
             for i in range(len(lat_children_values)):
                 lat_child_val = lat_children_values[i]
-                lat_child = [
-                    child
-                    for child in requests.children
-                    if child.values == lat_child_val
-                ][0]
+                lat_child = [child for child in requests.children if child.values == lat_child_val][0]
                 if lat_child.values not in [(latlon[0],) for latlon in nearest_latlons]:
                     lat_child.remove_branch()
                 else:
-                    possible_lons = [
-                        latlon[1]
-                        for latlon in nearest_latlons
-                        if (latlon[0],) == lat_child.values
-                    ]
+                    possible_lons = [latlon[1] for latlon in nearest_latlons if (latlon[0],) == lat_child.values]
                     lon_children_values = [child.values for child in lat_child.children]
                     for j in range(len(lon_children_values)):
                         lon_child_val = lon_children_values[j]
-                        lon_child = [
-                            child
-                            for child in lat_child.children
-                            if child.values == lon_child_val
-                        ][0]
+                        lon_child = [child for child in lat_child.children if child.values == lon_child_val][0]
                         for value in lon_child.values:
                             if value not in possible_lons:
                                 lon_child.remove_compressed_branch(value)
@@ -348,10 +326,7 @@ class FDBDatacube(Datacube):
             lat_child = requests.children[i]
             lon_length = len(lat_child.children)
             current_start_idxs[i] = [None] * lon_length
-            fdb_node_ranges[i] = [
-                [TensorIndexTree.root for y in range(lon_length)]
-                for x in range(lon_length)
-            ]
+            fdb_node_ranges[i] = [[TensorIndexTree.root for y in range(lon_length)] for x in range(lon_length)]
             current_start_idx = deepcopy(current_start_idxs[i])
             fdb_range_nodes = deepcopy(fdb_node_ranges[i])
             key_value_path = {lat_child.axis.name: lat_child.values}
@@ -363,9 +338,7 @@ class FDBDatacube(Datacube):
             (
                 current_start_idxs[i],
                 fdb_node_ranges[i],
-            ) = self.get_last_layer_before_leaf(
-                lat_child, leaf_path, current_start_idx, fdb_range_nodes
-            )
+            ) = self.get_last_layer_before_leaf(lat_child, leaf_path, current_start_idx, fdb_range_nodes)
 
         leaf_path_copy = deepcopy(leaf_path)
         leaf_path_copy.pop("values", None)
@@ -423,17 +396,11 @@ class FDBDatacube(Datacube):
             for j in range(len(old_interm_start_idx)):
                 # TODO: if we sorted the cyclic values in increasing order on the tree too,
                 # then we wouldn't have to sort here?
-                sorted_list = sorted(
-                    enumerate(old_interm_start_idx[j]), key=lambda x: x[1]
-                )
+                sorted_list = sorted(enumerate(old_interm_start_idx[j]), key=lambda x: x[1])
                 original_indices_idx, interm_start_idx = zip(*sorted_list)
                 for interm_fdb_nodes_obj in interm_fdb_nodes[j]:
-                    interm_fdb_nodes_obj.values = tuple(
-                        [interm_fdb_nodes_obj.values[k] for k in original_indices_idx]
-                    )
-                if abs(interm_start_idx[-1] + 1 - interm_start_idx[0]) <= len(
-                    interm_start_idx
-                ):
+                    interm_fdb_nodes_obj.values = tuple([interm_fdb_nodes_obj.values[k] for k in original_indices_idx])
+                if abs(interm_start_idx[-1] + 1 - interm_start_idx[0]) <= len(interm_start_idx):
                     current_request_ranges = (
                         interm_start_idx[0],
                         interm_start_idx[-1] + 1,
@@ -441,9 +408,7 @@ class FDBDatacube(Datacube):
                     interm_request_ranges.append(current_request_ranges)
                     new_fdb_node_ranges.append(interm_fdb_nodes[j])
                 else:
-                    jumps = list(
-                        map(operator.sub, interm_start_idx[1:], interm_start_idx[:-1])
-                    )
+                    jumps = list(map(operator.sub, interm_start_idx[1:], interm_start_idx[:-1]))
                     last_idx = 0
                     for k, jump in enumerate(jumps):
                         if jump > 1:

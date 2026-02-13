@@ -19,9 +19,7 @@ class Engine:
         self.remapped_vals = {}
         self.compressed_axes = []
 
-    def extract(
-        self, datacube: Datacube, polytopes: List[ConvexPolytope]
-    ) -> TensorIndexTree:
+    def extract(self, datacube: Datacube, polytopes: List[ConvexPolytope]) -> TensorIndexTree:
         # Delegate to the right slicer that the axes within the polytopes need to use
         pass
 

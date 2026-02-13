@@ -8,24 +8,14 @@ class DatacubeAxisTransformation(ABC):
         self.parent = None
 
     @staticmethod
-    def create_transform(
-        name, transformation_type_key, transformation_options, datacube
-    ):
-        transformation_type = _type_to_datacube_transformation_lookup[
-            transformation_type_key
-        ]
-        transformation_file_name = _type_to_transformation_file_lookup[
-            transformation_type_key
-        ]
+    def create_transform(name, transformation_type_key, transformation_options, datacube):
+        transformation_type = _type_to_datacube_transformation_lookup[transformation_type_key]
+        transformation_file_name = _type_to_transformation_file_lookup[transformation_type_key]
         file_name = ".datacube_" + transformation_file_name
-        module = import_module(
-            "polytope_feature.datacube.transformations" + file_name + file_name
-        )
+        module = import_module("polytope_feature.datacube.transformations" + file_name + file_name)
         constructor = getattr(module, transformation_type)
         transformation_type_option = transformation_options
-        new_transformation = deepcopy(
-            constructor(name, transformation_type_option, datacube)
-        )
+        new_transformation = deepcopy(constructor(name, transformation_type_option, datacube))
 
         new_transformation.name = name
         return new_transformation
@@ -65,9 +55,7 @@ class DatacubeAxisTransformation(ABC):
     def unmap_tree_node(self, node, unwanted_path):
         return (node, unwanted_path)
 
-    def find_indices_between(
-        self, indexes_ranges, low, up, datacube, method, indexes_between_ranges, axis
-    ):
+    def find_indices_between(self, indexes_ranges, low, up, datacube, method, indexes_between_ranges, axis):
         return indexes_between_ranges
 
     def _remap_val_to_axis_range(self, value, axis):

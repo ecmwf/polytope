@@ -63,9 +63,7 @@ class TestHullSlicer:
 
     @pytest.mark.skip(reason="This is too slow.")
     def test_extract(self):
-        self.datacube = MockDatacube(
-            {"a": 20, "b": 20, "c": 20, "d": 20, "x": 10, "y": 10}
-        )
+        self.datacube = MockDatacube({"a": 20, "b": 20, "c": 20, "d": 20, "x": 10, "y": 10})
         p1 = self.construct_nd_cube(4, 0, 10)
         p2 = self.construct_nd_cube(2, 0, 5)
         p2._axes = ["x", "y"]

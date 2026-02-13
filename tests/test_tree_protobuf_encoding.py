@@ -36,9 +36,7 @@ class TestEncoder:
         # TODO: test the timestamp and timedelta axes too
         self.fake_tree.add_child(child1)
         self.fake_tree.add_child(child2)
-        self.datacube = MockDatacube(
-            {"ax1": 1, "ax2": 1, "ax3": 1, "timestamp_ax": 1, "timedelta_ax": 1}
-        )
+        self.datacube = MockDatacube({"ax1": 1, "ax2": 1, "ax3": 1, "timestamp_ax": 1, "timedelta_ax": 1})
         self.datacube._axes = {
             "ax1": child_ax1,
             "ax2": grandchild_ax1,

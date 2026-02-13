@@ -20,9 +20,7 @@ class TestSlicingFDBDatacube:
                 },
                 {
                     "axis_name": "date",
-                    "transformations": [
-                        {"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}
-                    ],
+                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
                 },
                 {
                     "axis_name": "values",
@@ -157,9 +155,7 @@ class TestSlicingFDBDatacube:
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["an"]),
-            Point(
-                ["latitude", "longitude"], [[0.035149384216, -0.01]], method="nearest"
-            ),
+            Point(["latitude", "longitude"], [[0.035149384216, -0.01]], method="nearest"),
         )
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(
@@ -217,9 +213,7 @@ class TestSlicingFDBDatacube:
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["an"]),
-            Point(
-                ["latitude", "longitude"], [[0.035149384216, 359.97]], method="nearest"
-            ),
+            Point(["latitude", "longitude"], [[0.035149384216, 359.97]], method="nearest"),
         )
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(

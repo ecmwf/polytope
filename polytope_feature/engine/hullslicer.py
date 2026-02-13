@@ -10,9 +10,7 @@ class HullSlicer(Engine):
     def __init__(self):
         super().__init__()
 
-    def _build_unsliceable_child(
-        self, polytope, ax, node, datacube, lowers, next_nodes, slice_axis_idx
-    ):
+    def _build_unsliceable_child(self, polytope, ax, node, datacube, lowers, next_nodes, slice_axis_idx):
         if not polytope.is_flat:
             raise UnsliceableShapeError(ax)
         path = node.flatten()
@@ -29,16 +27,9 @@ class HullSlicer(Engine):
 
         # TODO: Restructure this to add all compressed values at once in the tree
         for i, lower in enumerate(lowers):
-            if (
-                self.axis_values_between.get((flattened_tuple, ax.name, lower), None)
-                is None
-            ):
-                self.axis_values_between[(flattened_tuple, ax.name, lower)] = (
-                    datacube.has_index(path, ax, lower)
-                )
-            datacube_has_index = self.axis_values_between[
-                (flattened_tuple, ax.name, lower)
-            ]
+            if self.axis_values_between.get((flattened_tuple, ax.name, lower), None) is None:
+                self.axis_values_between[(flattened_tuple, ax.name, lower)] = datacube.has_index(path, ax, lower)
+            datacube_has_index = self.axis_values_between[(flattened_tuple, ax.name, lower)]
 
             if datacube_has_index:
                 if i == 0:
@@ -78,14 +69,10 @@ class HullSlicer(Engine):
                 )
                 flattened = {flattened_tuple[0]: flattened_tuple[1]}
 
-        values = self.axis_values_between.get(
-            (flattened_tuple, ax.name, lower, upper, method), None
-        )
+        values = self.axis_values_between.get((flattened_tuple, ax.name, lower, upper, method), None)
         if values is None:
             values = datacube.get_indices(flattened, ax, lower, upper, method)
-            self.axis_values_between[
-                (flattened_tuple, ax.name, lower, upper, method)
-            ] = values
+            self.axis_values_between[(flattened_tuple, ax.name, lower, upper, method)] = values
         return values
 
     def remap_values(self, ax, value):
@@ -100,9 +87,7 @@ class HullSlicer(Engine):
             self.remapped_vals[(value, ax.name)] = remapped_val
         return remapped_val
 
-    def _build_sliceable_child(
-        self, polytope, ax, node, datacube, values, next_nodes, slice_axis_idx, api
-    ):
+    def _build_sliceable_child(self, polytope, ax, node, datacube, values, next_nodes, slice_axis_idx, api):
         # TODO: Restructure this to add all compressed values at once in the tree
         for i, value in enumerate(values):
             if i == 0 or ax.name not in api.compressed_axes:
@@ -142,9 +127,7 @@ class HullSlicer(Engine):
                         slice_axis_idx,
                     )
                 else:
-                    values = self.find_values_between(
-                        polytope, ax, node, datacube, lower, upper
-                    )
+                    values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
                     # NOTE: need to only remove the branches if the values are empty,
                     # but only if there are no other possible children left in the tree that
                     # we can append and if somehow this happens before and we need to remove, then what do we do??
@@ -180,9 +163,7 @@ class HullSlicer(Engine):
                     if api.ax_is_unsliceable[ax.name]:
                         all_lowers.append(lower)
                     else:
-                        values = self.find_values_between(
-                            polytope, ax, node, datacube, lower, upper
-                        )
+                        values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
                         all_values.extend(values)
             if api.ax_is_unsliceable[ax.name]:
                 self._build_unsliceable_child(
