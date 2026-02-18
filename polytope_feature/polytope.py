@@ -70,6 +70,7 @@ class Polytope:
             alternative_axes,
             use_catalogue,
             engine_options,
+            return_indexes,
         ) = PolytopeOptions.get_polytope_options(options)
         self.datacube = Datacube.create(
             datacube,
@@ -78,6 +79,7 @@ class Polytope:
             compressed_axes_options,
             alternative_axes,
             use_catalogue,
+            return_indexes,
             self.context,
         )
         if engine_options == {}:
