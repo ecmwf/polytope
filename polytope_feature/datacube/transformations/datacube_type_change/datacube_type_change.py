@@ -203,18 +203,22 @@ class TypeChangeSubHourlyTimeSteps(DatacubeAxisTypeChange):
         raise ValueError(f"Unsupported timestep format: {value}")
 
     def make_str(self, value):
+        return_vals = []
         for val in value:
             total_minutes = int(val.total_seconds() // 60)
             hours, minutes = divmod(total_minutes, 60)
 
             if hours == 0 and minutes == 0:
-                return "0"
+                # return "0"
+                return_vals.append("0")
             elif hours == 0:
-                return f"{minutes}m"
+                # return f"{minutes}m"
+                return_vals.append(f"{minutes}m")
             elif minutes == 0:
-                return f"{hours}"
+                return_vals.append(f"{hours}")
             else:
-                return f"{hours}h{minutes}m"
+                return_vals.append(f"{hours}h{minutes}m")
+        return return_vals
 
 
 _type_to_datacube_type_change_lookup = {
