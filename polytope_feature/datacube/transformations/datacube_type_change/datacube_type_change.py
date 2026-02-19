@@ -217,27 +217,17 @@ class TypeChangeSubHourlyTimeSteps(DatacubeAxisTypeChange):
         raise ValueError(f"Unsupported timestep format: {value}")
 
     def make_str(self, value):
+        return_vals = []
         for val in value:
-            # total_minutes = int(val.total_seconds() // 60)
-            # hours, minutes = divmod(total_minutes, 60)
-
-            # if hours == 0 and minutes == 0:
-            #     return "0"
-            # elif hours == 0:
-            #     return f"{minutes}m"
-            # elif minutes == 0:
-            #     return f"{hours}h"
-            # else:
-            #     return f"{hours}h{minutes}m"
             total_seconds = int(val.total_seconds())
             days, rem = divmod(total_seconds, 86400)
             hours, rem = divmod(rem, 3600)
             minutes, seconds = divmod(rem, 60)
 
             if days == 0 and hours == 0 and minutes == 0 and seconds == 0:
-                return "0"
+                return_vals.append("0")
             # Prefer compact forms when possible to remain backwards compatible
-            if days > 0:
+            elif days > 0:
                 parts = [f"{days}d"]
                 if hours > 0:
                     parts.append(f"{hours}h")
@@ -245,19 +235,22 @@ class TypeChangeSubHourlyTimeSteps(DatacubeAxisTypeChange):
                     parts.append(f"{minutes}m")
                 if seconds > 0:
                     parts.append(f"{seconds}s")
-                return "".join(parts)
-            if hours == 0:
+                return_vals.append("".join(parts))
+            elif hours == 0:
                 if minutes == 0:
-                    return f"{seconds}s"
-                if seconds == 0:
-                    return f"{minutes}m"
-                return f"{minutes}m{seconds}s"
+                    return_vals.append(f"{seconds}s")
+                elif seconds == 0:
+                    return_vals.append(f"{minutes}m")
+                else:
+                    return_vals.append(f"{minutes}m{seconds}s")
             # hours > 0
-            if minutes == 0 and seconds == 0:
-                return f"{hours}"
-            if seconds == 0:
-                return f"{hours}h{minutes}m"
-            return f"{hours}h{minutes}m{seconds}s"
+            elif minutes == 0 and seconds == 0:
+                return_vals.append(f"{hours}")
+            elif seconds == 0:
+                return_vals.append(f"{hours}h{minutes}m")
+            else:
+                return_vals.append(f"{hours}h{minutes}m{seconds}s")
+        return return_vals
 
 
 _type_to_datacube_type_change_lookup = {
