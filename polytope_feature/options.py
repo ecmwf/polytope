@@ -148,6 +148,7 @@ def gridspec_to_grid_config(gridspec, md5hash):
             Latin1InRadians=gridspec.get("Latin1InRadians"),
             Latin2InRadians=gridspec.get("Latin2InRadians"),
             LaDInRadians=gridspec.get("LaDInRadians"),
+            axes=["latitude", "longitude"],
         )
         return mc
     return None
