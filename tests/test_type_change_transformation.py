@@ -60,13 +60,12 @@ class TestIntTypeChangeTransformation:
             hours=1, minutes=15
         )
 
-        assert (
-            type_change_transform.make_str([pd.Timedelta(hours=1, minutes=15)])
-            == "1h15m"
-        )
-        assert type_change_transform.make_str([pd.Timedelta(minutes=20)]) == "20m"
-        assert type_change_transform.make_str([pd.Timedelta(hours=2)]) == "2"
-        assert type_change_transform.make_str([pd.Timedelta(hours=0)]) == "0"
+        assert type_change_transform.make_str([pd.Timedelta(hours=1, minutes=15)]) == [
+            "1h15m"
+        ]
+        assert type_change_transform.make_str([pd.Timedelta(minutes=20)]) == ["20m"]
+        assert type_change_transform.make_str([pd.Timedelta(hours=2)]) == ["2"]
+        assert type_change_transform.make_str([pd.Timedelta(hours=0)]) == ["0"]
 
     def test_subhourly_step_compact_type_change_axis(self):
         type_change_transform = TypeChangeSubHourlyTimeStepsCompact(
