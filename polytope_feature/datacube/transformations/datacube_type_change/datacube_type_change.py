@@ -215,7 +215,7 @@ class TypeChangeSubHourlyTimeSteps(DatacubeAxisTypeChange):
                 # return f"{minutes}m"
                 return_vals.append(f"{minutes}m")
             elif minutes == 0:
-                return_vals.append(f"{hours}h")
+                return_vals.append(f"{hours}")
             else:
                 return_vals.append(f"{hours}h{minutes}m")
         return return_vals
