@@ -2,9 +2,7 @@ name: Build abi3 wheels
 
 on:
   push:
-    branches: [ develop ]
-  pull_request:
-    branches: [ develop ]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
