@@ -159,7 +159,7 @@ def replace_grid_config_in_options(options, req):
     except ImportError:
         # Optional dependencies not available, skip grid replacement
         return False
-    
+
     gridspec, md5hash = lookup_grid_config(req)
     grid_config = gridspec_to_grid_config(gridspec, md5hash)
     if grid_config is not None:

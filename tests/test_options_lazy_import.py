@@ -1,7 +1,9 @@
 """
 Test that options.py implements lazy import correctly for optional switching_grids dependencies.
 """
+
 import sys
+
 import pytest
 
 from polytope_feature.options import PolytopeOptions
@@ -12,6 +14,7 @@ def _optional_deps_available():
     try:
         import eccodes  # noqa: F401
         import pyfdb  # noqa: F401
+
         return True
     except ImportError:
         return False
@@ -24,8 +27,8 @@ class TestOptionsLazyImport:
         """Test that importing options.py does not import switching_grid_helper."""
         # Before calling get_polytope_options with dynamic_grid=True,
         # switching_grid_helper should not be imported
-        assert 'polytope_feature.datacube.switching_grid_helper' not in sys.modules
-        
+        assert "polytope_feature.datacube.switching_grid_helper" not in sys.modules
+
     def test_get_options_without_dynamic_grid(self):
         """Test that get_polytope_options works without dynamic_grid enabled."""
         options = {
@@ -37,20 +40,27 @@ class TestOptionsLazyImport:
             ],
             "dynamic_grid": False,
         }
-        
+
         result = PolytopeOptions.get_polytope_options(options)
-        
+
         # Verify that we got the expected return tuple
         assert len(result) == 6
-        axis_config, compressed_axes_config, pre_path, alternative_axes, use_catalogue, engine_options = result
-        
+        (
+            axis_config,
+            compressed_axes_config,
+            pre_path,
+            alternative_axes,
+            use_catalogue,
+            engine_options,
+        ) = result
+
         # Verify basic structure
         assert len(axis_config) == 1
         assert axis_config[0].axis_name == "number"
-        
+
         # Verify switching_grid_helper was not imported
-        assert 'polytope_feature.datacube.switching_grid_helper' not in sys.modules
-        
+        assert "polytope_feature.datacube.switching_grid_helper" not in sys.modules
+
     def test_get_options_without_dynamic_grid_no_flag(self):
         """Test that get_polytope_options works when dynamic_grid is omitted (defaults to False)."""
         options = {
@@ -61,25 +71,32 @@ class TestOptionsLazyImport:
                 },
             ],
         }
-        
+
         result = PolytopeOptions.get_polytope_options(options)
-        
+
         # Verify that we got the expected return tuple
         assert len(result) == 6
-        axis_config, compressed_axes_config, pre_path, alternative_axes, use_catalogue, engine_options = result
-        
+        (
+            axis_config,
+            compressed_axes_config,
+            pre_path,
+            alternative_axes,
+            use_catalogue,
+            engine_options,
+        ) = result
+
         # Verify basic structure
         assert len(axis_config) == 1
         assert axis_config[0].axis_name == "latitude"
-        
+
         # Verify switching_grid_helper was not imported
-        assert 'polytope_feature.datacube.switching_grid_helper' not in sys.modules
-        
+        assert "polytope_feature.datacube.switching_grid_helper" not in sys.modules
+
     def test_get_options_with_dynamic_grid_missing_deps(self):
         """Test that get_polytope_options gracefully handles missing optional dependencies."""
         # This test assumes optional dependencies are not installed in the test environment
         # If they are installed, the import will succeed and we'll skip the ImportError path
-        
+
         options = {
             "axis_config": [
                 {
@@ -99,31 +116,38 @@ class TestOptionsLazyImport:
                 "georef": "test",
             },
         }
-        
+
         # This should not raise an exception even if optional deps are missing
         result = PolytopeOptions.get_polytope_options(options)
-        
+
         # Verify that we got the expected return tuple
         assert len(result) == 6
-        axis_config, compressed_axes_config, pre_path, alternative_axes, use_catalogue, engine_options = result
-        
+        (
+            axis_config,
+            compressed_axes_config,
+            pre_path,
+            alternative_axes,
+            use_catalogue,
+            engine_options,
+        ) = result
+
         # Verify basic structure - original config should be preserved
         assert len(axis_config) == 1
         assert axis_config[0].axis_name == "values"
-        
+
     @pytest.mark.skipif(
         not _optional_deps_available(),
-        reason="Optional switching_grids dependencies not installed"
+        reason="Optional switching_grids dependencies not installed",
     )
     def test_lazy_import_only_when_needed(self):
         """Test that switching_grid_helper is only imported when dynamic_grid is True."""
         # Remove the module if already imported from previous tests
-        if 'polytope_feature.datacube.switching_grid_helper' in sys.modules:
-            del sys.modules['polytope_feature.datacube.switching_grid_helper']
-            
+        if "polytope_feature.datacube.switching_grid_helper" in sys.modules:
+            del sys.modules["polytope_feature.datacube.switching_grid_helper"]
+
         # First verify it's not imported
-        assert 'polytope_feature.datacube.switching_grid_helper' not in sys.modules
-        
+        assert "polytope_feature.datacube.switching_grid_helper" not in sys.modules
+
         options = {
             "axis_config": [
                 {
@@ -133,8 +157,8 @@ class TestOptionsLazyImport:
             ],
             "dynamic_grid": False,
         }
-        
+
         PolytopeOptions.get_polytope_options(options)
-        
+
         # Should still not be imported
-        assert 'polytope_feature.datacube.switching_grid_helper' not in sys.modules
+        assert "polytope_feature.datacube.switching_grid_helper" not in sys.modules
