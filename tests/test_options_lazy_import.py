@@ -93,53 +93,6 @@ class TestOptionsLazyImport:
         # Verify switching_grid_helper was not imported
         assert "polytope_feature.datacube.switching_grid_helper" not in sys.modules
 
-    def test_get_options_with_dynamic_grid_missing_deps(self):
-        """Test that get_polytope_options gracefully handles missing optional dependencies.
-
-        NOTE: This test only validates the ImportError path if optional dependencies
-        are NOT installed. In CI, they are typically installed as part of test dependencies,
-        so this test may not exercise the ImportError handling. See
-        test_get_options_with_dynamic_grid_simulated_missing_deps for a test that
-        uses mocking to simulate missing dependencies regardless of installation status.
-        """
-        options = {
-            "axis_config": [
-                {
-                    "axis_name": "values",
-                    "transformations": [
-                        {
-                            "name": "mapper",
-                            "type": "lambert_conformal",
-                            "resolution": 1280,
-                            "axes": ["latitude", "longitude"],
-                        }
-                    ],
-                },
-            ],
-            "dynamic_grid": True,
-            "pre_path": {
-                "georef": "test",
-            },
-        }
-
-        # This should not raise an exception even if optional deps are missing
-        result = PolytopeOptions.get_polytope_options(options)
-
-        # Verify that we got the expected return tuple
-        assert len(result) == 6
-        (
-            axis_config,
-            compressed_axes_config,
-            pre_path,
-            alternative_axes,
-            use_catalogue,
-            engine_options,
-        ) = result
-
-        # Verify basic structure - original config should be preserved
-        assert len(axis_config) == 1
-        assert axis_config[0].axis_name == "values"
-
     def test_get_options_with_dynamic_grid_simulated_missing_deps(self):
         """Test ImportError handling by simulating missing optional dependencies.
 
