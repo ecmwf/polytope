@@ -1,0 +1,47 @@
+name: Build abi3 wheels
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build abi3 wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python (for maturin and packaging)
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Upgrade pip and install maturin
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install maturin
+
+      - name: Build abi3 wheel(s)
+        run: |
+          mkdir -p wheelhouse
+          maturin build --release --compatibility abi3 -o wheelhouse
+
+      - name: Upload built wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.os }}
+          path: wheelhouse/*.whl
