@@ -2,6 +2,7 @@
 Test that options.py implements lazy import correctly for optional switching_grids dependencies.
 """
 
+import builtins
 import sys
 from unittest.mock import patch
 
@@ -122,7 +123,7 @@ class TestOptionsLazyImport:
         }
 
         # Mock the builtins.__import__ to raise ImportError for switching_grid_helper
-        original_import = __builtins__.__import__
+        original_import = builtins.__import__
 
         def mock_import(name, *args, **kwargs):
             if "switching_grid_helper" in name:
