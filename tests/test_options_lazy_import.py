@@ -3,6 +3,7 @@ Test that options.py implements lazy import correctly for optional switching_gri
 """
 
 import sys
+from unittest.mock import patch
 
 import pytest
 
@@ -93,10 +94,14 @@ class TestOptionsLazyImport:
         assert "polytope_feature.datacube.switching_grid_helper" not in sys.modules
 
     def test_get_options_with_dynamic_grid_missing_deps(self):
-        """Test that get_polytope_options gracefully handles missing optional dependencies."""
-        # This test assumes optional dependencies are not installed in the test environment
-        # If they are installed, the import will succeed and we'll skip the ImportError path
+        """Test that get_polytope_options gracefully handles missing optional dependencies.
 
+        NOTE: This test only validates the ImportError path if optional dependencies
+        are NOT installed. In CI, they are typically installed as part of test dependencies,
+        so this test may not exercise the ImportError handling. See
+        test_get_options_with_dynamic_grid_simulated_missing_deps for a test that
+        uses mocking to simulate missing dependencies regardless of installation status.
+        """
         options = {
             "axis_config": [
                 {
@@ -134,6 +139,61 @@ class TestOptionsLazyImport:
         # Verify basic structure - original config should be preserved
         assert len(axis_config) == 1
         assert axis_config[0].axis_name == "values"
+
+    def test_get_options_with_dynamic_grid_simulated_missing_deps(self):
+        """Test ImportError handling by simulating missing optional dependencies.
+
+        This test uses mocking to simulate the ImportError that occurs when optional
+        dependencies (eccodes/pyfdb) are not installed, ensuring the ImportError
+        handling path is tested even when dependencies are installed in CI.
+        """
+
+        options_dict = {
+            "axis_config": [
+                {
+                    "axis_name": "values",
+                    "transformations": [
+                        {
+                            "name": "mapper",
+                            "type": "lambert_conformal",
+                            "resolution": 1280,
+                            "axes": ["latitude", "longitude"],
+                        }
+                    ],
+                },
+            ],
+            "dynamic_grid": True,
+            "pre_path": {
+                "georef": "test",
+            },
+        }
+
+        # Mock the builtins.__import__ to raise ImportError for switching_grid_helper
+        original_import = __builtins__.__import__
+
+        def mock_import(name, *args, **kwargs):
+            if "switching_grid_helper" in name:
+                raise ImportError(f"No module named '{name}'")
+            return original_import(name, *args, **kwargs)
+
+        with patch("builtins.__import__", side_effect=mock_import):
+            # This should not raise an exception even with ImportError
+            result = PolytopeOptions.get_polytope_options(options_dict)
+
+            # Verify that we got the expected return tuple
+            assert len(result) == 6
+            (
+                axis_config,
+                compressed_axes_config,
+                pre_path,
+                alternative_axes,
+                use_catalogue,
+                engine_options,
+            ) = result
+
+            # Verify basic structure - original config should be preserved
+            assert len(axis_config) == 1
+            assert axis_config[0].axis_name == "values"
 
     @pytest.mark.skipif(
         not _optional_deps_available(),
