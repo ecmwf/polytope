@@ -46,11 +46,11 @@ This request pulls three parameters from yesterdays forecast for all 50 ensemble
 
 The following are other examples of full field extraction on other datasets.
 
-  - <a href="./Examples/operational_example.ipynb">Operational</a>
-  - <a href="./Examples/climate_dt_example.ipynb">Climate DT</a>
-  - <a href="./Examples/extremes_dt_example.ipynb">Extremes DT</a>
-  - <a href="./Examples/on-demand_dt_example.ipynb">On Demand DT</a>
-  - <a href="./Examples/opendata_example.ipynb">Open Data</a>
+  - <a href="../Examples/operational_example">Operational</a>
+  - <a href="../Examples/climate_dt_example">Climate DT</a>
+  - <a href="../Examples/extremes_dt_example">Extremes DT</a>
+  - <a href="../Examples/on-demand_dt_example">On Demand DT</a>
+  - <a href="../Examples/opendata_example">Open Data</a>
 
 
 More examples of DestinE data via Polytope can be found in the following [examples repository](https://github.com/destination-earth-digital-twins/polytope-examples/tree/main).
