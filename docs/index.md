@@ -53,7 +53,7 @@ For a more in-depth explanation of how Polytope achieves its feature extraction,
   * <a href="./Service/Quick_Start">Quick Start</a>
   * <a href="./Service/Features/feature">Features</a>
   * <a href="./Service/Full_fields">Full Fields</a>
-  * <a href="./Service/Examples/Index">Examples</a>
+  * <a href="./Service/Examples/examples">Examples</a>
 
 <!-- ### <a href="./Algorithm/Overview/Overview">Algorithm</a>
   * <a href="./Algorithm/Overview/Overview">Overview</a>
