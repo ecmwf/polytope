@@ -4,12 +4,13 @@ import os
 import tempfile
 
 import eccodes
-import pyfdb
 
 # from polytope_feature.options import MapperConfig
 
 
 def get_first_grib_message(req):
+    import pyfdb
+
     fdb = pyfdb.FDB()
 
     # Make sure that we are accessing a single georef so that the grid is consistent
