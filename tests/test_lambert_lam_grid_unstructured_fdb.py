@@ -209,3 +209,48 @@ class TestQuadTreeSlicer:
             assert lat <= eccodes_lat + tol
             assert eccodes_lon - tol <= lon
             assert lon <= eccodes_lon + tol
+
+    @pytest.mark.fdb
+    def test_quad_tree_slicer_extract_point_k(self):
+        import pygribjump as gj
+
+        request = Request(
+            Select("date", [pd.Timestamp("20250221T0000")]),
+            Select("step", [0]),
+            Select("param", ["130"]),
+            Select("levtype", ["sfc"]),
+            Point(["latitude", "longitude"], [[44.25, 5.55]], method="nearest", k=4),
+        )
+
+        self.fdbdatacube = gj.GribJump()
+
+        self.API = Polytope(
+            datacube=self.fdbdatacube,
+            options=self.options,
+        )
+
+        result = self.API.retrieve(request)
+        assert len(result.leaves) == 4
+        result.pprint()
+
+        lats = []
+        lons = []
+        eccodes_lats = []
+        eccodes_lons = []
+        tol = 1e-3
+        leaves = result.leaves
+        for i in range(len(leaves)):
+            cubepath = leaves[i].flatten()
+            lat = cubepath["latitude"][0]
+            lon = cubepath["longitude"][0]
+            lats.append(lat)
+            lons.append(lon)
+            nearest_points = find_nearest_latlon("tests/data/lambert_lam_one_message.grib", lat, lon)
+            eccodes_lat = nearest_points[0][0]["lat"]
+            eccodes_lon = nearest_points[0][0]["lon"]
+            eccodes_lats.append(eccodes_lat)
+            eccodes_lons.append(eccodes_lon)
+            assert eccodes_lat - tol <= lat
+            assert lat <= eccodes_lat + tol
+            assert eccodes_lon - tol <= lon
+            assert lon <= eccodes_lon + tol
