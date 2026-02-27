@@ -35,9 +35,7 @@ class TestQuadTreeSlicer:
                 },
                 {
                     "axis_name": "date",
-                    "transformations": [
-                        {"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}
-                    ],
+                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
                 },
                 {
                     "axis_name": "values",
@@ -80,11 +78,7 @@ class TestQuadTreeSlicer:
         lat_ax = self.API.datacube.axes["latitude"]
         tree = TensorIndexTree()
         tree["unsliced_polytopes"] = [polytope]
-        self.API.engines["quadtree"]._build_sliceable_child(
-            polytope, lat_ax, tree, self.API.datacube, [], None
-        )
+        self.API.engines["quadtree"]._build_sliceable_child(polytope, lat_ax, tree, self.API.datacube, [], None)
         tree.pprint()
         assert len(tree.leaves) == 3
-        assert set([tuple(leaf.indexes) for leaf in tree.leaves]) == set(
-            [(0,), (4,), (6,)]
-        )
+        assert set([tuple(leaf.indexes) for leaf in tree.leaves]) == set([(0,), (4,), (6,)])

@@ -35,9 +35,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
         self.is_irregular = False
         self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
         self._first_axis_vals = self.first_axis_vals()
-        self._first_axis_vals_np_rounded = -np.round(
-            np.array(self._first_axis_vals), decimals=8
-        )
+        self._first_axis_vals_np_rounded = -np.round(np.array(self._first_axis_vals), decimals=8)
         self.compressed_grid_axes = [self._mapped_axes[1]]
         self.Nside = self._resolution
         self.k = int(math.log2(self.Nside))
@@ -48,18 +46,12 @@ class NestedHealpixGridMapper(DatacubeMapper):
         else:
             self.md5_hash = _md5_hash.get(resolution, None)
         if self._axis_reversed[mapped_axes[1]]:
-            raise NotImplementedError(
-                "Healpix grid with second axis in decreasing order is not supported"
-            )
+            raise NotImplementedError("Healpix grid with second axis in decreasing order is not supported")
         if not self._axis_reversed[mapped_axes[0]]:
-            raise NotImplementedError(
-                "Healpix grid with first axis in increasing order is not supported"
-            )
+            raise NotImplementedError("Healpix grid with first axis in increasing order is not supported")
 
         if local_area != []:
-            raise NotImplementedError(
-                "Local area grid not implemented for healpix grids"
-            )
+            raise NotImplementedError("Local area grid not implemented for healpix grids")
 
     def first_axis_vals(self):
         if use_rust:
@@ -70,18 +62,12 @@ class NestedHealpixGridMapper(DatacubeMapper):
 
             # Polar caps
             for i in range(1, self._resolution):
-                val = 90 - (
-                    rad2deg
-                    * math.acos(1 - (i * i / (3 * self._resolution * self._resolution)))
-                )
+                val = 90 - (rad2deg * math.acos(1 - (i * i / (3 * self._resolution * self._resolution))))
                 vals[i - 1] = val
                 vals[4 * self._resolution - 1 - i] = -val
             # Equatorial belts
             for i in range(self._resolution, 2 * self._resolution):
-                val = 90 - (
-                    rad2deg
-                    * math.acos((4 * self._resolution - 2 * i) / (3 * self._resolution))
-                )
+                val = 90 - (rad2deg * math.acos((4 * self._resolution - 2 * i) / (3 * self._resolution)))
                 vals[i - 1] = val
                 vals[4 * self._resolution - 1 - i] = -val
             # Equator
@@ -95,11 +81,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
 
     def second_axis_vals(self, first_val):
         tol = 1e-8
-        first_val = [
-            i
-            for i in self._first_axis_vals
-            if first_val[0] - tol <= i <= first_val[0] + tol
-        ][0]
+        first_val = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
         idx = self._first_axis_vals.index(first_val)
 
         values = self.HEALPix_longitudes(idx)
@@ -127,9 +109,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
         Nj = self.HEALPix_nj(i)
         step = 360.0 / Nj
         start = np.where(
-            (i < self._resolution)
-            | (3 * self._resolution - 1 < i)
-            | ((i + self._resolution) % 2 == 1),
+            (i < self._resolution) | (3 * self._resolution - 1 < i) | ((i + self._resolution) % 2 == 1),
             step / 2.0,
             0.0,
         )
@@ -144,9 +124,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
     def axes_idx_to_healpix_idx(self, first_idx, second_idx):
         res = self._resolution
         sum1 = 2 * (res - 1) * res
-        sum2 = 2 * (
-            ((res - 1) * res) - ((4 * res - 1 - first_idx) * (4 * res - first_idx))
-        )
+        sum2 = 2 * (((res - 1) * res) - ((4 * res - 1 - first_idx) * (4 * res - first_idx)))
 
         if first_idx < res - 1:
             return (2 * first_idx * (first_idx + 1)) + second_idx
@@ -169,22 +147,16 @@ class NestedHealpixGridMapper(DatacubeMapper):
             )
         else:
             # Convert to NumPy array for fast computation
-            idx = np.searchsorted(
-                self._first_axis_vals_np_rounded, -np.round(first_val[0], decimals=8)
-            )
+            idx = np.searchsorted(self._first_axis_vals_np_rounded, -np.round(first_val[0], decimals=8))
             if idx >= len(self._first_axis_vals_np_rounded):
                 return None
-            second_axis_vals = np.round(
-                np.array(self.second_axis_vals_from_idx(idx)), decimals=8
-            )
+            second_axis_vals = np.round(np.array(self.second_axis_vals_from_idx(idx)), decimals=8)
             second_vals = np.round(np.array(second_vals), decimals=8)
             second_idxs = np.searchsorted(second_axis_vals, second_vals)
             valid_mask = second_idxs < len(second_axis_vals)
             if not np.all(valid_mask):
                 return None
-            healpix_idxs = [
-                self.axes_idx_to_healpix_idx(idx, sec_idx) for sec_idx in second_idxs
-            ]
+            healpix_idxs = [self.axes_idx_to_healpix_idx(idx, sec_idx) for sec_idx in second_idxs]
             return_idxs = self.ring_to_nested(np.asarray(healpix_idxs)).tolist()
         return return_idxs
 
@@ -259,9 +231,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
 
         # South polar cap
         Nring_south = (1 + self.int_sqrt(2 * self.Npix - 2 * idx - 1)) >> 1
-        phi_south = (
-            1 + idx + 2 * Nring_south * (Nring_south - 1) + 4 * Nring_south - self.Npix
-        )
+        phi_south = 1 + idx + 2 * Nring_south * (Nring_south - 1) + 4 * Nring_south - self.Npix
         ring_south = 4 * self.Nside - Nring_south
         f_south = self.div_03(phi_south - 1, Nring_south) + 8
         nested_south = self.to_nest(f_south, ring_south, Nring_south, phi_south, 0)
@@ -287,9 +257,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
         nested_result = np.empty_like(idx)  # Preallocate array for performance
         nested_result[north_mask] = nested_north[north_mask]
         nested_result[south_mask] = nested_south[south_mask]
-        nested_result[~(north_mask | south_mask)] = nested_equatorial[
-            ~(north_mask | south_mask)
-        ]
+        nested_result[~(north_mask | south_mask)] = nested_equatorial[~(north_mask | south_mask)]
         return nested_result
 
 

@@ -18,9 +18,7 @@ class DatacubeAxisTypeChange(DatacubeAxisTransformation):
 
     def generate_final_transformation(self):
         map_type = _type_to_datacube_type_change_lookup[self.new_type]
-        module = import_module(
-            "polytope_feature.datacube.transformations.datacube_type_change.datacube_type_change"
-        )
+        module = import_module("polytope_feature.datacube.transformations.datacube_type_change.datacube_type_change")
         constructor = getattr(module, map_type)
         transformation = deepcopy(constructor(self.name, self.new_type))
         return transformation
@@ -210,9 +208,7 @@ class TypeChangeSubHourlyTimeSteps(DatacubeAxisTypeChange):
             minutes = int(m_match.group(1)) if m_match else 0
             seconds = int(s_match.group(1)) if s_match else 0
 
-            return pd.Timedelta(
-                days=days, hours=hours, minutes=minutes, seconds=seconds
-            )
+            return pd.Timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)
 
         raise ValueError(f"Unsupported timestep format: {value}")
 

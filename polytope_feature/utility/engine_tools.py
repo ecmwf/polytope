@@ -19,9 +19,7 @@ def unique_continuous_points_in_polytope(p: ConvexPolytope, datacube: Datacube):
     unique(p.points)
 
 
-def find_polytope_combinations(
-    datacube: Datacube, polytopes: List[ConvexPolytope]
-) -> TensorIndexTree:
+def find_polytope_combinations(datacube: Datacube, polytopes: List[ConvexPolytope]) -> TensorIndexTree:
     # here, we find the different possible polytope combinations that cover all of the datacube axes
 
     for p in polytopes:

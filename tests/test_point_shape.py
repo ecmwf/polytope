@@ -22,9 +22,7 @@ class TestSlicing3DXarrayDatacube:
         self.API = Polytope(datacube=array, options=options)
 
     def test_point(self):
-        request = Request(
-            Point(["step", "level"], [[3, 10]]), Select("date", ["2000-01-01"])
-        )
+        request = Request(Point(["step", "level"], [[3, 10]]), Select("date", ["2000-01-01"]))
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
         assert result.leaves[0].axis.name == "level"

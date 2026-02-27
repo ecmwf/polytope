@@ -49,9 +49,7 @@ options = {
         },
         {
             "axis_name": "date",
-            "transformations": [
-                {"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}
-            ],
+            "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
         },
         {
             "axis_name": "values",
@@ -102,6 +100,4 @@ time0 = time.time()
 # print(time1 - time0)
 # print(len(result.leaves))
 
-cProfile.runctx(
-    "API.retrieve(request)", globals(), locals(), "profiled_extract_quadtree.pstats"
-)
+cProfile.runctx("API.retrieve(request)", globals(), locals(), "profiled_extract_quadtree.pstats")

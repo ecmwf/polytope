@@ -26,7 +26,7 @@ class Shape(ABC):
 
 
 class ConvexPolytope(Shape):
-    def __init__(self, axes, points, method=None, is_orthogonal=False):
+    def __init__(self, axes, points, method=None, k=1, is_orthogonal=False):
         self._axes = list(axes)
         self.is_flat = False
         if len(self._axes) == 1 and len(points) == 1:
@@ -34,6 +34,7 @@ class ConvexPolytope(Shape):
             self.values = points
         self.points = points
         self.method = method
+        self.k = k
         self.is_orthogonal = is_orthogonal
         self.is_in_union = False
 
@@ -65,7 +66,7 @@ class ConvexPolytope(Shape):
 class Product(Shape):
     """Shape that takes two polytopes and 'multiplies' them together to obtain higher-dimensional shape"""
 
-    def __init__(self, *polytopes, method, value):
+    def __init__(self, *polytopes, method, k, value):
         # TODO
         all_axes = []
         for poly in polytopes:
@@ -86,6 +87,7 @@ class Product(Shape):
 
         self.is_in_union = False
         self.method = method
+        self.k = k
         self.values = value
 
         self.is_orthogonal = False
@@ -108,21 +110,19 @@ class Product(Shape):
 class Select(Shape):
     """Matches several discrete values"""
 
-    def __init__(self, axis, values, method=None):
+    def __init__(self, axis, values, method=None, k=1):
         self.axis = axis
         self.values = unique(values)
         if len(self.values) != len(values):
             warnings.warn("Duplicate request values were removed")
         self.method = method
+        self.k = k
 
     def axes(self):
         return [self.axis]
 
     def polytope(self):
-        return [
-            ConvexPolytope([self.axis], [[v]], self.method, is_orthogonal=True)
-            for v in self.values
-        ]
+        return [ConvexPolytope([self.axis], [[v]], self.method, self.k, is_orthogonal=True) for v in self.values]
 
     def __repr__(self):
         return f"Select in {self.axis} with points {self.values}"
@@ -131,10 +131,11 @@ class Select(Shape):
 class Point(Shape):
     """Matches several discrete value"""
 
-    def __init__(self, axes, values, method=None):
+    def __init__(self, axes, values, method=None, k=1):
         self._axes = axes
         self.values = values
         self.method = method
+        self.k = k
         self.decompose_1D = True
         assert len(values) == 1
 
@@ -150,21 +151,12 @@ class Point(Shape):
                 poly_to_mult = []
                 for i in range(len(self._axes)):
                     poly_to_mult.append(
-                        ConvexPolytope(
-                            [self._axes[i]],
-                            [[point[i]]],
-                            self.method,
-                            is_orthogonal=True,
-                        )
+                        ConvexPolytope([self._axes[i]], [[point[i]]], self.method, self.k, is_orthogonal=True)
                     )
-                polytopes.append(
-                    Product(*poly_to_mult, method=self.method, value=[point])
-                )
+                polytopes.append(Product(*poly_to_mult, method=self.method, k=self.k, value=[point]))
         else:
             for point in self.values:
-                polytopes.append(
-                    ConvexPolytope(self._axes, [point], self.method, is_orthogonal=True)
-                )
+                polytopes.append(ConvexPolytope(self._axes, [point], self.method, self.k, is_orthogonal=True))
         self.polytopes = polytopes
 
         return self.polytopes
@@ -187,11 +179,7 @@ class Span(Shape):
         return [self.axis]
 
     def polytope(self):
-        return [
-            ConvexPolytope(
-                [self.axis], [[self.lower], [self.upper]], is_orthogonal=True
-            )
-        ]
+        return [ConvexPolytope([self.axis], [[self.lower], [self.upper]], is_orthogonal=True)]
 
     def __repr__(self):
         return f"Span in {self.axis} with range from {self.lower} to {self.upper}"
@@ -273,10 +261,7 @@ class Disk(Shape):
             self.points[i] = [x, y]
 
     def _points_on_circle(self, n, r):
-        return [
-            [math.cos(2 * math.pi / n * x) * r, math.sin(2 * math.pi / n * x) * r]
-            for x in range(0, n)
-        ]
+        return [[math.cos(2 * math.pi / n * x) * r, math.sin(2 * math.pi / n * x) * r] for x in range(0, n)]
 
     def _expansion_to_circumscribe_circle(self, n):
         half_angle_between_segments = math.pi / n

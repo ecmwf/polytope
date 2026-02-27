@@ -30,13 +30,8 @@ tot_retrieve_time_unstructured = [
 ]
 
 
-pure_poly_time_structured = [
-    tot_retrieve_time_structured[i] - gj_retrieve_structured_time[i] for i in range(4)
-]
-pure_poly_time_unstructured = [
-    tot_retrieve_time_unstructured[i] - gj_retrieve_unstructured_time[i]
-    for i in range(4)
-]
+pure_poly_time_structured = [tot_retrieve_time_structured[i] - gj_retrieve_structured_time[i] for i in range(4)]
+pure_poly_time_unstructured = [tot_retrieve_time_unstructured[i] - gj_retrieve_unstructured_time[i] for i in range(4)]
 
 fig, ax = plt.subplots(1, 1)
 

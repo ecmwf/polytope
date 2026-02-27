@@ -51,9 +51,7 @@ class OptimisedQuadTreeSlicer(Engine):
         # extract a single polygon
         if use_rust:
             polytope_points = [tuple(point) for point in polytope.points]
-            polygon_points = self.quad_tree.query_polygon(
-                self.bbox_points, 0, polytope_points
-            )
+            polygon_points = self.quad_tree.query_polygon(self.bbox_points, 0, polytope_points)
         else:
             polygon_points = self.quad_tree.query_polygon(polytope)
 
@@ -64,9 +62,7 @@ class OptimisedQuadTreeSlicer(Engine):
     def _build_branch(self, ax, node, datacube, next_nodes, api):
         for polytope in node["unsliced_polytopes"]:
             if ax.name in polytope._axes:
-                self._build_sliceable_child(
-                    polytope, ax, node, datacube, next_nodes, api
-                )
+                self._build_sliceable_child(polytope, ax, node, datacube, next_nodes, api)
         del node["unsliced_polytopes"]
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes, api):

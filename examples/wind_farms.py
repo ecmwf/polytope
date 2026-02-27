@@ -21,16 +21,12 @@ class Test:
         axis_options = {"longitude": {"cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
-        self.API = Polytope(
-            datacube=array, engine=self.slicer, axis_options=axis_options
-        )
+        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=axis_options)
 
     def test_slice_wind_farms(self):
         gdal.SetConfigOption("SHAPE_RESTORE_SHX", "YES")
 
-        shapefile = gpd.read_file(
-            "./examples/data/EMODnet_HA_WindFarms_pg_20220324.shp"
-        )
+        shapefile = gpd.read_file("./examples/data/EMODnet_HA_WindFarms_pg_20220324.shp")
         polygons = []
         for i in range(306):
             country = shapefile.iloc[i]
@@ -89,9 +85,7 @@ class Test:
         fig, ax = plt.subplots(figsize=(12, 6))
         worldmap.plot(color="darkgrey", ax=ax)
         ax.scatter(longs, lats, s=8, c=parameter_values, cmap="viridis")
-        norm = mpl.colors.Normalize(
-            vmin=min(parameter_values), vmax=max(parameter_values)
-        )
+        norm = mpl.colors.Normalize(vmin=min(parameter_values), vmax=max(parameter_values))
 
         sm = plt.cm.ScalarMappable(cmap="viridis", norm=norm)
         sm.set_array([])

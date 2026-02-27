@@ -52,9 +52,7 @@ def get_gridspec_lamebert_conformal(gid):
 
     md5hash = eccodes.codes_get(gid, "md5GridSection")
 
-    earth_round = (eccodes.codes_get(gid, "shapeOfTheEarth") == 0) or (
-        eccodes.codes_get(gid, "shapeOfTheEarth") == 6
-    )
+    earth_round = (eccodes.codes_get(gid, "shapeOfTheEarth") == 0) or (eccodes.codes_get(gid, "shapeOfTheEarth") == 6)
 
     if earth_round:
         if eccodes.codes_get(gid, "shapeOfTheEarth") == 6:
@@ -71,12 +69,8 @@ def get_gridspec_lamebert_conformal(gid):
     LoVInDegrees = eccodes.codes_get(gid, "LoV") / 1000000
     Dx = eccodes.codes_get(gid, "Dx")
     Dy = eccodes.codes_get(gid, "Dy")
-    latFirstInRadians = (
-        eccodes.codes_get(gid, "latitudeOfFirstGridPoint") / 1000000 * to_rad
-    )
-    lonFirstInRadians = (
-        eccodes.codes_get(gid, "longitudeOfFirstGridPoint") / 1000000 * to_rad
-    )
+    latFirstInRadians = eccodes.codes_get(gid, "latitudeOfFirstGridPoint") / 1000000 * to_rad
+    lonFirstInRadians = eccodes.codes_get(gid, "longitudeOfFirstGridPoint") / 1000000 * to_rad
     LoVInRadians = eccodes.codes_get(gid, "LoV") / 1000000 * to_rad
     Latin1InRadians = eccodes.codes_get(gid, "Latin1") / 1000000 * to_rad
     Latin2InRadians = eccodes.codes_get(gid, "Latin2") / 1000000 * to_rad

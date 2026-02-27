@@ -29,22 +29,16 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         second_ax_name = self._second_axis
         second_ax_vals = np.array(datacube.ax_vals(second_ax_name))
         linkers = self._linkers
-        first_grid, second_grid = np.meshgrid(
-            first_ax_vals, second_ax_vals, indexing="ij"
-        )
+        first_grid, second_grid = np.meshgrid(first_ax_vals, second_ax_vals, indexing="ij")
         combined_strings = np.char.add(
             np.char.add(first_grid.ravel(), linkers[0]),
             np.char.add(second_grid.ravel(), linkers[1]),
         )
-        merged_values = (
-            pd.to_datetime(combined_strings).to_numpy().astype("datetime64[s]")
-        )
+        merged_values = pd.to_datetime(combined_strings).to_numpy().astype("datetime64[s]")
         merged_values = np.array(merged_values)
         merged_values.sort()
-        logging.debug(
-            f"Merged values {first_ax_vals} on axis {self.name} and \
-                     values {second_ax_vals} on axis {second_ax_name} to values {merged_values}"
-        )
+        logging.debug(f"Merged values {first_ax_vals} on axis {self.name} and \
+                     values {second_ax_vals} on axis {second_ax_name} to values {merged_values}")
         return merged_values
 
     def transformation_axes_final(self):
@@ -68,10 +62,8 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
             first_val = str(first_val).replace("-", "")
             second_val = second_val.replace(":", "")
             if i % 500 == 0:
-                logging.debug(
-                    f"Unmerged value {merged_val} to values {first_val} on axis {self.name} \
-                            and {second_val} on axis {self._second_axis}"
-                )
+                logging.debug(f"Unmerged value {merged_val} to values {first_val} on axis {self.name} \
+                            and {second_val} on axis {self._second_axis}")
             first_values.append(first_val)
             second_values.append(second_val)
         return (tuple(first_values), tuple(second_values))

@@ -89,9 +89,7 @@ class OptimisedPointInPolygonSlicer(Engine):
 
                 # NOTE: here, we only have sliceable children, since the unsliceable children are handled by the
                 # hullslicer engine? IS THIS TRUE?
-                self._build_sliceable_child(
-                    polytope, ax, node, datacube, next_nodes, api
-                )
+                self._build_sliceable_child(polytope, ax, node, datacube, next_nodes, api)
                 # TODO: what does this function actually return and what should it return?
                 # It just modifies the next_nodes?
         del node["unsliced_polytopes"]

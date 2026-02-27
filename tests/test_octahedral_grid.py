@@ -12,13 +12,7 @@ class TestOctahedralGrid:
         download_test_data(nexus_url, "foo.grib")
 
         ds = data.from_source("file", "./tests/data/foo.grib")
-        self.latlon_array = (
-            ds.to_xarray(engine="cfgrib")
-            .isel(step=0)
-            .isel(number=0)
-            .isel(surface=0)
-            .isel(time=0)
-        )
+        self.latlon_array = ds.to_xarray(engine="cfgrib").isel(step=0).isel(number=0).isel(surface=0).isel(time=0)
         self.latlon_array = self.latlon_array.t2m
         self.options = {
             "axis_config": [
@@ -79,15 +73,9 @@ class TestOctahedralGrid:
             tree_result = leaf.result[1].tolist()
             lats.append(lat)
             lons.append(lon)
-            nearest_points = find_nearest_latlon(
-                "./tests/data/foo.grib", lat[0], lon[0]
-            )
-            nearest_points_2 = find_nearest_latlon(
-                "./tests/data/foo.grib", lat[0], lon[1]
-            )
-            nearest_points_3 = find_nearest_latlon(
-                "./tests/data/foo.grib", lat[0], lon[2]
-            )
+            nearest_points = find_nearest_latlon("./tests/data/foo.grib", lat[0], lon[0])
+            nearest_points_2 = find_nearest_latlon("./tests/data/foo.grib", lat[0], lon[1])
+            nearest_points_3 = find_nearest_latlon("./tests/data/foo.grib", lat[0], lon[2])
             eccodes_lat = nearest_points[0][0]["lat"]
             eccodes_lon = nearest_points[0][0]["lon"]
             eccodes_value = nearest_points[0][0]["value"]
