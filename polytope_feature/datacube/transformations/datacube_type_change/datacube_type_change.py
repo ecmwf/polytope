@@ -189,30 +189,64 @@ class TypeChangeSubHourlyTimeSteps(DatacubeAxisTypeChange):
             return pd.Timedelta(hours=int(value))
 
         if isinstance(value, str):
-            # Extract hours and minutes using regex
+            # # Extract hours and minutes using regex
+            # h_match = re.search(r"(\d+)\s*h", value)
+            # m_match = re.search(r"(\d+)\s*m(?:in)?", value)
+
+            # hours = int(h_match.group(1)) if h_match else 0
+            # minutes = int(m_match.group(1)) if m_match else 0
+
+            # return pd.Timedelta(hours=hours, minutes=minutes)
+            # Extract days, hours, minutes and seconds using regex
+            d_match = re.search(r"(\d+)\s*d", value)
             h_match = re.search(r"(\d+)\s*h", value)
             m_match = re.search(r"(\d+)\s*m(?:in)?", value)
+            s_match = re.search(r"(\d+)\s*s(?:ec)?", value)
 
+            days = int(d_match.group(1)) if d_match else 0
             hours = int(h_match.group(1)) if h_match else 0
             minutes = int(m_match.group(1)) if m_match else 0
+            seconds = int(s_match.group(1)) if s_match else 0
 
-            return pd.Timedelta(hours=hours, minutes=minutes)
+            return pd.Timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)
 
         raise ValueError(f"Unsupported timestep format: {value}")
 
     def make_str(self, value):
+        return_vals = []
         for val in value:
-            total_minutes = int(val.total_seconds() // 60)
-            hours, minutes = divmod(total_minutes, 60)
+            total_seconds = int(val.total_seconds())
+            days, rem = divmod(total_seconds, 86400)
+            hours, rem = divmod(rem, 3600)
+            minutes, seconds = divmod(rem, 60)
 
-            if hours == 0 and minutes == 0:
-                return "0"
+            if days == 0 and hours == 0 and minutes == 0 and seconds == 0:
+                return_vals.append("0")
+            # Prefer compact forms when possible to remain backwards compatible
+            elif days > 0:
+                parts = [f"{days}d"]
+                if hours > 0:
+                    parts.append(f"{hours}h")
+                if minutes > 0:
+                    parts.append(f"{minutes}m")
+                if seconds > 0:
+                    parts.append(f"{seconds}s")
+                return_vals.append("".join(parts))
             elif hours == 0:
-                return f"{minutes}m"
-            elif minutes == 0:
-                return f"{hours}"
+                if minutes == 0:
+                    return_vals.append(f"{seconds}s")
+                elif seconds == 0:
+                    return_vals.append(f"{minutes}m")
+                else:
+                    return_vals.append(f"{minutes}m{seconds}s")
+            # hours > 0
+            elif minutes == 0 and seconds == 0:
+                return_vals.append(f"{hours}")
+            elif seconds == 0:
+                return_vals.append(f"{hours}h{minutes}m")
             else:
-                return f"{hours}h{minutes}m"
+                return_vals.append(f"{hours}h{minutes}m{seconds}s")
+        return return_vals
 
 
 _type_to_datacube_type_change_lookup = {

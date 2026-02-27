@@ -29,8 +29,8 @@
 * <a href="../OpenData/od_boundingbox_example">Bounding Box</a>
 * <a href="../OpenData/od_trajectory_example">Trajectory</a>
 * <a href="../OpenData/od_country_example">Country Cut-Out</a>
-* <a href="../OpenData/circle_example">Circle</a>
-* <a href="../OpenData/position_example">Position</a>
+* <a href="../OpenData/od_circle_example">Circle</a>
+* <a href="../OpenData/od_position_example">Position</a>
 
 For examples of Polytope feature extraction  and full field extraction on Destination Earth Digital Twin data, please visit the [dedicated GitHub repository](https://github.com/destination-earth-digital-twins/polytope-examples).
 
