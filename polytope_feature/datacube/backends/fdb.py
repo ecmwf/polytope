@@ -277,8 +277,9 @@ class FDBDatacube(Datacube):
                     nearest_pts_k[0][i] = [pt[1], pt[0]]
 
             k = nearest_pts_k[1]
-            if k != 1:
+            if k != 1 and not self.grid_transformation.is_irregular:
                 print("k nearest neighbour not supported in hullslicer, defaulting to nearest neighbour.")
+                k = 1
 
             transformed_nearest_pts = []
             for point in nearest_pts_k[0]:
@@ -292,8 +293,8 @@ class FDBDatacube(Datacube):
             # now find the nearest lat lon to the points requested
             nearest_latlons = []
             for pt in transformed_nearest_pts:
-                nearest_latlon = nearest_pt(found_latlon_pts, pt)
-                nearest_latlons.append(nearest_latlon)
+                nearest_latlon = nearest_pt(found_latlon_pts, pt, k)
+                nearest_latlons.extend(nearest_latlon)
 
             # need to remove the branches that do not fit
             lat_children_values = [child.values for child in requests.children]
