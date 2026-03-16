@@ -1,0 +1,12 @@
+name: ci
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  qa-pre-commit:
+    uses: ecmwf/reusable-workflows/.github/workflows/qa-precommit-run.yml@v2
+    secrets: inherit
