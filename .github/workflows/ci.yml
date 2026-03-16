@@ -7,6 +7,26 @@ on:
     branches: [ "main", "develop" ]
 
 jobs:
-  qa-pre-commit:
-    uses: ecmwf/reusable-workflows/.github/workflows/qa-precommit-run.yml@v2
-    secrets: inherit
+  python-qa:
+    name: python-qa
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.repository }}
+        ref: ${{ inputs.ref }}
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.x
+    - name: Install Python Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install black flake8 isort
+    - name: Check isort
+      run: isort --check --diff . --profile black
+    - name: Check black
+      run: black --check --diff .
+    - name: Check flake8
+      run: flake8 .
