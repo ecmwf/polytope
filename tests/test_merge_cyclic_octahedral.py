@@ -29,9 +29,7 @@ class TestMultipleTransformations:
                 },
                 {
                     "axis_name": "date",
-                    "transformations": [
-                        {"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}
-                    ],
+                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
                 },
                 {
                     "axis_name": "values",
@@ -64,8 +62,6 @@ class TestMultipleTransformations:
             Box(["latitude", "longitude"], [0, 0], [0.2, 0.2]),
         )
         result = self.API.retrieve(request)
-        assert result.leaves[0].flatten()["date"] == np.datetime64(
-            "2000-01-01T06:00:00"
-        )
+        assert result.leaves[0].flatten()["date"] == np.datetime64("2000-01-01T06:00:00")
         for leaf in result.leaves:
             assert leaf.flatten()["step"] in [0, 1, 2, 3]

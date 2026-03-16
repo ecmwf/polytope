@@ -27,18 +27,12 @@ class ReducedLatLonMapper(DatacubeMapper):
         else:
             self.md5_hash = _md5_hash.get(resolution, None)
         if self._axis_reversed[mapped_axes[1]]:
-            raise NotImplementedError(
-                "Reduced lat-lon grid with second axis in decreasing order is not supported"
-            )
+            raise NotImplementedError("Reduced lat-lon grid with second axis in decreasing order is not supported")
         if self._axis_reversed[mapped_axes[0]]:
-            raise NotImplementedError(
-                "Reduced lat-lon grid with first axis in decreasing order is not supported"
-            )
+            raise NotImplementedError("Reduced lat-lon grid with first axis in decreasing order is not supported")
 
         if local_area != []:
-            raise NotImplementedError(
-                "Local area grid not implemented for reduced latitude-longitude grids"
-            )
+            raise NotImplementedError("Local area grid not implemented for reduced latitude-longitude grids")
 
     def first_axis_vals(self):
         start_lat = 90
@@ -5110,9 +5104,7 @@ class ReducedLatLonMapper(DatacubeMapper):
             second_spacing = 360 / Ny
             return [i * second_spacing for i in range(Ny)]
         else:
-            raise ValueError(
-                "Requested latitude value is not within reduced latitude-longitude grid bounds"
-            )
+            raise ValueError("Requested latitude value is not within reduced latitude-longitude grid bounds")
 
     def map_second_axis(self, first_val, lower, upper):
         axis_lines = self.second_axis_vals(first_val)
@@ -5137,19 +5129,11 @@ class ReducedLatLonMapper(DatacubeMapper):
 
     def unmap(self, first_val, second_vals, unmapped_idx=None):
         tol = 1e-8
-        first_value = [
-            i
-            for i in self._first_axis_vals
-            if first_val[0] - tol <= i <= first_val[0] + tol
-        ][0]
+        first_value = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
         first_idx = self._first_axis_vals.index(first_value)
         return_idxs = []
         for second_val in second_vals:
-            second_val = [
-                i
-                for i in self.second_axis_vals(first_val)
-                if second_val - tol <= i <= second_val + tol
-            ][0]
+            second_val = [i for i in self.second_axis_vals(first_val) if second_val - tol <= i <= second_val + tol][0]
             second_idx = self.second_axis_vals(first_val).index(second_val)
             reduced_ll_index = self.axes_idx_to_reduced_ll_idx(first_idx, second_idx)
             return_idxs.append(reduced_ll_index)

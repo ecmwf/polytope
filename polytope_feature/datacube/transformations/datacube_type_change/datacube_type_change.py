@@ -18,9 +18,7 @@ class DatacubeAxisTypeChange(DatacubeAxisTransformation):
 
     def generate_final_transformation(self):
         map_type = _type_to_datacube_type_change_lookup[self.new_type]
-        module = import_module(
-            "polytope_feature.datacube.transformations.datacube_type_change.datacube_type_change"
-        )
+        module = import_module("polytope_feature.datacube.transformations.datacube_type_change.datacube_type_change")
         constructor = getattr(module, map_type)
         transformation = deepcopy(constructor(self.name, self.new_type))
         return transformation
@@ -191,28 +189,16 @@ class TypeChangeSubHourlyTimeSteps(DatacubeAxisTypeChange):
             return pd.Timedelta(hours=int(value))
 
         if isinstance(value, str):
-            # # Extract hours and minutes using regex
-            # h_match = re.search(r"(\d+)\s*h", value)
-            # m_match = re.search(r"(\d+)\s*m(?:in)?", value)
-
-            # hours = int(h_match.group(1)) if h_match else 0
-            # minutes = int(m_match.group(1)) if m_match else 0
-
-            # return pd.Timedelta(hours=hours, minutes=minutes)
             # Extract days, hours, minutes and seconds using regex
-            d_match = re.search(r"(\d+)\s*d", value)
             h_match = re.search(r"(\d+)\s*h", value)
             m_match = re.search(r"(\d+)\s*m(?:in)?", value)
             s_match = re.search(r"(\d+)\s*s(?:ec)?", value)
 
-            days = int(d_match.group(1)) if d_match else 0
             hours = int(h_match.group(1)) if h_match else 0
             minutes = int(m_match.group(1)) if m_match else 0
             seconds = int(s_match.group(1)) if s_match else 0
 
-            return pd.Timedelta(
-                days=days, hours=hours, minutes=minutes, seconds=seconds
-            )
+            return pd.Timedelta(hours=hours, minutes=minutes, seconds=seconds)
 
         raise ValueError(f"Unsupported timestep format: {value}")
 
@@ -220,17 +206,17 @@ class TypeChangeSubHourlyTimeSteps(DatacubeAxisTypeChange):
         return_vals = []
         for val in value:
             total_seconds = int(val.total_seconds())
-            days, rem = divmod(total_seconds, 86400)
-            hours, rem = divmod(rem, 3600)
+            hours, rem = divmod(total_seconds, 3600)
             minutes, seconds = divmod(rem, 60)
 
-            if days == 0 and hours == 0 and minutes == 0 and seconds == 0:
+            if hours == 0 and minutes == 0 and seconds == 0:
                 return_vals.append("0")
             # Prefer compact forms when possible to remain backwards compatible
-            elif days > 0:
-                parts = [f"{days}d"]
-                if hours > 0:
-                    parts.append(f"{hours}h")
+            elif hours > 0:
+                parts = [f"{hours}h"]
+                if minutes == 0 and seconds == 0:
+                    return_vals.append(f"{hours}")
+                    continue
                 if minutes > 0:
                     parts.append(f"{minutes}m")
                 if seconds > 0:

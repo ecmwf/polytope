@@ -19,9 +19,7 @@ class TestRegularGrid:
                 },
                 {
                     "axis_name": "date",
-                    "transformations": [
-                        {"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}
-                    ],
+                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
                 },
                 {
                     "axis_name": "values",
@@ -133,6 +131,34 @@ class TestRegularGrid:
             options=self.options,
         )
         result = self.API.retrieve(request)
+        longitude_val_1 = result.leaves[0].flatten()["longitude"]
+        result.pprint()
+        assert longitude_val_1 == (283.561643835616,)
+
+    @pytest.mark.fdb
+    @pytest.mark.internet
+    def test_regular_grid_k(self, fdb_store_operational_setup):
+        import pygribjump as gj
+
+        request = Request(
+            Select("step", [0]),
+            Select("levtype", ["sfc"]),
+            Select("date", [pd.Timestamp("20240103T0000")]),
+            Select("domain", ["g"]),
+            Select("expver", ["0001"]),
+            Select("param", ["167"]),
+            Select("class", ["od"]),
+            Select("stream", ["oper"]),
+            Select("type", ["fc"]),
+            Point(["latitude", "longitude"], [[39, -76.45]], method="nearest", k=2),
+        )
+        self.fdbdatacube = gj.GribJump()
+        self.API = Polytope(
+            datacube=self.fdbdatacube,
+            options=self.options,
+        )
+        result = self.API.retrieve(request)
+        assert len(result.leaves) == 1
         longitude_val_1 = result.leaves[0].flatten()["longitude"]
         result.pprint()
         assert longitude_val_1 == (283.561643835616,)

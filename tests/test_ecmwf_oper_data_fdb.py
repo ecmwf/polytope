@@ -16,9 +16,7 @@ class TestSlicingFDBDatacube:
                 },
                 {
                     "axis_name": "date",
-                    "transformations": [
-                        {"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}
-                    ],
+                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
                 },
                 {
                     "axis_name": "values",
@@ -102,9 +100,7 @@ class TestSlicingFDBDatacube:
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["fc"]),
-            Point(
-                ["latitude", "longitude"], [[0.035149384216, 0.0]], method="surrounding"
-            ),
+            Point(["latitude", "longitude"], [[0.035149384216, 0.0]], method="surrounding"),
         )
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(
@@ -131,9 +127,7 @@ class TestSlicingFDBDatacube:
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["fc"]),
-            Point(
-                ["latitude", "longitude"], [[0.035149384216, 0.0]], method="surrounding"
-            ),
+            Point(["latitude", "longitude"], [[0.035149384216, 0.0]], method="surrounding"),
         )
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(
@@ -157,9 +151,7 @@ class TestSlicingFDBDatacube:
                 },
                 {
                     "axis_name": "date",
-                    "transformations": [
-                        {"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}
-                    ],
+                    "transformations": [{"name": "merge", "other_axis": "time", "linkers": ["T", "00"]}],
                 },
                 {
                     "axis_name": "values",
@@ -211,9 +203,7 @@ class TestSlicingFDBDatacube:
             Select("class", ["od"]),
             Select("stream", ["oper"]),
             Select("type", ["fc"]),
-            Point(
-                ["latitude", "longitude"], [[0.035149384216, 0.0]], method="surrounding"
-            ),
+            Point(["latitude", "longitude"], [[0.035149384216, 0.0]], method="surrounding"),
         )
         self.fdbdatacube = gj.GribJump()
         self.API = Polytope(

@@ -53,42 +53,27 @@ class TestIntTypeChangeTransformation:
 
         assert type_change_transform.transform_type("2") == pd.Timedelta(hours=2)
         assert type_change_transform.transform_type(3) == pd.Timedelta(hours=3)
-        assert type_change_transform.transform_type("70m") == pd.Timedelta(
-            hours=1, minutes=10
-        )
-        assert type_change_transform.transform_type("1h15m") == pd.Timedelta(
-            hours=1, minutes=15
-        )
-        assert type_change_transform.transform_type("1d2h30m15s") == pd.Timedelta(
-            days=1, hours=2, minutes=30, seconds=15
-        )
+        assert type_change_transform.transform_type("70m") == pd.Timedelta(hours=1, minutes=10)
+        assert type_change_transform.transform_type("1h15m") == pd.Timedelta(hours=1, minutes=15)
+        assert type_change_transform.transform_type("26h30m15s") == pd.Timedelta(hours=26, minutes=30, seconds=15)
 
-        assert type_change_transform.make_str([pd.Timedelta(hours=1, minutes=15)]) == [
-            "1h15m"
-        ]
+        assert type_change_transform.make_str([pd.Timedelta(hours=1, minutes=15)]) == ["1h15m"]
         assert type_change_transform.make_str([pd.Timedelta(minutes=20)]) == ["20m"]
         assert type_change_transform.make_str([pd.Timedelta(hours=2)]) == ["2"]
         assert type_change_transform.make_str([pd.Timedelta(hours=0)]) == ["0"]
         assert type_change_transform.make_str([pd.Timedelta(seconds=30)]) == ["30s"]
-        assert type_change_transform.make_str([pd.Timedelta(days=1)]) == ["1d"]
+        assert type_change_transform.make_str([pd.Timedelta(days=1)]) == ["24"]
+        assert type_change_transform.make_str([pd.Timedelta(days=1, hours=2, minutes=20)]) == ["26h20m"]
 
     def test_subhourly_step_compact_type_change_axis(self):
-        type_change_transform = TypeChangeSubHourlyTimeStepsCompact(
-            "step", "subhourly_step_compact"
-        )
+        type_change_transform = TypeChangeSubHourlyTimeStepsCompact("step", "subhourly_step_compact")
 
         assert type_change_transform.transform_type("2") == pd.Timedelta(hours=2)
         assert type_change_transform.transform_type(3) == pd.Timedelta(hours=3)
-        assert type_change_transform.transform_type("70m") == pd.Timedelta(
-            hours=1, minutes=10
-        )
-        assert type_change_transform.transform_type("1h15m") == pd.Timedelta(
-            hours=1, minutes=15
-        )
+        assert type_change_transform.transform_type("70m") == pd.Timedelta(hours=1, minutes=10)
+        assert type_change_transform.transform_type("1h15m") == pd.Timedelta(hours=1, minutes=15)
 
-        assert (
-            type_change_transform.make_str([pd.Timedelta(hours=1, minutes=15)]) == "75m"
-        )
+        assert type_change_transform.make_str([pd.Timedelta(hours=1, minutes=15)]) == "75m"
         assert type_change_transform.make_str([pd.Timedelta(minutes=20)]) == "20m"
         assert type_change_transform.make_str([pd.Timedelta(hours=2)]) == "2"
         assert type_change_transform.make_str([pd.Timedelta(hours=0)]) == "0"

@@ -18,9 +18,7 @@ class Test:
         axis_options = {"longitude": {"cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
-        self.API = Polytope(
-            datacube=array, engine=self.slicer, axis_options=axis_options
-        )
+        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=axis_options)
 
     def test_slice_country(self):
         # Read a shapefile for a given country and extract the geometry polygons

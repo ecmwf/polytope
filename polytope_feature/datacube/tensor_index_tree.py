@@ -82,9 +82,7 @@ class TensorIndexTree(object):
                         other_val = other.values[i]
                         self_val = self.values[i]
                         if self.axis.can_round:
-                            if abs(other_val - self_val) > 2 * max(
-                                other.axis.tol, self.axis.tol
-                            ):
+                            if abs(other_val - self_val) > 2 * max(other.axis.tol, self.axis.tol):
                                 return False
                         else:
                             if other_val != self_val:

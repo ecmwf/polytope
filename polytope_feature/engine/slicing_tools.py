@@ -45,9 +45,7 @@ def slice_in_two(polytope: ConvexPolytope, value, slice_axis_idx):
                     vertices = None
 
             if vertices is not None:
-                left_polygon = ConvexPolytope(
-                    polytope._axes, [left_points[i] for i in vertices]
-                )
+                left_polygon = ConvexPolytope(polytope._axes, [left_points[i] for i in vertices])
             else:
                 left_polygon = None
 
@@ -62,9 +60,7 @@ def slice_in_two(polytope: ConvexPolytope, value, slice_axis_idx):
                     vertices = None
 
             if vertices is not None:
-                right_polygon = ConvexPolytope(
-                    polytope._axes, [right_points[i] for i in vertices]
-                )
+                right_polygon = ConvexPolytope(polytope._axes, [right_points[i] for i in vertices])
             else:
                 right_polygon = None
 
@@ -86,9 +82,7 @@ def _find_intersects(polytope, slice_axis_idx, value):
                 continue
 
             # Linearly interpolate all coordinates of two points (a,b) of the polytope
-            interp_coeff = (value - b[slice_axis_idx]) / (
-                a[slice_axis_idx] - b[slice_axis_idx]
-            )
+            interp_coeff = (value - b[slice_axis_idx]) / (a[slice_axis_idx] - b[slice_axis_idx])
             intersect = lerp(a, b, interp_coeff)
             intersects.append(intersect)
     return intersects

@@ -25,13 +25,9 @@ class ReducedGaussianGridMapper(DatacubeMapper):
         self._second_axis_spacing = {}
         self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
         if self._axis_reversed[mapped_axes[1]]:
-            raise NotImplementedError(
-                "Octahedral grid with second axis in decreasing order is not supported"
-            )
+            raise NotImplementedError("Octahedral grid with second axis in decreasing order is not supported")
         if not self._axis_reversed[mapped_axes[0]]:
-            raise NotImplementedError(
-                "Octahedral grid with first axis in increasing order is not supported"
-            )
+            raise NotImplementedError("Octahedral grid with first axis in increasing order is not supported")
         self.compressed_grid_axes = [self._mapped_axes[1]]
         if md5_hash is not None:
             self.md5_hash = md5_hash
@@ -39,9 +35,7 @@ class ReducedGaussianGridMapper(DatacubeMapper):
             self.md5_hash = _md5_hash.get(resolution, None)
 
         if local_area != []:
-            raise NotImplementedError(
-                "Local area grid not implemented for reduced gaussian grids"
-            )
+            raise NotImplementedError("Local area grid not implemented for reduced gaussian grids")
 
     def gauss_first_guess(self):
         i = 0
@@ -771,14 +765,10 @@ class ReducedGaussianGridMapper(DatacubeMapper):
                     mem2 = 1
                     mem1 = root
                     for legi in range(nval):
-                        legfonc = (
-                            (2.0 * (legi + 1) - 1.0) * root * mem1 - legi * mem2
-                        ) / (legi + 1)
+                        legfonc = ((2.0 * (legi + 1) - 1.0) * root * mem1 - legi * mem2) / (legi + 1)
                         mem2 = mem1
                         mem1 = legfonc
-                    conv = legfonc / (
-                        (nval * (mem2 - root * legfonc)) / (1.0 - (root * root))
-                    )
+                    conv = legfonc / ((nval * (mem2 - root * legfonc)) / (1.0 - (root * root)))
                     root = root - conv
                     # add maybe a max iter here to make sure we converge at some point
                 new_vals[jval] = math.asin(root) * rad2deg
@@ -1439,11 +1429,7 @@ class ReducedGaussianGridMapper(DatacubeMapper):
 
     def second_axis_vals(self, first_val):
         tol = 1e-8
-        first_value = [
-            i
-            for i in self._first_axis_vals
-            if first_val[0] - tol <= i <= first_val[0] + tol
-        ][0]
+        first_value = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
         first_idx = self._first_axis_vals.index(first_value)
         Ny = self.lon_spacing()[first_idx]
         second_spacing = 360 / Ny
@@ -1461,23 +1447,13 @@ class ReducedGaussianGridMapper(DatacubeMapper):
 
     def unmap(self, first_val, second_vals, unmapped_idx=None):
         tol = 1e-8
-        first_value = [
-            i
-            for i in self._first_axis_vals
-            if first_val[0] - tol <= i <= first_val[0] + tol
-        ][0]
+        first_value = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
         first_idx = self._first_axis_vals.index(first_value)
         return_idxs = []
         for second_val in second_vals:
-            second_val = [
-                i
-                for i in self.second_axis_vals(first_val)
-                if second_val - tol <= i <= second_val + tol
-            ][0]
+            second_val = [i for i in self.second_axis_vals(first_val) if second_val - tol <= i <= second_val + tol][0]
             second_idx = self.second_axis_vals(first_val).index(second_val)
-            reduced_gaussian_index = self.axes_idx_to_reduced_gaussian_idx(
-                first_idx, second_idx
-            )
+            reduced_gaussian_index = self.axes_idx_to_reduced_gaussian_idx(first_idx, second_idx)
             return_idxs.append(reduced_gaussian_index)
         return return_idxs
 

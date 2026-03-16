@@ -17,15 +17,11 @@ class Test:
         axis_options = {"longitude": {"cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         self.slicer = HullSlicer()
-        self.API = Polytope(
-            datacube=array, engine=self.slicer, axis_options=axis_options
-        )
+        self.API = Polytope(datacube=array, engine=self.slicer, axis_options=axis_options)
 
     def test_slice_country(self):
         bounding_box = Box(["latitude", "longitude"], [-0.1, -0.1], [0.1, 0.1])
-        request_obj = PathSegment(
-            ["latitude", "longitude"], bounding_box, [-88, -67], [68, 170]
-        )
+        request_obj = PathSegment(["latitude", "longitude"], bounding_box, [-88, -67], [68, 170])
         request = Request(
             request_obj,
             Select("number", [0]),

@@ -85,8 +85,7 @@ improved_polytope_data = [improved_polytope_data_original[i] for i in mask]
 country_list = [country_list_original[i] for i in mask]
 
 normalised_improvement = [
-    polytope / rectangle
-    for polytope, rectangle in zip(improved_polytope_data, naive_rectangle_data)
+    polytope / rectangle for polytope, rectangle in zip(improved_polytope_data, naive_rectangle_data)
 ]
 
 normalised_rectangle_data = list(np.ones(len(naive_rectangle_data)))

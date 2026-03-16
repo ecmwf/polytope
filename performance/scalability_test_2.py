@@ -11,9 +11,7 @@ from polytope_feature.shapes import Box, Select, Union
 
 class Test:
     def setup_method(self):
-        array = xr.open_dataset(
-            "./examples/data/temp_model_levels.grib", engine="cfgrib"
-        ).t
+        array = xr.open_dataset("./examples/data/temp_model_levels.grib", engine="cfgrib").t
         options = {"longitude": {"Cyclic": [0, 360.0]}}
         self.xarraydatacube = XArrayDatacube(array)
         for dim in array.dims:
@@ -88,9 +86,7 @@ class Test:
                 union = Union(["latitude", "longitude"], union, box)
         time_start = time.time()
         print(time_start)
-        request = Request(
-            union, Select("step", [np.timedelta64(0, "ns")]), Select("hybrid", [1])
-        )
+        request = Request(union, Select("step", [np.timedelta64(0, "ns")]), Select("hybrid", [1]))
         result = self.API.retrieve(request)
         # result.pprint()
         print(len(result.leaves))
