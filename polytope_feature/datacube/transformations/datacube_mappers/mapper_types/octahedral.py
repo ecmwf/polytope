@@ -12,8 +12,8 @@ try:
     )
 
     use_rust = True
-except (ModuleNotFoundError, ImportError):
-    print("Failed to load Rust extension, falling back to Python implementation.")
+except (ModuleNotFoundError, ImportError) as e:
+    print(f"Failed to load Rust extension with error: {e}, falling back to Python implementation.")
 
 
 class OctahedralGridMapper(DatacubeMapper):
