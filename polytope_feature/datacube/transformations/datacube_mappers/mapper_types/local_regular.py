@@ -114,15 +114,14 @@ class LocalRegularGridMapper(DatacubeMapper):
         descending = self._axis_reversed[self._mapped_axes[0]]
         if descending:
             # right descending order for searchsorted
-            first_idx = np.searchsorted(first_array[::-1], first_val[0])
-            first_idx = len(first_array) - 1 - first_idx
+            first_idx = np.searchsorted(-first_array, -first_val[0])
         else:
             first_idx = np.searchsorted(first_array, first_val[0])
-            if first_idx > 0 and first_idx < len(first_array):
-                left_val = first_array[first_idx - 1]
-                right_val = first_array[first_idx]
-                if abs(first_val[0] - left_val) < abs(first_val[0] - right_val):
-                    first_idx -= 1
+        if first_idx > 0 and first_idx < len(first_array):
+            left_val = first_array[first_idx - 1]
+            right_val = first_array[first_idx]
+            if abs(first_val[0] - left_val) < abs(first_val[0] - right_val):
+                first_idx -= 1
         second_idxs = np.searchsorted(second_array, second_vals)
 
         # map to grid idx
