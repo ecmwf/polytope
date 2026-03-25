@@ -123,6 +123,12 @@ class LocalRegularGridMapper(DatacubeMapper):
             if abs(first_val[0] - left_val) < abs(first_val[0] - right_val):
                 first_idx -= 1
         second_idxs = np.searchsorted(second_array, second_vals)
+        for i, second_idx in enumerate(second_idxs):
+            if second_idx > 0 and second_idx < len(second_array):
+                left_val = second_array[second_idx - 1]
+                right_val = second_array[second_idx]
+                if abs(second_vals[i] - left_val) < abs(second_vals[i] - right_val):
+                    second_idxs[i] -= 1
 
         # map to grid idx
         final_idxs = first_idx * (self.second_resolution + 1) + second_idxs
