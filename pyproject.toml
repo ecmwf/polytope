@@ -39,6 +39,7 @@ dependencies = [
     "xarray",
     "conflator",
     "protobuf",
+    "shapely",
 ]
 
 [project.optional-dependencies]
