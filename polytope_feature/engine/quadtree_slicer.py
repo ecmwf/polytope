@@ -19,6 +19,7 @@ class QuadTreeSlicer(Engine):
         # TODO: maybe we create the quadtree as soon as we have an unstructured slicer type and return it
         # to the slicer somehow?
         quad_tree = QuadTree()
+        # NOTE: the points here are assumed to be lat/lon implicitly
         points = [tuple(point) for point in points]
         quad_tree.build_point_tree(points)
         self.points = points
@@ -27,17 +28,29 @@ class QuadTreeSlicer(Engine):
     def extract_single(self, datacube, polytope):
         # extract a single polygon
         # if need to find nearest points, then take alternative slicing method using quadtree to find nearest point
+        axes = polytope.axes()
+        assert len(axes) == 2
+        assert "latitude" in axes and "longitude" in axes
+        revert_axes = not (list(axes) == ["latitude", "longitude"])
         if use_rust:
             if len(datacube.nearest_search) == 0:
-                polytope_points = [tuple(point) for point in polytope.points]
+                if revert_axes:
+                    polytope_points = [tuple(reversed(point)) for point in polytope.points]
+                else:
+                    polytope_points = [tuple(point) for point in polytope.points]
                 polygon_points = self.quad_tree.query_polygon(self.points, 0, polytope_points)
             else:
                 k = datacube.nearest_search[tuple(polytope.axes())][1]
-                nn_points = [tuple(pt) for pt in datacube.nearest_search[tuple(polytope.axes())][0]]
+                if revert_axes:
+                    nn_points = [tuple(reversed(pt)) for pt in datacube.nearest_search[tuple(polytope.axes())][0]]
+                else:
+                    nn_points = [tuple(pt) for pt in datacube.nearest_search[tuple(polytope.axes())][0]]
                 polygon_points = []
                 for nn_pt in nn_points:
                     polygon_points.extend(self.quad_tree.k_nearest_neighbor(nn_pt, k, self.points))
         else:
+            if revert_axes:
+                polytope.points = [tuple(reversed(point)) for point in polytope.points]
             polygon_points = self.quad_tree.query_polygon(polytope)
         return polygon_points
 
