@@ -1,11 +1,10 @@
 import argparse
+import logging
 from abc import ABC
 from typing import Dict, List, Literal, Optional, Tuple, Union
 
 from conflator import ConfigModel, Conflator
 from pydantic import ConfigDict
-
-from polytope_feature.datacube.switching_grid_helper import lookup_grid_config
 
 
 class TransformationConfig(ConfigModel):
@@ -111,9 +110,12 @@ class PolytopeOptions(ABC):
                 replaced = replace_grid_config_in_options(config_options, pre_path)
                 if replaced:
                     axis_config = config_options.axis_config
-            except Exception:
-                # Fail silently and continue with original config
-                pass
+            except Exception as e:
+                logging.warning(
+                    "Dynamic grid replacement failed for georef '%s': %s. Using static grid config.",
+                    pre_path.get("georef", "unknown"),
+                    e,
+                )
         return (
             axis_config,
             compressed_axes_config,
@@ -151,6 +153,8 @@ def gridspec_to_grid_config(gridspec, md5hash):
 
 
 def replace_grid_config_in_options(options, req):
+    from polytope_feature.datacube.switching_grid_helper import lookup_grid_config
+
     gridspec, md5hash = lookup_grid_config(req)
     grid_config = gridspec_to_grid_config(gridspec, md5hash)
     if grid_config is not None:
