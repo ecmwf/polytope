@@ -4,6 +4,16 @@ import math
 from .....utility.list_tools import bisect_left_cmp, bisect_right_cmp
 from ..datacube_mappers import DatacubeMapper
 
+try:
+    from polytope_feature.polytope_rs import (
+        first_axis_vals_reduced_gaussian as _rs_first_axis_vals,
+    )
+    from polytope_feature.polytope_rs import unmap_reduced_gaussian as _rs_unmap
+
+    _RUST_REDUCED_GAUSSIAN = True
+except ImportError:
+    _RUST_REDUCED_GAUSSIAN = False
+
 
 class ReducedGaussianGridMapper(DatacubeMapper):
     def __init__(
@@ -747,6 +757,9 @@ class ReducedGaussianGridMapper(DatacubeMapper):
         return lats
 
     def first_axis_vals(self):
+        if _RUST_REDUCED_GAUSSIAN:
+            return _rs_first_axis_vals(self._resolution)
+        # Pure-Python fallback
         if self._resolution == 320:
             return self.get_precomputed_values_N320()
         else:
@@ -1446,6 +1459,12 @@ class ReducedGaussianGridMapper(DatacubeMapper):
                 return idx
 
     def unmap(self, first_val, second_vals, unmapped_idx=None):
+        if _RUST_REDUCED_GAUSSIAN:
+            try:
+                return _rs_unmap(self._resolution, list(first_val), list(second_vals))
+            except Exception:
+                # Fall through to Python implementation for unsupported resolutions
+                pass
         tol = 1e-8
         first_value = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
         first_idx = self._first_axis_vals.index(first_value)

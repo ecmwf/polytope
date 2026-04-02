@@ -3,6 +3,18 @@ import math
 
 from ..datacube_mappers import DatacubeMapper
 
+_use_rust = False
+try:
+    from polytope_feature.polytope_rs import (
+        first_axis_vals_healpix_ring,
+        healpix_ring_longitudes,
+        unmap_healpix_ring,
+    )
+
+    _use_rust = True
+except (ModuleNotFoundError, ImportError) as e:
+    print(f"Failed to load Rust extension with error: {e}, falling back to Python implementation.")
+
 
 class HealpixGridMapper(DatacubeMapper):
     def __init__(
@@ -36,6 +48,8 @@ class HealpixGridMapper(DatacubeMapper):
             raise NotImplementedError("Local area grid not implemented for healpix grids")
 
     def first_axis_vals(self):
+        if _use_rust:
+            return first_axis_vals_healpix_ring(self._resolution)
         rad2deg = 180 / math.pi
         vals = [0] * (4 * self._resolution - 1)
 
@@ -83,6 +97,8 @@ class HealpixGridMapper(DatacubeMapper):
             return self.HEALPix_nj(ni - 1 - i)
 
     def HEALPix_longitudes(self, i):
+        if _use_rust:
+            return healpix_ring_longitudes(i, self._resolution)
         Nj = self.HEALPix_nj(i)
         step = 360.0 / Nj
         start = (
@@ -147,6 +163,8 @@ class HealpixGridMapper(DatacubeMapper):
                 return idx
 
     def unmap(self, first_val, second_vals, unmapped_idx=None):
+        if _use_rust:
+            return unmap_healpix_ring(self._first_axis_vals, first_val[0], second_vals, self._resolution)
         tol = 1e-8
         first_value = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
         first_idx = self._first_axis_vals.index(first_value)

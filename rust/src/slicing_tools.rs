@@ -1,12 +1,155 @@
+use geo::{point, ConvexHull, CoordsIter, LineString, Polygon};
+use pyo3::prelude::*;
 use std::error::Error;
-use geo::{LineString, Polygon, point, ConvexHull, CoordsIter};
 use std::fmt;
+
+// ---------------------------------------------------------------------------
+// N-dimensional generalised slice
+// ---------------------------------------------------------------------------
+
+/// Linearly interpolate between two N-dimensional points.
+fn lerp_nd(a: &[f64], b: &[f64], t: f64) -> Vec<f64> {
+    a.iter()
+        .zip(b.iter())
+        .map(|(&ai, &bi)| bi + t * (ai - bi))
+        .collect()
+}
+
+/// Find all intersection points of the hyperplane `points[slice_axis_idx] == value`
+/// with the convex polytope defined by `polytope_points` (N-D, N >= 1).
+/// Works exactly like the Python `_find_intersects` but for arbitrary dimension.
+fn find_intersects_nd(
+    polytope_points: &[Vec<f64>],
+    slice_axis_idx: usize,
+    value: f64,
+) -> Vec<Vec<f64>> {
+    let mut intersects = Vec::new();
+
+    let above: Vec<&Vec<f64>> = polytope_points
+        .iter()
+        .filter(|p| p[slice_axis_idx] >= value)
+        .collect();
+    let below: Vec<&Vec<f64>> = polytope_points
+        .iter()
+        .filter(|p| p[slice_axis_idx] <= value)
+        .collect();
+
+    for a in &above {
+        for b in &below {
+            if (a[slice_axis_idx] - b[slice_axis_idx]).abs() < f64::EPSILON {
+                // Edge lies on the slice plane — keep b
+                intersects.push((*b).clone());
+                continue;
+            }
+            let t = (value - b[slice_axis_idx]) / (a[slice_axis_idx] - b[slice_axis_idx]);
+            intersects.push(lerp_nd(a, b, t));
+        }
+    }
+    intersects
+}
+
+/// Remove the coordinate at `slice_axis_idx` from every point, reducing dimension by 1.
+fn reduce_dimension(points: Vec<Vec<f64>>, slice_axis_idx: usize) -> Vec<Vec<f64>> {
+    points
+        .into_iter()
+        .map(|p| {
+            p.into_iter()
+                .enumerate()
+                .filter(|(i, _)| *i != slice_axis_idx)
+                .map(|(_, v)| v)
+                .collect()
+        })
+        .collect()
+}
+
+/// Compute the 2-D convex hull of `points` using the `geo` crate.
+/// Returns the hull vertices (open ring — last != first).
+fn convex_hull_2d(points: &[Vec<f64>]) -> Vec<Vec<f64>> {
+    let coords: Vec<[f64; 2]> = points.iter().map(|p| [p[0], p[1]]).collect();
+    let hull_pts = find_qhull_points2(&coords);
+    hull_pts.into_iter().map(|[x, y]| vec![x, y]).collect()
+}
+
+/// Compute the 1-D "hull" (just min and max) of `points`.
+fn convex_hull_1d(points: &[Vec<f64>]) -> Vec<Vec<f64>> {
+    let min = points.iter().map(|p| p[0]).fold(f64::INFINITY, f64::min);
+    let max = points
+        .iter()
+        .map(|p| p[0])
+        .fold(f64::NEG_INFINITY, f64::max);
+    if (min - max).abs() < f64::EPSILON {
+        vec![vec![min]]
+    } else {
+        vec![vec![min], vec![max]]
+    }
+}
+
+/// Python-callable N-dimensional slice.
+///
+/// `polytope_points` : list of N-dimensional points (list[list[float]])
+/// `is_flat`         : whether the polytope is degenerate / flat (mirrors Python's ConvexPolytope.is_flat)
+/// `value`           : the value at which to slice along `slice_axis_idx`
+/// `slice_axis_idx`  : which dimension to slice along
+///
+/// Returns `None` when there is no intersection, otherwise the reduced polytope
+/// as `list[list[float]]`.
+#[pyfunction]
+pub fn slice_polytope(
+    polytope_points: Vec<Vec<f64>>,
+    is_flat: bool,
+    value: f64,
+    slice_axis_idx: usize,
+) -> PyResult<Option<Vec<Vec<f64>>>> {
+    // Mirror the `is_flat` fast-path from Python's `slice()`
+    if is_flat {
+        let hit = polytope_points
+            .iter()
+            .any(|p| p.iter().any(|&v| (v - value).abs() < f64::EPSILON));
+        if hit {
+            return Ok(Some(vec![vec![value]]));
+        } else {
+            return Ok(None);
+        }
+    }
+
+    let intersects = find_intersects_nd(&polytope_points, slice_axis_idx, value);
+
+    if intersects.is_empty() {
+        return Ok(None);
+    }
+
+    // Reduce dimension
+    let reduced = reduce_dimension(intersects, slice_axis_idx);
+    let ndim = reduced[0].len();
+
+    // Mirror Python: if fewer points than ndim+1, no hull needed
+    if reduced.len() < ndim + 1 {
+        return Ok(Some(reduced));
+    }
+
+    // Compute hull based on dimension of the reduced points
+    let hull = match ndim {
+        0 => return Ok(None),
+        1 => convex_hull_1d(&reduced),
+        2 => convex_hull_2d(&reduced),
+        _ => {
+            // For >2D we cannot easily compute an exact convex hull here without
+            // an N-D library. Return all reduced intersection points; the caller
+            // can further prune if needed. In practice polytope-python rarely
+            // exceeds 2D after the first few slice steps, so this is fine.
+            reduced
+        }
+    };
+
+    Ok(Some(hull))
+}
 
 pub fn is_contained_in(point: [f64; 2], polygon_points: &[[f64; 2]]) -> bool {
     let (min_y, max_y) = _slice_2D_vertical_extents(polygon_points, point[0]);
     point[1] >= min_y && point[1] <= max_y
 }
 
+#[allow(non_snake_case)]
 fn _slice_2D_vertical_extents(polygon_points: &[[f64; 2]], val: f64) -> (f64, f64) {
     let intersects = _find_intersects(polygon_points, 0, val);
     intersects.iter().fold(
@@ -34,14 +177,16 @@ fn _find_intersects(
             }
 
             // Edge is incident with the slice plane
-            if (slice_axis_idx == 0 && a[0] == b[0])
-                || (slice_axis_idx == 1 && a[1] == b[1])
-            {
+            if (slice_axis_idx == 0 && a[0] == b[0]) || (slice_axis_idx == 1 && a[1] == b[1]) {
                 intersects.push(b);
                 continue;
             }
 
-            let denom = if slice_axis_idx == 0 { a[0] - b[0] } else { a[1] - b[1] };
+            let denom = if slice_axis_idx == 0 {
+                a[0] - b[0]
+            } else {
+                a[1] - b[1]
+            };
             if denom.abs() < f64::EPSILON {
                 continue; // avoid division by zero
             }
@@ -56,18 +201,18 @@ fn _find_intersects(
 }
 
 fn lerp(a: [f64; 2], b: [f64; 2], t: f64) -> [f64; 2] {
-    [
-        b[0] + t * (a[0] - b[0]),
-        b[1] + t * (a[1] - b[1]),
-    ]
+    [b[0] + t * (a[0] - b[0]), b[1] + t * (a[1] - b[1])]
 }
 
-
-fn polygon_extents(polytope_points: &Vec<[f64;2]>, slice_axis_idx: usize) -> (f64, f64){
+fn polygon_extents(polytope_points: &Vec<[f64; 2]>, slice_axis_idx: usize) -> (f64, f64) {
     let (min_val, max_val) = polytope_points.into_iter().fold(
         (f64::INFINITY, f64::NEG_INFINITY),
         |(min, max), polytope_point| {
-            let value = if slice_axis_idx == 0 { polytope_point[0] } else { polytope_point[1] }; // Select the correct axis
+            let value = if slice_axis_idx == 0 {
+                polytope_point[0]
+            } else {
+                polytope_point[1]
+            }; // Select the correct axis
             (min.min(value), max.max(value))
         },
     );

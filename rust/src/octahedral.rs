@@ -7886,7 +7886,7 @@ fn create_first_idx_list(resolution: usize) -> Vec<usize> {
 fn second_axis_spacing(
     resolution: usize,
     first_val: &[f64],
-    first_axis_vals: &Vec<f64> // use Vec, but pass as reference!
+    first_axis_vals: &Vec<f64>, // use Vec, but pass as reference!
 ) -> (f64, usize) {
     let tol = 1e-10;
     let target = first_val[0] - tol;
@@ -7916,7 +7916,7 @@ fn find_second_axis_idx(
     // first_val: &[f64],
     first_val: &Vec<f64>,
     second_val: f64,
-    first_axis_vals: &Vec<f64> // keep Vec, pass by reference!
+    first_axis_vals: &Vec<f64>, // keep Vec, pass by reference!
 ) -> (usize, usize) {
     let (second_axis_spacing, first_idx) =
         second_axis_spacing(resolution, first_val, first_axis_vals);
@@ -7935,10 +7935,13 @@ fn find_second_axis_idx(
     (first_idx, second_idx)
 }
 
-
-fn axes_idx_to_octahedral_idx(first_idx: usize, second_idx: usize, first_idx_map: &Vec<usize>) -> usize {
+fn axes_idx_to_octahedral_idx(
+    first_idx: usize,
+    second_idx: usize,
+    first_idx_map: &Vec<usize>,
+) -> usize {
     first_idx_map[first_idx - 1] + second_idx
-    }
+}
 
 // #[pyfunction]
 // pub fn unmap_octahedral(resolution: usize, first_val: &[f64], second_vals: &[f64]) -> PyResult<Vec<usize>> {
@@ -7959,8 +7962,8 @@ fn axes_idx_to_octahedral_idx(first_idx: usize, second_idx: usize, first_idx_map
 #[pyfunction]
 pub fn unmap_octahedral(
     resolution: usize,
-    first_val: Vec<f64>,      // <-- now Vec<f64> passed by reference
-    second_vals: Vec<f64>     // <-- now Vec<f64> passed by reference
+    first_val: Vec<f64>,   // <-- now Vec<f64> passed by reference
+    second_vals: Vec<f64>, // <-- now Vec<f64> passed by reference
 ) -> PyResult<Vec<usize>> {
     let mut return_idxs = Vec::with_capacity(second_vals.len());
 
@@ -7970,8 +7973,7 @@ pub fn unmap_octahedral(
     for &second_val in second_vals.iter() {
         let (first_idx, second_idx) =
             find_second_axis_idx(resolution, &first_val, second_val, &first_axis_vals);
-        let octahedral_index =
-            axes_idx_to_octahedral_idx(first_idx, second_idx, &first_idx_map);
+        let octahedral_index = axes_idx_to_octahedral_idx(first_idx, second_idx, &first_idx_map);
         return_idxs.push(octahedral_index);
     }
 

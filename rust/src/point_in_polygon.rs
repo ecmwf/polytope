@@ -1,11 +1,11 @@
-use geo::{polygon, Point, Contains, LineString, Polygon};
+use geo::{Contains, LineString, Point, Polygon};
 
 use pyo3::prelude::*;
 
 #[pyfunction]
 pub fn extract_point_in_poly(
     points: Vec<(f64, f64)>,
-    poly: Vec<(f64, f64)>
+    poly: Vec<(f64, f64)>,
 ) -> PyResult<Vec<(f64, f64)>> {
     let poly = {
         let mut poly = poly;
@@ -28,6 +28,7 @@ pub fn extract_point_in_poly(
     Ok(inside)
 }
 
+#[allow(dead_code)]
 fn close_polygon(mut points: Vec<(f64, f64)>) -> Vec<(f64, f64)> {
     if let Some(first) = points.first() {
         if let Some(last) = points.last() {
@@ -39,32 +40,30 @@ fn close_polygon(mut points: Vec<(f64, f64)>) -> Vec<(f64, f64)> {
     points
 }
 
-
 fn find_bounds(points: &Vec<(f64, f64)>) -> Option<((f64, f64), (f64, f64))> {
     if points.is_empty() {
         return None;
     }
 
     let (min_x, max_x, min_y, max_y) = points.iter().fold(
-        (f64::INFINITY, f64::NEG_INFINITY, f64::INFINITY, f64::NEG_INFINITY),
+        (
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+        ),
         |(min_x, max_x, min_y, max_y), &(x, y)| {
-            (
-                min_x.min(x),
-                max_x.max(x),
-                min_y.min(y),
-                max_y.max(y),
-            )
+            (min_x.min(x), max_x.max(x), min_y.min(y), max_y.max(y))
         },
     );
 
     Some(((min_x, min_y), (max_x, max_y)))
 }
 
-
 #[pyfunction]
 pub fn extract_point_in_poly_bbox(
     points: Vec<(f64, f64)>,
-    poly: Vec<(f64, f64)>
+    poly: Vec<(f64, f64)>,
 ) -> PyResult<Vec<(f64, f64)>> {
     let poly_bbox_option = find_bounds(&poly);
     let poly = {
@@ -78,7 +77,8 @@ pub fn extract_point_in_poly_bbox(
     };
 
     if let Some(poly_bbox) = poly_bbox_option {
-        let inside_bbox: Vec<(f64, f64)> = points.into_iter()
+        let inside_bbox: Vec<(f64, f64)> = points
+            .into_iter()
             .filter(|&(x, y)| {
                 let ((min_x, min_y), (max_x, max_y)) = poly_bbox;
                 min_x <= x && x <= max_x && min_y <= y && y <= max_y

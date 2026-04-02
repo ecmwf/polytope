@@ -4,7 +4,7 @@ version = "0.0.0" # placeholder
 edition = "2021"
 
 [dependencies]
-pyo3 = { version = "0.20", features = ["extension-module"] }
+pyo3 = { version = "0.23", features = ["extension-module"] }
 geo = { version = "0.30"}
 ordered-float = "4.2"
 

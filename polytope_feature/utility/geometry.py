@@ -1,5 +1,12 @@
 import math
 
+try:
+    from polytope_feature.polytope_rs import nearest_pt as _rs_nearest_pt
+
+    _RUST_NEAREST_PT = True
+except ImportError:
+    _RUST_NEAREST_PT = False
+
 
 def lerp(a, b, value):
     intersect = [b + (a - b) * value for a, b in zip(a, b)]
@@ -14,6 +21,15 @@ def nearest_pt(pts_list, pt, k=1):
     to `pt`. If k==1 a single tuple is returned, otherwise a list of tuples
     ordered by increasing distance is returned.
     """
+    if _RUST_NEAREST_PT:
+        # Convert to the format expected by Rust: list of (lat_vals, lon_vals) tuples
+        rs_input = [(list(item[0]), list(item[1])) for item in pts_list]
+        result = _rs_nearest_pt(rs_input, (float(pt[0]), float(pt[1])), int(k))
+        if not result:
+            return [] if k != 1 else None
+        return result
+
+    # Pure-Python fallback
     new_pts_list = []
     for potential_pt in pts_list:
         for first_val in potential_pt[0]:

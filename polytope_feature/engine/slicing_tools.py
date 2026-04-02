@@ -8,6 +8,13 @@ from ..shapes import ConvexPolytope
 from ..utility.geometry import lerp
 from ..utility.list_tools import argmax, argmin
 
+try:
+    from polytope_feature.polytope_rs import slice_polytope as _rs_slice_polytope
+
+    _RUST_SLICE = True
+except ImportError:
+    _RUST_SLICE = False
+
 
 def slice_in_two(polytope: ConvexPolytope, value, slice_axis_idx):
     if polytope is None:
@@ -97,6 +104,21 @@ def _reduce_dimension(intersects, slice_axis_idx):
 
 
 def slice(polytope: ConvexPolytope, axis, value, slice_axis_idx):
+    # Fast-path: delegate to the Rust implementation which avoids scipy overhead
+    if _RUST_SLICE:
+        result_points = _rs_slice_polytope(
+            polytope.points,
+            polytope.is_flat,
+            float(value),
+            int(slice_axis_idx),
+        )
+        if result_points is None:
+            return None
+        axes = copy(polytope._axes)
+        axes.remove(axis)
+        return ConvexPolytope(axes, result_points)
+
+    # Pure-Python fallback (original implementation)
     # TODO: maybe these functions should go in the slicing tools?
     if polytope.is_flat:
         if value in chain(*polytope.points):

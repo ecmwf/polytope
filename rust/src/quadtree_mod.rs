@@ -1,24 +1,21 @@
 #![allow(dead_code)]
 
-use pyo3::prelude::*;   // Do not use * for importing here
+use pyo3::prelude::*; // Do not use * for importing here
 
+use pyo3::exceptions::PyRuntimeError;
 use std::collections::HashSet;
 use std::error::Error;
-use pyo3::exceptions::PyRuntimeError;
 
 // TODO: look at rust built in arena
 
+use crate::distance::{box_dist2, dist2};
 use crate::slicing_tools::{is_contained_in, slice_in_two};
-use crate::distance::{dist2, box_dist2};
 
-use std::collections::BinaryHeap;
-use std::cmp::Reverse;
 use ordered_float::OrderedFloat;
+use std::cmp::Reverse;
+use std::collections::BinaryHeap;
 
-
-
-#[derive(Debug)]
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 #[pyclass]
 pub struct QuadTreeNode {
     points: Option<Vec<usize>>,
@@ -43,7 +40,6 @@ impl QuadTreeNode {
     }
 }
 
-
 #[derive(Debug)]
 #[pyclass]
 pub struct QuadTree {
@@ -54,13 +50,15 @@ pub struct QuadTree {
 impl QuadTree {
     #[new]
     fn new() -> Self {
-        QuadTree {
-            nodes: Vec::new(),
-        }
+        QuadTree { nodes: Vec::new() }
     }
 
-
-    fn k_nearest_neighbor(&self, query: (f64, f64), k: usize, quadtree_points: Vec<(f64, f64)>) -> Option<Vec<usize>> {
+    fn k_nearest_neighbor(
+        &self,
+        query: (f64, f64),
+        k: usize,
+        quadtree_points: Vec<(f64, f64)>,
+    ) -> Option<Vec<usize>> {
         if self.nodes.is_empty() {
             return None;
         }
@@ -69,7 +67,8 @@ impl QuadTree {
         self.knn_search(0, query, k, &mut heap, &quadtree_points);
 
         // keep only  point indexes from distance heap and sort from nearest to farthest
-        let mut results: Vec<_> = heap.into_sorted_vec()
+        let results: Vec<_> = heap
+            .into_sorted_vec()
             .into_iter()
             .map(|Reverse((OrderedFloat(_d2), idx))| idx)
             .collect();
@@ -77,7 +76,11 @@ impl QuadTree {
         Some(results)
     }
 
-    fn nearest_neighbor(&self, query: (f64, f64), quadtree_points: Vec<(f64, f64)>) -> Option<usize> {
+    fn nearest_neighbor(
+        &self,
+        query: (f64, f64),
+        quadtree_points: Vec<(f64, f64)>,
+    ) -> Option<usize> {
         if self.nodes.is_empty() {
             return None;
         }
@@ -99,14 +102,19 @@ impl QuadTree {
     }
 
     fn build_point_tree(&mut self, points: Vec<(f64, f64)>) {
-        self.create_node((0.0,0.0), (180.0, 90.0), 0);
+        self.create_node((0.0, 0.0), (180.0, 90.0), 0);
         points.iter().enumerate().for_each(|(index, _p)| {
             self.insert(index, 0, &points);
         });
     }
 
-
-    fn query_polygon(&mut self, quadtree_points: Vec<(f64, f64)>, node_idx: usize, mut polygon_points: Option<Vec<(f64, f64)>>)  -> PyResult<HashSet<usize>> {
+    #[pyo3(signature = (quadtree_points, node_idx, polygon_points=None))]
+    fn query_polygon(
+        &mut self,
+        quadtree_points: Vec<(f64, f64)>,
+        node_idx: usize,
+        mut polygon_points: Option<Vec<(f64, f64)>>,
+    ) -> PyResult<HashSet<usize>> {
         let mut results: HashSet<usize> = HashSet::new();
 
         let processed_quadtree_points = self.process_points(quadtree_points);
@@ -115,7 +123,12 @@ impl QuadTree {
             .take()
             .map(|pts| pts.into_iter().map(|(x, y)| [x, y]).collect());
 
-        let query_result: Result<(), Box<dyn Error>> = self._query_polygon(&processed_quadtree_points, node_idx, processed_polygon_points.as_mut(), &mut results);
+        let query_result: Result<(), Box<dyn Error>> = self._query_polygon(
+            &processed_quadtree_points,
+            node_idx,
+            processed_polygon_points.as_mut(),
+            &mut results,
+        );
 
         query_result.map_err(|e| PyErr::new::<PyRuntimeError, _>(e.to_string()))?;
 
@@ -124,15 +137,16 @@ impl QuadTree {
 
     fn get_center(&self, index: usize) -> PyResult<(f64, f64)> {
         let nodes = &self.nodes;
-        nodes.get(index).map(|n| n.center).ok_or_else(|| {
-            pyo3::exceptions::PyIndexError::new_err("Invalid node index")
-        })
+        nodes
+            .get(index)
+            .map(|n| n.center)
+            .ok_or_else(|| pyo3::exceptions::PyIndexError::new_err("Invalid node index"))
     }
 
     fn quadrant_rectangle_points(&self, node_idx: usize) -> PyResult<Vec<[f64; 2]>> {
         let (cx, cy) = self.get_center(node_idx)?;
-        let (sx, sy) = self.get_size(node_idx)?; 
-    
+        let (sx, sy) = self.get_size(node_idx)?;
+
         Ok(vec![
             [cx - sx, cy - sy],
             [cx - sx, cy + sy],
@@ -157,25 +171,25 @@ impl QuadTree {
     }
 
     fn get_children_idxs(&self, index: usize) -> Vec<usize> {
-        self.nodes.get(index).map_or_else(Vec::new, |node| node.children.to_vec())
+        self.nodes
+            .get(index)
+            .map_or_else(Vec::new, |node| node.children.to_vec())
     }
 
     fn get_point_idxs(&self, node_idx: usize) -> Vec<usize> {
-        self.nodes.get(node_idx)
+        self.nodes
+            .get(node_idx)
             .and_then(|n| n.points.as_ref()) // Get points if node exists
             .map_or_else(Vec::new, |points| points.iter().map(|p| *p).collect())
     }
-
 }
 
-
 impl QuadTree {
-
     const MAX: usize = 3;
     const MAX_DEPTH: i32 = 20;
 
-    fn process_points(&self, points: Vec<(f64, f64)>) -> Vec<[f64;2]> {
-        points.into_iter().map(|(x, y)| [x,y]).collect()
+    fn process_points(&self, points: Vec<(f64, f64)>) -> Vec<[f64; 2]> {
+        points.into_iter().map(|(x, y)| [x, y]).collect()
     }
 
     fn knn_search(
@@ -192,7 +206,7 @@ impl QuadTree {
         let prune_dist2 = if heap.len() < k {
             f64::INFINITY
         } else {
-            heap.peek().unwrap().0 .0 .into_inner()
+            heap.peek().unwrap().0 .0.into_inner()
         };
 
         // if this node is farther than the k-th current best, ignore
@@ -208,7 +222,7 @@ impl QuadTree {
 
                 if heap.len() < k {
                     heap.push(Reverse((OrderedFloat(d2), pi)));
-                } else if d2 < heap.peek().unwrap().0 .0 .into_inner(){
+                } else if d2 < heap.peek().unwrap().0 .0.into_inner() {
                     heap.pop();
                     heap.push(Reverse((OrderedFloat(d2), pi)));
                 }
@@ -228,7 +242,7 @@ impl QuadTree {
         query: (f64, f64),
         best_idx: &mut Option<usize>,
         best_dist2: &mut f64,
-        quadtree_points: &Vec<(f64, f64)>
+        quadtree_points: &Vec<(f64, f64)>,
     ) {
         let node = &self.nodes[node_idx];
 
@@ -274,10 +288,13 @@ impl QuadTree {
 
     fn get_depth(&self, index: usize) -> i32 {
         let nodes = &self.nodes;
-        nodes.get(index).map(|n| n.depth).expect("Index exists in QuadTree arena")
+        nodes
+            .get(index)
+            .map(|n| n.depth)
+            .expect("Index exists in QuadTree arena")
     }
 
-    fn get_points_length(&self, index: usize) -> usize{
+    fn get_points_length(&self, index: usize) -> usize {
         let nodes = &self.nodes;
         if let Some(n) = nodes.get(index) {
             let point_count = n.points.as_ref().map_or(0, |v| v.len());
@@ -289,9 +306,10 @@ impl QuadTree {
 
     fn get_size(&self, index: usize) -> PyResult<(f64, f64)> {
         let nodes = &self.nodes;
-        nodes.get(index).map(|n| n.size).ok_or_else(|| {
-            pyo3::exceptions::PyIndexError::new_err("Invalid node index")
-        })
+        nodes
+            .get(index)
+            .map(|n| n.size)
+            .ok_or_else(|| pyo3::exceptions::PyIndexError::new_err("Invalid node index"))
     }
 
     fn add_point_to_node(&mut self, index: usize, point_idx: usize) {
@@ -301,20 +319,20 @@ impl QuadTree {
                 if !points.iter().any(|pt| *pt == point_idx) {
                     points.push(point_idx);
                 }
-            } 
+            }
             // If there are no points yet, initialize the vector
             else {
                 n.points = Some(vec![point_idx]);
             }
         }
     }
-    
+
     fn insert(&mut self, pt_index: usize, node_idx: usize, pts_ref: &Vec<(f64, f64)>) {
         if self.nodes[node_idx].children.is_empty() {
             self.add_point_to_node(node_idx, pt_index);
             let points_len = self.get_points_length(node_idx);
             let depth = self.get_depth(node_idx);
-    
+
             if points_len > Self::MAX && depth < Self::MAX_DEPTH {
                 self.split(node_idx, pts_ref);
                 // TODO: here, can remove the points attribute of the node with node_idx
@@ -325,9 +343,13 @@ impl QuadTree {
         }
     }
 
-
-    fn insert_into_children(&mut self, pt_index: usize, node_idx: usize, pts_ref: &Vec<(f64, f64)>) {
-        let (x,y) = pts_ref.get(pt_index).unwrap();
+    fn insert_into_children(
+        &mut self,
+        pt_index: usize,
+        node_idx: usize,
+        pts_ref: &Vec<(f64, f64)>,
+    ) {
+        let (x, y) = pts_ref.get(pt_index).unwrap();
         let (cx, cy) = self.get_center(node_idx).unwrap();
         let child_idxs = self.get_children_idxs(node_idx);
 
@@ -350,7 +372,7 @@ impl QuadTree {
     }
 
     fn add_child(&mut self, node_idx: usize, center: (f64, f64), size: (f64, f64), depth: i32) {
-        let child_idx = self.create_node( center, size, depth);
+        let child_idx = self.create_node(center, size, depth);
         if let Some(n) = self.nodes.get_mut(node_idx) {
             n.children.push(child_idx);
         }
@@ -362,22 +384,22 @@ impl QuadTree {
         let node_depth = self.get_depth(node_idx);
 
         let (hx, hy) = (w * 0.5, h * 0.5);
-    
+
         let new_centers = [
             (x_center - hx, y_center - hy),
             (x_center - hx, y_center + hy),
             (x_center + hx, y_center - hy),
             (x_center + hx, y_center + hy),
         ];
-    
+
         // Add children
         for &center in &new_centers {
             self.add_child(node_idx, center, (hx, hy), node_depth + 1);
         }
-    
+
         // Minimize locking scope
         let points = self.nodes.get_mut(node_idx).and_then(|n| n.points.take());
-    
+
         // Process points outside the lock
         if let Some(points) = points {
             for node in points {
@@ -405,7 +427,8 @@ impl QuadTree {
 
     fn get_node_items(&self, node_idx: usize) -> Vec<usize> {
         let nodes = &self.nodes;
-        nodes.get(node_idx)
+        nodes
+            .get(node_idx)
             .and_then(|n| n.points.as_ref()) // Get `points` only if node exists
             .map_or_else(Vec::new, |points| points.iter().map(|p| *p).collect())
     }
@@ -418,10 +441,9 @@ impl QuadTree {
         results: &mut HashSet<usize>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(points) = polygon_points {
-
             // Sort points based on the first coordinate
             points.sort_unstable_by(|a, b| a.partial_cmp(&b).unwrap());
-            let mut quadrant_points = self.quadrant_rectangle_points(node_idx)?;
+            let quadrant_points = self.quadrant_rectangle_points(node_idx)?;
             if *points == quadrant_points {
                 results.extend(self.find_nodes_in(node_idx));
             } else {
@@ -430,22 +452,45 @@ impl QuadTree {
                     let quadtree_center = self.get_center(node_idx)?;
 
                     // TODO: optimisation: if polygon is entirely within one of the child quadrants, don't need to do slice_in_two really
-    
-                    let (left_polygon, right_polygon) = slice_in_two(Some(points), quadtree_center.0, 0)?;
-                    let (q1_polygon, q2_polygon) = slice_in_two(left_polygon.as_ref(), quadtree_center.1, 1)?;
-                    let (q3_polygon, q4_polygon) = slice_in_two(right_polygon.as_ref(), quadtree_center.1, 1)?;
-    
+
+                    let (left_polygon, right_polygon) =
+                        slice_in_two(Some(points), quadtree_center.0, 0)?;
+                    let (q1_polygon, q2_polygon) =
+                        slice_in_two(left_polygon.as_ref(), quadtree_center.1, 1)?;
+                    let (q3_polygon, q4_polygon) =
+                        slice_in_two(right_polygon.as_ref(), quadtree_center.1, 1)?;
+
                     if let Some(mut poly) = q1_polygon {
-                        self._query_polygon(quadtree_points, children_idxs[0], Some(poly.as_mut()), results)?;
+                        self._query_polygon(
+                            quadtree_points,
+                            children_idxs[0],
+                            Some(poly.as_mut()),
+                            results,
+                        )?;
                     }
                     if let Some(mut poly) = q2_polygon {
-                        self._query_polygon(quadtree_points, children_idxs[1], Some(poly.as_mut()), results)?;
+                        self._query_polygon(
+                            quadtree_points,
+                            children_idxs[1],
+                            Some(poly.as_mut()),
+                            results,
+                        )?;
                     }
                     if let Some(mut poly) = q3_polygon {
-                        self._query_polygon(quadtree_points, children_idxs[2], Some(poly.as_mut()), results)?;
+                        self._query_polygon(
+                            quadtree_points,
+                            children_idxs[2],
+                            Some(poly.as_mut()),
+                            results,
+                        )?;
                     }
                     if let Some(mut poly) = q4_polygon {
-                        self._query_polygon(quadtree_points, children_idxs[3], Some(poly.as_mut()), results)?;
+                        self._query_polygon(
+                            quadtree_points,
+                            children_idxs[3],
+                            Some(poly.as_mut()),
+                            results,
+                        )?;
                     }
                 } else {
                     let filtered_nodes: Vec<usize> = self
