@@ -11,8 +11,8 @@ Full field requests return GRIB data. They use the same keys as [MARS](https://c
 For full field extraction the Polytope service supports retrieval from the following datasets:
 
 * ECMWF Operational Data from the last two days [Further Details](https://apps.ecmwf.int/mars-catalogue/)
-* DestinE Climate Digital Twin [Further Details](https://confluence.ecmwf.int/display/DDCZArchive/Climate+DT+overview)
-* DestinE Extremes Digital Twin [Further Details](https://confluence.ecmwf.int/display/DDCZArchive/Extremes+DT+overview)
+* DestinE Climate Digital Twin [Further Details](https://destine.ecmwf.int/climate-change-adaptation-digital-twin-climate-dt/)
+* DestinE Extremes Digital Twin [Further Details](https://destine.ecmwf.int/weather-induced-extremes-digital-twin/)
 * DestinE On-Demand Extremes Digital Twin
 * ECMWF Opendata for AI datasets [Further Details](https://confluence.ecmwf.int/display/DAC/ECMWF+open+data%3A+real-time+forecasts+from+IFS+and+AIFS#ECMWFopendata:realtimeforecastsfromIFSandAIFS-IndexFilesIndexfiles)
 
