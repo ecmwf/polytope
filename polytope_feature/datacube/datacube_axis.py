@@ -74,7 +74,6 @@ class DatacubeAxis(ABC):
 
     def find_indexes(self, path, datacube):
         indexes = self.find_standard_indexes(path, datacube)
-        print("WHAT ARE THE STANDARD INDEXES HERE ", indexes)
         for transformation in self.transformations[::-1]:
             indexes = transformation.find_modified_indexes(indexes, path, datacube, self)
         return indexes
@@ -195,10 +194,6 @@ class DatacubeAxis(ABC):
                 end = bisect.bisect_right(wrapped, up_w)
 
             indexes_between_ranges.extend(indexes[start:end])
-        
-        print("WHAT ARE THE INDEXES BETWEEN ", indexes_between_ranges)
-        print("WHAT ARE THE LOW AND UP ", low, up)
-        print("WHAT ARE THE INDEXES ", indexes)
 
         return indexes_between_ranges
 
