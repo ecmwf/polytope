@@ -101,6 +101,55 @@ class DatacubeAxis(ABC):
             value = transformation._remap_val_to_axis_range(value, self)
         return value
 
+    def _mixed_key(self, x):
+
+        if isinstance(x, pd.Timedelta):
+            return (0, x.total_seconds())
+        elif isinstance(x, str):
+            return (1, x)
+        else:
+            return (2, x)
+
+    def _is_mixed(self, indexes):
+        types = {type(x) for x in indexes}
+        return len(types) > 1
+
+    def find_standard_indices_between(self, indexes, low, up, datacube, method=None):
+
+        indexes_list = list(indexes)
+
+        # If homogeneous → use fast path
+        if not self._is_mixed(indexes_list):
+
+            if method in ("surrounding", "nearest"):
+                start = bisect.bisect_left(indexes_list, low)
+                end = bisect.bisect_right(indexes_list, up)
+                start = max(start - 1, 0)
+                end = min(end + 1, len(indexes_list))
+            else:
+                start = bisect.bisect_left(indexes_list, low)
+                end = bisect.bisect_right(indexes_list, up)
+
+            return indexes_list[start:end]
+
+        # Mixed types → fallback (robust)
+        low_k = self._mixed_key(low)
+        up_k = self._mixed_key(up)
+
+        filtered = [x for x in indexes_list if low_k <= self._mixed_key(x) <= up_k]
+
+        if method in ("surrounding", "nearest") and filtered:
+            # add neighbors manually
+            first_idx = indexes_list.index(filtered[0])
+            last_idx = indexes_list.index(filtered[-1])
+
+            start = max(first_idx - 1, 0)
+            end = min(last_idx + 2, len(indexes_list))
+
+            return indexes_list[start:end]
+
+        return filtered
+
     # def find_standard_indices_between(self, indexes, low, up, datacube, method=None):
     #     indexes_between_ranges = []
 
@@ -134,68 +183,6 @@ class DatacubeAxis(ABC):
     #             indexes_between = indexes[lower_idx:upper_idx]
     #             indexes_between_ranges.extend(indexes_between)
     #     return indexes_between_ranges
-
-    def _mixed_key(self, x):
-        if isinstance(x, pd.Timedelta):
-            return (0, x.total_seconds())
-        elif isinstance(x, str):
-            return (1, x)
-        else:
-            return (2, x)
-
-
-    def find_standard_indices_between(self, indexes, low, up, datacube, method=None):
-        indexes_between_ranges = []
-
-        # Ensure sorted with consistent key
-        try:
-            indexes = sorted(indexes, key=self._mixed_key)
-        except Exception:
-            indexes = list(indexes)
-
-        # Wrap low/up with same key logic
-        low_k = self._mixed_key(low)
-        up_k = self._mixed_key(up)
-
-        # Helper for bisect with key
-        class KeyWrapper:
-            def __init__(self, obj, key):
-                self.obj = obj
-                self.key = key
-            def __lt__(self, other):
-                return self.key(self.obj) < self.key(other.obj)
-
-        wrapped = [KeyWrapper(x, self._mixed_key) for x in indexes]
-        low_w = KeyWrapper(low, self._mixed_key)
-        up_w = KeyWrapper(up, self._mixed_key)
-
-        if self.name in datacube.complete_axes and self.name not in datacube.transformed_axes:
-            # pandas searchsorted won't work reliably with mixed types
-            # so we fallback to bisect logic here too
-            if method in ("surrounding", "nearest"):
-                start = bisect.bisect_left(wrapped, low_w)
-                end = bisect.bisect_right(wrapped, up_w)
-                start = max(start - 1, 0)
-                end = min(end + 1, len(indexes))
-            else:
-                start = bisect.bisect_left(wrapped, low_w)
-                end = bisect.bisect_right(wrapped, up_w)
-
-            indexes_between_ranges.extend(indexes[start:end])
-
-        else:
-            if method in ("surrounding", "nearest"):
-                start = bisect.bisect_left(wrapped, low_w)
-                end = bisect.bisect_right(wrapped, up_w)
-                start = max(start - 1, 0)
-                end = min(end + 1, len(indexes))
-            else:
-                start = bisect.bisect_left(wrapped, low_w)
-                end = bisect.bisect_right(wrapped, up_w)
-
-            indexes_between_ranges.extend(indexes[start:end])
-
-        return indexes_between_ranges
 
     def find_indices_between(self, indexes_ranges, low, up, datacube, method=None):
         indexes_between_ranges = self.find_standard_indices_between(indexes_ranges, low, up, datacube, method)
