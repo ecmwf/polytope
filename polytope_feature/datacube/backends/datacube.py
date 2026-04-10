@@ -138,7 +138,6 @@ class Datacube(ABC):
         """
         path = self.fit_path(path)
         indexes = axis.find_indexes(path, self)
-        # print("WHAT ARE THE INDEXES HERE ", indexes)
 
         idx_between = axis.find_indices_between(indexes, lower, upper, self, method)
 
