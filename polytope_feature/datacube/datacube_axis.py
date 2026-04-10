@@ -74,6 +74,7 @@ class DatacubeAxis(ABC):
 
     def find_indexes(self, path, datacube):
         indexes = self.find_standard_indexes(path, datacube)
+        print("WHAT ARE THE STANDARD INDEXES HERE ", indexes)
         for transformation in self.transformations[::-1]:
             indexes = transformation.find_modified_indexes(indexes, path, datacube, self)
         return indexes
@@ -101,38 +102,104 @@ class DatacubeAxis(ABC):
             value = transformation._remap_val_to_axis_range(value, self)
         return value
 
+    # def find_standard_indices_between(self, indexes, low, up, datacube, method=None):
+    #     indexes_between_ranges = []
+
+    #     if self.name in datacube.complete_axes and self.name not in datacube.transformed_axes:
+    #         # Find the range of indexes between lower and upper
+    #         # https://pandas.pydata.org/docs/reference/api/pandas.Index.searchsorted.html
+    #         # Assumes the indexes are already sorted (could sort to be sure) and monotonically increasing
+    #         if method == "surrounding" or method == "nearest":
+    #             start = indexes.searchsorted(low, "left")
+    #             end = indexes.searchsorted(up, "right")
+    #             start = max(start - 1, 0)
+    #             end = min(end + 1, len(indexes))
+    #             indexes_between = indexes[start:end].to_list()
+    #             indexes_between_ranges.extend(indexes_between)
+    #         else:
+    #             start = indexes.searchsorted(low, "left")
+    #             end = indexes.searchsorted(up, "right")
+    #             indexes_between = indexes[start:end].to_list()
+    #             indexes_between_ranges.extend(indexes_between)
+    #     else:
+    #         if method == "surrounding" or method == "nearest":
+    #             start = bisect.bisect_left(indexes, low)
+    #             end = bisect.bisect_right(indexes, up)
+    #             start = max(start - 1, 0)
+    #             end = min(end + 1, len(indexes))
+    #             indexes_between = indexes[start:end]
+    #             indexes_between_ranges.extend(indexes_between)
+    #         else:
+    #             lower_idx = bisect.bisect_left(indexes, low)
+    #             upper_idx = bisect.bisect_right(indexes, up)
+    #             indexes_between = indexes[lower_idx:upper_idx]
+    #             indexes_between_ranges.extend(indexes_between)
+    #     return indexes_between_ranges
+
+    def _mixed_key(self, x):
+        if isinstance(x, pd.Timedelta):
+            return (0, x.total_seconds())
+        elif isinstance(x, str):
+            return (1, x)
+        else:
+            return (2, x)
+
+
     def find_standard_indices_between(self, indexes, low, up, datacube, method=None):
         indexes_between_ranges = []
 
+        # Ensure sorted with consistent key
+        try:
+            indexes = sorted(indexes, key=self._mixed_key)
+        except Exception:
+            indexes = list(indexes)
+
+        # Wrap low/up with same key logic
+        low_k = self._mixed_key(low)
+        up_k = self._mixed_key(up)
+
+        # Helper for bisect with key
+        class KeyWrapper:
+            def __init__(self, obj, key):
+                self.obj = obj
+                self.key = key
+            def __lt__(self, other):
+                return self.key(self.obj) < self.key(other.obj)
+
+        wrapped = [KeyWrapper(x, self._mixed_key) for x in indexes]
+        low_w = KeyWrapper(low, self._mixed_key)
+        up_w = KeyWrapper(up, self._mixed_key)
+
         if self.name in datacube.complete_axes and self.name not in datacube.transformed_axes:
-            # Find the range of indexes between lower and upper
-            # https://pandas.pydata.org/docs/reference/api/pandas.Index.searchsorted.html
-            # Assumes the indexes are already sorted (could sort to be sure) and monotonically increasing
-            if method == "surrounding" or method == "nearest":
-                start = indexes.searchsorted(low, "left")
-                end = indexes.searchsorted(up, "right")
+            # pandas searchsorted won't work reliably with mixed types
+            # so we fallback to bisect logic here too
+            if method in ("surrounding", "nearest"):
+                start = bisect.bisect_left(wrapped, low_w)
+                end = bisect.bisect_right(wrapped, up_w)
                 start = max(start - 1, 0)
                 end = min(end + 1, len(indexes))
-                indexes_between = indexes[start:end].to_list()
-                indexes_between_ranges.extend(indexes_between)
             else:
-                start = indexes.searchsorted(low, "left")
-                end = indexes.searchsorted(up, "right")
-                indexes_between = indexes[start:end].to_list()
-                indexes_between_ranges.extend(indexes_between)
+                start = bisect.bisect_left(wrapped, low_w)
+                end = bisect.bisect_right(wrapped, up_w)
+
+            indexes_between_ranges.extend(indexes[start:end])
+
         else:
-            if method == "surrounding" or method == "nearest":
-                start = bisect.bisect_left(indexes, low)
-                end = bisect.bisect_right(indexes, up)
+            if method in ("surrounding", "nearest"):
+                start = bisect.bisect_left(wrapped, low_w)
+                end = bisect.bisect_right(wrapped, up_w)
                 start = max(start - 1, 0)
                 end = min(end + 1, len(indexes))
-                indexes_between = indexes[start:end]
-                indexes_between_ranges.extend(indexes_between)
             else:
-                lower_idx = bisect.bisect_left(indexes, low)
-                upper_idx = bisect.bisect_right(indexes, up)
-                indexes_between = indexes[lower_idx:upper_idx]
-                indexes_between_ranges.extend(indexes_between)
+                start = bisect.bisect_left(wrapped, low_w)
+                end = bisect.bisect_right(wrapped, up_w)
+
+            indexes_between_ranges.extend(indexes[start:end])
+        
+        print("WHAT ARE THE INDEXES BETWEEN ", indexes_between_ranges)
+        print("WHAT ARE THE LOW AND UP ", low, up)
+        print("WHAT ARE THE INDEXES ", indexes)
+
         return indexes_between_ranges
 
     def find_indices_between(self, indexes_ranges, low, up, datacube, method=None):
