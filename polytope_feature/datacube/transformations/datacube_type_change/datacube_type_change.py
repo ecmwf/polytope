@@ -183,7 +183,6 @@ class TypeChangeSubHourlyTimeSteps(DatacubeAxisTypeChange):
         self._new_type = new_type
 
     def transform_type(self, value):
-        print("AND WHAT ABOUT HERE ", value)
         if isinstance(value, int):
             return pd.Timedelta(hours=value)
 
