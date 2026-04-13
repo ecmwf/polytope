@@ -1,3 +1,5 @@
+import heapq
+
 from ...engine.slicing_tools import slice, slice_in_two
 
 """
@@ -172,3 +174,63 @@ class QuadTree:
         for node in self.nodes:
             results.add(node)
         return results
+
+    def _box_dist2(self, query):
+        """Squared distance from query point to the nearest point inside this node's bounding box.
+        Returns 0 if the query point is inside the box.
+        `self.size` stores half-extents on each axis."""
+        qx, qy = query
+        cx, cy = self.center
+        sx, sy = self.size
+        dx = max(0.0, abs(qx - cx) - sx)
+        dy = max(0.0, abs(qy - cy) - sy)
+        return dx * dx + dy * dy
+
+    def _knn_search(self, query, k, heap, seen, counter):
+        """Branch-and-bound kNN traversal.
+        heap: max-heap (via negation) of (-dist2, counter, QuadNode) for current k-best.
+        seen: set of node indices already in the heap (avoids duplicates from shared-boundary insertions).
+        counter: single-element list used as a monotone tie-breaker."""
+        # Prune: if the closest possible point in this box is farther than
+        # the k-th best distance found so far, skip the entire subtree.
+        prune_dist2 = -heap[0][0] if len(heap) >= k else float("inf")
+        if self._box_dist2(query) > prune_dist2:
+            return
+
+        if not self.children:
+            # Leaf node: evaluate every stored point.
+            for node in self.nodes:
+                if node.index in seen:
+                    continue
+                d2 = (node.item[0] - query[0]) ** 2 + (node.item[1] - query[1]) ** 2
+                if len(heap) < k:
+                    heapq.heappush(heap, (-d2, counter[0], node))
+                    seen.add(node.index)
+                    counter[0] += 1
+                elif d2 < -heap[0][0]:
+                    _, _, evicted = heapq.heapreplace(heap, (-d2, counter[0], node))
+                    seen.discard(evicted.index)
+                    seen.add(node.index)
+                    counter[0] += 1
+        else:
+            for child in self.children:
+                child._knn_search(query, k, heap, seen, counter)
+
+    def k_nearest_neighbor(self, query, k, points=None):
+        """Return list of up to k nearest QuadNode objects to query, sorted nearest-first.
+
+        Args:
+            query:  (x, y) query coordinates.
+            k:      number of nearest neighbours to return.
+            points: ignored; accepted for API compatibility with the Rust version.
+
+        Returns:
+            List of QuadNode objects ordered from nearest to farthest.
+        """
+        heap = []  # max-heap via negation: (-dist2, counter, QuadNode)
+        seen = set()
+        counter = [0]
+        self._knn_search(query, k, heap, seen, counter)
+        # Sort nearest-first: ascending dist2 == descending (-dist2)
+        heap.sort(reverse=True)
+        return [node for _neg_d2, _c, node in heap]
