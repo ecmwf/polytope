@@ -9,14 +9,14 @@ Tests verify that:
 5. Negative coordinates and scattered points work as expected
 """
 
-import sys
+import pytest
 
 try:
     from polytope_feature.polytope_rs import QuadTree
-except ImportError as e:
-    print(f"Error importing QuadTree: {e}")
-    print("Make sure to build the Rust module first: cd rust && maturin develop")
-    sys.exit(1)
+except ImportError:
+    QuadTree = None
+
+pytestmark = pytest.mark.skipif(QuadTree is None, reason="QuadTree not installed")
 
 
 def squared_distance(p1, p2):
@@ -274,9 +274,3 @@ class TestNearestNeighbor:
         print("=" * 60)
 
         return failed == 0
-
-
-if __name__ == "__main__":
-    tester = TestNearestNeighbor()
-    success = tester.run_all()
-    sys.exit(0 if success else 1)
