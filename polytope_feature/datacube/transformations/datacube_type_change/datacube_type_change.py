@@ -188,7 +188,7 @@ class TypeChangeSubHourlyTimeSteps(DatacubeAxisTypeChange):
 
         if isinstance(value, str) and value.isdigit():
             return pd.Timedelta(hours=int(value))
-        
+
         elif isinstance(value, str) and "-" in value:
             # Step range is not parsed here
             return value
