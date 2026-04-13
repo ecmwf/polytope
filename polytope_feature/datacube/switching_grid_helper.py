@@ -16,30 +16,14 @@ def get_first_grib_message(req):
     # Make sure that we are accessing a single georef so that the grid is consistent
     assert "georef" in req.keys()
 
-    first_field = next(fdb.list(req, keys=True))["keys"]
-
-    field = fdb.retrieve(first_field)
-
-    # Normalize the retrieve() result into a plain `bytes` object
-    if hasattr(field, "read"):
-        # file-like object: read the contents
-        data = field.read()
-    else:
-        data = field
-
-    # Convert common buffer types to bytes
-    if isinstance(data, bytes):
-        msg_bytes = data
-    elif isinstance(data, bytearray):
-        msg_bytes = bytes(data)
-    elif isinstance(data, memoryview):
-        msg_bytes = data.tobytes()
-    else:
-        # last resort: try to construct bytes (may raise)
-        try:
-            msg_bytes = bytes(data)
-        except Exception as e:
-            raise TypeError(f"Unsupported GRIB message type: {type(data)!r}") from e
+    # Use data_handle from the list element directly instead of a separate
+    # retrieve() call — avoids the list iterator polluting retrieve state.
+    first_element = next(fdb.list(req))
+    dh = first_element.data_handle
+    if dh is None:
+        raise ValueError("List element has no data handle")
+    with dh:
+        msg_bytes = dh.read()
 
     gid = eccodes.codes_new_from_message(msg_bytes)
     return gid
