@@ -84,6 +84,17 @@ line-length = 120
 include = [ "polytope_feature" ]
 where = [ "./" ]
 
+[tool.setuptools-rust]
+# Configure Rust extension build to target the stable ABI (abi3) where
+# the Rust/C-API layer (e.g. PyO3 with abi3 feature) is used. This
+# signals setuptools-rust-based builds to enable the limited API
+# configuration so a single wheel can be compatible across multiple
+# Python versions. The Rust/Cargo crate should enable the appropriate
+# `abi3`/`py_limited_api` features in its own Cargo.toml.
+bindings = "pyo3"
+py_limited_api = true
+features = ["abi3"]
+
 [tool.setuptools_scm]
 version_file = "polytope_feature/_version.py"
 version_file_template = '''# Do not change! Do not track in version control!
