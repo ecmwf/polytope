@@ -1,15 +1,8 @@
 from copy import copy
 
+from polytope_feature.polytope_rs import QuadTree
+
 from .engine import Engine
-
-use_rust = False
-try:
-    from polytope_feature.polytope_rs import QuadTree
-
-    use_rust = True
-except (ModuleNotFoundError, ImportError) as e:
-    print(f"Failed to load Rust extension with error: {e}, falling back to Python implementation.")
-    from ..datacube.quadtree.quad_tree import QuadTree
 
 
 class QuadTreeSlicer(Engine):
@@ -32,26 +25,21 @@ class QuadTreeSlicer(Engine):
         assert len(axes) == 2
         assert "latitude" in axes and "longitude" in axes
         revert_axes = not (list(axes) == ["latitude", "longitude"])
-        if use_rust:
-            if len(datacube.nearest_search) == 0:
-                if revert_axes:
-                    polytope_points = [tuple(reversed(point)) for point in polytope.points]
-                else:
-                    polytope_points = [tuple(point) for point in polytope.points]
-                polygon_points = self.quad_tree.query_polygon(self.points, 0, polytope_points)
-            else:
-                k = datacube.nearest_search[tuple(polytope.axes())][1]
-                if revert_axes:
-                    nn_points = [tuple(reversed(pt)) for pt in datacube.nearest_search[tuple(polytope.axes())][0]]
-                else:
-                    nn_points = [tuple(pt) for pt in datacube.nearest_search[tuple(polytope.axes())][0]]
-                polygon_points = []
-                for nn_pt in nn_points:
-                    polygon_points.extend(self.quad_tree.k_nearest_neighbor(nn_pt, k, self.points))
-        else:
+        if len(datacube.nearest_search) == 0:
             if revert_axes:
-                polytope.points = [tuple(reversed(point)) for point in polytope.points]
-            polygon_points = self.quad_tree.query_polygon(polytope)
+                polytope_points = [tuple(reversed(point)) for point in polytope.points]
+            else:
+                polytope_points = [tuple(point) for point in polytope.points]
+            polygon_points = self.quad_tree.query_polygon(self.points, 0, polytope_points)
+        else:
+            k = datacube.nearest_search[tuple(polytope.axes())][1]
+            if revert_axes:
+                nn_points = [tuple(reversed(pt)) for pt in datacube.nearest_search[tuple(polytope.axes())][0]]
+            else:
+                nn_points = [tuple(pt) for pt in datacube.nearest_search[tuple(polytope.axes())][0]]
+            polygon_points = []
+            for nn_pt in nn_points:
+                polygon_points.extend(self.quad_tree.k_nearest_neighbor(nn_pt, k, self.points))
         return polygon_points
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):
@@ -68,19 +56,12 @@ class QuadTreeSlicer(Engine):
         lon_ax = datacube._axes["longitude"]
         for value in extracted_points:
             # convert to float for slicing
-            if use_rust:
-                lat_val = self.points[value][0]
-                lon_val = self.points[value][1]
-            else:
-                lat_val = value.item[0]
-                lon_val = value.item[1]
+            lat_val = self.points[value][0]
+            lon_val = self.points[value][1]
             # store the native type
             child, _ = node.create_child(lat_ax, lat_val, [])
             grand_child, _ = child.create_child(lon_ax, lon_val, [])
             # NOTE: the index of the point is stashed in the branches' result
-            if use_rust:
-                grand_child.indexes = [value]
-            else:
-                grand_child.indexes = [value.index]
+            grand_child.indexes = [value]
             grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             grand_child["unsliced_polytopes"].remove(polytope)
