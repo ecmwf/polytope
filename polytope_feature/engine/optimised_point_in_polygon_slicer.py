@@ -1,19 +1,10 @@
 from copy import copy
 
+from polytope_feature.polytope_rs import extract_point_in_poly_bbox
+
 from ..datacube.datacube_axis import IntDatacubeAxis
 from ..datacube.tensor_index_tree import TensorIndexTree
 from .engine import Engine
-
-use_rust = False
-try:
-    from polytope_feature.polytope_rs import extract_point_in_poly_bbox
-
-    use_rust = True
-except (ModuleNotFoundError, ImportError) as e:
-    print(f"Failed to load Rust extension with error: {e}, falling back to Python implementation.")
-
-    from shapely.geometry import Point
-    from shapely.geometry.polygon import Polygon
 
 
 class OptimisedPointInPolygonSlicer(Engine):
@@ -51,15 +42,6 @@ class OptimisedPointInPolygonSlicer(Engine):
 
         return request
 
-    def find_points_in_bbox(self, polytope):
-        self.bbox_points = []
-        bbox_x_range = polytope.extents(polytope.axes()[0])[:2]
-        bbox_y_range = polytope.extents(polytope.axes()[1])[:2]
-        for point in self.points:
-            if bbox_x_range[0] <= point[0] <= bbox_x_range[1]:
-                if bbox_y_range[0] <= point[1] <= bbox_y_range[1]:
-                    self.bbox_points.append(point)
-
     def extract_single(self, datacube, polytope):
         # extract a single polygon
 
@@ -67,19 +49,8 @@ class OptimisedPointInPolygonSlicer(Engine):
         # We do this by intersecting the datacube point cloud quad tree with the polytope here
 
         # But here, we only consider the points in the bounding box of the polygon
-
-        if use_rust:
-            polytope_points = [tuple(point) for point in polytope.points]
-            found_points = extract_point_in_poly_bbox(self.points, polytope_points)
-        else:
-            self.find_points_in_bbox(polytope)
-
-            found_points = []
-            polygon = Polygon(polytope.points)
-            for point in self.bbox_points:
-                new_point = Point(point[0], point[1])
-                if polygon.contains(new_point):
-                    found_points.append(point)
+        polytope_points = [tuple(point) for point in polytope.points]
+        found_points = extract_point_in_poly_bbox(self.points, polytope_points)
         return found_points
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):
