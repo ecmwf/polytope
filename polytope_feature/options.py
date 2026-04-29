@@ -86,6 +86,7 @@ class Config(ConfigModel):
     use_catalogue: Optional[bool] = False
     engine_options: Optional[Dict[str, str]] = {}
     dynamic_grid: Optional[bool] = False
+    dynamic_grid_service_url: Optional[str] = None
 
 
 class PolytopeOptions(ABC):
@@ -99,6 +100,7 @@ class PolytopeOptions(ABC):
         compressed_axes_config = config_options.compressed_axes_config
         pre_path = config_options.pre_path
         dynamic_grid = config_options.dynamic_grid
+        dynamic_grid_service_url = config_options.dynamic_grid_service_url
         alternative_axes = config_options.alternative_axes
         use_catalogue = config_options.use_catalogue
         engine_options = config_options.engine_options
@@ -107,7 +109,7 @@ class PolytopeOptions(ABC):
             # TODO: look at the pre-path and query the eccodes function to get the new grid option
             # TODO: then change the grid option inside of the axis_config
             try:
-                replaced = replace_grid_config_in_options(config_options, pre_path)
+                replaced = replace_grid_config_in_options(config_options, pre_path, dynamic_grid_service_url)
                 if replaced:
                     axis_config = config_options.axis_config
             except Exception as e:
@@ -152,10 +154,10 @@ def gridspec_to_grid_config(gridspec, md5hash):
     return None
 
 
-def replace_grid_config_in_options(options, req):
+def replace_grid_config_in_options(options, req, service_url=None):
     from polytope_feature.datacube.switching_grid_helper import lookup_grid_config
 
-    gridspec, md5hash = lookup_grid_config(req)
+    gridspec, md5hash = lookup_grid_config(req, service_url=service_url)
     grid_config = gridspec_to_grid_config(gridspec, md5hash)
     if grid_config is not None:
         for axis_conf in options.axis_config:
