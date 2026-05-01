@@ -108,16 +108,9 @@ class PolytopeOptions(ABC):
         if dynamic_grid:
             # TODO: look at the pre-path and query the eccodes function to get the new grid option
             # TODO: then change the grid option inside of the axis_config
-            try:
-                replaced = replace_grid_config_in_options(config_options, pre_path, dynamic_grid_service_url)
-                if replaced:
-                    axis_config = config_options.axis_config
-            except Exception as e:
-                logging.warning(
-                    "Dynamic grid replacement failed for georef '%s': %s. Using static grid config.",
-                    pre_path.get("georef", "unknown"),
-                    e,
-                )
+            replaced = replace_grid_config_in_options(config_options, pre_path, dynamic_grid_service_url)
+            if replaced:
+                axis_config = config_options.axis_config
         return (
             axis_config,
             compressed_axes_config,
