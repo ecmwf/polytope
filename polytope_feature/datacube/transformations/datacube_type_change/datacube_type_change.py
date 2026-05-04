@@ -240,7 +240,9 @@ class TypeChangeSubHourlyTimeSteps(DatacubeAxisTypeChange):
                 return_vals.append(f"{hours}h{minutes}m")
             else:
                 return_vals.append(f"{hours}h{minutes}m{seconds}s")
-        return return_vals
+        # return return_vals
+        unique_list = list(dict.fromkeys(return_vals))
+        return unique_list
 
 
 _type_to_datacube_type_change_lookup = {
