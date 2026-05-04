@@ -1,7 +1,5 @@
 import math
 
-import numpy as np
-
 from polytope_feature.polytope_rs import (
     first_axis_vals_healpix_nested,
     healpix_longitudes,
@@ -29,7 +27,6 @@ class NestedHealpixGridMapper(DatacubeMapper):
         self.is_irregular = False
         self._axis_reversed = {mapped_axes[0]: True, mapped_axes[1]: False}
         self._first_axis_vals = self.first_axis_vals()
-        self._first_axis_vals_np_rounded = -np.round(np.array(self._first_axis_vals), decimals=8)
         self.compressed_grid_axes = [self._mapped_axes[1]]
         self.Nside = self._resolution
         self.k = int(math.log2(self.Nside))
@@ -62,22 +59,6 @@ class NestedHealpixGridMapper(DatacubeMapper):
 
         values = self.HEALPix_longitudes(idx)
         return values
-
-    def second_axis_vals_from_idx(self, first_val_idx):
-        values = self.HEALPix_longitudes(first_val_idx)
-        return values
-
-    def HEALPix_nj(self, i):
-        assert self._resolution > 0
-        ni = 4 * self._resolution - 1
-        assert i < ni
-
-        if i < self._resolution:
-            return 4 * (i + 1)
-        elif i < 3 * self._resolution:
-            return 4 * self._resolution
-        else:
-            return self.HEALPix_nj(ni - 1 - i)
 
     def HEALPix_longitudes(self, i):
         return healpix_longitudes(i, self._resolution)

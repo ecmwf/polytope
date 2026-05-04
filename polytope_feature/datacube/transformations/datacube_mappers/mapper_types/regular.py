@@ -1,4 +1,6 @@
-import bisect
+import numpy as np
+
+from polytope_feature.polytope_rs import first_axis_vals_regular, unmap_regular
 
 from ..datacube_mappers import DatacubeMapper
 
@@ -25,6 +27,8 @@ class RegularGridMapper(DatacubeMapper):
             assert set(axis_reversed.keys()) == set(mapped_axes)
             self._axis_reversed = axis_reversed
         self._first_axis_vals = self.first_axis_vals()
+        # Cache second axis values — identical for every latitude row
+        self._second_axis_vals = np.arange(4 * self._resolution, dtype=np.float64) * self.deg_increment
         self.compressed_grid_axes = [self._mapped_axes[1]]
         if md5_hash is not None:
             self.md5_hash = md5_hash
@@ -37,11 +41,8 @@ class RegularGridMapper(DatacubeMapper):
             raise TypeError("Use local_regular grid type for local area regular lat-lon grids")
 
     def first_axis_vals(self):
-        if self._axis_reversed[self._mapped_axes[0]]:
-            first_ax_vals = [90 - i * self.deg_increment for i in range(2 * self._resolution)]
-        else:
-            first_ax_vals = [-90 + i * self.deg_increment for i in range(2 * self._resolution)]
-        return first_ax_vals
+        descending = self._axis_reversed[self._mapped_axes[0]]
+        return first_axis_vals_regular(self._resolution, descending)
 
     def map_first_axis(self, lower, upper):
         axis_lines = self._first_axis_vals
@@ -49,41 +50,36 @@ class RegularGridMapper(DatacubeMapper):
         return return_vals
 
     def second_axis_vals(self, first_val):
-        second_ax_vals = [i * self.deg_increment for i in range(4 * self._resolution)]
-        return second_ax_vals
+        return self._second_axis_vals
 
     def map_second_axis(self, first_val, lower, upper):
-        axis_lines = self.second_axis_vals(first_val)
-        return_vals = [val for val in axis_lines if lower <= val <= upper]
+        axis_lines = self._second_axis_vals
+        return_vals = axis_lines[(axis_lines >= lower) & (axis_lines <= upper)].tolist()
         return return_vals
-
-    def axes_idx_to_regular_idx(self, first_idx, second_idx):
-        final_idx = first_idx * 4 * self._resolution + second_idx
-        return final_idx
 
     def find_second_idx(self, first_val, second_val):
         tol = 1e-10
-        second_axis_vals = self.second_axis_vals(first_val)
-        second_idx = bisect.bisect_left(second_axis_vals, second_val - tol)
-        return second_idx
+        second_idx = np.searchsorted(self._second_axis_vals, second_val - tol)
+        return int(second_idx)
 
     def unmap_first_val_to_start_line_idx(self, first_val):
-        tol = 1e-8
-        first_val = [i for i in self._first_axis_vals if first_val - tol <= i <= first_val + tol][0]
-        first_idx = self._first_axis_vals.index(first_val)
+        first_axis_arr = np.asarray(self._first_axis_vals)
+        descending = self._axis_reversed[self._mapped_axes[0]]
+        if descending:
+            first_idx = int(np.searchsorted(-first_axis_arr, -first_val))
+        else:
+            first_idx = int(np.searchsorted(first_axis_arr, first_val))
         return first_idx * 4 * self._resolution
 
     def unmap(self, first_val, second_vals, unmapped_idx=None):
-        tol = 1e-8
-        first_val = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
-        first_idx = self._first_axis_vals.index(first_val)
-        return_idxs = []
-        for second_val in second_vals:
-            second_val = [i for i in self.second_axis_vals(first_val) if second_val - tol <= i <= second_val + tol][0]
-            second_idx = self.second_axis_vals(first_val).index(second_val)
-            final_index = self.axes_idx_to_regular_idx(first_idx, second_idx)
-            return_idxs.append(final_index)
-        return return_idxs
+        descending = self._axis_reversed[self._mapped_axes[0]]
+        return unmap_regular(
+            self._resolution,
+            self._first_axis_vals,
+            first_val[0],
+            list(second_vals),
+            descending,
+        )
 
 
 # md5 grid hash in form {resolution : hash}

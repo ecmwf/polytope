@@ -1,6 +1,9 @@
-import bisect
-
 import numpy as np
+
+from polytope_feature.polytope_rs import (
+    first_axis_vals_local_regular,
+    unmap_local_regular,
+)
 
 from ..datacube_mappers import DatacubeMapper
 
@@ -16,7 +19,6 @@ class LocalRegularGridMapper(DatacubeMapper):
         axis_reversed=None,
         mapper_options=None,
     ):
-        # TODO: if local area is not empty list, raise NotImplemented
         self._mapped_axes = mapped_axes
         self._base_axis = base_axis
 
@@ -62,21 +64,13 @@ class LocalRegularGridMapper(DatacubeMapper):
         )
 
     def first_axis_vals(self):
-        if self._axis_reversed[self._mapped_axes[0]]:
-            first_ax_vals = np.arange(
-                self._first_axis_max,
-                self._first_axis_max - self._first_deg_increment * (self.first_resolution + 1),
-                -self._first_deg_increment,
-                dtype=np.float64,
-            )
-        else:
-            first_ax_vals = np.arange(
-                self._first_axis_min,
-                self._first_axis_min + self._first_deg_increment * (self.first_resolution + 1),
-                self._first_deg_increment,
-                dtype=np.float64,
-            )
-        return first_ax_vals
+        descending = self._axis_reversed[self._mapped_axes[0]]
+        return first_axis_vals_local_regular(
+            self._first_axis_min,
+            self._first_axis_max,
+            self.first_resolution,
+            descending,
+        )
 
     def map_first_axis(self, lower, upper):
         axis_lines = self._first_axis_vals
@@ -87,52 +81,34 @@ class LocalRegularGridMapper(DatacubeMapper):
         return self._second_axis_vals
 
     def map_second_axis(self, first_val, lower, upper):
-        axis_lines = self.second_axis_vals(first_val)
-        return_vals = [val for val in axis_lines if lower <= val <= upper]
+        axis_lines = self._second_axis_vals
+        return_vals = axis_lines[(axis_lines >= lower) & (axis_lines <= upper)].tolist()
         return return_vals
-
-    def axes_idx_to_regular_idx(self, first_idx, second_idx):
-        final_idx = first_idx * (self.second_resolution + 1) + second_idx
-        return final_idx
 
     def find_second_idx(self, first_val, second_val):
         tol = 1e-10
-        second_axis_vals = self.second_axis_vals(first_val)
-        second_idx = bisect.bisect_left(second_axis_vals, second_val - tol)
-        return second_idx
+        second_idx = np.searchsorted(self._second_axis_vals, second_val - tol)
+        return int(second_idx)
 
     def unmap_first_val_to_start_line_idx(self, first_val):
-        tol = 1e-8
-        first_val = [i for i in self._first_axis_vals if first_val - tol <= i <= first_val + tol][0]
-        first_idx = self._first_axis_vals.index(first_val)
-        return first_idx * self.second_resolution
-
-    def unmap(self, first_val, second_vals, unmapped_idx=None):
-        first_array = self._first_axis_vals
-        second_array = self._second_axis_vals
-        second_vals = np.asarray(second_vals)
+        first_array = np.asarray(self._first_axis_vals)
         descending = self._axis_reversed[self._mapped_axes[0]]
         if descending:
-            # right descending order for searchsorted
-            first_idx = np.searchsorted(-first_array, -first_val[0])
+            first_idx = int(np.searchsorted(-first_array, -first_val))
         else:
-            first_idx = np.searchsorted(first_array, first_val[0])
-        if first_idx > 0 and first_idx < len(first_array):
-            left_val = first_array[first_idx - 1]
-            right_val = first_array[first_idx]
-            if abs(first_val[0] - left_val) < abs(first_val[0] - right_val):
-                first_idx -= 1
-        second_idxs = np.searchsorted(second_array, second_vals)
-        for i, second_idx in enumerate(second_idxs):
-            if second_idx > 0 and second_idx < len(second_array):
-                left_val = second_array[second_idx - 1]
-                right_val = second_array[second_idx]
-                if abs(second_vals[i] - left_val) < abs(second_vals[i] - right_val):
-                    second_idxs[i] -= 1
+            first_idx = int(np.searchsorted(first_array, first_val))
+        return first_idx * (self.second_resolution + 1)
 
-        # map to grid idx
-        final_idxs = first_idx * (self.second_resolution + 1) + second_idxs
-        return final_idxs
+    def unmap(self, first_val, second_vals, unmapped_idx=None):
+        descending = self._axis_reversed[self._mapped_axes[0]]
+        return unmap_local_regular(
+            list(self._first_axis_vals),
+            list(self._second_axis_vals),
+            first_val[0],
+            list(second_vals),
+            descending,
+            self.second_resolution,
+        )
 
 
 # md5 grid hash in form {resolution : hash}
