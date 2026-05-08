@@ -2,8 +2,10 @@ import json
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+import pytest
 import requests
 
+from polytope_feature.datacube import switching_grid_local
 from polytope_feature.datacube.switching_grid_helper import lookup_grid_config, lookup_grid_config_remote
 from polytope_feature.options import PolytopeOptions
 
@@ -95,6 +97,62 @@ def test_lookup_grid_config_remote_retries_on_timeout(monkeypatch):
     assert md5hash == 'abc123'
     assert gridspec['type'] == 'lambert_conformal'
     assert calls == [1.0, 5.0]
+
+
+def test_lookup_grid_config_remote_raises_on_http_error(monkeypatch):
+    req = {'georef': 'u1516b', 'class': 'd1'}
+
+    class _Response:
+        def raise_for_status(self):
+            raise requests.HTTPError('service rejected request')
+
+    def _fake_post(url, json, timeout):
+        return _Response()
+
+    monkeypatch.setattr(requests, 'post', _fake_post)
+
+    with pytest.raises(requests.HTTPError, match='service rejected request'):
+        lookup_grid_config_remote(req, 'http://example.com')
+
+
+def test_lookup_grid_config_without_georef_returns_none(monkeypatch):
+    req = {'class': 'd1'}
+    monkeypatch.delenv('POLYTOPE_DYNAMIC_GRID_SERVICE_URL', raising=False)
+
+    assert lookup_grid_config(req) is None
+
+
+def test_lookup_grid_config_local_saves_and_uses_cache(tmp_path, monkeypatch):
+    req = {'georef': 'u1516b', 'class': 'd1'}
+    cache_file = tmp_path / 'grid_cache.json'
+    gridspec = {'type': 'lambert_conformal', 'nx': 10, 'ny': 20}
+    calls = []
+    releases = []
+
+    monkeypatch.setattr(switching_grid_local, '_grid_cache_file', lambda: str(cache_file))
+    monkeypatch.setattr(switching_grid_local, 'get_first_grib_message', lambda request: calls.append(request) or 'gid')
+    monkeypatch.setattr(switching_grid_local, 'get_gridspec_and_hash', lambda gid: (gridspec, 'abc123'))
+    monkeypatch.setattr(switching_grid_local.eccodes, 'codes_release', lambda gid: releases.append(gid))
+
+    assert switching_grid_local.lookup_grid_config_local(req) == (gridspec, 'abc123')
+    assert cache_file.exists()
+
+    monkeypatch.setattr(
+        switching_grid_local,
+        'get_first_grib_message',
+        lambda request: pytest.fail('cache hit should not read from FDB'),
+    )
+
+    assert switching_grid_local.lookup_grid_config_local(req) == (gridspec, 'abc123')
+    assert calls == [req]
+    assert releases == ['gid']
+
+
+def test_get_gridspec_and_hash_rejects_unsupported_grid_type(monkeypatch):
+    monkeypatch.setattr(switching_grid_local.eccodes, 'codes_get', lambda gid, key: 'regular_ll')
+
+    with pytest.raises(ValueError, match='Unsupported grid type: regular_ll'):
+        switching_grid_local.get_gridspec_and_hash('gid')
 
 
 def test_dynamic_grid_service_replaces_mapper_config():
