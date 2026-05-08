@@ -5,7 +5,9 @@ import requests
 
 
 def lookup_grid_config_local(req):
-    from polytope_feature.datacube.switching_grid_local import lookup_grid_config_local as _lookup_grid_config_local
+    from polytope_feature.datacube.switching_grid_local import (
+        lookup_grid_config_local as _lookup_grid_config_local,
+    )
 
     return _lookup_grid_config_local(req)
 

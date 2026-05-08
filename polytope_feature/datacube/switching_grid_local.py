@@ -6,7 +6,6 @@ import threading
 
 import eccodes
 
-
 _GRID_CACHE = None
 _GRID_CACHE_LOCK = threading.Lock()
 

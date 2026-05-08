@@ -7,7 +7,10 @@ import pytest
 import requests
 
 from polytope_feature.datacube import switching_grid_local
-from polytope_feature.datacube.switching_grid_helper import lookup_grid_config, lookup_grid_config_remote
+from polytope_feature.datacube.switching_grid_helper import (
+    lookup_grid_config,
+    lookup_grid_config_remote,
+)
 from polytope_feature.options import PolytopeOptions
 
 
