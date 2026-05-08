@@ -109,25 +109,32 @@ def _grib2_message(payload=b""):
 
 def test_read_first_grib_message_uses_grib1_encoded_length():
     message = _grib1_message(b"payload")
-    data_handle = _FakeDataHandle(message + b"NEXT")
+    data = message + b"NEXT"
+    data_handle = _FakeDataHandle(data)
 
-    assert switching_grid_local.read_first_grib_message(data_handle) == message
-    assert data_handle.offset == len(message)
+    assert switching_grid_local.read_first_grib_message(data_handle, len(data)) == message
+    assert data_handle.offset == len(data)
 
 
 def test_read_first_grib_message_uses_grib2_encoded_length():
     message = _grib2_message(b"payload")
-    data_handle = _FakeDataHandle(message + b"NEXT")
+    data = message + b"NEXT"
+    data_handle = _FakeDataHandle(data)
 
-    assert switching_grid_local.read_first_grib_message(data_handle) == message
-    assert data_handle.offset == len(message)
+    assert switching_grid_local.read_first_grib_message(data_handle, len(data)) == message
+    assert data_handle.offset == len(data)
+
+
+def test_read_first_grib_message_rejects_invalid_data_length():
+    with pytest.raises(ValueError, match="Invalid data handle length"):
+        switching_grid_local.read_first_grib_message(_FakeDataHandle(b""), 0)
 
 
 def test_read_first_grib_message_supports_read_without_readinto():
     message = _grib2_message(b"payload")
     data_handle = _FakeReadDataHandle(message)
 
-    assert switching_grid_local.read_first_grib_message(data_handle) == message
+    assert switching_grid_local.read_first_grib_message(data_handle, len(message)) == message
     assert data_handle.offset == len(message)
 
 
@@ -135,14 +142,14 @@ def test_read_first_grib_message_rejects_missing_terminator():
     message = _grib2_message(b"payload")[:-4] + b"BAD!"
 
     with pytest.raises(ValueError, match="GRIB terminator missing"):
-        switching_grid_local.read_first_grib_message(_FakeDataHandle(message))
+        switching_grid_local.read_first_grib_message(_FakeDataHandle(message), len(message))
 
 
 def test_read_first_grib_message_rejects_short_reads():
     message = _grib2_message(b"payload")[:-1]
 
     with pytest.raises(EOFError, match="Short GRIB read"):
-        switching_grid_local.read_first_grib_message(_FakeDataHandle(message))
+        switching_grid_local.read_first_grib_message(_FakeDataHandle(message), len(message) + 1)
 
 
 def test_read_first_grib_message_rejects_oversized_message(monkeypatch):
@@ -151,7 +158,7 @@ def test_read_first_grib_message_rejects_oversized_message(monkeypatch):
     header = b"GRIB" + b"\x00\x00\x00\x02" + oversized_length.to_bytes(8, "big")
 
     with pytest.raises(ValueError, match="exceeds maximum 64"):
-        switching_grid_local.read_first_grib_message(_FakeDataHandle(header))
+        switching_grid_local.read_first_grib_message(_FakeDataHandle(header), oversized_length)
 
 
 def test_lookup_grid_config_remote_service():

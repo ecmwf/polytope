@@ -35,8 +35,11 @@ def _read_exact(data_handle, length):
     return bytes(buffer)
 
 
-def read_first_grib_message(data_handle):
-    header = _read_exact(data_handle, 8)
+def _validate_grib_message(message):
+    if len(message) < 8:
+        raise EOFError(f"Short GRIB read: wanted at least 8 bytes, got {len(message)}")
+
+    header = message[:8]
 
     if header[:4] != b"GRIB":
         raise ValueError("Not a GRIB message")
@@ -44,24 +47,42 @@ def read_first_grib_message(data_handle):
     edition = header[7]
     if edition == 1:
         total_length = int.from_bytes(header[4:7], "big")
+        header_length = 8
     elif edition == 2:
-        header += _read_exact(data_handle, 8)
+        if len(message) < 16:
+            raise EOFError(f"Short GRIB read: wanted at least 16 bytes, got {len(message)}")
+        header = message[:16]
         total_length = int.from_bytes(header[8:16], "big")
+        header_length = 16
     else:
         raise ValueError(f"Unsupported GRIB edition: {edition}")
 
-    if total_length < len(header):
+    if total_length < header_length:
         raise ValueError(f"Invalid GRIB length: {total_length}")
 
     max_length = _max_grib_message_bytes()
     if total_length > max_length:
         raise ValueError(f"GRIB message length {total_length} exceeds maximum {max_length}")
 
-    message = header + _read_exact(data_handle, total_length - len(header))
-    if message[-4:] != b"7777":
+    if len(message) < total_length:
+        raise EOFError(f"Short GRIB read: wanted {total_length} bytes, got {len(message)}")
+
+    grib_message = message[:total_length]
+    if grib_message[-4:] != b"7777":
         raise ValueError("GRIB terminator missing")
 
-    return message
+    return grib_message
+
+
+def read_first_grib_message(data_handle, data_length):
+    if data_length <= 0:
+        raise ValueError(f"Invalid data handle length: {data_length}")
+
+    max_length = _max_grib_message_bytes()
+    if data_length > max_length:
+        raise ValueError(f"Data handle length {data_length} exceeds maximum {max_length}")
+
+    return _validate_grib_message(_read_exact(data_handle, data_length))
 
 
 def get_first_grib_message(req):
@@ -76,7 +97,7 @@ def get_first_grib_message(req):
     if dh is None:
         raise ValueError("List element has no data handle")
     with dh:
-        msg_bytes = read_first_grib_message(dh)
+        msg_bytes = read_first_grib_message(dh, first_element.length())
 
     gid = eccodes.codes_new_from_message(msg_bytes)
     return gid
