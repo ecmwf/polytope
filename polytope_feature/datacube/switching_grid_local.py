@@ -2,8 +2,13 @@ import json
 import math
 import os
 import tempfile
+import threading
 
 import eccodes
+
+
+_GRID_CACHE = None
+_GRID_CACHE_LOCK = threading.Lock()
 
 
 def get_first_grib_message(req):
@@ -126,26 +131,41 @@ def _cache_key(req_georef):
         return str(req_georef)
 
 
+def _get_cache_locked():
+    global _GRID_CACHE
+    if _GRID_CACHE is None:
+        _GRID_CACHE = _load_cache()
+    return _GRID_CACHE
+
+
 def lookup_grid_config_local(req):
     # Make sure that we are accessing a single georef so that the grid is consistent
     if "georef" not in req.keys():
         return
     req_georef = req["georef"]
-    cache = _load_cache()
     cache_key = _cache_key(req_georef)
 
-    if cache_key in cache:
-        entry = cache[cache_key]
-        return (entry.get("gridspec"), entry.get("md5hash"))
+    with _GRID_CACHE_LOCK:
+        cache = _get_cache_locked()
+        if cache_key in cache:
+            entry = cache[cache_key]
+            return (entry.get("gridspec"), entry.get("md5hash"))
 
     gid = get_first_grib_message(req)
     try:
         gridspec, md5hash = get_gridspec_and_hash(gid)
+    finally:
+        eccodes.codes_release(gid)
+
+    with _GRID_CACHE_LOCK:
+        cache = _get_cache_locked()
+        if cache_key in cache:
+            entry = cache[cache_key]
+            return (entry.get("gridspec"), entry.get("md5hash"))
+
         cache[cache_key] = {"gridspec": gridspec, "md5hash": md5hash}
         try:
             _save_cache(cache)
         except Exception:
             pass
         return (gridspec, md5hash)
-    finally:
-        eccodes.codes_release(gid)
