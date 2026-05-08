@@ -8,6 +8,60 @@ import eccodes
 
 _GRID_CACHE = None
 _GRID_CACHE_LOCK = threading.Lock()
+_DEFAULT_MAX_GRIB_MESSAGE_BYTES = 512 * 1024 * 1024
+
+
+def _max_grib_message_bytes():
+    return int(os.environ.get("POLYTOPE_MAX_GRIB_MESSAGE_BYTES", _DEFAULT_MAX_GRIB_MESSAGE_BYTES))
+
+
+def _read_exact(data_handle, length):
+    buffer = bytearray(length)
+    view = memoryview(buffer)
+    offset = 0
+
+    while offset < length:
+        if hasattr(data_handle, "readinto"):
+            bytes_read = data_handle.readinto(view[offset:])
+        else:
+            chunk = data_handle.read(length - offset)
+            bytes_read = len(chunk)
+            view[offset : offset + bytes_read] = chunk
+
+        if bytes_read <= 0:
+            raise EOFError(f"Short GRIB read: wanted {length} bytes, got {offset}")
+        offset += bytes_read
+
+    return bytes(buffer)
+
+
+def read_first_grib_message(data_handle):
+    header = _read_exact(data_handle, 8)
+
+    if header[:4] != b"GRIB":
+        raise ValueError("Not a GRIB message")
+
+    edition = header[7]
+    if edition == 1:
+        total_length = int.from_bytes(header[4:7], "big")
+    elif edition == 2:
+        header += _read_exact(data_handle, 8)
+        total_length = int.from_bytes(header[8:16], "big")
+    else:
+        raise ValueError(f"Unsupported GRIB edition: {edition}")
+
+    if total_length < len(header):
+        raise ValueError(f"Invalid GRIB length: {total_length}")
+
+    max_length = _max_grib_message_bytes()
+    if total_length > max_length:
+        raise ValueError(f"GRIB message length {total_length} exceeds maximum {max_length}")
+
+    message = header + _read_exact(data_handle, total_length - len(header))
+    if message[-4:] != b"7777":
+        raise ValueError("GRIB terminator missing")
+
+    return message
 
 
 def get_first_grib_message(req):
@@ -22,7 +76,7 @@ def get_first_grib_message(req):
     if dh is None:
         raise ValueError("List element has no data handle")
     with dh:
-        msg_bytes = dh.read()
+        msg_bytes = read_first_grib_message(dh)
 
     gid = eccodes.codes_new_from_message(msg_bytes)
     return gid
