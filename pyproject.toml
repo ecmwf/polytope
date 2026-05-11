@@ -62,11 +62,6 @@ catalogue = [
     "qubed"
 ]
 
-switching_grids = [
-    "eccodes",
-    "pyfdb>=0.2.0"
-]
-
 [project.urls]
 repository = "https://github.com/ecmwf/polytope"
 documentation = "https://polytope.readthedocs.io/en/latest/"
