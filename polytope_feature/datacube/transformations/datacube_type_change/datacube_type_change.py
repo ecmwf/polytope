@@ -30,7 +30,6 @@ class DatacubeAxisTypeChange(DatacubeAxisTransformation):
         return_idx = [self._final_transformation.transform_type(val) for val in values]
         if None in return_idx:
             return None
-        # return_idx.sort()
         return_idx.sort(key=lambda x: (isinstance(x, str), x))
         return return_idx
 
@@ -149,6 +148,9 @@ class TypeChangeSubHourlyTimeStepsCompact(DatacubeAxisTypeChange):
         self._new_type = new_type
 
     def transform_type(self, value):
+        if isinstance(value, pd.Timedelta):
+            return value
+
         if isinstance(value, int):
             return pd.Timedelta(hours=value)
 
@@ -183,32 +185,38 @@ class TypeChangeSubHourlyTimeSteps(DatacubeAxisTypeChange):
         self._new_type = new_type
 
     def transform_type(self, value):
+        if isinstance(value, pd.Timedelta):
+            return value
+
         if isinstance(value, int):
             return pd.Timedelta(hours=value)
 
-        if isinstance(value, str) and value.isdigit():
+        if not isinstance(value, str):
+            raise ValueError(f"Unsupported timestep format: {value}")
+
+        if value.isdigit():
             return pd.Timedelta(hours=int(value))
 
-        elif isinstance(value, str) and "-" in value:
-            # Step range is not parsed here
+        if "-" in value:
+            # Step range is not parsed here.
             return value
 
-        elif isinstance(value, str):
-            # Extract days, hours, minutes and seconds using regex
-            h_match = re.search(r"(\d+)\s*h", value)
-            m_match = re.search(r"(\d+)\s*m(?:in)?", value)
-            s_match = re.search(r"(\d+)\s*s(?:ec)?", value)
+        # Extract days, hours, minutes and seconds using regex
+        h_match = re.search(r"(\d+)\s*h", value)
+        m_match = re.search(r"(\d+)\s*m(?:in)?", value)
+        s_match = re.search(r"(\d+)\s*s(?:ec)?", value)
 
-            hours = int(h_match.group(1)) if h_match else 0
-            minutes = int(m_match.group(1)) if m_match else 0
-            seconds = int(s_match.group(1)) if s_match else 0
-            return pd.Timedelta(hours=hours, minutes=minutes, seconds=seconds)
-
-        raise ValueError(f"Unsupported timestep format: {value}")
+        hours = int(h_match.group(1)) if h_match else 0
+        minutes = int(m_match.group(1)) if m_match else 0
+        seconds = int(s_match.group(1)) if s_match else 0
+        return pd.Timedelta(hours=hours, minutes=minutes, seconds=seconds)
 
     def make_str(self, value):
         return_vals = []
         for val in value:
+            if isinstance(val, str):
+                return_vals.append(val)
+                continue
             total_seconds = int(val.total_seconds())
             hours, rem = divmod(total_seconds, 3600)
             minutes, seconds = divmod(rem, 60)
@@ -233,16 +241,7 @@ class TypeChangeSubHourlyTimeSteps(DatacubeAxisTypeChange):
                     return_vals.append(f"{minutes}m")
                 else:
                     return_vals.append(f"{minutes}m{seconds}s")
-            # hours > 0
-            elif minutes == 0 and seconds == 0:
-                return_vals.append(f"{hours}")
-            elif seconds == 0:
-                return_vals.append(f"{hours}h{minutes}m")
-            else:
-                return_vals.append(f"{hours}h{minutes}m{seconds}s")
-        # return return_vals
-        unique_list = list(dict.fromkeys(return_vals))
-        return unique_list
+        return list(dict.fromkeys(return_vals))
 
 
 _type_to_datacube_type_change_lookup = {

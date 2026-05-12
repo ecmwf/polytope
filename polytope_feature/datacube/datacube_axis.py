@@ -115,11 +115,22 @@ class DatacubeAxis(ABC):
         return len(types) > 1
 
     def find_standard_indices_between(self, indexes, low, up, datacube, method=None):
-
         indexes_list = list(indexes)
 
-        # If homogeneous → use fast path
+        # If homogeneous → keep the fast pandas.Index searchsorted path when
+        # available for complete, non-transformed axes.
         if not self._is_mixed(indexes_list):
+            if (
+                datacube is not None
+                and self.name in datacube.complete_axes
+                and self.name not in datacube.transformed_axes
+            ):
+                start = indexes.searchsorted(low, "left")
+                end = indexes.searchsorted(up, "right")
+                if method in ("surrounding", "nearest"):
+                    start = max(start - 1, 0)
+                    end = min(end + 1, len(indexes))
+                return indexes[start:end].to_list()
 
             if method in ("surrounding", "nearest"):
                 start = bisect.bisect_left(indexes_list, low)
@@ -136,13 +147,17 @@ class DatacubeAxis(ABC):
         low_k = self._mixed_key(low)
         up_k = self._mixed_key(up)
 
-        filtered = [x for x in indexes_list if low_k <= self._mixed_key(x) <= up_k]
+        filtered = []
+        first_idx = None
+        last_idx = None
+        for idx, value in enumerate(indexes_list):
+            if low_k <= self._mixed_key(value) <= up_k:
+                filtered.append(value)
+                if first_idx is None:
+                    first_idx = idx
+                last_idx = idx
 
         if method in ("surrounding", "nearest") and filtered:
-            # add neighbors manually
-            first_idx = indexes_list.index(filtered[0])
-            last_idx = indexes_list.index(filtered[-1])
-
             start = max(first_idx - 1, 0)
             end = min(last_idx + 2, len(indexes_list))
 
