@@ -1,8 +1,12 @@
+from types import SimpleNamespace
+
 import numpy as np
 import pandas as pd
 import xarray as xr
 
+from polytope_feature.datacube.datacube_axis import UnsliceableDatacubeAxis
 from polytope_feature.datacube.transformations.datacube_type_change.datacube_type_change import (
+    DatacubeAxisTypeChange,
     TypeChangeStrToFloat,
     TypeChangeSubHourlyTimeSteps,
     TypeChangeSubHourlyTimeStepsCompact,
@@ -64,6 +68,40 @@ class TestIntTypeChangeTransformation:
         assert type_change_transform.make_str([pd.Timedelta(seconds=30)]) == ["30s"]
         assert type_change_transform.make_str([pd.Timedelta(days=1)]) == ["24"]
         assert type_change_transform.make_str([pd.Timedelta(days=1, hours=2, minutes=20)]) == ["26h20m"]
+
+    def test_subhourly_step_type_change_preserves_step_ranges(self):
+        type_change_transform = TypeChangeSubHourlyTimeSteps("step", "subhourly_step")
+
+        assert type_change_transform.transform_type("11h45m-15h45m") == "11h45m-15h45m"
+        assert type_change_transform.make_str(["11h45m-15h45m"]) == ["11h45m-15h45m"]
+
+    def test_subhourly_step_type_change_sorts_mixed_ranges_and_timedeltas(self):
+        type_change_transform = DatacubeAxisTypeChange("step", SimpleNamespace(type="subhourly_step"))
+
+        values = [
+            pd.Timedelta(hours=15, minutes=45),
+            "11h45m-15h45m",
+            pd.Timedelta(hours=11, minutes=45),
+        ]
+
+        assert type_change_transform.change_val_type("step", values) == [
+            pd.Timedelta(hours=11, minutes=45),
+            pd.Timedelta(hours=15, minutes=45),
+            "11h45m-15h45m",
+        ]
+
+    def test_find_standard_indices_between_mixed_duplicates_with_surrounding(self):
+        axis = UnsliceableDatacubeAxis()
+        axis.name = "step"
+        indexes = [pd.Timedelta(hours=0), "11h45m-15h45m", "11h45m-15h45m", "11h45m-15h45m", "next"]
+
+        assert axis.find_standard_indices_between(indexes, "11h45m-15h45m", "11h45m-15h45m", None, "surrounding") == [
+            pd.Timedelta(hours=0),
+            "11h45m-15h45m",
+            "11h45m-15h45m",
+            "11h45m-15h45m",
+            "next",
+        ]
 
     def test_subhourly_step_compact_type_change_axis(self):
         type_change_transform = TypeChangeSubHourlyTimeStepsCompact("step", "subhourly_step_compact")
