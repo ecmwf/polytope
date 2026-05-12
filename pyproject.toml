@@ -51,7 +51,7 @@ tests = [
     "h5py",
     "earthkit-data",
     "matplotlib",
-    "pyfdb>=0.2.0",
+    "pyfdb<=0.1.3",
 ]
 
 unstructured = [
