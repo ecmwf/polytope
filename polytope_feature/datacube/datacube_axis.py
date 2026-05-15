@@ -13,6 +13,7 @@ from .transformations.datacube_merger.datacube_merger import DatacubeAxisMerger
 from .transformations.datacube_reverse.datacube_reverse import DatacubeAxisReverse
 from .transformations.datacube_type_change.datacube_type_change import (
     DatacubeAxisTypeChange,
+    parse_step_timedelta,
 )
 
 
@@ -339,6 +340,12 @@ class PandasTimedeltaDatacubeAxis(DatacubeAxis):
     def parse(self, value: Any) -> Any:
         if isinstance(value, np.str_):
             value = str(value)
+        if isinstance(value, (str, pd.Timedelta, int)):
+            try:
+                return parse_step_timedelta(value)
+            except ValueError:
+                if isinstance(value, str) and "-" in value:
+                    raise
         return pd.Timedelta(value)
 
     def to_float(self, value: pd.Timedelta):

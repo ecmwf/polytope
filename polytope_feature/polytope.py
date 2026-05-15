@@ -2,7 +2,7 @@ import logging
 from typing import List
 
 from .datacube.backends.datacube import Datacube
-from .datacube.datacube_axis import UnsliceableDatacubeAxis
+from .datacube.datacube_axis import PandasTimedeltaDatacubeAxis, UnsliceableDatacubeAxis
 from .datacube.tensor_index_tree import TensorIndexTree
 from .engine.hullslicer import HullSlicer
 from .engine.optimised_point_in_polygon_slicer import OptimisedPointInPolygonSlicer
@@ -116,7 +116,14 @@ class Polytope:
             if self.ax_is_unsliceable[ax]:
                 break
             for j, val in enumerate(p.points):
-                p.points[j][i] = mapper.to_float(mapper.parse(p.points[j][i]))
+                point_value = p.points[j][i]
+                if (
+                    isinstance(mapper, PandasTimedeltaDatacubeAxis)
+                    and isinstance(point_value, str)
+                    and "-" in point_value
+                ):
+                    continue
+                p.points[j][i] = mapper.to_float(mapper.parse(point_value))
         # Remove duplicate points
         unique(p.points)
 

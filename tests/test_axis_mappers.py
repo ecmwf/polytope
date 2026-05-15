@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 
 from polytope_feature.datacube.datacube_axis import (
     DatacubeAxisCyclic,
@@ -117,6 +118,13 @@ class TestAxisMappers:
         time1 = pd.Timedelta("1 days")
         time2 = pd.Timedelta("1 days 2 hours")
         assert axis.parse(time1) == pd.Timedelta("1 days 00:00:00")
+        assert axis.parse("15") == pd.Timedelta(hours=15)
+        assert axis.parse("15h") == pd.Timedelta(hours=15)
+        assert axis.parse("45m") == pd.Timedelta(minutes=45)
+        assert axis.parse("1h30m") == pd.Timedelta(hours=1, minutes=30)
+        assert axis.parse("26h30m15s") == pd.Timedelta(hours=26, minutes=30, seconds=15)
+        with pytest.raises(ValueError):
+            axis.parse("0-15")
         assert axis.to_float(time1) == 86400.0
         assert axis.from_float(3600) == pd.Timedelta("0 days 01:00:00")
         assert axis.serialize(time1) == "1 days 00:00:00"

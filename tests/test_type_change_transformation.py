@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
+from polytope_feature.datacube.backends.fdb import FDBDatacube
 from polytope_feature.datacube.datacube_axis import UnsliceableDatacubeAxis
 from polytope_feature.datacube.transformations.datacube_type_change.datacube_type_change import (
     DatacubeAxisTypeChange,
@@ -56,7 +57,11 @@ class TestIntTypeChangeTransformation:
         type_change_transform = TypeChangeSubHourlyTimeSteps("step", "subhourly_step")
 
         assert type_change_transform.transform_type("2") == pd.Timedelta(hours=2)
+        assert type_change_transform.transform_type("15") == pd.Timedelta(hours=15)
+        assert type_change_transform.transform_type("15h") == pd.Timedelta(hours=15)
         assert type_change_transform.transform_type(3) == pd.Timedelta(hours=3)
+        assert type_change_transform.transform_type("45m") == pd.Timedelta(minutes=45)
+        assert type_change_transform.transform_type("1h30m") == pd.Timedelta(hours=1, minutes=30)
         assert type_change_transform.transform_type("70m") == pd.Timedelta(hours=1, minutes=10)
         assert type_change_transform.transform_type("1h15m") == pd.Timedelta(hours=1, minutes=15)
         assert type_change_transform.transform_type("26h30m15s") == pd.Timedelta(hours=26, minutes=30, seconds=15)
@@ -73,9 +78,10 @@ class TestIntTypeChangeTransformation:
         type_change_transform = TypeChangeSubHourlyTimeSteps("step", "subhourly_step")
 
         assert type_change_transform.transform_type("11h45m-15h45m") == "11h45m-15h45m"
-        assert type_change_transform.make_str(["11h45m-15h45m"]) == ["11h45m-15h45m"]
+        assert type_change_transform.transform_type("0-45m") == "0-45m"
+        assert type_change_transform.make_str(["0-45m"]) == ["0-45m"]
 
-    def test_subhourly_step_type_change_sorts_mixed_ranges_and_timedeltas(self):
+    def test_subhourly_step_type_change_sorts_preserved_ranges_after_timedeltas(self):
         type_change_transform = DatacubeAxisTypeChange("step", SimpleNamespace(type="subhourly_step"))
 
         values = [
@@ -89,6 +95,80 @@ class TestIntTypeChangeTransformation:
             pd.Timedelta(hours=15, minutes=45),
             "11h45m-15h45m",
         ]
+
+    def test_subhourly_step_request_tree_preserves_hyphenated_labels(self):
+        axis_options = [
+            SimpleNamespace(
+                axis_name="step",
+                transformations=[SimpleNamespace(name="type_change", type="subhourly_step")],
+            )
+        ]
+        datacube = FDBDatacube(
+            gj=SimpleNamespace(),
+            axis_options=axis_options,
+            alternative_axes=[SimpleNamespace(axis_name="step", values=["0-15", "14-15", "0-1h30m", "15", "15h"])],
+        )
+        datacube._axes.pop("values")
+        datacube.complete_axes.remove("values")
+        seed_array = xr.DataArray(np.random.randn(1), dims=("seed",), coords={"seed": [0]})
+        api = Polytope(datacube=seed_array, options={})
+        api.datacube = datacube
+        api.engine_options = {"step": "hullslicer"}
+        api.engines = api.create_engines()
+
+        for requested_value in ["0-15", "14-15", "0-1h30m"]:
+            request_tree = api.slice(datacube, Request(Select("step", [requested_value])).polytopes())
+            step_node = request_tree.children[0]
+
+            assert step_node.values == (requested_value,)
+
+    def test_subhourly_step_request_tree_keeps_distinct_hyphenated_labels(self):
+        axis_options = [
+            SimpleNamespace(
+                axis_name="step",
+                transformations=[SimpleNamespace(name="type_change", type="subhourly_step")],
+            )
+        ]
+        datacube = FDBDatacube(
+            gj=SimpleNamespace(),
+            axis_options=axis_options,
+            alternative_axes=[SimpleNamespace(axis_name="step", values=["0-15", "14-15", "15"])],
+        )
+        datacube._axes.pop("values")
+        datacube.complete_axes.remove("values")
+        seed_array = xr.DataArray(np.random.randn(1), dims=("seed",), coords={"seed": [0]})
+        api = Polytope(datacube=seed_array, options={})
+        api.datacube = datacube
+        api.engine_options = {"step": "hullslicer"}
+        api.engines = api.create_engines()
+
+        request_tree = api.slice(datacube, Request(Select("step", ["0-15", "14-15"])).polytopes())
+
+        assert [child.values for child in request_tree.children] == [("0-15", "14-15")]
+
+    def test_subhourly_step_request_tree_supports_mixed_labels_and_timedeltas(self):
+        axis_options = [
+            SimpleNamespace(
+                axis_name="step",
+                transformations=[SimpleNamespace(name="type_change", type="subhourly_step")],
+            )
+        ]
+        datacube = FDBDatacube(
+            gj=SimpleNamespace(),
+            axis_options=axis_options,
+            alternative_axes=[SimpleNamespace(axis_name="step", values=["0-15", "14-15", "15"])],
+        )
+        datacube._axes.pop("values")
+        datacube.complete_axes.remove("values")
+        seed_array = xr.DataArray(np.random.randn(1), dims=("seed",), coords={"seed": [0]})
+        api = Polytope(datacube=seed_array, options={})
+        api.datacube = datacube
+        api.engine_options = {"step": "hullslicer"}
+        api.engines = api.create_engines()
+
+        request_tree = api.slice(datacube, Request(Select("step", ["0-15", "15"])).polytopes())
+
+        assert [child.values for child in request_tree.children] == [(pd.Timedelta(hours=15), "0-15")]
 
     def test_find_standard_indices_between_mixed_duplicates_with_surrounding(self):
         axis = UnsliceableDatacubeAxis()

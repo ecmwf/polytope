@@ -90,7 +90,7 @@ class TensorIndexTree(object):
                     return True
 
     def __lt__(self, other):
-        return (self.axis.name, self.values) < (other.axis.name, other.values)
+        return (self.axis.name, self._sortable_values()) < (other.axis.name, other._sortable_values())
 
     def __repr__(self):
         if self.axis != "root":
@@ -105,8 +105,16 @@ class TensorIndexTree(object):
     def add_value(self, value):
         new_values = list(self.values)
         new_values.append(value)
-        new_values.sort()
+        new_values.sort(key=self._value_sort_key)
         self.values = tuple(new_values)
+
+    def _value_sort_key(self, value):
+        if hasattr(self.axis, "_mixed_key"):
+            return self.axis._mixed_key(value)
+        return value
+
+    def _sortable_values(self):
+        return tuple(self._value_sort_key(value) for value in self.values)
 
     def create_child(self, axis, value, next_nodes):
         # TODO: what if we remove the next nodes here?

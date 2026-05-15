@@ -48,6 +48,12 @@ class HullSlicer(Engine):
                 raise ValueError(errmsg)
 
     def find_values_between(self, polytope, ax, node, datacube, lower, upper):
+        if isinstance(lower, str) and lower == upper:
+            flattened = node.flatten()
+            if datacube.has_index(flattened, ax, lower):
+                return [lower]
+            return []
+
         tol = ax.tol
         lower = ax.from_float(lower - tol)
         upper = ax.from_float(upper + tol)
@@ -91,9 +97,13 @@ class HullSlicer(Engine):
         # TODO: Restructure this to add all compressed values at once in the tree
         for i, value in enumerate(values):
             if i == 0 or ax.name not in api.compressed_axes:
-                fvalue = ax.to_float(value)
-                new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
-                remapped_val = self.remap_values(ax, value)
+                if isinstance(value, str):
+                    new_polytope = None
+                    remapped_val = value
+                else:
+                    fvalue = ax.to_float(value)
+                    new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
+                    remapped_val = self.remap_values(ax, value)
                 child, next_nodes = node.create_child(ax, remapped_val, next_nodes)
                 child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
                 child["unsliced_polytopes"].remove(polytope)
@@ -101,7 +111,7 @@ class HullSlicer(Engine):
                     child["unsliced_polytopes"].add(new_polytope)
                 next_nodes.append(child)
             else:
-                remapped_val = self.remap_values(ax, value)
+                remapped_val = value if isinstance(value, str) else self.remap_values(ax, value)
                 child.add_value(remapped_val)
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):
