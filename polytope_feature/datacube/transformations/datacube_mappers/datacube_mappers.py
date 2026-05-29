@@ -65,7 +65,7 @@ class DatacubeMapper(DatacubeAxisTransformation):
             pass  # already a dict-like from mapper_options
         else:
             # Default: first axis reversed, second axis not
-            self._axis_reversed = {self._mapped_axes[0]: True, self._mapped_axes[1]: False}
+            self._axis_reversed = {self._mapped_axes()[0]: True, self._mapped_axes()[1]: False}
         self.compressed_grid_axes = getattr(
             self._final_transformation,
             "compressed_grid_axes",

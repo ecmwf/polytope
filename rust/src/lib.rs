@@ -1,4 +1,5 @@
 use pyo3::prelude::*;
+pub mod fdb_sort;
 pub mod lambert_conformal;
 pub mod list_tools;
 use pyo3::wrap_pyfunction;
@@ -49,6 +50,10 @@ fn polytope_rs(py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<mappers::unstructured::UnstructuredGridMapper>()?;
     m.add_class::<mappers::lambert_conformal::LambertConformalGridMapper>()?;
     m.add_class::<mappers::irregular::IrregularGridMapper>()?;
+    m.add_function(wrap_pyfunction!(fdb_sort::sort_request_ranges, m)?)?;
+    m.add_function(wrap_pyfunction!(fdb_sort::expand_compressed_requests, m)?)?;
+    m.add_function(wrap_pyfunction!(fdb_sort::sort_request_ranges_flat, m)?)?;
+    m.add_function(wrap_pyfunction!(fdb_sort::expand_compressed_requests_flat, m)?)?;
     Ok(())
 }
 
