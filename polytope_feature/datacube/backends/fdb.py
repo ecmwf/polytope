@@ -235,31 +235,55 @@ class FDBDatacube(Datacube):
                     self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path)
 
     def remove_duplicates_in_request_ranges(self, fdb_node_ranges, current_start_idxs):
-        seen_indices = set()
+        # First pass: identify which (i, k) "wins" each index (first occurrence).
+        # seen_indices maps idx -> (i, k)
+        seen_indices = {}
+        # Track which (i,k,j) are duplicates of an earlier node
+        is_dup = {}
+
+        for i, idxs_list in enumerate(current_start_idxs):
+            for k, sub_lat_idxs in enumerate(idxs_list):
+                for j, idx in enumerate(sub_lat_idxs):
+                    if idx not in seen_indices:
+                        seen_indices[idx] = (i, k)
+                    else:
+                        is_dup[(i, k, j)] = True
+
+        # Second pass: build new structures
         new_fdb_node_ranges = []
         new_current_start_idxs = []
+        nodes_to_remove = []
+        nodes_to_update = []  # (node, new_values, filtered_idxs)
         for i, idxs_list in enumerate(current_start_idxs):
             new_idx_group = []
             new_fdb_group = []
             for k, sub_lat_idxs in enumerate(idxs_list):
                 actual_fdb_node = fdb_node_ranges[i][k]
-                original_vals = []
+                node = actual_fdb_node[0]
+                # Collect non-duplicate indices and values for this node
                 filtered_idxs = []
+                original_vals = []
                 for j, idx in enumerate(sub_lat_idxs):
-                    if idx not in seen_indices:
-                        seen_indices.add(idx)
+                    if (i, k, j) not in is_dup:
                         filtered_idxs.append(idx)
-                        original_vals.append(actual_fdb_node[0].values[j])
+                        original_vals.append(node.values[j])
                 if filtered_idxs:
-                    # keep only if we had values still
-                    actual_fdb_node[0].values = tuple(original_vals)
+                    nodes_to_update.append((node, tuple(original_vals), filtered_idxs))
                     new_idx_group.append(filtered_idxs)
                     new_fdb_group.append(actual_fdb_node)
                 else:
-                    # remove this node because we removed all values
-                    actual_fdb_node[0].remove_branch()
+                    # All indices were duplicates — remove this node from the result tree
+                    nodes_to_remove.append(node)
             new_current_start_idxs.append(new_idx_group)
             new_fdb_node_ranges.append(new_fdb_group)
+
+        # Remove empty nodes first (before mutating values, to preserve SortedList ordering)
+        for node in nodes_to_remove:
+            node.remove_branch()
+
+        # Now safely mutate winner node values (trim any partially-duplicate values)
+        for node, new_values, _ in nodes_to_update:
+            node.values = new_values
 
         return new_fdb_node_ranges, new_current_start_idxs
 
