@@ -79,7 +79,7 @@ class LambertConformalGridMapper(DatacubeMapper):
             con = eccent * sinpi
             dphi = self.M_PI_2 - 2 * math.atan(ts * (math.pow(((1 - con) / (1 + con)), eccnth))) - phi
             phi += dphi
-            if math.abs(dphi) <= 1e-10:
+            if abs(dphi) <= 1e-10:
                 return phi
         return 0
 
@@ -173,7 +173,7 @@ class LambertConformalGridMapper(DatacubeMapper):
         sin_po = math.sin(self.LaDInRadians)
         ts0 = self.compute_t(e, self.LaDInRadians, sin_po)
 
-        if math.abs(self.Latin1InRadians - self.Latin2InRadians) > self.epsilon:
+        if abs(self.Latin1InRadians - self.Latin2InRadians) > self.epsilon:
             ns = math.log(ms1 / ms2) / math.log(ts1 / ts2)
         else:
             ns = con
@@ -181,7 +181,7 @@ class LambertConformalGridMapper(DatacubeMapper):
         F_cst = ms1 / (ns * math.pow(ts1, ns))
         rh = self.earthMajorAxisInMetres * F_cst * math.pow(ts0, ns)
 
-        con = math.abs(math.abs(self.latFirstInRadians) - self.M_PI_2)
+        con = abs(abs(self.latFirstInRadians) - self.M_PI_2)
 
         if con > self.epsilon:
             sinphi = math.sin(self.latFirstInRadians)

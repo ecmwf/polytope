@@ -204,7 +204,15 @@ class FDBDatacube(Datacube):
                 key_value_path, leaf_path, self.unwanted_path
             )
             leaf_path.update(key_value_path)
-            if len(requests.children[0].children[0].children) == 0:
+            merged = getattr(self.grid_transformation, "merged_latlon", False)
+            if not requests.children:
+                return
+            at_leaf_level = (
+                len(requests.children[0].children) == 0
+                if merged
+                else len(requests.children[0].children[0].children) == 0
+            )
+            if at_leaf_level:
                 # find the fdb_requests and associated nodes to which to add results
                 (
                     path,
@@ -343,30 +351,51 @@ class FDBDatacube(Datacube):
         # request ranges in those layers
         self.nearest_lat_lon_search(requests)
 
-        lat_length = len(requests.children)
-        current_start_idxs = [False] * lat_length
-        fdb_node_ranges = [False] * lat_length
-        for i in range(len(requests.children)):
-            lat_child = requests.children[i]
-            lon_length = len(lat_child.children)
-            current_start_idxs[i] = [None] * lon_length
-            fdb_node_ranges[i] = [[TensorIndexTree.root for y in range(lon_length)] for x in range(lon_length)]
-            current_start_idx = deepcopy(current_start_idxs[i])
-            fdb_range_nodes = deepcopy(fdb_node_ranges[i])
-            key_value_path = {lat_child.axis.name: lat_child.values}
-            ax = lat_child.axis
-            key_value_path, leaf_path, self.unwanted_path = ax.unmap_path_key(
-                key_value_path, leaf_path, self.unwanted_path
-            )
-            leaf_path.update(key_value_path)
-            (
-                current_start_idxs[i],
-                fdb_node_ranges[i],
-            ) = self.get_last_layer_before_leaf(lat_child, leaf_path, current_start_idx, fdb_range_nodes)
+        merged = getattr(self.grid_transformation, "merged_latlon", False)
+
+        if merged:
+            # Merged mode: the latlon node IS the leaf carrier (has indexes directly).
+            # Structure: requests.children = [latlon_node, ...]
+            # Each latlon_node has node.indexes with the flat index list.
+            n = len(requests.children)
+            current_start_idxs = []
+            fdb_node_ranges = []
+            for latlon_child in requests.children:
+                leaf_path["index"] = latlon_child.indexes
+                key_value_path = {latlon_child.axis.name: latlon_child.values}
+                ax = latlon_child.axis
+                key_value_path, leaf_path, self.unwanted_path = ax.unmap_path_key(
+                    key_value_path, leaf_path, self.unwanted_path
+                )
+                # Each entry is a single-element sublist (one index per merged node)
+                current_start_idxs.append([list(key_value_path["values"])])
+                fdb_node_ranges.append([[latlon_child]])
+            lat_length = n
+        else:
+            lat_length = len(requests.children)
+            current_start_idxs = [False] * lat_length
+            fdb_node_ranges = [False] * lat_length
+            for i in range(len(requests.children)):
+                lat_child = requests.children[i]
+                lon_length = len(lat_child.children)
+                current_start_idxs[i] = [None] * lon_length
+                fdb_node_ranges[i] = [[TensorIndexTree.root for y in range(lon_length)] for x in range(lon_length)]
+                current_start_idx = deepcopy(current_start_idxs[i])
+                fdb_range_nodes = deepcopy(fdb_node_ranges[i])
+                key_value_path = {lat_child.axis.name: lat_child.values}
+                ax = lat_child.axis
+                key_value_path, leaf_path, self.unwanted_path = ax.unmap_path_key(
+                    key_value_path, leaf_path, self.unwanted_path
+                )
+                leaf_path.update(key_value_path)
+                (
+                    current_start_idxs[i],
+                    fdb_node_ranges[i],
+                ) = self.get_last_layer_before_leaf(lat_child, leaf_path, current_start_idx, fdb_range_nodes)
 
         leaf_path_copy = deepcopy(leaf_path)
         leaf_path_copy.pop("values", None)
-        leaf_path_copy.pop("index")
+        leaf_path_copy.pop("index", None)
         return (leaf_path_copy, current_start_idxs, fdb_node_ranges, lat_length)
 
     def get_last_layer_before_leaf(self, requests, leaf_path, current_idx, fdb_range_n):

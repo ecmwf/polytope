@@ -66,13 +66,24 @@ class DatacubeMapper(DatacubeAxisTransformation):
         else:
             # Default: first axis reversed, second axis not
             self._axis_reversed = {self._mapped_axes()[0]: True, self._mapped_axes()[1]: False}
-        self.compressed_grid_axes = getattr(
+        self._compressed_grid_axes = getattr(
             self._final_transformation,
             "compressed_grid_axes",
             [self._final_mapped_axes[1]],
         )
+        self.merged_latlon = False
         self.md5_hash = getattr(self._final_transformation, "md5_hash", None)
         self.is_irregular = getattr(self._final_transformation, "is_irregular", False)
+
+    @property
+    def compressed_grid_axes(self):
+        if self.merged_latlon:
+            return []
+        return self._compressed_grid_axes
+
+    @compressed_grid_axes.setter
+    def compressed_grid_axes(self, value):
+        self._compressed_grid_axes = value
 
     def generate_final_transformation(self):
         constructor = _type_to_datacube_mapper_lookup[self.grid_type]
@@ -120,6 +131,8 @@ class DatacubeMapper(DatacubeAxisTransformation):
 
     def change_val_type(self, axis_name, values):
         # the new axis_vals created will be floats
+        if self.merged_latlon:
+            return [(0.0, 0.0)]
         return [0.0]
 
     def _mapped_axes(self):
@@ -166,9 +179,20 @@ class DatacubeMapper(DatacubeAxisTransformation):
     def unmap_path_key(self, key_value_path, leaf_path, unwanted_path, axis):
         values = key_value_path[axis.name]
         if axis.name == self._mapped_axes()[0]:
+            if self.merged_latlon:
+                lat, lon = values[0]
+                unmapped_idx = leaf_path.get("index", None)
+                if unmapped_idx is not None and len(unmapped_idx) > 0:
+                    unmapped_idx = list(unmapped_idx)
+                else:
+                    unmapped_idx = self.unmap((lat, lon), None, unmapped_idx)
+                key_value_path[self.old_axis] = unmapped_idx
+                return (key_value_path, leaf_path, unwanted_path)
             unwanted_val = key_value_path[self._mapped_axes()[0]]
             unwanted_path[axis.name] = unwanted_val
         if axis.name == self._mapped_axes()[1]:
+            if self.merged_latlon:
+                return (key_value_path, leaf_path, unwanted_path)
             first_val = unwanted_path[self._mapped_axes()[0]]
             unmapped_idx = leaf_path.get("index", None)
             if unmapped_idx is not None and len(unmapped_idx) > 0:
@@ -183,9 +207,20 @@ class DatacubeMapper(DatacubeAxisTransformation):
     def unmap_tree_node(self, node, unwanted_path):
         values = node.values
         if node.axis.name == self._mapped_axes()[0]:
+            if self.merged_latlon:
+                # In merged mode, values are (lat, lon) tuples; extract unmapped indexes directly.
+                unmapped_idxs = []
+                for val in values:
+                    lat, lon = val
+                    unmapped_idx = self.unmap((lat, lon), None)
+                    unmapped_idxs.append(unmapped_idx)
+                returned_node = node.hide_non_index_nodes(unmapped_idxs)
+                return (returned_node, unwanted_path)
             unwanted_path[node.axis.name] = values
             returned_node = node
         if node.axis.name == self._mapped_axes()[1]:
+            if self.merged_latlon:
+                return (node, unwanted_path)
             first_vals = unwanted_path[self._mapped_axes()[0]]
             unmapped_idxs = []
             for first_val in first_vals:

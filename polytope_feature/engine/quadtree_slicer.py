@@ -55,6 +55,7 @@ class QuadTreeSlicer(Engine):
         return polygon_points
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):
+        datacube.grid_transformation.merged_latlon = True
         for polytope in node["unsliced_polytopes"]:
             if ax.name in polytope._axes:
                 self._build_sliceable_child(polytope, ax, node, datacube, next_nodes, api)
@@ -65,22 +66,19 @@ class QuadTreeSlicer(Engine):
         if len(extracted_points) == 0:
             node.remove_branch()
         lat_ax = ax
-        lon_ax = datacube._axes["longitude"]
         for value in extracted_points:
             # convert to float for slicing
             if use_rust:
                 lat_val = self.points[value][0]
                 lon_val = self.points[value][1]
+                flat_idx = value
             else:
                 lat_val = value.item[0]
                 lon_val = value.item[1]
-            # store the native type
-            child, _ = node.create_child(lat_ax, lat_val, [])
-            grand_child, _ = child.create_child(lon_ax, lon_val, [])
-            # NOTE: the index of the point is stashed in the branches' result
-            if use_rust:
-                grand_child.indexes = [value]
-            else:
-                grand_child.indexes = [value.index]
-            grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
-            grand_child["unsliced_polytopes"].remove(polytope)
+                flat_idx = value.index
+            # store lat/lon as a merged node on the lat axis
+            child, _ = node.create_child(lat_ax, ((lat_val, lon_val),), [])
+            # NOTE: the index of the point is stashed in the merged node
+            child.indexes = [flat_idx]
+            child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
+            child["unsliced_polytopes"].remove(polytope)
