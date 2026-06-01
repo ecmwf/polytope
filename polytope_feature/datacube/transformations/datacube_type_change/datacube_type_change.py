@@ -209,6 +209,9 @@ class TypeChangeSubHourlyTimeSteps(DatacubeAxisTypeChange):
     def make_str(self, value):
         return_vals = []
         for val in value:
+            if isinstance(val, str) and "-" in val:
+                return_vals.append(val)
+                continue
             total_seconds = int(val.total_seconds())
             hours, rem = divmod(total_seconds, 3600)
             minutes, seconds = divmod(rem, 60)
