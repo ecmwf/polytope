@@ -321,16 +321,34 @@ class PandasTimedeltaDatacubeAxis(DatacubeAxis):
         self.type = np.timedelta64(0, "s")
         self.can_round = False
 
+    # def parse(self, value: Any) -> Any:
+    #     if isinstance(value, np.str_):
+    #         value = str(value)
+    #     return pd.Timedelta(value)
+
+    # def to_float(self, value: pd.Timedelta):
+    #     if isinstance(value, np.timedelta64):
+    #         return value.astype("timedelta64[s]").astype(int)
+    #     else:
+    #         return float(value.value / 10**9)
+
     def parse(self, value: Any) -> Any:
         if isinstance(value, np.str_):
             value = str(value)
+        if isinstance(value, str) and "-" in value:
+            return value
         return pd.Timedelta(value)
 
     def to_float(self, value: pd.Timedelta):
         if isinstance(value, np.timedelta64):
             return value.astype("timedelta64[s]").astype(int)
         else:
-            return float(value.value / 10**9)
+            if isinstance(value, str):
+                if "-" in value:
+                    return value
+                return float(value)
+            else:
+                return float(value.value / 10**9)
 
     def from_float(self, value):
         return pd.Timedelta(int(value), unit="s")
