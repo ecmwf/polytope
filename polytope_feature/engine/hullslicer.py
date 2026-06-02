@@ -48,9 +48,6 @@ class HullSlicer(Engine):
                 raise ValueError(errmsg)
 
     def find_values_between(self, polytope, ax, node, datacube, lower, upper):
-        # tol = ax.tol
-        # lower = ax.from_float(lower - tol)
-        # upper = ax.from_float(upper + tol)
         if isinstance(lower, str) and isinstance(upper, str):
             pass
         else:

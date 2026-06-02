@@ -30,7 +30,6 @@ class DatacubeAxisTypeChange(DatacubeAxisTransformation):
         return_idx = [self._final_transformation.transform_type(val) for val in values]
         if None in return_idx:
             return None
-        # return_idx.sort()
         return_idx.sort(key=lambda x: (isinstance(x, str), x))
         return return_idx
 
@@ -243,7 +242,6 @@ class TypeChangeSubHourlyTimeSteps(DatacubeAxisTypeChange):
                 return_vals.append(f"{hours}h{minutes}m")
             else:
                 return_vals.append(f"{hours}h{minutes}m{seconds}s")
-        # return return_vals
         unique_list = list(dict.fromkeys(return_vals))
         return unique_list
 
