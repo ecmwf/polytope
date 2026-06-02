@@ -174,6 +174,8 @@ class Polytope:
         return request
 
     def find_engine(self, ax):
+        if ax.name not in self.engine_options:
+            raise ValueError(f"No engine specified for axis {ax.name}")
         slicer_type = self.engine_options[ax.name]
         return self.engines[slicer_type]
 

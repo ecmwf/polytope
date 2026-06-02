@@ -1,5 +1,4 @@
 import argparse
-import logging
 from abc import ABC
 from typing import Dict, List, Literal, Optional, Tuple, Union
 
@@ -85,7 +84,6 @@ class Config(ConfigModel):
     alternative_axes: Optional[List[GribJumpAxesConfig]] = []
     use_catalogue: Optional[bool] = False
     engine_options: Optional[Dict[str, str]] = {}
-    dynamic_grid: Optional[bool] = False
 
 
 class PolytopeOptions(ABC):
@@ -98,24 +96,10 @@ class PolytopeOptions(ABC):
         axis_config = config_options.axis_config
         compressed_axes_config = config_options.compressed_axes_config
         pre_path = config_options.pre_path
-        dynamic_grid = config_options.dynamic_grid
         alternative_axes = config_options.alternative_axes
         use_catalogue = config_options.use_catalogue
         engine_options = config_options.engine_options
 
-        if dynamic_grid:
-            # TODO: look at the pre-path and query the eccodes function to get the new grid option
-            # TODO: then change the grid option inside of the axis_config
-            try:
-                replaced = replace_grid_config_in_options(config_options, pre_path)
-                if replaced:
-                    axis_config = config_options.axis_config
-            except Exception as e:
-                logging.warning(
-                    "Dynamic grid replacement failed for georef '%s': %s. Using static grid config.",
-                    pre_path.get("georef", "unknown"),
-                    e,
-                )
         return (
             axis_config,
             compressed_axes_config,
@@ -150,17 +134,3 @@ def gridspec_to_grid_config(gridspec, md5hash):
         )
         return mc
     return None
-
-
-def replace_grid_config_in_options(options, req):
-    from polytope_feature.datacube.switching_grid_helper import lookup_grid_config
-
-    gridspec, md5hash = lookup_grid_config(req)
-    grid_config = gridspec_to_grid_config(gridspec, md5hash)
-    if grid_config is not None:
-        for axis_conf in options.axis_config:
-            for idx, transformation in enumerate(axis_conf.transformations):
-                if getattr(transformation, "name", None) == "mapper":
-                    axis_conf.transformations[idx] = grid_config
-                    return True
-    return False
