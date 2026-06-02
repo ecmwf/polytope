@@ -1,3 +1,4 @@
+import logging
 from copy import copy
 
 from .engine import Engine
@@ -21,7 +22,9 @@ class QuadTreeSlicer(Engine):
         quad_tree = QuadTree()
         # NOTE: the points here are assumed to be lat/lon implicitly
         points = [tuple(point) for point in points]
+        logging.debug("Creating point cloud quadtree...")
         quad_tree.build_point_tree(points)
+        logging.debug("Created point cloud quadtree")
         self.points = points
         self.quad_tree = quad_tree
 
@@ -33,12 +36,15 @@ class QuadTreeSlicer(Engine):
         assert "latitude" in axes and "longitude" in axes
         revert_axes = not (list(axes) == ["latitude", "longitude"])
         if use_rust:
+            logging.debug("Using Rust for quadtree polygon query")
             if len(datacube.nearest_search) == 0:
                 if revert_axes:
                     polytope_points = [tuple(reversed(point)) for point in polytope.points]
                 else:
                     polytope_points = [tuple(point) for point in polytope.points]
+                logging.debug("Querying quadtree")
                 polygon_points = self.quad_tree.query_polygon(self.points, 0, polytope_points)
+                logging.debug("Finished querying quadtree")
             else:
                 k = datacube.nearest_search[tuple(polytope.axes())][1]
                 if revert_axes:
