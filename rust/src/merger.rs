@@ -1,6 +1,8 @@
 use pyo3::prelude::*;
+use pyo3::types::PyDict;
 
 #[pyclass]
+#[derive(Clone)]
 pub struct DatacubeAxisMerger {
     linkers: Vec<String>,
 }
@@ -10,6 +12,10 @@ impl DatacubeAxisMerger {
     #[new]
     pub fn new(linkers: Vec<String>) -> Self {
         DatacubeAxisMerger { linkers }
+    }
+
+    fn __deepcopy__(&self, _memo: &Bound<'_, PyDict>) -> Self {
+        self.clone()
     }
 
     /// Splits each merged value by linkers to recover first_val and second_val.

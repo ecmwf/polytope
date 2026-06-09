@@ -66,8 +66,11 @@ class TestQuadTreeSlicer:
             datacube=self.fdbdatacube,
             options=self.options,
         )
+        import time
 
+        start_time = time.time()
         result = self.API.retrieve(request)
+        print("TIME TAKEN: ", time.time() - start_time)
 
         assert len(result.leaves) == 6919
         result.pprint()

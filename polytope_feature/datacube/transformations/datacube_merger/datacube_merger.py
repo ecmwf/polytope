@@ -24,7 +24,7 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         self._linkers = merge_options.linkers
         self._merged_values = self.merged_values(datacube)
         if _RUST_MERGER_AVAILABLE:
-            self._rust_merger = _RustDatacubeAxisMerger.new(list(self._linkers))
+            self._rust_merger = _RustDatacubeAxisMerger(list(self._linkers))
         else:
             self._rust_merger = None
 
