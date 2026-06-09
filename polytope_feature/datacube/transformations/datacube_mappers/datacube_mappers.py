@@ -180,7 +180,9 @@ class DatacubeMapper(DatacubeAxisTransformation):
         values = key_value_path[axis.name]
         if axis.name == self._mapped_axes()[0]:
             if self.merged_latlon:
-                lat, lon = values[0]
+                # print("WHAT DO WE HAVE HERE, ", values)
+                ((inner,),) = values
+                lat, lon = inner
                 unmapped_idx = leaf_path.get("index", None)
                 if unmapped_idx is not None and len(unmapped_idx) > 0:
                     unmapped_idx = list(unmapped_idx)

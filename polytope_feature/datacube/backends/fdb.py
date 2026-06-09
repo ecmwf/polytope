@@ -361,6 +361,7 @@ class FDBDatacube(Datacube):
             current_start_idxs = []
             fdb_node_ranges = []
             for latlon_child in requests.children:
+                print("WHAT ABOUT INDEX AND PATH HERE ", latlon_child.indexes, leaf_path, latlon_child.values)
                 leaf_path["index"] = latlon_child.indexes
                 key_value_path = {latlon_child.axis.name: latlon_child.values}
                 ax = latlon_child.axis
