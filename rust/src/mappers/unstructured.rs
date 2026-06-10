@@ -6,6 +6,8 @@ pub struct UnstructuredGridMapper {
     #[pyo3(get)]
     pub is_irregular: bool,
     latlon_points: Vec<Vec<f64>>,
+    #[pyo3(get)]
+    pub md5_hash: Option<String>,
 }
 
 #[pymethods]

@@ -24,6 +24,8 @@ pub struct LambertConformalGridMapper {
     latin1_in_radians: f64,
     latin2_in_radians: f64,
     lad_in_radians: f64,
+    #[pyo3(get)]
+    pub md5_hash: Option<String>,
 }
 
 #[pymethods]

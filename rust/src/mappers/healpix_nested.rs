@@ -17,6 +17,7 @@ pub struct NestedHealpixGridMapper {
     base_axis: String,
     mapped_axes: Vec<String>,
     resolution: usize,
+    #[pyo3(get)]
     pub md5_hash: Option<String>,
     axis_reversed: HashMap<String, bool>,
     first_axis_vals_cache: Vec<f64>,

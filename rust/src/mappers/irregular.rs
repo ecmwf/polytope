@@ -13,6 +13,8 @@ pub struct IrregularGridMapper {
     #[pyo3(get)]
     pub is_irregular: bool,
     inner: InnerMapper,
+    #[pyo3(get)]
+    pub md5_hash: Option<String>,
 }
 
 #[pymethods]
@@ -49,6 +51,7 @@ impl IrregularGridMapper {
                 Ok(IrregularGridMapper {
                     is_irregular: true,
                     inner: InnerMapper::LambertConformal(mapper),
+                    md5_hash,
                 })
             }
             "unstructured" => {
@@ -64,6 +67,7 @@ impl IrregularGridMapper {
                 Ok(IrregularGridMapper {
                     is_irregular: true,
                     inner: InnerMapper::Unstructured(mapper),
+                    md5_hash,
                 })
             }
             "icon" => Err(pyo3::exceptions::PyNotImplementedError::new_err(

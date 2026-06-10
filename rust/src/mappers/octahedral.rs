@@ -136,7 +136,8 @@ pub struct OctahedralGridMapper {
     base_axis: String,
     mapped_axes: Vec<String>,
     resolution: usize,
-    md5_hash: Option<String>,
+    #[pyo3(get)]
+    pub md5_hash: Option<String>,
     axis_reversed: HashMap<String, bool>,
     first_axis_vals_cache: Vec<f64>,
     first_idx_map: Vec<usize>,
@@ -149,7 +150,7 @@ impl OctahedralGridMapper {
         base_axis: String,
         mapped_axes: Vec<String>,
         resolution: usize,
-        md5_hash: Option<String>,
+        _md5_hash: Option<String>,
         local_area: Option<Vec<f64>>,
         axis_reversed: Option<HashMap<String, bool>>,
         mapper_options: Option<PyObject>,
@@ -170,6 +171,16 @@ impl OctahedralGridMapper {
                 m.insert(mapped_axes[1].clone(), false);
             }
             m
+        });
+
+        let md5_hash = _md5_hash.or_else(|| {
+            if resolution == 1280 {
+                Some("158db321ae8e773681eeb40e0a3d350f".to_string())
+            } else if resolution == 2560 {
+                Some("b46ef646819838ead0a38749197e17a9".to_string())
+            } else {
+                None
+            }
         });
 
         Ok(OctahedralGridMapper {
