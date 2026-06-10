@@ -36,7 +36,7 @@ impl LambertConformalGridMapper {
         _base_axis: PyObject,
         _mapped_axes: PyObject,
         _resolution: PyObject,
-        _md5_hash: Option<PyObject>,
+        _md5_hash: Option<String>,
         _local_area: Option<PyObject>,
         _axis_reversed: Option<PyObject>,
         mapper_options: Option<PyObject>,
@@ -88,6 +88,7 @@ impl LambertConformalGridMapper {
                 latin1_in_radians,
                 latin2_in_radians,
                 lad_in_radians,
+                md5_hash: _md5_hash,
             })
         })
     }

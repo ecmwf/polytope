@@ -25,11 +25,20 @@ impl IrregularGridMapper {
         base_axis: PyObject,
         mapped_axes: PyObject,
         resolution: PyObject,
-        md5_hash: Option<PyObject>,
+        md5_hash: Option<String>,
         local_area: Option<PyObject>,
         axis_reversed: Option<PyObject>,
         mapper_options: Option<PyObject>,
     ) -> PyResult<Self> {
+
+        // let md5_hash: Option<String> = Python::with_gil(|py| {
+        //     md5_hash
+        //         .as_ref()
+        //         .map(|obj| obj.extract::<String>(py))
+        //         .transpose()
+        // })?;
+        let md5_hash: Option<String> = md5_hash;
+
         let grid_type: String = Python::with_gil(|py| -> PyResult<String> {
             let opts = mapper_options
                 .as_ref()
@@ -43,7 +52,7 @@ impl IrregularGridMapper {
                     base_axis,
                     mapped_axes,
                     resolution,
-                    md5_hash,
+                    md5_hash.clone(),
                     local_area,
                     axis_reversed,
                     mapper_options,
@@ -59,7 +68,7 @@ impl IrregularGridMapper {
                     base_axis,
                     mapped_axes,
                     resolution,
-                    md5_hash,
+                    md5_hash.clone(),
                     local_area,
                     axis_reversed,
                     mapper_options,
@@ -67,7 +76,7 @@ impl IrregularGridMapper {
                 Ok(IrregularGridMapper {
                     is_irregular: true,
                     inner: InnerMapper::Unstructured(mapper),
-                    md5_hash,
+                    md5_hash: md5_hash,
                 })
             }
             "icon" => Err(pyo3::exceptions::PyNotImplementedError::new_err(
