@@ -12,6 +12,7 @@ use crate::healpix_nested::{
 /// HEALPix nested-ordered grid mapper.
 /// Mirrors `polytope_feature.datacube.transformations.datacube_mappers.mapper_types.healpix_nested.NestedHealpixGridMapper`.
 #[pyclass]
+#[derive(Clone)]
 pub struct NestedHealpixGridMapper {
     base_axis: String,
     mapped_axes: Vec<String>,
@@ -31,13 +32,15 @@ pub struct NestedHealpixGridMapper {
 #[pymethods]
 impl NestedHealpixGridMapper {
     #[new]
-    #[pyo3(signature = (base_axis, mapped_axes, resolution, md5_hash=None, axis_reversed=None))]
+    #[pyo3(signature = (base_axis, mapped_axes, resolution, md5_hash=None, local_area=None, axis_reversed=None, mapper_options=None))]
     pub fn new(
         base_axis: String,
         mapped_axes: Vec<String>,
         resolution: usize,
         md5_hash: Option<String>,
+        local_area: Option<Vec<f64>>,
         axis_reversed: Option<HashMap<String, bool>>,
+        mapper_options: Option<PyObject>,
     ) -> PyResult<Self> {
         // Default axis_reversed: first axis decreasing, second axis increasing
         let axis_reversed = axis_reversed.unwrap_or_else(|| {
@@ -78,6 +81,10 @@ impl NestedHealpixGridMapper {
             ncap,
             k,
         })
+    }
+
+    fn __deepcopy__(&self, _memo: &PyAny) -> Self {
+        self.clone()
     }
 
     /// Returns latitude values for every ring, ordered north-to-south (decreasing).

@@ -131,6 +131,7 @@ fn find_second_axis_idx_fn(
 // ── pyclass ──────────────────────────────────────────────────────────────────
 
 #[pyclass]
+#[derive(Clone)]
 pub struct OctahedralGridMapper {
     base_axis: String,
     mapped_axes: Vec<String>,
@@ -149,7 +150,9 @@ impl OctahedralGridMapper {
         mapped_axes: Vec<String>,
         resolution: usize,
         md5_hash: Option<String>,
+        local_area: Option<Vec<f64>>,
         axis_reversed: Option<HashMap<String, bool>>,
+        mapper_options: Option<PyObject>,
     ) -> PyResult<Self> {
         let first_axis_vals_cache = match resolution {
             1280 => OCTAHEDRAL_N1280_LATS.to_vec(),
@@ -178,6 +181,10 @@ impl OctahedralGridMapper {
             first_axis_vals_cache,
             first_idx_map,
         })
+    }
+
+    fn __deepcopy__(&self, _memo: &PyAny) -> Self {
+        self.clone()
     }
 
     /// Return all latitude values for the first axis.

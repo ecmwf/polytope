@@ -1,5 +1,4 @@
 use pyo3::prelude::*;
-use pyo3::types::PyDict;
 
 #[pyclass]
 #[derive(Clone)]
@@ -14,7 +13,7 @@ impl DatacubeAxisMerger {
         DatacubeAxisMerger { linkers }
     }
 
-    fn __deepcopy__(&self, _memo: &Bound<'_, PyDict>) -> Self {
+    fn __deepcopy__(&self, _memo: &PyAny) -> Self {
         self.clone()
     }
 

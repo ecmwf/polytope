@@ -1,6 +1,7 @@
 use pyo3::prelude::*;
 
 #[pyclass]
+#[derive(Clone)]
 pub struct UnstructuredGridMapper {
     #[pyo3(get)]
     pub is_irregular: bool,
@@ -33,6 +34,10 @@ impl UnstructuredGridMapper {
             is_irregular: true,
             latlon_points,
         })
+    }
+
+    fn __deepcopy__(&self, _memo: &PyAny) -> Self {
+        self.clone()
     }
 
     pub fn grid_latlon_points(&self) -> Vec<Vec<f64>> {
