@@ -2,6 +2,7 @@ use pyo3::prelude::*;
 use std::collections::HashMap;
 
 #[pyclass]
+#[derive(Clone)]
 pub struct LocalRegularGridMapper {
     #[pyo3(get)]
     pub base_axis: String,
@@ -28,7 +29,7 @@ pub struct LocalRegularGridMapper {
 #[pymethods]
 impl LocalRegularGridMapper {
     #[new]
-    #[pyo3(signature = (base_axis, mapped_axes, resolution, md5_hash=None, local_area=vec![], axis_reversed=None))]
+    #[pyo3(signature = (base_axis, mapped_axes, resolution, md5_hash=None, local_area=vec![], axis_reversed=None, mapper_options=None))]
     pub fn new(
         base_axis: String,
         mapped_axes: Vec<String>,
@@ -36,6 +37,7 @@ impl LocalRegularGridMapper {
         md5_hash: Option<String>,
         local_area: Vec<f64>,
         axis_reversed: Option<HashMap<String, bool>>,
+        mapper_options: Option<PyObject>,
         py: Python<'_>,
     ) -> PyResult<Self> {
         if local_area.len() != 4 {
@@ -115,6 +117,10 @@ impl LocalRegularGridMapper {
             cached_first_axis_vals,
             cached_second_axis_vals,
         })
+    }
+
+    fn __deepcopy__(&self, _memo: &PyAny) -> Self {
+        self.clone()
     }
 
     pub fn first_axis_vals(&self) -> Vec<f64> {

@@ -2,6 +2,7 @@ use pyo3::prelude::*;
 use std::collections::HashMap;
 
 #[pyclass]
+#[derive(Clone)]
 pub struct RegularGridMapper {
     #[pyo3(get)]
     pub base_axis: String,
@@ -25,7 +26,9 @@ impl RegularGridMapper {
         mapped_axes: Vec<String>,
         resolution: usize,
         md5_hash: Option<String>,
+        local_area: Option<Vec<f64>>,
         axis_reversed: Option<HashMap<String, bool>>,
+        mapper_options: Option<PyObject>,
     ) -> PyResult<Self> {
         let deg_increment = 90.0 / resolution as f64;
 
@@ -61,6 +64,10 @@ impl RegularGridMapper {
             first_axis_vals,
             deg_increment,
         })
+    }
+
+    fn __deepcopy__(&self, _memo: &PyAny) -> Self {
+        self.clone()
     }
 
     pub fn first_axis_vals(&self) -> Vec<f64> {

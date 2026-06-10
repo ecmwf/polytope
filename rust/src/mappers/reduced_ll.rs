@@ -5,6 +5,7 @@ use crate::mappers::data::reduced_ll_1441::REDUCED_LL_1441_LON_SPACING;
 use crate::mappers::data::reduced_ll_3601::REDUCED_LL_3601_LON_SPACING;
 
 #[pyclass]
+#[derive(Clone)]
 pub struct ReducedLatLonMapper {
     #[pyo3(get)]
     pub base_axis: String,
@@ -58,7 +59,9 @@ impl ReducedLatLonMapper {
         mapped_axes: Vec<String>,
         resolution: usize,
         md5_hash: Option<String>,
+        local_area: Option<Vec<f64>>,
         axis_reversed: Option<HashMap<String, bool>>,
+        mapper_options: Option<PyObject>,
     ) -> PyResult<Self> {
         let (axis_reversed_first, axis_reversed_second) = match axis_reversed {
             Some(ref map) => {
@@ -107,6 +110,10 @@ impl ReducedLatLonMapper {
             axis_reversed_second,
             first_axis_vals_cache,
         })
+    }
+
+    fn __deepcopy__(&self, _memo: &PyAny) -> Self {
+        self.clone()
     }
 
     pub fn first_axis_vals(&self) -> Vec<f64> {

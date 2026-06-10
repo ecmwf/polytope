@@ -115,6 +115,7 @@ fn compute_gauss_lats(resolution: usize) -> Vec<f64> {
 }
 
 #[pyclass]
+#[derive(Clone)]
 pub struct ReducedGaussianGridMapper {
     #[pyo3(get)]
     pub base_axis: String,
@@ -137,7 +138,9 @@ impl ReducedGaussianGridMapper {
         mapped_axes: Vec<String>,
         resolution: usize,
         md5_hash: Option<String>,
+        local_area: Option<Vec<f64>>,
         axis_reversed: Option<HashMap<String, bool>>,
+        mapper_options: Option<PyObject>,
     ) -> PyResult<Self> {
         let (axis_reversed_first, axis_reversed_second) = match axis_reversed {
             Some(ref map) => {
@@ -191,6 +194,10 @@ impl ReducedGaussianGridMapper {
             axis_reversed_second,
             cached_first_axis_vals: computed,
         })
+    }
+
+    fn __deepcopy__(&self, _memo: &PyAny) -> Self {
+        self.clone()
     }
 
     pub fn first_axis_vals(&self) -> Vec<f64> {

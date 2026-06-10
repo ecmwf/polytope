@@ -3,6 +3,7 @@ use pyo3::prelude::*;
 use crate::lambert_conformal::{get_latlons_oblate, get_latlons_sphere};
 
 #[pyclass]
+#[derive(Clone)]
 pub struct LambertConformalGridMapper {
     #[pyo3(get)]
     pub is_irregular: bool,
@@ -87,6 +88,10 @@ impl LambertConformalGridMapper {
                 lad_in_radians,
             })
         })
+    }
+
+    fn __deepcopy__(&self, _memo: &PyAny) -> Self {
+        self.clone()
     }
 
     pub fn grid_latlon_points(&self) -> PyResult<Vec<Vec<f64>>> {
