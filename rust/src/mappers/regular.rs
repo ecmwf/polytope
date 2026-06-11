@@ -82,19 +82,19 @@ impl RegularGridMapper {
             .collect()
     }
 
-    pub fn second_axis_vals(&self, _first_val: f64) -> Vec<f64> {
+    pub fn second_axis_vals(&self, _first_val: Vec<f64>) -> Vec<f64> {
         let n = 4 * self.resolution;
         (0..n).map(|i| i as f64 * self.deg_increment).collect()
     }
 
-    pub fn map_second_axis(&self, first_val: f64, lower: f64, upper: f64) -> Vec<f64> {
+    pub fn map_second_axis(&self, first_val: Vec<f64>, lower: f64, upper: f64) -> Vec<f64> {
         self.second_axis_vals(first_val)
             .into_iter()
             .filter(|&v| v >= lower && v <= upper)
             .collect()
     }
 
-    pub fn find_second_idx(&self, first_val: f64, second_val: f64) -> usize {
+    pub fn find_second_idx(&self, first_val: Vec<f64>, second_val: f64) -> usize {
         let tol = 1e-10;
         let vals = self.second_axis_vals(first_val);
         vals.partition_point(|&x| x < second_val - tol)
@@ -126,7 +126,7 @@ impl RegularGridMapper {
                     .iter()
                     .position(|&v| (v - fv).abs() < tol)
                     .unwrap_or(0);
-                let second_idx = self.find_second_idx(fv, sv);
+                let second_idx = self.find_second_idx(vec![fv], sv);
                 self.axes_idx_to_regular_idx(first_idx, second_idx)
             })
             .collect()

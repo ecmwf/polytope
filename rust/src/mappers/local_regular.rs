@@ -135,18 +135,18 @@ impl LocalRegularGridMapper {
             .collect()
     }
 
-    pub fn second_axis_vals(&self, _first_val: f64) -> Vec<f64> {
+    pub fn second_axis_vals(&self, _first_val: Vec<f64>) -> Vec<f64> {
         self.cached_second_axis_vals.clone()
     }
 
-    pub fn map_second_axis(&self, first_val: f64, lower: f64, upper: f64) -> Vec<f64> {
+    pub fn map_second_axis(&self, first_val: Vec<f64>, lower: f64, upper: f64) -> Vec<f64> {
         self.second_axis_vals(first_val)
             .into_iter()
             .filter(|&v| v >= lower && v <= upper)
             .collect()
     }
 
-    pub fn find_second_idx(&self, first_val: f64, second_val: f64) -> usize {
+    pub fn find_second_idx(&self, first_val: Vec<f64>, second_val: f64) -> usize {
         let tol = 1e-10;
         let vals = self.second_axis_vals(first_val);
         vals.partition_point(|&x| x < second_val - tol)

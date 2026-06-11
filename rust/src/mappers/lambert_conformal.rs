@@ -134,7 +134,7 @@ impl LambertConformalGridMapper {
 
     pub fn unmap(
         &self,
-        _first_val: f64,
+        _first_val: Vec<f64>,
         _second_val: f64,
         unmapped_idx: Vec<usize>,
     ) -> usize {

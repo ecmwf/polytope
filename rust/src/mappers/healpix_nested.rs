@@ -33,12 +33,12 @@ pub struct NestedHealpixGridMapper {
 #[pymethods]
 impl NestedHealpixGridMapper {
     #[new]
-    #[pyo3(signature = (base_axis, mapped_axes, resolution, md5_hash=None, local_area=None, axis_reversed=None, mapper_options=None))]
+    #[pyo3(signature = (base_axis, mapped_axes, resolution, _md5_hash=None, local_area=None, axis_reversed=None, mapper_options=None))]
     pub fn new(
         base_axis: String,
         mapped_axes: Vec<String>,
         resolution: usize,
-        md5_hash: Option<String>,
+        _md5_hash: Option<String>,
         local_area: Option<Vec<f64>>,
         axis_reversed: Option<HashMap<String, bool>>,
         mapper_options: Option<PyObject>,
@@ -49,6 +49,18 @@ impl NestedHealpixGridMapper {
             m.insert(mapped_axes[0].clone(), true);
             m.insert(mapped_axes[1].clone(), false);
             m
+        });
+
+        let md5_hash = _md5_hash.or_else(|| {
+            if resolution == 1024 {
+                Some("cbda19e48d4d7e5e22641154878b9b22".to_string())
+            } else if resolution == 512 {
+                Some("47efaa0853e70948a41d5225e7653194".to_string())
+            } else if resolution == 128 {
+                Some("f3dfeb7a5bbbdd13a20d10fdb3797c71".to_string())
+            } else {
+                None
+            }
         });
 
         // Validate (mirror Python __init__ checks)
