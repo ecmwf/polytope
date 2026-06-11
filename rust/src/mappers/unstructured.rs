@@ -49,10 +49,10 @@ impl UnstructuredGridMapper {
 
     pub fn unmap(
         &self,
-        _first_val: f64,
-        _second_val: f64,
+        _first_val: Vec<f64>,
+        _second_val: Vec<f64>,
         unmapped_idx: Vec<usize>,
-    ) -> usize {
-        unmapped_idx[0]
+    ) -> Vec<usize> {
+        unmapped_idx
     }
 }

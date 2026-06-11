@@ -117,17 +117,21 @@ impl RegularGridMapper {
     #[pyo3(signature = (first_val, second_vals, _unmapped_idx=None))]
     pub fn unmap(&self, first_val: Vec<f64>, second_vals: Vec<f64>, _unmapped_idx: Option<Vec<usize>>) -> Vec<usize> {
         let tol = 1e-8;
+
         first_val
             .iter()
-            .zip(second_vals.iter())
-            .map(|(&fv, &sv)| {
-                let first_idx = self
-                    .first_axis_vals
-                    .iter()
-                    .position(|&v| (v - fv).abs() < tol)
-                    .unwrap_or(0);
-                let second_idx = self.find_second_idx(vec![fv], sv);
-                self.axes_idx_to_regular_idx(first_idx, second_idx)
+            .flat_map(|&fv| {
+                second_vals.iter().map(move |&sv| {
+                    let first_idx = self
+                        .first_axis_vals
+                        .iter()
+                        .position(|&v| (v - fv).abs() < tol)
+                        .unwrap_or(0);
+
+                    let second_idx = self.find_second_idx(vec![fv], sv);
+
+                    self.axes_idx_to_regular_idx(first_idx, second_idx)
+                })
             })
             .collect()
     }
