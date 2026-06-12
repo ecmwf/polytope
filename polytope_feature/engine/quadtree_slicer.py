@@ -66,6 +66,7 @@ class QuadTreeSlicer(Engine):
         if len(extracted_points) == 0:
             node.remove_branch()
         lat_ax = ax
+        # print("HERE HOW MANY EXTRACTED POINTS ", len(extracted_points), " FOR POLYTOPE ", polytope)
         for value in extracted_points:
             # convert to float for slicing
             if use_rust:

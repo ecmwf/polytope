@@ -210,12 +210,11 @@ class DatacubeMapper(DatacubeAxisTransformation):
         values = node.values
         if node.axis.name == self._mapped_axes()[0]:
             if self.merged_latlon:
-                # In merged mode, values are (lat, lon) tuples; extract unmapped indexes directly.
-                unmapped_idxs = []
-                for val in values:
-                    lat, lon = val
-                    unmapped_idx = self.unmap((lat, lon), None)
-                    unmapped_idxs.append(unmapped_idx)
+                # In merged mode the unmapped grid indices are already stored on the
+                # node (set by _build_sliceable_child via create_child).  Reuse them
+                # directly so we never have to call unmap() with None, which fails for
+                # Rust-backed mappers.
+                unmapped_idxs = list(node.indexes)
                 returned_node = node.hide_non_index_nodes(unmapped_idxs)
                 return (returned_node, unwanted_path)
             unwanted_path[node.axis.name] = values

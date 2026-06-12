@@ -241,3 +241,91 @@ class TestQuadTreeSlicerMergedNodes:
             inner = values[0]
             assert isinstance(inner, tuple)
             assert len(inner) == 2  # (lat, lon) — not a nested tree structure
+
+
+# ---------------------------------------------------------------------------
+# (e) DatacubeMapper.unmap_tree_node in merged mode correctly unpacks
+#     the (((lat, lon),),) node values structure
+# ---------------------------------------------------------------------------
+
+
+class TestUnmapTreeNodeMergedLatlon:
+    def _make_mapper(self):
+        import types
+
+        from polytope_feature.datacube.transformations.datacube_mappers.datacube_mappers import (
+            DatacubeMapper,
+        )
+
+        opts = types.SimpleNamespace(
+            type="octahedral",
+            resolution=32,
+            axes=["latitude", "longitude"],
+            md5_hash=None,
+            local=None,
+            axis_reversed=None,
+        )
+        return DatacubeMapper("values", opts)
+
+    def test_unmap_tree_node_merged_does_not_crash(self):
+        """
+        unmap_tree_node with merged_latlon=True must not raise ValueError when
+        unpacking the nested (((lat, lon),),) values structure.
+        """
+        from polytope_feature.datacube.datacube_axis import (
+            FloatDatacubeAxis,
+            IntDatacubeAxis,
+        )
+        from polytope_feature.datacube.tensor_index_tree import TensorIndexTree
+
+        mapper = self._make_mapper()
+        mapper.merged_latlon = True
+
+        lat_ax = FloatDatacubeAxis()
+        lat_ax.name = "latitude"
+
+        # hide_non_index_nodes walks up two levels, so build root → parent → node.
+        root = TensorIndexTree()
+        int_ax = IntDatacubeAxis()
+        int_ax.name = "step"
+        parent = TensorIndexTree(int_ax, (0,))
+        root.add_child(parent)
+        node = TensorIndexTree(lat_ax, (((10.0, 20.0),),))
+        node.indexes = [42]
+        parent.add_child(node)
+
+        # Must not raise; before the fix this raised ValueError due to
+        # 'lat, lon = ((lat, lon),)' trying to unpack a 1-element tuple.
+        returned_node, unwanted_path = mapper.unmap_tree_node(node, {})
+        assert returned_node is not None
+
+    def test_unmap_tree_node_merged_multiple_values(self):
+        """Multiple merged-latlon values all unpack correctly."""
+        from unittest.mock import patch
+
+        from polytope_feature.datacube.datacube_axis import (
+            FloatDatacubeAxis,
+            IntDatacubeAxis,
+        )
+        from polytope_feature.datacube.tensor_index_tree import TensorIndexTree
+
+        mapper = self._make_mapper()
+        mapper.merged_latlon = True
+
+        lat_ax = FloatDatacubeAxis()
+        lat_ax.name = "latitude"
+
+        # Build root → parent → node so hide_non_index_nodes can walk up.
+        root = TensorIndexTree()
+        int_ax = IntDatacubeAxis()
+        int_ax.name = "step"
+        parent = TensorIndexTree(int_ax, (0,))
+        root.add_child(parent)
+        # Simulate a compressed node with two merged values
+        node = TensorIndexTree(lat_ax, (((1.0, 2.0),), ((3.0, 4.0),)))
+        node.indexes = []
+        parent.add_child(node)
+
+        with patch.object(mapper, "unmap", side_effect=lambda fv, sv: 99):
+            returned_node, _ = mapper.unmap_tree_node(node, {})
+        assert returned_node is not None

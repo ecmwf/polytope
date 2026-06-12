@@ -84,8 +84,9 @@ class TestQuadTreeSlicer:
         leaves = result.leaves
         for i in range(len(leaves)):
             cubepath = leaves[i].flatten()
-            lat = cubepath["latitude"][0]
-            lon = cubepath["longitude"][0]
+            # With merged_latlon=True the latitude key holds (((lat, lon),),);
+            # unpack to get scalar lat/lon values.
+            ((lat, lon),) = cubepath["latitude"][0]
             lats.append(lat)
             lons.append(lon)
 

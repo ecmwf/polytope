@@ -47,12 +47,13 @@ impl UnstructuredGridMapper {
         self.latlon_points.clone()
     }
 
+    #[pyo3(signature = (_first_val, _second_val=None, unmapped_idx=None))]
     pub fn unmap(
         &self,
         _first_val: Vec<f64>,
-        _second_val: Vec<f64>,
-        unmapped_idx: Vec<usize>,
+        _second_val: Option<Vec<f64>>,
+        unmapped_idx: Option<Vec<usize>>,
     ) -> Vec<usize> {
-        unmapped_idx
+        unmapped_idx.unwrap_or_default()
     }
 }
