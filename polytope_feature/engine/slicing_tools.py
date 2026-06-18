@@ -45,7 +45,7 @@ def slice_in_two(polytope: ConvexPolytope, value, slice_axis_idx):
                     vertices = None
 
             if vertices is not None:
-                left_polygon = ConvexPolytope(polytope._axes, [left_points[i] for i in vertices])
+                left_polygon = ConvexPolytope(polytope._axes, [left_points[i] for i in vertices], tag=polytope.tag)
             else:
                 left_polygon = None
 
@@ -60,7 +60,7 @@ def slice_in_two(polytope: ConvexPolytope, value, slice_axis_idx):
                     vertices = None
 
             if vertices is not None:
-                right_polygon = ConvexPolytope(polytope._axes, [right_points[i] for i in vertices])
+                right_polygon = ConvexPolytope(polytope._axes, [right_points[i] for i in vertices], tag=polytope.tag)
             else:
                 right_polygon = None
 
@@ -116,7 +116,7 @@ def slice(polytope: ConvexPolytope, axis, value, slice_axis_idx):
     axes.remove(axis)
 
     if len(intersects) < len(intersects[0]) + 1:
-        return ConvexPolytope(axes, intersects)
+        return ConvexPolytope(axes, intersects, tag=polytope.tag)
     # Compute convex hull (removing interior points)
     if len(intersects[0]) == 0:
         return None
@@ -131,6 +131,6 @@ def slice(polytope: ConvexPolytope, axis, value, slice_axis_idx):
 
         except scipy.spatial.qhull.QhullError as e:
             if "less than" or "flat" in str(e):
-                return ConvexPolytope(axes, intersects)
+                return ConvexPolytope(axes, intersects, tag=polytope.tag)
     # Sliced result is simply the convex hull
-    return ConvexPolytope(axes, [intersects[i] for i in vertices])
+    return ConvexPolytope(axes, [intersects[i] for i in vertices], tag=polytope.tag)
