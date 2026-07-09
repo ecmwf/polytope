@@ -16,7 +16,7 @@ class TestHealpixNestedGrid:
         nexus_url = "https://sites.ecmwf.int/repository/polytope/test-data/healpix_nested.grib"
         download_test_data(nexus_url, "healpix_nested.grib")
 
-        ds = data.from_source("file", "./tests/data/healpix_nested.grib").to_fields()[3]
+        ds = data.from_source("file", "./tests/data/healpix_nested.grib").to_fieldlist()[3]
         self.latlon_array = ds.to_xarray(engine="cfgrib").isel(step=0).isel(time=0).isel(heightAboveGround=0).t2m
         self.options = {
             "axis_config": [
