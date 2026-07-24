@@ -4,6 +4,8 @@ import warnings
 from abc import ABC, abstractmethod
 from typing import List
 
+import mapbox_earcut as earcut
+import numpy as np
 import tripy
 
 from .utility.list_tools import unique
@@ -549,3 +551,65 @@ class Polygon(Shape):
 
     def __repr__(self):
         return f"Polygon in {self._axes} with points {self._points}"
+
+
+class PolygonWithHoles(Shape):
+    """2-D polygon defined by a set of exterior points and optional holes"""
+
+    def __init__(self, axes, points, holes=None):
+        self._axes = axes
+        assert len(axes) == 2
+
+        for p in points:
+            assert len(p) == 2
+
+        if holes is None:
+            holes = []
+
+        self._holes = holes
+        self._points = points
+        self.polytopes = []
+
+        if len(points) == 0:
+            return
+
+        # Flatten all rings
+        rings = [points] + list(holes)
+
+        vertices = []
+        ring_end_indices = []
+
+        for ring in rings:
+            for p in ring:
+                assert len(p) == 2
+                vertices.append(p)
+            ring_end_indices.append(len(vertices))
+
+        vertices = np.asarray(vertices, dtype=np.float64)
+        ring_end_indices = np.asarray(ring_end_indices, dtype=np.uint32)
+
+        triangle_indices = earcut.triangulate_float64(vertices, ring_end_indices)
+
+        if len(triangle_indices) == 0:
+            self.polytopes = [ConvexPolytope(self.axes(), points)]
+            return
+
+        for i in range(0, len(triangle_indices), 3):
+            tri_points = [
+                vertices[triangle_indices[i]].tolist(),
+                vertices[triangle_indices[i + 1]].tolist(),
+                vertices[triangle_indices[i + 2]].tolist(),
+            ]
+
+            poly = ConvexPolytope(self.axes(), tri_points)
+            poly.add_to_union()
+            self.polytopes.append(poly)
+
+    def axes(self):
+        return self._axes
+
+    def polytope(self):
+        return self.polytopes
+
+    def __repr__(self):
+        return f"PolygonWithHoles in {self._axes} with points {self._points} and holes {self._holes}"
