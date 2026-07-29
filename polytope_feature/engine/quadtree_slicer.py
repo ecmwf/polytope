@@ -67,11 +67,34 @@ class QuadTreeSlicer(Engine):
         del node["unsliced_polytopes"]
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes, api):
-        extracted_points = self.extract_single(datacube, polytope)
+        from ..datacube.transformations.datacube_cyclic.datacube_cyclic import (
+            DatacubeAxisCyclic,
+        )
+
+        lon_ax = datacube._axes["longitude"]
+
+        # When the longitude axis is cyclic and the request polygon crosses the seam,
+        # split it into canonical sub-polytopes before querying the point cloud.
+        sub_polytopes = [polytope]
+        if lon_ax.is_cyclic and len(datacube.nearest_search) == 0:
+            for t in lon_ax.transformations:
+                if isinstance(t, DatacubeAxisCyclic):
+                    sub_polytopes = t.split_polytope_at_boundary(polytope, "longitude", lon_ax)
+                    break
+
+        # Query each sub-polytope and deduplicate by point-cloud index.
+        extracted_points = []
+        seen = set()
+        for sub_poly in sub_polytopes:
+            for value in self.extract_single(datacube, sub_poly):
+                idx = value if use_rust else value.index
+                if idx not in seen:
+                    seen.add(idx)
+                    extracted_points.append(value)
+
         if len(extracted_points) == 0:
             node.remove_branch()
         lat_ax = ax
-        lon_ax = datacube._axes["longitude"]
         for value in extracted_points:
             # convert to float for slicing
             if use_rust:

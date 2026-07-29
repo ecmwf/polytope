@@ -12,8 +12,57 @@ try:
 except (ModuleNotFoundError, ImportError) as e:
     print(f"Failed to load Rust extension with error: {e}, falling back to Python implementation.")
 
-    from shapely.geometry import Point
-    from shapely.geometry.polygon import Polygon
+
+def _convex_hull(points):
+    """Return the vertices of the convex hull of *points* in CCW order.
+
+    Uses a straightforward Graham-scan implementation.  *points* is a sequence
+    of length-2 iterables (e.g. ``[[x0,y0], [x1,y1], ...]``).
+    """
+    pts = [tuple(p) for p in points]
+    pts = sorted(set(pts))
+    if len(pts) <= 1:
+        return pts
+
+    def _cross(o, a, b):
+        return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+
+    lower = []
+    for p in pts:
+        while len(lower) >= 2 and _cross(lower[-2], lower[-1], p) <= 0:
+            lower.pop()
+        lower.append(p)
+
+    upper = []
+    for p in reversed(pts):
+        while len(upper) >= 2 and _cross(upper[-2], upper[-1], p) <= 0:
+            upper.pop()
+        upper.append(p)
+
+    # Concatenate, dropping the last point of each half (duplicates of endpoints).
+    return lower[:-1] + upper[:-1]
+
+
+def _point_in_convex_hull(point, hull):
+    """Return True if *point* lies inside or on the boundary of the convex *hull*.
+
+    *hull* must be a list of vertices in CCW order as returned by ``_convex_hull``.
+    Uses the cross-product sign test: a point is inside a CCW convex polygon iff
+    it is to the left of (or on) every directed edge.
+    """
+    n = len(hull)
+    if n == 0:
+        return False
+    if n == 1:
+        return point[0] == hull[0][0] and point[1] == hull[0][1]
+    px, py = point[0], point[1]
+    for i in range(n):
+        ax, ay = hull[i]
+        bx, by = hull[(i + 1) % n]
+        # cross product of (b-a) x (p-a); negative → point is to the right → outside
+        if (bx - ax) * (py - ay) - (by - ay) * (px - ax) < 0:
+            return False
+    return True
 
 
 class PointInPolygonSlicer(Engine):
@@ -58,12 +107,8 @@ class PointInPolygonSlicer(Engine):
             polytope_points = [tuple(point) for point in polytope.points]
             found_points = extract_point_in_poly(self.points, polytope_points)
         else:
-            found_points = []
-            for point in self.points:
-                new_point = Point(point[0], point[1])
-                polygon = Polygon(polytope.points)
-                if polygon.contains(new_point):
-                    found_points.append(point)
+            hull = _convex_hull(polytope.points)
+            found_points = [p for p in self.points if _point_in_convex_hull(p, hull)]
         return found_points
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):
@@ -79,25 +124,35 @@ class PointInPolygonSlicer(Engine):
         del node["unsliced_polytopes"]
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes, api):
-        extracted_points = self.extract_single(datacube, polytope)
-        # TODO: add the sliced points as node to the tree and update the next_nodes
-        if len(extracted_points) == 0:
+        from ..datacube.transformations.datacube_cyclic.datacube_cyclic import (
+            DatacubeAxisCyclic,
+        )
+
+        lon_ax = datacube._axes["longitude"]
+
+        # Split across the cyclic seam when needed.
+        sub_polytopes = [polytope]
+        if lon_ax.is_cyclic:
+            for t in lon_ax.transformations:
+                if isinstance(t, DatacubeAxisCyclic):
+                    sub_polytopes = t.split_polytope_at_boundary(polytope, "longitude", lon_ax)
+                    break
+
+        # Gather unique points (dedup by (lat, lon) tuple).
+        seen = {}  # (lat, lon) -> global index
+        for sub_poly in sub_polytopes:
+            for point in self.extract_single(datacube, sub_poly):
+                key = (point[0], point[1])
+                if key not in seen:
+                    seen[key] = self.find_point_index(point)
+
+        if len(seen) == 0:
             node.remove_branch()
 
         lat_ax = ax
-        lon_ax = datacube._axes["longitude"]
-
-        for point in extracted_points:
-            # convert to float for slicing
-            value = self.find_point_index(point)
-            lat_val = point[0]
-            lon_val = point[1]
-
-            # store the native type
+        for (lat_val, lon_val), value in seen.items():
             child, _ = node.create_child(lat_ax, lat_val, [])
             grand_child, _ = child.create_child(lon_ax, lon_val, [])
-            # NOTE: the index of the point is stashed in the branches' result
             grand_child.indexes = [value]
             grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             grand_child["unsliced_polytopes"].remove(polytope)
-        # TODO: but now what happens to the second axis in the point cloud?? Do we create a second node for it??
