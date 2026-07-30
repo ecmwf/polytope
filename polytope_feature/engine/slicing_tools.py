@@ -5,11 +5,7 @@ import scipy
 import scipy.spatial
 
 from ..shapes import ConvexPolytope
-from ..utility.geometry import (  # noqa: F401 – re-exported
-    _find_intersects,
-    lerp,
-    slice_in_two,
-)
+from ..utility.geometry import _find_intersects
 from ..utility.list_tools import argmax, argmin
 
 
