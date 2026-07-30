@@ -1,6 +1,9 @@
 import logging
 from copy import copy
 
+from ..datacube.transformations.datacube_cyclic.datacube_cyclic import (
+    DatacubeAxisCyclic,
+)
 from .engine import Engine
 
 use_rust = False
@@ -67,10 +70,6 @@ class QuadTreeSlicer(Engine):
         del node["unsliced_polytopes"]
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes, api):
-        from ..datacube.transformations.datacube_cyclic.datacube_cyclic import (
-            DatacubeAxisCyclic,
-        )
-
         lon_ax = datacube._axes["longitude"]
 
         # When the longitude axis is cyclic and the request polygon crosses the seam,

@@ -2,6 +2,9 @@ from copy import copy
 
 from ..datacube.datacube_axis import IntDatacubeAxis
 from ..datacube.tensor_index_tree import TensorIndexTree
+from ..datacube.transformations.datacube_cyclic.datacube_cyclic import (
+    DatacubeAxisCyclic,
+)
 from .engine import Engine
 
 use_rust = False
@@ -124,10 +127,6 @@ class PointInPolygonSlicer(Engine):
         del node["unsliced_polytopes"]
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes, api):
-        from ..datacube.transformations.datacube_cyclic.datacube_cyclic import (
-            DatacubeAxisCyclic,
-        )
-
         lon_ax = datacube._axes["longitude"]
 
         # Split across the cyclic seam when needed.

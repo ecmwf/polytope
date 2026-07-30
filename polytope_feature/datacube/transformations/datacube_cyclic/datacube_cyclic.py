@@ -1,6 +1,8 @@
 import math
 from copy import deepcopy
 
+from ....shapes import ConvexPolytope
+from ....utility.geometry import slice_in_two
 from ....utility.list_tools import unique
 from ..datacube_transformations import DatacubeAxisTransformation
 
@@ -160,10 +162,6 @@ class DatacubeAxisCyclic(DatacubeAxisTransformation):
             One or more polytopes, each with longitude coordinates fully inside
             ``[axis_lower, axis_upper]``.
         """
-        # Local imports avoid circular dependencies between datacube and engine layers.
-        from ....engine.slicing_tools import slice_in_two
-        from ....shapes import ConvexPolytope
-
         self.update_range(lon_axis)
         axis_lower = lon_axis.range[0]
         axis_upper = lon_axis.range[1]
