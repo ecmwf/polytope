@@ -1,4 +1,5 @@
-from ...engine.slicing_tools import slice, slice_in_two
+from ...engine.slicing_tools import slice
+from ...utility.geometry import slice_in_two
 
 # TODO: make this as methods of the python quadtree?
 

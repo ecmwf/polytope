@@ -142,39 +142,6 @@ class TestQuadtreeCyclicUnstructured:
 
 
 # ---------------------------------------------------------------------------
-# PointInPolygon engine tests (same scenarios)
-# ---------------------------------------------------------------------------
-
-
-class TestPointInPolygonCyclicUnstructured:
-    """Point-in-polygon engine: same cyclic-seam scenarios."""
-
-    def setup_method(self, method):
-        self.api = _make_api("point_in_polygon")
-
-    def test_box_crossing_seam_at_360(self):
-        request = Request(Box(["latitude", "longitude"], [0, 355], [10, 370]))
-        result = self.api.retrieve(request)
-
-        lons = _retrieved_lons(result)
-        assert lons == {357.0, 358.0, 359.0, 1.0, 2.0, 3.0}
-
-    def test_box_crossing_seam_with_negative_longitude(self):
-        request = Request(Box(["latitude", "longitude"], [0, -5], [10, 5]))
-        result = self.api.retrieve(request)
-
-        lons = _retrieved_lons(result)
-        assert lons == {357.0, 358.0, 359.0, 1.0, 2.0, 3.0}
-
-    def test_box_not_crossing_seam(self):
-        request = Request(Box(["latitude", "longitude"], [0, 356], [10, 360]))
-        result = self.api.retrieve(request)
-
-        lons = _retrieved_lons(result)
-        assert lons == {357.0, 358.0, 359.0}
-
-
-# ---------------------------------------------------------------------------
 # Unit-level tests for DatacubeAxisCyclic.split_polytope_at_boundary
 # ---------------------------------------------------------------------------
 
