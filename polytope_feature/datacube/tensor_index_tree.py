@@ -20,6 +20,16 @@ class DatacubePath(OrderedDict):
         print(result[:-1])
 
 
+class MergedTensorIndexNode(object):
+    def __init__(self, axes=None, values=tuple()):
+        # TODO
+        self.axes = axes
+        self.values = values
+        self.children = SortedList()
+        self._parent = None
+        self.indexes = []
+
+
 class TensorIndexTree(object):
     root = IntDatacubeAxis()
     root.name = "root"
@@ -108,6 +118,11 @@ class TensorIndexTree(object):
         new_values.append(value)
         new_values.sort()
         self.values = tuple(new_values)
+
+    def create_merged_child(self, axes, values, next_nodes):
+        node = MergedTensorIndexNode()
+        self.add_child(node)
+        return (node, next_nodes)
 
     def create_child(self, axis, value, next_nodes):
         # TODO: what if we remove the next nodes here?
