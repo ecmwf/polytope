@@ -3,6 +3,9 @@
 
 from copy import copy
 
+from ..datacube.transformations.datacube_cyclic.datacube_cyclic import (
+    DatacubeAxisCyclic,
+)
 from .engine import Engine
 
 use_rust = False
@@ -67,29 +70,40 @@ class OptimisedQuadTreeSlicer(Engine):
         del node["unsliced_polytopes"]
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes, api):
-        extracted_points = self.extract_single(datacube, polytope)
-        if len(extracted_points) == 0:
+        lon_ax = datacube._axes["longitude"]
+
+        # When the longitude axis is cyclic, split the polygon at the seam first.
+        sub_polytopes = [polytope]
+        if lon_ax.is_cyclic and len(datacube.nearest_search) == 0:
+            for t in lon_ax.transformations:
+                if isinstance(t, DatacubeAxisCyclic):
+                    sub_polytopes = t.split_polytope_at_boundary(polytope, "longitude", lon_ax)
+                    break
+
+        # Query each sub-polytope.  We must capture (global_index, lat, lon) immediately
+        # after each extract_single call, because build_local_quadtree overwrites
+        # self.bbox_indexes and self.bbox_points on every invocation.
+        seen = {}  # global_index -> (lat_val, lon_val)
+        for sub_poly in sub_polytopes:
+            local_points = self.extract_single(datacube, sub_poly)
+            for value in local_points:
+                if use_rust:
+                    actual_index = self.bbox_indexes[value]
+                    lat_val = self.bbox_points[value][0]
+                    lon_val = self.bbox_points[value][1]
+                else:
+                    actual_index = self.bbox_indexes[value.index]
+                    lat_val = value.item[0]
+                    lon_val = value.item[1]
+                if actual_index not in seen:
+                    seen[actual_index] = (lat_val, lon_val)
+
+        if len(seen) == 0:
             node.remove_branch()
         lat_ax = ax
-        lon_ax = datacube._axes["longitude"]
-        for value in extracted_points:
-            # convert to float for slicing
-            if use_rust:
-                actual_index = self.bbox_indexes[value]
-                lat_val = self.bbox_points[value][0]
-                lon_val = self.bbox_points[value][1]
-            else:
-                actual_index = self.bbox_indexes[value.index]
-                lat_val = value.item[0]
-                lon_val = value.item[1]
-            # store the native type
+        for actual_index, (lat_val, lon_val) in seen.items():
             child, _ = node.create_child(lat_ax, lat_val, [])
             grand_child, _ = child.create_child(lon_ax, lon_val, [])
-            # NOTE: the index of the point is stashed in the branches' result
-            # if use_rust:
-            #     grand_child.indexes = [value]
-            # else:
-            #     grand_child.indexes = [value.index]
             grand_child.indexes = [actual_index]
             grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             grand_child["unsliced_polytopes"].remove(polytope)
