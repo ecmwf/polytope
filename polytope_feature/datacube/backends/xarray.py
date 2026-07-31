@@ -93,10 +93,7 @@ class XArrayDatacube(Datacube):
                         # We are at a leaf and need to assign value to it
                         leaf_path_copy = deepcopy(leaf_path)
                         unmapped_path = {}
-                        print("LOOK NOW")
-                        print(leaf_path)
                         self.refit_path(leaf_path_copy, unmapped_path, leaf_path)
-                        print(leaf_path)
                         for key in leaf_path_copy:
                             if isinstance(leaf_path_copy[key], tuple):
                                 leaf_path_copy[key] = list(leaf_path_copy[key])
@@ -109,9 +106,33 @@ class XArrayDatacube(Datacube):
                         key = subxarray.name
                         requests.result = (key, value)
         else:
-            # TODO
-
-            pass
+            first_ax = requests.axes[0]
+            second_ax = requests.axes[1]
+            key_value_path = {first_ax.name: requests.values[0]}
+            key_value_path, leaf_path, self.unwanted_path = first_ax.unmap_path_key(
+                key_value_path, leaf_path, self.unwanted_path
+            )
+            leaf_path.update(key_value_path)
+            leaf_path["index"] = requests.indexes
+            key_value_path = {second_ax.name: requests.values[1]}
+            key_value_path, leaf_path, self.unwanted_path = second_ax.unmap_path_key(
+                key_value_path, leaf_path, self.unwanted_path
+            )
+            leaf_path.update(key_value_path)
+            leaf_path_copy = deepcopy(leaf_path)
+            unmapped_path = {}
+            self.refit_path(leaf_path_copy, unmapped_path, leaf_path)
+            for key in leaf_path_copy:
+                if isinstance(leaf_path_copy[key], tuple):
+                    leaf_path_copy[key] = list(leaf_path_copy[key])
+            for key in unmapped_path:
+                if isinstance(unmapped_path[key], tuple):
+                    unmapped_path[key] = list(unmapped_path[key])
+            subxarray = self.dataarray.sel(leaf_path_copy, method="nearest")
+            subxarray = subxarray.sel(unmapped_path)
+            value = subxarray.values
+            key = subxarray.name
+            requests.result = (key, value)
 
     def datacube_natural_indexes(self, axis, subarray):
         if axis.name in self.complete_axes:
