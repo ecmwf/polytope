@@ -78,14 +78,18 @@ class XArrayDatacube(Datacube):
                 key_value_path, leaf_path, self.unwanted_path
             )
             leaf_path.update(key_value_path)
+            # When merged_latlon=True the longitude axis is merged into the latitude
+            # node, so the tree is one level shallower than axis_counter suggests.
+            merged = getattr(getattr(self, "grid_transformation", None), "merged_latlon", False)
+            leaf_depth = self.axis_counter - (1 if merged else 0)
             if len(requests.children) != 0:
                 # We are not a leaf and we loop over
                 for c in requests.children:
-                    if axis_counter == self.axis_counter - 1:
+                    if axis_counter == leaf_depth - 1:
                         leaf_path["index"] = c.indexes
                     self.get(c, context, leaf_path, axis_counter + 1)
             else:
-                if self.axis_counter != axis_counter:
+                if leaf_depth != axis_counter:
                     requests.remove_branch()
                 else:
                     # We are at a leaf and need to assign value to it

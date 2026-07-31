@@ -1,19 +1,12 @@
-import logging
 import math
+
+from polytope_feature.polytope_rs import (
+    first_axis_vals_octahedral,
+    unmap_octahedral,
+)
 
 from .....utility.list_tools import bisect_left_cmp, bisect_right_cmp
 from ..datacube_mappers import DatacubeMapper
-
-use_rust = False
-try:
-    from polytope_feature.polytope_rs import (
-        first_axis_vals_octahedral,
-        unmap_octahedral,
-    )
-
-    use_rust = True
-except (ModuleNotFoundError, ImportError) as e:
-    print(f"Failed to load Rust extension with error: {e}, falling back to Python implementation.")
 
 
 class OctahedralGridMapper(DatacubeMapper):
@@ -7803,38 +7796,7 @@ class OctahedralGridMapper(DatacubeMapper):
         return lats
 
     def first_axis_vals(self):
-        if use_rust:
-            return first_axis_vals_octahedral(self._resolution)
-        else:
-            if self._resolution == 2560:
-                return self.get_precomputed_values_N2560()
-            if self._resolution == 1280:
-                return self.get_precomputed_values_N1280()
-            else:
-                logging.info("Calculating grid. Not using a pre-computed grid.")
-                precision = 1.0e-14
-                nval = self._resolution * 2
-                rad2deg = 180 / math.pi
-                convval = 1 - ((2 / math.pi) * (2 / math.pi)) * 0.25
-                vals = self.gauss_first_guess()
-                new_vals = [0] * nval
-                denom = math.sqrt(((nval + 0.5) * (nval + 0.5)) + convval)
-                for jval in range(self._resolution):
-                    root = math.cos(vals[jval] / denom)
-                    conv = 1
-                    while abs(conv) >= precision:
-                        mem2 = 1
-                        mem1 = root
-                        for legi in range(nval):
-                            legfonc = ((2.0 * (legi + 1) - 1.0) * root * mem1 - legi * mem2) / (legi + 1)
-                            mem2 = mem1
-                            mem1 = legfonc
-                        conv = legfonc / ((nval * (mem2 - root * legfonc)) / (1.0 - (root * root)))
-                        root = root - conv
-                        # add maybe a max iter here to make sure we converge at some point
-                    new_vals[jval] = math.asin(root) * rad2deg
-                    new_vals[nval - 1 - jval] = -new_vals[jval]
-                return new_vals
+        return first_axis_vals_octahedral(self._resolution)
 
     def map_first_axis(self, lower, upper):
         axis_lines = self._first_axis_vals
@@ -7911,15 +7873,7 @@ class OctahedralGridMapper(DatacubeMapper):
         return (first_idx, second_idx)
 
     def unmap(self, first_val, second_vals, unmapped_idx=None):
-        if use_rust:
-            return unmap_octahedral(self._resolution, first_val, second_vals)
-        else:
-            return_idxs = []
-            for second_val in second_vals:
-                first_idx, second_idx = self.find_second_axis_idx(first_val, second_val)
-                octahedral_index = self.axes_idx_to_octahedral_idx(first_idx, second_idx)
-                return_idxs.append(octahedral_index)
-            return return_idxs
+        return unmap_octahedral(self._resolution, first_val, second_vals)
 
 
 # md5 grid hash in form {resolution : hash}

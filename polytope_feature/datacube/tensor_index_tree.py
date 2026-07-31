@@ -1,9 +1,17 @@
 import logging
+import math
 from typing import OrderedDict
 
 from sortedcontainers import SortedList
 
 from .datacube_axis import IntDatacubeAxis, UnsliceableDatacubeAxis
+
+
+def distance(a, b):
+    if isinstance(a, tuple) and isinstance(b, tuple):
+        return math.sqrt(sum((distance(x, y)) ** 2 for x, y in zip(a, b)))
+    else:
+        return abs(a - b)
 
 
 class DatacubePath(OrderedDict):
@@ -83,7 +91,7 @@ class TensorIndexTree(object):
                         other_val = other.values[i]
                         self_val = self.values[i]
                         if self.axis.can_round:
-                            if abs(other_val - self_val) > 2 * max(other.axis.tol, self.axis.tol):
+                            if distance(other_val, self_val) > 2 * max(other.axis.tol, self.axis.tol):
                                 return False
                         else:
                             if other_val != self_val:

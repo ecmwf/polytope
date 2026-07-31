@@ -1,7 +1,26 @@
 from copy import deepcopy
-from importlib import import_module
 
 from ..datacube_transformations import DatacubeAxisTransformation
+
+try:
+    from polytope_feature.polytope_rs import (
+        HealpixGridMapper,
+    )
+    from polytope_feature.polytope_rs import (
+        LambertConformalGridMapper as RustLambertConformalGridMapper,
+    )
+    from polytope_feature.polytope_rs import (
+        LocalRegularGridMapper,
+        NestedHealpixGridMapper,
+        OctahedralGridMapper,
+        ReducedGaussianGridMapper,
+        ReducedLatLonMapper,
+        RegularGridMapper,
+    )
+
+    _RUST_AVAILABLE = True
+except (ModuleNotFoundError, ImportError):
+    _RUST_AVAILABLE = False
 
 
 class DatacubeMapper(DatacubeAxisTransformation):
@@ -24,21 +43,58 @@ class DatacubeMapper(DatacubeAxisTransformation):
         self.mapper_options = mapper_options
         self.old_axis = name
         self._final_transformation = self.generate_final_transformation()
-        self._final_mapped_axes = self._final_transformation._mapped_axes
-        self._axis_reversed = self._final_transformation._axis_reversed
-        self.compressed_grid_axes = self._final_transformation.compressed_grid_axes
-        self.md5_hash = self._final_transformation.md5_hash
-        self.is_irregular = self._final_transformation.is_irregular
+        # Support both Python mapper objects (_mapped_axes) and Rust objects (mapped_axes).
+        # For Rust irregular mappers that do not expose mapped_axes, fall back to grid_axes.
+        for attr in ("_mapped_axes", "mapped_axes"):
+            if hasattr(self._final_transformation, attr):
+                self._final_mapped_axes = getattr(self._final_transformation, attr)
+                break
+        else:
+            self._final_mapped_axes = self.grid_axes
+        # Resolve axis_reversed from the mapper (Rust exposes it as `axis_reversed` dict,
+        # Python uses `_axis_reversed`)
+        _resolved = None
+        for attr in ("_axis_reversed", "axis_reversed"):
+            if hasattr(self._final_transformation, attr):
+                _resolved = getattr(self._final_transformation, attr)
+                break
+
+        if isinstance(_resolved, dict):
+            self._axis_reversed = _resolved
+        elif hasattr(self._axis_reversed, "__getitem__"):
+            pass  # already a dict-like from mapper_options
+        else:
+            # Default: first axis reversed, second axis not
+            self._axis_reversed = {self._mapped_axes()[0]: True, self._mapped_axes()[1]: False}
+        self._compressed_grid_axes = getattr(
+            self._final_transformation,
+            "compressed_grid_axes",
+            [self._final_mapped_axes[1]],
+        )
+        self.merged_latlon = False
+        self.md5_hash = getattr(self._final_transformation, "md5_hash", None)
+        self.is_irregular = getattr(self._final_transformation, "is_irregular", False)
+
+    @property
+    def compressed_grid_axes(self):
+        if self.merged_latlon:
+            return []
+        return self._compressed_grid_axes
+
+    @compressed_grid_axes.setter
+    def compressed_grid_axes(self, value):
+        self._compressed_grid_axes = value
 
     def generate_final_transformation(self):
-        map_type = _type_to_datacube_mapper_lookup[self.grid_type]
-        if map_type == "IrregularGridMapper":
-            module = import_module(
-                "polytope_feature.datacube.transformations.datacube_mappers.mapper_types." + "irregular"
+        constructor = _type_to_datacube_mapper_lookup[self.grid_type]
+        if constructor is None:
+            # icon: fall back to Python IrregularGridMapper
+            from polytope_feature.datacube.transformations.datacube_mappers.mapper_types.irregular import (
+                IrregularGridMapper,
             )
-            constructor = getattr(module, map_type)
+
             transformation = deepcopy(
-                constructor(
+                IrregularGridMapper(
                     self.old_axis,
                     self.grid_axes,
                     self.grid_resolution,
@@ -50,20 +106,14 @@ class DatacubeMapper(DatacubeAxisTransformation):
             )
             return transformation._final_irregular_transformation
         else:
-            module = import_module(
-                "polytope_feature.datacube.transformations.datacube_mappers.mapper_types." + self.grid_type
-            )
-            constructor = getattr(module, map_type)
-            transformation = deepcopy(
-                constructor(
-                    self.old_axis,
-                    self.grid_axes,
-                    self.grid_resolution,
-                    self.md5_hash,
-                    self.local_area,
-                    self._axis_reversed,
-                    self.mapper_options,
-                )
+            transformation = constructor(
+                self.old_axis,
+                self.grid_axes,
+                self.grid_resolution,
+                self.md5_hash,
+                self.local_area,
+                self._axis_reversed,
+                self.mapper_options,
             )
             return transformation
 
@@ -81,6 +131,8 @@ class DatacubeMapper(DatacubeAxisTransformation):
 
     def change_val_type(self, axis_name, values):
         # the new axis_vals created will be floats
+        if self.merged_latlon:
+            return [(0.0, 0.0)]
         return [0.0]
 
     def _mapped_axes(self):
@@ -127,9 +179,22 @@ class DatacubeMapper(DatacubeAxisTransformation):
     def unmap_path_key(self, key_value_path, leaf_path, unwanted_path, axis):
         values = key_value_path[axis.name]
         if axis.name == self._mapped_axes()[0]:
+            if self.merged_latlon:
+                # print("WHAT DO WE HAVE HERE, ", values)
+                ((inner,),) = values
+                lat, lon = inner
+                unmapped_idx = leaf_path.get("index", None)
+                if unmapped_idx is not None and len(unmapped_idx) > 0:
+                    unmapped_idx = list(unmapped_idx)
+                else:
+                    unmapped_idx = self.unmap((lat, lon), None, unmapped_idx)
+                key_value_path[self.old_axis] = unmapped_idx
+                return (key_value_path, leaf_path, unwanted_path)
             unwanted_val = key_value_path[self._mapped_axes()[0]]
             unwanted_path[axis.name] = unwanted_val
         if axis.name == self._mapped_axes()[1]:
+            if self.merged_latlon:
+                return (key_value_path, leaf_path, unwanted_path)
             first_val = unwanted_path[self._mapped_axes()[0]]
             unmapped_idx = leaf_path.get("index", None)
             if unmapped_idx is not None and len(unmapped_idx) > 0:
@@ -144,9 +209,19 @@ class DatacubeMapper(DatacubeAxisTransformation):
     def unmap_tree_node(self, node, unwanted_path):
         values = node.values
         if node.axis.name == self._mapped_axes()[0]:
+            if self.merged_latlon:
+                # In merged mode the unmapped grid indices are already stored on the
+                # node (set by _build_sliceable_child via create_child).  Reuse them
+                # directly so we never have to call unmap() with None, which fails for
+                # Rust-backed mappers.
+                unmapped_idxs = list(node.indexes)
+                returned_node = node.hide_non_index_nodes(unmapped_idxs)
+                return (returned_node, unwanted_path)
             unwanted_path[node.axis.name] = values
             returned_node = node
         if node.axis.name == self._mapped_axes()[1]:
+            if self.merged_latlon:
+                return (node, unwanted_path)
             first_vals = unwanted_path[self._mapped_axes()[0]]
             unmapped_idxs = []
             for first_val in first_vals:
@@ -157,15 +232,50 @@ class DatacubeMapper(DatacubeAxisTransformation):
         return (returned_node, unwanted_path)
 
 
-_type_to_datacube_mapper_lookup = {
-    "octahedral": "OctahedralGridMapper",
-    "healpix": "HealpixGridMapper",
-    "regular": "RegularGridMapper",
-    "reduced_ll": "ReducedLatLonMapper",
-    "local_regular": "LocalRegularGridMapper",
-    "lambert_conformal": "IrregularGridMapper",
-    "unstructured": "IrregularGridMapper",
-    "healpix_nested": "NestedHealpixGridMapper",
-    "icon": "IrregularGridMapper",
-    "reduced_gaussian": "ReducedGaussianGridMapper",
-}
+def _build_lookup():
+    """Build the mapper lookup dict. Uses Rust classes when available, else falls back
+    to Python mapper classes loaded via import_module."""
+    if _RUST_AVAILABLE:
+        return {
+            "octahedral": OctahedralGridMapper,
+            "healpix": HealpixGridMapper,
+            "regular": RegularGridMapper,
+            "reduced_ll": ReducedLatLonMapper,
+            "local_regular": LocalRegularGridMapper,
+            "lambert_conformal": RustLambertConformalGridMapper,
+            "unstructured": _rust_unstructured_mapper(),
+            "healpix_nested": NestedHealpixGridMapper,
+            "icon": None,  # Not implemented in Rust; use Python IrregularGridMapper
+            "reduced_gaussian": ReducedGaussianGridMapper,
+        }
+    else:
+        from importlib import import_module
+
+        def _python_mapper(grid_type, class_name):
+            mod = import_module("polytope_feature.datacube.transformations.datacube_mappers.mapper_types." + grid_type)
+            return getattr(mod, class_name)
+
+        return {
+            "octahedral": _python_mapper("octahedral", "OctahedralGridMapper"),
+            "healpix": _python_mapper("healpix", "HealpixGridMapper"),
+            "regular": _python_mapper("regular", "RegularGridMapper"),
+            "reduced_ll": _python_mapper("reduced_ll", "ReducedLatLonMapper"),
+            "local_regular": _python_mapper("local_regular", "LocalRegularGridMapper"),
+            "lambert_conformal": None,  # handled via IrregularGridMapper
+            "unstructured": None,  # handled via IrregularGridMapper
+            "healpix_nested": _python_mapper("healpix_nested", "NestedHealpixGridMapper"),
+            "icon": None,  # Python IrregularGridMapper
+            "reduced_gaussian": _python_mapper("reduced_gaussian", "ReducedGaussianGridMapper"),
+        }
+
+
+def _rust_unstructured_mapper():
+    try:
+        from polytope_feature.polytope_rs import UnstructuredGridMapper
+
+        return UnstructuredGridMapper
+    except (ModuleNotFoundError, ImportError):
+        return None
+
+
+_type_to_datacube_mapper_lookup = _build_lookup()

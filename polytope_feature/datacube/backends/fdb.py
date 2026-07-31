@@ -147,21 +147,12 @@ class FDBDatacube(Datacube):
         complete_list_complete_uncompressed_requests = []
         complete_fdb_decoding_info = []
         for j, compressed_request in enumerate(fdb_requests):
-            uncompressed_request = {}
-
-            # Need to determine the possible decompressed requests
-
             # find the possible combinations of compressed indices
-            interm_branch_tuple_values = []
-            for key in compressed_request[0].keys():
-                interm_branch_tuple_values.append(compressed_request[0][key])
-            request_combis = product(*interm_branch_tuple_values)
+            keys_list = list(compressed_request[0].keys())
+            interm_branch_tuple_values = [compressed_request[0][key] for key in keys_list]
 
-            # Need to extract the possible requests and add them to the right nodes
-            for combi in request_combis:
-                uncompressed_request = {}
-                for i, key in enumerate(compressed_request[0].keys()):
-                    uncompressed_request[key] = combi[i]
+            for combi in product(*interm_branch_tuple_values):
+                uncompressed_request = dict(zip(keys_list, combi))
                 complete_uncompressed_request = (
                     uncompressed_request,
                     compressed_request[1],
@@ -213,7 +204,15 @@ class FDBDatacube(Datacube):
                 key_value_path, leaf_path, self.unwanted_path
             )
             leaf_path.update(key_value_path)
-            if len(requests.children[0].children[0].children) == 0:
+            merged = getattr(self.grid_transformation, "merged_latlon", False)
+            if not requests.children:
+                return
+            at_leaf_level = (
+                len(requests.children[0].children) == 0
+                if merged
+                else len(requests.children[0].children[0].children) == 0
+            )
+            if at_leaf_level:
                 # find the fdb_requests and associated nodes to which to add results
                 (
                     path,
@@ -352,30 +351,52 @@ class FDBDatacube(Datacube):
         # request ranges in those layers
         self.nearest_lat_lon_search(requests)
 
-        lat_length = len(requests.children)
-        current_start_idxs = [False] * lat_length
-        fdb_node_ranges = [False] * lat_length
-        for i in range(len(requests.children)):
-            lat_child = requests.children[i]
-            lon_length = len(lat_child.children)
-            current_start_idxs[i] = [None] * lon_length
-            fdb_node_ranges[i] = [[TensorIndexTree.root for y in range(lon_length)] for x in range(lon_length)]
-            current_start_idx = deepcopy(current_start_idxs[i])
-            fdb_range_nodes = deepcopy(fdb_node_ranges[i])
-            key_value_path = {lat_child.axis.name: lat_child.values}
-            ax = lat_child.axis
-            key_value_path, leaf_path, self.unwanted_path = ax.unmap_path_key(
-                key_value_path, leaf_path, self.unwanted_path
-            )
-            leaf_path.update(key_value_path)
-            (
-                current_start_idxs[i],
-                fdb_node_ranges[i],
-            ) = self.get_last_layer_before_leaf(lat_child, leaf_path, current_start_idx, fdb_range_nodes)
+        merged = getattr(self.grid_transformation, "merged_latlon", False)
+
+        if merged:
+            # Merged mode: the latlon node IS the leaf carrier (has indexes directly).
+            # Structure: requests.children = [latlon_node, ...]
+            # Each latlon_node has node.indexes with the flat index list.
+            n = len(requests.children)
+            current_start_idxs = []
+            fdb_node_ranges = []
+            for latlon_child in requests.children:
+                # print("WHAT ABOUT INDEX AND PATH HERE ", latlon_child.indexes, leaf_path, latlon_child.values)
+                leaf_path["index"] = latlon_child.indexes
+                key_value_path = {latlon_child.axis.name: latlon_child.values}
+                ax = latlon_child.axis
+                key_value_path, leaf_path, self.unwanted_path = ax.unmap_path_key(
+                    key_value_path, leaf_path, self.unwanted_path
+                )
+                # Each entry is a single-element sublist (one index per merged node)
+                current_start_idxs.append([list(key_value_path["values"])])
+                fdb_node_ranges.append([[latlon_child]])
+            lat_length = n
+        else:
+            lat_length = len(requests.children)
+            current_start_idxs = [False] * lat_length
+            fdb_node_ranges = [False] * lat_length
+            for i in range(len(requests.children)):
+                lat_child = requests.children[i]
+                lon_length = len(lat_child.children)
+                current_start_idxs[i] = [None] * lon_length
+                fdb_node_ranges[i] = [[TensorIndexTree.root for y in range(lon_length)] for x in range(lon_length)]
+                current_start_idx = deepcopy(current_start_idxs[i])
+                fdb_range_nodes = deepcopy(fdb_node_ranges[i])
+                key_value_path = {lat_child.axis.name: lat_child.values}
+                ax = lat_child.axis
+                key_value_path, leaf_path, self.unwanted_path = ax.unmap_path_key(
+                    key_value_path, leaf_path, self.unwanted_path
+                )
+                leaf_path.update(key_value_path)
+                (
+                    current_start_idxs[i],
+                    fdb_node_ranges[i],
+                ) = self.get_last_layer_before_leaf(lat_child, leaf_path, current_start_idx, fdb_range_nodes)
 
         leaf_path_copy = deepcopy(leaf_path)
         leaf_path_copy.pop("values", None)
-        leaf_path_copy.pop("index")
+        leaf_path_copy.pop("index", None)
         return (leaf_path_copy, current_start_idxs, fdb_node_ranges, lat_length)
 
     def get_last_layer_before_leaf(self, requests, leaf_path, current_idx, fdb_range_n):
@@ -400,66 +421,69 @@ class FDBDatacube(Datacube):
     def assign_fdb_output_to_nodes(self, output_iterator, fdb_requests_decoding_info):
         logging.debug("Assigning GribJump output to tree nodes")
         for k, result in enumerate(output_iterator):
-            (
-                original_indices,
-                fdb_node_ranges,
-            ) = fdb_requests_decoding_info[k]
-            sorted_fdb_range_nodes = [fdb_node_ranges[i] for i in original_indices]
-            for i in range(len(sorted_fdb_range_nodes)):
-                n = sorted_fdb_range_nodes[i][0]
-                if len(result.values) == 0:
-                    # If we are here, no data was found for this path in the fdb
-                    none_array = [None] * len(n.values)
-                    n.result.extend(none_array)
-                else:
-                    n.result.extend(result.values[i])
+            original_indices, fdb_node_ranges = fdb_requests_decoding_info[k]
+            result_values = result.values
+            has_data = len(result_values) > 0
+            # Reorder nodes to match sorted request order
+            if original_indices == tuple(range(len(original_indices))):
+                sorted_nodes = fdb_node_ranges
+            else:
+                sorted_nodes = [fdb_node_ranges[i] for i in original_indices]
+            if has_data:
+                for i, node_list in enumerate(sorted_nodes):
+                    node_list[0].result.extend(result_values[i])
+            else:
+                # No data found for this path in the fdb
+                for node_list in sorted_nodes:
+                    n = node_list[0]
+                    n.result += [None] * len(n.values)
         logging.debug("Finished assigning GribJump output to tree nodes")
 
+    @property
+    def _skip_dedup(self):
+        return getattr(self.grid_transformation, "is_irregular", False)
+
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
-        (
-            new_fdb_node_ranges,
-            new_current_start_idx,
-        ) = self.remove_duplicates_in_request_ranges(fdb_node_ranges, current_start_idx)
-        current_start_idx = new_current_start_idx
-        fdb_node_ranges = new_fdb_node_ranges
+        if not self._skip_dedup:
+            (
+                new_fdb_node_ranges,
+                new_current_start_idx,
+            ) = self.remove_duplicates_in_request_ranges(fdb_node_ranges, current_start_idx)
+            current_start_idx = new_current_start_idx
+            fdb_node_ranges = new_fdb_node_ranges
+
         interm_request_ranges = []
-        # TODO: modify the start indexes to have as many arrays as the request ranges
         new_fdb_node_ranges = []
         for i in range(lat_length):
             interm_fdb_nodes = fdb_node_ranges[i]
             old_interm_start_idx = current_start_idx[i]
             for j in range(len(old_interm_start_idx)):
-                # TODO: if we sorted the cyclic values in increasing order on the tree too,
-                # then we wouldn't have to sort here?
-                sorted_list = sorted(enumerate(old_interm_start_idx[j]), key=lambda x: x[1])
-                original_indices_idx, interm_start_idx = zip(*sorted_list)
+                sublist = old_interm_start_idx[j]
+                # Fast path: single index — no sorting or reordering needed
+                if len(sublist) == 1:
+                    interm_request_ranges.append((sublist[0], sublist[0] + 1))
+                    new_fdb_node_ranges.append(interm_fdb_nodes[j])
+                    continue
+                sorted_pairs = sorted(enumerate(sublist), key=lambda x: x[1])
+                original_indices_idx, interm_start_idx = zip(*sorted_pairs)
                 for interm_fdb_nodes_obj in interm_fdb_nodes[j]:
-                    interm_fdb_nodes_obj.values = tuple([interm_fdb_nodes_obj.values[k] for k in original_indices_idx])
+                    # single-element fast path — skip reordering
+                    if len(interm_fdb_nodes_obj.values) <= 1:
+                        continue
+                    interm_fdb_nodes_obj.values = tuple(interm_fdb_nodes_obj.values[k] for k in original_indices_idx)
                 if abs(interm_start_idx[-1] + 1 - interm_start_idx[0]) <= len(interm_start_idx):
-                    current_request_ranges = (
-                        interm_start_idx[0],
-                        interm_start_idx[-1] + 1,
-                    )
-                    interm_request_ranges.append(current_request_ranges)
+                    interm_request_ranges.append((interm_start_idx[0], interm_start_idx[-1] + 1))
                     new_fdb_node_ranges.append(interm_fdb_nodes[j])
                 else:
                     jumps = list(map(operator.sub, interm_start_idx[1:], interm_start_idx[:-1]))
                     last_idx = 0
                     for k, jump in enumerate(jumps):
                         if jump > 1:
-                            current_request_ranges = (
-                                interm_start_idx[last_idx],
-                                interm_start_idx[k] + 1,
-                            )
+                            interm_request_ranges.append((interm_start_idx[last_idx], interm_start_idx[k] + 1))
                             new_fdb_node_ranges.append(interm_fdb_nodes[j])
                             last_idx = k + 1
-                            interm_request_ranges.append(current_request_ranges)
                         if k == len(interm_start_idx) - 2:
-                            current_request_ranges = (
-                                interm_start_idx[last_idx],
-                                interm_start_idx[-1] + 1,
-                            )
-                            interm_request_ranges.append(current_request_ranges)
+                            interm_request_ranges.append((interm_start_idx[last_idx], interm_start_idx[-1] + 1))
                             new_fdb_node_ranges.append(interm_fdb_nodes[j])
         request_ranges_with_idx = list(enumerate(interm_request_ranges))
         sorted_list = sorted(request_ranges_with_idx, key=lambda x: x[1][0])

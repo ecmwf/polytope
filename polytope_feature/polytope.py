@@ -215,6 +215,7 @@ class Polytope:
         logging.info("Created request tree for %s ", self.context)
         self.datacube.get(request_tree, self.context)
         logging.info("Retrieved data for %s ", self.context)
+        request_tree.pprint()
         return request_tree
 
     def find_compressed_axes(self, datacube, polytopes):

@@ -1,8 +1,13 @@
+import logging
+
 import numpy as np
 import xarray as xr
 
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box
+
+logger = logging.getLogger("")
+logger.setLevel(logging.DEBUG)
 
 
 class TestPolytopeExtract:

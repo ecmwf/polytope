@@ -5,6 +5,15 @@ import pandas as pd
 
 from ..datacube_transformations import DatacubeAxisTransformation
 
+try:
+    from polytope_feature.polytope_rs import (
+        DatacubeAxisMerger as _RustDatacubeAxisMerger,
+    )
+
+    _RUST_MERGER_AVAILABLE = True
+except ImportError:
+    _RUST_MERGER_AVAILABLE = False
+
 
 class DatacubeAxisMerger(DatacubeAxisTransformation):
     def __init__(self, name, merge_options, datacube=None):
@@ -14,6 +23,10 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         self._second_axis = merge_options.other_axis
         self._linkers = merge_options.linkers
         self._merged_values = self.merged_values(datacube)
+        if _RUST_MERGER_AVAILABLE:
+            self._rust_merger = _RustDatacubeAxisMerger(list(self._linkers))
+        else:
+            self._rust_merger = None
 
     def blocked_axes(self):
         return [self._second_axis]
@@ -48,6 +61,11 @@ class DatacubeAxisMerger(DatacubeAxisTransformation):
         return self
 
     def unmerge(self, merged_val):
+        if self._rust_merger is not None:
+            merged_strs = [str(v) for v in merged_val]
+            first_values, second_values = self._rust_merger.unmerge(merged_strs)
+            return (tuple(first_values), tuple(second_values))
+
         first_values = []
         second_values = []
         for i, merged_value in enumerate(merged_val):
