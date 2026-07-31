@@ -236,7 +236,18 @@ class FDBDatacube(Datacube):
                         self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path)
         else:
             # TODO
-            pass
+            key_value_path = {requests.axes[0].name: requests.values[0]}
+            first_ax = requests.axes[0]
+            key_value_path, leaf_path, self.unwanted_path = first_ax.unmap_path_key(
+                key_value_path, leaf_path, self.unwanted_path
+            )
+            leaf_path.update(key_value_path)
+            path, current_start_idxs, fdb_node_ranges, lat_length = self.get_merged_2nd_last_values(requests, leaf_path)
+            original_indices, sorted_request_ranges, fdb_node_ranges = self.sort_fdb_request_ranges(
+                current_start_idxs, lat_length, fdb_node_ranges
+            )
+            fdb_requests.append((path, sorted_request_ranges))
+            fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
 
     def remove_duplicates_in_request_ranges(self, fdb_node_ranges, current_start_idxs):
         # First pass: identify which (i, k) "wins" each index (first occurrence).
@@ -381,6 +392,10 @@ class FDBDatacube(Datacube):
         leaf_path_copy.pop("values", None)
         leaf_path_copy.pop("index")
         return (leaf_path_copy, current_start_idxs, fdb_node_ranges, lat_length)
+
+    def get_merged_2nd_last_values(self, requests, leaf_path=None):
+        # TODO
+        pass
 
     def get_last_layer_before_leaf(self, requests, leaf_path, current_idx, fdb_range_n):
         current_idx = [[] for i in range(len(requests.children))]
