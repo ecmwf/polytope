@@ -4,6 +4,8 @@ import warnings
 from abc import ABC, abstractmethod
 from typing import List
 
+import mapbox_earcut as earcut
+import numpy as np
 import tripy
 
 from .utility.list_tools import unique
@@ -26,7 +28,7 @@ class Shape(ABC):
 
 
 class ConvexPolytope(Shape):
-    def __init__(self, axes, points, method=None, k=1, is_orthogonal=False):
+    def __init__(self, axes, points, method=None, k=1, is_orthogonal=False, tag=None):
         self._axes = list(axes)
         self.is_flat = False
         if len(self._axes) == 1 and len(points) == 1:
@@ -37,6 +39,7 @@ class ConvexPolytope(Shape):
         self.k = k
         self.is_orthogonal = is_orthogonal
         self.is_in_union = False
+        self.tag = tag
 
     def add_to_union(self):
         self.is_in_union = True
@@ -66,7 +69,7 @@ class ConvexPolytope(Shape):
 class Product(Shape):
     """Shape that takes two polytopes and 'multiplies' them together to obtain higher-dimensional shape"""
 
-    def __init__(self, *polytopes, method, k, value):
+    def __init__(self, *polytopes, method, k, value, tag=None):
         # TODO
         all_axes = []
         for poly in polytopes:
@@ -89,6 +92,7 @@ class Product(Shape):
         self.method = method
         self.k = k
         self.values = value
+        self.tag = tag
 
         self.is_orthogonal = False
 
@@ -110,19 +114,23 @@ class Product(Shape):
 class Select(Shape):
     """Matches several discrete values"""
 
-    def __init__(self, axis, values, method=None, k=1):
+    def __init__(self, axis, values, method=None, k=1, tag=None):
         self.axis = axis
         self.values = unique(values)
         if len(self.values) != len(values):
             warnings.warn("Duplicate request values were removed")
         self.method = method
         self.k = k
+        self.tag = tag
 
     def axes(self):
         return [self.axis]
 
     def polytope(self):
-        return [ConvexPolytope([self.axis], [[v]], self.method, self.k, is_orthogonal=True) for v in self.values]
+        return [
+            ConvexPolytope([self.axis], [[v]], self.method, self.k, is_orthogonal=True, tag=self.tag)
+            for v in self.values
+        ]
 
     def __repr__(self):
         return f"Select in {self.axis} with points {self.values}"
@@ -131,11 +139,12 @@ class Select(Shape):
 class Point(Shape):
     """Matches several discrete value"""
 
-    def __init__(self, axes, values, method=None, k=1):
+    def __init__(self, axes, values, method=None, k=1, tag=None):
         self._axes = axes
         self.values = values
         self.method = method
         self.k = k
+        self.tag = tag
         self.decompose_1D = True
         assert len(values) == 1
 
@@ -151,12 +160,16 @@ class Point(Shape):
                 poly_to_mult = []
                 for i in range(len(self._axes)):
                     poly_to_mult.append(
-                        ConvexPolytope([self._axes[i]], [[point[i]]], self.method, self.k, is_orthogonal=True)
+                        ConvexPolytope(
+                            [self._axes[i]], [[point[i]]], self.method, self.k, is_orthogonal=True, tag=self.tag
+                        )
                     )
-                polytopes.append(Product(*poly_to_mult, method=self.method, k=self.k, value=[point]))
+                polytopes.append(Product(*poly_to_mult, method=self.method, k=self.k, value=[point], tag=self.tag))
         else:
             for point in self.values:
-                polytopes.append(ConvexPolytope(self._axes, [point], self.method, self.k, is_orthogonal=True))
+                polytopes.append(
+                    ConvexPolytope(self._axes, [point], self.method, self.k, is_orthogonal=True, tag=self.tag)
+                )
         self.polytopes = polytopes
 
         return self.polytopes
@@ -168,18 +181,19 @@ class Point(Shape):
 class Span(Shape):
     """1-D range along a single axis"""
 
-    def __init__(self, axis, lower=-math.inf, upper=math.inf):
+    def __init__(self, axis, lower=-math.inf, upper=math.inf, tag=None):
         assert not isinstance(lower, list)
         assert not isinstance(upper, list)
         self.axis = axis
         self.lower = lower
         self.upper = upper
+        self.tag = tag
 
     def axes(self):
         return [self.axis]
 
     def polytope(self):
-        return [ConvexPolytope([self.axis], [[self.lower], [self.upper]], is_orthogonal=True)]
+        return [ConvexPolytope([self.axis], [[self.lower], [self.upper]], is_orthogonal=True, tag=self.tag)]
 
     def __repr__(self):
         return f"Span in {self.axis} with range from {self.lower} to {self.upper}"
@@ -188,8 +202,8 @@ class Span(Shape):
 class All(Span):
     """Matches all indices in an axis"""
 
-    def __init__(self, axis):
-        super().__init__(axis)
+    def __init__(self, axis, tag=None):
+        super().__init__(axis, tag=tag)
 
     def __repr__(self):
         return f"All in {self.axis}"
@@ -198,11 +212,12 @@ class All(Span):
 class Box(Shape):
     """N-D axis-aligned bounding box (AABB), specified by two opposite corners"""
 
-    def __init__(self, axes, lower_corner=None, upper_corner=None):
+    def __init__(self, axes, lower_corner=None, upper_corner=None, tag=None):
         dimension = len(axes)
         self._lower_corner = lower_corner
         self._upper_corner = upper_corner
         self._axes = axes
+        self.tag = tag
         assert len(lower_corner) == dimension
         assert len(upper_corner) == dimension
 
@@ -230,7 +245,7 @@ class Box(Shape):
         return self._axes
 
     def polytope(self):
-        return [ConvexPolytope(self.axes(), self.vertices, is_orthogonal=True)]
+        return [ConvexPolytope(self.axes(), self.vertices, is_orthogonal=True, tag=self.tag)]
 
     def __repr__(self):
         return f"Box in {self._axes} with with lower corner {self._lower_corner} and upper corner{self._upper_corner}"
@@ -242,11 +257,12 @@ class Disk(Shape):
     # NB radius is two dimensional
     # NB number of segments is hard-coded, not exposed to user
 
-    def __init__(self, axes, centre=[0, 0], radius=[1, 1]):
+    def __init__(self, axes, centre=[0, 0], radius=[1, 1], tag=None):
         self._axes = axes
         self.centre = centre
         self.radius = radius
         self.segments = 12
+        self.tag = tag
 
         assert len(axes) == 2
         assert len(centre) == 2
@@ -271,7 +287,7 @@ class Disk(Shape):
         return self._axes
 
     def polytope(self):
-        return [ConvexPolytope(self.axes(), self.points)]
+        return [ConvexPolytope(self.axes(), self.points, tag=self.tag)]
 
     def __repr__(self):
         return f"Disk in {self._axes} with centred at {self.centre} and with radius {self.radius}"
@@ -281,10 +297,11 @@ class Ellipsoid(Shape):
     # Here we use the formula for the inscribed circle in an icosahedron
     # See https://en.wikipedia.org/wiki/Platonic_solid
 
-    def __init__(self, axes, centre=[0, 0, 0], radius=[1, 1, 1]):
+    def __init__(self, axes, centre=[0, 0, 0], radius=[1, 1, 1], tag=None):
         self._axes = axes
         self.centre = centre
         self.radius = radius
+        self.tag = tag
 
         assert len(axes) == 3
         assert len(centre) == 3
@@ -326,7 +343,7 @@ class Ellipsoid(Shape):
         return edge_length
 
     def polytope(self):
-        return [ConvexPolytope(self.axes(), self.points)]
+        return [ConvexPolytope(self.axes(), self.points, tag=self.tag)]
 
     def __repr__(self):
         return f"Ellipsoid in {self._axes} with centred at {self.centre} and with radius {self.radius}"
@@ -335,11 +352,12 @@ class Ellipsoid(Shape):
 class PathSegment(Shape):
     """N-D polytope defined by a shape which is swept along a straight line between two points"""
 
-    def __init__(self, axes, shape: Shape, start: List, end: List):
+    def __init__(self, axes, shape: Shape, start: List, end: List, tag=None):
         self._axes = axes
         self._start = start
         self._end = end
         self._shape = shape
+        self.tag = tag
 
         assert shape.axes() == self.axes()
         assert len(start) == len(self.axes())
@@ -355,7 +373,7 @@ class PathSegment(Shape):
             for p in polytope.points:
                 points.append([a + b for a, b in zip(p, start)])
                 points.append([a + b for a, b in zip(p, end)])
-            poly = ConvexPolytope(self.axes(), points)
+            poly = ConvexPolytope(self.axes(), points, tag=self.tag)
             poly.add_to_union()
             self.polytopes.append(poly)
 
@@ -373,10 +391,11 @@ class PathSegment(Shape):
 class Path(Shape):
     """N-D polytope defined by a shape which is swept along a polyline defined by multiple points"""
 
-    def __init__(self, axes, shape, *points, closed=False):
+    def __init__(self, axes, shape, *points, closed=False, tag=None):
         self._axes = axes
         self._shape = shape
         self._points = points
+        self.tag = tag
 
         assert shape.axes() == self.axes()
         for p in points:
@@ -406,10 +425,11 @@ class Path(Shape):
 class Segment(Shape):
     """N-D polytope defined as the space between two shapes"""
 
-    def __init__(self, axes, shape1: Shape, shape2: Shape):
+    def __init__(self, axes, shape1: Shape, shape2: Shape, tag=None):
         self._axes = axes
         self._shape1 = shape1
         self._shape2 = shape2
+        self.tag = tag
 
         assert shape1.axes() == self.axes()
         assert shape2.axes() == self.axes()
@@ -427,7 +447,7 @@ class Segment(Shape):
                 assert polytope1.axes() == polytope2.axes()
                 points = polytope1.points
                 points.extend(polytope2.points)
-                poly = ConvexPolytope(polytope1.axes(), points)
+                poly = ConvexPolytope(polytope1.axes(), points, tag=self.tag)
                 poly.add_to_union()
                 self.polytopes.append(poly)
 
@@ -446,9 +466,10 @@ class ShapePath(Shape):
     # TODO
     """N-D polytope defined by the space between multiple shapes"""
 
-    def __init__(self, axes, *shapes):
+    def __init__(self, axes, *shapes, tag=None):
         self._axes = axes
         self._shapes = shapes
+        self.tag = tag
 
         for shape in shapes:
             assert shape.axes() == self.axes()
@@ -475,8 +496,9 @@ class ShapePath(Shape):
 class Union(Shape):
     """N-D union of two shapes with the same axes"""
 
-    def __init__(self, axes, *shapes):
+    def __init__(self, axes, *shapes, tag=None):
         self._axes = axes
+        self.tag = tag
         for s in shapes:
             assert s.axes() == self.axes()
         self._shapes = shapes
@@ -500,8 +522,9 @@ class Union(Shape):
 class Polygon(Shape):
     """2-D polygon defined by a set of exterior points"""
 
-    def __init__(self, axes, points):
+    def __init__(self, axes, points, tag=None):
         self._axes = axes
+        self.tag = tag
         assert len(axes) == 2
         for p in points:
             assert len(p) == 2
@@ -511,12 +534,12 @@ class Polygon(Shape):
         self.polytopes = []
 
         if len(points) > 0 and len(triangles) == 0:
-            self.polytopes = [ConvexPolytope(self.axes(), points)]
+            self.polytopes = [ConvexPolytope(self.axes(), points, tag=self.tag)]
 
         else:
             for t in triangles:
                 tri_points = [list(point) for point in t]
-                poly = ConvexPolytope(self.axes(), tri_points)
+                poly = ConvexPolytope(self.axes(), tri_points, tag=self.tag)
                 poly.add_to_union()
                 self.polytopes.append(poly)
 
@@ -528,3 +551,65 @@ class Polygon(Shape):
 
     def __repr__(self):
         return f"Polygon in {self._axes} with points {self._points}"
+
+
+class PolygonWithHoles(Shape):
+    """2-D polygon defined by a set of exterior points and optional holes"""
+
+    def __init__(self, axes, points, holes=None):
+        self._axes = axes
+        assert len(axes) == 2
+
+        for p in points:
+            assert len(p) == 2
+
+        if holes is None:
+            holes = []
+
+        self._holes = holes
+        self._points = points
+        self.polytopes = []
+
+        if len(points) == 0:
+            return
+
+        # Flatten all rings
+        rings = [points] + list(holes)
+
+        vertices = []
+        ring_end_indices = []
+
+        for ring in rings:
+            for p in ring:
+                assert len(p) == 2
+                vertices.append(p)
+            ring_end_indices.append(len(vertices))
+
+        vertices = np.asarray(vertices, dtype=np.float64)
+        ring_end_indices = np.asarray(ring_end_indices, dtype=np.uint32)
+
+        triangle_indices = earcut.triangulate_float64(vertices, ring_end_indices)
+
+        if len(triangle_indices) == 0:
+            self.polytopes = [ConvexPolytope(self.axes(), points)]
+            return
+
+        for i in range(0, len(triangle_indices), 3):
+            tri_points = [
+                vertices[triangle_indices[i]].tolist(),
+                vertices[triangle_indices[i + 1]].tolist(),
+                vertices[triangle_indices[i + 2]].tolist(),
+            ]
+
+            poly = ConvexPolytope(self.axes(), tri_points)
+            poly.add_to_union()
+            self.polytopes.append(poly)
+
+    def axes(self):
+        return self._axes
+
+    def polytope(self):
+        return self.polytopes
+
+    def __repr__(self):
+        return f"PolygonWithHoles in {self._axes} with points {self._points} and holes {self._holes}"

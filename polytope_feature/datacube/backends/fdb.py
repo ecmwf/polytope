@@ -419,6 +419,7 @@ class FDBDatacube(Datacube):
         return (current_idx, fdb_range_n)
 
     def assign_fdb_output_to_nodes(self, output_iterator, fdb_requests_decoding_info):
+        logging.debug("Assigning GribJump output to tree nodes")
         for k, result in enumerate(output_iterator):
             original_indices, fdb_node_ranges = fdb_requests_decoding_info[k]
             result_values = result.values
@@ -436,6 +437,7 @@ class FDBDatacube(Datacube):
                 for node_list in sorted_nodes:
                     n = node_list[0]
                     n.result += [None] * len(n.values)
+        logging.debug("Finished assigning GribJump output to tree nodes")
 
     @property
     def _skip_dedup(self):

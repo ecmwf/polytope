@@ -40,13 +40,13 @@ dependencies = [
     "conflator",
     "protobuf",
     "shapely",
+    "mapbox_earcut",
 ]
 
 [project.optional-dependencies]
 tests = [
     "pytest",
     "pytest-cov",
-    "cffi",
     "eccodes",
     "h5netcdf",
     "h5py",
@@ -61,11 +61,6 @@ unstructured = [
 
 catalogue = [
     "qubed"
-]
-
-switching_grids = [
-    "eccodes",
-    "pyfdb<=0.1.3"
 ]
 
 [project.urls]
