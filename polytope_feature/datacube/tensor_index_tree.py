@@ -28,6 +28,49 @@ class MergedTensorIndexNode(object):
         self.children = SortedList()
         self._parent = None
         self.indexes = []
+        self.axis = axes[0] if axes is not None else None
+
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def __delitem__(self, key):
+        return delattr(self, key)
+
+    def __lt__(self, other):
+        return ((self.axes[0].name, self.axes[1].name), self.values) < (
+            (other.axes[0].name, other.axes[1].name),
+            other.values,
+        )
+
+    def _collect_leaf_nodes(self, leaves):
+        if len(self.children) == 0:
+            leaves.append(self)
+
+    def flatten(self):
+        path = DatacubePath()
+        ancestors = self.get_ancestors()
+        for ancestor in ancestors:
+            if isinstance(ancestor, TensorIndexTree):
+                path[ancestor.axis.name] = ancestor.values
+            else:
+                path[ancestor.axes[0].name] = [ancestor.values[0]]
+                path[ancestor.axes[1].name] = [ancestor.values[1]]
+        return path
+
+    @property
+    def parent(self):
+        return self._parent
+
+    def get_ancestors(self):
+        ancestors = []
+        current_node = self
+        while current_node.axis.name != "root":
+            ancestors.append(current_node)
+            current_node = current_node.parent
+        return ancestors[::-1]
 
 
 class TensorIndexTree(object):
@@ -120,7 +163,7 @@ class TensorIndexTree(object):
         self.values = tuple(new_values)
 
     def create_merged_child(self, axes, values, next_nodes):
-        node = MergedTensorIndexNode()
+        node = MergedTensorIndexNode(axes, values)
         self.add_child(node)
         return (node, next_nodes)
 

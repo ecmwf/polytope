@@ -200,39 +200,43 @@ class FDBDatacube(Datacube):
             leaf_path = {}
 
         # First when request node is root, go to its children
-        if requests.axis.name == "root":
-            logging.debug("Looking for data for the tree")
+        if isinstance(requests, TensorIndexTree):
+            if requests.axis.name == "root":
+                logging.debug("Looking for data for the tree")
 
-            for c in requests.children:
-                self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info)
-        # If request node has no children, we have a leaf so need to assign fdb values to it
-        else:
-            key_value_path = {requests.axis.name: requests.values}
-            ax = requests.axis
-            key_value_path, leaf_path, self.unwanted_path = ax.unmap_path_key(
-                key_value_path, leaf_path, self.unwanted_path
-            )
-            leaf_path.update(key_value_path)
-            if len(requests.children[0].children[0].children) == 0:
-                # find the fdb_requests and associated nodes to which to add results
-                (
-                    path,
-                    current_start_idxs,
-                    fdb_node_ranges,
-                    lat_length,
-                ) = self.get_2nd_last_values(requests, leaf_path)
-                (
-                    original_indices,
-                    sorted_request_ranges,
-                    fdb_node_ranges,
-                ) = self.sort_fdb_request_ranges(current_start_idxs, lat_length, fdb_node_ranges)
-                fdb_requests.append((path, sorted_request_ranges))
-                fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
-
-            # Otherwise remap the path for this key and iterate again over children
-            else:
                 for c in requests.children:
-                    self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path)
+                    self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info)
+            # If request node has no children, we have a leaf so need to assign fdb values to it
+            else:
+                key_value_path = {requests.axis.name: requests.values}
+                ax = requests.axis
+                key_value_path, leaf_path, self.unwanted_path = ax.unmap_path_key(
+                    key_value_path, leaf_path, self.unwanted_path
+                )
+                leaf_path.update(key_value_path)
+                if len(requests.children[0].children[0].children) == 0:
+                    # find the fdb_requests and associated nodes to which to add results
+                    (
+                        path,
+                        current_start_idxs,
+                        fdb_node_ranges,
+                        lat_length,
+                    ) = self.get_2nd_last_values(requests, leaf_path)
+                    (
+                        original_indices,
+                        sorted_request_ranges,
+                        fdb_node_ranges,
+                    ) = self.sort_fdb_request_ranges(current_start_idxs, lat_length, fdb_node_ranges)
+                    fdb_requests.append((path, sorted_request_ranges))
+                    fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
+
+                # Otherwise remap the path for this key and iterate again over children
+                else:
+                    for c in requests.children:
+                        self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path)
+        else:
+            # TODO
+            pass
 
     def remove_duplicates_in_request_ranges(self, fdb_node_ranges, current_start_idxs):
         # First pass: identify which (i, k) "wins" each index (first occurrence).

@@ -3,6 +3,7 @@ from copy import copy, deepcopy
 import numpy as np
 import xarray as xr
 
+from ..tensor_index_tree import TensorIndexTree
 from .datacube import Datacube
 
 
@@ -68,41 +69,49 @@ class XArrayDatacube(Datacube):
     def get(self, requests, context=None, leaf_path=None, axis_counter=0):
         if leaf_path is None:
             leaf_path = {}
-        if requests.axis.name == "root":
-            for c in requests.children:
-                self.get(c, context, leaf_path, axis_counter + 1)
-        else:
-            key_value_path = {requests.axis.name: requests.values}
-            ax = requests.axis
-            key_value_path, leaf_path, self.unwanted_path = ax.unmap_path_key(
-                key_value_path, leaf_path, self.unwanted_path
-            )
-            leaf_path.update(key_value_path)
-            if len(requests.children) != 0:
-                # We are not a leaf and we loop over
+        if isinstance(requests, TensorIndexTree):
+            if requests.axis.name == "root":
                 for c in requests.children:
-                    if axis_counter == self.axis_counter - 1:
-                        leaf_path["index"] = c.indexes
                     self.get(c, context, leaf_path, axis_counter + 1)
             else:
-                if self.axis_counter != axis_counter:
-                    requests.remove_branch()
+                key_value_path = {requests.axis.name: requests.values}
+                ax = requests.axis
+                key_value_path, leaf_path, self.unwanted_path = ax.unmap_path_key(
+                    key_value_path, leaf_path, self.unwanted_path
+                )
+                leaf_path.update(key_value_path)
+                if len(requests.children) != 0:
+                    # We are not a leaf and we loop over
+                    for c in requests.children:
+                        if axis_counter == self.axis_counter - 1:
+                            leaf_path["index"] = c.indexes
+                        self.get(c, context, leaf_path, axis_counter + 1)
                 else:
-                    # We are at a leaf and need to assign value to it
-                    leaf_path_copy = deepcopy(leaf_path)
-                    unmapped_path = {}
-                    self.refit_path(leaf_path_copy, unmapped_path, leaf_path)
-                    for key in leaf_path_copy:
-                        if isinstance(leaf_path_copy[key], tuple):
-                            leaf_path_copy[key] = list(leaf_path_copy[key])
-                    for key in unmapped_path:
-                        if isinstance(unmapped_path[key], tuple):
-                            unmapped_path[key] = list(unmapped_path[key])
-                    subxarray = self.dataarray.sel(leaf_path_copy, method="nearest")
-                    subxarray = subxarray.sel(unmapped_path)
-                    value = subxarray.values
-                    key = subxarray.name
-                    requests.result = (key, value)
+                    if self.axis_counter != axis_counter:
+                        requests.remove_branch()
+                    else:
+                        # We are at a leaf and need to assign value to it
+                        leaf_path_copy = deepcopy(leaf_path)
+                        unmapped_path = {}
+                        print("LOOK NOW")
+                        print(leaf_path)
+                        self.refit_path(leaf_path_copy, unmapped_path, leaf_path)
+                        print(leaf_path)
+                        for key in leaf_path_copy:
+                            if isinstance(leaf_path_copy[key], tuple):
+                                leaf_path_copy[key] = list(leaf_path_copy[key])
+                        for key in unmapped_path:
+                            if isinstance(unmapped_path[key], tuple):
+                                unmapped_path[key] = list(unmapped_path[key])
+                        subxarray = self.dataarray.sel(leaf_path_copy, method="nearest")
+                        subxarray = subxarray.sel(unmapped_path)
+                        value = subxarray.values
+                        key = subxarray.name
+                        requests.result = (key, value)
+        else:
+            # TODO
+
+            pass
 
     def datacube_natural_indexes(self, axis, subarray):
         if axis.name in self.complete_axes:
