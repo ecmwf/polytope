@@ -28,6 +28,9 @@ class MergedTensorIndexNode(object):
         self.children = SortedList()
         self._parent = None
         self.indexes = []
+        self.result = []
+        self.hidden = False
+        self.ancestors = []
         self.axis = axes[0] if axes is not None else None
 
     def __setitem__(self, key, value):
@@ -71,6 +74,22 @@ class MergedTensorIndexNode(object):
             ancestors.append(current_node)
             current_node = current_node.parent
         return ancestors[::-1]
+
+    def pprint(self, level=0):
+        if self.axis.name == "root":
+            logging.debug("\n")
+        logging.debug("\t" * level + "\u21b3" + str(self))
+        for child in self.children:
+            if not child.hidden:
+                child.pprint(level + 1)
+        if len(self.children) == 0:
+            logging.debug("\t" * (level + 1) + "\u21b3" + str(self.result))
+
+    def __repr__(self):
+        if self.axis != "root":
+            return f"{self.axes[0].name}={self.values[0]}, {self.axes[1].name}={self.values[1]}"
+        else:
+            return f"{self.axis}"
 
 
 class TensorIndexTree(object):
