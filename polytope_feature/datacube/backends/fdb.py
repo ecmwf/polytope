@@ -302,6 +302,54 @@ class FDBDatacube(Datacube):
 
         return new_fdb_node_ranges, new_current_start_idxs
 
+    def nearest_lat_lon_search_merged(self, requests):
+        if len(self.nearest_search) != 0:
+            first_ax_name = requests.axes[0].name
+            second_ax_name = requests.axes[1].name
+
+            axes_in_nearest_search = [
+                first_ax_name not in self.nearest_search.keys(),
+                second_ax_name not in self.nearest_search.keys(),
+            ]
+
+            if all(not item for item in axes_in_nearest_search):
+                raise Exception("nearest point search axes are wrong")
+
+            second_ax = requests.axes[1]
+
+            nearest_pts_k = self.nearest_search.get((first_ax_name, second_ax_name), None)
+            if nearest_pts_k is None:
+                nearest_pts_k = self.nearest_search.get((second_ax_name, first_ax_name), None)
+                for i, pt in enumerate(nearest_pts_k[0]):
+                    nearest_pts_k[0][i] = [pt[1], pt[0]]
+
+            k = nearest_pts_k[1]
+            if k != 1 and not self.grid_transformation.is_irregular:
+                print("k nearest neighbour not supported in hullslicer, defaulting to nearest neighbour.")
+                k = 1
+
+            transformed_nearest_pts = []
+            for point in nearest_pts_k[0]:
+                transformed_nearest_pts.append([point[0], second_ax._remap_val_to_axis_range(point[1])])
+
+            found_latlon_pts = []
+            for latlon_child in requests.children:
+                found_latlon_pts.append(list(latlon_child.values))
+
+            # now find the nearest lat lon to the points requested
+            nearest_latlons = []
+            for pt in transformed_nearest_pts:
+                nearest_latlon = nearest_pt(found_latlon_pts, pt, k)
+                nearest_latlons.extend(nearest_latlon)
+
+            # need to remove the branches that do not fit
+            latlon_children_values = [child.values for child in requests.children]
+            for i in range(len(latlon_children_values)):
+                latlon_child_val = latlon_children_values[i]
+                latlon_child = [child for child in requests.children if child.values == latlon_child_val][0]
+                if latlon_child.values not in nearest_latlons:
+                    latlon_child.remove_branch()
+
     def nearest_lat_lon_search(self, requests):
         if len(self.nearest_search) != 0:
             first_ax_name = requests.children[0].axis.name
@@ -394,7 +442,12 @@ class FDBDatacube(Datacube):
         return (leaf_path_copy, current_start_idxs, fdb_node_ranges, lat_length)
 
     def get_merged_2nd_last_values(self, requests, leaf_path=None):
+        if leaf_path is None:
+            leaf_path = {}
+        self.nearest_lat_lon_search_merged(requests)
+
         # TODO
+
         pass
 
     def get_last_layer_before_leaf(self, requests, leaf_path, current_idx, fdb_range_n):
