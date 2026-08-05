@@ -5,6 +5,7 @@ from itertools import product
 
 from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
 from ...utility.geometry import nearest_pt
+from ..tensor_index_tree import MergedTensorIndexNode
 from .datacube import Datacube, TensorIndexTree
 
 
@@ -223,7 +224,23 @@ class FDBDatacube(Datacube):
                     key_value_path, leaf_path, self.unwanted_path
                 )
                 leaf_path.update(key_value_path)
-                if len(requests.children[0].children[0].children) == 0:
+                # If the direct children are MergedTensorIndexNodes (merged lat-lon leaves),
+                # collect all of them at once into a single FDB request for this path.
+                if isinstance(requests.children[0], MergedTensorIndexNode):
+                    (
+                        path,
+                        current_start_idxs,
+                        fdb_node_ranges,
+                        lat_length,
+                    ) = self.get_merged_2nd_last_values(requests, leaf_path)
+                    (
+                        original_indices,
+                        sorted_request_ranges,
+                        fdb_node_ranges,
+                    ) = self.sort_fdb_request_ranges(current_start_idxs, lat_length, fdb_node_ranges)
+                    fdb_requests.append((path, sorted_request_ranges))
+                    fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
+                elif len(requests.children[0].children[0].children) == 0:
                     if isinstance(requests.children[0].children[0], TensorIndexTree):
                         # find the fdb_requests and associated nodes to which to add results
                         (
@@ -500,33 +517,40 @@ class FDBDatacube(Datacube):
     def get_merged_2nd_last_values(self, requests, leaf_path=None):
         if leaf_path is None:
             leaf_path = {}
+        # requests is the parent TensorIndexTree node whose direct children are all
+        # MergedTensorIndexNodes (each holding values=(lat, lon) and indexes=[flat_idx]).
+        # Iterate over all of them so one FDB request covers the entire shared path.
         self.nearest_lat_lon_search_merged(requests)
 
-        # requests is a single MergedTensorIndexNode: values=(lat, lon), indexes=[flat_idx].
-        # The caller (get_fdb_requests) has already called unmap_path_key for axes[0] (lat),
-        # stashing the lat value in self.unwanted_path.
-        # Now call unmap_path_key for axes[1] (lon) to obtain the actual FDB flat index.
-        lon_ax = requests.axes[1]
-        key_value_path = {lon_ax.name: requests.values[1]}
-        leaf_path["index"] = requests.indexes
-        key_value_path, leaf_path, self.unwanted_path = lon_ax.unmap_path_key(
-            key_value_path, leaf_path, self.unwanted_path
-        )
-        # key_value_path["values"] now holds the FDB flat index(es) for this merged node
-        flat_indices = list(key_value_path["values"])
+        lat_length = len(requests.children)
+        current_start_idxs = [None] * lat_length
+        fdb_node_ranges = [None] * lat_length
 
-        # Use a shallow proxy so that sort_fdb_request_ranges / remove_duplicates can freely
-        # mutate .values without corrupting the original merged node (whose values=(lat, lon)
-        # are needed by flatten() and tree-output logic downstream).
-        # The proxy shares .result with the real node so that assign_fdb_output_to_nodes
-        # writes results directly onto it.
-        proxy = copy(requests)
-        proxy.values = (requests.values[1],)  # single lon value; length == len(flat_indices)
-        proxy.remove_branch = requests.remove_branch  # delegate removals to the real node
+        for i, merged_child in enumerate(requests.children):
+            lat_ax = merged_child.axes[0]
+            lon_ax = merged_child.axes[1]
 
-        lat_length = 1
-        current_start_idxs = [[flat_indices]]
-        fdb_node_ranges = [[[proxy]]]
+            # Two-pass unmapping mirroring get_2nd_last_values + get_last_layer_before_leaf:
+            # Pass 1 — lat: stash lat value in unwanted_path (no index produced yet)
+            kv_lat = {lat_ax.name: merged_child.values[0]}
+            kv_lat, leaf_path, self.unwanted_path = lat_ax.unmap_path_key(kv_lat, leaf_path, self.unwanted_path)
+            leaf_path.update(kv_lat)
+
+            # Pass 2 — lon: use stashed lat + pre-computed flat index to obtain FDB index
+            kv_lon = {lon_ax.name: merged_child.values[1]}
+            leaf_path["index"] = merged_child.indexes
+            kv_lon, leaf_path, self.unwanted_path = lon_ax.unmap_path_key(kv_lon, leaf_path, self.unwanted_path)
+            flat_indices = list(kv_lon["values"])
+
+            # Proxy protects merged_child.values=(lat, lon) from mutation by
+            # sort_fdb_request_ranges / remove_duplicates, while sharing .result so
+            # that assign_fdb_output_to_nodes writes back onto the real node.
+            proxy = copy(merged_child)
+            proxy.values = (merged_child.values[1],)  # length == len(flat_indices)
+            proxy.remove_branch = merged_child.remove_branch  # delegate tree removal
+
+            current_start_idxs[i] = [flat_indices]
+            fdb_node_ranges[i] = [[proxy]]
 
         leaf_path_copy = deepcopy(leaf_path)
         leaf_path_copy.pop("values", None)
