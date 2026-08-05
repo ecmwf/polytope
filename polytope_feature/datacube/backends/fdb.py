@@ -170,11 +170,16 @@ class FDBDatacube(Datacube):
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
 
-        if logging.root.level <= logging.DEBUG:
+        # if logging.root.level <= logging.DEBUG:
+        if True:
             printed_list_to_gj = complete_list_complete_uncompressed_requests[::1000]
             logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
+            print("LOOK NOW WHAT IS HERE")
+            # print(printed_list_to_gj)
+            print(complete_list_complete_uncompressed_requests[::1])
         logging.info("Requests given to GribJump extract for %s", context)
         try:
+            # print()
             iterator = self.gj.extract(complete_list_complete_uncompressed_requests, context)
         except Exception as e:
             if "BadValue: Grid hash mismatch" in str(e):
@@ -195,12 +200,16 @@ class FDBDatacube(Datacube):
         fdb_requests=[],
         fdb_requests_decoding_info=[],
         leaf_path=None,
+        merged_leaf=False,
     ):
         if leaf_path is None:
             leaf_path = {}
 
         # First when request node is root, go to its children
-        if isinstance(requests, TensorIndexTree):
+        print("LOOK WHAT THE TYPE HERE")
+        print(type(requests))
+        # if isinstance(requests, TensorIndexTree):
+        if not merged_leaf:
             if requests.axis.name == "root":
                 logging.debug("Looking for data for the tree")
 
@@ -215,39 +224,86 @@ class FDBDatacube(Datacube):
                 )
                 leaf_path.update(key_value_path)
                 if len(requests.children[0].children[0].children) == 0:
-                    # find the fdb_requests and associated nodes to which to add results
-                    (
-                        path,
-                        current_start_idxs,
-                        fdb_node_ranges,
-                        lat_length,
-                    ) = self.get_2nd_last_values(requests, leaf_path)
-                    (
-                        original_indices,
-                        sorted_request_ranges,
-                        fdb_node_ranges,
-                    ) = self.sort_fdb_request_ranges(current_start_idxs, lat_length, fdb_node_ranges)
-                    fdb_requests.append((path, sorted_request_ranges))
-                    fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
+                    if isinstance(requests.children[0].children[0], TensorIndexTree):
+                        # find the fdb_requests and associated nodes to which to add results
+                        (
+                            path,
+                            current_start_idxs,
+                            fdb_node_ranges,
+                            lat_length,
+                        ) = self.get_2nd_last_values(requests, leaf_path)
+                        (
+                            original_indices,
+                            sorted_request_ranges,
+                            fdb_node_ranges,
+                        ) = self.sort_fdb_request_ranges(current_start_idxs, lat_length, fdb_node_ranges)
+                        fdb_requests.append((path, sorted_request_ranges))
+                        fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
+                    else:
+                        # print("DID WE GO HERE???")
+                        # key_value_path = {requests.axes[0].name: requests.values[0]}
+                        # first_ax = requests.axes[0]
+                        # key_value_path, leaf_path, self.unwanted_path = first_ax.unmap_path_key(
+                        #     key_value_path, leaf_path, self.unwanted_path
+                        # )
+                        # leaf_path.update(key_value_path)
+                        # path, current_start_idxs, fdb_node_ranges, lat_length =
+                        # self.get_merged_2nd_last_values(requests, leaf_path)
+                        # original_indices, sorted_request_ranges, fdb_node_ranges = self.sort_fdb_request_ranges(
+                        #     current_start_idxs, lat_length, fdb_node_ranges
+                        # )
+                        # fdb_requests.append((path, sorted_request_ranges))
+                        # fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
+                        merged_leaf = True
+                        for c in requests.children:
+                            self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path, merged_leaf)
 
                 # Otherwise remap the path for this key and iterate again over children
                 else:
                     for c in requests.children:
                         self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path)
-        else:
-            # TODO
-            key_value_path = {requests.axes[0].name: requests.values[0]}
-            first_ax = requests.axes[0]
-            key_value_path, leaf_path, self.unwanted_path = first_ax.unmap_path_key(
-                key_value_path, leaf_path, self.unwanted_path
-            )
-            leaf_path.update(key_value_path)
-            path, current_start_idxs, fdb_node_ranges, lat_length = self.get_merged_2nd_last_values(requests, leaf_path)
-            original_indices, sorted_request_ranges, fdb_node_ranges = self.sort_fdb_request_ranges(
-                current_start_idxs, lat_length, fdb_node_ranges
-            )
-            fdb_requests.append((path, sorted_request_ranges))
-            fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
+        if merged_leaf:
+            if isinstance(requests, TensorIndexTree):
+                key_value_path = {requests.axis.name: requests.values}
+                ax = requests.axis
+                key_value_path, leaf_path, self.unwanted_path = ax.unmap_path_key(
+                    key_value_path, leaf_path, self.unwanted_path
+                )
+                leaf_path.update(key_value_path)
+                for c in requests.children:
+                    self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path, merged_leaf)
+            else:
+                print("DID WE GO HERE???")
+                key_value_path = {requests.axes[0].name: requests.values[0]}
+                first_ax = requests.axes[0]
+                key_value_path, leaf_path, self.unwanted_path = first_ax.unmap_path_key(
+                    key_value_path, leaf_path, self.unwanted_path
+                )
+                leaf_path.update(key_value_path)
+                path, current_start_idxs, fdb_node_ranges, lat_length = self.get_merged_2nd_last_values(
+                    requests, leaf_path
+                )
+                original_indices, sorted_request_ranges, fdb_node_ranges = self.sort_fdb_request_ranges(
+                    current_start_idxs, lat_length, fdb_node_ranges
+                )
+                fdb_requests.append((path, sorted_request_ranges))
+                fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
+        # else:
+        #     # TODO
+        #     print("DID WE GO HERE???")
+        #     key_value_path = {requests.axes[0].name: requests.values[0]}
+        #     first_ax = requests.axes[0]
+        #     key_value_path, leaf_path, self.unwanted_path = first_ax.unmap_path_key(
+        #         key_value_path, leaf_path, self.unwanted_path
+        #     )
+        #     leaf_path.update(key_value_path)
+        #     path, current_start_idxs, fdb_node_ranges, lat_length =
+        #  self.get_merged_2nd_last_values(requests, leaf_path)
+        #     original_indices, sorted_request_ranges, fdb_node_ranges = self.sort_fdb_request_ranges(
+        #         current_start_idxs, lat_length, fdb_node_ranges
+        #     )
+        #     fdb_requests.append((path, sorted_request_ranges))
+        #     fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
 
     def remove_duplicates_in_request_ranges(self, fdb_node_ranges, current_start_idxs):
         # First pass: identify which (i, k) "wins" each index (first occurrence).

@@ -91,6 +91,14 @@ class MergedTensorIndexNode(object):
         else:
             return f"{self.axis}"
 
+    def remove_branch(self):
+        if not self.is_root():
+            old_parent = self._parent
+            self._parent.children.remove(self)
+            self._parent = None
+            if len(old_parent.children) == 0:
+                old_parent.remove_branch()
+
 
 class TensorIndexTree(object):
     root = IntDatacubeAxis()
