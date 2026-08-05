@@ -1,6 +1,6 @@
 import logging
 import operator
-from copy import deepcopy
+from copy import copy, deepcopy
 from itertools import product
 
 from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
@@ -446,9 +446,36 @@ class FDBDatacube(Datacube):
             leaf_path = {}
         self.nearest_lat_lon_search_merged(requests)
 
-        # TODO
+        # requests is a single MergedTensorIndexNode: values=(lat, lon), indexes=[flat_idx].
+        # The caller (get_fdb_requests) has already called unmap_path_key for axes[0] (lat),
+        # stashing the lat value in self.unwanted_path.
+        # Now call unmap_path_key for axes[1] (lon) to obtain the actual FDB flat index.
+        lon_ax = requests.axes[1]
+        key_value_path = {lon_ax.name: requests.values[1]}
+        leaf_path["index"] = requests.indexes
+        key_value_path, leaf_path, self.unwanted_path = lon_ax.unmap_path_key(
+            key_value_path, leaf_path, self.unwanted_path
+        )
+        # key_value_path["values"] now holds the FDB flat index(es) for this merged node
+        flat_indices = list(key_value_path["values"])
 
-        pass
+        # Use a shallow proxy so that sort_fdb_request_ranges / remove_duplicates can freely
+        # mutate .values without corrupting the original merged node (whose values=(lat, lon)
+        # are needed by flatten() and tree-output logic downstream).
+        # The proxy shares .result with the real node so that assign_fdb_output_to_nodes
+        # writes results directly onto it.
+        proxy = copy(requests)
+        proxy.values = (requests.values[1],)  # single lon value; length == len(flat_indices)
+        proxy.remove_branch = requests.remove_branch  # delegate removals to the real node
+
+        lat_length = 1
+        current_start_idxs = [[flat_indices]]
+        fdb_node_ranges = [[[proxy]]]
+
+        leaf_path_copy = deepcopy(leaf_path)
+        leaf_path_copy.pop("values", None)
+        leaf_path_copy.pop("index")
+        return (leaf_path_copy, current_start_idxs, fdb_node_ranges, lat_length)
 
     def get_last_layer_before_leaf(self, requests, leaf_path, current_idx, fdb_range_n):
         current_idx = [[] for i in range(len(requests.children))]
