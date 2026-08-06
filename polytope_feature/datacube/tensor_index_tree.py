@@ -32,6 +32,7 @@ class MergedTensorIndexNode(object):
         self.hidden = False
         self.ancestors = []
         self.axis = axes[0] if axes is not None else None
+        self.tags = set()
 
     def __setitem__(self, key, value):
         setattr(self, key, value)
@@ -47,6 +48,17 @@ class MergedTensorIndexNode(object):
             (other.axes[0].name, other.axes[1].name),
             other.values,
         )
+
+    def __eq__(self, other):
+        if not isinstance(other, MergedTensorIndexNode):
+            return False
+        if self.axes[0].name == other.axes[0].name and self.axes[1].name == other.axes[1].name:
+            if other.values == self.values:
+                return True
+        return False
+
+    # def __hash__(self):
+    #     return hash((self.axes[0].name, self.axes[1].name, self.values))
 
     def _collect_leaf_nodes(self, leaves):
         if len(self.children) == 0:
@@ -95,6 +107,9 @@ class MergedTensorIndexNode(object):
     def remove_branch(self):
         if not self.is_root():
             old_parent = self._parent
+            print("WHAT WHEN WE REMOVE BRANCHES??")
+            print([c for c in self._parent.children])
+            print(self)
             self._parent.children.remove(self)
             self._parent = None
             if len(old_parent.children) == 0:
@@ -102,6 +117,25 @@ class MergedTensorIndexNode(object):
 
     def is_root(self):
         return self.parent is None
+
+    def merge(self, other):
+        self.tags.update(other.tags)
+        for other_child in other.children:
+            my_child = self.find_child(other_child)
+            if not my_child:
+                self.add_child(other_child)
+            else:
+                my_child.merge(other_child)
+
+    def add_child(self, node):
+        self.children.add(node)
+        node._parent = self
+
+    def find_child(self, node):
+        index = self.children.bisect_left(node)
+        if index < len(self.children) and self.children[index] == node:
+            return self.children[index]
+        return None
 
 
 class TensorIndexTree(object):
