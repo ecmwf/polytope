@@ -87,7 +87,8 @@ class MergedTensorIndexNode(object):
 
     def __repr__(self):
         if self.axis != "root":
-            return f"{self.axes[0].name}={self.values[0]}, {self.axes[1].name}={self.values[1]}"
+            # return f"{self.axes[0].name}={self.values[0]}, {self.axes[1].name}={self.values[1]}"
+            return f"{(self.axes[0].name, self.axes[1].name)}={self.values}"
         else:
             return f"{self.axis}"
 

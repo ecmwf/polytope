@@ -171,13 +171,9 @@ class FDBDatacube(Datacube):
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
 
-        # if logging.root.level <= logging.DEBUG:
-        if True:
+        if logging.root.level <= logging.DEBUG:
             printed_list_to_gj = complete_list_complete_uncompressed_requests[::1000]
             logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
-            print("LOOK NOW WHAT IS HERE")
-            # print(printed_list_to_gj)
-            print(complete_list_complete_uncompressed_requests[::1])
         logging.info("Requests given to GribJump extract for %s", context)
         try:
             # print()
@@ -207,8 +203,6 @@ class FDBDatacube(Datacube):
             leaf_path = {}
 
         # First when request node is root, go to its children
-        print("LOOK WHAT THE TYPE HERE")
-        print(type(requests))
         # if isinstance(requests, TensorIndexTree):
         if not merged_leaf:
             if requests.axis.name == "root":
@@ -279,7 +273,8 @@ class FDBDatacube(Datacube):
                 else:
                     for c in requests.children:
                         self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path)
-        if merged_leaf:
+        if merged_leaf and len(requests.children[0].children) == 0:
+            print("WHAT IS IT HERE THOUGH THE REQUEST THAT WE LOOP OVER??")
             if isinstance(requests, TensorIndexTree):
                 key_value_path = {requests.axis.name: requests.values}
                 ax = requests.axis
@@ -287,16 +282,7 @@ class FDBDatacube(Datacube):
                     key_value_path, leaf_path, self.unwanted_path
                 )
                 leaf_path.update(key_value_path)
-                for c in requests.children:
-                    self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path, merged_leaf)
-            else:
-                print("DID WE GO HERE???")
-                key_value_path = {requests.axes[0].name: requests.values[0]}
-                first_ax = requests.axes[0]
-                key_value_path, leaf_path, self.unwanted_path = first_ax.unmap_path_key(
-                    key_value_path, leaf_path, self.unwanted_path
-                )
-                leaf_path.update(key_value_path)
+
                 path, current_start_idxs, fdb_node_ranges, lat_length = self.get_merged_2nd_last_values(
                     requests, leaf_path
                 )
@@ -305,6 +291,24 @@ class FDBDatacube(Datacube):
                 )
                 fdb_requests.append((path, sorted_request_ranges))
                 fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
+
+                # for c in requests.children:
+                #     self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path, merged_leaf)
+            # else:
+            #     key_value_path = {requests.axes[0].name: requests.values[0]}
+            #     first_ax = requests.axes[0]
+            #     key_value_path, leaf_path, self.unwanted_path = first_ax.unmap_path_key(
+            #         key_value_path, leaf_path, self.unwanted_path
+            #     )
+            #     leaf_path.update(key_value_path)
+            #     path, current_start_idxs, fdb_node_ranges, lat_length = self.get_merged_2nd_last_values(
+            #         requests, leaf_path
+            #     )
+            #     original_indices, sorted_request_ranges, fdb_node_ranges = self.sort_fdb_request_ranges(
+            #         current_start_idxs, lat_length, fdb_node_ranges
+            #     )
+            #     fdb_requests.append((path, sorted_request_ranges))
+            #     fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
         # else:
         #     # TODO
         #     print("DID WE GO HERE???")
@@ -377,8 +381,8 @@ class FDBDatacube(Datacube):
 
     def nearest_lat_lon_search_merged(self, requests):
         if len(self.nearest_search) != 0:
-            first_ax_name = requests.axes[0].name
-            second_ax_name = requests.axes[1].name
+            first_ax_name = requests.children[0].axes[0].name
+            second_ax_name = requests.children[0].axes[1].name
 
             axes_in_nearest_search = [
                 first_ax_name not in self.nearest_search.keys(),
@@ -388,7 +392,7 @@ class FDBDatacube(Datacube):
             if all(not item for item in axes_in_nearest_search):
                 raise Exception("nearest point search axes are wrong")
 
-            second_ax = requests.axes[1]
+            second_ax = requests.children[0].axes[1]
 
             nearest_pts_k = self.nearest_search.get((first_ax_name, second_ax_name), None)
             if nearest_pts_k is None:
@@ -406,13 +410,20 @@ class FDBDatacube(Datacube):
                 transformed_nearest_pts.append([point[0], second_ax._remap_val_to_axis_range(point[1])])
 
             found_latlon_pts = []
+            print("AND HERE")
+            print(requests)
             for latlon_child in requests.children:
-                found_latlon_pts.append(list(latlon_child.values))
+                print(latlon_child.values)
+                found_latlon_pts.append([[latlon_child.values[0]], [latlon_child.values[1]]])
 
             # now find the nearest lat lon to the points requested
             nearest_latlons = []
             for pt in transformed_nearest_pts:
+                print("LOOK NOW")
+                print(found_latlon_pts)
+                print(pt)
                 nearest_latlon = nearest_pt(found_latlon_pts, pt, k)
+                print(nearest_latlon)
                 nearest_latlons.extend(nearest_latlon)
 
             # need to remove the branches that do not fit
@@ -526,7 +537,13 @@ class FDBDatacube(Datacube):
         current_start_idxs = [None] * lat_length
         fdb_node_ranges = [None] * lat_length
 
+        # print("WHAT ABOUT HERE")
+        # print(requests)
+        # print(requests.children)
+
         for i, merged_child in enumerate(requests.children):
+            # self.nearest_lat_lon_search_merged(requests)
+            # self.nearest_lat_lon_search_merged(merged_child)
             lat_ax = merged_child.axes[0]
             lon_ax = merged_child.axes[1]
 
@@ -550,7 +567,9 @@ class FDBDatacube(Datacube):
             proxy.remove_branch = merged_child.remove_branch  # delegate tree removal
 
             current_start_idxs[i] = [flat_indices]
+            # current_start_idxs = [[flat_indices]]
             fdb_node_ranges[i] = [[proxy]]
+            # fdb_node_ranges = [[[proxy]]]
 
         leaf_path_copy = deepcopy(leaf_path)
         leaf_path_copy.pop("values", None)
@@ -595,6 +614,10 @@ class FDBDatacube(Datacube):
         logging.debug("Finished assigning GribJump output to tree nodes")
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
+        # print("WHAT DO WE HAVE HERE THROUGH")
+        # print(current_start_idx)
+        # print(lat_length)
+        # print(fdb_node_ranges)
         (
             new_fdb_node_ranges,
             new_current_start_idx,
