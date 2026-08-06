@@ -100,6 +100,9 @@ class MergedTensorIndexNode(object):
             if len(old_parent.children) == 0:
                 old_parent.remove_branch()
 
+    def is_root(self):
+        return self.parent is None
+
 
 class TensorIndexTree(object):
     root = IntDatacubeAxis()
