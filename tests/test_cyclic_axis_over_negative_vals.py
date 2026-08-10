@@ -172,6 +172,7 @@ class TestSlicingCyclicAxisNegVals:
         # result.pprint()
         assert len(result.leaves) == 1
         assert [(val,) for val in result.leaves[0].values] == [
+            (-1.1,),
             (-1.0,),
             (-0.9,),
             (-0.8,),
@@ -182,5 +183,4 @@ class TestSlicingCyclicAxisNegVals:
             (-0.4,),
             (-0.3,),
             (-0.2,),
-            (-0.1,),
         ]

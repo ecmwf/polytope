@@ -47,6 +47,7 @@ class DatacubeAxisCyclic(DatacubeAxisTransformation):
             return_lower = lower + (loops + 1) * axis_range
             return_upper = upper + (loops + 1) * axis_range
         elif lower >= axis_upper:
+            print("WERENT HERE????????")
             # In this case we need to calculate the number of loops between the axis upper
             # and the lower to recenter the lower
             loops = int((lower - axis_upper) / axis_range)
@@ -76,6 +77,23 @@ class DatacubeAxisCyclic(DatacubeAxisTransformation):
 
     def remap(self, range, ranges, axis):
         self.update_range(axis)
+        if range[0] == range[1] and range[0] == axis.range[1]:
+            range = [
+                self._remap_val_to_axis_range(range[0], axis) - axis.tol,
+                self._remap_val_to_axis_range(range[0], axis) + axis.tol,
+            ]
+            return [range]
+        if axis.range[0] - axis.tol <= range[0] <= axis.range[1] + axis.tol:
+            if axis.range[0] - axis.tol <= range[1] <= axis.range[1] + axis.tol:
+                # If we are already in the cyclic range, return it
+                print("LOOK HERE NOW ACRTUALLY")
+                print(range)
+                # return [range]
+                # range = [
+                #     self._remap_val_to_axis_range(range[0], axis) - axis.tol,
+                #     self._remap_val_to_axis_range(range[0], axis) + axis.tol,
+                # ]
+                return [range]
         if abs(range[0] - range[1]) <= 2 * axis.tol:
             # If we have a range that is just one point, then it should still be counted
             # and so we should take a small interval around it to find values inbetween
@@ -84,13 +102,13 @@ class DatacubeAxisCyclic(DatacubeAxisTransformation):
                 self._remap_val_to_axis_range(range[0], axis) + axis.tol,
             ]
             return [range]
-        elif axis.range[0] - axis.tol <= range[0] <= axis.range[1] + axis.tol:
-            if axis.range[0] - axis.tol <= range[1] <= axis.range[1] + axis.tol:
-                # If we are already in the cyclic range, return it
-                print("LOOK HERE NOW ACRTUALLY")
-                print(range)
-                print(range)
-                return [range]
+        # elif axis.range[0] - axis.tol <= range[0] <= axis.range[1] + axis.tol:
+        #     if axis.range[0] - axis.tol <= range[1] <= axis.range[1] + axis.tol:
+        #         # If we are already in the cyclic range, return it
+        #         print("LOOK HERE NOW ACRTUALLY")
+        #         print(range)
+        #         print(range)
+        #         return [range]
         # elif abs(range[0] - range[1]) <= 2 * axis.tol:
         #     # If we have a range that is just one point, then it should still be counted
         #     # and so we should take a small interval around it to find values inbetween
