@@ -55,7 +55,6 @@ class HullSlicer(Engine):
             pass
         else:
             tol = ax.tol
-            # print("WHAT IS LOW AND UP HERE ", lower, upper)
             lower = ax.from_float(lower - tol)
             upper = ax.from_float(upper + tol)
         flattened = node.flatten()

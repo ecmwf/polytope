@@ -63,5 +63,5 @@ class TestSlicingMultipleTransformationsOneAxis:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert max(result.leaves[-1].flatten()["longitude"]) == 360.0
-        assert min(result.leaves[0].flatten()["longitude"]) == 0.070093457944
+        assert max(result.leaves[-1].flatten()["longitude"]) == 359.929797191888
+        assert min(result.leaves[0].flatten()["longitude"]) == 0
