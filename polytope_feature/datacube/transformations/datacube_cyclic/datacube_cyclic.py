@@ -59,7 +59,10 @@ class DatacubeAxisCyclic(DatacubeAxisTransformation):
         return [return_lower, return_upper]
 
     def _remap_val_to_axis_range(self, value, axis):
+        print("WHAT ABOUT HERE")
+        print(value)
         value = self._remap_range_to_axis_range([value, value], axis)
+        print(value)
         return value[0]
 
     def offset(self, range, axis, offset):
@@ -73,11 +76,7 @@ class DatacubeAxisCyclic(DatacubeAxisTransformation):
 
     def remap(self, range, ranges, axis):
         self.update_range(axis)
-        if axis.range[0] - axis.tol <= range[0] <= axis.range[1] + axis.tol:
-            if axis.range[0] - axis.tol <= range[1] <= axis.range[1] + axis.tol:
-                # If we are already in the cyclic range, return it
-                return [range]
-        elif abs(range[0] - range[1]) <= 2 * axis.tol:
+        if abs(range[0] - range[1]) <= 2 * axis.tol:
             # If we have a range that is just one point, then it should still be counted
             # and so we should take a small interval around it to find values inbetween
             range = [
@@ -85,12 +84,31 @@ class DatacubeAxisCyclic(DatacubeAxisTransformation):
                 self._remap_val_to_axis_range(range[0], axis) + axis.tol,
             ]
             return [range]
+        elif axis.range[0] - axis.tol <= range[0] <= axis.range[1] + axis.tol:
+            if axis.range[0] - axis.tol <= range[1] <= axis.range[1] + axis.tol:
+                # If we are already in the cyclic range, return it
+                print("LOOK HERE NOW ACRTUALLY")
+                print(range)
+                print(range)
+                return [range]
+        # elif abs(range[0] - range[1]) <= 2 * axis.tol:
+        #     # If we have a range that is just one point, then it should still be counted
+        #     # and so we should take a small interval around it to find values inbetween
+        #     range = [
+        #         self._remap_val_to_axis_range(range[0], axis) - axis.tol,
+        #         self._remap_val_to_axis_range(range[0], axis) + axis.tol,
+        #     ]
+        #     return [range]
         range_intervals = self.to_intervals(range, [[]], axis)
+        print("WHAT ABOUT HERE ACTUALLY")
+        print(range_intervals)
         ranges = []
         for interval in range_intervals:
             if abs(interval[0] - interval[1]) > 0:
                 # If the interval is not just a single point, we remap it to the axis range
                 range = self._remap_range_to_axis_range([interval[0], interval[1]], axis)
+                print("REMAPPED RANGE")
+                print(range)
                 up = range[1]
                 low = range[0]
                 if up < low:

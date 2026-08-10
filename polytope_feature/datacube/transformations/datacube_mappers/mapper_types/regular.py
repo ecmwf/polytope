@@ -79,6 +79,9 @@ class RegularGridMapper(DatacubeMapper):
         first_idx = self._first_axis_vals.index(first_val)
         return_idxs = []
         for second_val in second_vals:
+            # print(second_val)
+            # print(second_vals)
+            # print(self.second_axis_vals(first_val))
             second_val = [i for i in self.second_axis_vals(first_val) if second_val - tol <= i <= second_val + tol][0]
             second_idx = self.second_axis_vals(first_val).index(second_val)
             final_index = self.axes_idx_to_regular_idx(first_idx, second_idx)
