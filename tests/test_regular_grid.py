@@ -3,7 +3,7 @@ import pytest
 from helper_functions import download_test_data, find_nearest_latlon
 
 from polytope_feature.polytope import Polytope, Request
-from polytope_feature.shapes import Disk, Select
+from polytope_feature.shapes import Box, Disk, Select
 
 # import geopandas as gpd
 # import matplotlib.pyplot as plt
@@ -142,3 +142,73 @@ class TestRegularGrid:
         # plt.show()
 
         assert len(eccodes_lats) == 3
+
+    @pytest.mark.fdb
+    @pytest.mark.internet
+    def test_regular_grid_cyclic(self):
+        import pygribjump as gj
+
+        request = Request(
+            Select("step", [0]),
+            Select("levtype", ["pl"]),
+            Select("date", [pd.Timestamp("20170102T120000")]),
+            Select("domain", ["g"]),
+            Select("expver", ["0001"]),
+            Select("param", ["129"]),
+            Select("class", ["ea"]),
+            Select("stream", ["enda"]),
+            Select("type", ["an"]),
+            Box(["latitude", "longitude"], [0, 10], [2, 370]),
+            Select("levelist", ["500"]),
+            Select("number", ["0", "1"]),
+        )
+        self.fdbdatacube = gj.GribJump()
+        self.API = Polytope(
+            datacube=self.fdbdatacube,
+            options=self.options,
+        )
+        result = self.API.retrieve(request)
+        result.pprint()
+        assert len(result.leaves) == 1
+
+        from polytope_feature.datacube.transformations.datacube_mappers.mapper_types.regular import (
+            RegularGridMapper,
+        )
+
+        lats = []
+        lons = []
+        eccodes_lats = []
+        tol = 1e-8
+        leaves = result.leaves
+        for i in range(len(leaves)):
+            right_pl_results = leaves[i].result[len(leaves[i].values) :]
+            result_tree = right_pl_results[0]
+            cubepath = leaves[i].flatten()
+            lat = cubepath["latitude"][0]
+            lon = cubepath["longitude"][0]
+            lats.append(lat)
+            lons.append(lon)
+            nearest_points = find_nearest_latlon("./tests/data/era5-levels-members.grib", lat, lon)
+            eccodes_lat = nearest_points[0][0]["lat"]
+            eccodes_lon = nearest_points[0][0]["lon"]
+            eccodes_value = nearest_points[121][0]["value"]
+            eccodes_lats.append(eccodes_lat)
+
+            mapper = RegularGridMapper("base", ["base1", "base2"], 30)
+            assert nearest_points[121][0]["index"] == mapper.unmap((lat,), (lon,))[0]
+
+            assert eccodes_lat - tol <= lat
+            assert lat <= eccodes_lat + tol
+            assert eccodes_lon - tol <= lon
+            assert lon <= eccodes_lon + tol
+            assert eccodes_value == result_tree
+
+        # worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
+        # fig, ax = plt.subplots(figsize=(12, 6))
+        # worldmap.plot(color="darkgrey", ax=ax)
+
+        # plt.scatter(lons, lats, s=16, c="red", cmap="YlOrRd")
+        # plt.colorbar(label="Temperature")
+        # plt.show()
+
+        assert len(eccodes_lats) == 1

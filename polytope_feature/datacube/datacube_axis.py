@@ -292,7 +292,9 @@ class PandasTimedeltaDatacubeAxis(DatacubeAxis):
             value = str(value)
         if isinstance(value, str) and "-" in value:
             return value
-        return pd.Timedelta(value)
+        if isinstance(value, str):
+            return pd.Timedelta(value)
+        return pd.to_timedelta(value, unit="h")
 
     def to_float(self, value: pd.Timedelta):
         if isinstance(value, np.timedelta64):

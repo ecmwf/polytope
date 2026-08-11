@@ -34,6 +34,7 @@ class TensorIndexTree(object):
         self.ancestors = []
         self.indexes = []
         self.hidden = False
+        self.tags = set()
 
     @property
     def leaves(self):
@@ -179,6 +180,7 @@ class TensorIndexTree(object):
         return non_hidden_child_counter
 
     def merge(self, other):
+        self.tags.update(other.tags)
         for other_child in other.children:
             my_child = self.find_child(other_child)
             if not my_child:

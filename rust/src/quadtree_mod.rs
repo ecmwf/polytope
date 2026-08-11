@@ -19,7 +19,7 @@ use ordered_float::OrderedFloat;
 
 #[derive(Debug)]
 #[derive(Clone)]
-#[pyclass]
+#[pyclass(skip_from_py_object)]
 pub struct QuadTreeNode {
     points: Option<Vec<usize>>,
     children: Vec<usize>,

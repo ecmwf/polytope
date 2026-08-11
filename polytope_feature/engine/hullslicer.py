@@ -36,6 +36,9 @@ class HullSlicer(Engine):
                     child, next_nodes = node.create_child(ax, lower, next_nodes)
                     child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
                     child["unsliced_polytopes"].remove(polytope)
+                    # Stamp the tag: unsliceable axes consume the polytope without a geometric slice
+                    if polytope.tag is not None:
+                        child.tags.add(polytope.tag)
                     next_nodes.append(child)
                 else:
                     child.add_value(lower)
@@ -52,7 +55,6 @@ class HullSlicer(Engine):
             pass
         else:
             tol = ax.tol
-            # print("WHAT IS LOW AND UP HERE ", lower, upper)
             lower = ax.from_float(lower - tol)
             upper = ax.from_float(upper + tol)
         flattened = node.flatten()
@@ -103,6 +105,10 @@ class HullSlicer(Engine):
                 child["unsliced_polytopes"].remove(polytope)
                 if new_polytope is not None:
                     child["unsliced_polytopes"].add(new_polytope)
+                else:
+                    # Polytope fully resolved at this node: stamp its tag
+                    if polytope.tag is not None:
+                        child.tags.add(polytope.tag)
                 next_nodes.append(child)
             else:
                 remapped_val = self.remap_values(ax, value)

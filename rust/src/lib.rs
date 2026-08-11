@@ -21,7 +21,7 @@ pub mod point_in_polygon;
 use crate::point_in_polygon::{extract_point_in_poly, extract_point_in_poly_bbox};
 
 #[pymodule]
-fn polytope_rs(py: Python, m: &PyModule) -> PyResult<()> {
+fn polytope_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(get_latlons_sphere, m)?)?;
     m.add_function(wrap_pyfunction!(get_latlons_oblate, m)?)?;
     m.add_function(wrap_pyfunction!(axes_idx_to_healpix_idx_batch, m)?)?;

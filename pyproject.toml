@@ -40,6 +40,7 @@ dependencies = [
     "conflator",
     "protobuf",
     "shapely",
+    "mapbox_earcut",
 ]
 
 [project.optional-dependencies]
