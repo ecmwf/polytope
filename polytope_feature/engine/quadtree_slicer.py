@@ -56,7 +56,7 @@ class QuadTreeSlicer(Engine):
                     nn_points = [tuple(pt) for pt in datacube.nearest_search[tuple(polytope.axes())][0]]
                 polygon_points = []
                 for nn_pt in nn_points:
-                    polygon_points.extend(self.quad_tree.k_nearest_neighbor(nn_pt, k, self.points))
+                    polygon_points.extend(self.quad_tree.k_nearest_neighbor(nn_pt, k))
         else:
             if revert_axes:
                 polytope.points = [tuple(reversed(point)) for point in polytope.points]

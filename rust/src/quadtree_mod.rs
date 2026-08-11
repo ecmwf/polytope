@@ -48,6 +48,7 @@ impl QuadTreeNode {
 #[pyclass]
 pub struct QuadTree {
     nodes: Vec<QuadTreeNode>,
+    points: Vec<(f64, f64)>,
 }
 
 #[pymethods]
@@ -56,17 +57,17 @@ impl QuadTree {
     fn new() -> Self {
         QuadTree {
             nodes: Vec::new(),
+            points: Vec::new(),
         }
     }
 
 
-    fn k_nearest_neighbor(&self, query: (f64, f64), k: usize, quadtree_points: Vec<(f64, f64)>) -> Option<Vec<usize>> {
+    fn k_nearest_neighbor(&self, query: (f64, f64), k: usize) -> Option<Vec<usize>> {
         if self.nodes.is_empty() {
             return None;
         }
-        // let mut heap = BinaryHeap::new();
         let mut heap = BinaryHeap::<Reverse<(OrderedFloat<f64>, usize)>>::new();
-        self.knn_search(0, query, k, &mut heap, &quadtree_points);
+        self.knn_search(0, query, k, &mut heap, &self.points);
 
         // keep only  point indexes from distance heap and sort from nearest to farthest
         let mut results: Vec<_> = heap.into_sorted_vec()
@@ -81,9 +82,10 @@ impl QuadTree {
         if self.nodes.is_empty() {
             return None;
         }
+        let pts = if quadtree_points.is_empty() { &self.points } else { &quadtree_points };
         let mut best_idx = None;
         let mut best_dist2 = f64::INFINITY;
-        self.nn_search(0, query, &mut best_idx, &mut best_dist2, &quadtree_points);
+        self.nn_search(0, query, &mut best_idx, &mut best_dist2, pts);
         best_idx
     }
 
@@ -103,6 +105,7 @@ impl QuadTree {
         points.iter().enumerate().for_each(|(index, _p)| {
             self.insert(index, 0, &points);
         });
+        self.points = points;
     }
 
 

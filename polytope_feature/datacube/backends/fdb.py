@@ -427,10 +427,8 @@ class FDBDatacube(Datacube):
                 nearest_latlons.extend(nearest_latlon)
 
             # need to remove the branches that do not fit
-            latlon_children_values = [child.values for child in requests.children]
-            for i in range(len(latlon_children_values)):
-                latlon_child_val = latlon_children_values[i]
-                latlon_child = [child for child in requests.children if child.values == latlon_child_val][0]
+            latlon_children_by_values = {child.values: child for child in requests.children}
+            for latlon_child_val, latlon_child in list(latlon_children_by_values.items()):
                 if latlon_child.values not in nearest_latlons:
                     latlon_child.remove_branch()
 
@@ -476,18 +474,18 @@ class FDBDatacube(Datacube):
                 nearest_latlons.extend(nearest_latlon)
 
             # need to remove the branches that do not fit
-            lat_children_values = [child.values for child in requests.children]
-            for i in range(len(lat_children_values)):
-                lat_child_val = lat_children_values[i]
-                lat_child = [child for child in requests.children if child.values == lat_child_val][0]
+            lat_children_by_values = {child.values: child for child in requests.children}
+            lat_children_values = list(lat_children_by_values.keys())
+            for lat_child_val in lat_children_values:
+                lat_child = lat_children_by_values[lat_child_val]
                 if lat_child.values not in [(latlon[0],) for latlon in nearest_latlons]:
                     lat_child.remove_branch()
                 else:
                     possible_lons = [latlon[1] for latlon in nearest_latlons if (latlon[0],) == lat_child.values]
-                    lon_children_values = [child.values for child in lat_child.children]
-                    for j in range(len(lon_children_values)):
-                        lon_child_val = lon_children_values[j]
-                        lon_child = [child for child in lat_child.children if child.values == lon_child_val][0]
+                    lon_children_by_values = {child.values: child for child in lat_child.children}
+                    lon_children_values = list(lon_children_by_values.keys())
+                    for lon_child_val in lon_children_values:
+                        lon_child = lon_children_by_values[lon_child_val]
                         for value in lon_child.values:
                             if value not in possible_lons:
                                 lon_child.remove_compressed_branch(value)
