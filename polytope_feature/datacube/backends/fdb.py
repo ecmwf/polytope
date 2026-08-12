@@ -274,7 +274,7 @@ class FDBDatacube(Datacube):
                     for c in requests.children:
                         self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path)
         if merged_leaf and len(requests.children[0].children) == 0:
-            print("WHAT IS IT HERE THOUGH THE REQUEST THAT WE LOOP OVER??")
+            # print("WHAT IS IT HERE THOUGH THE REQUEST THAT WE LOOP OVER??")
             if isinstance(requests, TensorIndexTree):
                 key_value_path = {requests.axis.name: requests.values}
                 ax = requests.axis
@@ -410,20 +410,20 @@ class FDBDatacube(Datacube):
                 transformed_nearest_pts.append([point[0], second_ax._remap_val_to_axis_range(point[1])])
 
             found_latlon_pts = []
-            print("AND HERE")
-            print(requests)
+            # print("AND HERE")
+            # print(requests)
             for latlon_child in requests.children:
-                print(latlon_child.values)
+                # print(latlon_child.values)
                 found_latlon_pts.append([[latlon_child.values[0]], [latlon_child.values[1]]])
 
             # now find the nearest lat lon to the points requested
             nearest_latlons = []
             for pt in transformed_nearest_pts:
-                print("LOOK NOW")
-                print(found_latlon_pts)
-                print(pt)
+                # print("LOOK NOW")
+                # print(found_latlon_pts)
+                # print(pt)
                 nearest_latlon = nearest_pt(found_latlon_pts, pt, k)
-                print(nearest_latlon)
+                # print(nearest_latlon)
                 nearest_latlons.extend(nearest_latlon)
 
             # need to remove the branches that do not fit
