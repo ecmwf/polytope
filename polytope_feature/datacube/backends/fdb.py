@@ -176,7 +176,6 @@ class FDBDatacube(Datacube):
             logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
         logging.info("Requests given to GribJump extract for %s", context)
         try:
-            # print()
             iterator = self.gj.extract(complete_list_complete_uncompressed_requests, context)
         except Exception as e:
             if "BadValue: Grid hash mismatch" in str(e):
@@ -251,20 +250,6 @@ class FDBDatacube(Datacube):
                         fdb_requests.append((path, sorted_request_ranges))
                         fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
                     else:
-                        # print("DID WE GO HERE???")
-                        # key_value_path = {requests.axes[0].name: requests.values[0]}
-                        # first_ax = requests.axes[0]
-                        # key_value_path, leaf_path, self.unwanted_path = first_ax.unmap_path_key(
-                        #     key_value_path, leaf_path, self.unwanted_path
-                        # )
-                        # leaf_path.update(key_value_path)
-                        # path, current_start_idxs, fdb_node_ranges, lat_length =
-                        # self.get_merged_2nd_last_values(requests, leaf_path)
-                        # original_indices, sorted_request_ranges, fdb_node_ranges = self.sort_fdb_request_ranges(
-                        #     current_start_idxs, lat_length, fdb_node_ranges
-                        # )
-                        # fdb_requests.append((path, sorted_request_ranges))
-                        # fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
                         merged_leaf = True
                         for c in requests.children:
                             self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path, merged_leaf)
@@ -274,7 +259,6 @@ class FDBDatacube(Datacube):
                     for c in requests.children:
                         self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path)
         if merged_leaf and len(requests.children[0].children) == 0:
-            print("WHAT IS IT HERE THOUGH THE REQUEST THAT WE LOOP OVER??")
             if isinstance(requests, TensorIndexTree):
                 key_value_path = {requests.axis.name: requests.values}
                 ax = requests.axis
@@ -291,40 +275,6 @@ class FDBDatacube(Datacube):
                 )
                 fdb_requests.append((path, sorted_request_ranges))
                 fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
-
-                # for c in requests.children:
-                #     self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path, merged_leaf)
-            # else:
-            #     key_value_path = {requests.axes[0].name: requests.values[0]}
-            #     first_ax = requests.axes[0]
-            #     key_value_path, leaf_path, self.unwanted_path = first_ax.unmap_path_key(
-            #         key_value_path, leaf_path, self.unwanted_path
-            #     )
-            #     leaf_path.update(key_value_path)
-            #     path, current_start_idxs, fdb_node_ranges, lat_length = self.get_merged_2nd_last_values(
-            #         requests, leaf_path
-            #     )
-            #     original_indices, sorted_request_ranges, fdb_node_ranges = self.sort_fdb_request_ranges(
-            #         current_start_idxs, lat_length, fdb_node_ranges
-            #     )
-            #     fdb_requests.append((path, sorted_request_ranges))
-            #     fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
-        # else:
-        #     # TODO
-        #     print("DID WE GO HERE???")
-        #     key_value_path = {requests.axes[0].name: requests.values[0]}
-        #     first_ax = requests.axes[0]
-        #     key_value_path, leaf_path, self.unwanted_path = first_ax.unmap_path_key(
-        #         key_value_path, leaf_path, self.unwanted_path
-        #     )
-        #     leaf_path.update(key_value_path)
-        #     path, current_start_idxs, fdb_node_ranges, lat_length =
-        #  self.get_merged_2nd_last_values(requests, leaf_path)
-        #     original_indices, sorted_request_ranges, fdb_node_ranges = self.sort_fdb_request_ranges(
-        #         current_start_idxs, lat_length, fdb_node_ranges
-        #     )
-        #     fdb_requests.append((path, sorted_request_ranges))
-        #     fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
 
     def remove_duplicates_in_request_ranges(self, fdb_node_ranges, current_start_idxs):
         # First pass: identify which (i, k) "wins" each index (first occurrence).
@@ -410,27 +360,25 @@ class FDBDatacube(Datacube):
                 transformed_nearest_pts.append([point[0], second_ax._remap_val_to_axis_range(point[1])])
 
             found_latlon_pts = []
-            print("AND HERE")
-            print(requests)
+            # print("AND HERE")
+            # print(requests)
             for latlon_child in requests.children:
-                print(latlon_child.values)
+                # print(latlon_child.values)
                 found_latlon_pts.append([[latlon_child.values[0]], [latlon_child.values[1]]])
 
             # now find the nearest lat lon to the points requested
             nearest_latlons = []
             for pt in transformed_nearest_pts:
-                print("LOOK NOW")
-                print(found_latlon_pts)
-                print(pt)
+                # print("LOOK NOW")
+                # print(found_latlon_pts)
+                # print(pt)
                 nearest_latlon = nearest_pt(found_latlon_pts, pt, k)
-                print(nearest_latlon)
+                # print(nearest_latlon)
                 nearest_latlons.extend(nearest_latlon)
 
             # need to remove the branches that do not fit
-            latlon_children_values = [child.values for child in requests.children]
-            for i in range(len(latlon_children_values)):
-                latlon_child_val = latlon_children_values[i]
-                latlon_child = [child for child in requests.children if child.values == latlon_child_val][0]
+            latlon_children_by_values = {child.values: child for child in requests.children}
+            for latlon_child_val, latlon_child in list(latlon_children_by_values.items()):
                 if latlon_child.values not in nearest_latlons:
                     latlon_child.remove_branch()
 
@@ -476,18 +424,18 @@ class FDBDatacube(Datacube):
                 nearest_latlons.extend(nearest_latlon)
 
             # need to remove the branches that do not fit
-            lat_children_values = [child.values for child in requests.children]
-            for i in range(len(lat_children_values)):
-                lat_child_val = lat_children_values[i]
-                lat_child = [child for child in requests.children if child.values == lat_child_val][0]
+            lat_children_by_values = {child.values: child for child in requests.children}
+            lat_children_values = list(lat_children_by_values.keys())
+            for lat_child_val in lat_children_values:
+                lat_child = lat_children_by_values[lat_child_val]
                 if lat_child.values not in [(latlon[0],) for latlon in nearest_latlons]:
                     lat_child.remove_branch()
                 else:
                     possible_lons = [latlon[1] for latlon in nearest_latlons if (latlon[0],) == lat_child.values]
-                    lon_children_values = [child.values for child in lat_child.children]
-                    for j in range(len(lon_children_values)):
-                        lon_child_val = lon_children_values[j]
-                        lon_child = [child for child in lat_child.children if child.values == lon_child_val][0]
+                    lon_children_by_values = {child.values: child for child in lat_child.children}
+                    lon_children_values = list(lon_children_by_values.keys())
+                    for lon_child_val in lon_children_values:
+                        lon_child = lon_children_by_values[lon_child_val]
                         for value in lon_child.values:
                             if value not in possible_lons:
                                 lon_child.remove_compressed_branch(value)

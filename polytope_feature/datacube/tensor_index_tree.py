@@ -107,9 +107,9 @@ class MergedTensorIndexNode(object):
     def remove_branch(self):
         if not self.is_root():
             old_parent = self._parent
-            print("WHAT WHEN WE REMOVE BRANCHES??")
-            print([c for c in self._parent.children])
-            print(self)
+            # print("WHAT WHEN WE REMOVE BRANCHES??")
+            # print([c for c in self._parent.children])
+            # print(self)
             self._parent.children.remove(self)
             self._parent = None
             if len(old_parent.children) == 0:

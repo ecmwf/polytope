@@ -233,9 +233,11 @@ class TestNearestNeighbor:
             result = quadtree.nearest_neighbor(query, points)
             expected_idx, expected_dist = find_expected_nearest(query, points)
 
-            assert result == expected_idx, f"Query {query}: expected {expected_idx}, got {result}"
-
             result_dist = squared_distance(query, points[result])
+            assert result_dist == expected_dist, (
+                f"Query {query}: got index {result} (dist²={result_dist}) "
+                f"but expected dist²={expected_dist} (one candidate: index {expected_idx})"
+            )
             print(f"✓ Query {query} → index {result} (dist²={result_dist:.2f})")
 
     def run_all(self):
