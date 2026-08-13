@@ -1,11 +1,12 @@
 import pytest
 
+from polytope_feature.datacube.backends.mock import MockDatacube
 from polytope_feature.datacube.quadtree.quad_tree import QuadNode
 from polytope_feature.datacube.quadtree.quadtree_additional_operations import (
     query_polygon,
 )
 from polytope_feature.datacube.tensor_index_tree import TensorIndexTree
-from polytope_feature.engine.quadtree_slicer import QuadTreeSlicer
+from polytope_feature.engine.quadtree_slicer import QuadTreeSlicer, use_rust
 from polytope_feature.polytope import Polytope
 from polytope_feature.shapes import Box, ConvexPolytope
 from polytope_feature.utility.geometry import slice_in_two
@@ -238,3 +239,15 @@ class TestQuadTreeSlicer:
         self.API.engines["quadtree"]._build_sliceable_child(polytope, lat_ax, tree, self.API.datacube, [], None)
         print(time.time() - time1)
         assert len(tree.leaves) == 55100
+
+
+class TestQuadTreeSlicerWithoutFdb:
+    def test_extract_single_longitude_first(self):
+        grid = [(4, 1), (1, 4)]  # quadtree constructor assumes points are lat/lon
+        slicer = QuadTreeSlicer(grid)
+        polytope = Box(["longitude", "latitude"], [0, 2], [3, 5]).polytope()[0]
+        found = {
+            slicer.points[point if use_rust else point.index]
+            for point in slicer.extract_single(MockDatacube({}), polytope)
+        }
+        assert found == {(4, 1)}
