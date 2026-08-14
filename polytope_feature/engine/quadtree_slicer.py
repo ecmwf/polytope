@@ -1,5 +1,4 @@
 import logging
-from copy import copy
 
 from ..datacube.transformations.datacube_cyclic.datacube_cyclic import (
     DatacubeAxisCyclic,
@@ -56,7 +55,7 @@ class QuadTreeSlicer(Engine):
                     nn_points = [tuple(pt) for pt in datacube.nearest_search[tuple(polytope.axes())][0]]
                 polygon_points = []
                 for nn_pt in nn_points:
-                    polygon_points.extend(self.quad_tree.k_nearest_neighbor(nn_pt, k, self.points))
+                    polygon_points.extend(self.quad_tree.k_nearest_neighbor(nn_pt, k))
         else:
             if revert_axes:
                 polytope.points = [tuple(reversed(point)) for point in polytope.points]
@@ -64,10 +63,13 @@ class QuadTreeSlicer(Engine):
         return polygon_points
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):
-        for polytope in node["unsliced_polytopes"]:
-            if ax.name in polytope._axes:
-                self._build_sliceable_child(polytope, ax, node, datacube, next_nodes, api)
-        del node["unsliced_polytopes"]
+        if len(datacube.nearest_search) == 0:
+            for polytope in node["unsliced_polytopes"]:
+                if ax.name in polytope._axes:
+                    self._build_sliceable_child(polytope, ax, node, datacube, next_nodes, api)
+            del node["unsliced_polytopes"]
+        else:
+            self._build_sliceable_child(node["unsliced_polytopes"].pop(), ax, node, datacube, next_nodes, api)
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes, api):
         lon_ax = datacube._axes["longitude"]
@@ -103,12 +105,11 @@ class QuadTreeSlicer(Engine):
                 lat_val = value.item[0]
                 lon_val = value.item[1]
             # store the native type
-            child, _ = node.create_child(lat_ax, lat_val, [])
-            grand_child, _ = child.create_child(lon_ax, lon_val, [])
+            grand_child, _ = node.create_merged_child([lat_ax, lon_ax], (lat_val, lon_val), [])
             # NOTE: the index of the point is stashed in the branches' result
             if use_rust:
                 grand_child.indexes = [value]
             else:
                 grand_child.indexes = [value.index]
-            grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
-            grand_child["unsliced_polytopes"].remove(polytope)
+            # grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
+            # grand_child["unsliced_polytopes"].remove(polytope)

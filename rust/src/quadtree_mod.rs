@@ -12,7 +12,6 @@ use crate::slicing_tools::{is_contained_in, slice_in_two};
 use crate::distance::{dist2, box_dist2};
 
 use std::collections::BinaryHeap;
-use std::cmp::Reverse;
 use ordered_float::OrderedFloat;
 
 
@@ -48,6 +47,7 @@ impl QuadTreeNode {
 #[pyclass]
 pub struct QuadTree {
     nodes: Vec<QuadTreeNode>,
+    points: Vec<(f64, f64)>,
 }
 
 #[pymethods]
@@ -56,22 +56,25 @@ impl QuadTree {
     fn new() -> Self {
         QuadTree {
             nodes: Vec::new(),
+            points: Vec::new(),
         }
     }
 
 
-    fn k_nearest_neighbor(&self, query: (f64, f64), k: usize, quadtree_points: Vec<(f64, f64)>) -> Option<Vec<usize>> {
+    fn k_nearest_neighbor(&self, query: (f64, f64), k: usize) -> Option<Vec<usize>> {
         if self.nodes.is_empty() {
             return None;
         }
-        // let mut heap = BinaryHeap::new();
-        let mut heap = BinaryHeap::<Reverse<(OrderedFloat<f64>, usize)>>::new();
-        self.knn_search(0, query, k, &mut heap, &quadtree_points);
+        // Max-heap of (dist², idx): top = farthest of the k current candidates.
+        // Using a max-heap lets us prune by the k-th nearest distance and replace
+        // the farthest candidate when a closer point is found.
+        let mut heap = BinaryHeap::<(OrderedFloat<f64>, usize)>::new();
+        self.knn_search(0, query, k, &mut heap, &self.points);
 
-        // keep only  point indexes from distance heap and sort from nearest to farthest
-        let mut results: Vec<_> = heap.into_sorted_vec()
+        // into_sorted_vec() returns ascending order (nearest first) for a max-heap.
+        let results: Vec<usize> = heap.into_sorted_vec()
             .into_iter()
-            .map(|Reverse((OrderedFloat(_d2), idx))| idx)
+            .map(|(OrderedFloat(_d2), idx)| idx)
             .collect();
 
         Some(results)
@@ -81,9 +84,10 @@ impl QuadTree {
         if self.nodes.is_empty() {
             return None;
         }
+        let pts = if quadtree_points.is_empty() { &self.points } else { &quadtree_points };
         let mut best_idx = None;
         let mut best_dist2 = f64::INFINITY;
-        self.nn_search(0, query, &mut best_idx, &mut best_dist2, &quadtree_points);
+        self.nn_search(0, query, &mut best_idx, &mut best_dist2, pts);
         best_idx
     }
 
@@ -99,10 +103,33 @@ impl QuadTree {
     }
 
     fn build_point_tree(&mut self, points: Vec<(f64, f64)>) {
-        self.create_node((0.0,0.0), (180.0, 90.0), 0);
+        if points.is_empty() {
+            return;
+        }
+        // Compute a tight bounding box so the root node covers only the actual
+        // data extent rather than the entire globe.  This ensures useful pruning
+        // starts at the very first level of the tree.
+        let mut min_x = points[0].0;
+        let mut max_x = points[0].0;
+        let mut min_y = points[0].1;
+        let mut max_y = points[0].1;
+        for &(x, y) in &points {
+            if x < min_x { min_x = x; }
+            if x > max_x { max_x = x; }
+            if y < min_y { min_y = y; }
+            if y > max_y { max_y = y; }
+        }
+        let cx = (min_x + max_x) * 0.5;
+        let cy = (min_y + max_y) * 0.5;
+        // Add a tiny epsilon so boundary points are strictly inside the root.
+        let sx = (max_x - min_x) * 0.5 + 1e-9;
+        let sy = (max_y - min_y) * 0.5 + 1e-9;
+
+        self.create_node((cx, cy), (sx, sy), 0);
         points.iter().enumerate().for_each(|(index, _p)| {
             self.insert(index, 0, &points);
         });
+        self.points = points;
     }
 
 
@@ -183,41 +210,51 @@ impl QuadTree {
         node_idx: usize,
         query: (f64, f64),
         k: usize,
-        heap: &mut BinaryHeap<Reverse<(OrderedFloat<f64>, usize)>>, // min-heap of distances
+        heap: &mut BinaryHeap<(OrderedFloat<f64>, usize)>, // max-heap: top = farthest of k candidates
         quadtree_points: &Vec<(f64, f64)>,
     ) {
         let node = &self.nodes[node_idx];
 
-        // use farthest distance in the current heap to prune
+        // Threshold = distance to k-th nearest known point (farthest in the heap).
+        // Any node whose closest possible point is >= this distance can be skipped.
         let prune_dist2 = if heap.len() < k {
             f64::INFINITY
         } else {
-            heap.peek().unwrap().0 .0 .into_inner()
+            heap.peek().unwrap().0.into_inner() // max dist² in heap = k-th nearest
         };
 
-        // if this node is farther than the k-th current best, ignore
-        if box_dist2(node.center, node.size, query) > prune_dist2 {
+        if box_dist2(node.center, node.size, query) >= prune_dist2 {
             return;
         }
 
-        // compare distance of points inside leaf node
+        // Leaf: check every point in this node.
         if let Some(point_indices) = &node.points {
             for &pi in point_indices {
                 let p = quadtree_points[pi];
                 let d2 = dist2(p, query);
-
                 if heap.len() < k {
-                    heap.push(Reverse((OrderedFloat(d2), pi)));
-                } else if d2 < heap.peek().unwrap().0 .0 .into_inner(){
+                    heap.push((OrderedFloat(d2), pi));
+                } else if d2 < heap.peek().unwrap().0.into_inner() {
+                    // Replace the current farthest candidate with this closer point.
                     heap.pop();
-                    heap.push(Reverse((OrderedFloat(d2), pi)));
+                    heap.push((OrderedFloat(d2), pi));
                 }
             }
             return;
         }
 
-        // recurse into children
-        for &child_idx in &node.children {
+        // Internal node: visit children closest-first so we tighten the bound
+        // early and prune more aggressively on subsequent children.
+        let children: Vec<usize> = node.children.to_vec();
+        let mut children_by_dist: Vec<(f64, usize)> = children.iter()
+            .map(|&ci| {
+                let cn = &self.nodes[ci];
+                (box_dist2(cn.center, cn.size, query), ci)
+            })
+            .collect();
+        children_by_dist.sort_unstable_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+
+        for (_, child_idx) in children_by_dist {
             self.knn_search(child_idx, query, k, heap, quadtree_points);
         }
     }
@@ -232,12 +269,12 @@ impl QuadTree {
     ) {
         let node = &self.nodes[node_idx];
 
-        // if this node is farther than the current best, ignore
-        if box_dist2(node.center, node.size, query) > *best_dist2 {
+        // Prune: node cannot improve on the current best.
+        if box_dist2(node.center, node.size, query) >= *best_dist2 {
             return;
         }
 
-        // compare distance of points inside leaf node
+        // Leaf: check every point.
         if let Some(point_indices) = &node.points {
             for &pi in point_indices {
                 let p = quadtree_points[pi];
@@ -249,9 +286,19 @@ impl QuadTree {
             }
             return;
         }
-        // else, recurse into children
-        for &child_idx in &node.children {
-            self.nn_search(child_idx, query, best_idx, best_dist2, &quadtree_points);
+
+        // Internal node: visit children closest-first so the bound tightens fast.
+        let children: Vec<usize> = node.children.to_vec();
+        let mut children_by_dist: Vec<(f64, usize)> = children.iter()
+            .map(|&ci| {
+                let cn = &self.nodes[ci];
+                (box_dist2(cn.center, cn.size, query), ci)
+            })
+            .collect();
+        children_by_dist.sort_unstable_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+
+        for (_, child_idx) in children_by_dist {
+            self.nn_search(child_idx, query, best_idx, best_dist2, quadtree_points);
         }
     }
 

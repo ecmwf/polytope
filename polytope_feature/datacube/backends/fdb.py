@@ -1,10 +1,11 @@
 import logging
 import operator
-from copy import deepcopy
+from copy import copy, deepcopy
 from itertools import product
 
 from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
 from ...utility.geometry import nearest_pt
+from ..tensor_index_tree import MergedTensorIndexNode
 from .datacube import Datacube, TensorIndexTree
 
 
@@ -195,44 +196,85 @@ class FDBDatacube(Datacube):
         fdb_requests=[],
         fdb_requests_decoding_info=[],
         leaf_path=None,
+        merged_leaf=False,
     ):
         if leaf_path is None:
             leaf_path = {}
 
         # First when request node is root, go to its children
-        if requests.axis.name == "root":
-            logging.debug("Looking for data for the tree")
+        # if isinstance(requests, TensorIndexTree):
+        if not merged_leaf:
+            if requests.axis.name == "root":
+                logging.debug("Looking for data for the tree")
 
-            for c in requests.children:
-                self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info)
-        # If request node has no children, we have a leaf so need to assign fdb values to it
-        else:
-            key_value_path = {requests.axis.name: requests.values}
-            ax = requests.axis
-            key_value_path, leaf_path, self.unwanted_path = ax.unmap_path_key(
-                key_value_path, leaf_path, self.unwanted_path
-            )
-            leaf_path.update(key_value_path)
-            if len(requests.children[0].children[0].children) == 0:
-                # find the fdb_requests and associated nodes to which to add results
-                (
-                    path,
-                    current_start_idxs,
-                    fdb_node_ranges,
-                    lat_length,
-                ) = self.get_2nd_last_values(requests, leaf_path)
-                (
-                    original_indices,
-                    sorted_request_ranges,
-                    fdb_node_ranges,
-                ) = self.sort_fdb_request_ranges(current_start_idxs, lat_length, fdb_node_ranges)
+                for c in requests.children:
+                    self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info)
+            # If request node has no children, we have a leaf so need to assign fdb values to it
+            else:
+                key_value_path = {requests.axis.name: requests.values}
+                ax = requests.axis
+                key_value_path, leaf_path, self.unwanted_path = ax.unmap_path_key(
+                    key_value_path, leaf_path, self.unwanted_path
+                )
+                leaf_path.update(key_value_path)
+                # If the direct children are MergedTensorIndexNodes (merged lat-lon leaves),
+                # collect all of them at once into a single FDB request for this path.
+                if isinstance(requests.children[0], MergedTensorIndexNode):
+                    (
+                        path,
+                        current_start_idxs,
+                        fdb_node_ranges,
+                        lat_length,
+                    ) = self.get_merged_2nd_last_values(requests, leaf_path)
+                    (
+                        original_indices,
+                        sorted_request_ranges,
+                        fdb_node_ranges,
+                    ) = self.sort_fdb_request_ranges(current_start_idxs, lat_length, fdb_node_ranges)
+                    fdb_requests.append((path, sorted_request_ranges))
+                    fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
+                elif len(requests.children[0].children[0].children) == 0:
+                    if isinstance(requests.children[0].children[0], TensorIndexTree):
+                        # find the fdb_requests and associated nodes to which to add results
+                        (
+                            path,
+                            current_start_idxs,
+                            fdb_node_ranges,
+                            lat_length,
+                        ) = self.get_2nd_last_values(requests, leaf_path)
+                        (
+                            original_indices,
+                            sorted_request_ranges,
+                            fdb_node_ranges,
+                        ) = self.sort_fdb_request_ranges(current_start_idxs, lat_length, fdb_node_ranges)
+                        fdb_requests.append((path, sorted_request_ranges))
+                        fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
+                    else:
+                        merged_leaf = True
+                        for c in requests.children:
+                            self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path, merged_leaf)
+
+                # Otherwise remap the path for this key and iterate again over children
+                else:
+                    for c in requests.children:
+                        self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path)
+        if merged_leaf and len(requests.children[0].children) == 0:
+            if isinstance(requests, TensorIndexTree):
+                key_value_path = {requests.axis.name: requests.values}
+                ax = requests.axis
+                key_value_path, leaf_path, self.unwanted_path = ax.unmap_path_key(
+                    key_value_path, leaf_path, self.unwanted_path
+                )
+                leaf_path.update(key_value_path)
+
+                path, current_start_idxs, fdb_node_ranges, lat_length = self.get_merged_2nd_last_values(
+                    requests, leaf_path
+                )
+                original_indices, sorted_request_ranges, fdb_node_ranges = self.sort_fdb_request_ranges(
+                    current_start_idxs, lat_length, fdb_node_ranges
+                )
                 fdb_requests.append((path, sorted_request_ranges))
                 fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
-
-            # Otherwise remap the path for this key and iterate again over children
-            else:
-                for c in requests.children:
-                    self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path)
 
     def remove_duplicates_in_request_ranges(self, fdb_node_ranges, current_start_idxs):
         # First pass: identify which (i, k) "wins" each index (first occurrence).
@@ -287,6 +329,59 @@ class FDBDatacube(Datacube):
 
         return new_fdb_node_ranges, new_current_start_idxs
 
+    def nearest_lat_lon_search_merged(self, requests):
+        if len(self.nearest_search) != 0:
+            first_ax_name = requests.children[0].axes[0].name
+            second_ax_name = requests.children[0].axes[1].name
+
+            axes_in_nearest_search = [
+                first_ax_name not in self.nearest_search.keys(),
+                second_ax_name not in self.nearest_search.keys(),
+            ]
+
+            if all(not item for item in axes_in_nearest_search):
+                raise Exception("nearest point search axes are wrong")
+
+            second_ax = requests.children[0].axes[1]
+
+            nearest_pts_k = self.nearest_search.get((first_ax_name, second_ax_name), None)
+            if nearest_pts_k is None:
+                nearest_pts_k = self.nearest_search.get((second_ax_name, first_ax_name), None)
+                for i, pt in enumerate(nearest_pts_k[0]):
+                    nearest_pts_k[0][i] = [pt[1], pt[0]]
+
+            k = nearest_pts_k[1]
+            if k != 1 and not self.grid_transformation.is_irregular:
+                print("k nearest neighbour not supported in hullslicer, defaulting to nearest neighbour.")
+                k = 1
+
+            transformed_nearest_pts = []
+            for point in nearest_pts_k[0]:
+                transformed_nearest_pts.append([point[0], second_ax._remap_val_to_axis_range(point[1])])
+
+            found_latlon_pts = []
+            # print("AND HERE")
+            # print(requests)
+            for latlon_child in requests.children:
+                # print(latlon_child.values)
+                found_latlon_pts.append([[latlon_child.values[0]], [latlon_child.values[1]]])
+
+            # now find the nearest lat lon to the points requested
+            nearest_latlons = []
+            for pt in transformed_nearest_pts:
+                # print("LOOK NOW")
+                # print(found_latlon_pts)
+                # print(pt)
+                nearest_latlon = nearest_pt(found_latlon_pts, pt, k)
+                # print(nearest_latlon)
+                nearest_latlons.extend(nearest_latlon)
+
+            # need to remove the branches that do not fit
+            latlon_children_by_values = {child.values: child for child in requests.children}
+            for latlon_child_val, latlon_child in list(latlon_children_by_values.items()):
+                if latlon_child.values not in nearest_latlons:
+                    latlon_child.remove_branch()
+
     def nearest_lat_lon_search(self, requests):
         if len(self.nearest_search) != 0:
             first_ax_name = requests.children[0].axis.name
@@ -329,18 +424,18 @@ class FDBDatacube(Datacube):
                 nearest_latlons.extend(nearest_latlon)
 
             # need to remove the branches that do not fit
-            lat_children_values = [child.values for child in requests.children]
-            for i in range(len(lat_children_values)):
-                lat_child_val = lat_children_values[i]
-                lat_child = [child for child in requests.children if child.values == lat_child_val][0]
+            lat_children_by_values = {child.values: child for child in requests.children}
+            lat_children_values = list(lat_children_by_values.keys())
+            for lat_child_val in lat_children_values:
+                lat_child = lat_children_by_values[lat_child_val]
                 if lat_child.values not in [(latlon[0],) for latlon in nearest_latlons]:
                     lat_child.remove_branch()
                 else:
                     possible_lons = [latlon[1] for latlon in nearest_latlons if (latlon[0],) == lat_child.values]
-                    lon_children_values = [child.values for child in lat_child.children]
-                    for j in range(len(lon_children_values)):
-                        lon_child_val = lon_children_values[j]
-                        lon_child = [child for child in lat_child.children if child.values == lon_child_val][0]
+                    lon_children_by_values = {child.values: child for child in lat_child.children}
+                    lon_children_values = list(lon_children_by_values.keys())
+                    for lon_child_val in lon_children_values:
+                        lon_child = lon_children_by_values[lon_child_val]
                         for value in lon_child.values:
                             if value not in possible_lons:
                                 lon_child.remove_compressed_branch(value)
@@ -372,6 +467,57 @@ class FDBDatacube(Datacube):
                 current_start_idxs[i],
                 fdb_node_ranges[i],
             ) = self.get_last_layer_before_leaf(lat_child, leaf_path, current_start_idx, fdb_range_nodes)
+
+        leaf_path_copy = deepcopy(leaf_path)
+        leaf_path_copy.pop("values", None)
+        leaf_path_copy.pop("index")
+        return (leaf_path_copy, current_start_idxs, fdb_node_ranges, lat_length)
+
+    def get_merged_2nd_last_values(self, requests, leaf_path=None):
+        if leaf_path is None:
+            leaf_path = {}
+        # requests is the parent TensorIndexTree node whose direct children are all
+        # MergedTensorIndexNodes (each holding values=(lat, lon) and indexes=[flat_idx]).
+        # Iterate over all of them so one FDB request covers the entire shared path.
+        self.nearest_lat_lon_search_merged(requests)
+
+        lat_length = len(requests.children)
+        current_start_idxs = [None] * lat_length
+        fdb_node_ranges = [None] * lat_length
+
+        # print("WHAT ABOUT HERE")
+        # print(requests)
+        # print(requests.children)
+
+        for i, merged_child in enumerate(requests.children):
+            # self.nearest_lat_lon_search_merged(requests)
+            # self.nearest_lat_lon_search_merged(merged_child)
+            lat_ax = merged_child.axes[0]
+            lon_ax = merged_child.axes[1]
+
+            # Two-pass unmapping mirroring get_2nd_last_values + get_last_layer_before_leaf:
+            # Pass 1 — lat: stash lat value in unwanted_path (no index produced yet)
+            kv_lat = {lat_ax.name: merged_child.values[0]}
+            kv_lat, leaf_path, self.unwanted_path = lat_ax.unmap_path_key(kv_lat, leaf_path, self.unwanted_path)
+            leaf_path.update(kv_lat)
+
+            # Pass 2 — lon: use stashed lat + pre-computed flat index to obtain FDB index
+            kv_lon = {lon_ax.name: merged_child.values[1]}
+            leaf_path["index"] = merged_child.indexes
+            kv_lon, leaf_path, self.unwanted_path = lon_ax.unmap_path_key(kv_lon, leaf_path, self.unwanted_path)
+            flat_indices = list(kv_lon["values"])
+
+            # Proxy protects merged_child.values=(lat, lon) from mutation by
+            # sort_fdb_request_ranges / remove_duplicates, while sharing .result so
+            # that assign_fdb_output_to_nodes writes back onto the real node.
+            proxy = copy(merged_child)
+            proxy.values = (merged_child.values[1],)  # length == len(flat_indices)
+            proxy.remove_branch = merged_child.remove_branch  # delegate tree removal
+
+            current_start_idxs[i] = [flat_indices]
+            # current_start_idxs = [[flat_indices]]
+            fdb_node_ranges[i] = [[proxy]]
+            # fdb_node_ranges = [[[proxy]]]
 
         leaf_path_copy = deepcopy(leaf_path)
         leaf_path_copy.pop("values", None)
@@ -416,6 +562,10 @@ class FDBDatacube(Datacube):
         logging.debug("Finished assigning GribJump output to tree nodes")
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
+        # print("WHAT DO WE HAVE HERE THROUGH")
+        # print(current_start_idx)
+        # print(lat_length)
+        # print(fdb_node_ranges)
         (
             new_fdb_node_ranges,
             new_current_start_idx,
