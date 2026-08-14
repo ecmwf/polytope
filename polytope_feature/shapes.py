@@ -146,7 +146,7 @@ class Point(Shape):
         self.k = k
         self.tag = tag
         self.decompose_1D = True
-        assert len(values) == 1
+        # assert len(values) == 1
 
     def axes(self):
         return self._axes

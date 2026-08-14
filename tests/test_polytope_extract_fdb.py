@@ -106,9 +106,9 @@ class TestPolytopeExtract:
         result = self.API.retrieve(request)
 
         assert len(result.leaves) == 3
-        assert result.leaves[0].flatten()["longitude"] == (0,)
-        assert result.leaves[0].flatten()["latitude"] == (0.035149384216,)
-        assert result.leaves[1].flatten()["longitude"] == (10,)
-        assert result.leaves[1].flatten()["latitude"] == (5,)
-        assert result.leaves[2].flatten()["longitude"] == (10,)
-        assert result.leaves[2].flatten()["latitude"] == (10,)
+        assert result.leaves[0].flatten()["longitude"] == list((0,))
+        assert result.leaves[0].flatten()["latitude"] == list((0.035149384216,))
+        assert result.leaves[1].flatten()["longitude"] == list((10,))
+        assert result.leaves[1].flatten()["latitude"] == list((5,))
+        assert result.leaves[2].flatten()["longitude"] == list((10,))
+        assert result.leaves[2].flatten()["latitude"] == list((10,))

@@ -20,6 +20,124 @@ class DatacubePath(OrderedDict):
         print(result[:-1])
 
 
+class MergedTensorIndexNode(object):
+    def __init__(self, axes=None, values=tuple()):
+        # TODO
+        self.axes = axes
+        self.values = values
+        self.children = SortedList()
+        self._parent = None
+        self.indexes = []
+        self.result = []
+        self.hidden = False
+        self.ancestors = []
+        self.axis = axes[0] if axes is not None else None
+        self.tags = set()
+
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def __delitem__(self, key):
+        return delattr(self, key)
+
+    def __lt__(self, other):
+        return ((self.axes[0].name, self.axes[1].name), self.values) < (
+            (other.axes[0].name, other.axes[1].name),
+            other.values,
+        )
+
+    def __eq__(self, other):
+        if not isinstance(other, MergedTensorIndexNode):
+            return False
+        if self.axes[0].name == other.axes[0].name and self.axes[1].name == other.axes[1].name:
+            if other.values == self.values:
+                return True
+        return False
+
+    # def __hash__(self):
+    #     return hash((self.axes[0].name, self.axes[1].name, self.values))
+
+    def _collect_leaf_nodes(self, leaves):
+        if len(self.children) == 0:
+            leaves.append(self)
+
+    def flatten(self):
+        path = DatacubePath()
+        ancestors = self.get_ancestors()
+        for ancestor in ancestors:
+            if isinstance(ancestor, TensorIndexTree):
+                path[ancestor.axis.name] = ancestor.values
+            else:
+                path[ancestor.axes[0].name] = [ancestor.values[0]]
+                path[ancestor.axes[1].name] = [ancestor.values[1]]
+        return path
+
+    @property
+    def parent(self):
+        return self._parent
+
+    def get_ancestors(self):
+        ancestors = []
+        current_node = self
+        while current_node.axis.name != "root":
+            ancestors.append(current_node)
+            current_node = current_node.parent
+        return ancestors[::-1]
+
+    def pprint(self, level=0):
+        if self.axis.name == "root":
+            logging.debug("\n")
+        logging.debug("\t" * level + "\u21b3" + str(self))
+        for child in self.children:
+            if not child.hidden:
+                child.pprint(level + 1)
+        if len(self.children) == 0:
+            logging.debug("\t" * (level + 1) + "\u21b3" + str(self.result))
+
+    def __repr__(self):
+        if self.axis != "root":
+            # return f"{self.axes[0].name}={self.values[0]}, {self.axes[1].name}={self.values[1]}"
+            return f"{(self.axes[0].name, self.axes[1].name)}={self.values}"
+        else:
+            return f"{self.axis}"
+
+    def remove_branch(self):
+        if not self.is_root():
+            old_parent = self._parent
+            # print("WHAT WHEN WE REMOVE BRANCHES??")
+            # print([c for c in self._parent.children])
+            # print(self)
+            self._parent.children.remove(self)
+            self._parent = None
+            if len(old_parent.children) == 0:
+                old_parent.remove_branch()
+
+    def is_root(self):
+        return self.parent is None
+
+    def merge(self, other):
+        self.tags.update(other.tags)
+        for other_child in other.children:
+            my_child = self.find_child(other_child)
+            if not my_child:
+                self.add_child(other_child)
+            else:
+                my_child.merge(other_child)
+
+    def add_child(self, node):
+        self.children.add(node)
+        node._parent = self
+
+    def find_child(self, node):
+        index = self.children.bisect_left(node)
+        if index < len(self.children) and self.children[index] == node:
+            return self.children[index]
+        return None
+
+
 class TensorIndexTree(object):
     root = IntDatacubeAxis()
     root.name = "root"
@@ -108,6 +226,11 @@ class TensorIndexTree(object):
         new_values.append(value)
         new_values.sort()
         self.values = tuple(new_values)
+
+    def create_merged_child(self, axes, values, next_nodes):
+        node = MergedTensorIndexNode(axes, values)
+        self.add_child(node)
+        return (node, next_nodes)
 
     def create_child(self, axis, value, next_nodes):
         # TODO: what if we remove the next nodes here?

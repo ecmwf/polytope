@@ -25,6 +25,7 @@ jobs:
     secrets: inherit
     with:
       testpypi: true
+      buildargs: "--sdist"
       env_vars: |
         {
           "USE_RUST": "0",
