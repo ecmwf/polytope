@@ -23,6 +23,7 @@ jobs:
     uses: ecmwf/reusable-workflows/.github/workflows/cd-pypi.yml@v2
     secrets: inherit
     with:
+      buildargs: "--sdist"
       env_vars: |
         {
           "USE_RUST": "0",
