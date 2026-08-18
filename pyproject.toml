@@ -73,7 +73,7 @@ issues = "https://github.com/ecmwf/polytope/issues"
 include-package-data = true
 
 [[tool.setuptools-rust.ext-modules]]
-target = "rust"
+target = "polytope_feature.polytope_rs"
 path = "rust/Cargo.toml"
 binding = "PyO3"
 
