@@ -181,19 +181,24 @@ class Point(Shape):
 class Span(Shape):
     """1-D range along a single axis"""
 
-    def __init__(self, axis, lower=-math.inf, upper=math.inf, tag=None):
+    def __init__(self, axis, lower=-math.inf, upper=math.inf, method=None, tag=None):
         assert not isinstance(lower, list)
         assert not isinstance(upper, list)
         self.axis = axis
         self.lower = lower
         self.upper = upper
+        self.method = method
         self.tag = tag
 
     def axes(self):
         return [self.axis]
 
     def polytope(self):
-        return [ConvexPolytope([self.axis], [[self.lower], [self.upper]], is_orthogonal=True, tag=self.tag)]
+        return [
+            ConvexPolytope(
+                [self.axis], [[self.lower], [self.upper]], is_orthogonal=True, method=self.method, tag=self.tag
+            )
+        ]
 
     def __repr__(self):
         return f"Span in {self.axis} with range from {self.lower} to {self.upper}"
@@ -212,11 +217,12 @@ class All(Span):
 class Box(Shape):
     """N-D axis-aligned bounding box (AABB), specified by two opposite corners"""
 
-    def __init__(self, axes, lower_corner=None, upper_corner=None, tag=None):
+    def __init__(self, axes, lower_corner=None, upper_corner=None, method=None, tag=None):
         dimension = len(axes)
         self._lower_corner = lower_corner
         self._upper_corner = upper_corner
         self._axes = axes
+        self.method = method
         self.tag = tag
         assert len(lower_corner) == dimension
         assert len(upper_corner) == dimension
@@ -245,6 +251,14 @@ class Box(Shape):
         return self._axes
 
     def polytope(self):
+        if self.method:
+            # If we want to do any kind of linear search, need to treat box as product of 1D spans
+            range_first_ax = [[self._lower_corner[0]], [self._upper_corner[0]]]
+            range_second_ax = [[self._lower_corner[1]], [self._upper_corner[1]]]
+            return [
+                ConvexPolytope([self.axes()[0]], range_first_ax, is_orthogonal=True, method=self.method, tag=self.tag),
+                ConvexPolytope([self.axes()[1]], range_second_ax, is_orthogonal=True, method=self.method, tag=self.tag),
+            ]
         return [ConvexPolytope(self.axes(), self.vertices, is_orthogonal=True, tag=self.tag)]
 
     def __repr__(self):

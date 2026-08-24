@@ -45,6 +45,26 @@ class TestSlicing3DXarrayDatacube:
         result = self.API.retrieve(request)
         assert len(result.leaves) == 1
 
+    def test_2D_box_nearest(self):
+        request = Request(
+            Box(["step", "level"], [3, 10], [6, 11], method="surrounding"), Select("date", ["2000-01-01"])
+        )
+        result = self.API.retrieve(request)
+        result.pprint()
+        assert len(result.leaves) == 1
+        assert result.leaves[0].flatten()["step"] == (0, 3, 6, 9)
+        assert result.leaves[0].flatten()["level"] == (9, 10, 11, 12)
+
+    def test_2D_span_nearest(self):
+        request = Request(
+            Span("level", 10, 11, method="surrounding"), Select("step", [3]), Select("date", ["2000-01-01"])
+        )
+        result = self.API.retrieve(request)
+        result.pprint()
+        assert len(result.leaves) == 1
+        assert result.leaves[0].flatten()["step"] == (3,)
+        assert result.leaves[0].flatten()["level"] == (9, 10, 11, 12)
+
     def test_2D_box_union_disjoint_boxes(self):
         box1 = Box(["step", "level"], [3, 10], [6, 11])
         box2 = Box(["step", "level"], [7, 15], [12, 17])
