@@ -167,4 +167,4 @@ class TestSlicing3DXarrayDatacube:
         result = Polytope(cube).retrieve(Request(Point(["latitude", "longitude"], points, method="nearest")))
         assert len(result.leaves) == 3
         for leaf in result.leaves:
-            assert len(leaf.values) == 3
+            assert len(leaf.values) == 5

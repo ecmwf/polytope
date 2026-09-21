@@ -223,9 +223,8 @@ class TensorIndexTree(object):
 
     def add_value(self, value):
         new_values = list(self.values)
-        if value not in new_values:
-            new_values.append(value)
-            new_values.sort()
+        new_values.append(value)
+        new_values.sort()
         self.values = tuple(new_values)
 
     def create_merged_child(self, axes, values, next_nodes):
