@@ -8,7 +8,7 @@ The following key value pairs are available via Polytope:
 
 * `class` : `od`
 * `stream` : `enfo` `oper`
-* `type` : `fc` `pf` `cf`
+* `type` : `fc` `pf`
 * `levtype` : `sfc` `pl` `ml`
 * `expver` : `0001`
 * `domain` : `g`
