@@ -146,3 +146,25 @@ class TestSlicing3DXarrayDatacube:
             324.0,
             342.0,
         )
+
+    def test_close_points(self):
+        from types import MethodType
+
+        from polytope_feature.datacube.backends.mock import MockDatacube
+        from polytope_feature.polytope import Polytope, Request
+        from polytope_feature.shapes import Point
+
+        GRID = {"latitude": [50.70, 50.725, 50.74166666666788, 50.76, 60.0], "longitude": [7.0, 7.108, 7.2]}
+
+        cube = MockDatacube({"latitude": 100, "longitude": 100}, ["longitude"])
+        cube.get_indices = MethodType(
+            lambda self, path, axis, lower, upper, method=None: axis.find_standard_indices_between(
+                GRID[axis.name], lower, upper, self, method
+            ),
+            cube,
+        )
+        points = [[50.725, 7.108], [50.7417, 7.1083]]
+        result = Polytope(cube).retrieve(Request(Point(["latitude", "longitude"], points, method="nearest")))
+        assert len(result.leaves) == 3
+        for leaf in result.leaves:
+            assert len(leaf.values) == 3
