@@ -20,7 +20,7 @@ import pandas as pd
 import pytest
 
 from polytope_feature.polytope import Polytope, Request
-from polytope_feature.shapes import Point, Select
+from polytope_feature.shapes import Point, Select, Union
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -29,14 +29,14 @@ from polytope_feature.shapes import Point, Select
 
 def _make_union_of_points(latlons, k=1):
     # """Build a flat Union of Point(nearest) shapes from a list of (lat, lon) pairs."""
-    # shapes = [Point(["latitude", "longitude"], [[lat, lon]], method="nearest", k=k) for lat, lon in latlons]
-    # if len(shapes) == 1:
-    #     return shapes[0]
-    # # Use the variadic form to keep the Union flat — avoids deep recursion
-    # # that a chained binary Union would cause for large N.
-    # return Union(["latitude", "longitude"], *shapes)
-    latlons = [[lat, lon] for lat, lon in latlons]
-    return Point(["latitude", "longitude"], latlons, method="nearest", k=k)
+    shapes = [Point(["latitude", "longitude"], [[lat, lon]], method="nearest", k=k) for lat, lon in latlons]
+    if len(shapes) == 1:
+        return shapes[0]
+    # Use the variadic form to keep the Union flat — avoids deep recursion
+    # that a chained binary Union would cause for large N.
+    return Union(["latitude", "longitude"], *shapes)
+    # latlons = [[lat, lon] for lat, lon in latlons]
+    # return Point(["latitude", "longitude"], latlons, method="nearest", k=k)
 
 
 def _grid_query_points(n_lat, n_lon, lat_lo, lat_hi, lon_lo, lon_hi):
