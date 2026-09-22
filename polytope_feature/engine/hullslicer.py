@@ -33,7 +33,7 @@ class HullSlicer(Engine):
 
             if datacube_has_index:
                 if i == 0:
-                    child, next_nodes = node.create_child(ax, lower, next_nodes)
+                    exists, child, next_nodes = node.create_child(ax, lower, next_nodes)
                     child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
                     child["unsliced_polytopes"].remove(polytope)
                     # Stamp the tag: unsliceable axes consume the polytope without a geometric slice

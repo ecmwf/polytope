@@ -96,7 +96,7 @@ class PointInPolygonSlicer(Engine):
             values_axis.name = "values"
             result = point.item
             # TODO: make finding the axes objects nicer?
-            child, _ = request.create_child(values_axis, idx, [])
+            exists, child, _ = request.create_child(values_axis, idx, [])
             child.result = result
 
         return request
@@ -150,8 +150,8 @@ class PointInPolygonSlicer(Engine):
 
         lat_ax = ax
         for (lat_val, lon_val), value in seen.items():
-            child, _ = node.create_child(lat_ax, lat_val, [])
-            grand_child, _ = child.create_child(lon_ax, lon_val, [])
+            exists, child, _ = node.create_child(lat_ax, lat_val, [])
+            exists, grand_child, _ = child.create_child(lon_ax, lon_val, [])
             grand_child.indexes = [value]
             grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             grand_child["unsliced_polytopes"].remove(polytope)

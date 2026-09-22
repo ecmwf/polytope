@@ -102,8 +102,8 @@ class OptimisedQuadTreeSlicer(Engine):
             node.remove_branch()
         lat_ax = ax
         for actual_index, (lat_val, lon_val) in seen.items():
-            child, _ = node.create_child(lat_ax, lat_val, [])
-            grand_child, _ = child.create_child(lon_ax, lon_val, [])
+            exists, child, _ = node.create_child(lat_ax, lat_val, [])
+            exists, grand_child, _ = child.create_child(lon_ax, lon_val, [])
             grand_child.indexes = [actual_index]
             grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             grand_child["unsliced_polytopes"].remove(polytope)
