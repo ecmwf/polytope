@@ -69,8 +69,8 @@ class TestIndexTreesAfterSlicing:
         axis2 = IntDatacubeAxis()
         axis2.name = "level"
         # Test getting child
-        assert request1.create_child(axis2, 3.0, [])[0].axis.name == "level"
-        assert request1.create_child(axis2, 3.0, [])[0].values == tuple([3.0])
+        assert request1.create_child(axis2, 3.0, [])[1].axis.name == "level"
+        assert request1.create_child(axis2, 3.0, [])[1].values == tuple([3.0])
 
     def test_pprint(self):
         box = Box(["step", "level"], [3.0, 1.0], [6.0, 3.0])
@@ -92,6 +92,6 @@ class TestIndexTreesAfterSlicing:
         axis2.name = "level"
         # Test if remove_branch() also removes longer branches
         request1 = request.create_child(axis1, 1.0, [])
-        request2 = request1[0].create_child(axis2, 0.0, [])
-        request2[0].remove_branch()
-        assert request1[0].is_root()  # removed from original
+        request2 = request1[1].create_child(axis2, 0.0, [])
+        request2[1].remove_branch()
+        assert request1[1].is_root()  # removed from original

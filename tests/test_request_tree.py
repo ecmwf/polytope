@@ -227,8 +227,8 @@ class TestIndexTree:
         )
         root_node = TensorIndexTree()
         root_node.add_child(child1)
-        assert root_node.create_child(axis1, 0, [])[0] == child1
-        assert root_node.create_child(axis2, 0, [])[0].parent == root_node
+        assert root_node.create_child(axis1, 0, [])[1] == child1
+        assert root_node.create_child(axis2, 0, [])[1].parent == root_node
 
     def test_eq(self):
         axis1 = IntDatacubeAxis()

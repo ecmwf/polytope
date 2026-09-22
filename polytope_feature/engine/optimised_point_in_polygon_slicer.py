@@ -46,7 +46,7 @@ class OptimisedPointInPolygonSlicer(Engine):
             values_axis.name = "values"
             result = point.item
             # TODO: make finding the axes objects nicer?
-            child, _ = request.create_child(values_axis, idx, [])
+            exists, child, _ = request.create_child(values_axis, idx, [])
             child.result = result
 
         return request
@@ -110,8 +110,8 @@ class OptimisedPointInPolygonSlicer(Engine):
             lon_val = point[1]
 
             # store the native type
-            child, _ = node.create_child(lat_ax, lat_val, [])
-            grand_child, _ = child.create_child(lon_ax, lon_val, [])
+            exists, child, _ = node.create_child(lat_ax, lat_val, [])
+            exists, grand_child, _ = child.create_child(lon_ax, lon_val, [])
             # NOTE: the index of the point is stashed in the branches' result
             grand_child.indexes = [value]
             grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])

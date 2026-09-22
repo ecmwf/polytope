@@ -239,8 +239,8 @@ class TensorIndexTree(object):
         existing_child = self.find_child(node)
         if not existing_child:
             self.add_child(node)
-            return (node, next_nodes)
-        return (existing_child, next_nodes)
+            return (False, node, next_nodes)
+        return (True, existing_child, next_nodes)
 
     @property
     def parent(self):
