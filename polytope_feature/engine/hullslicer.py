@@ -100,7 +100,7 @@ class HullSlicer(Engine):
                 fvalue = ax.to_float(value)
                 new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
                 remapped_val = self.remap_values(ax, value)
-                child, next_nodes = node.create_child(ax, remapped_val, next_nodes)
+                exists, child, next_nodes = node.create_child(ax, remapped_val, next_nodes)
                 child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
                 child["unsliced_polytopes"].remove(polytope)
                 if new_polytope is not None:
@@ -109,7 +109,10 @@ class HullSlicer(Engine):
                     # Polytope fully resolved at this node: stamp its tag
                     if polytope.tag is not None:
                         child.tags.add(polytope.tag)
-                next_nodes.append(child)
+                if not exists:
+                    next_nodes.append(child)
+                else:
+                    node.remove_branch()
             else:
                 remapped_val = self.remap_values(ax, value)
                 child.add_value(remapped_val)

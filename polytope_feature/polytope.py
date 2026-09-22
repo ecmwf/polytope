@@ -165,12 +165,9 @@ class Polytope:
                 next_nodes = []
                 interm_next_nodes = []
                 for node in current_nodes:
-                    if hasattr(node, "unsliced_polytopes"):
-                        engine._build_branch(ax, node, datacube, interm_next_nodes, self)
-                        next_nodes.extend(interm_next_nodes)
-                        interm_next_nodes = []
-                    else:
-                        node.remove_branch()
+                    engine._build_branch(ax, node, datacube, interm_next_nodes, self)
+                    next_nodes.extend(interm_next_nodes)
+                    interm_next_nodes = []
                 current_nodes = next_nodes
 
             request.merge(r)
