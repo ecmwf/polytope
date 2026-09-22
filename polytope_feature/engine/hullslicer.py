@@ -111,8 +111,6 @@ class HullSlicer(Engine):
                         child.tags.add(polytope.tag)
                 if not exists:
                     next_nodes.append(child)
-                else:
-                    node.remove_branch()
             else:
                 remapped_val = self.remap_values(ax, value)
                 child.add_value(remapped_val)
