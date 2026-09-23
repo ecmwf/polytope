@@ -176,7 +176,12 @@ class FDBDatacube(Datacube):
             logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
         logging.info("Requests given to GribJump extract for %s", context)
         try:
+            import time
+
+            time1 = time.time()
             iterator = self.gj.extract(complete_list_complete_uncompressed_requests, context)
+            time2 = time.time()
+            print("TIME TAKEN BY GJ EXTRACT IS ", time2 - time1)
         except Exception as e:
             if "BadValue: Grid hash mismatch" in str(e):
                 logging.info("Error is: %s", e)

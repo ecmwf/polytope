@@ -466,6 +466,47 @@ impl QuadTree {
     ) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(points) = polygon_points {
 
+            // ----------------------------------------------------------------
+            // Fast paths based on axis-aligned bounding boxes.
+            //
+            // For a query box (or any polygon) that covers a large area of the
+            // point cloud we want to prune whole subtrees without ever calling
+            // slice_in_two (which builds convex hulls). We use the polygon's
+            // AABB against the quadrant's AABB:
+            //
+            //   * disjoint          -> no points possible, return.
+            //   * quadrant fully
+            //     inside polygon
+            //     AABB *and* polygon
+            //     is itself an
+            //     axis-aligned rect -> every point in this subtree is inside
+            //                          the polygon; collect them wholesale
+            //                          via find_nodes_in.
+            //
+            // For non-rectangular polygons we can only use the disjoint
+            // prune -- containment inside the AABB does not imply containment
+            // inside the polygon.
+            // ----------------------------------------------------------------
+            let (poly_min, poly_max) = polygon_aabb(points);
+            let (node_min, node_max) = self.node_bbox_points(node_idx)?;
+
+            // Disjoint AABBs: nothing here can be inside the polygon.
+            if node_max[0] < poly_min[0] || node_min[0] > poly_max[0]
+                || node_max[1] < poly_min[1] || node_min[1] > poly_max[1]
+            {
+                return Ok(());
+            }
+
+            // Quadrant fully inside polygon AABB + polygon is an axis-aligned
+            // rectangle: collect the whole subtree.
+            if node_min[0] >= poly_min[0] && node_max[0] <= poly_max[0]
+                && node_min[1] >= poly_min[1] && node_max[1] <= poly_max[1]
+                && is_axis_aligned_rect(points, poly_min, poly_max)
+            {
+                results.extend(self.find_nodes_in(node_idx));
+                return Ok(());
+            }
+
             // Sort points based on the first coordinate
             points.sort_unstable_by(|a, b| a.partial_cmp(&b).unwrap());
             let mut quadrant_points = self.quadrant_rectangle_points(node_idx)?;
@@ -506,4 +547,60 @@ impl QuadTree {
         }
         Ok(())
     }
+}
+
+
+// ---------------------------------------------------------------------------
+// AABB helpers used by _query_polygon's fast paths.
+// ---------------------------------------------------------------------------
+
+/// Bounding box of a polygon vertex list. Returns (min, max) with
+/// (min[0], min[1]) = (min_x, min_y).
+fn polygon_aabb(points: &[[f64; 2]]) -> ([f64; 2], [f64; 2]) {
+    let mut min_x = f64::INFINITY;
+    let mut max_x = f64::NEG_INFINITY;
+    let mut min_y = f64::INFINITY;
+    let mut max_y = f64::NEG_INFINITY;
+    for &[x, y] in points {
+        if x < min_x { min_x = x; }
+        if x > max_x { max_x = x; }
+        if y < min_y { min_y = y; }
+        if y > max_y { max_y = y; }
+    }
+    ([min_x, min_y], [max_x, max_y])
+}
+
+/// Detects a 4-vertex axis-aligned rectangle whose corners are exactly the
+/// 4 combinations of its two distinct x-values and two distinct y-values.
+///
+/// This is the shape produced by `polytope_feature.shapes.Box` in 2D. When it
+/// holds, containment in the polygon is equivalent to containment in its AABB
+/// -- which lets us harvest whole quadtree subtrees without any per-point
+/// containment check.
+fn is_axis_aligned_rect(points: &[[f64; 2]], poly_min: [f64; 2], poly_max: [f64; 2]) -> bool {
+    if points.len() != 4 {
+        return false;
+    }
+    // Degenerate box (zero width/height) -> treat as not-a-rect to fall through
+    // to normal slicing rather than potentially collecting a whole subtree for
+    // a line/point query.
+    if poly_min[0] == poly_max[0] || poly_min[1] == poly_max[1] {
+        return false;
+    }
+    // Every vertex must sit on one of the two x-extremes and one of the two
+    // y-extremes. If that's true for 4 distinct vertices, they necessarily
+    // form the axis-aligned rectangle {min,max} x {min,max}.
+    let eps = 1e-12;
+    let on_extreme = |v: f64, lo: f64, hi: f64| -> bool {
+        (v - lo).abs() <= eps || (v - hi).abs() <= eps
+    };
+    for &[x, y] in points {
+        if !on_extreme(x, poly_min[0], poly_max[0]) {
+            return false;
+        }
+        if !on_extreme(y, poly_min[1], poly_max[1]) {
+            return false;
+        }
+    }
+    true
 }
