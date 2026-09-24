@@ -1,12 +1,74 @@
 import logging
-import operator
 from copy import copy, deepcopy
 from itertools import product
+from operator import itemgetter
 
 from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
 from ...utility.geometry import nearest_pt
 from ..tensor_index_tree import MergedTensorIndexNode
 from .datacube import Datacube, TensorIndexTree
+
+
+def sort_and_compress_indices(values):
+    """Sort a flat sequence of integer indices and compress them into
+    contiguous (start, end) ranges (end exclusive), e.g. [3, 4, 5, 9] ->
+    [(3, 6), (9, 10)].
+
+    This is deliberately factored out of ``sort_fdb_request_ranges`` as a
+    standalone, side-effect-free function operating only on plain ints:
+
+    * it is independently unit-testable without needing to construct a full
+      FDB request tree,
+    * it has no dependency on ``self``/the tensor-tree node objects, so it is
+      a natural candidate to later swap for a numpy-vectorised or
+      Rust/compiled implementation without touching the tree-mutation logic
+      that surrounds it,
+    * factoring it out lets us apply a couple of cheap wins that mattered a
+      lot in profiling of large/branchy FDB requests:
+        - a fast path that detects already-sorted input (very common, since
+          FDB indices are usually produced in increasing order already) and
+          skips the O(n log n) ``sorted()`` call entirely,
+        - a single linear pass to build ranges (replacing the old
+          branch that computed an intermediate list of "jumps" via
+          ``map(operator.sub, ...)`` only to then walk it again).
+
+    Returns:
+        (order, ranges)
+        order: ``None`` if ``values`` was already sorted (no reordering
+            needed), otherwise a tuple giving, for each position in the
+            sorted output, the index into the original ``values`` sequence
+            it came from (i.e. a permutation to apply to any data that was
+            aligned with the original, unsorted ``values``).
+        ranges: list of (start, end) tuples, end-exclusive, sorted by start.
+    """
+    n = len(values)
+    if n == 1:
+        v = values[0]
+        return None, [(v, v + 1)]
+
+    is_sorted = True
+    prev = values[0]
+    for v in values[1:]:
+        if v < prev:
+            is_sorted = False
+            break
+        prev = v
+
+    if is_sorted:
+        order = None
+        sorted_vals = values
+    else:
+        order, sorted_vals = zip(*sorted(enumerate(values), key=itemgetter(1)))
+
+    ranges = []
+    start = prev = sorted_vals[0]
+    for v in sorted_vals[1:]:
+        if v - prev > 1:
+            ranges.append((start, prev + 1))
+            start = v
+        prev = v
+    ranges.append((start, prev + 1))
+    return order, ranges
 
 
 class FDBDatacube(Datacube):
@@ -142,7 +204,12 @@ class FDBDatacube(Datacube):
             return requests
         fdb_requests = []
         fdb_requests_decoding_info = []
+        import time
+
+        time1 = time.time()
         self.get_fdb_requests(requests, fdb_requests, fdb_requests_decoding_info)
+        time2 = time.time()
+        print("TIME TAKEN BY GETTING FDB REQUESTS IS ", time2 - time1)
 
         # here, loop through the fdb requests and request from gj and directly add to the nodes
         complete_list_complete_uncompressed_requests = []
@@ -282,40 +349,36 @@ class FDBDatacube(Datacube):
                 fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
 
     def remove_duplicates_in_request_ranges(self, fdb_node_ranges, current_start_idxs):
-        # First pass: identify which (i, k) "wins" each index (first occurrence).
-        # seen_indices maps idx -> (i, k)
-        seen_indices = {}
-        # Track which (i,k,j) are duplicates of an earlier node
-        is_dup = {}
+        # Single pass: "first occurrence wins". We iterate (i, k, j) in the same
+        # order as before, so this reproduces the exact same result as the old
+        # two-pass version (build a set of duplicates, then filter), but without
+        # ever materialising an `is_dup` dict keyed by (i, k, j) tuples, and
+        # without walking every index twice. For large/branchy requests this
+        # tuple-keyed dict was a significant source of Python-level hashing and
+        # allocation overhead.
+        seen_indices = set()
 
-        for i, idxs_list in enumerate(current_start_idxs):
-            for k, sub_lat_idxs in enumerate(idxs_list):
-                for j, idx in enumerate(sub_lat_idxs):
-                    if idx not in seen_indices:
-                        seen_indices[idx] = (i, k)
-                    else:
-                        is_dup[(i, k, j)] = True
-
-        # Second pass: build new structures
         new_fdb_node_ranges = []
         new_current_start_idxs = []
         nodes_to_remove = []
-        nodes_to_update = []  # (node, new_values, filtered_idxs)
+        nodes_to_update = []  # (node, new_values)
         for i, idxs_list in enumerate(current_start_idxs):
             new_idx_group = []
             new_fdb_group = []
             for k, sub_lat_idxs in enumerate(idxs_list):
                 actual_fdb_node = fdb_node_ranges[i][k]
                 node = actual_fdb_node[0]
+                node_values = node.values
                 # Collect non-duplicate indices and values for this node
                 filtered_idxs = []
                 original_vals = []
                 for j, idx in enumerate(sub_lat_idxs):
-                    if (i, k, j) not in is_dup:
+                    if idx not in seen_indices:
+                        seen_indices.add(idx)
                         filtered_idxs.append(idx)
-                        original_vals.append(node.values[j])
+                        original_vals.append(node_values[j])
                 if filtered_idxs:
-                    nodes_to_update.append((node, tuple(original_vals), filtered_idxs))
+                    nodes_to_update.append((node, tuple(original_vals)))
                     new_idx_group.append(filtered_idxs)
                     new_fdb_group.append(actual_fdb_node)
                 else:
@@ -329,7 +392,7 @@ class FDBDatacube(Datacube):
             node.remove_branch()
 
         # Now safely mutate winner node values (trim any partially-duplicate values)
-        for node, new_values, _ in nodes_to_update:
+        for node, new_values in nodes_to_update:
             node.values = new_values
 
         return new_fdb_node_ranges, new_current_start_idxs
@@ -550,6 +613,9 @@ class FDBDatacube(Datacube):
 
     def assign_fdb_output_to_nodes(self, output_iterator, fdb_requests_decoding_info):
         logging.debug("Assigning GribJump output to tree nodes")
+        import time
+
+        time1 = time.time()
         for k, result in enumerate(output_iterator):
             (
                 original_indices,
@@ -564,13 +630,11 @@ class FDBDatacube(Datacube):
                     n.result.extend(none_array)
                 else:
                     n.result.extend(result.values[i])
+        time2 = time.time()
+        print("TIME TAKEN BY ASSIGNING IS ", time2 - time1)
         logging.debug("Finished assigning GribJump output to tree nodes")
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
-        # print("WHAT DO WE HAVE HERE THROUGH")
-        # print(current_start_idx)
-        # print(lat_length)
-        # print(fdb_node_ranges)
         (
             new_fdb_node_ranges,
             new_current_start_idx,
@@ -584,41 +648,28 @@ class FDBDatacube(Datacube):
             interm_fdb_nodes = fdb_node_ranges[i]
             old_interm_start_idx = current_start_idx[i]
             for j in range(len(old_interm_start_idx)):
-                # TODO: if we sorted the cyclic values in increasing order on the tree too,
-                # then we wouldn't have to sort here?
-                sorted_list = sorted(enumerate(old_interm_start_idx[j]), key=lambda x: x[1])
-                original_indices_idx, interm_start_idx = zip(*sorted_list)
-                for interm_fdb_nodes_obj in interm_fdb_nodes[j]:
-                    interm_fdb_nodes_obj.values = tuple([interm_fdb_nodes_obj.values[k] for k in original_indices_idx])
-                if abs(interm_start_idx[-1] + 1 - interm_start_idx[0]) <= len(interm_start_idx):
-                    current_request_ranges = (
-                        interm_start_idx[0],
-                        interm_start_idx[-1] + 1,
-                    )
-                    interm_request_ranges.append(current_request_ranges)
+                order, ranges = sort_and_compress_indices(old_interm_start_idx[j])
+
+                # Only the *order* of a node's values needs to be updated to
+                # match the (possibly re-sorted) index order. If the indices
+                # were already sorted (the common case, since FDB indices are
+                # usually produced in increasing order already), `order` is
+                # the identity permutation and this reorder is skipped
+                # entirely, avoiding a wasted tuple rebuild per node.
+                if order is not None:
+                    for interm_fdb_nodes_obj in interm_fdb_nodes[j]:
+                        node_values = interm_fdb_nodes_obj.values
+                        interm_fdb_nodes_obj.values = tuple(node_values[k] for k in order)
+
+                for r in ranges:
+                    interm_request_ranges.append(r)
                     new_fdb_node_ranges.append(interm_fdb_nodes[j])
-                else:
-                    jumps = list(map(operator.sub, interm_start_idx[1:], interm_start_idx[:-1]))
-                    last_idx = 0
-                    for k, jump in enumerate(jumps):
-                        if jump > 1:
-                            current_request_ranges = (
-                                interm_start_idx[last_idx],
-                                interm_start_idx[k] + 1,
-                            )
-                            new_fdb_node_ranges.append(interm_fdb_nodes[j])
-                            last_idx = k + 1
-                            interm_request_ranges.append(current_request_ranges)
-                        if k == len(interm_start_idx) - 2:
-                            current_request_ranges = (
-                                interm_start_idx[last_idx],
-                                interm_start_idx[-1] + 1,
-                            )
-                            interm_request_ranges.append(current_request_ranges)
-                            new_fdb_node_ranges.append(interm_fdb_nodes[j])
-        request_ranges_with_idx = list(enumerate(interm_request_ranges))
-        sorted_list = sorted(request_ranges_with_idx, key=lambda x: x[1][0])
-        original_indices, sorted_request_ranges = zip(*sorted_list)
+
+        request_ranges_with_idx = sorted(enumerate(interm_request_ranges), key=itemgetter(1))
+        if request_ranges_with_idx:
+            original_indices, sorted_request_ranges = zip(*request_ranges_with_idx)
+        else:
+            original_indices, sorted_request_ranges = (), ()
         return (original_indices, sorted_request_ranges, new_fdb_node_ranges)
 
     def datacube_natural_indexes(self, axis, subarray):
