@@ -32,7 +32,11 @@ class QuadTreeSlicer(Engine):
 
     def extract_single(self, datacube, polytope):
         # extract a single polygon
+        print("WENT HERE?")
         # if need to find nearest points, then take alternative slicing method using quadtree to find nearest point
+        import time
+
+        time1 = time.time()
         axes = polytope.axes()
         assert len(axes) == 2
         assert "latitude" in axes and "longitude" in axes
@@ -60,6 +64,8 @@ class QuadTreeSlicer(Engine):
             if revert_axes:
                 polytope.points = [tuple(reversed(point)) for point in polytope.points]
             polygon_points = self.quad_tree.query_polygon(polytope)
+        time2 = time.time()
+        print("TIME TAKEN BY QUADTREE POLYGON QUERY IS ", time2 - time1)
         return polygon_points
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):
@@ -72,6 +78,9 @@ class QuadTreeSlicer(Engine):
             self._build_sliceable_child(node["unsliced_polytopes"].pop(), ax, node, datacube, next_nodes, api)
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes, api):
+        import time
+
+        time1 = time.time()
         lon_ax = datacube._axes["longitude"]
 
         # When the longitude axis is cyclic and the request polygon crosses the seam,
@@ -113,3 +122,5 @@ class QuadTreeSlicer(Engine):
                 grand_child.indexes = [value.index]
             # grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             # grand_child["unsliced_polytopes"].remove(polytope)
+        time2 = time.time()
+        print("TIME TAKEN BY QUADTREE BUILD SLICEABLE CHILD IS ", time2 - time1)
