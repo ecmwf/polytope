@@ -11,7 +11,7 @@ jobs:
     secrets: inherit
     with:
       platforms: "['ubuntu-latest','macos-latest']"
-      pyversions: "['39','310','311','312']"
+      pyversions: "['39','310','311','312','313','314']"
       env_vars: |
         {
           "USE_RUST": "1",
