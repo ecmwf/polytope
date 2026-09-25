@@ -1,4 +1,7 @@
 import logging
+import os
+
+import numpy as np
 
 from ..datacube.transformations.datacube_cyclic.datacube_cyclic import (
     DatacubeAxisCyclic,
@@ -29,6 +32,13 @@ class QuadTreeSlicer(Engine):
         logging.debug("Created point cloud quadtree")
         self.points = points
         self.quad_tree = quad_tree
+        self.bulk_spatial = os.environ.get("POLYTOPE_BULK_SPATIAL") == "1"
+        self.bulk_nearest_once = os.environ.get("POLYTOPE_BULK_NEAREST_ONCE") == "1"
+        self.points_array = np.asarray(points) if self.bulk_spatial else None
+        self.bulk_nearest_paths = set()
+
+    def reset_bulk_state(self):
+        self.bulk_nearest_paths.clear()
 
     def extract_single(self, datacube, polytope):
         # extract a single polygon
@@ -69,6 +79,12 @@ class QuadTreeSlicer(Engine):
                     self._build_sliceable_child(polytope, ax, node, datacube, next_nodes, api)
             del node["unsliced_polytopes"]
         else:
+            if self.bulk_spatial and self.bulk_nearest_once:
+                path_key = tuple(node.flatten().items())
+                if path_key in self.bulk_nearest_paths:
+                    node.remove_branch()
+                    return
+                self.bulk_nearest_paths.add(path_key)
             self._build_sliceable_child(node["unsliced_polytopes"].pop(), ax, node, datacube, next_nodes, api)
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes, api):
@@ -91,11 +107,23 @@ class QuadTreeSlicer(Engine):
                 idx = value if use_rust else value.index
                 if idx not in seen:
                     seen.add(idx)
-                    extracted_points.append(value)
+                    extracted_points.append(idx if use_rust else value)
 
         if len(extracted_points) == 0:
             node.remove_branch()
+            return
+
         lat_ax = ax
+        if self.bulk_spatial and use_rust:
+            assert self.points_array is not None
+            indexes = np.asarray(extracted_points, dtype=np.int64)
+            coordinates = self.points_array[indexes]
+            # Match SortedList's existing coordinate order while retaining the
+            # canonical backend index needed for range planning.
+            output_order = np.lexsort((coordinates[:, 1], coordinates[:, 0]))
+            node.create_bulk_merged_child([lat_ax, lon_ax], coordinates[output_order], indexes[output_order], [])
+            return
+
         for value in extracted_points:
             # convert to float for slicing
             if use_rust:

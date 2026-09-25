@@ -1,12 +1,23 @@
 import logging
 import operator
+import time
 from copy import copy, deepcopy
 from itertools import product
 
+import numpy as np
+
 from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
 from ...utility.geometry import nearest_pt
-from ..tensor_index_tree import MergedTensorIndexNode
+from ..tensor_index_tree import BulkMergedTensorIndexNode, MergedTensorIndexNode
 from .datacube import Datacube, TensorIndexTree
+
+
+class BulkFDBDecoding:
+    __slots__ = ("node", "sorted_output_positions")
+
+    def __init__(self, node, sorted_output_positions):
+        self.node = node
+        self.sorted_output_positions = sorted_output_positions
 
 
 class FDBDatacube(Datacube):
@@ -142,7 +153,11 @@ class FDBDatacube(Datacube):
             return requests
         fdb_requests = []
         fdb_requests_decoding_info = []
+        self.prototype_metrics = {}
+        planning_start = time.perf_counter()
         self.get_fdb_requests(requests, fdb_requests, fdb_requests_decoding_info)
+        self.prototype_metrics["request_planning_s"] = time.perf_counter() - planning_start
+        self.prototype_metrics["ranges_per_field"] = sum(len(request[1]) for request in fdb_requests)
 
         # here, loop through the fdb requests and request from gj and directly add to the nodes
         complete_list_complete_uncompressed_requests = []
@@ -170,13 +185,19 @@ class FDBDatacube(Datacube):
                 )
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
+        self.prototype_metrics["uncompressed_requests"] = len(complete_list_complete_uncompressed_requests)
+        self.prototype_metrics["effective_range_arrays"] = sum(
+            len(request[1]) for request in complete_list_complete_uncompressed_requests
+        )
 
         if logging.root.level <= logging.DEBUG:
             printed_list_to_gj = complete_list_complete_uncompressed_requests[::1000]
             logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
         logging.info("Requests given to GribJump extract for %s", context)
+        extract_start = time.perf_counter()
         try:
             iterator = self.gj.extract(complete_list_complete_uncompressed_requests, context)
+            self.prototype_metrics["gj_extract_call_s"] = time.perf_counter() - extract_start
         except Exception as e:
             if "BadValue: Grid hash mismatch" in str(e):
                 logging.info("Error is: %s", e)
@@ -188,7 +209,9 @@ class FDBDatacube(Datacube):
                 raise e
 
         logging.info("Requests extracted from GribJump for %s", context)
+        assignment_start = time.perf_counter()
         self.assign_fdb_output_to_nodes(iterator, complete_fdb_decoding_info)
+        self.prototype_metrics["iterator_and_assignment_s"] = time.perf_counter() - assignment_start
 
     def get_fdb_requests(
         self,
@@ -217,9 +240,14 @@ class FDBDatacube(Datacube):
                     key_value_path, leaf_path, self.unwanted_path
                 )
                 leaf_path.update(key_value_path)
-                # If the direct children are MergedTensorIndexNodes (merged lat-lon leaves),
-                # collect all of them at once into a single FDB request for this path.
-                if isinstance(requests.children[0], MergedTensorIndexNode):
+                # Bulk coupled-axis leaves carry all selected canonical indexes
+                # in one array-backed node.
+                if isinstance(requests.children[0], BulkMergedTensorIndexNode):
+                    path, ranges, decoding = self.get_bulk_merged_values(requests, leaf_path)
+                    fdb_requests.append((path, ranges))
+                    fdb_requests_decoding_info.append(decoding)
+                # Legacy merged lat-lon leaves are represented one point per node.
+                elif isinstance(requests.children[0], MergedTensorIndexNode):
                     (
                         path,
                         current_start_idxs,
@@ -233,6 +261,9 @@ class FDBDatacube(Datacube):
                     ) = self.sort_fdb_request_ranges(current_start_idxs, lat_length, fdb_node_ranges)
                     fdb_requests.append((path, sorted_request_ranges))
                     fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
+                elif isinstance(requests.children[0].children[0], BulkMergedTensorIndexNode):
+                    for child in requests.children:
+                        self.get_fdb_requests(child, fdb_requests, fdb_requests_decoding_info, leaf_path)
                 elif len(requests.children[0].children[0].children) == 0:
                     if isinstance(requests.children[0].children[0], TensorIndexTree):
                         # find the fdb_requests and associated nodes to which to add results
@@ -473,6 +504,42 @@ class FDBDatacube(Datacube):
         leaf_path_copy.pop("index")
         return (leaf_path_copy, current_start_idxs, fdb_node_ranges, lat_length)
 
+    def get_bulk_merged_values(self, requests, leaf_path=None):
+        if leaf_path is None:
+            leaf_path = {}
+
+        if len(requests.children) != 1:
+            raise NotImplementedError("Prototype bulk retrieval requires one coupled selection per FDB path")
+        bulk_node = requests.children[0]
+        lat_ax, lon_ax = bulk_node.axes
+        first_coordinate = bulk_node.coordinates[0]
+
+        # Run one representative point through the mapper to preserve its
+        # generic path/unwanted-path semantics. Canonical indexes for all other
+        # points are already carried by the bulk leaf.
+        kv_lat = {lat_ax.name: first_coordinate[0]}
+        kv_lat, leaf_path, self.unwanted_path = lat_ax.unmap_path_key(kv_lat, leaf_path, self.unwanted_path)
+        leaf_path.update(kv_lat)
+        kv_lon = {lon_ax.name: first_coordinate[1]}
+        leaf_path["index"] = [int(bulk_node.indexes[0])]
+        kv_lon, leaf_path, self.unwanted_path = lon_ax.unmap_path_key(kv_lon, leaf_path, self.unwanted_path)
+
+        indexes = np.asarray(bulk_node.indexes, dtype=np.int64)
+        sorted_output_positions = np.argsort(indexes, kind="stable")
+        sorted_indexes = indexes[sorted_output_positions]
+        if len(sorted_indexes) > 1 and np.any(np.diff(sorted_indexes) == 0):
+            raise ValueError("Bulk spatial selection contains duplicate canonical indexes")
+
+        cuts = np.flatnonzero(np.diff(sorted_indexes) > 1)
+        starts = np.r_[sorted_indexes[0], sorted_indexes[cuts + 1]]
+        ends = np.r_[sorted_indexes[cuts] + 1, sorted_indexes[-1] + 1]
+        ranges = [(int(start), int(end)) for start, end in zip(starts, ends)]
+
+        path = deepcopy(leaf_path)
+        path.pop("values", None)
+        path.pop("index", None)
+        return path, ranges, BulkFDBDecoding(bulk_node, sorted_output_positions)
+
     def get_merged_2nd_last_values(self, requests, leaf_path=None):
         if leaf_path is None:
             leaf_path = {}
@@ -545,11 +612,29 @@ class FDBDatacube(Datacube):
 
     def assign_fdb_output_to_nodes(self, output_iterator, fdb_requests_decoding_info):
         logging.debug("Assigning GribJump output to tree nodes")
+        returned_range_arrays = 0
         for k, result in enumerate(output_iterator):
-            (
-                original_indices,
-                fdb_node_ranges,
-            ) = fdb_requests_decoding_info[k]
+            decoding = fdb_requests_decoding_info[k]
+            if isinstance(decoding, BulkFDBDecoding):
+                if len(result.values) == 0:
+                    values = np.full(decoding.node.point_count, None, dtype=object)
+                else:
+                    returned_range_arrays += len(result.values)
+                    if len(result.values) == 1:
+                        sorted_values = np.asarray(result.values[0]).reshape(-1)
+                    else:
+                        sorted_values = np.concatenate(result.values)
+                    if len(sorted_values) != decoding.node.point_count:
+                        raise ValueError(
+                            "GribJump result size does not match bulk spatial selection: "
+                            f"{len(sorted_values)} != {decoding.node.point_count}"
+                        )
+                    values = np.empty_like(sorted_values)
+                    values[decoding.sorted_output_positions] = sorted_values
+                decoding.node.result.append(values)
+                continue
+
+            original_indices, fdb_node_ranges = decoding
             sorted_fdb_range_nodes = [fdb_node_ranges[i] for i in original_indices]
             for i in range(len(sorted_fdb_range_nodes)):
                 n = sorted_fdb_range_nodes[i][0]
@@ -559,6 +644,7 @@ class FDBDatacube(Datacube):
                     n.result.extend(none_array)
                 else:
                     n.result.extend(result.values[i])
+        self.prototype_metrics["returned_range_arrays"] = returned_range_arrays
         logging.debug("Finished assigning GribJump output to tree nodes")
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):

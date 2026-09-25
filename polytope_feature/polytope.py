@@ -123,6 +123,11 @@ class Polytope:
     def slice(self, datacube, polytopes: List[ConvexPolytope]):
         """Low-level API which takes a polytope geometry object and uses it to slice the datacube"""
 
+        for engine in set(self.engines.values()):
+            reset_bulk_state = getattr(engine, "reset_bulk_state", None)
+            if reset_bulk_state is not None:
+                reset_bulk_state()
+
         self.find_compressed_axes(datacube, polytopes)
 
         self.remove_compressed_axis_in_union(polytopes)

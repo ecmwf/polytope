@@ -138,6 +138,38 @@ class MergedTensorIndexNode(object):
         return None
 
 
+class BulkMergedTensorIndexNode(MergedTensorIndexNode):
+    """Array-backed coupled-axis leaf.
+
+    This is the bulk equivalent of many ``MergedTensorIndexNode`` objects. It
+    keeps explicit coordinates and canonical backend indexes without expanding
+    every selected point into a Python tree node.
+    """
+
+    def __init__(self, axes, coordinates, indexes):
+        super().__init__(axes, ())
+        self.coordinates = coordinates
+        self.indexes = indexes
+
+    @property
+    def point_count(self):
+        return len(self.indexes)
+
+    def __lt__(self, other):
+        if not isinstance(other, BulkMergedTensorIndexNode):
+            return True
+        my_first = tuple(self.coordinates[0]) if self.point_count else ()
+        other_first = tuple(other.coordinates[0]) if other.point_count else ()
+        return (my_first, self.point_count) < (other_first, other.point_count)
+
+    def __eq__(self, other):
+        return self is other
+
+    def __repr__(self):
+        names = tuple(axis.name for axis in self.axes)
+        return f"{names}=<bulk {self.point_count} points>"
+
+
 class TensorIndexTree(object):
     root = IntDatacubeAxis()
     root.name = "root"
@@ -229,6 +261,11 @@ class TensorIndexTree(object):
 
     def create_merged_child(self, axes, values, next_nodes):
         node = MergedTensorIndexNode(axes, values)
+        self.add_child(node)
+        return (node, next_nodes)
+
+    def create_bulk_merged_child(self, axes, coordinates, indexes, next_nodes):
+        node = BulkMergedTensorIndexNode(axes, coordinates, indexes)
         self.add_child(node)
         return (node, next_nodes)
 
