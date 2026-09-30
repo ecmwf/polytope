@@ -144,6 +144,10 @@ class Point(Shape):
         self.values = values
         self.method = method
         self.k = k
+        self.single_point_tag = True
+        if isinstance(tag, list):
+            if len(tag) == len(values):
+                self.single_point_tag = False
         self.tag = tag
         self.decompose_1D = True
         # assert len(values) == 1
@@ -156,20 +160,24 @@ class Point(Shape):
 
         polytopes = []
         if self.decompose_1D:
-            for point in self.values:
+            for i, point in enumerate(self.values):
+                if not self.single_point_tag:
+                    tag = self.tag[i]
+                else:
+                    tag = self.tag
                 poly_to_mult = []
                 for i in range(len(self._axes)):
                     poly_to_mult.append(
-                        ConvexPolytope(
-                            [self._axes[i]], [[point[i]]], self.method, self.k, is_orthogonal=True, tag=self.tag
-                        )
+                        ConvexPolytope([self._axes[i]], [[point[i]]], self.method, self.k, is_orthogonal=True, tag=tag)
                     )
-                polytopes.append(Product(*poly_to_mult, method=self.method, k=self.k, value=[point], tag=self.tag))
+                polytopes.append(Product(*poly_to_mult, method=self.method, k=self.k, value=[point], tag=tag))
         else:
-            for point in self.values:
-                polytopes.append(
-                    ConvexPolytope(self._axes, [point], self.method, self.k, is_orthogonal=True, tag=self.tag)
-                )
+            for i, point in enumerate(self.values):
+                if not self.single_point_tag:
+                    tag = self.tag[i]
+                else:
+                    tag = self.tag
+                polytopes.append(ConvexPolytope(self._axes, [point], self.method, self.k, is_orthogonal=True, tag=tag))
         self.polytopes = polytopes
 
         return self.polytopes
