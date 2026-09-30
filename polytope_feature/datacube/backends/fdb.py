@@ -8,7 +8,11 @@ import numpy as np
 
 from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
 from ...utility.geometry import nearest_pt
-from ..tensor_index_tree import BulkMergedTensorIndexNode, MergedTensorIndexNode
+from ..tensor_index_tree import (
+    BulkGridTensorIndexNode,
+    BulkMergedTensorIndexNode,
+    MergedTensorIndexNode,
+)
 from .datacube import Datacube, TensorIndexTree
 
 
@@ -46,6 +50,9 @@ class FDBDatacube(Datacube):
 
         self.unwanted_path = {}
         self.axis_options = axis_options
+        # When True, the latitude -> longitude layers returned by the hullslicer are folded into a
+        # single BulkGridTensorIndexNode per path before retrieval
+        self.bulk_grid_leaves = False
 
         partial_request = config
         # Find values in the level 3 FDB datacube
@@ -243,9 +250,10 @@ class FDBDatacube(Datacube):
                 # Bulk coupled-axis leaves carry all selected canonical indexes
                 # in one array-backed node.
                 if isinstance(requests.children[0], BulkMergedTensorIndexNode):
-                    path, ranges, decoding = self.get_bulk_merged_values(requests, leaf_path)
-                    fdb_requests.append((path, ranges))
-                    fdb_requests_decoding_info.append(decoding)
+                    for bulk_node in requests.children:
+                        path, ranges, decoding = self.get_bulk_merged_values(bulk_node, leaf_path)
+                        fdb_requests.append((path, ranges))
+                        fdb_requests_decoding_info.append(decoding)
                 # Legacy merged lat-lon leaves are represented one point per node.
                 elif isinstance(requests.children[0], MergedTensorIndexNode):
                     (
@@ -265,7 +273,13 @@ class FDBDatacube(Datacube):
                     for child in requests.children:
                         self.get_fdb_requests(child, fdb_requests, fdb_requests_decoding_info, leaf_path)
                 elif len(requests.children[0].children[0].children) == 0:
-                    if isinstance(requests.children[0].children[0], TensorIndexTree):
+                    if self.bulk_grid_leaves and isinstance(requests.children[0].children[0], TensorIndexTree):
+                        grid_node = self.fold_into_bulk_grid(requests, leaf_path)
+                        if grid_node is not None:
+                            path, ranges, decoding = self.get_bulk_merged_values(grid_node, leaf_path)
+                            fdb_requests.append((path, ranges))
+                            fdb_requests_decoding_info.append(decoding)
+                    elif isinstance(requests.children[0].children[0], TensorIndexTree):
                         # find the fdb_requests and associated nodes to which to add results
                         (
                             path,
@@ -504,27 +518,29 @@ class FDBDatacube(Datacube):
         leaf_path_copy.pop("index")
         return (leaf_path_copy, current_start_idxs, fdb_node_ranges, lat_length)
 
-    def get_bulk_merged_values(self, requests, leaf_path=None):
+    def get_bulk_merged_values(self, bulk_node, leaf_path=None):
         if leaf_path is None:
             leaf_path = {}
 
-        if len(requests.children) != 1:
-            raise NotImplementedError("Prototype bulk retrieval requires one coupled selection per FDB path")
-        bulk_node = requests.children[0]
-        lat_ax, lon_ax = bulk_node.axes
-        first_coordinate = bulk_node.coordinates[0]
+        if isinstance(bulk_node, BulkGridTensorIndexNode):
+            # The grid node's indexes were already unmapped row by row when folding the tree
+            path = deepcopy(leaf_path)
+        else:
+            lat_ax, lon_ax = bulk_node.axes
+            first_coordinate = bulk_node.coordinates[0]
 
-        # Run one representative point through the mapper to preserve its
-        # generic path/unwanted-path semantics. Canonical indexes for all other
-        # points are already carried by the bulk leaf.
-        kv_lat = {lat_ax.name: first_coordinate[0]}
-        kv_lat, leaf_path, self.unwanted_path = lat_ax.unmap_path_key(kv_lat, leaf_path, self.unwanted_path)
-        leaf_path.update(kv_lat)
-        kv_lon = {lon_ax.name: first_coordinate[1]}
-        leaf_path["index"] = [int(bulk_node.indexes[0])]
-        kv_lon, leaf_path, self.unwanted_path = lon_ax.unmap_path_key(kv_lon, leaf_path, self.unwanted_path)
+            # Run one representative point through the mapper to preserve its
+            # generic path/unwanted-path semantics. Canonical indexes for all other
+            # points are already carried by the bulk leaf.
+            kv_lat = {lat_ax.name: first_coordinate[0]}
+            kv_lat, leaf_path, self.unwanted_path = lat_ax.unmap_path_key(kv_lat, leaf_path, self.unwanted_path)
+            leaf_path.update(kv_lat)
+            kv_lon = {lon_ax.name: first_coordinate[1]}
+            leaf_path["index"] = [int(bulk_node.indexes[0])]
+            kv_lon, leaf_path, self.unwanted_path = lon_ax.unmap_path_key(kv_lon, leaf_path, self.unwanted_path)
+            path = deepcopy(leaf_path)
 
-        indexes = np.asarray(bulk_node.indexes, dtype=np.int64)
+        indexes = bulk_node.indexes
         sorted_output_positions = np.argsort(indexes, kind="stable")
         sorted_indexes = indexes[sorted_output_positions]
         if len(sorted_indexes) > 1 and np.any(np.diff(sorted_indexes) == 0):
@@ -535,10 +551,64 @@ class FDBDatacube(Datacube):
         ends = np.r_[sorted_indexes[cuts] + 1, sorted_indexes[-1] + 1]
         ranges = [(int(start), int(end)) for start, end in zip(starts, ends)]
 
-        path = deepcopy(leaf_path)
         path.pop("values", None)
         path.pop("index", None)
         return path, ranges, BulkFDBDecoding(bulk_node, sorted_output_positions)
+
+    def fold_into_bulk_grid(self, requests, leaf_path):
+        """Replace the latitude -> longitude children of ``requests`` by one BulkGridTensorIndexNode.
+
+        The longitude leaves are unmapped to their canonical grid indexes row by row. Points whose
+        index was already seen on an earlier row (eg. duplicated cyclic longitudes) are dropped, as in
+        remove_duplicates_in_request_ranges. Returns None if no point is left.
+        """
+        self.nearest_lat_lon_search(requests)
+        if len(requests.children) == 0:
+            return None
+
+        lat_ax = requests.children[0].axis
+        lon_ax = requests.children[0].children[0].axis
+        seen = set()
+        lat_values = []
+        lon_rows = []
+        index_rows = []
+        tags = set()
+        for lat_child in requests.children:
+            tags.update(lat_child.tags)
+            key_value_path = {lat_child.axis.name: lat_child.values}
+            key_value_path, leaf_path, self.unwanted_path = lat_child.axis.unmap_path_key(
+                key_value_path, leaf_path, self.unwanted_path
+            )
+            leaf_path.update(key_value_path)
+            row_lons = []
+            row_idxs = []
+            for lon_child in lat_child.children:
+                tags.update(lon_child.tags)
+                key_value_path = {lon_child.axis.name: lon_child.values}
+                leaf_path["index"] = lon_child.indexes
+                key_value_path, leaf_path, self.unwanted_path = lon_child.axis.unmap_path_key(
+                    key_value_path, leaf_path, self.unwanted_path
+                )
+                for lon, idx in zip(lon_child.values, key_value_path["values"]):
+                    if idx not in seen:
+                        seen.add(idx)
+                        row_lons.append(lon)
+                        row_idxs.append(idx)
+            if len(row_lons) > 0:
+                lat_values.append(lat_child.values[0])
+                lon_rows.append(row_lons)
+                index_rows.extend(row_idxs)
+
+        for lat_child in list(requests.children):
+            requests.children.remove(lat_child)
+            lat_child._parent = None
+        if len(lat_values) == 0:
+            requests.remove_branch()
+            return None
+        grid_node = BulkGridTensorIndexNode([lat_ax, lon_ax], lat_values, lon_rows, index_rows)
+        grid_node.tags = tags
+        requests.add_child(grid_node)
+        return grid_node
 
     def get_merged_2nd_last_values(self, requests, leaf_path=None):
         if leaf_path is None:

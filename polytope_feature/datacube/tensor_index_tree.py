@@ -1,6 +1,7 @@
 import logging
 from typing import OrderedDict
 
+import numpy as np
 from sortedcontainers import SortedList
 
 from .datacube_axis import IntDatacubeAxis, UnsliceableDatacubeAxis
@@ -144,30 +145,100 @@ class BulkMergedTensorIndexNode(MergedTensorIndexNode):
     This is the bulk equivalent of many ``MergedTensorIndexNode`` objects. It
     keeps explicit coordinates and canonical backend indexes without expanding
     every selected point into a Python tree node.
+
+    ``coordinates`` is an (N, 2) array of (first axis, second axis) values, ie
+    (lat, lon), and ``indexes`` the N canonical backend indexes of those points.
+    After retrieval, ``result`` holds one array of N values per uncompressed
+    request combination of the compressed axes above this node, in the same
+    order as the legacy leaves' flat ``result`` blocks.
+
+    At most one bulk node exists per parent: bulk nodes on the same axes compare
+    equal, so merging trees (eg. for unions) unions their points instead of
+    adding siblings.
     """
 
     def __init__(self, axes, coordinates, indexes):
         super().__init__(axes, ())
-        self.coordinates = coordinates
-        self.indexes = indexes
+        self.coordinates = np.asarray(coordinates, dtype=np.float64).reshape(-1, 2)
+        self.indexes = None if indexes is None else np.asarray(indexes, dtype=np.int64)
 
     @property
     def point_count(self):
-        return len(self.indexes)
+        return len(self.coordinates)
+
+    @property
+    def axis_names(self):
+        return tuple(axis.name for axis in self.axes)
 
     def __lt__(self, other):
-        if not isinstance(other, BulkMergedTensorIndexNode):
-            return True
-        my_first = tuple(self.coordinates[0]) if self.point_count else ()
-        other_first = tuple(other.coordinates[0]) if other.point_count else ()
-        return (my_first, self.point_count) < (other_first, other.point_count)
+        # Bulk nodes on the same axes are interchangeable in sort order; they sort after any other node.
+        if isinstance(other, BulkMergedTensorIndexNode):
+            return self.axis_names < other.axis_names
+        return False
 
     def __eq__(self, other):
-        return self is other
+        return isinstance(other, BulkMergedTensorIndexNode) and self.axis_names == other.axis_names
 
     def __repr__(self):
-        names = tuple(axis.name for axis in self.axes)
-        return f"{names}=<bulk {self.point_count} points>"
+        return f"{self.axis_names}=<bulk {self.point_count} points>"
+
+    def flatten(self):
+        path = self.parent.flatten() if self.parent is not None else DatacubePath()
+        path[self.axes[0].name] = tuple(self.coordinates[:, 0].tolist())
+        path[self.axes[1].name] = tuple(self.coordinates[:, 1].tolist())
+        return path
+
+    def get_ancestors(self):
+        ancestors = self.parent.get_ancestors() if self.parent is not None else []
+        return ancestors + [self]
+
+    def merge(self, other):
+        self.tags.update(other.tags)
+        if other is self or other.point_count == 0:
+            return
+        if len(self.result) != 0 or len(other.result) != 0:
+            raise ValueError("Cannot merge bulk nodes which already hold retrieved results")
+        coordinates = np.concatenate([self.coordinates, other.coordinates])
+        indexes = np.concatenate([self.indexes, other.indexes])
+        _, first = np.unique(indexes, return_index=True)
+        coordinates = coordinates[first]
+        indexes = indexes[first]
+        order = np.lexsort((coordinates[:, 1], coordinates[:, 0]))
+        self.coordinates = coordinates[order]
+        self.indexes = indexes[order]
+
+
+class BulkGridTensorIndexNode(BulkMergedTensorIndexNode):
+    """Array-backed leaf for a structured (hullslicer) lat/lon selection.
+
+    Replaces the ``latitude -> longitude`` layers under one path: ``lat_values``
+    holds the selected latitudes and ``lon_values[i]`` the (compressed)
+    longitudes selected on latitude ``i``. The points, and so ``coordinates``,
+    ``indexes`` and each ``result`` array, are ordered latitude-major, with the
+    points of row ``i`` at ``row_slice(i)``.
+    """
+
+    def __init__(self, axes, lat_values, lon_values, indexes=None):
+        self.lat_values = np.asarray(lat_values, dtype=np.float64)
+        self.lon_values = [np.asarray(lons, dtype=np.float64) for lons in lon_values]
+        row_lengths = np.array([len(lons) for lons in self.lon_values], dtype=np.int64)
+        self.row_offsets = np.concatenate([[0], np.cumsum(row_lengths)])
+        if len(self.lon_values) == 0:
+            coordinates = np.empty((0, 2))
+        else:
+            coordinates = np.column_stack((np.repeat(self.lat_values, row_lengths), np.concatenate(self.lon_values)))
+        super().__init__(axes, coordinates, indexes)
+
+    def row_slice(self, i):
+        return slice(int(self.row_offsets[i]), int(self.row_offsets[i + 1]))
+
+    def __repr__(self):
+        return f"{self.axis_names}=<grid {len(self.lat_values)} rows, {self.point_count} points>"
+
+    def merge(self, other):
+        if other is self:
+            return
+        raise NotImplementedError("Bulk grid nodes are built after slicing and cannot be merged")
 
 
 class TensorIndexTree(object):
@@ -266,6 +337,10 @@ class TensorIndexTree(object):
 
     def create_bulk_merged_child(self, axes, coordinates, indexes, next_nodes):
         node = BulkMergedTensorIndexNode(axes, coordinates, indexes)
+        existing_child = self.find_child(node)
+        if existing_child is not None:
+            existing_child.merge(node)
+            return (existing_child, next_nodes)
         self.add_child(node)
         return (node, next_nodes)
 

@@ -1,6 +1,7 @@
 # import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
+from bulk_helpers import point_leaves
 
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
@@ -69,7 +70,7 @@ class TestQuadTreeSlicer:
 
         result = self.API.retrieve(request)
 
-        assert len(result.leaves) == 6919
+        assert len(point_leaves(result)) == 6919
         result.pprint()
 
         lats = []
@@ -77,7 +78,7 @@ class TestQuadTreeSlicer:
         # eccodes_lats = []
         # eccodes_lons = []
         # tol = 1e-8
-        leaves = result.leaves
+        leaves = point_leaves(result)
         for i in range(len(leaves)):
             cubepath = leaves[i].flatten()
             lat = cubepath["latitude"][0]

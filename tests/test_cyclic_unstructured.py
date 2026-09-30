@@ -12,6 +12,7 @@ needed.
 
 import numpy as np
 import xarray as xr
+from bulk_helpers import point_leaves
 
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box
@@ -59,7 +60,7 @@ def _make_api(engine: str = "quadtree") -> Polytope:
 
 def _retrieved_lons(result) -> set:
     lons = set()
-    for leaf in result.leaves:
+    for leaf in point_leaves(result):
         flat = leaf.flatten()
         if "longitude" in flat:
             lons.add(flat["longitude"][0])
