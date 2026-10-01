@@ -70,6 +70,7 @@ class Polytope:
             alternative_axes,
             use_catalogue,
             engine_options,
+            bulk_grid_leaves,
         ) = PolytopeOptions.get_polytope_options(options)
         self.datacube = Datacube.create(
             datacube,
@@ -80,6 +81,7 @@ class Polytope:
             use_catalogue,
             self.context,
         )
+        self.datacube.bulk_grid_leaves = bulk_grid_leaves
         if engine_options == {}:
             for ax_name in self.datacube._axes.keys():
                 engine_options[ax_name] = "hullslicer"
@@ -122,6 +124,11 @@ class Polytope:
 
     def slice(self, datacube, polytopes: List[ConvexPolytope]):
         """Low-level API which takes a polytope geometry object and uses it to slice the datacube"""
+
+        for engine in set(self.engines.values()):
+            reset_bulk_state = getattr(engine, "reset_bulk_state", None)
+            if reset_bulk_state is not None:
+                reset_bulk_state()
 
         self.find_compressed_axes(datacube, polytopes)
 

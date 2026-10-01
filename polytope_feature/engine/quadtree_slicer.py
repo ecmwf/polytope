@@ -1,5 +1,7 @@
 import logging
 
+import numpy as np
+
 from ..datacube.transformations.datacube_cyclic.datacube_cyclic import (
     DatacubeAxisCyclic,
 )
@@ -29,6 +31,12 @@ class QuadTreeSlicer(Engine):
         logging.debug("Created point cloud quadtree")
         self.points = points
         self.quad_tree = quad_tree
+        self.points_array = np.asarray(points, dtype=np.float64).reshape(-1, 2)
+        # Paths for which the nearest point search was already done in this slice
+        self.bulk_nearest_paths = set()
+
+    def reset_bulk_state(self):
+        self.bulk_nearest_paths.clear()
 
     def extract_single(self, datacube, polytope):
         # extract a single polygon
@@ -69,6 +77,13 @@ class QuadTreeSlicer(Engine):
                     self._build_sliceable_child(polytope, ax, node, datacube, next_nodes, api)
             del node["unsliced_polytopes"]
         else:
+            # The nearest search looks up all the requested nearest points at once, independently of the
+            # polytope, so each path only needs to be searched once across the sliced combinations.
+            path_key = tuple(node.flatten().items())
+            if path_key in self.bulk_nearest_paths:
+                node.remove_branch()
+                return
+            self.bulk_nearest_paths.add(path_key)
             self._build_sliceable_child(node["unsliced_polytopes"].pop(), ax, node, datacube, next_nodes, api)
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes, api):
@@ -84,32 +99,22 @@ class QuadTreeSlicer(Engine):
                     break
 
         # Query each sub-polytope and deduplicate by point-cloud index.
-        extracted_points = []
+        extracted_idxs = []
         seen = set()
         for sub_poly in sub_polytopes:
             for value in self.extract_single(datacube, sub_poly):
                 idx = value if use_rust else value.index
                 if idx not in seen:
                     seen.add(idx)
-                    extracted_points.append(value)
+                    extracted_idxs.append(idx)
 
-        if len(extracted_points) == 0:
+        if len(extracted_idxs) == 0:
             node.remove_branch()
-        lat_ax = ax
-        for value in extracted_points:
-            # convert to float for slicing
-            if use_rust:
-                lat_val = self.points[value][0]
-                lon_val = self.points[value][1]
-            else:
-                lat_val = value.item[0]
-                lon_val = value.item[1]
-            # store the native type
-            grand_child, _ = node.create_merged_child([lat_ax, lon_ax], (lat_val, lon_val), [])
-            # NOTE: the index of the point is stashed in the branches' result
-            if use_rust:
-                grand_child.indexes = [value]
-            else:
-                grand_child.indexes = [value.index]
-            # grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
-            # grand_child["unsliced_polytopes"].remove(polytope)
+            return
+
+        indexes = np.asarray(extracted_idxs, dtype=np.int64)
+        coordinates = self.points_array[indexes]
+        # Sort by (lat, lon) to match the legacy per-point leaf order while retaining the
+        # canonical backend index needed for range planning.
+        output_order = np.lexsort((coordinates[:, 1], coordinates[:, 0]))
+        node.create_bulk_merged_child([ax, lon_ax], coordinates[output_order], indexes[output_order], [])

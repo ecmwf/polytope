@@ -18,6 +18,7 @@ import time
 import numpy as np
 import pandas as pd
 import pytest
+from bulk_helpers import point_leaves
 
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Point, Select, Union
@@ -130,7 +131,7 @@ class TestNNManyPointsPerf:
         result = api.retrieve(request)
         elapsed = time.perf_counter() - t0
 
-        n_leaves = len(result.leaves)
+        n_leaves = len(point_leaves(result))
         with capsys.disabled():
             print(f"\n{label}  query_pts={len(query_points)}  k={k}  leaves={n_leaves}  elapsed={elapsed:.3f}s")
 
