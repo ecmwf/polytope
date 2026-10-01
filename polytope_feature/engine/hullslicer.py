@@ -10,6 +10,24 @@ class HullSlicer(Engine):
     def __init__(self):
         super().__init__()
 
+    def _prune_other_groups(self, unsliced_polytopes, polytope):
+        # When a polytope is part of a "group" (e.g. the lat/lon constraints
+        # decomposed from the same requested Point value, see
+        # shapes.py::Point.polytope() and ConvexPolytope.group_id), drop any
+        # *other* group's constraints from the set once this one has been
+        # resolved along an axis. Without this, a single Point shape holding
+        # N values (e.g. a batch of nearest-neighbour lookups) would cause
+        # every subsequent axis to be built once per already-created branch
+        # *per remaining point*, i.e. O(branches * points) instead of
+        # O(points) -- because each of the N points' per-axis constraints
+        # would otherwise still sit together, unrelated, in every branch's
+        # unsliced_polytopes set. Polytopes without a group_id (e.g. from
+        # Select/Box/Span) are always kept, so this is a no-op for every
+        # other shape.
+        if polytope.group_id is None:
+            return unsliced_polytopes
+        return {p for p in unsliced_polytopes if p.group_id is None or p.group_id == polytope.group_id}
+
     def _build_unsliceable_child(self, polytope, ax, node, datacube, lowers, next_nodes, slice_axis_idx):
         if not polytope.is_flat:
             raise UnsliceableShapeError(ax)
@@ -34,12 +52,19 @@ class HullSlicer(Engine):
             if datacube_has_index:
                 if i == 0:
                     exists, child, next_nodes = node.create_child(ax, lower, next_nodes)
-                    child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
-                    child["unsliced_polytopes"].remove(polytope)
+                    pruned = self._prune_other_groups(copy(node["unsliced_polytopes"]), polytope)
+                    pruned.discard(polytope)
                     # Stamp the tag: unsliceable axes consume the polytope without a geometric slice
                     if polytope.tag is not None:
                         child.tags.add(polytope.tag)
-                    next_nodes.append(child)
+                    if not exists:
+                        child["unsliced_polytopes"] = pruned
+                        next_nodes.append(child)
+                    else:
+                        # See comment in _build_sliceable_child: merge rather
+                        # than overwrite when this value already resolved to
+                        # an existing child.
+                        child["unsliced_polytopes"].update(pruned)
                 else:
                     child.add_value(lower)
             else:
@@ -101,16 +126,25 @@ class HullSlicer(Engine):
                 new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
                 remapped_val = self.remap_values(ax, value)
                 exists, child, next_nodes = node.create_child(ax, remapped_val, next_nodes)
-                child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
-                child["unsliced_polytopes"].remove(polytope)
+                pruned = self._prune_other_groups(copy(node["unsliced_polytopes"]), polytope)
+                pruned.discard(polytope)
                 if new_polytope is not None:
-                    child["unsliced_polytopes"].add(new_polytope)
+                    pruned.add(new_polytope)
                 else:
                     # Polytope fully resolved at this node: stamp its tag
                     if polytope.tag is not None:
                         child.tags.add(polytope.tag)
                 if not exists:
+                    child["unsliced_polytopes"] = pruned
                     next_nodes.append(child)
+                else:
+                    # This value already resolved to an existing child (e.g.
+                    # two distinct points/polytopes happen to share the same
+                    # resolved value on this axis): merge this polytope's
+                    # remaining constraints into the existing set rather than
+                    # overwriting whatever a previous polytope already
+                    # contributed there.
+                    child["unsliced_polytopes"].update(pruned)
             else:
                 remapped_val = self.remap_values(ax, value)
                 child.add_value(remapped_val)
