@@ -28,7 +28,7 @@ class Shape(ABC):
 
 
 class ConvexPolytope(Shape):
-    def __init__(self, axes, points, method=None, k=1, is_orthogonal=False, tag=None):
+    def __init__(self, axes, points, method=None, k=1, is_orthogonal=False, tag=None, group_id=None):
         self._axes = list(axes)
         self.is_flat = False
         if len(self._axes) == 1 and len(points) == 1:
@@ -40,6 +40,18 @@ class ConvexPolytope(Shape):
         self.is_orthogonal = is_orthogonal
         self.is_in_union = False
         self.tag = tag
+        # Used to associate multiple 1-D ConvexPolytopes that were decomposed
+        # from the same originating multi-axis point (see Point.polytope()).
+        # When set, engines can use this to recognise that two polytopes
+        # "belong together" (e.g. the latitude and longitude constraint of
+        # the same requested nearest-neighbour point) even after they have
+        # been flattened into independent per-axis constraints, without
+        # needing to keep them nested inside a Product. This allows pruning
+        # away unrelated sibling constraints for *other* points once one of
+        # a point's own constraints has been resolved, avoiding O(branches *
+        # points) blowup when many points are requested via a single Point
+        # shape (as opposed to one Point per value wrapped in a Union).
+        self.group_id = group_id
 
     def add_to_union(self):
         self.is_in_union = True
@@ -144,6 +156,10 @@ class Point(Shape):
         self.values = values
         self.method = method
         self.k = k
+        self.single_point_tag = True
+        if isinstance(tag, list):
+            if len(tag) == len(values):
+                self.single_point_tag = False
         self.tag = tag
         self.decompose_1D = True
         # assert len(values) == 1
@@ -156,20 +172,39 @@ class Point(Shape):
 
         polytopes = []
         if self.decompose_1D:
-            for point in self.values:
+            for i, point in enumerate(self.values):
+                if not self.single_point_tag:
+                    tag = self.tag[i]
+                else:
+                    tag = self.tag
+                # A unique id shared by every 1-D ConvexPolytope decomposed
+                # from this specific point, so engines (e.g. HullSlicer) can
+                # recognise that these per-axis constraints "belong together"
+                # even after Product has been flattened away, and correctly
+                # prune away *other* points' constraints once one of this
+                # point's own constraints has been resolved along an axis.
+                group_id = (id(self), i)
                 poly_to_mult = []
-                for i in range(len(self._axes)):
+                for ax_idx in range(len(self._axes)):
                     poly_to_mult.append(
                         ConvexPolytope(
-                            [self._axes[i]], [[point[i]]], self.method, self.k, is_orthogonal=True, tag=self.tag
+                            [self._axes[ax_idx]],
+                            [[point[ax_idx]]],
+                            self.method,
+                            self.k,
+                            is_orthogonal=True,
+                            tag=tag,
+                            group_id=group_id,
                         )
                     )
-                polytopes.append(Product(*poly_to_mult, method=self.method, k=self.k, value=[point], tag=self.tag))
+                polytopes.append(Product(*poly_to_mult, method=self.method, k=self.k, value=[point], tag=tag))
         else:
-            for point in self.values:
-                polytopes.append(
-                    ConvexPolytope(self._axes, [point], self.method, self.k, is_orthogonal=True, tag=self.tag)
-                )
+            for i, point in enumerate(self.values):
+                if not self.single_point_tag:
+                    tag = self.tag[i]
+                else:
+                    tag = self.tag
+                polytopes.append(ConvexPolytope(self._axes, [point], self.method, self.k, is_orthogonal=True, tag=tag))
         self.polytopes = polytopes
 
         return self.polytopes

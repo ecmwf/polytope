@@ -38,8 +38,20 @@ class QuadTreeSlicer(Engine):
         assert "latitude" in axes and "longitude" in axes
         revert_axes = not (list(axes) == ["latitude", "longitude"])
         if use_rust:
-            logging.debug("Using Rust for quadtree polygon query")
-            if len(datacube.nearest_search) == 0:
+            if polytope.method == "nearest":
+                logging.debug("Using Rust for quadtree k-nearest-neighbor query")
+                k = polytope.k
+                if revert_axes:
+                    nn_points = [tuple(reversed(point)) for point in polytope.points]
+                else:
+                    nn_points = [tuple(point) for point in polytope.points]
+                polygon_points = []
+                for nn_pt in nn_points:
+                    result = self.quad_tree.k_nearest_neighbor(nn_pt, k)
+                    if result:
+                        polygon_points.extend(result)
+            else:
+                logging.debug("Using Rust for quadtree polygon query")
                 if revert_axes:
                     polytope_points = [tuple(reversed(point)) for point in polytope.points]
                 else:
@@ -47,15 +59,6 @@ class QuadTreeSlicer(Engine):
                 logging.debug("Querying quadtree")
                 polygon_points = self.quad_tree.query_polygon(self.points, 0, polytope_points)
                 logging.debug("Finished querying quadtree")
-            else:
-                k = datacube.nearest_search[tuple(polytope.axes())][1]
-                if revert_axes:
-                    nn_points = [tuple(reversed(pt)) for pt in datacube.nearest_search[tuple(polytope.axes())][0]]
-                else:
-                    nn_points = [tuple(pt) for pt in datacube.nearest_search[tuple(polytope.axes())][0]]
-                polygon_points = []
-                for nn_pt in nn_points:
-                    polygon_points.extend(self.quad_tree.k_nearest_neighbor(nn_pt, k))
         else:
             if revert_axes:
                 polytope.points = [tuple(reversed(point)) for point in polytope.points]
@@ -63,21 +66,29 @@ class QuadTreeSlicer(Engine):
         return polygon_points
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):
-        if len(datacube.nearest_search) == 0:
-            for polytope in node["unsliced_polytopes"]:
-                if ax.name in polytope._axes:
-                    self._build_sliceable_child(polytope, ax, node, datacube, next_nodes, api)
-            del node["unsliced_polytopes"]
-        else:
-            self._build_sliceable_child(node["unsliced_polytopes"].pop(), ax, node, datacube, next_nodes, api)
+        # Process every polytope registered against this axis on this node
+        # individually. Each polytope already carries its own query point(s),
+        # method, k and tag, so there is no need to reach into the shared,
+        # global `datacube.nearest_search` registry here: doing so previously
+        # caused every polytope sharing the same (latitude, longitude) axes to
+        # see (and get tagged with) results belonging to every other
+        # registered point, whenever more than one nearest-neighbour Point
+        # shape/value was requested in the same call (e.g. a Union of tagged
+        # Points, or a single Point with several values).
+        for polytope in list(node["unsliced_polytopes"]):
+            if ax.name in polytope._axes:
+                self._build_sliceable_child(polytope, ax, node, datacube, next_nodes, api)
+        del node["unsliced_polytopes"]
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes, api):
         lon_ax = datacube._axes["longitude"]
 
         # When the longitude axis is cyclic and the request polygon crosses the seam,
         # split it into canonical sub-polytopes before querying the point cloud.
+        # This only applies to polygon/box-style queries; nearest-neighbour queries
+        # operate directly on query points and do not need seam-splitting.
         sub_polytopes = [polytope]
-        if lon_ax.is_cyclic and len(datacube.nearest_search) == 0:
+        if lon_ax.is_cyclic and polytope.method != "nearest":
             for t in lon_ax.transformations:
                 if isinstance(t, DatacubeAxisCyclic):
                     sub_polytopes = t.split_polytope_at_boundary(polytope, "longitude", lon_ax)
@@ -94,7 +105,13 @@ class QuadTreeSlicer(Engine):
                     extracted_points.append(value)
 
         if len(extracted_points) == 0:
-            node.remove_branch()
+            # Only remove the branch if nothing else (e.g. a sibling polytope
+            # sharing this node, such as another tagged Point value) has
+            # already added children here.
+            if len(node.children) == 0:
+                node.remove_branch()
+            return
+
         lat_ax = ax
         for value in extracted_points:
             # convert to float for slicing
@@ -111,5 +128,9 @@ class QuadTreeSlicer(Engine):
                 grand_child.indexes = [value]
             else:
                 grand_child.indexes = [value.index]
+            # Stamp the tag: the polytope is fully resolved by this 2-D (lat, lon) slice,
+            # so its tag (if any) belongs on the resulting leaf node.
+            if polytope.tag is not None:
+                grand_child.tags.add(polytope.tag)
             # grand_child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
             # grand_child["unsliced_polytopes"].remove(polytope)

@@ -408,6 +408,10 @@ class FDBDatacube(Datacube):
                 print("k nearest neighbour not supported in hullslicer, defaulting to nearest neighbour.")
                 k = 1
 
+            # Tags registered alongside each query point (see Polytope.retrieve()),
+            # used below to re-attach the correct tag to each resolved leaf.
+            tags_list = nearest_pts_k[2] if len(nearest_pts_k) > 2 else [None] * len(nearest_pts_k[0])
+
             transformed_nearest_pts = []
             for point in nearest_pts_k[0]:
                 transformed_nearest_pts.append([point[0], second_ax._remap_val_to_axis_range(point[1])])
@@ -417,11 +421,19 @@ class FDBDatacube(Datacube):
                 for lon_child in lat_child.children:
                     found_latlon_pts.append([lat_child.values, lon_child.values])
 
-            # now find the nearest lat lon to the points requested
+            # now find the nearest lat lon to the points requested, keeping
+            # track of which originating query point's tag each match belongs
+            # to (a single physical (lat, lon) result may satisfy more than
+            # one requested query point, in which case its tags accumulate).
             nearest_latlons = []
-            for pt in transformed_nearest_pts:
+            latlon_tags = {}
+            for idx, pt in enumerate(transformed_nearest_pts):
                 nearest_latlon = nearest_pt(found_latlon_pts, pt, k)
                 nearest_latlons.extend(nearest_latlon)
+                tag = tags_list[idx] if idx < len(tags_list) else None
+                if tag is not None:
+                    for latlon in nearest_latlon:
+                        latlon_tags.setdefault(latlon, set()).add(tag)
 
             # need to remove the branches that do not fit
             lat_children_by_values = {child.values: child for child in requests.children}
@@ -439,6 +451,17 @@ class FDBDatacube(Datacube):
                         for value in lon_child.values:
                             if value not in possible_lons:
                                 lon_child.remove_compressed_branch(value)
+                        # Re-stamp this leaf's tags based on which originating
+                        # query point(s) it actually matched, discarding any
+                        # tags speculatively (and possibly incorrectly)
+                        # stamped while HullSlicer built candidate branches
+                        # for every polytope sharing this axis pair.
+                        correct_tags = set()
+                        for value in lon_child.values:
+                            key = (lat_child.values[0], value)
+                            correct_tags.update(latlon_tags.get(key, set()))
+                        if correct_tags:
+                            lon_child.tags = correct_tags
 
     def get_2nd_last_values(self, requests, leaf_path=None):
         if leaf_path is None:

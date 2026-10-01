@@ -359,3 +359,114 @@ class TestTagsOn3DTree:
 
         assert leaf_tags[(3, 2, 1)] == {"A"}
         assert leaf_tags[(9, 4, 0)] == {"B"}
+
+
+# ---------------------------------------------------------------------------
+# Point shape holding multiple values with a per-value tag list
+# ---------------------------------------------------------------------------
+
+
+class TestPointShapePerValueTags:
+    """A single Point shape can hold many (lat, lon)-style values at once.
+    When `tag` is a list of the same length as `values`, each value should get
+    its own, distinct tag rather than sharing one tag across all values."""
+
+    def setup_method(self, method):
+        self.step_vals = list(range(0, 20, 2))  # 0,2,...,18
+        self.level_vals = list(range(1, 11))  # 1..10
+        self.api = _make_2d_api(self.step_vals, self.level_vals)
+
+    # -- unit level: Point.polytope() assigns per-value tags correctly ------
+
+    def test_point_polytope_assigns_tag_per_value(self):
+        values = [[0, 1], [4, 3], [8, 5], [12, 7], [16, 9]]
+        tags = ["t0", "t1", "t2", "t3", "t4"]
+        pt = Point(["step", "level"], values, tag=tags)
+        assert pt.single_point_tag is False
+
+        polys = pt.polytope()
+        assert len(polys) == len(values)
+        for poly, expected_tag in zip(polys, tags):
+            assert poly.tag == expected_tag
+            for cp in poly.polytope():
+                assert cp.tag == expected_tag
+
+    def test_point_polytope_tag_list_shorter_than_values_keeps_single_tag(self):
+        """If the tag list length doesn't match values, tag is treated as a single
+        (shared) object applied to every value, per the single_point_tag flag logic."""
+        values = [[0, 1], [4, 3], [8, 5]]
+        tags = ["only_one"]  # length mismatch: 1 != 3
+        pt = Point(["step", "level"], values, tag=tags)
+        assert pt.single_point_tag is True
+
+        polys = pt.polytope()
+        assert len(polys) == len(values)
+        for poly in polys:
+            assert poly.tag == tags
+
+    # -- integration: every value in the Point shape gets its own leaf tag --
+
+    def test_every_value_gets_correct_tag_on_tree_leaves(self):
+        values = [[0, 1], [4, 3], [8, 5], [12, 7], [16, 9]]
+        tags = ["t0", "t1", "t2", "t3", "t4"]
+        request = Request(Union(["step", "level"], Point(["step", "level"], values, tag=tags)))
+        result = self.api.retrieve(request)
+        leaves = result.leaves
+        assert len(leaves) == len(values)
+
+        leaf_tags = {}
+        for leaf in leaves:
+            path = leaf.flatten()
+            key = (path["step"][0], path["level"][0])
+            leaf_tags[key] = leaf.tags
+
+        for (step_val, level_val), expected_tag in zip(values, tags):
+            assert leaf_tags[(step_val, level_val)] == {expected_tag}
+
+    def test_every_value_gets_correct_tag_regardless_of_order(self):
+        """Shuffle the value/tag pairing to ensure tags track their own value,
+        not just positional order coincidence."""
+        values = [[18, 10], [2, 2], [10, 6], [6, 4], [14, 8]]
+        tags = ["end", "start", "middle", "lowmid", "highmid"]
+        request = Request(Union(["step", "level"], Point(["step", "level"], values, tag=tags)))
+        result = self.api.retrieve(request)
+        leaves = result.leaves
+        assert len(leaves) == len(values)
+
+        leaf_tags = {}
+        for leaf in leaves:
+            path = leaf.flatten()
+            key = (path["step"][0], path["level"][0])
+            leaf_tags[key] = leaf.tags
+
+        for (step_val, level_val), expected_tag in zip(values, tags):
+            assert leaf_tags[(step_val, level_val)] == {expected_tag}
+
+    def test_duplicate_value_with_different_tags_accumulates(self):
+        """Two distinct entries in the same Point that resolve to the same
+        datacube location should accumulate both of their respective tags."""
+        values = [[4, 3], [4, 3], [8, 5]]
+        tags = ["dup_a", "dup_b", "unique"]
+        request = Request(Union(["step", "level"], Point(["step", "level"], values, tag=tags)))
+        result = self.api.retrieve(request)
+        leaves = result.leaves
+        # [4,3] appears twice but maps to a single datacube leaf
+        assert len(leaves) == 2
+
+        leaf_tags = {}
+        for leaf in leaves:
+            path = leaf.flatten()
+            key = (path["step"][0], path["level"][0])
+            leaf_tags[key] = leaf.tags
+
+        assert leaf_tags[(4, 3)] == {"dup_a", "dup_b"}
+        assert leaf_tags[(8, 5)] == {"unique"}
+
+    def test_no_tags_given_all_values_untagged(self):
+        values = [[0, 1], [4, 3], [8, 5]]
+        request = Request(Union(["step", "level"], Point(["step", "level"], values)))
+        result = self.api.retrieve(request)
+        leaves = result.leaves
+        assert len(leaves) == len(values)
+        for leaf in leaves:
+            assert len(leaf.tags) == 0

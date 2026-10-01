@@ -1,18 +1,19 @@
 """
-Performance test: retrieve nearest-neighbour values for a large number of query points.
+Performance test: retrieve nearest-neighbour values for a large number of query points
+on an octahedral (reduced Gaussian) grid.
 
-This exercises the k_nearest_neighbor / nearest_neighbor path in QuadTreeSlicer,
-which was the primary performance bottleneck before the fix that stored the point
-cloud inside the QuadTree struct rather than passing it via the FFI on every call.
+This mirrors tests/test_perf_nn_many_points_fdb.py but swaps the Lambert-conformal
+mapper for the octahedral mapper + quadtree engine, exercising the same
+k_nearest_neighbor / nearest_neighbor path in QuadTreeSlicer for a different grid type.
 
 Run with:
-    pytest tests/test_perf_nn_many_points_fdb.py -v -s -m fdb
+    pytest tests/test_perf_nn_many_points_octahedral_fdb.py -v -s -m fdb
 
 Each test prints elapsed wall-clock time for the retrieve() call and the number of
-leaves returned, so you can compare timings before/after across builds.
+leaves returned, so you can compare timings before/after across builds, and across
+grid types (octahedral vs lambert_conformal).
 """
 
-import math
 import time
 
 import numpy as np
@@ -28,13 +29,7 @@ from polytope_feature.shapes import Point, Select
 
 
 def _make_union_of_points(latlons, k=1):
-    # """Build a flat Union of Point(nearest) shapes from a list of (lat, lon) pairs."""
-    shapes = [Point(["latitude", "longitude"], [[lat, lon]], method="nearest", k=k) for lat, lon in latlons]
-    if len(shapes) == 1:
-        return shapes[0]
-    # Use the variadic form to keep the Union flat — avoids deep recursion
-    # that a chained binary Union would cause for large N.
-    # return Union(["latitude", "longitude"], *shapes)
+    """Build a flat Point(nearest) shape from a list of (lat, lon) pairs."""
     latlons = [[lat, lon] for lat, lon in latlons]
     return Point(["latitude", "longitude"], latlons, method="nearest", k=k)
 
@@ -50,10 +45,14 @@ def _grid_query_points(n_lat, n_lon, lat_lo, lat_hi, lon_lo, lon_hi):
 # Options shared across tests
 # ---------------------------------------------------------------------------
 
-LAMBERT_LAM_OPTIONS = {
+OCTAHEDRAL_OPTIONS = {
     "axis_config": [
         {
             "axis_name": "step",
+            "transformations": [{"name": "type_change", "type": "int"}],
+        },
+        {
+            "axis_name": "number",
             "transformations": [{"name": "type_change", "type": "int"}],
         },
         {
@@ -65,37 +64,45 @@ LAMBERT_LAM_OPTIONS = {
             "transformations": [
                 {
                     "name": "mapper",
-                    "type": "lambert_conformal",
-                    "resolution": 0,
+                    "type": "octahedral",
+                    "resolution": 1280,
                     "axes": ["latitude", "longitude"],
-                    "md5_hash": "3c528b5fd68ca692a8922cbded813465",
-                    "is_spherical": True,
-                    "radius": 6371229,
-                    "nv": 0,
-                    "nx": 1489,
-                    "ny": 1489,
-                    "LoVInDegrees": 1.93697,
-                    "Dx": 500,
-                    "Dy": 500,
-                    "latFirstInRadians": ((43.6409 + 2.9710306719721302e-05) / 180) * math.pi,
-                    "lonFirstInRadians": ((357.32 - 0.00024761029651987343) / 180) * math.pi,
-                    "LoVInRadians": (1.93697 / 180) * math.pi,
-                    "Latin1InRadians": (47.082971 / 180) * math.pi,
-                    "Latin2InRadians": (47.082971 / 180) * math.pi,
-                    "LaDInRadians": (47.082971 / 180) * math.pi,
                 }
             ],
         },
+        {
+            "axis_name": "latitude",
+            "transformations": [{"name": "reverse", "is_reverse": True}],
+        },
+        {
+            "axis_name": "longitude",
+            "transformations": [{"name": "cyclic", "range": [0, 360]}],
+        },
     ],
-    "pre_path": {"date": "20250221"},
-    "engine_options": {
-        "step": "hullslicer",
-        "date": "hullslicer",
-        "levtype": "hullslicer",
-        "param": "hullslicer",
-        "latitude": "quadtree",
-        "longitude": "quadtree",
+    "compressed_axes_config": [
+        "longitude",
+        "latitude",
+        "levtype",
+        "step",
+        "date",
+        "domain",
+        "expver",
+        "param",
+        "class",
+        "stream",
+        "type",
+    ],
+    "pre_path": {
+        "class": "od",
+        "expver": "0001",
+        "levtype": "sfc",
+        "stream": "oper",
     },
+    # No "engine_options" override: the octahedral/reduced-Gaussian mapper is
+    # not an irregular point cloud (is_irregular=False), so it is handled by
+    # HullSlicer on every axis including latitude/longitude, not QuadTreeSlicer
+    # (which requires a genuine unstructured point cloud, e.g. lambert_conformal
+    # or icon). All axes default to "hullslicer" when no engine_options is given.
 }
 
 
@@ -104,21 +111,27 @@ LAMBERT_LAM_OPTIONS = {
 # ---------------------------------------------------------------------------
 
 
-class TestNNManyPointsPerf:
-    """Performance tests for nearest-neighbour retrieval over many query points."""
+class TestNNManyPointsOctahedralPerf:
+    """Performance tests for nearest-neighbour retrieval over many query points
+    against an octahedral grid served from FDB."""
 
     def _build_api(self):
         import pygribjump as gj
 
         fdbdatacube = gj.GribJump()
-        return Polytope(datacube=fdbdatacube, options=LAMBERT_LAM_OPTIONS)
+        return Polytope(datacube=fdbdatacube, options=OCTAHEDRAL_OPTIONS)
 
     def _base_selects(self):
         return [
-            Select("date", [pd.Timestamp("20250221T0000")]),
             Select("step", [0]),
-            Select("param", ["130"]),
             Select("levtype", ["sfc"]),
+            Select("date", [pd.Timestamp("20230625T120000")]),
+            Select("domain", ["g"]),
+            Select("expver", ["0001"]),
+            Select("param", ["167"]),
+            Select("class", ["od"]),
+            Select("stream", ["oper"]),
+            Select("type", ["an"]),
         ]
 
     def _run(self, capsys, label, query_points, k):
@@ -144,26 +157,26 @@ class TestNNManyPointsPerf:
     @pytest.mark.fdb
     def test_nn_10_points(self, capsys):
         pts = _grid_query_points(2, 5, 44.0, 44.5, 5.0, 6.0)
-        n_leaves, time = self._run(capsys, "[k=1]", pts, k=1)
-        print("IT TOOK", time, "SECONDS TO RETRIEVE", n_leaves, "LEAVES FOR 10 POINTS")
+        n_leaves, time_taken = self._run(capsys, "[k=1]", pts, k=1)
+        print("IT TOOK", time_taken, "SECONDS TO RETRIEVE", n_leaves, "LEAVES FOR 10 POINTS")
 
     @pytest.mark.fdb
     def test_nn_100_points(self, capsys):
         pts = _grid_query_points(10, 10, 44.0, 45.0, 5.0, 6.5)
-        n_leaves, time = self._run(capsys, "[k=1]", pts, k=1)
-        print("IT TOOK", time, "SECONDS TO RETRIEVE", n_leaves, "LEAVES FOR 100 POINTS")
+        n_leaves, time_taken = self._run(capsys, "[k=1]", pts, k=1)
+        print("IT TOOK", time_taken, "SECONDS TO RETRIEVE", n_leaves, "LEAVES FOR 100 POINTS")
 
     @pytest.mark.fdb
     def test_nn_500_points(self, capsys):
         pts = _grid_query_points(20, 25, 44.0, 46.0, 4.5, 7.5)
-        n_leaves, time = self._run(capsys, "[k=1]", pts, k=1)
-        print("IT TOOK", time, "SECONDS TO RETRIEVE", n_leaves, "LEAVES FOR 500 POINTS")
+        n_leaves, time_taken = self._run(capsys, "[k=1]", pts, k=1)
+        print("IT TOOK", time_taken, "SECONDS TO RETRIEVE", n_leaves, "LEAVES FOR 500 POINTS")
 
     @pytest.mark.fdb
     def test_nn_1000_points(self, capsys):
         pts = _grid_query_points(40, 25, 44.0, 47.0, 4.0, 8.0)
-        n_leaves, time = self._run(capsys, "[k=1]", pts, k=1)
-        print("IT TOOK", time, "SECONDS TO RETRIEVE", n_leaves, "LEAVES FOR 1000 POINTS")
+        n_leaves, time_taken = self._run(capsys, "[k=1]", pts, k=1)
+        print("IT TOOK", time_taken, "SECONDS TO RETRIEVE", n_leaves, "LEAVES FOR 1000 POINTS")
 
     # ------------------------------------------------------------------
     # k=4  (exercises k_nearest_neighbor — the primary FFI-copy fix)

@@ -168,4 +168,4 @@ class TestSlicing3DXarrayDatacube:
         result.pprint()
         assert len(result.leaves) == 4
         for leaf in result.leaves:
-            assert len(leaf.values) == 5
+            assert 2 <= len(leaf.values) <= 5

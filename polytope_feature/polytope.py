@@ -201,16 +201,25 @@ class Polytope:
             method = polytope.method
             if method == "nearest":
                 k = polytope.k
+                axes_key = tuple(polytope.axes())
+                # Track the tag alongside each registered query point so that,
+                # once the actual nearest-neighbour(s) have been resolved, the
+                # correct originating tag can be re-attached to each result
+                # leaf instead of whichever polytope happened to be iterated
+                # last/first while building speculative candidate branches.
                 if polytope.is_flat:
-                    if self.datacube.nearest_search.get(tuple(polytope.axes()), None) is None:
-                        self.datacube.nearest_search[tuple(polytope.axes())] = (polytope.values, k)
-                    else:
-                        self.datacube.nearest_search[tuple(polytope.axes())][0].append(polytope.values[0])
+                    point = polytope.values[0]
                 else:
-                    if self.datacube.nearest_search.get(tuple(polytope.axes()), None) is None:
-                        self.datacube.nearest_search[tuple(polytope.axes())] = (polytope.points, k)
-                    else:
-                        self.datacube.nearest_search[tuple(polytope.axes())][0].append(polytope.points[0])
+                    point = polytope.points[0]
+                tag = polytope.tag
+                entry = self.datacube.nearest_search.get(axes_key, None)
+                if entry is None:
+                    self.datacube.nearest_search[axes_key] = ([point], k, [tag])
+                else:
+                    entry[0].append(point)
+                    # entry may have been created before this change (defensive default)
+                    if len(entry) > 2:
+                        entry[2].append(tag)
         request_tree = self.slice(self.datacube, request.polytopes())
         logging.info("Created request tree for %s ", self.context)
         self.datacube.get(request_tree, self.context)
