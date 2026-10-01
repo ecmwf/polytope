@@ -229,8 +229,17 @@ class TensorIndexTree(object):
 
     def create_merged_child(self, axes, values, next_nodes):
         node = MergedTensorIndexNode(axes, values)
-        self.add_child(node)
-        return (node, next_nodes)
+        # Dedup on (axes, values): if a child with the same resolved (lat, lon)
+        # already exists on this node (e.g. because two distinct requested
+        # points - possibly carrying different tags - resolve to the same
+        # physical point on the grid), merge into the existing node instead of
+        # creating a structurally-identical sibling. This mirrors the
+        # dedup behaviour already present in create_child.
+        existing_child = self.find_child(node)
+        if not existing_child:
+            self.add_child(node)
+            return (node, next_nodes)
+        return (existing_child, next_nodes)
 
     def create_child(self, axis, value, next_nodes):
         # TODO: what if we remove the next nodes here?
