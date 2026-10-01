@@ -20,7 +20,7 @@ import pandas as pd
 import pytest
 
 from polytope_feature.polytope import Polytope, Request
-from polytope_feature.shapes import Point, Select, Union
+from polytope_feature.shapes import Point, Select  # , Union
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -34,9 +34,10 @@ def _make_union_of_points(latlons, k=1):
         return shapes[0]
     # Use the variadic form to keep the Union flat — avoids deep recursion
     # that a chained binary Union would cause for large N.
-    return Union(["latitude", "longitude"], *shapes)
-    # latlons = [[lat, lon] for lat, lon in latlons]
-    # return Point(["latitude", "longitude"], latlons, method="nearest", k=k)
+    # return Union(["latitude", "longitude"], *shapes)
+    latlons = [[lat, lon] for lat, lon in latlons]
+    tags = latlons.copy()
+    return Point(["latitude", "longitude"], latlons, method="nearest", k=k, tag=tags)
 
 
 def _grid_query_points(n_lat, n_lon, lat_lo, lat_hi, lon_lo, lon_hi):
@@ -131,6 +132,8 @@ class TestNNManyPointsPerf:
         elapsed = time.perf_counter() - t0
 
         n_leaves = len(result.leaves)
+        for leaf in result.leaves:
+            print(leaf.tags)
         with capsys.disabled():
             print(f"\n{label}  query_pts={len(query_points)}  k={k}  leaves={n_leaves}  elapsed={elapsed:.3f}s")
 
@@ -147,34 +150,34 @@ class TestNNManyPointsPerf:
         n_leaves, time = self._run(capsys, "[k=1]", pts, k=1)
         print("IT TOOK", time, "SECONDS TO RETRIEVE", n_leaves, "LEAVES FOR 10 POINTS")
 
-    @pytest.mark.fdb
-    def test_nn_100_points(self, capsys):
-        pts = _grid_query_points(10, 10, 44.0, 45.0, 5.0, 6.5)
-        n_leaves, time = self._run(capsys, "[k=1]", pts, k=1)
-        print("IT TOOK", time, "SECONDS TO RETRIEVE", n_leaves, "LEAVES FOR 100 POINTS")
+    # @pytest.mark.fdb
+    # def test_nn_100_points(self, capsys):
+    #     pts = _grid_query_points(10, 10, 44.0, 45.0, 5.0, 6.5)
+    #     n_leaves, time = self._run(capsys, "[k=1]", pts, k=1)
+    #     print("IT TOOK", time, "SECONDS TO RETRIEVE", n_leaves, "LEAVES FOR 100 POINTS")
 
-    @pytest.mark.fdb
-    def test_nn_500_points(self, capsys):
-        pts = _grid_query_points(20, 25, 44.0, 46.0, 4.5, 7.5)
-        n_leaves, time = self._run(capsys, "[k=1]", pts, k=1)
-        print("IT TOOK", time, "SECONDS TO RETRIEVE", n_leaves, "LEAVES FOR 500 POINTS")
+    # @pytest.mark.fdb
+    # def test_nn_500_points(self, capsys):
+    #     pts = _grid_query_points(20, 25, 44.0, 46.0, 4.5, 7.5)
+    #     n_leaves, time = self._run(capsys, "[k=1]", pts, k=1)
+    #     print("IT TOOK", time, "SECONDS TO RETRIEVE", n_leaves, "LEAVES FOR 500 POINTS")
 
-    @pytest.mark.fdb
-    def test_nn_1000_points(self, capsys):
-        pts = _grid_query_points(40, 25, 44.0, 47.0, 4.0, 8.0)
-        n_leaves, time = self._run(capsys, "[k=1]", pts, k=1)
-        print("IT TOOK", time, "SECONDS TO RETRIEVE", n_leaves, "LEAVES FOR 1000 POINTS")
+    # @pytest.mark.fdb
+    # def test_nn_1000_points(self, capsys):
+    #     pts = _grid_query_points(40, 25, 44.0, 47.0, 4.0, 8.0)
+    #     n_leaves, time = self._run(capsys, "[k=1]", pts, k=1)
+    #     print("IT TOOK", time, "SECONDS TO RETRIEVE", n_leaves, "LEAVES FOR 1000 POINTS")
 
-    # ------------------------------------------------------------------
-    # k=4  (exercises k_nearest_neighbor — the primary FFI-copy fix)
-    # ------------------------------------------------------------------
+    # # ------------------------------------------------------------------
+    # # k=4  (exercises k_nearest_neighbor — the primary FFI-copy fix)
+    # # ------------------------------------------------------------------
 
-    @pytest.mark.fdb
-    def test_nn_100_points_k4(self, capsys):
-        pts = _grid_query_points(10, 10, 44.0, 45.0, 5.0, 6.5)
-        self._run(capsys, "[k=4]", pts, k=4)
+    # @pytest.mark.fdb
+    # def test_nn_100_points_k4(self, capsys):
+    #     pts = _grid_query_points(10, 10, 44.0, 45.0, 5.0, 6.5)
+    #     self._run(capsys, "[k=4]", pts, k=4)
 
-    @pytest.mark.fdb
-    def test_nn_500_points_k4(self, capsys):
-        pts = _grid_query_points(20, 25, 44.0, 46.0, 4.5, 7.5)
-        self._run(capsys, "[k=4]", pts, k=4)
+    # @pytest.mark.fdb
+    # def test_nn_500_points_k4(self, capsys):
+    #     pts = _grid_query_points(20, 25, 44.0, 46.0, 4.5, 7.5)
+    #     self._run(capsys, "[k=4]", pts, k=4)

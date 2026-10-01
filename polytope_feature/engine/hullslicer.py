@@ -104,6 +104,8 @@ class HullSlicer(Engine):
                 child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
                 child["unsliced_polytopes"].remove(polytope)
                 if new_polytope is not None:
+                    # print("WE WENT EHRE??")
+                    # print(child, new_polytope.tag)
                     child["unsliced_polytopes"].add(new_polytope)
                 else:
                     # Polytope fully resolved at this node: stamp its tag
@@ -120,6 +122,8 @@ class HullSlicer(Engine):
             parent_node = node.parent
             right_unsliced_polytopes = []
             for polytope in node["unsliced_polytopes"]:
+                # print("HERE NOW")
+                # print(polytope.tag)
                 if ax.name in polytope._axes:
                     right_unsliced_polytopes.append(polytope)
             for i, polytope in enumerate(right_unsliced_polytopes):

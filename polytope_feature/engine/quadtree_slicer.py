@@ -50,8 +50,10 @@ class QuadTreeSlicer(Engine):
             else:
                 k = datacube.nearest_search[tuple(polytope.axes())][1]
                 if revert_axes:
+                    print(datacube.nearest_search[tuple(polytope.axes())][0])
                     nn_points = [tuple(reversed(pt)) for pt in datacube.nearest_search[tuple(polytope.axes())][0]]
                 else:
+                    print(datacube.nearest_search[tuple(polytope.axes())][0])
                     nn_points = [tuple(pt) for pt in datacube.nearest_search[tuple(polytope.axes())][0]]
                 polygon_points = []
                 for nn_pt in nn_points:
@@ -77,6 +79,8 @@ class QuadTreeSlicer(Engine):
         # When the longitude axis is cyclic and the request polygon crosses the seam,
         # split it into canonical sub-polytopes before querying the point cloud.
         sub_polytopes = [polytope]
+        # print("WHAT IS THE POLYTOPE")
+        # print(polytope)
         if lon_ax.is_cyclic and len(datacube.nearest_search) == 0:
             for t in lon_ax.transformations:
                 if isinstance(t, DatacubeAxisCyclic):
@@ -96,6 +100,7 @@ class QuadTreeSlicer(Engine):
         if len(extracted_points) == 0:
             node.remove_branch()
         lat_ax = ax
+        tag = polytope.tag
         for value in extracted_points:
             # convert to float for slicing
             if use_rust:
@@ -106,6 +111,8 @@ class QuadTreeSlicer(Engine):
                 lon_val = value.item[1]
             # store the native type
             grand_child, _ = node.create_merged_child([lat_ax, lon_ax], (lat_val, lon_val), [])
+            if tag is not None:
+                grand_child.tags.add(tuple(tag))
             # NOTE: the index of the point is stashed in the branches' result
             if use_rust:
                 grand_child.indexes = [value]

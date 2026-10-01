@@ -202,15 +202,21 @@ class Polytope:
             if method == "nearest":
                 k = polytope.k
                 if polytope.is_flat:
-                    if self.datacube.nearest_search.get(tuple(polytope.axes()), None) is None:
-                        self.datacube.nearest_search[tuple(polytope.axes())] = (polytope.values, k)
+                    key = tuple(polytope.axes())
+
+                    if key not in self.datacube.nearest_search:
+                        self.datacube.nearest_search[key] = ([(polytope.values[0], polytope.tag)], k)
                     else:
-                        self.datacube.nearest_search[tuple(polytope.axes())][0].append(polytope.values[0])
+                        self.datacube.nearest_search[key][0].append((polytope.values[0], polytope.tag))
+
                 else:
-                    if self.datacube.nearest_search.get(tuple(polytope.axes()), None) is None:
-                        self.datacube.nearest_search[tuple(polytope.axes())] = (polytope.points, k)
+                    key = tuple(polytope.axes())
+
+                    if key not in self.datacube.nearest_search:
+                        self.datacube.nearest_search[key] = ([(polytope.points[0], polytope.tag)], k)
                     else:
-                        self.datacube.nearest_search[tuple(polytope.axes())][0].append(polytope.points[0])
+                        self.datacube.nearest_search[key][0].append((polytope.points[0], polytope.tag))
+
         request_tree = self.slice(self.datacube, request.polytopes())
         logging.info("Created request tree for %s ", self.context)
         self.datacube.get(request_tree, self.context)
