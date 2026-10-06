@@ -1,15 +1,22 @@
-"""Per-value tags of a multi-value nearest Point, on a structured grid (HullSlicer) and an
-unstructured grid (QuadTreeSlicer). Both engines must tag every resolved point with the tag
-of the value it is nearest to, and give the same result as a Union of single-value Points."""
+"""Per-point tags on live FDB data, on a structured grid (HullSlicer, with both the legacy leaves
+and the BulkGridTensorIndexNode leaves) and an unstructured grid (QuadTreeSlicer).
+
+Every resolved point must carry the tags of the shapes / query values that selected it: for a
+nearest search only the point(s) actually nearest to a query value get that value's tag, and a
+multi-value Point gives the same result as a Union of single-value Points.
+
+The structured tests need the octahedral od/oper 20230625 data, the unstructured tests the
+Lambert LAM 20250221 data."""
 
 import math
 
+import numpy as np
 import pandas as pd
 import pytest
 from bulk_helpers import point_leaves
 
 from polytope_feature.polytope import Polytope, Request
-from polytope_feature.shapes import Point, Select, Union
+from polytope_feature.shapes import Box, Point, Select, Union
 
 OCTAHEDRAL_OPTIONS = {
     "axis_config": [
@@ -96,40 +103,96 @@ def tags_by_point(result):
 
 class _PointTagTests:
     options = None
+    # Far apart query values, nearest to different grid points
     values = None
+    # Two query values whose candidate grid points overlap, nearest to different grid points
+    close_values = None
+    box = None
 
     def selects(self):
         raise NotImplementedError
 
-    def retrieve(self, shape):
+    def retrieve(self, shape, **options):
         import pygribjump as gj
 
-        return Polytope(datacube=gj.GribJump(), options=self.options).retrieve(Request(*self.selects(), shape))
+        api = Polytope(datacube=gj.GribJump(), options=dict(self.options, **options))
+        return api.retrieve(Request(*self.selects(), shape))
+
+    def multi(self, values, tags, **options):
+        return self.retrieve(Point(["latitude", "longitude"], values, method="nearest", tag=tags), **options)
+
+    def union(self, values, tags, **options):
+        points = [Point(["latitude", "longitude"], [v], method="nearest", tag=t) for v, t in zip(values, tags)]
+        return self.retrieve(Union(["latitude", "longitude"], *points), **options)
+
+    def check_one_tag_per_value(self, result, values, tags):
+        found = tags_by_point(result)
+        assert len(found) == len(values)
+        assert all(len(t) == 1 for t in found.values())
+        assert set().union(*found.values()) == set(tags)
+        return found
 
     @pytest.mark.fdb
     def test_multi_value_point_tags(self):
         tags = [f"p{i}" for i in range(len(self.values))]
-        result = tags_by_point(self.retrieve(Point(["latitude", "longitude"], self.values, method="nearest", tag=tags)))
-        assert len(result) == len(self.values)
-        assert all(len(t) == 1 for t in result.values())
-        assert set().union(*result.values()) == set(tags)
+        self.check_one_tag_per_value(self.multi(self.values, tags), self.values, tags)
 
     @pytest.mark.fdb
     def test_multi_value_point_matches_union(self):
         tags = [f"p{i}" for i in range(len(self.values))]
-        multi = self.retrieve(Point(["latitude", "longitude"], self.values, method="nearest", tag=tags))
-        union = self.retrieve(
-            Union(
-                ["latitude", "longitude"],
-                *[Point(["latitude", "longitude"], [v], method="nearest", tag=t) for v, t in zip(self.values, tags)],
-            )
-        )
-        assert tags_by_point(multi) == tags_by_point(union)
+        assert tags_by_point(self.multi(self.values, tags)) == tags_by_point(self.union(self.values, tags))
+
+    @pytest.mark.fdb
+    def test_close_values_keep_their_own_tag(self):
+        tags = ["A", "B"]
+        for result in (self.multi(self.close_values, tags), self.union(self.close_values, tags)):
+            self.check_one_tag_per_value(result, self.close_values, tags)
+
+    @pytest.mark.fdb
+    def test_same_nearest_point_gets_all_tags(self):
+        value = self.values[0]
+        found = tags_by_point(self.multi([value, value], ["A", "B"]))
+        assert list(found.values()) == [{"A", "B"}]
+
+    @pytest.mark.fdb
+    def test_single_tag_for_all_values(self):
+        found = tags_by_point(self.multi(self.values, "shared"))
+        assert len(found) == len(self.values)
+        assert all(t == {"shared"} for t in found.values())
+
+    @pytest.mark.fdb
+    def test_untagged_points(self):
+        found = tags_by_point(self.multi(self.values, None))
+        assert len(found) == len(self.values)
+        assert all(t == set() for t in found.values())
+
+    @pytest.mark.fdb
+    def test_box_tag_on_every_point(self):
+        found = tags_by_point(self.retrieve(Box(["latitude", "longitude"], *self.box, tag="box")))
+        assert len(found) > 1
+        assert all(t == {"box"} for t in found.values())
+
+    @pytest.mark.fdb
+    def test_many_random_values_match_union(self):
+        rng = np.random.default_rng(0)
+        lows, highs = np.min(self.values, axis=0), np.max(self.values, axis=0)
+        values = rng.uniform(lows, highs, size=(40, 2)).tolist()
+        tags = [f"r{i}" for i in range(len(values))]
+        multi = tags_by_point(self.multi(values, tags))
+        assert multi == tags_by_point(self.union(values, tags))
+        # every value's tag ends up on exactly one point
+        counts = {}
+        for point_tags in multi.values():
+            for tag in point_tags:
+                counts[tag] = counts.get(tag, 0) + 1
+        assert counts == {tag: 1 for tag in tags}
 
 
 class TestPointTagsStructuredGrid(_PointTagTests):
     options = OCTAHEDRAL_OPTIONS
     values = [[0, 0], [0.2, 0.2], [1.0, 1.5]]
+    close_values = [[0, 0], [0.0, 0.08]]
+    box = ([0, 0], [0.2, 0.2])
 
     def selects(self):
         return [
@@ -145,9 +208,31 @@ class TestPointTagsStructuredGrid(_PointTagTests):
         ]
 
 
+class TestPointTagsStructuredBulkGrid(TestPointTagsStructuredGrid):
+    """Same checks with the latitude/longitude layers folded into a BulkGridTensorIndexNode."""
+
+    options = dict(OCTAHEDRAL_OPTIONS, bulk_grid_leaves=True)
+
+    @pytest.mark.fdb
+    def test_leaves_are_bulk_grid_nodes(self):
+        from polytope_feature.datacube.tensor_index_tree import BulkGridTensorIndexNode
+
+        result = self.multi(self.values, ["A", "B", "C"])
+        assert all(isinstance(leaf, BulkGridTensorIndexNode) for leaf in result.leaves)
+
+    @pytest.mark.fdb
+    def test_matches_legacy_leaves(self):
+        tags = [f"p{i}" for i in range(len(self.values))]
+        bulk = tags_by_point(self.multi(self.values, tags))
+        legacy = tags_by_point(self.multi(self.values, tags, bulk_grid_leaves=False))
+        assert bulk == legacy
+
+
 class TestPointTagsUnstructuredGrid(_PointTagTests):
     options = LAMBERT_OPTIONS
     values = [[44.25, 5.55], [43.75, 5.35], [44.0, 5.45]]
+    close_values = [[44.0, 5.45], [44.0, 5.456]]
+    box = ([44, 5.5], [44.05, 5.52])
 
     def selects(self):
         return [
@@ -156,3 +241,11 @@ class TestPointTagsUnstructuredGrid(_PointTagTests):
             Select("param", ["130"]),
             Select("levtype", ["sfc"]),
         ]
+
+    @pytest.mark.fdb
+    def test_k_nearest_points_carry_the_value_tag(self):
+        shape = Point(["latitude", "longitude"], self.values[:2], method="nearest", k=4, tag=["A", "B"])
+        found = tags_by_point(self.retrieve(shape))
+        assert len(found) == 8
+        assert sorted(len(t) for t in found.values()) == [1] * 8
+        assert sum(t == {"A"} for t in found.values()) == 4

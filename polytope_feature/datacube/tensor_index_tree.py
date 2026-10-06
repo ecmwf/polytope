@@ -231,7 +231,7 @@ class BulkGridTensorIndexNode(BulkMergedTensorIndexNode):
     points of row ``i`` at ``row_slice(i)``.
     """
 
-    def __init__(self, axes, lat_values, lon_values, indexes=None):
+    def __init__(self, axes, lat_values, lon_values, indexes=None, point_tags=None):
         self.lat_values = np.asarray(lat_values, dtype=np.float64)
         self.lon_values = [np.asarray(lons, dtype=np.float64) for lons in lon_values]
         row_lengths = np.array([len(lons) for lons in self.lon_values], dtype=np.int64)
@@ -240,7 +240,7 @@ class BulkGridTensorIndexNode(BulkMergedTensorIndexNode):
             coordinates = np.empty((0, 2))
         else:
             coordinates = np.column_stack((np.repeat(self.lat_values, row_lengths), np.concatenate(self.lon_values)))
-        super().__init__(axes, coordinates, indexes)
+        super().__init__(axes, coordinates, indexes, point_tags)
 
     def row_slice(self, i):
         return slice(int(self.row_offsets[i]), int(self.row_offsets[i + 1]))

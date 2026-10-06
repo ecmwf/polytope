@@ -177,7 +177,8 @@ class Polytope:
                     polys.append(poly)
         return polys
 
-    def _group_combinations(self, combinations, batched_axes):
+    @classmethod
+    def _group_combinations(cls, combinations, batched_axes):
         """Yield (shared_polytopes, batched_polytopes) per distinct tree prefix.
 
         Polytopes on axes of a batching engine (see Engine.batches_polytopes) are split
@@ -187,7 +188,7 @@ class Polytope:
         grouped = {}
         for c in combinations:
             shared, batched = [], []
-            for poly in self._flatten_combination(c):
+            for poly in cls._flatten_combination(c):
                 (batched if batched_axes.intersection(poly.axes()) else shared).append(poly)
             key = frozenset(shared) if batched_axes else object()
             entry = grouped.setdefault(key, (shared, set()))
@@ -218,20 +219,15 @@ class Polytope:
         logging.info("Starting request for %s ", self.context)
         self.datacube.check_branching_axes(request)
         self.switch_polytope_dim(request)
+        self.datacube.nearest_search = {}
         for polytope in request.polytopes():
-            method = polytope.method
-            if method == "nearest":
-                k = polytope.k
-                if polytope.is_flat:
-                    if self.datacube.nearest_search.get(tuple(polytope.axes()), None) is None:
-                        self.datacube.nearest_search[tuple(polytope.axes())] = (polytope.values, k)
-                    else:
-                        self.datacube.nearest_search[tuple(polytope.axes())][0].append(polytope.values[0])
-                else:
-                    if self.datacube.nearest_search.get(tuple(polytope.axes()), None) is None:
-                        self.datacube.nearest_search[tuple(polytope.axes())] = (polytope.points, k)
-                    else:
-                        self.datacube.nearest_search[tuple(polytope.axes())][0].append(polytope.points[0])
+            if polytope.method == "nearest":
+                # Register the query point(s) with the tag of the polytope they come from, so the
+                # backend can attach the right tag to each nearest point once it is resolved.
+                query_points = polytope.values if polytope.is_flat else polytope.points
+                points, _, tags = self.datacube.nearest_search.setdefault(tuple(polytope.axes()), ([], polytope.k, []))
+                points.extend(list(pt) for pt in query_points)
+                tags.extend([polytope.tag] * len(query_points))
         request_tree = self.slice(self.datacube, request.polytopes())
         logging.info("Created request tree for %s ", self.context)
         self.datacube.get(request_tree, self.context)
