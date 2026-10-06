@@ -443,10 +443,13 @@ class FDBDatacube(Datacube):
             second_ax = requests.children[0].children[0].axis
 
             nearest_pts_k = self.nearest_search.get((first_ax_name, second_ax_name), None)
-            if nearest_pts_k is None:
+            query_points = None
+            if nearest_pts_k is not None:
+                query_points = nearest_pts_k[0]
+            else:
                 nearest_pts_k = self.nearest_search.get((second_ax_name, first_ax_name), None)
-                for i, pt in enumerate(nearest_pts_k[0]):
-                    nearest_pts_k[0][i] = [pt[1], pt[0]]
+                query_points = [[pt[1], pt[0]] for pt in nearest_pts_k[0]]
+            query_tags = nearest_pts_k[2] if len(nearest_pts_k) > 2 else [None] * len(query_points)
 
             k = nearest_pts_k[1]
             if k != 1 and not self.grid_transformation.is_irregular:
@@ -454,7 +457,7 @@ class FDBDatacube(Datacube):
                 k = 1
 
             transformed_nearest_pts = []
-            for point in nearest_pts_k[0]:
+            for point in query_points:
                 transformed_nearest_pts.append([point[0], second_ax._remap_val_to_axis_range(point[1])])
 
             found_latlon_pts = []
@@ -462,11 +465,18 @@ class FDBDatacube(Datacube):
                 for lon_child in lat_child.children:
                     found_latlon_pts.append([lat_child.values, lon_child.values])
 
-            # now find the nearest lat lon to the points requested
+            # now find the nearest lat lon to the points requested, remembering which query
+            # point (and so which tag) each resolved point is nearest to
             nearest_latlons = []
-            for pt in transformed_nearest_pts:
+            point_tags = {}
+            for pt, tag in zip(transformed_nearest_pts, query_tags):
                 nearest_latlon = nearest_pt(found_latlon_pts, pt, k)
                 nearest_latlons.extend(nearest_latlon)
+                for latlon in nearest_latlon:
+                    tags = point_tags.setdefault(tuple(latlon), set())
+                    if tag is not None:
+                        tags.add(tag)
+            nearest_tags = {tag for tag in query_tags if tag is not None}
 
             # need to remove the branches that do not fit
             lat_children_by_values = {child.values: child for child in requests.children}
@@ -484,6 +494,50 @@ class FDBDatacube(Datacube):
                         for value in lon_child.values:
                             if value not in possible_lons:
                                 lon_child.remove_compressed_branch(value)
+                    if lat_child.parent is not None:
+                        self._retag_nearest_lons(lat_child, point_tags, nearest_tags)
+            return point_tags
+        return None
+
+    @staticmethod
+    def _retag_nearest_lons(lat_child, point_tags, nearest_tags):
+        """Re-attach nearest-search tags to the points that are actually nearest to each query.
+
+        While slicing, a nearest query's tag is stamped on every candidate it touches, so after
+        the nearest search we drop those tags and give each resolved point the tags of the
+        queries it is nearest to. A compressed longitude node carries one set of tags for all
+        its values, so the longitude nodes of this latitude are rebuilt as one node per distinct
+        set of tags (which also merges overlapping siblings coming from unions).
+        """
+        lat_child.tags -= nearest_tags
+        lat = lat_child.values[0]
+        values_by_tags = {}
+        lon_axis = None
+        for lon_child in list(lat_child.children):
+            lon_axis = lon_child.axis
+            base_tags = lon_child.tags - nearest_tags
+            for value in lon_child.values:
+                tags = frozenset(base_tags | point_tags.get((lat, value), set()))
+                values_by_tags.setdefault(tags, set()).add(value)
+        if lon_axis is None:
+            return
+        groups = list(values_by_tags.items())
+        # Keep the existing node when it already holds a single group of values
+        if len(groups) == 1 and len(lat_child.children) == 1:
+            next(iter(lat_child.children)).tags = set(groups[0][0])
+            return
+        for lon_child in list(lat_child.children):
+            lat_child.children.remove(lon_child)
+            lon_child._parent = None
+        seen = set()
+        for tags, values in groups:
+            values = tuple(sorted(values - seen))
+            seen.update(values)
+            if len(values) == 0:
+                continue
+            node = TensorIndexTree(lon_axis, values)
+            node.tags = set(tags)
+            lat_child.add_child(node)
 
     def get_2nd_last_values(self, requests, leaf_path=None):
         if leaf_path is None:
@@ -572,9 +626,8 @@ class FDBDatacube(Datacube):
         lat_values = []
         lon_rows = []
         index_rows = []
-        tags = set()
+        point_tags = []
         for lat_child in requests.children:
-            tags.update(lat_child.tags)
             key_value_path = {lat_child.axis.name: lat_child.values}
             key_value_path, leaf_path, self.unwanted_path = lat_child.axis.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
@@ -583,7 +636,6 @@ class FDBDatacube(Datacube):
             row_lons = []
             row_idxs = []
             for lon_child in lat_child.children:
-                tags.update(lon_child.tags)
                 key_value_path = {lon_child.axis.name: lon_child.values}
                 leaf_path["index"] = lon_child.indexes
                 key_value_path, leaf_path, self.unwanted_path = lon_child.axis.unmap_path_key(
@@ -594,6 +646,8 @@ class FDBDatacube(Datacube):
                         seen.add(idx)
                         row_lons.append(lon)
                         row_idxs.append(idx)
+                        # every point carries the tags of its latitude and longitude nodes
+                        point_tags.append(lat_child.tags | lon_child.tags)
             if len(row_lons) > 0:
                 lat_values.append(lat_child.values[0])
                 lon_rows.append(row_lons)
@@ -605,8 +659,7 @@ class FDBDatacube(Datacube):
         if len(lat_values) == 0:
             requests.remove_branch()
             return None
-        grid_node = BulkGridTensorIndexNode([lat_ax, lon_ax], lat_values, lon_rows, index_rows)
-        grid_node.tags = tags
+        grid_node = BulkGridTensorIndexNode([lat_ax, lon_ax], lat_values, lon_rows, index_rows, point_tags)
         requests.add_child(grid_node)
         return grid_node
 
