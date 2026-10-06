@@ -13,6 +13,10 @@ class PointLeaf:
         return [int(self.bulk_node.indexes[self.i])]
 
     @property
+    def tags(self):
+        return self.bulk_node.point_tags[self.i]
+
+    @property
     def result(self):
         return [values[self.i] for values in self.bulk_node.result]
 
