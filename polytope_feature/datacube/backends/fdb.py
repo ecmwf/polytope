@@ -6,7 +6,7 @@ from itertools import product
 from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
 from ...utility.geometry import nearest_pt
 from ..tensor_index_tree import MergedTensorIndexNode
-from ..tree_values import finalise_result, take, values_hash_key
+from ..tree_values import finalise_result, restore_value_order, take, values_hash_key
 from .datacube import Datacube, TensorIndexTree
 
 
@@ -35,6 +35,7 @@ class FDBDatacube(Datacube):
         logging.info("Created an FDB datacube with options: " + str(axis_options))
 
         self.unwanted_path = {}
+        self._leaf_result_orders = {}
         self.axis_options = axis_options
 
         partial_request = config
@@ -222,6 +223,8 @@ class FDBDatacube(Datacube):
         """
         # never carry unmapping state over from a previous get
         self.unwanted_path = {}
+        # id(leaf) -> positions of its values in grid-index order, for leaves whose values keep their order
+        self._leaf_result_orders = {}
         fdb_requests = []
         fdb_requests_decoding_info = []
         self.get_fdb_requests(requests, fdb_requests, fdb_requests_decoding_info)
@@ -635,9 +638,14 @@ class FDBDatacube(Datacube):
                 else:
                     entry[1].append(result.values[i])
         for owner, chunks in chunks_by_node.values():
+            result = finalise_result(chunks)
+            order = self._leaf_result_orders.get(id(owner))
+            if order is not None:
+                # results arrive in grid-index order; put them back in the order of the leaf's values
+                result = restore_value_order(result, order)
             if len(owner.result) != 0:
-                chunks.insert(0, list(owner.result))
-            owner.result = finalise_result(chunks)
+                result = finalise_result([list(owner.result), list(result)])
+            owner.result = result
         logging.debug("Finished assigning GribJump output to tree nodes")
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
@@ -663,7 +671,12 @@ class FDBDatacube(Datacube):
                 sorted_list = sorted(enumerate(old_interm_start_idx[j]), key=lambda x: x[1])
                 original_indices_idx, interm_start_idx = zip(*sorted_list)
                 for interm_fdb_nodes_obj in interm_fdb_nodes[j]:
-                    interm_fdb_nodes_obj.values = take(interm_fdb_nodes_obj.values, original_indices_idx)
+                    if getattr(interm_fdb_nodes_obj, "_keep_value_order", False):
+                        # merged polygon row: keep the values ascending, remember how to reorder the results
+                        if original_indices_idx != tuple(range(len(original_indices_idx))):
+                            self._leaf_result_orders[id(interm_fdb_nodes_obj)] = original_indices_idx
+                    else:
+                        interm_fdb_nodes_obj.values = take(interm_fdb_nodes_obj.values, original_indices_idx)
                 if abs(interm_start_idx[-1] + 1 - interm_start_idx[0]) <= len(interm_start_idx):
                     current_request_ranges = (
                         interm_start_idx[0],

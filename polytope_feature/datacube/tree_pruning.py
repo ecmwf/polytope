@@ -44,6 +44,8 @@ def _copy_node(node, values=None):
     new.indexes = list(node.indexes)
     new.hidden = node.hidden
     new.tags = set(node.tags)
+    if node._keep_value_order:
+        new._keep_value_order = True
     return new
 
 

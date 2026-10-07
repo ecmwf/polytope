@@ -4,6 +4,7 @@ from typing import List
 from .datacube.backends.datacube import Datacube
 from .datacube.datacube_axis import UnsliceableDatacubeAxis
 from .datacube.tensor_index_tree import TensorIndexTree
+from .datacube.tree_rows import RowMerger
 from .engine.hullslicer import HullSlicer
 from .engine.optimised_point_in_polygon_slicer import OptimisedPointInPolygonSlicer
 from .engine.optimised_quadtree_slicer import OptimisedQuadTreeSlicer
@@ -127,7 +128,7 @@ class Polytope:
         # the last datacube axis holds the tree leaves (e.g. longitude); the slicer stores those as numpy arrays
         self.leaf_axis_name = next(reversed(datacube.axes.keys()))
 
-        self.remove_compressed_axis_in_union(polytopes)
+        merge_rows = self._compress_union_rows(datacube, polytopes)
 
         # Convert the polytope points to float type to support triangulation and interpolation
         for p in polytopes:
@@ -140,6 +141,7 @@ class Polytope:
         groups, input_axes = group(polytopes)
         datacube.validate(input_axes)
         request = TensorIndexTree()
+        row_merger = RowMerger(self.leaf_axis_name) if merge_rows else None
         combinations = tensor_product(groups)
 
         # NOTE: could optimise here if we know combinations will always be for one request.
@@ -172,8 +174,43 @@ class Polytope:
                     interm_next_nodes = []
                 current_nodes = next_nodes
 
-            request.merge(r)
+            if row_merger is None:
+                request.merge(r)
+            else:
+                row_merger.merge(request, r)
+        if row_merger is not None:
+            row_merger.finalise(request)
         return request
+
+    # Off by default: the legacy CovJSON step encoder (covjsonkit ``walk_tree_step``, used for climate-dt polygons)
+    # reads one point per leaf.  Set to True on an instance (or the class) to get one leaf per row for polygons/paths.
+    _merge_union_rows = False
+
+    def _compress_union_rows(self, datacube, polytopes):
+        """Apply ``remove_compressed_axis_in_union`` unless the union's rows can be merged instead.
+
+        A union of non-orthogonal shapes (the convex pieces of a polygon, the segments of a path) used to leave the
+        leaf axis uncompressed, i.e. one tree node per point.  When the leaf axis holds array leaves and every piece
+        has the same tag (so per-point tags carry no information), it stays compressed and the pieces' leaves are
+        merged row by row (see ``tree_rows.RowMerger``).  Returns whether rows must be merged.
+        """
+        before = list(self.compressed_axes)
+        self.remove_compressed_axis_in_union(polytopes)
+        leaf = self.leaf_axis_name
+        if not self._merge_union_rows or leaf not in before or leaf in self.compressed_axes:
+            return False
+        if self.engine_options.get(leaf) != "hullslicer":
+            return False
+        if not HullSlicer.is_array_leaf_axis(datacube.axes[leaf], self):
+            return False
+        pieces = []
+        for p in polytopes:
+            pieces.extend(p.polytope() if isinstance(p, Product) else [p])
+        tags = {p.tag for p in pieces if p.is_in_union and leaf in p.axes()}
+        if len(tags) > 1:
+            return False
+        self.compressed_axes = before
+        return True
 
     def find_engine(self, ax):
         if ax.name not in self.engine_options:

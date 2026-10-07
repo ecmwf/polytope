@@ -99,3 +99,15 @@ def finalise_result(chunks):
             out[start:end] = list(np.asarray(c, dtype=np.float64))
         start = end
     return out
+
+
+def restore_value_order(result, order):
+    """Reorder a leaf ``result`` fetched in grid-index order back into the order of the leaf's values.
+
+    ``order[k]`` is the position in the leaf's ``values`` of the k-th point in grid-index order.  ``result`` holds
+    one block of ``len(order)`` values per field, each block in grid-index order.
+    """
+    n = len(order)
+    out = np.empty_like(result)
+    out.reshape(-1, n)[:, np.asarray(order, dtype=np.intp)] = result.reshape(-1, n)
+    return out

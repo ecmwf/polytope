@@ -155,6 +155,9 @@ class MergedTensorIndexNode(object):
 class TensorIndexTree(object):
     root = IntDatacubeAxis()
     root.name = "root"
+    # Set on the merged longitude leaves of polygons/paths (see tree_rows.py): FDBDatacube.get keeps their values in
+    # ascending order instead of reordering them by grid index.
+    _keep_value_order = False
 
     def __init__(self, axis=root, values=tuple()):
         # NOTE: the values here is a tuple so we can hash it. Leaves on the last (longitude) axis built by the hull
