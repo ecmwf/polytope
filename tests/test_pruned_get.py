@@ -510,6 +510,114 @@ def test_bitmap_missing_points_are_nan_in_full_and_banded():
 
 
 # ---------------------------------------------------------------------------------------------------------------------
+# (e) prepare: the final coordinate list before fetching any data
+
+
+def leaf_coords(tree):
+    """[(non-spatial path, lat, (lon, ...)), ...] for every longitude leaf, in traversal order."""
+    out = []
+    for node, ancestors in iter_nodes(tree):
+        if len(node.children) != 0 or node is tree:
+            continue
+        *field_nodes, lat_node, _ = ancestors
+        path = tuple((n.axis.name, tuple(n.values)) for n in field_nodes)
+        out.append((path, lat_node.values[0], tuple(node.values.tolist())))
+    return out
+
+
+def prepared_copy(datacube, tree):
+    """Prepare an independent copy of ``tree`` and check that no data was fetched."""
+    calls = len(datacube.gj.extract_calls)
+    prepared = tree.prune()
+    assert datacube.prepare(prepared) is prepared
+    assert len(datacube.gj.extract_calls) == calls
+    assert all(len(leaf.result) == 0 for leaf in prepared.leaves)
+    return prepared
+
+
+@pytest.mark.parametrize("case", list(CASES))
+def test_prepare_gives_the_coordinates_of_a_full_get(case):
+    datacube, tree, _, _ = make_tree(case)
+    prepared = prepared_copy(datacube, tree)
+    full_tree, _ = full_records(datacube, tree)
+    assert leaf_coords(prepared) == leaf_coords(full_tree)
+    assert prepared.latitude_point_counts() == full_tree.latitude_point_counts()
+    if case == "healpix_nested":
+        # nested order differs from slice order: prepare really reorders
+        assert leaf_coords(prepared) != leaf_coords(tree)
+    if case == "regular_overlap":
+        # duplicate points dropped: counts of the prepared tree are the post-get counts
+        assert sum(prepared.latitude_point_counts()) < sum(tree.latitude_point_counts())
+
+
+@pytest.mark.parametrize("case", list(CASES))
+def test_prepare_is_idempotent(case):
+    datacube, tree, _, _ = make_tree(case)
+    once = prepared_copy(datacube, tree)
+    twice = prepared_copy(datacube, once)
+    assert datacube.prepare(twice) is twice
+    assert snapshot(twice) == snapshot(once)
+
+
+@pytest.mark.parametrize(
+    "case, missing",
+    [(case, None) for case in CASES] + [("regular_overlap", [{"param": "165", "step": "6"}])],
+)
+@pytest.mark.parametrize("band_size", [1, 2])
+def test_bands_of_prepared_tree_are_slices_of_full_get(case, missing, band_size):
+    datacube, tree, select_axes, _ = make_tree(case, missing=missing)
+    _, full = full_records(datacube, tree)
+    prepared = prepared_copy(datacube, tree)
+    before = snapshot(prepared)
+    offsets = {}
+    value_lists = [axis_values(prepared, a) for a in select_axes]
+    for combo in itertools.product(*value_lists):
+        select = dict(zip(select_axes, combo))
+        counts = prepared.latitude_point_counts(select)
+        for start in range(0, len(counts), band_size):
+            band = (start, min(start + band_size, len(counts)))
+            sub = prepared.prune(select=select, latitude_range=band)
+            coords = leaf_coords(sub)
+            assert datacube.get(sub) is sub
+            # get leaves the coordinates of a prepared band as they were
+            assert leaf_coords(sub) == coords
+            fields = records(sub)
+            assert len(fields) == 1
+            ((field, points),) = fields.items()
+            n = sum(counts[band[0] : band[1]])
+            assert len(points) == n
+            offset = offsets.get(field, 0)
+            assert_same_records({field: full[field][offset : offset + n]}, {field: points})
+            offsets[field] = offset + n
+    assert offsets == {field: len(points) for field, points in full.items()}
+    assert snapshot(prepared) == before
+
+
+def test_prepare_with_select_and_latitude_range_prunes_a_copy():
+    datacube, tree, _, _ = make_tree("regular_overlap")
+    before = snapshot(tree)
+    select = {"param": "167", "step": 6, "number": 2}
+    band = datacube.prepare(tree, select=select, latitude_range=(1, 3))
+    assert snapshot(tree) == before
+    assert band is not tree
+    expected = prepared_copy(datacube, tree).prune(select=select, latitude_range=(1, 3))
+    assert leaf_coords(band) == leaf_coords(expected)
+    assert leaf_coords(datacube.get(band)) == leaf_coords(expected)
+
+
+@pytest.mark.parametrize("case", list(CASES))
+def test_get_on_unprepared_tree_matches_get_on_prepared_tree(case):
+    datacube, tree, _, gj = make_tree(case)
+    unprepared = tree.prune()
+    datacube.get(unprepared)
+    unprepared_requests = gj.extract_calls[-1]
+    prepared = prepared_copy(datacube, tree)
+    datacube.get(prepared)
+    assert gj.extract_calls[-1] == unprepared_requests
+    assert snapshot(prepared) == snapshot(unprepared)
+
+
+# ---------------------------------------------------------------------------------------------------------------------
 # memory
 
 
