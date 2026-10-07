@@ -21,6 +21,7 @@ class _ExtractResult:
         self._flat = flat
         self._shape = shape
         self._missing = missing
+        self._views = None
 
     @property
     def values_flat(self):
@@ -28,9 +29,10 @@ class _ExtractResult:
 
     @property
     def values(self):
-        if self._missing:
-            return []
-        return np.split(self._flat, np.cumsum(self._shape)[:-1])
+        # one view per index range, built once and kept, as pygribjump caches its own
+        if self._views is None:
+            self._views = [] if self._missing else np.split(self._flat, np.cumsum(self._shape)[:-1])
+        return self._views
 
 
 class _ExtractionIterator:
