@@ -1,4 +1,4 @@
-"""Measure request-tree memory per point, slice time and prepare/get time.
+"""Measure request-tree memory per point, slice time, prepare/get time and the peak memory of one ``get``.
 
 Uses an in-memory fake gribjump (``tests/fake_gribjump.py``) so no FDB is needed.  Each scenario is measured in a
 fresh subprocess so the RSS numbers do not interfere with each other.
@@ -8,6 +8,14 @@ fresh subprocess so the RSS numbers do not interfere with each other.
     python performance/tree_memory.py --get SCENARIO [...]  # also time prepare() and get()
     python performance/tree_memory.py --per-point SCENARIO  # polygons with one leaf node per point
     python performance/tree_memory.py healpix_nested 1024   # global box on one grid (as before)
+
+With ``--get``, the peak RSS of the ``get`` itself is sampled in a background thread and reported per value
+(``get_peak_bytes_per_value``), together with the RSS the fake's buffers alone account for (``extract_mb``: every
+field's values, as gribjump's own non-lazy iterator holds them before the first result is handed out).
+
+    python performance/tree_memory.py --get --fields=12 healpix1024_europe_box   # 12 fields in one call
+    python performance/tree_memory.py --get --fields=12 --iter healpix1024_europe_box    # consumed field by field
+    python performance/tree_memory.py --get --fields=12 --legacy healpix1024_europe_box  # per-range assignment
 """
 
 import gc
@@ -16,6 +24,7 @@ import os
 import resource
 import subprocess
 import sys
+import threading
 import time
 from importlib.util import module_from_spec, spec_from_file_location
 
@@ -58,6 +67,8 @@ SCENARIOS = {
     ),
     "efas_danube_polygon": (EFAS_GRID, [-180, 180], ("polygon", DANUBE_POLYGON)),
     "efas_danube_box": (EFAS_GRID, [-180, 180], ("box", [42.08, 8.15], [50.25, 29.73])),
+    # the bounding box of EUROPE_POLYGON: on a nested grid it breaks into ~1 index range per 1.6 points
+    "healpix1024_europe_box": ({"type": "healpix_nested", "resolution": 1024}, [0, 360], ("box", [35, -15], [71, 40])),
     # global regular boxes: 8 * resolution**2 points
     "regular90_global_box": ({"type": "regular", "resolution": 90}, [0, 360], GLOBAL_BOX),
     "regular180_global_box": ({"type": "regular", "resolution": 180}, [0, 360], GLOBAL_BOX),
@@ -110,7 +121,57 @@ def _tree_stats(tree):
     return n_points, n_nodes, n_lat, deep_bytes
 
 
-def measure(mapper, cyclic_range, shape_spec, per_point=False, with_get=False):
+class _PeakRss:
+    """Samples the process RSS in a background thread, for the peak of a call that frees as it goes."""
+
+    def __init__(self, proc, interval=0.002):
+        self.proc = proc
+        self.interval = interval
+        self.peak = proc.memory_info().rss
+        self._stop = threading.Event()
+        self._thread = threading.Thread(target=self._run, daemon=True)
+
+    def _run(self):
+        while not self._stop.wait(self.interval):
+            self.peak = max(self.peak, self.proc.memory_info().rss)
+
+    def __enter__(self):
+        self._thread.start()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._stop.set()
+        self._thread.join()
+        self.peak = max(self.peak, self.proc.memory_info().rss)
+
+
+def _use_legacy_assignment():
+    """Fetch with the per-range result assignment this branch replaced (``tests/legacy_assign.py``)."""
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tests", "legacy_assign.py")
+    spec = spec_from_file_location("legacy_assign", path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"cannot load the legacy assignment from {path}")
+    module = module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    from polytope_feature.datacube.backends.fdb import FDBDatacube
+
+    FDBDatacube.assign_fdb_output_to_nodes = module.legacy_assign_fdb_output_to_nodes
+
+
+def _consume_get_iter(datacube, tree):
+    """Read every field through ``get_iter``, dropping each one before asking for the next."""
+    n_values = 0
+    for _path, leaf_values in datacube.get_iter(tree):
+        if leaf_values is None:
+            continue
+        for _leaf, values in leaf_values:
+            n_values += values.size
+        del leaf_values
+    return n_values
+
+
+def measure(mapper, cyclic_range, shape_spec, per_point=False, with_get=False, n_fields=1, legacy=False, iter_=False):
     import psutil
 
     GribJump = _load_fake_gribjump().GribJump
@@ -126,7 +187,7 @@ def measure(mapper, cyclic_range, shape_spec, per_point=False, with_get=False):
         "expver": ["0001"],
         "levtype": ["sfc"],
         "param": ["167"],
-        "step": ["0"],
+        "step": [str(6 * i) for i in range(n_fields)],
         "stream": ["oper"],
         "type": ["fc"],
     }
@@ -153,7 +214,7 @@ def measure(mapper, cyclic_range, shape_spec, per_point=False, with_get=False):
     if hasattr(api, "_merge_union_rows"):
         api._merge_union_rows = not per_point
     request = Request(
-        Select("step", [0]),
+        Select("step", [6 * i for i in range(n_fields)]),
         Select("levtype", ["sfc"]),
         Select("date", ["20240101T000000"]),
         Select("domain", ["g"]),
@@ -197,15 +258,54 @@ def measure(mapper, cyclic_range, shape_spec, per_point=False, with_get=False):
         "rss_after_slice_mb": round(proc.memory_info().rss / 2**20, 1),
     }
     if with_get:
+        if legacy:
+            _use_legacy_assignment()
         prepared = tree.prune() if hasattr(tree, "prune") else None
         if prepared is not None and hasattr(datacube, "prepare"):
             t0 = time.perf_counter()
-            datacube.prepare(prepared)
+            getattr(datacube, "prepare")(prepared)
             out["prepare_s"] = round(time.perf_counter() - t0, 2)
             del prepared
+        gc.collect()
+        rss3 = proc.memory_info().rss
+        # Split the growth in three: what building the requests costs (the grid indices of every point, as
+        # Python ints in lists, plus the request ranges), what the fake's buffers cost (every field's values, as
+        # gribjump's non-lazy iterator holds them before the first result is handed out) and the peak of the
+        # whole call.
+        around_extract = {}
+        real_extract = gj.extract
+
+        def extract(requests, ctx=None):
+            around_extract["before"] = proc.memory_info().rss
+            iterator = real_extract(requests, ctx)
+            around_extract["after"] = proc.memory_info().rss
+            around_extract["requests"] = len(requests)
+            around_extract["ranges"] = len(requests[0][1]) if requests else 0
+            return iterator
+
+        gj.extract = extract
         t0 = time.perf_counter()
-        datacube.get(tree)
+        with _PeakRss(proc) as peak:
+            if iter_:
+                n_values = _consume_get_iter(datacube, tree)
+            else:
+                datacube.get(tree)
+                n_values = n_points * n_fields
         out["get_s"] = round(time.perf_counter() - t0, 2)
+        out["fields"] = n_fields
+        out["requests"] = around_extract.get("requests")
+        out["ranges_per_field"] = around_extract.get("ranges")
+        out["values"] = n_values
+        before_extract = around_extract.get("before", rss3)
+        after = around_extract.get("after", rss3)
+        call_values = n_points * n_fields
+        out["rss_before_get_mb"] = round(rss3 / 2**20, 1)
+        out["request_mb"] = round((before_extract - rss3) / 2**20, 1)
+        out["request_bytes_per_value"] = round((before_extract - rss3) / call_values, 1)
+        out["extract_mb"] = round((after - before_extract) / 2**20, 1)
+        out["extract_bytes_per_value"] = round((after - before_extract) / call_values, 1)
+        out["get_peak_mb"] = round((peak.peak - rss3) / 2**20, 1)
+        out["get_peak_bytes_per_value"] = round((peak.peak - rss3) / call_values, 1)
         gc.collect()
         out["rss_after_get_mb"] = round(proc.memory_info().rss / 2**20, 1)
     # ru_maxrss is in KiB on Linux
@@ -214,18 +314,33 @@ def measure(mapper, cyclic_range, shape_spec, per_point=False, with_get=False):
 
 
 def main(argv):
-    flags = {a for a in argv if a.startswith("--")}
+    flags = [a for a in argv if a.startswith("--")]
     args = [a for a in argv if not a.startswith("--")]
     with_get = "--get" in flags
     per_point = "--per-point" in flags
+    legacy = "--legacy" in flags
+    iter_ = "--iter" in flags
+    if "--fields" in flags:
+        sys.exit("the number of fields is given as --fields=N")
+    n_fields = 1
+    for flag in flags:
+        if flag.startswith("--fields="):
+            try:
+                n_fields = int(flag.split("=", 1)[1])
+            except ValueError:
+                sys.exit(f"{flag!r} is not a number of fields")
     if "--child" in flags:
         name = args[0]
         if name in SCENARIOS:
             mapper, cyclic_range, shape = SCENARIOS[name]
         else:
             grid_type, resolution = name.split(":")
-            mapper, cyclic_range, shape = {"type": grid_type, "resolution": int(resolution)}, [0, 360], GLOBAL_BOX
-        print(json.dumps(measure(mapper, cyclic_range, shape, per_point, with_get)))
+            try:
+                mapper = {"type": grid_type, "resolution": int(resolution)}
+            except ValueError:
+                sys.exit(f"{resolution!r} is not a grid resolution")
+            cyclic_range, shape = [0, 360], GLOBAL_BOX
+        print(json.dumps(measure(mapper, cyclic_range, shape, per_point, with_get, n_fields, legacy, iter_)))
         return
     if len(args) == 2 and args[1].isdigit():
         names = [f"{args[0]}:{args[1]}"]
@@ -236,8 +351,12 @@ def main(argv):
             sys.exit(f"unknown scenario {name!r}; choose from {', '.join(SCENARIOS)}")
         cmd = [sys.executable, __file__, "--child", name] + sorted(flags)
         out = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        result = json.loads(out.stdout.strip().splitlines()[-1])
-        print(json.dumps({"scenario": name, "per_point": per_point, **result}))
+        try:
+            result = json.loads(out.stdout.strip().splitlines()[-1])
+        except (ValueError, IndexError):
+            sys.exit(f"{name}: the measuring process printed no result\n{out.stdout}\n{out.stderr}")
+        extra = {"legacy": legacy, "iter": iter_} if with_get else {}
+        print(json.dumps({"scenario": name, "per_point": per_point, **extra, **result}))
 
 
 if __name__ == "__main__":

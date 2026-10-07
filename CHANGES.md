@@ -31,6 +31,16 @@ Notes for the PR description.
   searched near the flipped coordinates. A copy is swapped now. Requests with (latitude, longitude) axes, as
   polytope-mars builds by default, are unaffected; (longitude, latitude) position requests over several
   uncompressed branches return different (now correct) points.
+- **One gribjump result is read once, as one flat buffer.** `assign_fdb_output_to_nodes` took `result.values[i]`
+  per index range -- a numpy object plus a list slot each -- and kept the chunks of every leaf of the call until
+  the last field had arrived. It now takes `result.values_flat` once per field and scatters it into the leaves by
+  a plan built per spatial sub-tree (`datacube/fdb_assign.py`), and a leaf's result for the whole call is
+  pre-allocated (`n_points x n_fields`, float64, NaN-filled) and filled field by field. Values, point order,
+  the object/`None` result of a missing field and the value order of merged polygon rows are unchanged
+  (`tests/test_flat_assign.py` compares every scenario against the old implementation, kept in
+  `tests/legacy_assign.py`). On grids whose points a bounding box covers in long runs (regular, octahedral,
+  local_regular) nothing changes measurably; on HEALPix nested grids, where a box breaks into roughly one range
+  per 1.6 points, the peak of a 12-field `get` falls from ~370 to ~40 B/value. See `MEASUREMENTS.md`.
 
 ## Opt-in: one longitude leaf per latitude node for polygons and paths
 
@@ -70,3 +80,37 @@ under each latitude node are merged into one sorted, de-duplicated float64 array
   `get` returns. Idempotent; `get` on a prepared tree or on `prepared.prune(select, latitude_range)` gives the same
   values/result order as `get` on the unprepared tree. Grid indices are recomputed by the later `get` rather than
   cached on the leaves, to keep the tree at ~8 B/point.
+- `FDBDatacube.get_iter(requests, context=None, select=None, latitude_range=None)`: builds the same gribjump call
+  as `get` (same pruning, same requests, same order) but yields `(field_path, [(leaf, values), ...])` per field
+  instead of filling the tree, so that a caller can hold one field (or one group) at a time. `field_path` is the
+  MARS keys of one field with one scalar value each, in the order the tree descends; `values` is a fresh float64
+  array of `len(leaf.values)` points, NaN where bitmap-missing, and the leaves come in tree order, so
+  concatenating them gives the field's points in the order `get` writes them. The second item is `None` for a
+  field gribjump has no message for (what `get` records as `None` values), so a missing field is detectable
+  without reading a value. Fields arrive in gribjump's request order: sub-trees in tree order, then the
+  cartesian product of the sub-tree's compressed axes in tree order, outermost axis first and innermost varying
+  fastest -- the order in which `get` lays a leaf's fields out in its `result`. Nothing is written to any
+  `result`: the tree is left as `prepare` leaves it, and the caller owns the arrays. Nothing is requested until
+  the first item is consumed.
+
+## Follow-ups (not in this branch)
+
+- **The request side still costs ~90-210 B/value.** `get_last_layer_before_leaf` collects every point's grid
+  index as a Python `int` in a list per leaf, and `sort_fdb_request_ranges` then sorts `enumerate(...)` of those
+  lists, which builds one tuple per point. After the result side was fixed this is what a `get` peaks on
+  (`MEASUREMENTS.md`): ~90 B/value for one field on the EFAS Danube box, ~210 B/value on a HEALPix 1024 Europe
+  box. Both passes are expressible in numpy over the leaf's index array (the mappers already return arrays),
+  which would leave only the request ranges themselves.
+- **`extract_from_mask` / `extract_from_indices` would not help by themselves.** Both are pure client-side
+  conveniences in pygribjump 0.12: they build the same `ExtractionRequest` list the current `extract` call
+  builds, so the bytes on the wire, the grid-hash check and the server's work are identical and nothing needs
+  validating against the remote gribjump server beyond what `extract` already does. `extract_from_mask` derives
+  the ranges from a boolean mask in numpy (attractive: one mask could be shared by every field of a call, and
+  its ranges are exactly the ascending, de-duplicated ranges we already send), but `ExtractionRequest.__init__`
+  then copies the range list and builds a Python list of range lengths per *field*, so the per-range Python
+  objects reappear inside pygribjump; and `extract_from_indices` is strictly worse, since it asks for one range
+  per point (357k ranges instead of 224k for the HEALPix box above, as a list of tuples per field).
+  Removing the last per-range objects therefore needs pygribjump to accept the ranges (or the mask) as a numpy
+  array it passes straight to C, not a different call on our side. What *would* need validating if a mask is
+  ever used: the mask must span the whole field (`numberOfValues` of the grid, not of the request), so the grid
+  size would have to come from the mapper and agree with the `gridHash` the server checks.

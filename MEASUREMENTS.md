@@ -91,3 +91,61 @@ cases was stopped after 15 minutes without completing.
 | regular360_global_box | 1,036,800 | 217 s / 218 s | 0.5 s / 0.53 s | 1.49 s | 10.2 | 319.7 MB |
 | efas_danube_box | 634,550 | not measured (quadratic) | 0.28 s / 0.28 s | 3.45 s | 11.0 | 240.9 MB |
 | regular500_global_box | 2,000,000 | not measured (quadratic) | 1.11 s / 0.91 s | 3.07 s | 9.5 | 488.6 MB |
+
+# What one `get` peaks at, per value
+
+Peak RSS of a single `get`, sampled every 2 ms in a background thread, minus the RSS before the call (the sliced,
+prepared tree is already there), over the values the call fetches (`n_points x n_fields`).  One field group, all
+fields in one gribjump call (the `step` axis stays compressed).  Fake gribjump, each run in its own process:
+
+    python performance/tree_memory.py --get --fields=12 healpix1024_europe_box            # flat, filling the tree
+    python performance/tree_memory.py --get --fields=12 --iter healpix1024_europe_box     # flat, through get_iter
+    python performance/tree_memory.py --get --fields=12 --legacy healpix1024_europe_box   # per-range assignment
+
+- **HEALPix nested 1024, Europe box** `[35, -15]` to `[71, 40]`: 357,409 points in 223,602 index ranges (1.6
+  points per range).
+- **EFAS `local_regular` 2969x4529, Danube box** `[42.08, 8.15]` to `[50.25, 29.73]`: 634,550 points in 490
+  ranges (1,295 points per range).
+
+"before" is the per-range assignment (`result.values[i]` per range, chunks of every leaf kept until the last field
+arrived) kept in `tests/legacy_assign.py`; "after" is the flat one (`result.values_flat` once per field, scattered
+into pre-allocated leaf results); "get_iter" consumes the same call field by field and drops each field.
+
+| grid | fields | values | before | after | `get_iter` | before peak | after peak | `get_iter` peak |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| HEALPix 1024, Europe box | 1 | 357,409 | 236 B | 214 B | 239 B | 80.6 MB | 72.9 MB | 81.4 MB |
+| | 4 | 1,429,636 | 120 B | 54 B | 53 B | 164.0 MB | 73.4 MB | 72.7 MB |
+| | 12 | 4,288,908 | 108 B | 30 B | 27 B | 440.5 MB | 123.8 MB | 109.5 MB |
+| EFAS, Danube box | 1 | 634,550 | 143 B | 147 B | 145 B | 86.6 MB | 89.1 MB | 87.4 MB |
+| | 4 | 2,538,200 | 37 B | 36 B | 37 B | 88.3 MB | 87.5 MB | 88.3 MB |
+| | 12 | 7,614,600 | 17 B | 17 B | 12 B | 121.5 MB | 123.6 MB | 88.2 MB |
+
+HEALPix against the row-ordered grid, which is the number the polytope-mars unit planner needs to be grid
+independent: **6.4x before, 1.8x after** at 12 fields (3.3x -> 1.5x at 4 fields).  `get` time on the HEALPix box
+also drops (26.3 s -> 23.6 s at 12 fields; 1.2 s -> 0.32 s for 4 fields on the EFAS box).
+
+Where the rest of the peak is, and what polytope-mars should size with:
+
+- The **result side** is now 8 B/value (the leaf arrays) plus 8 B/value of gribjump buffer plus, on grids whose
+  points a leaf does not cover in one ascending run, 4 B/value for the plan's positions.  Before, each index
+  range cost a numpy view plus a list slot (~165 B measured), which on HEALPix is ~100 B per *value* and on a
+  row-ordered grid ~0.1 B.
+- The **request side** is unchanged and is now what a small call peaks on: `get_last_layer_before_leaf` collects
+  every point's grid index as a Python `int` in a list and `sort_fdb_request_ranges` sorts `enumerate(...)` of
+  those lists.  Measured (`request_bytes_per_value x fields`): **~210 B per point on HEALPix nested, ~88 B per
+  point on EFAS**, independent of the number of fields.  See the follow-up in `CHANGES.md`.
+- So the Python side of one call is about `n_points x 220 B + n_values x 24 B` on every grid measured (that bound
+  holds for all six rows above, with room to spare on the row-ordered grid).  The 24 B/value term is the
+  grid-independent constant; the per-point term is paid once per call however many fields it has, so it is
+  ~20 B/value for a 12-field unit and 220 B/value for a single field.
+- `get_iter` does not keep the values: after a 12-field HEALPix call the process is at 181 MB rather than 259 MB,
+  and its peak is the lowest of the three (one field's arrays at a time instead of all twelve).
+
+The gribjump buffer itself (`extract_mb`: the fake builds every field's values before handing out the first
+result, as `GribJump::extract` does -- see `CHANGES.md`) shows up as 23-26 MB for a 12-field call, i.e. ~6 B/value
+against the 8 B/value of doubles it allocates: the rest is absorbed into memory the request bookkeeping had just
+freed.  For 1 and 4 fields it is entirely absorbed and measures 0.1 MB.
+
+The flat path was also checked against the per-range one at this scale, not only in the unit tests: the same
+HEALPix 1024 Europe box with 4 compressed fields (753 leaves, 1,429,636 values) gives identical leaf values and
+`result_array()` under both implementations.
