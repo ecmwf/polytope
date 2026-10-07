@@ -144,7 +144,9 @@ class FDBDatacube(Datacube):
         as in ``get``), nearest-point selection, conversion of each leaf's coordinates to grid indices, dropping
         duplicate grid points (e.g. a box that overlaps itself across the longitude seam) and reordering each
         longitude leaf's ``values`` by grid index (HEALPix nested and other grids number points differently from
-        slice order).  ``gribjump.extract`` is not called and every ``result`` is left untouched.
+        slice order).  ``gribjump.extract`` is not called and every ``result`` is left untouched.  The merged polygon
+        rows of ``Polytope._merge_union_rows`` keep their ascending values: ``get`` returns their results in that order,
+        as it did for the per-point leaves of a polygon.
 
         Use it to read the final coordinate list of a request before extracting any values: after ``prepare``
         the latitude/longitude values in the tree are exactly those (and in the order) that ``get`` fills, and
