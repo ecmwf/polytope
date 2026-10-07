@@ -106,6 +106,9 @@ def restore_value_order(result, order):
 
     ``order[k]`` is the position in the leaf's ``values`` of the k-th point in grid-index order.  ``result`` holds
     one block of ``len(order)`` values per field, each block in grid-index order.
+
+    ``FDBDatacube.get`` does this as it writes the results, by folding ``order`` into the positions its
+    ``fdb_assign.ScatterPlan`` reads from the gribjump buffer; this reorders a finished result instead.
     """
     n = len(order)
     out = np.empty_like(result)
