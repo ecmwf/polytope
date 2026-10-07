@@ -124,6 +124,8 @@ class Polytope:
         """Low-level API which takes a polytope geometry object and uses it to slice the datacube"""
 
         self.find_compressed_axes(datacube, polytopes)
+        # the last datacube axis holds the tree leaves (e.g. longitude); the slicer stores those as numpy arrays
+        self.leaf_axis_name = next(reversed(datacube.axes.keys()))
 
         self.remove_compressed_axis_in_union(polytopes)
 

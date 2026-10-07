@@ -4,6 +4,16 @@ from typing import OrderedDict
 from sortedcontainers import SortedList
 
 from .datacube_axis import IntDatacubeAxis, UnsliceableDatacubeAxis
+from .tree_values import (
+    is_array,
+    merge_sorted,
+    remove_value,
+    result_as_array,
+    values_hash_key,
+    values_identical,
+    values_lt,
+    values_within_tol,
+)
 
 
 class DatacubePath(OrderedDict):
@@ -115,6 +125,10 @@ class MergedTensorIndexNode(object):
             if len(old_parent.children) == 0:
                 old_parent.remove_branch()
 
+    def result_array(self):
+        """This node's ``result`` as a float64 array, with missing values (``None``) as NaN."""
+        return result_as_array(self.result)
+
     def is_root(self):
         return self.parent is None
 
@@ -143,7 +157,8 @@ class TensorIndexTree(object):
     root.name = "root"
 
     def __init__(self, axis=root, values=tuple()):
-        # NOTE: the values here is a tuple so we can hash it
+        # NOTE: the values here is a tuple so we can hash it. Leaves on the last (longitude) axis built by the hull
+        # slicer hold a float64 np.ndarray instead; see tree_values.py for the shared comparison semantics.
         self.values = values
         self.children = SortedList()
         self._parent = None
@@ -181,7 +196,7 @@ class TensorIndexTree(object):
         return delattr(self, key)
 
     def __hash__(self):
-        return hash((self.axis.name, self.values))
+        return hash((self.axis.name, values_hash_key(self.values)))
 
     def __eq__(self, other):
         if not isinstance(other, TensorIndexTree):
@@ -189,7 +204,7 @@ class TensorIndexTree(object):
         if self.axis.name != other.axis.name:
             return False
         else:
-            if other.values == self.values:
+            if values_identical(other.values, self.values):
                 return True
             else:
                 if isinstance(self.axis, UnsliceableDatacubeAxis):
@@ -197,6 +212,8 @@ class TensorIndexTree(object):
                 else:
                     if len(other.values) != len(self.values):
                         return False
+                    if self.axis.can_round and (is_array(self.values) or is_array(other.values)):
+                        return values_within_tol(other.values, self.values, 2 * max(other.axis.tol, self.axis.tol))
                     for i in range(len(other.values)):
                         other_val = other.values[i]
                         self_val = self.values[i]
@@ -209,7 +226,9 @@ class TensorIndexTree(object):
                     return True
 
     def __lt__(self, other):
-        return (self.axis.name, self.values) < (other.axis.name, other.values)
+        if self.axis.name != other.axis.name:
+            return self.axis.name < other.axis.name
+        return values_lt(self.values, other.values)
 
     def __repr__(self):
         if self.axis != "root":
@@ -222,10 +241,21 @@ class TensorIndexTree(object):
         node._parent = self
 
     def add_value(self, value):
+        if is_array(self.values):
+            self.values = merge_sorted(self.values, [value])
+            return
         new_values = list(self.values)
         new_values.append(value)
         new_values.sort()
         self.values = tuple(new_values)
+
+    def add_values(self, values):
+        """Add several values at once and store them as a sorted float64 array (used for longitude leaves)."""
+        self.values = merge_sorted(self.values, values)
+
+    def result_array(self):
+        """This leaf's ``result`` as a float64 array, with missing values (``None``) as NaN."""
+        return result_as_array(self.result)
 
     def create_merged_child(self, axes, values, next_nodes):
         node = MergedTensorIndexNode(axes, values)
@@ -337,7 +367,7 @@ class TensorIndexTree(object):
             self.remove_branch()
             return
 
-        self.values = tuple(val for val in self.values if val != value)
+        self.values = remove_value(self.values, value)
         parent = self.parent
         if parent is None:
             return

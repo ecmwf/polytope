@@ -1,6 +1,7 @@
 import math
 from copy import copy
 
+from ..datacube.datacube_axis import FloatDatacubeAxis
 from ..utility.exceptions import UnsliceableShapeError
 from .engine import Engine
 from .slicing_tools import slice
@@ -50,7 +51,7 @@ class HullSlicer(Engine):
                 )
                 raise ValueError(errmsg)
 
-    def find_values_between(self, polytope, ax, node, datacube, lower, upper):
+    def find_values_between(self, polytope, ax, node, datacube, lower, upper, use_cache=True):
         if isinstance(lower, str) and isinstance(upper, str):
             pass
         else:
@@ -75,14 +76,16 @@ class HullSlicer(Engine):
                 )
                 flattened = {flattened_tuple[0]: flattened_tuple[1]}
 
+        if not use_cache:
+            return datacube.get_indices(flattened, ax, lower, upper, method)
         values = self.axis_values_between.get((flattened_tuple, ax.name, lower, upper, method), None)
         if values is None:
             values = datacube.get_indices(flattened, ax, lower, upper, method)
             self.axis_values_between[(flattened_tuple, ax.name, lower, upper, method)] = values
         return values
 
-    def remap_values(self, ax, value):
-        remapped_val = self.remapped_vals.get((value, ax.name), None)
+    def remap_values(self, ax, value, use_cache=True):
+        remapped_val = self.remapped_vals.get((value, ax.name), None) if use_cache else None
         if remapped_val is None:
             remapped_val = value
             if ax.is_cyclic:
@@ -90,16 +93,29 @@ class HullSlicer(Engine):
                 remapped_val = (remapped_val_interm[0] + remapped_val_interm[1]) / 2
             if ax.can_round:
                 remapped_val = round(remapped_val, int(-math.log10(ax.tol)))
-            self.remapped_vals[(value, ax.name)] = remapped_val
+            if use_cache:
+                self.remapped_vals[(value, ax.name)] = remapped_val
         return remapped_val
 
+    @staticmethod
+    def is_array_leaf_axis(ax, api):
+        """Whether ``ax`` is the float leaf axis (e.g. longitude), whose nodes store values as numpy arrays.
+
+        Values on this axis are neither cached per value nor per grid line: those caches would hold every point of
+        the request as Python objects, several times the size of the tree itself.
+        """
+        return ax.name == getattr(api, "leaf_axis_name", None) and isinstance(ax, FloatDatacubeAxis)
+
     def _build_sliceable_child(self, polytope, ax, node, datacube, values, next_nodes, slice_axis_idx, api):
-        # TODO: Restructure this to add all compressed values at once in the tree
+        # Leaves on the last (longitude) float axis store their values as a float64 numpy array, filled in one go
+        array_leaf = self.is_array_leaf_axis(ax, api)
+        compressed_values = []
+        child = None
         for i, value in enumerate(values):
             if i == 0 or ax.name not in api.compressed_axes:
                 fvalue = ax.to_float(value)
                 new_polytope = slice(polytope, ax.name, fvalue, slice_axis_idx)
-                remapped_val = self.remap_values(ax, value)
+                remapped_val = self.remap_values(ax, value, use_cache=not array_leaf)
                 exists, child, next_nodes = node.create_child(ax, remapped_val, next_nodes)
                 child["unsliced_polytopes"] = copy(node["unsliced_polytopes"])
                 child["unsliced_polytopes"].remove(polytope)
@@ -111,9 +127,16 @@ class HullSlicer(Engine):
                         child.tags.add(polytope.tag)
                 if not exists:
                     next_nodes.append(child)
+                if array_leaf and ax.name not in api.compressed_axes:
+                    child.add_values([])
             else:
-                remapped_val = self.remap_values(ax, value)
-                child.add_value(remapped_val)
+                remapped_val = self.remap_values(ax, value, use_cache=not array_leaf)
+                if array_leaf:
+                    compressed_values.append(remapped_val)
+                else:
+                    child.add_value(remapped_val)
+        if array_leaf and child is not None and ax.name in api.compressed_axes:
+            child.add_values(compressed_values)
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):
         if ax.name not in api.compressed_axes:
@@ -138,7 +161,9 @@ class HullSlicer(Engine):
                         slice_axis_idx,
                     )
                 else:
-                    values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
+                    values = self.find_values_between(
+                        polytope, ax, node, datacube, lower, upper, use_cache=not self.is_array_leaf_axis(ax, api)
+                    )
                     # NOTE: need to only remove the branches if the values are empty,
                     # but only if there are no other possible children left in the tree that
                     # we can append and if somehow this happens before and we need to remove, then what do we do??
@@ -174,7 +199,9 @@ class HullSlicer(Engine):
                     if api.ax_is_unsliceable[ax.name]:
                         all_lowers.append(lower)
                     else:
-                        values = self.find_values_between(polytope, ax, node, datacube, lower, upper)
+                        values = self.find_values_between(
+                            polytope, ax, node, datacube, lower, upper, use_cache=not self.is_array_leaf_axis(ax, api)
+                        )
                         all_values.extend(values)
             if api.ax_is_unsliceable[ax.name]:
                 self._build_unsliceable_child(

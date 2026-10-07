@@ -6,6 +6,7 @@ from itertools import product
 from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
 from ...utility.geometry import nearest_pt
 from ..tensor_index_tree import MergedTensorIndexNode
+from ..tree_values import finalise_result, take, values_hash_key
 from .datacube import Datacube, TensorIndexTree
 
 
@@ -136,6 +137,12 @@ class FDBDatacube(Datacube):
             self._axes.pop(axis_name, None)
 
     def get(self, requests: TensorIndexTree, context=None):
+        """Fetch data from gribjump into the leaves of ``requests``; return ``requests``.
+
+        After ``get`` each leaf's ``result`` is a ``np.ndarray``: float64 when every field was found, otherwise
+        object dtype with ``None`` for the missing values (use ``leaf.result_array()`` for float64 with NaN).
+        Leaf ``values`` are reordered by grid index and de-duplicated in place to line up with ``result``.
+        """
         if context is None:
             context = {}
         if len(requests.children) == 0:
@@ -189,6 +196,7 @@ class FDBDatacube(Datacube):
 
         logging.info("Requests extracted from GribJump for %s", context)
         self.assign_fdb_output_to_nodes(iterator, complete_fdb_decoding_info)
+        return requests
 
     def get_fdb_requests(
         self,
@@ -295,7 +303,7 @@ class FDBDatacube(Datacube):
         new_fdb_node_ranges = []
         new_current_start_idxs = []
         nodes_to_remove = []
-        nodes_to_update = []  # (node, new_values, filtered_idxs)
+        nodes_to_update = []  # (node, kept value positions)
         for i, idxs_list in enumerate(current_start_idxs):
             new_idx_group = []
             new_fdb_group = []
@@ -304,13 +312,14 @@ class FDBDatacube(Datacube):
                 node = actual_fdb_node[0]
                 # Collect non-duplicate indices and values for this node
                 filtered_idxs = []
-                original_vals = []
+                kept_positions = []
                 for j, idx in enumerate(sub_lat_idxs):
                     if (i, k, j) not in is_dup:
                         filtered_idxs.append(idx)
-                        original_vals.append(node.values[j])
+                        kept_positions.append(j)
                 if filtered_idxs:
-                    nodes_to_update.append((node, tuple(original_vals), filtered_idxs))
+                    if len(kept_positions) != len(node.values):
+                        nodes_to_update.append((node, kept_positions))
                     new_idx_group.append(filtered_idxs)
                     new_fdb_group.append(actual_fdb_node)
                 else:
@@ -324,8 +333,8 @@ class FDBDatacube(Datacube):
             node.remove_branch()
 
         # Now safely mutate winner node values (trim any partially-duplicate values)
-        for node, new_values, _ in nodes_to_update:
-            node.values = new_values
+        for node, kept_positions in nodes_to_update:
+            node.values = take(node.values, kept_positions)
 
         return new_fdb_node_ranges, new_current_start_idxs
 
@@ -432,7 +441,7 @@ class FDBDatacube(Datacube):
                     lat_child.remove_branch()
                 else:
                     possible_lons = [latlon[1] for latlon in nearest_latlons if (latlon[0],) == lat_child.values]
-                    lon_children_by_values = {child.values: child for child in lat_child.children}
+                    lon_children_by_values = {values_hash_key(child.values): child for child in lat_child.children}
                     lon_children_values = list(lon_children_by_values.keys())
                     for lon_child_val in lon_children_values:
                         lon_child = lon_children_by_values[lon_child_val]
@@ -513,6 +522,7 @@ class FDBDatacube(Datacube):
             proxy = copy(merged_child)
             proxy.values = (merged_child.values[1],)  # length == len(flat_indices)
             proxy.remove_branch = merged_child.remove_branch  # delegate tree removal
+            proxy._result_owner = merged_child  # assign_fdb_output_to_nodes writes results onto the real node
 
             current_start_idxs[i] = [flat_indices]
             # current_start_idxs = [[flat_indices]]
@@ -545,20 +555,27 @@ class FDBDatacube(Datacube):
 
     def assign_fdb_output_to_nodes(self, output_iterator, fdb_requests_decoding_info):
         logging.debug("Assigning GribJump output to tree nodes")
+        # Collect the per-range chunks of every leaf in gribjump output order, then store each leaf's result as one
+        # numpy array (see tree_values.finalise_result).
+        chunks_by_node = {}
         for k, result in enumerate(output_iterator):
-            (
-                original_indices,
-                fdb_node_ranges,
-            ) = fdb_requests_decoding_info[k]
+            original_indices, fdb_node_ranges = fdb_requests_decoding_info[k]
             sorted_fdb_range_nodes = [fdb_node_ranges[i] for i in original_indices]
             for i in range(len(sorted_fdb_range_nodes)):
                 n = sorted_fdb_range_nodes[i][0]
+                owner = getattr(n, "_result_owner", n)
+                entry = chunks_by_node.get(id(owner))
+                if entry is None:
+                    entry = chunks_by_node[id(owner)] = (owner, [])
                 if len(result.values) == 0:
                     # If we are here, no data was found for this path in the fdb
-                    none_array = [None] * len(n.values)
-                    n.result.extend(none_array)
+                    entry[1].append([None] * len(n.values))
                 else:
-                    n.result.extend(result.values[i])
+                    entry[1].append(result.values[i])
+        for owner, chunks in chunks_by_node.values():
+            if len(owner.result) != 0:
+                chunks.insert(0, list(owner.result))
+            owner.result = finalise_result(chunks)
         logging.debug("Finished assigning GribJump output to tree nodes")
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
@@ -584,7 +601,7 @@ class FDBDatacube(Datacube):
                 sorted_list = sorted(enumerate(old_interm_start_idx[j]), key=lambda x: x[1])
                 original_indices_idx, interm_start_idx = zip(*sorted_list)
                 for interm_fdb_nodes_obj in interm_fdb_nodes[j]:
-                    interm_fdb_nodes_obj.values = tuple([interm_fdb_nodes_obj.values[k] for k in original_indices_idx])
+                    interm_fdb_nodes_obj.values = take(interm_fdb_nodes_obj.values, original_indices_idx)
                 if abs(interm_start_idx[-1] + 1 - interm_start_idx[0]) <= len(interm_start_idx):
                     current_request_ranges = (
                         interm_start_idx[0],
