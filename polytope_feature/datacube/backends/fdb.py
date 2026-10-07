@@ -136,17 +136,32 @@ class FDBDatacube(Datacube):
         for axis_name in axes_to_remove:
             self._axes.pop(axis_name, None)
 
-    def get(self, requests: TensorIndexTree, context=None):
-        """Fetch data from gribjump into the leaves of ``requests``; return ``requests``.
+    def get(self, requests: TensorIndexTree, context=None, select=None, latitude_range=None):
+        """Fetch data from gribjump into the leaves of ``requests``; return the tree holding the results.
+
+        ``requests`` may be a full tree from ``Polytope.slice`` or a sub-tree from ``TensorIndexTree.prune``.
+        Passing ``select`` and/or ``latitude_range`` prunes ``requests`` first (see ``TensorIndexTree.prune``) and
+        fills and returns the pruned copy, leaving ``requests`` untouched.  Results for a pruned tree are exactly
+        the corresponding slice of a full ``get``: the compressed axes expand to the selected values only, point
+        order within a band is the same, and a field gribjump does not have yields ``None`` values.  ``get`` keeps
+        no state between calls, so pruned trees of the same parent can be fetched one after another.
 
         After ``get`` each leaf's ``result`` is a ``np.ndarray``: float64 when every field was found, otherwise
         object dtype with ``None`` for the missing values (use ``leaf.result_array()`` for float64 with NaN).
         Leaf ``values`` are reordered by grid index and de-duplicated in place to line up with ``result``.
+        Latitude bands are not supported together with nearest-point search, which selects among the points
+        present in the tree being fetched.
         """
         if context is None:
             context = {}
+        if select is not None or latitude_range is not None:
+            if latitude_range is not None and len(self.nearest_search) != 0:
+                raise ValueError("latitude_range cannot be combined with nearest-point search")
+            requests = requests.prune(select=select, latitude_range=latitude_range)
         if len(requests.children) == 0:
             return requests
+        # never carry unmapping state over from a previous get
+        self.unwanted_path = {}
         fdb_requests = []
         fdb_requests_decoding_info = []
         self.get_fdb_requests(requests, fdb_requests, fdb_requests_decoding_info)
