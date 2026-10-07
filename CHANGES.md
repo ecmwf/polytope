@@ -28,3 +28,10 @@ Notes for the PR description.
 - `TensorIndexTree.result_array()` / `MergedTensorIndexNode.result_array()`
 - `TensorIndexTree.add_values(values)`
 - `FDBDatacube.get(requests, context=None, select=None, latitude_range=None)`
+- `FDBDatacube.prepare(requests, context=None, select=None, latitude_range=None)`: runs every step of `get` before
+  the gribjump call (pruning, nearest-point selection, grid-index lookup, de-duplication of grid points and
+  reordering of longitude leaf `values` by grid index) without fetching data or touching `result`. After `prepare`
+  the tree holds the exact coordinates, in order, that `get` fills, and `latitude_point_counts` counts the points
+  `get` returns. Idempotent; `get` on a prepared tree or on `prepared.prune(select, latitude_range)` gives the same
+  values/result order as `get` on the unprepared tree. Grid indices are recomputed by the later `get` rather than
+  cached on the leaves, to keep the tree at ~8 B/point.

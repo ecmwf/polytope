@@ -140,7 +140,7 @@ def latitude_point_counts(tree, select=None, latitude_axis="latitude"):
     return counts
 
 
-def prune(tree, select=None, latitude_range=None, latitude_axis="latitude"):
+def prune(tree, select=None, latitude_range=None, latitude_axis="latitude") -> TensorIndexTree:
     if not tree.is_root():
         raise ValueError("prune() must be called on the root of a tree")
     select = _check_select(select, latitude_axis)
@@ -159,4 +159,6 @@ def prune(tree, select=None, latitude_range=None, latitude_axis="latitude"):
             return _copy_subtree(node)
         return None
 
-    return _walk(tree, select, latitude_axis, on_spatial, build=True)
+    pruned = _walk(tree, select, latitude_axis, on_spatial, build=True)
+    assert pruned is not None
+    return pruned

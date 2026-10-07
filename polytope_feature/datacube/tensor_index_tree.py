@@ -274,7 +274,7 @@ class TensorIndexTree(object):
 
         return latitude_point_counts(self, select, latitude_axis)
 
-    def prune(self, select=None, latitude_range=None, latitude_axis="latitude"):
+    def prune(self, select=None, latitude_range=None, latitude_axis="latitude") -> "TensorIndexTree":
         """Return an independent copy of this (root) tree restricted to one field group and/or latitude band.
 
         :param select: ``{axis_name: value}``; on every node of each named axis only ``value`` is kept (so the
