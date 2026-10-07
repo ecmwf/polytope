@@ -1,16 +1,49 @@
 """A minimal in-memory stand-in for ``pygribjump.GribJump`` used to drive the real ``FDBDatacube`` in tests.
 
-``axes()`` answers from a declared axis table and ``extract()`` returns, per request, one ``np.ndarray`` per
-requested index range.  Values are a deterministic function of the request path and the absolute grid index, so
-any reordering or misassignment of values to tree nodes is detectable.
+``axes()`` answers from a declared axis table and ``extract()`` returns one result per request, with ``values_flat``
+(one contiguous float64 array over all of the request's index ranges) and the per-range ``values`` list of views
+into it, as pygribjump 0.12 does.  Values are a deterministic function of the request path and the absolute grid
+index, so any reordering or misassignment of values to tree nodes is detectable.
+
+The iterator mirrors gribjump's own memory behaviour: every field's buffer is allocated before the first result is
+handed out (``GribJump::extract`` wraps an already-materialised vector in its ``ExtractionIterator``), and the
+iterator drops its own reference to each result as it yields it, so a consumer that releases a result frees its
+buffer.
 """
 
 import numpy as np
 
 
 class _ExtractResult:
-    def __init__(self, values):
-        self.values = values
+    """One field's extracted values, like ``pygribjump.ExtractionResult``."""
+
+    def __init__(self, flat, shape, missing=False):
+        self._flat = flat
+        self._shape = shape
+        self._missing = missing
+
+    @property
+    def values_flat(self):
+        return self._flat
+
+    @property
+    def values(self):
+        if self._missing:
+            return []
+        return np.split(self._flat, np.cumsum(self._shape)[:-1])
+
+
+class _ExtractionIterator:
+    """Cursor over results that were all built before the first ``next()``, as gribjump's ``VectorSource`` is."""
+
+    def __init__(self, results):
+        self._results = results
+
+    def __iter__(self):
+        for i in range(len(self._results)):
+            result = self._results[i]
+            self._results[i] = None  # hand over ownership, as VectorSource::next() does
+            yield result
 
 
 INDEX_SCALE = 1e8  # grid indices are below this, so ``value % INDEX_SCALE`` recovers the grid index
@@ -22,7 +55,7 @@ def path_offset(path):
     digest = 0
     for ch in key:
         digest = (digest * 131 + ord(ch)) % 100_003
-    return float(digest) * INDEX_SCALE
+    return digest * INDEX_SCALE
 
 
 def expected_value(path, index):
@@ -32,7 +65,7 @@ def expected_value(path, index):
 
 def index_of(value):
     """Grid index encoded in a (non-NaN) value returned by the fake."""
-    return int(round(value % INDEX_SCALE))
+    return np.rint(value % INDEX_SCALE).astype(np.int64).item()
 
 
 class GribJump:
@@ -61,15 +94,20 @@ class GribJump:
         out = []
         for path, ranges, _md5 in requests:
             if self._is_missing(path):
-                out.append(_ExtractResult([]))
+                out.append(_ExtractResult(np.empty(0, dtype=np.float64), [], missing=True))
                 continue
-            vals = []
+            shape = [end - start for start, end in ranges]
+            flat = np.empty(sum(shape), dtype=np.float64)
+            offset = 0
             for start, end in ranges:
-                arr = expected_value(path, np.arange(start, end))
-                if self.nan_indices:
+                flat[offset : offset + end - start] = expected_value(path, np.arange(start, end))  # noqa: E203
+                offset += end - start
+            if self.nan_indices:
+                offset = 0
+                for start, end in ranges:
                     for i in range(start, end):
                         if i in self.nan_indices:
-                            arr[i - start] = np.nan
-                vals.append(arr)
-            out.append(_ExtractResult(vals))
-        return iter(out)
+                            flat[offset + i - start] = np.nan
+                    offset += end - start
+            out.append(_ExtractResult(flat, shape))
+        return _ExtractionIterator(out)

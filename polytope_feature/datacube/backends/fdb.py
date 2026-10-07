@@ -5,8 +5,9 @@ from itertools import product
 
 from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
 from ...utility.geometry import nearest_pt
+from ..fdb_assign import FieldRequests, field_values_flat
 from ..tensor_index_tree import MergedTensorIndexNode
-from ..tree_values import finalise_result, restore_value_order, take, values_hash_key
+from ..tree_values import take, values_hash_key
 from .datacube import Datacube, TensorIndexTree
 
 
@@ -188,13 +189,17 @@ class FDBDatacube(Datacube):
         if len(requests.children) == 0:
             return requests
         complete_list_complete_uncompressed_requests, complete_fdb_decoding_info = self._gribjump_requests(requests)
+        iterator = self._gribjump_extract(complete_list_complete_uncompressed_requests, context)
+        self.assign_fdb_output_to_nodes(iterator, complete_fdb_decoding_info)
+        return requests
 
+    def _gribjump_extract(self, uncompressed_requests, context):
         if logging.root.level <= logging.DEBUG:
-            printed_list_to_gj = complete_list_complete_uncompressed_requests[::1000]
+            printed_list_to_gj = uncompressed_requests[::1000]
             logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
         logging.info("Requests given to GribJump extract for %s", context)
         try:
-            iterator = self.gj.extract(complete_list_complete_uncompressed_requests, context)
+            iterator = self.gj.extract(uncompressed_requests, context)
         except Exception as e:
             if "BadValue: Grid hash mismatch" in str(e):
                 logging.info("Error is: %s", e)
@@ -204,10 +209,8 @@ class FDBDatacube(Datacube):
                 raise GribJumpNoIndexError()
             else:
                 raise e
-
         logging.info("Requests extracted from GribJump for %s", context)
-        self.assign_fdb_output_to_nodes(iterator, complete_fdb_decoding_info)
-        return requests
+        return iterator
 
     def _prune_for_get(self, requests: TensorIndexTree, select, latitude_range) -> TensorIndexTree:
         if select is None and latitude_range is None:
@@ -221,7 +224,9 @@ class FDBDatacube(Datacube):
     def _gribjump_requests(self, requests):
         """Build the gribjump extract requests for ``requests`` and their decoding info.
 
-        Reorders and de-duplicates the longitude leaf values of ``requests`` in place (see :meth:`prepare`).
+        Reorders and de-duplicates the longitude leaf values of ``requests`` in place (see :meth:`prepare`).  The
+        decoding info holds one ``(FieldRequests, field index)`` pair per request: the ``FieldRequests`` of a
+        spatial sub-tree is shared by all of its fields and knows where each field's values belong.
         """
         # never carry unmapping state over from a previous get
         self.unwanted_path = {}
@@ -235,18 +240,24 @@ class FDBDatacube(Datacube):
         complete_list_complete_uncompressed_requests = []
         complete_fdb_decoding_info = []
         for j, compressed_request in enumerate(fdb_requests):
-            uncompressed_request = {}
-
-            # Need to determine the possible decompressed requests
-
             # find the possible combinations of compressed indices
             interm_branch_tuple_values = []
             for key in compressed_request[0].keys():
                 interm_branch_tuple_values.append(compressed_request[0][key])
-            request_combis = product(*interm_branch_tuple_values)
+            n_fields = 1
+            for branch_values in interm_branch_tuple_values:
+                n_fields *= len(branch_values)
+            original_indices, fdb_node_ranges = fdb_requests_decoding_info[j]
+            field_requests = FieldRequests(
+                original_indices,
+                fdb_node_ranges,
+                compressed_request[1],
+                n_fields,
+                self._leaf_result_orders,
+            )
 
             # Need to extract the possible requests and add them to the right nodes
-            for combi in request_combis:
+            for field_index, combi in enumerate(product(*interm_branch_tuple_values)):
                 uncompressed_request = {}
                 for i, key in enumerate(compressed_request[0].keys()):
                     uncompressed_request[key] = combi[i]
@@ -256,7 +267,7 @@ class FDBDatacube(Datacube):
                     self.grid_md5_hash,
                 )
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
-                complete_fdb_decoding_info.append(fdb_requests_decoding_info[j] + (compressed_request[1],))
+                complete_fdb_decoding_info.append((field_requests, field_index))
         return complete_list_complete_uncompressed_requests, complete_fdb_decoding_info
 
     def get_fdb_requests(
@@ -615,39 +626,29 @@ class FDBDatacube(Datacube):
         return (current_idx, fdb_range_n)
 
     def assign_fdb_output_to_nodes(self, output_iterator, fdb_requests_decoding_info):
+        """Write every field of the gribjump output into the leaves of the tree it was requested for.
+
+        Each result is consumed once, as one contiguous ``values_flat`` buffer sliced into the leaves' results by
+        the sub-tree's :class:`~polytope_feature.datacube.fdb_assign.ScatterPlan`, so that nothing is kept per
+        request range and no field's values outlive their result.  A leaf's result for the whole call is
+        pre-allocated (``n_points x n_fields``, float64, NaN-filled) and filled field by field.
+        """
         logging.debug("Assigning GribJump output to tree nodes")
-        # Collect the per-range chunks of every leaf in gribjump output order, then store each leaf's result as one
-        # numpy array (see tree_values.finalise_result).
-        chunks_by_node = {}
+        open_requests = None
         for k, result in enumerate(output_iterator):
-            decoding_info = fdb_requests_decoding_info[k]
-            original_indices, fdb_node_ranges = decoding_info[0], decoding_info[1]
-            sorted_ranges = decoding_info[2] if len(decoding_info) > 2 else None
-            sorted_fdb_range_nodes = [fdb_node_ranges[i] for i in original_indices]
-            for i in range(len(sorted_fdb_range_nodes)):
-                n = sorted_fdb_range_nodes[i][0]
-                owner = getattr(n, "_result_owner", n)
-                entry = chunks_by_node.get(id(owner))
-                if entry is None:
-                    entry = chunks_by_node[id(owner)] = (owner, [])
-                if len(result.values) == 0:
-                    # If we are here, no data was found for this path in the fdb: one None per point of this range
-                    if sorted_ranges is not None:
-                        n_points = sorted_ranges[i][1] - sorted_ranges[i][0]
-                    else:
-                        n_points = len(n.values)
-                    entry[1].append([None] * n_points)
-                else:
-                    entry[1].append(result.values[i])
-        for owner, chunks in chunks_by_node.values():
-            result = finalise_result(chunks)
-            order = self._leaf_result_orders.get(id(owner))
-            if order is not None:
-                # results arrive in grid-index order; put them back in the order of the leaf's values
-                result = restore_value_order(result, order)
-            if len(owner.result) != 0:
-                result = finalise_result([list(owner.result), list(result)])
-            owner.result = result
+            field_requests, field_index = fdb_requests_decoding_info[k]
+            if field_requests is not open_requests:
+                # the requests of a sub-tree are consecutive, so only its plan and leaf results are alive
+                if open_requests is not None:
+                    open_requests.finish_and_release()
+                open_requests = field_requests
+            plan = field_requests.plan(allocate=True)
+            flat = field_values_flat(result)
+            del result  # drop gribjump's result as soon as its values are readable
+            plan.assign_field(flat, field_index)
+            del flat
+        if open_requests is not None:
+            open_requests.finish_and_release()
         logging.debug("Finished assigning GribJump output to tree nodes")
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
