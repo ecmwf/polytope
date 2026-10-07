@@ -415,8 +415,8 @@ class FDBDatacube(Datacube):
             nearest_pts_k = self.nearest_search.get((first_ax_name, second_ax_name), None)
             if nearest_pts_k is None:
                 nearest_pts_k = self.nearest_search.get((second_ax_name, first_ax_name), None)
-                for i, pt in enumerate(nearest_pts_k[0]):
-                    nearest_pts_k[0][i] = [pt[1], pt[0]]
+                # swap a copy: the stored points must stay as requested for the next get/prepare
+                nearest_pts_k = ([[pt[1], pt[0]] for pt in nearest_pts_k[0]], nearest_pts_k[1])
 
             k = nearest_pts_k[1]
             if k != 1 and not self.grid_transformation.is_irregular:
@@ -468,8 +468,8 @@ class FDBDatacube(Datacube):
             nearest_pts_k = self.nearest_search.get((first_ax_name, second_ax_name), None)
             if nearest_pts_k is None:
                 nearest_pts_k = self.nearest_search.get((second_ax_name, first_ax_name), None)
-                for i, pt in enumerate(nearest_pts_k[0]):
-                    nearest_pts_k[0][i] = [pt[1], pt[0]]
+                # swap a copy: the stored points must stay as requested for the next get/prepare
+                nearest_pts_k = ([[pt[1], pt[0]] for pt in nearest_pts_k[0]], nearest_pts_k[1])
 
             k = nearest_pts_k[1]
             if k != 1 and not self.grid_transformation.is_irregular:
