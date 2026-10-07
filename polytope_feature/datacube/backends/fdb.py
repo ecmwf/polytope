@@ -136,37 +136,97 @@ class FDBDatacube(Datacube):
         for axis_name in axes_to_remove:
             self._axes.pop(axis_name, None)
 
+    def prepare(self, requests: TensorIndexTree, context=None, select=None, latitude_range=None):
+        """Put ``requests`` into the point order ``get`` returns, without fetching any data.
+
+        Runs every step of :meth:`get` before the gribjump call: optional pruning (``select`` / ``latitude_range``,
+        as in ``get``), nearest-point selection, conversion of each leaf's coordinates to grid indices, dropping
+        duplicate grid points (e.g. a box that overlaps itself across the longitude seam) and reordering each
+        longitude leaf's ``values`` by grid index (HEALPix nested and other grids number points differently from
+        slice order).  ``gribjump.extract`` is not called and every ``result`` is left untouched.
+
+        Use it to read the final coordinate list of a request before extracting any values: after ``prepare``
+        the latitude/longitude values in the tree are exactly those (and in the order) that ``get`` fills, and
+        ``latitude_point_counts`` counts the points ``get`` returns per latitude node.
+
+        Like ``get``, the tree is modified in place and returned when neither ``select`` nor ``latitude_range``
+        is given; otherwise a pruned copy is prepared and returned and ``requests`` is left untouched.
+        ``prepare`` is idempotent, and ``get`` on a prepared tree, or on ``prepared.prune(select, latitude_range)``,
+        gives the same ``values`` and ``result`` order as ``get`` on the unprepared tree (bands of a prepared tree
+        concatenate to the full result).  Grid indices are not cached: ``get`` recomputes them for the (sub-)tree it
+        fetches, which keeps the tree at ~8 B/point.
+        """
+        requests = self._prune_for_get(requests, select, latitude_range)
+        if len(requests.children) != 0:
+            self._gribjump_requests(requests)
+        return requests
+
     def get(self, requests: TensorIndexTree, context=None, select=None, latitude_range=None):
         """Fetch data from gribjump into the leaves of ``requests``; return the tree holding the results.
 
-        ``requests`` may be a full tree from ``Polytope.slice`` or a sub-tree from ``TensorIndexTree.prune``.
-        Passing ``select`` and/or ``latitude_range`` prunes ``requests`` first (see ``TensorIndexTree.prune``) and
-        fills and returns the pruned copy, leaving ``requests`` untouched.  Results for a pruned tree are exactly
-        the corresponding slice of a full ``get``: the compressed axes expand to the selected values only, point
-        order within a band is the same, and a field gribjump does not have yields ``None`` values.  ``get`` keeps
-        no state between calls, so pruned trees of the same parent can be fetched one after another.
+        ``requests`` may be a full tree from ``Polytope.slice``, a sub-tree from ``TensorIndexTree.prune``, or
+        either of those after :meth:`prepare`.  Passing ``select`` and/or ``latitude_range`` prunes ``requests``
+        first (see ``TensorIndexTree.prune``) and fills and returns the pruned copy, leaving ``requests`` untouched.
+        Results for a pruned tree are exactly the corresponding slice of a full ``get``: the compressed axes expand
+        to the selected values only, point order within a band is the same, and a field gribjump does not have
+        yields ``None`` values.  ``get`` keeps no state between calls, so pruned trees of the same parent can be
+        fetched one after another.
 
         After ``get`` each leaf's ``result`` is a ``np.ndarray``: float64 when every field was found, otherwise
         object dtype with ``None`` for the missing values (use ``leaf.result_array()`` for float64 with NaN).
-        Leaf ``values`` are reordered by grid index and de-duplicated in place to line up with ``result``.
+        Leaf ``values`` are reordered by grid index and de-duplicated in place to line up with ``result`` (a no-op
+        on a prepared tree; use :meth:`prepare` to get the final coordinates before fetching).
         Latitude bands are not supported together with nearest-point search, which selects among the points
         present in the tree being fetched.
         """
         if context is None:
             context = {}
-        if select is not None or latitude_range is not None:
-            if latitude_range is not None and len(self.nearest_search) != 0:
-                raise ValueError("latitude_range cannot be combined with nearest-point search")
-            requests = requests.prune(select=select, latitude_range=latitude_range)
+        requests = self._prune_for_get(requests, select, latitude_range)
         if len(requests.children) == 0:
             return requests
+        complete_list_complete_uncompressed_requests, complete_fdb_decoding_info = self._gribjump_requests(requests)
+
+        if logging.root.level <= logging.DEBUG:
+            printed_list_to_gj = complete_list_complete_uncompressed_requests[::1000]
+            logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
+        logging.info("Requests given to GribJump extract for %s", context)
+        try:
+            iterator = self.gj.extract(complete_list_complete_uncompressed_requests, context)
+        except Exception as e:
+            if "BadValue: Grid hash mismatch" in str(e):
+                logging.info("Error is: %s", e)
+                raise BadGridError()
+            if "Missing JumpInfo" in str(e):
+                logging.info("Error is: %s", e)
+                raise GribJumpNoIndexError()
+            else:
+                raise e
+
+        logging.info("Requests extracted from GribJump for %s", context)
+        self.assign_fdb_output_to_nodes(iterator, complete_fdb_decoding_info)
+        return requests
+
+    def _prune_for_get(self, requests: TensorIndexTree, select, latitude_range) -> TensorIndexTree:
+        if select is None and latitude_range is None:
+            return requests
+        if latitude_range is not None and len(self.nearest_search) != 0:
+            raise ValueError("latitude_range cannot be combined with nearest-point search")
+        pruned = requests.prune(select=select, latitude_range=latitude_range)
+        assert pruned is not None
+        return pruned
+
+    def _gribjump_requests(self, requests):
+        """Build the gribjump extract requests for ``requests`` and their decoding info.
+
+        Reorders and de-duplicates the longitude leaf values of ``requests`` in place (see :meth:`prepare`).
+        """
         # never carry unmapping state over from a previous get
         self.unwanted_path = {}
         fdb_requests = []
         fdb_requests_decoding_info = []
         self.get_fdb_requests(requests, fdb_requests, fdb_requests_decoding_info)
 
-        # here, loop through the fdb requests and request from gj and directly add to the nodes
+        # expand the compressed non-spatial axes into one gribjump request per field
         complete_list_complete_uncompressed_requests = []
         complete_fdb_decoding_info = []
         for j, compressed_request in enumerate(fdb_requests):
@@ -192,26 +252,7 @@ class FDBDatacube(Datacube):
                 )
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
                 complete_fdb_decoding_info.append(fdb_requests_decoding_info[j] + (compressed_request[1],))
-
-        if logging.root.level <= logging.DEBUG:
-            printed_list_to_gj = complete_list_complete_uncompressed_requests[::1000]
-            logging.debug("The requests we give GribJump are: %s", printed_list_to_gj)
-        logging.info("Requests given to GribJump extract for %s", context)
-        try:
-            iterator = self.gj.extract(complete_list_complete_uncompressed_requests, context)
-        except Exception as e:
-            if "BadValue: Grid hash mismatch" in str(e):
-                logging.info("Error is: %s", e)
-                raise BadGridError()
-            if "Missing JumpInfo" in str(e):
-                logging.info("Error is: %s", e)
-                raise GribJumpNoIndexError()
-            else:
-                raise e
-
-        logging.info("Requests extracted from GribJump for %s", context)
-        self.assign_fdb_output_to_nodes(iterator, complete_fdb_decoding_info)
-        return requests
+        return complete_list_complete_uncompressed_requests, complete_fdb_decoding_info
 
     def get_fdb_requests(
         self,

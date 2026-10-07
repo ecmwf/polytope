@@ -262,9 +262,13 @@ class TensorIndexTree(object):
 
         Only branches matching ``select`` are counted (see :meth:`prune`), so
         ``tree.prune(select, latitude_range=(i, j))`` holds exactly ``sum(counts[i:j])`` points. A merged
-        (lat, lon) leaf counts as a latitude node holding one point. Use this to plan latitude bands. Counts are
-        taken before ``get`` drops duplicate grid points (e.g. a box overlapping itself across the longitude seam),
-        so a filled band can hold fewer points; read coordinates from the filled tree.
+        (lat, lon) leaf counts as a latitude node holding one point. Use this to plan latitude bands.
+
+        Counts reflect the tree as it is. On a tree prepared with ``FDBDatacube.prepare`` they are exactly the
+        number of points ``get`` returns per latitude node (duplicate grid points already dropped), so bands
+        planned from them line up with the prepared coordinate list. On an unprepared tree they are taken before
+        ``get`` drops duplicate grid points (e.g. a box overlapping itself across the longitude seam), so a filled
+        band can hold fewer points.
         """
         from .tree_pruning import latitude_point_counts
 
@@ -285,8 +289,10 @@ class TensorIndexTree(object):
             several pruned trees of the same parent can be filled one after another.
 
         Concatenating the results of the bands ``[0, k1), [k1, k2), ...`` of a field reproduces the values and point
-        order of a ``get`` on the unpruned tree. Do not use latitude bands when the datacube does nearest-point
-        search (``FDBDatacube.nearest_search``): that search only considers the points of the tree being fetched.
+        order of a ``get`` on the unpruned tree. Pruning a tree prepared with ``FDBDatacube.prepare`` keeps its
+        final point order, so a band's coordinates can be read before (and without) calling ``get``. Do not use
+        latitude bands when the datacube does nearest-point search (``FDBDatacube.nearest_search``): that search
+        only considers the points of the tree being fetched.
         """
         from .tree_pruning import prune
 

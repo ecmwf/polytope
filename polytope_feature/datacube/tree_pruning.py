@@ -3,7 +3,9 @@
 A caller slices a request once, then repeatedly prunes the tree to one value on each compressed non-spatial axis
 (date/time/step/number/param/levelist...) and a contiguous band of latitude nodes, and calls ``datacube.get`` on
 each pruned tree.  The pruned trees share no mutable state with the parent, so ``get`` (which reorders and
-de-duplicates leaf values and fills ``result``) never touches the parent tree.
+de-duplicates leaf values and fills ``result``) never touches the parent tree.  Calling ``FDBDatacube.prepare`` on
+the parent first puts its points into their final (``get``) order, so every pruned band's coordinates are known
+before any data is fetched.
 """
 
 import math
