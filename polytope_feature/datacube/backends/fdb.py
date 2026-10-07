@@ -176,7 +176,7 @@ class FDBDatacube(Datacube):
                     self.grid_md5_hash,
                 )
                 complete_list_complete_uncompressed_requests.append(complete_uncompressed_request)
-                complete_fdb_decoding_info.append(fdb_requests_decoding_info[j])
+                complete_fdb_decoding_info.append(fdb_requests_decoding_info[j] + (compressed_request[1],))
 
         if logging.root.level <= logging.DEBUG:
             printed_list_to_gj = complete_list_complete_uncompressed_requests[::1000]
@@ -559,7 +559,9 @@ class FDBDatacube(Datacube):
         # numpy array (see tree_values.finalise_result).
         chunks_by_node = {}
         for k, result in enumerate(output_iterator):
-            original_indices, fdb_node_ranges = fdb_requests_decoding_info[k]
+            decoding_info = fdb_requests_decoding_info[k]
+            original_indices, fdb_node_ranges = decoding_info[0], decoding_info[1]
+            sorted_ranges = decoding_info[2] if len(decoding_info) > 2 else None
             sorted_fdb_range_nodes = [fdb_node_ranges[i] for i in original_indices]
             for i in range(len(sorted_fdb_range_nodes)):
                 n = sorted_fdb_range_nodes[i][0]
@@ -568,8 +570,12 @@ class FDBDatacube(Datacube):
                 if entry is None:
                     entry = chunks_by_node[id(owner)] = (owner, [])
                 if len(result.values) == 0:
-                    # If we are here, no data was found for this path in the fdb
-                    entry[1].append([None] * len(n.values))
+                    # If we are here, no data was found for this path in the fdb: one None per point of this range
+                    if sorted_ranges is not None:
+                        n_points = sorted_ranges[i][1] - sorted_ranges[i][0]
+                    else:
+                        n_points = len(n.values)
+                    entry[1].append([None] * n_points)
                 else:
                     entry[1].append(result.values[i])
         for owner, chunks in chunks_by_node.values():
