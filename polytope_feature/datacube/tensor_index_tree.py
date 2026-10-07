@@ -262,7 +262,9 @@ class TensorIndexTree(object):
 
         Only branches matching ``select`` are counted (see :meth:`prune`), so
         ``tree.prune(select, latitude_range=(i, j))`` holds exactly ``sum(counts[i:j])`` points. A merged
-        (lat, lon) leaf counts as a latitude node holding one point. Use this to plan latitude bands.
+        (lat, lon) leaf counts as a latitude node holding one point. Use this to plan latitude bands. Counts are
+        taken before ``get`` drops duplicate grid points (e.g. a box overlapping itself across the longitude seam),
+        so a filled band can hold fewer points; read coordinates from the filled tree.
         """
         from .tree_pruning import latitude_point_counts
 
