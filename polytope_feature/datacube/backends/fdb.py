@@ -193,6 +193,56 @@ class FDBDatacube(Datacube):
         self.assign_fdb_output_to_nodes(iterator, complete_fdb_decoding_info)
         return requests
 
+    def get_iter(self, requests: TensorIndexTree, context=None, select=None, latitude_range=None):
+        """Fetch ``requests`` field by field, yielding ``(field_path, leaf_values)`` instead of filling the tree.
+
+        Builds exactly the same gribjump call as :meth:`get` (same pruning, same requests, same order) but hands
+        each field's values to the caller as they arrive, so that only one field need be alive at a time.  Each
+        item is:
+
+        * ``field_path``: the MARS keys of one field, as given to gribjump -- one scalar value per key, the keys
+          in the order the tree descends (outermost axis first);
+        * ``leaf_values``: ``[(leaf, values), ...]``, one entry per longitude leaf of the field's sub-tree in tree
+          order, ``values`` a fresh float64 array of ``len(leaf.values)`` points (NaN where a point is
+          bitmap-missing).  Concatenating them in order gives the field's points in the order ``get`` writes them
+          into the leaves.  It is ``None`` when gribjump has no message for the field (what ``get`` records as
+          ``None`` values), so that a caller can detect a missing field without reading any value.
+
+        Items come in gribjump's request order: the spatial sub-trees in tree order and, within a sub-tree, its
+        fields as the cartesian product of the compressed axes' values in tree order -- outermost axis first,
+        innermost varying fastest (``itertools.product`` order, which is also the order ``get`` lays a leaf's
+        fields out in its ``result``).  A field path appears once per sub-tree that holds points of it.
+
+        Unlike ``get``, nothing is written to any ``result``: the tree is left as :meth:`prepare` leaves it (leaf
+        values reordered by grid index and de-duplicated, every ``result`` untouched) and the caller owns the
+        arrays it is given.  Nothing is requested until the first item is consumed.
+        """
+        if context is None:
+            context = {}
+        requests = self._prune_for_get(requests, select, latitude_range)
+        if len(requests.children) == 0:
+            return
+        uncompressed_requests, decoding_info = self._gribjump_requests(requests)
+        iterator = self._gribjump_extract(uncompressed_requests, context)
+        open_requests = None
+        for k, result in enumerate(iterator):
+            field_requests, field_index = decoding_info[k]
+            if field_requests is not open_requests:
+                if open_requests is not None:
+                    open_requests.release()
+                open_requests = field_requests
+            flat = field_values_flat(result)
+            del result  # drop gribjump's result as soon as its values are readable
+            plan = field_requests.plan()
+            if flat is None:
+                yield uncompressed_requests[k][0], None
+            else:
+                values = plan.field_arrays(flat)
+                del flat
+                yield uncompressed_requests[k][0], values
+        if open_requests is not None:
+            open_requests.release()
+
     def _gribjump_extract(self, uncompressed_requests, context):
         if logging.root.level <= logging.DEBUG:
             printed_list_to_gj = uncompressed_requests[::1000]

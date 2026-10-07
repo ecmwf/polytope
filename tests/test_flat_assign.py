@@ -165,3 +165,107 @@ def test_short_field_result_is_rejected(monkeypatch):
     monkeypatch.setattr(fdb_module, "field_values_flat", truncated)
     with pytest.raises(ValueError, match="values for a field"):
         datacube.get(tree)
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# (b) get_iter
+
+
+def consume_get_iter(datacube, tree, **kwargs):
+    """``{id(leaf): (leaf, [values of each field present])}`` and the paths yielded as missing."""
+    blocks = {}
+    missing_paths = []
+    for path, leaf_values in datacube.get_iter(tree, **kwargs):
+        assert isinstance(path, dict) and all(isinstance(v, str) for v in path.values())
+        if leaf_values is None:
+            missing_paths.append(path)
+            continue
+        for leaf, values in leaf_values:
+            assert values.dtype == np.float64 and len(values) == len(leaf.values)
+            blocks.setdefault(id(leaf), (leaf, []))[1].append(values)
+    return blocks, missing_paths
+
+
+def present_blocks(leaf, n_points):
+    """The field blocks of a filled leaf's result that gribjump had data for, as float64 arrays."""
+    values = leaf.result_array()
+    out = []
+    for start in range(0, len(values), n_points):
+        block = leaf.result[start : start + n_points]  # noqa: E203
+        if not all(v is None for v in block):
+            out.append(values[start : start + n_points])  # noqa: E203
+    return out
+
+
+def assert_get_iter_matches_get(case, missing=None, nan_indices=None, **kwargs):
+    datacube, tree, _, _ = make_tree(case, missing=missing, nan_indices=nan_indices)
+    filled = datacube.get(tree.prune(), **kwargs)
+    datacube2, tree2, _, gj = make_tree(case, missing=missing, nan_indices=nan_indices)
+    blocks, missing_paths = consume_get_iter(datacube2, tree2, **kwargs)
+
+    expected_leaves = leaves_of(filled)
+    assert len(blocks) == len(expected_leaves)
+    for (_, arrays), leaf in zip(blocks.values(), expected_leaves):
+        n_points = len(leaf.values)
+        expected = present_blocks(leaf, n_points)
+        assert len(arrays) == len(expected)
+        for got, want in zip(arrays, expected):
+            np.testing.assert_array_equal(got, want)
+    # one item per gribjump request, missing where the fake has no field for the path
+    requested = gj.extract_calls[-1]
+    assert len(missing_paths) == sum(1 for request in requested if gj._is_missing(request[0]))
+    assert [dict(path) for path in missing_paths] == [r[0] for r in requested if gj._is_missing(r[0])]
+    return filled
+
+
+@pytest.mark.parametrize("case", list(CASES))
+def test_get_iter_gives_the_values_of_get(case):
+    assert_get_iter_matches_get(case)
+    assert_get_iter_matches_get(case, nan_indices=set(range(0, 20_000, 7)))
+
+
+@pytest.mark.parametrize("case", list(CASES))
+def test_get_iter_reports_missing_fields_as_none(case):
+    datacube, tree, _, _ = make_tree(case, missing=[{"param": "165"}])
+    paths = [path for path, values in datacube.get_iter(tree) if values is None]
+    assert paths and all(path["param"] == "165" for path in paths)
+    assert_get_iter_matches_get(case, missing=[{"param": "165", "step": "6"}])
+
+
+def test_get_iter_with_select_and_latitude_range():
+    select = {"param": "167", "step": 6, "number": 2}
+    assert_get_iter_matches_get("regular_overlap", select=select, latitude_range=(1, 3))
+
+
+def test_get_iter_fields_come_in_the_product_order_of_the_compressed_axes():
+    datacube, tree, _, _ = make_tree("regular_seam")
+    paths = [path for path, _ in datacube.get_iter(tree)]
+    keys = [key for key in paths[0] if len({path[key] for path in paths}) > 1]
+    assert keys == ["param", "step", "number"]  # tree order, outermost first
+    assert [tuple(path[key] for key in keys) for path in paths] == list(
+        itertools.product(["165", "167"], ["0", "6"], ["1", "2"])
+    )
+
+
+def test_get_iter_leaves_the_tree_prepared_and_unfilled():
+    datacube, tree, _, _ = make_tree("healpix_nested")
+    prepared = datacube.prepare(tree.prune())
+    fetched = tree.prune()
+    consumed = list(datacube.get_iter(fetched))
+    assert len(consumed) == 2 * 2  # param x realization, neither compressed: one request each
+    assert all(len(leaf.result) == 0 for leaf in leaves_of(fetched))
+    assert snapshot(fetched) == snapshot(prepared)
+
+
+def test_get_iter_of_an_empty_tree_yields_nothing():
+    datacube, tree, _, _ = make_tree("regular_seam")
+    empty = tree.prune(latitude_range=(100, 200))
+    assert list(datacube.get_iter(empty)) == []
+
+
+def test_get_iter_requests_nothing_before_the_first_item():
+    datacube, tree, _, gj = make_tree("regular_seam")
+    iterator = datacube.get_iter(tree)
+    assert gj.extract_calls == []
+    next(iterator)
+    assert len(gj.extract_calls) == 1
