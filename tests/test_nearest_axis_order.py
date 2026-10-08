@@ -1,5 +1,5 @@
 """Nearest-point requests whose axes are given as (longitude, latitude) find the same points on every branch and on
-every get/prepare (the stored request points used to be swapped in place on each nearest-point search)."""
+every get/prepare: the search swaps a copy of the query points, leaving the registered points untouched."""
 
 import copy
 

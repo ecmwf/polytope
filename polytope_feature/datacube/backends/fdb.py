@@ -546,7 +546,7 @@ class FDBDatacube(Datacube):
             nearest_pts_k = self.nearest_search.get((first_ax_name, second_ax_name), None)
             if nearest_pts_k is None:
                 nearest_pts_k = self.nearest_search.get((second_ax_name, first_ax_name), None)
-                # swap a copy: the stored points must stay as requested for the next get/prepare
+                # swap a copy: the registered points must stay as the caller gave them for the next get/prepare
                 nearest_pts_k = ([[pt[1], pt[0]] for pt in nearest_pts_k[0]], nearest_pts_k[1])
 
             k = nearest_pts_k[1]

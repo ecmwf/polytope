@@ -1,10 +1,10 @@
 """One longitude leaf per latitude node for unions of non-orthogonal shapes (polygons, paths).
 
-A polygon is sliced as a union of convex pieces (triangles), each into its own tree, and the trees are merged.  The
-slicer used to leave the leaf (longitude) axis uncompressed for such unions so that merging de-duplicated points
-shared by neighbouring pieces, at the cost of one tree node per point (~1.4 KB/point).  With :class:`RowMerger`
-the leaf axis stays compressed: each piece gives one float64 leaf per latitude node, and merging concatenates the
-leaves under the same latitude node into one sorted, de-duplicated array.
+A polygon is sliced as a union of convex pieces (triangles), each into its own tree, and the trees are merged.
+Without :class:`RowMerger` the leaf (longitude) axis is left uncompressed for such unions, so that merging
+de-duplicates the points shared by neighbouring pieces, at the cost of one tree node per point (~1.4 KB/point).
+With :class:`RowMerger` the leaf axis stays compressed: each piece gives one float64 leaf per latitude node, and
+merging concatenates the leaves under the same latitude node into one sorted, de-duplicated array.
 
 The merged leaf holds exactly the points, in the same (ascending) order, as the per-point leaves did.  Its
 ``_keep_value_order`` flag tells ``FDBDatacube.get``/``prepare`` to keep that order instead of reordering the

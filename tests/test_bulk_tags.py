@@ -31,7 +31,7 @@ LAT, LON = float_axis("latitude"), float_axis("longitude")
 
 
 def point_tags(node):
-    """Per-point tags of a bulk node, as the list of sets the node used to hold."""
+    """Per-point tags of a bulk node, as one set per point."""
     return [set(node.tags_of_point(i)) for i in range(node.point_count)]
 
 

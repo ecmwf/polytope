@@ -33,7 +33,7 @@ Where the change comes from:
 1. Longitude leaf values are a float64 array (8 B/pt) instead of a tuple of Python floats (8 B pointer + 24 B float).
 2. A leaf's values are collected and sorted once. Before, each `add_value` copied and re-sorted the whole tuple,
    which was quadratic per latitude line and accounted for most of the slice time.
-3. The slicer no longer caches the per-line index lookups and per-value remaps on the leaf axis. Those caches held
+3. The slicer does not cache the per-line index lookups and per-value remaps on the leaf axis. Those caches held
    every point of the request as Python objects.
 
 `tests/test_pruned_get.py::test_tree_memory_per_point_for_1m_point_slice` asserts the `getsizeof` estimate stays
@@ -52,7 +52,7 @@ longitude axis is not compressed for unions, so every point is a tree node. "row
 `_merge_union_rows = True`: one float64 leaf per latitude node. Both trees hold the same points in the same order.
 
 - Europe: polytope-mars `tools/measure_memory.py` `EUROPE_POLYGON` (7 vertices, 35-71N, 15W-40E) on HEALPix
-  nested 1024, cyclic longitude range [0, 360]. Same point and latitude-node count as Phase 0 (321,936 / 753).
+  nested 1024, cyclic longitude range [0, 360]. 321,936 points in 753 latitude nodes.
 - Danube: a 15-vertex Danube-basin outline inside the EFAS Danube bounding box `[[50.25, 8.15], [42.08, 29.73]]`
   (`DANUBE_POLYGON` in `performance/tree_memory.py`) on the EFAS `local_regular` 2969x4529 grid; 400,655 of the
   box's 634,550 points.
@@ -68,7 +68,7 @@ Columns as in the table above; `prepare` runs on a pruned copy of the tree, `get
 one field. Max RSS includes ~125 MB of interpreter and imports.
 
 - The per-point tree costs ~1.3 KB/point (a `TensorIndexTree`, its `__dict__`, a `SortedList` and a 1-element
-  array per point), matching Phase 0's 1,385 B/pt. A global H1024 polygon (12.6M points) would need ~17 GB; with
+  array per point). A global H1024 polygon (12.6M points) would need ~17 GB; with
   rows it is the ~9 B/pt of the global box above.
 - `get`/`prepare` on the per-point tree are slow because `get_2nd_last_values` builds a list of
   `len(row)` x `len(row)` placeholders per latitude node (quadratic in the leaves per row) and handles every point
@@ -80,9 +80,9 @@ one field. Max RSS includes ~125 MB of interpreter and imports.
 
 `prepare`/`get` on a single field, fake gribjump, regular lat/lon global boxes and the EFAS `local_regular` Danube box
 (`performance/tree_memory.py --get regular90_global_box regular180_global_box regular360_global_box efas_danube_box regular500_global_box`).
-"Before" is Phase 1b's measurement on this branch before commit `0b96fe7c` (the mapper rebuilt the full longitude list for
-every point, so cost grew quadratically); "after" is the vectorised O(log n) lookup. The baseline run for the two largest
-cases was stopped after 15 minutes without completing.
+"Before" is this branch at the commit preceding `0b96fe7c`, where the mapper rebuilt the full longitude list for
+every point and the cost grew quadratically; "after" is the vectorised O(log n) lookup. The two largest cases had
+not completed after 15 minutes of the baseline run and are not quoted.
 
 | scenario | points | before `prepare` / `get` | after `prepare` / `get` | slice | tree (B/pt) | max RSS |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -130,7 +130,7 @@ Where the rest of the peak is, and what polytope-mars should size with:
   points a leaf does not cover in one ascending run, 4 B/value for the plan's positions.  Before, each index
   range cost a numpy view plus a list slot (~165 B measured), which on HEALPix is ~100 B per *value* and on a
   row-ordered grid ~0.1 B.
-- The **request side** is unchanged and is now what a small call peaks on: `get_last_layer_before_leaf` collects
+- The **request side** is unchanged and is what a small call peaks on: `get_last_layer_before_leaf` collects
   every point's grid index as a Python `int` in a list and `sort_fdb_request_ranges` sorts `enumerate(...)` of
   those lists.  Measured (`request_bytes_per_value x fields`): **~210 B per point on HEALPix nested, ~88 B per
   point on EFAS**, independent of the number of fields.  See the follow-up in `CHANGES.md`.
@@ -194,16 +194,16 @@ What it says:
    1,116 on the Europe polygon (180x), 7,864,320 -> **1** on the whole world.  A box that covers a whole
    row-ordered grid is one range (O1280, EFAS) and never more than one per discontinuity.  The ranges are exact:
    they are the gaps in the field's sorted indexes, so nothing is over-fetched.
-2. **`prepare` is 2-20x faster** and no longer grows with the number of rows: 0.39 s for the HEALPix Europe
+2. **`prepare` is 2-20x faster** and does not grow with the number of rows: 0.39 s for the HEALPix Europe
    polygon (5.2 s before the HEALPix mapper was vectorised, 0.82 s after), 0.82 s for a 13.5M-point EFAS field
    against 17.5 s, 7.1 s for a 12.6M-point HEALPix field against 37.2 s.
 3. **The peak is flat across grids and shapes**: 66-75 B/point with the fold, against 173-288 B/point without,
-   and it no longer depends on how the grid numbers its points.  It is made of the node's own arrays
+   and it does not depend on how the grid numbers its points.  It is made of the node's own arrays
    (coordinates 16 + indexes 8 B/pt), the field's values (8 B/pt), the gribjump buffer the extract call
    allocates for the whole field before handing out the first result (8 B/pt), and -- only on grids whose points
    a request does not cover in ascending index order, i.e. HEALPix nested -- the sort the ranges come from
    (int64 permutation plus sorted copy, 16 B/pt transient, 4 B/pt kept as int32).  The remainder is what the
    allocator keeps after the transients are freed.
-4. The 60 B/point target of `PHASE3-BRIEF.md` is met on the steady state (24-56 B/point on every shape) but not
-   on the peak, which lands at 66-75 B/point.  32 B/point of that is the node and the values, 8 B/point is
-   gribjump's own buffer, and the rest is the sort and allocator retention; see the breakdown above.
+4. The steady state is 24-56 B/point on every shape; the peak lands at 66-75 B/point.  32 B/point of that is
+   the node and the values, 8 B/point is gribjump's own buffer, and the rest is the sort and allocator
+   retention; see the breakdown above.

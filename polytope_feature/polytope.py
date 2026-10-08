@@ -182,8 +182,8 @@ class Polytope:
     def _compress_union_rows(self, datacube, polytopes):
         """Apply ``remove_compressed_axis_in_union`` unless the union's rows can be merged instead.
 
-        A union of non-orthogonal shapes (the convex pieces of a polygon, the segments of a path) used to leave the
-        leaf axis uncompressed, i.e. one tree node per point.  When the leaf axis holds array leaves it stays
+        A union of non-orthogonal shapes (the convex pieces of a polygon, the segments of a path) otherwise leaves
+        the leaf axis uncompressed, i.e. one tree node per point.  When the leaf axis holds array leaves it stays
         compressed and the pieces' leaves are merged row by row (see ``tree_rows.RowMerger``), which gives the
         merged leaf per-point tags where its pieces are tagged differently.  Returns whether rows must be merged.
         """

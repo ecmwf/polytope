@@ -1,7 +1,7 @@
 # Changes on `feat/numpy-leaf-values-pruned-get`
 
-Notes for the PR description.  `feat/fix_tags_and_nearest_point` (`918580e3`, four commits) is merged into this
-branch; the merge and what it changes are described under "Merged: bulk spatial nodes and per-point tags" below.
+`feat/fix_tags_and_nearest_point` (`918580e3`, four commits) is merged into this branch; the merge and what it
+changes are described under "Merged: bulk spatial nodes and per-point tags" below.
 
 ## Behaviour changes
 
@@ -12,33 +12,35 @@ branch; the merge and what it changes are described under "Merged: bulk spatial 
   the values in `tuple(...)` (three tests in this repo were updated). Non-leaf nodes, merged (lat, lon) nodes from
   the quadtree slicer and leaves on non-float axes keep tuples.
 - **Leaf `result` is an `np.ndarray` after `FDBDatacube.get`.** float64 when every field was found; object dtype
-  with `None` for missing fields otherwise (the values and `None`s are the same as in the old list).
+  with `None` for missing fields otherwise (the values and `None`s are those of the list it replaces).
   `leaf.result_array()` returns float64 with NaN for missing values. The xarray and mock backends are unchanged.
 - **`FDBDatacube.get` returns the tree it filled** (it returned `None` before).
 - **Missing field on a leaf spanning several index ranges.** When gribjump returned no data for a field and a
   leaf's grid indices were split into several ranges (e.g. a box across the longitude seam), every range appended
   `len(leaf.values)` `None`s, making the leaf's `result` too long and shifting the following fields. Each range now
-  adds one `None` per point it covers. This can change CovJSON output for such requests (previously misaligned).
-- The hull slicer no longer caches per-value remaps and per-line index lookups on the leaf (longitude) axis; this
+  adds one `None` per point it covers. This changes CovJSON output for such requests, where the values after a
+  missing field were shifted.
+- The hull slicer does not cache per-value remaps or per-line index lookups on the leaf (longitude) axis, which
   removes most of the slice-time memory (see `MEASUREMENTS.md`). Results are identical.
 - **Regular and local_regular grid index lookup is O(log n) per point.** `RegularGridMapper.unmap` rebuilt and
   scanned the whole longitude list twice per point (`get`/`prepare` on a global 0.25° box took 217 s); it now uses
   `np.searchsorted` on axis arrays built once per mapper, and `LocalRegularGridMapper.unmap`'s nearest-neighbour
-  step is vectorised. Indices are identical (checked against the old code on random points of several grids),
+  step is vectorised. Indices are identical (checked against the scanning implementation on random points of
+  several grids),
   including the `IndexError` for values more than 1e-8 off the grid. See `MEASUREMENTS.md`.
-- **Nearest-point search no longer mutates the request points.** For a `Point(["longitude", "latitude"], ...,
+- **Nearest-point search leaves the registered request points unchanged.** For a `Point(["longitude", "latitude"], ...,
   method="nearest")` the stored points were swapped in place on every search, so the next branch of the same `get`
   (e.g. a second realization or param on a datacube that does not compress them) or the next `get`/`prepare`
   searched near the flipped coordinates. A copy is swapped now. Requests with (latitude, longitude) axes, as
   polytope-mars builds by default, are unaffected; (longitude, latitude) position requests over several
-  uncompressed branches return different (now correct) points.
+  uncompressed branches return the points nearest to each query, which differs from what they returned before.
 - **One gribjump result is read once, as one flat buffer.** `assign_fdb_output_to_nodes` took `result.values[i]`
   per index range -- a numpy object plus a list slot each -- and kept the chunks of every leaf of the call until
   the last field had arrived. It now takes `result.values_flat` once per field and scatters it into the leaves by
   a plan built per spatial sub-tree (`datacube/fdb_assign.py`), and a leaf's result for the whole call is
   pre-allocated (`n_points x n_fields`, float64, NaN-filled) and filled field by field. Values, point order,
   the object/`None` result of a missing field and the value order of merged polygon rows are unchanged
-  (`tests/test_flat_assign.py` compares every scenario against the old implementation, kept in
+  (`tests/test_flat_assign.py` compares every scenario against the per-range implementation, kept in
   `tests/legacy_assign.py`). On grids whose points a bounding box covers in long runs (regular, octahedral,
   local_regular) nothing changes measurably; on HEALPix nested grids, where a box breaks into roughly one range
   per 1.6 points, the peak of a 12-field `get` falls from ~370 to ~40 B/value. See `MEASUREMENTS.md`.
@@ -103,7 +105,7 @@ it on:
 - an unstructured (quadtree) tree gets one `BulkMergedTensorIndexNode` per spatial sub-tree at slice time
   instead of one `MergedTensorIndexNode` per point;
 - `latitude_point_counts()`, `prune(latitude_range=)` and `get(latitude_range=)` raise: a field that fits the
-  memory budget is fetched whole. They are unchanged with the option off, and go away in Phase 3c.
+  memory budget is fetched whole. They are unchanged with the option off.
 
 With the option off the trees are exactly what they were, which is why the polytope-mars golden corpus is
 byte-identical and its 309 tests pass unchanged. Measurements: `MEASUREMENTS.md`.
@@ -114,16 +116,15 @@ byte-identical and its 309 tests pass unchanged. Measurements: `MEASUREMENTS.md`
   up only on the point(s) actually nearest to it (`_retag_nearest_lons`), not on every candidate the slicer
   touched, and a point nearest to several queries carries all of their tags.
 - `Point(axes, values, tag=[...])` tags each value separately, and a multi-value `Point` is resolved as a
-  `Union` of single-value `Point`s -- it selects its points, not the cross product of their coordinates. This
-  changes what a multi-value nearest `Point` returns: previously the candidates of all values were crossed.
+  `Union` of single-value `Point`s -- it selects its points, not the cross product of their coordinates, which
+  changes what a multi-value nearest `Point` returns.
 - Per-point tags are stored as numpy: `tag_ids` (int32 per point, `None` when every point carries the same
   tags) into `tag_sets` (the distinct tag sets). `node.tags_of_point(i)` is the per-point accessor on array
   leaves and on both bulk node kinds; `node.tags` stays the union. There is no Python object per point.
 
 ### Nearest-point search
 
-Their fix is the one kept: the swapped (longitude, latitude) query points are built as a copy, so the registered
-points are never mutated; `Polytope.retrieve` resets `datacube.nearest_search` per request and registers each
+The swapped (longitude, latitude) query points are built as a copy, so the registered points are never mutated; `Polytope.retrieve` resets `datacube.nearest_search` per request and registers each
 query point with the tag of the polytope it came from; the quadtree slicer resolves each nearest polytope with
 its own points and `k` instead of taking them from the datacube, and its Python k-nearest fallback is
 vectorised.
@@ -162,7 +163,7 @@ to the engine together (`Polytope._group_combinations`). `Engine.reset()` is cal
   `result`: the tree is left as `prepare` leaves it, and the caller owns the arrays. Nothing is requested until
   the first item is consumed.
 
-### What Phase 3b consumes from a bulk spatial node
+### What a consumer reads from a bulk spatial node
 
 With `bulk_grid_leaves` on, the leaves of a prepared tree are `BulkGridTensorIndexNode` (structured grids) or
 `BulkMergedTensorIndexNode` (point clouds), one per spatial sub-tree, and the whole spatial walk is:
@@ -205,10 +206,10 @@ With `bulk_grid_leaves` on, the leaves of a prepared tree are `BulkGridTensorInd
   array it passes straight to C, not a different call on our side. What *would* need validating if a mask is
   ever used: the mask must span the whole field (`numberOfValues` of the grid, not of the request), so the grid
   size would have to come from the mapper and agree with the `gridHash` the server checks.
-- **The fold's peak is 66-75 B/point, not the 60 B/point of `PHASE3-BRIEF.md`.** 32 B/point of that is the
+- **The fold's peak is 66-75 B/point**, against a steady state of 24 B/point. 32 B/point of that is the
   node's own arrays plus the field's values, 8 B/point is the buffer `gribjump.extract` allocates for the whole
   field before handing out the first result, and on HEALPix nested the ranges need an int64 permutation plus a
   sorted copy of the indexes (16 B/point transient). Writing the ranges from a sort that never materialises the
   permutation, or reading the field in pieces, would close the gap.
 - **Latitude bands are still there with `bulk_grid_leaves` off.** `latitude_range` / `latitude_point_counts` and
-  the banded `prepare` are deleted in Phase 3c, once polytope-mars no longer calls them.
+  the banded `prepare` can be deleted once no caller fetches a field in latitude bands.
