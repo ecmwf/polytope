@@ -149,3 +149,61 @@ freed.  For 1 and 4 fields it is entirely absorbed and measures 0.1 MB.
 The flat path was also checked against the per-range one at this scale, not only in the unit tests: the same
 HEALPix 1024 Europe box with 4 compressed fields (753 leaves, 1,429,636 values) gives identical leaf values and
 `result_array()` under both implementations.
+
+# One bulk spatial node per field: whole-field ranges instead of per-row ranges
+
+One field, sliced as polytope-mars builds its features (`_merge_union_rows = True`), then `prepare` and `get`
+against polytope-mars' fake gribjump, with `bulk_grid_leaves` off and on.  Each row is a fresh subprocess; peak
+is `resource.getrusage(RUSAGE_SELF).ru_maxrss` of that process.  Reproduce with:
+
+    python performance/bulk_memory.py            # every shape, fold off and on
+    python performance/bulk_memory.py SHAPE ...  # see performance/bulk_memory.py SHAPES
+
+| shape | bulk | points | slice s | tree MB | tree B/pt | prepare s | get s | growth B/pt | peak growth B/pt | peak MB | ranges/field |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| EFAS Danube box | off | 634,550 | 3.3 | 6.6 | 8.5 | 0.29 | 0.29 | 81.8 | 172.7 | 270.9 | 490 |
+| | **on** | | 3.4 | 6.6 | 8.5 | **0.05** | 0.01 | **55.5** | **65.7** | **206.2** | 490 |
+| HEALPix-1024 Europe box | off | 479,865 | 1.2 | 6.8 | 9.0 | 1.08 | 1.10 | 123.2 | 288.4 | 299.4 | 300,315 |
+| | **on** | | 1.2 | 6.7 | 9.0 | **0.46** | 0.01 | **72.6** | **70.5** | **199.6** | **1,388** |
+| HEALPix-1024 Europe polygon | off | 321,936 | 2.1 | 13.1 | 9.4 | 0.82 | 0.90 | 187.9 | 257.4 | 252.7 | 201,454 |
+| | **on** | | 1.8 | 13.1 | 9.4 | **0.39** | 0.01 | **68.4** | **66.6** | **194.4** | **1,116** |
+| EFAS Europe polygon | off | 6,426,480 | 34.8 | 119.4 | 8.2 | 5.44 | 5.61 | 9.4 | 173.1 | 1,340.4 | 2,160 |
+| | **on** | | 34.8 | 120.5 | 8.2 | **0.37** | 0.12 | 23.9 | **65.7** | **683.4** | 2,160 |
+| HEALPix-1024 whole world box | off | 12,582,912 | 24.8 | 107.1 | 8.2 | 37.2 | 36.9 | 24.6 | 246.5 | 3,225.3 | 7,864,320 |
+| | **on** | | 25.5 | 106.9 | 8.2 | **7.1** | 0.40 | 35.0 | **74.9** | **1,166.4** | **1** |
+| EFAS whole domain box | off | 13,454,100 | 67.7 | 111.6 | 8.1 | 17.5 | 17.4 | 17.6 | 177.5 | 2,548.6 | 2,970 |
+| | **on** | | 67.5 | 111.7 | 8.1 | **0.82** | 0.29 | 33.5 | **65.9** | **1,116.5** | **2** |
+| O1280 whole world box | off | 6,599,680 | 12.9 | 57.2 | 8.2 | 7.7 | 7.2 | 31.3 | 204.1 | 1,503.1 | 2,560 |
+| | **on** | | 13.2 | 57.3 | 8.2 | **2.5** | 0.15 | 37.8 | **74.6** | **687.6** | **1** |
+
+How to read the columns:
+
+- **tree MB / tree B/pt**: RSS growth during the slice, and the `getsizeof` estimate of the tree.  The fold runs in
+  `prepare`, so the sliced tree is the same with it off and on.
+- **prepare s**: `prepare` on the sliced tree, which is where the ranges are planned (`get s` is then only the
+  gribjump call and the assignment; with the fold off `get` re-plans the ranges, hence the two similar numbers).
+- **growth B/pt**: RSS after `prepare` + `get` minus RSS after the slice, per point.
+- **peak growth B/pt**: the process peak minus RSS after the slice, per point -- what a field costs on top of
+  its tree.
+- **ranges/field**: index ranges one field's gribjump request asks for (`prototype_metrics["ranges_per_field"]`,
+  summed over the spatial sub-trees of the call).
+
+What it says:
+
+1. **Whole-field ranges end the HEALPix range explosion**: 300,315 -> 1,388 on the Europe box (216x), 201,454 ->
+   1,116 on the Europe polygon (180x), 7,864,320 -> **1** on the whole world.  A box that covers a whole
+   row-ordered grid is one range (O1280, EFAS) and never more than one per discontinuity.  The ranges are exact:
+   they are the gaps in the field's sorted indexes, so nothing is over-fetched.
+2. **`prepare` is 2-20x faster** and no longer grows with the number of rows: 0.39 s for the HEALPix Europe
+   polygon (5.2 s before the HEALPix mapper was vectorised, 0.82 s after), 0.82 s for a 13.5M-point EFAS field
+   against 17.5 s, 7.1 s for a 12.6M-point HEALPix field against 37.2 s.
+3. **The peak is flat across grids and shapes**: 66-75 B/point with the fold, against 173-288 B/point without,
+   and it no longer depends on how the grid numbers its points.  It is made of the node's own arrays
+   (coordinates 16 + indexes 8 B/pt), the field's values (8 B/pt), the gribjump buffer the extract call
+   allocates for the whole field before handing out the first result (8 B/pt), and -- only on grids whose points
+   a request does not cover in ascending index order, i.e. HEALPix nested -- the sort the ranges come from
+   (int64 permutation plus sorted copy, 16 B/pt transient, 4 B/pt kept as int32).  The remainder is what the
+   allocator keeps after the transients are freed.
+4. The 60 B/point target of `PHASE3-BRIEF.md` is met on the steady state (24-56 B/point on every shape) but not
+   on the peak, which lands at 66-75 B/point.  32 B/point of that is the node and the values, 8 B/point is
+   gribjump's own buffer, and the rest is the sort and allocator retention; see the breakdown above.
