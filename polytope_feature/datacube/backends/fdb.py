@@ -240,6 +240,7 @@ class FDBDatacube(Datacube):
                 values = plan.field_arrays(flat)
                 del flat
                 yield uncompressed_requests[k][0], values
+                del values  # let the caller's field go before the next one is read
         if open_requests is not None:
             open_requests.release()
 

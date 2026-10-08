@@ -115,7 +115,7 @@ into pre-allocated leaf results); "get_iter" consumes the same call field by fie
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | HEALPix 1024, Europe box | 1 | 357,409 | 236 B | 214 B | 239 B | 80.6 MB | 72.9 MB | 81.4 MB |
 | | 4 | 1,429,636 | 120 B | 54 B | 53 B | 164.0 MB | 73.4 MB | 72.7 MB |
-| | 12 | 4,288,908 | 108 B | 30 B | 27 B | 440.5 MB | 123.8 MB | 109.5 MB |
+| | 12 | 4,288,908 | 108 B | 30 B | 26 B | 440.5 MB | 123.8 MB | 107.3 MB |
 | EFAS, Danube box | 1 | 634,550 | 143 B | 147 B | 145 B | 86.6 MB | 89.1 MB | 87.4 MB |
 | | 4 | 2,538,200 | 37 B | 36 B | 37 B | 88.3 MB | 87.5 MB | 88.3 MB |
 | | 12 | 7,614,600 | 17 B | 17 B | 12 B | 121.5 MB | 123.6 MB | 88.2 MB |
@@ -138,7 +138,7 @@ Where the rest of the peak is, and what polytope-mars should size with:
   holds for all six rows above, with room to spare on the row-ordered grid).  The 24 B/value term is the
   grid-independent constant; the per-point term is paid once per call however many fields it has, so it is
   ~20 B/value for a 12-field unit and 220 B/value for a single field.
-- `get_iter` does not keep the values: after a 12-field HEALPix call the process is at 181 MB rather than 259 MB,
+- `get_iter` does not keep the values: after a 12-field HEALPix call the process is at 187 MB rather than 259 MB,
   and its peak is the lowest of the three (one field's arrays at a time instead of all twelve).
 
 The gribjump buffer itself (`extract_mb`: the fake builds every field's values before handing out the first
