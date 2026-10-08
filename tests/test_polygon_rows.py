@@ -222,8 +222,9 @@ def test_polygon_rows_keep_the_polygon_tag():
     assert point_sequence(new) == point_sequence(old)
 
 
-def test_polygons_with_different_tags_keep_one_leaf_per_point():
-    second = [[p[0] + 30, p[1]] for p in NOTCHED]
+def test_polygons_with_different_tags_compress_with_per_point_tags():
+    """Two tagged polygons sharing rows merge into one leaf per row, each point keeping its own tag."""
+    second = [[p[0], p[1] + 25] for p in NOTCHED]
     shapes = [
         Union(
             ["latitude", "longitude"],
@@ -232,9 +233,16 @@ def test_polygons_with_different_tags_keep_one_leaf_per_point():
         )
     ]
     (_, old, _), (_, new, _) = both_trees("regular_notched", shapes=shapes)
-    assert snapshot(new) == snapshot(old)
-    assert all(len(leaf.values) == 1 for leaf in new.leaves)
-    assert {tag for leaf in new.leaves for tag in leaf.tags} == {"a", "b"}
+    assert point_sequence(new) == point_sequence(old)
+    assert any(len(leaf.values) > 1 for leaf in new.leaves)
+    # every point carries the tag of the polygon it came from, as it did on its own leaf
+    old_tags = {(lat, lon): leaf.tags for leaf in old.leaves for lat, lon in [(leaf.parent.values[0], leaf.values[0])]}
+    new_tags = {}
+    for leaf in new.leaves:
+        for i, lon in enumerate(leaf.values.tolist()):
+            new_tags[(leaf.parent.values[0], lon)] = set(leaf.tags_of_point(i))
+    assert new_tags == old_tags
+    assert {frozenset({"a"}), frozenset({"b"})} <= {frozenset(t) for t in new_tags.values()}
 
 
 def test_overlapping_polygons_give_each_point_once():

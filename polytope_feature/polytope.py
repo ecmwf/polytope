@@ -183,9 +183,9 @@ class Polytope:
         """Apply ``remove_compressed_axis_in_union`` unless the union's rows can be merged instead.
 
         A union of non-orthogonal shapes (the convex pieces of a polygon, the segments of a path) used to leave the
-        leaf axis uncompressed, i.e. one tree node per point.  When the leaf axis holds array leaves and every piece
-        has the same tag (so per-point tags carry no information), it stays compressed and the pieces' leaves are
-        merged row by row (see ``tree_rows.RowMerger``).  Returns whether rows must be merged.
+        leaf axis uncompressed, i.e. one tree node per point.  When the leaf axis holds array leaves it stays
+        compressed and the pieces' leaves are merged row by row (see ``tree_rows.RowMerger``), which gives the
+        merged leaf per-point tags where its pieces are tagged differently.  Returns whether rows must be merged.
         """
         before = list(self.compressed_axes)
         self.remove_compressed_axis_in_union(polytopes)
@@ -195,12 +195,6 @@ class Polytope:
         if self.engine_options.get(leaf) != "hullslicer":
             return False
         if not HullSlicer.is_array_leaf_axis(datacube.axes[leaf], self):
-            return False
-        pieces = []
-        for p in polytopes:
-            pieces.extend(p.polytope() if isinstance(p, Product) else [p])
-        tags = {p.tag for p in pieces if p.is_in_union and leaf in p.axes()}
-        if len(tags) > 1:
             return False
         self.compressed_axes = before
         return True

@@ -34,8 +34,23 @@ def _leaf_indexes(datacube, lon_child, leaf_path):
     return np.asarray(key_value_path["values"], dtype=np.int64)
 
 
+def _leaf_tags(lat_child, lon_child, order):
+    """``(tag_sets, tag_ids)`` of one longitude leaf's points, reordered like its values.
+
+    A leaf whose points carry different tags (the merged rows of a union of differently tagged shapes,
+    see ``tree_rows.RowMerger``) keeps them per point; otherwise all of its points share the tags of
+    the latitude and longitude nodes.
+    """
+    lat_tags = lat_child.tags
+    if lon_child.tag_ids is None:
+        return [frozenset(lat_tags | lon_child.tags)], None
+    tag_sets = [frozenset(lat_tags | tags) for tags in lon_child.tag_sets]
+    tag_ids = lon_child.tag_ids if order is None else lon_child.tag_ids[order]
+    return tag_sets, tag_ids
+
+
 def _row_leaves(datacube, lat_child, leaf_path):
-    """``(values, indexes, tags)`` per longitude leaf of one latitude node, in tree order."""
+    """``(values, indexes, tag_sets, tag_ids)`` per longitude leaf of one latitude node, in tree order."""
     key_value_path = {lat_child.axis.name: lat_child.values}
     key_value_path, leaf_path, datacube.unwanted_path = lat_child.axis.unmap_path_key(
         key_value_path, leaf_path, datacube.unwanted_path
@@ -45,13 +60,17 @@ def _row_leaves(datacube, lat_child, leaf_path):
     for lon_child in lat_child.children:
         indexes = _leaf_indexes(datacube, lon_child, leaf_path)
         values = np.asarray(lon_child.values, dtype=np.float64)
+        order = None
         if not lon_child._keep_value_order and indexes.size > 1:
             # a box leaf's points come back in grid-index order, as ``prepare`` leaves its values
             order = np.argsort(indexes, kind="stable")
-            if not np.array_equal(order, np.arange(indexes.size)):
+            if np.array_equal(order, np.arange(indexes.size)):
+                order = None
+            else:
                 indexes = indexes[order]
                 values = values[order]
-        leaves.append((values, indexes, frozenset(lat_child.tags | lon_child.tags)))
+        tag_sets, tag_ids = _leaf_tags(lat_child, lon_child, order)
+        leaves.append((values, indexes, tag_sets, tag_ids))
     return leaves
 
 
@@ -85,23 +104,29 @@ def fold_into_bulk_grid(datacube, requests, leaf_path):
     row_lengths = []
     values = []
     indexes = []
-    leaf_tag_ids = []
-    leaf_lengths = []
+    tag_id_blocks = []
     tag_sets = []
     ids_of = {}
+
+    def tag_id(tags):
+        found = ids_of.get(tags)
+        if found is None:
+            found = ids_of[tags] = len(tag_sets)
+            tag_sets.append(tags)
+        return found
+
     for lat_child in requests.children:
         row_length = 0
-        for leaf_values, leaf_indexes, leaf_tags in _row_leaves(datacube, lat_child, leaf_path):
+        for leaf_values, leaf_indexes, leaf_tag_sets, leaf_tag_ids in _row_leaves(datacube, lat_child, leaf_path):
             if leaf_values.size == 0:
                 continue
-            tag_id = ids_of.get(leaf_tags)
-            if tag_id is None:
-                tag_id = ids_of[leaf_tags] = len(tag_sets)
-                tag_sets.append(leaf_tags)
+            ids = np.asarray([tag_id(tags) for tags in leaf_tag_sets], dtype=np.int32)
             values.append(leaf_values)
             indexes.append(leaf_indexes)
-            leaf_tag_ids.append(tag_id)
-            leaf_lengths.append(leaf_values.size)
+            if leaf_tag_ids is None:
+                tag_id_blocks.append(np.broadcast_to(ids, (leaf_values.size,)))
+            else:
+                tag_id_blocks.append(ids[leaf_tag_ids])
             row_length += leaf_values.size
         if row_length != 0:
             lat_values.append(lat_child.values[0])
@@ -120,7 +145,8 @@ def fold_into_bulk_grid(datacube, requests, leaf_path):
     del values
     all_indexes = np.concatenate(indexes) if len(indexes) > 1 else indexes[0]
     del indexes
-    tag_ids = np.repeat(np.asarray(leaf_tag_ids, dtype=np.int32), np.asarray(leaf_lengths, dtype=np.int64))
+    tag_ids = np.concatenate(tag_id_blocks) if len(tag_id_blocks) > 1 else np.asarray(tag_id_blocks[0])
+    del tag_id_blocks
 
     keep = _unique_first_seen(all_indexes)
     if keep is not None:

@@ -15,7 +15,7 @@ from ..tensor_index_tree import (
     MergedTensorIndexNode,
 )
 from ..tree_fold import fold_into_bulk_grid
-from ..tree_values import take, values_hash_key
+from ..tree_values import is_array, take, values_hash_key
 from .datacube import Datacube, TensorIndexTree
 
 
@@ -650,16 +650,22 @@ class FDBDatacube(Datacube):
         the nearest search we drop those tags and give each resolved point the tags of the
         queries it is nearest to. A compressed longitude node carries one set of tags for all
         its values, so the longitude nodes of this latitude are rebuilt as one node per distinct
-        set of tags (which also merges overlapping siblings coming from unions).
+        set of tags (which also merges overlapping siblings coming from unions).  Array leaves
+        (and their per-point tags, see ``tree_rows.RowMerger``) are rebuilt as array leaves.
         """
         lat_child.tags -= nearest_tags
         lat = lat_child.values[0]
         values_by_tags = {}
         lon_axis = None
+        array_leaf = False
+        keep_value_order = False
         for lon_child in list(lat_child.children):
             lon_axis = lon_child.axis
-            base_tags = lon_child.tags - nearest_tags
-            for value in lon_child.values:
+            array_leaf = array_leaf or is_array(lon_child.values)
+            keep_value_order = keep_value_order or lon_child._keep_value_order
+            node_tags = None if lon_child.tag_ids is not None else lon_child.tags - nearest_tags
+            for i, value in enumerate(lon_child.values):
+                base_tags = node_tags if node_tags is not None else lon_child.tags_of_point(i) - nearest_tags
                 tags = frozenset(base_tags | point_tags.get((lat, value), set()))
                 values_by_tags.setdefault(tags, set()).add(value)
         if lon_axis is None:
@@ -667,19 +673,23 @@ class FDBDatacube(Datacube):
         groups = list(values_by_tags.items())
         # Keep the existing node when it already holds a single group of values
         if len(groups) == 1 and len(lat_child.children) == 1:
-            next(iter(lat_child.children)).tags = set(groups[0][0])
+            only_child = next(iter(lat_child.children))
+            only_child.tag_ids = None
+            only_child.tag_sets = None
+            only_child.tags = set(groups[0][0])
             return
         for lon_child in list(lat_child.children):
             lat_child.children.remove(lon_child)
             lon_child._parent = None
         seen = set()
         for tags, values in groups:
-            values = tuple(sorted(values - seen))
+            values = sorted(values - seen)
             seen.update(values)
             if len(values) == 0:
                 continue
-            node = TensorIndexTree(lon_axis, values)
+            node = TensorIndexTree(lon_axis, np.asarray(values, dtype=np.float64) if array_leaf else tuple(values))
             node.tags = set(tags)
+            node._keep_value_order = keep_value_order
             lat_child.add_child(node)
 
     def get_2nd_last_values(self, requests, leaf_path=None):

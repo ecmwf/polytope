@@ -349,6 +349,25 @@ class TensorIndexTree(object):
     # Set on the merged longitude leaves of polygons/paths (see tree_rows.py): FDBDatacube.get keeps their values in
     # ascending order instead of reordering them by grid index.
     _keep_value_order = False
+    # Per-point tags of an array leaf whose points do not all carry the same tags (the merged rows of a union of
+    # differently tagged shapes): an int32 id per value into ``tag_sets``.  ``tags`` holds their union, as for any
+    # other node.  Both are None on a node whose points share ``tags``.
+    tag_ids = None
+    tag_sets = None
+
+    def tags_of_point(self, i):
+        """The tags of value ``i`` of this node: its own when they differ per point, else the node's."""
+        if self.tag_ids is None:
+            return self.tags
+        return self.tag_sets[self.tag_ids[i]]
+
+    def set_point_tags(self, tag_sets, tag_ids):
+        """Give this node per-point tags; ``tags`` becomes their union."""
+        self.tag_sets = [frozenset(t) for t in tag_sets]
+        self.tag_ids = np.asarray(tag_ids, dtype=np.int32)
+        self.tags = set()
+        for t in self.tag_sets:
+            self.tags.update(t)
 
     def __init__(self, axis=root, values=tuple()):
         # NOTE: the values here is a tuple so we can hash it. Leaves on the last (longitude) axis built by the hull
