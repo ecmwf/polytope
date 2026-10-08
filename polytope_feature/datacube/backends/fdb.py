@@ -227,7 +227,9 @@ class FDBDatacube(Datacube):
           order, ``values`` a fresh float64 array of ``len(leaf.values)`` points (NaN where a point is
           bitmap-missing).  Concatenating them in order gives the field's points in the order ``get`` writes them
           into the leaves.  It is ``None`` when gribjump has no message for the field (what ``get`` records as
-          ``None`` values), so that a caller can detect a missing field without reading any value.
+          ``None`` values), so that a caller can detect a missing field without reading any value.  When the
+          spatial layers are folded into bulk nodes (``bulk_grid_leaves``) the list holds one
+          ``(bulk node, values)`` entry per spatial sub-tree, ``values`` in the node's point order.
 
         Items come in gribjump's request order: the spatial sub-trees in tree order and, within a sub-tree, its
         fields as the cartesian product of the compressed axes' values in tree order -- outermost axis first,
@@ -249,7 +251,11 @@ class FDBDatacube(Datacube):
         for k, result in enumerate(iterator):
             decoding = decoding_info[k]
             if isinstance(decoding, BulkFDBDecoding):
-                raise NotImplementedError("get_iter does not support bulk spatial nodes yet")
+                values = self.bulk_field_values(result, decoding)
+                del result
+                yield uncompressed_requests[k][0], None if values is None else [(decoding.node, values)]
+                del values
+                continue
             field_requests, field_index = decoding
             if field_requests is not open_requests:
                 if open_requests is not None:
@@ -294,6 +300,11 @@ class FDBDatacube(Datacube):
             return requests
         if latitude_range is not None and len(self.nearest_search) != 0:
             raise ValueError("latitude_range cannot be combined with nearest-point search")
+        if latitude_range is not None and self.bulk_grid_leaves:
+            raise ValueError(
+                "latitude_range cannot be combined with bulk_grid_leaves: a field that fits the memory budget "
+                "is fetched whole"
+            )
         pruned = requests.prune(select=select, latitude_range=latitude_range)
         assert pruned is not None
         return pruned
@@ -750,6 +761,9 @@ class FDBDatacube(Datacube):
         indexes = bulk_node.indexes
         sorted_output_positions = np.argsort(indexes, kind="stable")
         sorted_indexes = indexes[sorted_output_positions]
+        if np.array_equal(sorted_output_positions, np.arange(len(indexes))):
+            # the node's points are already in ascending index order: nothing to un-sort on assignment
+            sorted_output_positions = None
         if len(sorted_indexes) > 1 and np.any(np.diff(sorted_indexes) == 0):
             raise ValueError("Bulk spatial selection contains duplicate canonical indexes")
 
@@ -859,7 +873,7 @@ class FDBDatacube(Datacube):
         for k, result in enumerate(output_iterator):
             decoding = fdb_requests_decoding_info[k]
             if isinstance(decoding, BulkFDBDecoding):
-                returned_range_arrays += self.assign_bulk_result(result, decoding)
+                self.assign_bulk_result(result, decoding)
                 continue
             field_requests, field_index = decoding
             if field_requests is not open_requests:
@@ -878,25 +892,34 @@ class FDBDatacube(Datacube):
         logging.debug("Finished assigning GribJump output to tree nodes")
 
     @staticmethod
-    def assign_bulk_result(result, decoding):
-        """Append one field's values to a bulk node's ``result``, back in the node's point order."""
-        if len(result.values) == 0:
-            decoding.node.result.append(np.full(decoding.node.point_count, None, dtype=object))
-            return 0
-        returned_range_arrays = len(result.values)
-        if returned_range_arrays == 1:
-            sorted_values = np.asarray(result.values[0]).reshape(-1)
-        else:
-            sorted_values = np.concatenate(result.values)
-        if len(sorted_values) != decoding.node.point_count:
+    def bulk_field_values(result, decoding):
+        """One field's values in a bulk node's point order, or ``None`` when gribjump had no message for it.
+
+        The field is read once, as the contiguous ``values_flat`` buffer over all of its index ranges (in
+        ascending grid-index order), and scattered back into the node's point order with the positions
+        ``get_bulk_merged_values`` recorded when it sorted the node's indexes.
+        """
+        flat = field_values_flat(result)
+        if flat is None:
+            return None
+        node = decoding.node
+        if len(flat) != node.point_count:
             raise ValueError(
-                "GribJump result size does not match bulk spatial selection: "
-                f"{len(sorted_values)} != {decoding.node.point_count}"
+                "GribJump result size does not match bulk spatial selection: " f"{len(flat)} != {node.point_count}"
             )
-        values = np.empty_like(sorted_values)
-        values[decoding.sorted_output_positions] = sorted_values
+        if decoding.sorted_output_positions is None:
+            return np.array(flat, dtype=np.float64)
+        values = np.empty(node.point_count, dtype=np.float64)
+        values[decoding.sorted_output_positions] = flat
+        return values
+
+    @classmethod
+    def assign_bulk_result(cls, result, decoding):
+        """Append one field's values to a bulk node's ``result``, back in the node's point order."""
+        values = cls.bulk_field_values(result, decoding)
+        if values is None:
+            values = np.full(decoding.node.point_count, None, dtype=object)
         decoding.node.result.append(values)
-        return returned_range_arrays
 
     def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
         # print("WHAT DO WE HAVE HERE THROUGH")

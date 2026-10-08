@@ -12,7 +12,17 @@ import math
 
 import numpy as np
 
-from .tensor_index_tree import MergedTensorIndexNode, TensorIndexTree
+from .tensor_index_tree import (
+    BulkMergedTensorIndexNode,
+    MergedTensorIndexNode,
+    TensorIndexTree,
+)
+
+#: latitude bands count spatial nodes, which a bulk node does not expose: a field holding one is fetched whole.
+_NO_BANDS = (
+    "Latitude bands are not supported on bulk spatial nodes (bulk_grid_leaves): a field that fits the memory "
+    "budget is fetched whole"
+)
 
 
 def _value_matches(node_value, wanted, axis):
@@ -46,6 +56,10 @@ def _copy_node(node, values=None):
     new.tags = set(node.tags)
     if node._keep_value_order:
         new._keep_value_order = True
+    if node.tag_ids is not None and values is None:
+        # per-point tags of an array leaf: shared, not copied per point
+        new.tag_sets = node.tag_sets
+        new.tag_ids = node.tag_ids
     return new
 
 
@@ -58,6 +72,9 @@ def _copy_merged(node):
 
 
 def _copy_subtree(node):
+    if isinstance(node, BulkMergedTensorIndexNode):
+        # share the node's arrays: a bulk node holds the whole spatial selection
+        return node.copy_shared()
     if isinstance(node, MergedTensorIndexNode):
         return _copy_merged(node)
     new = _copy_node(node)
@@ -67,6 +84,8 @@ def _copy_subtree(node):
 
 
 def _subtree_points(node):
+    if isinstance(node, BulkMergedTensorIndexNode):
+        raise ValueError(_NO_BANDS)
     if isinstance(node, MergedTensorIndexNode):
         return 1
     if len(node.children) == 0:
@@ -155,6 +174,8 @@ def prune(tree, select=None, latitude_range=None, latitude_axis="latitude") -> T
     counter = [0]
 
     def on_spatial(node):
+        if latitude_range is not None and isinstance(node, BulkMergedTensorIndexNode):
+            raise ValueError(_NO_BANDS)
         k = counter[0]
         counter[0] += 1
         if lo <= k < hi:

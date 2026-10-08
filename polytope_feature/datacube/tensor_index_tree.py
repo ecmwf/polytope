@@ -1,4 +1,5 @@
 import logging
+from copy import copy
 from typing import OrderedDict
 
 import numpy as np
@@ -238,6 +239,20 @@ class BulkMergedTensorIndexNode(MergedTensorIndexNode):
     def tags_of_point(self, i):
         """The tags of point ``i`` of this node (a frozenset; empty when the point carries none)."""
         return self.tag_sets[self.tag_ids[i]]
+
+    def copy_shared(self):
+        """An unattached copy of this node holding no result and sharing all of its arrays.
+
+        Used by ``TensorIndexTree.prune`` to put the same points into another tree without copying
+        anything per point.
+        """
+        new = copy(self)
+        new.result = []
+        new._parent = None
+        new.children = SortedList()
+        new.ancestors = []
+        new.tags = set(self.tags)
+        return new
 
     @property
     def point_count(self):

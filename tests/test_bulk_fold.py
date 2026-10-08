@@ -213,3 +213,76 @@ def test_fold_leaves_no_python_object_per_point():
     points = sum(leaf.point_count for leaf in tree.leaves)
     assert points > 1000
     assert grown < points / 10, grown
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# (c) assignment, get_iter and prune on a folded tree
+
+
+@pytest.mark.parametrize("case", list(CASES))
+def test_get_iter_gives_one_entry_per_bulk_node(case):
+    options, axes, request, _ = CASES[case]
+    datacube, tree = slice_tree(options, axes, request, bulk=True)
+    datacube.prepare(tree)
+    streamed = tree.prune()
+    positions = {id(node): i for i, node in enumerate(streamed.leaves)}
+    fields = {}
+    for path, leaf_values in datacube.get_iter(streamed):
+        assert leaf_values is not None
+        assert len(leaf_values) == 1
+        node, values = leaf_values[0]
+        assert isinstance(node, BulkGridTensorIndexNode)
+        assert values.dtype == np.float64 and len(values) == node.point_count
+        fields.setdefault(positions[id(node)], []).append(values)
+    # the same values get() writes into the nodes, in the same order
+    datacube.get(tree)
+    for i, node in enumerate(tree.leaves):
+        assert len(fields[i]) == len(node.result)
+        for got, want in zip(fields[i], node.result):
+            np.testing.assert_array_equal(got, np.asarray(want, dtype=np.float64))
+
+
+def test_get_iter_reports_a_missing_field_as_none():
+    options, axes, request, _ = CASES["regular_seam"]
+    datacube, tree = slice_tree(options, axes, request, bulk=True, missing=[{"param": "165"}])
+    missing = [path for path, values in datacube.get_iter(tree) if values is None]
+    assert missing and all(path["param"] == "165" for path in missing)
+
+
+def test_prune_shares_the_bulk_arrays_and_fills_independently():
+    options, axes, request, select_axes = CASES["regular_seam"]
+    datacube, tree = slice_tree(options, axes, request, bulk=True)
+    datacube.prepare(tree)
+    (node,) = tree.leaves
+    sub = tree.prune(select={"param": "167", "step": 0, "number": 1})
+    (pruned_node,) = sub.leaves
+    assert pruned_node is not node
+    assert pruned_node.coordinates is node.coordinates
+    assert pruned_node.indexes is node.indexes
+    assert pruned_node.tag_ids is node.tag_ids
+    assert pruned_node.result == []
+    datacube.get(sub)
+    assert len(pruned_node.result) == 1
+    assert node.result == []
+    assert [index_of(v) for v in pruned_node.result[0]] == node.indexes.tolist()
+
+
+def test_latitude_bands_are_refused_on_a_folded_tree():
+    options, axes, request, _ = CASES["regular_seam"]
+    datacube, tree = slice_tree(options, axes, request, bulk=True)
+    datacube.prepare(tree)
+    with pytest.raises(ValueError, match="bulk"):
+        tree.latitude_point_counts()
+    with pytest.raises(ValueError, match="bulk"):
+        tree.prune(latitude_range=(0, 1))
+    with pytest.raises(ValueError, match="bulk"):
+        datacube.get(tree, latitude_range=(0, 1))
+
+
+def test_latitude_bands_still_work_with_the_fold_off():
+    options, axes, request, _ = CASES["regular_seam"]
+    datacube, tree = slice_tree(options, axes, request, bulk=False)
+    counts = datacube.prepare(tree).latitude_point_counts()
+    assert len(counts) > 1
+    band = tree.prune(latitude_range=(0, 1))
+    assert sum(len(leaf.values) for leaf in band.leaves) == counts[0]
