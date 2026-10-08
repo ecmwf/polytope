@@ -30,6 +30,11 @@ def float_axis(name):
 LAT, LON = float_axis("latitude"), float_axis("longitude")
 
 
+def point_tags(node):
+    """Per-point tags of a bulk node, as the list of sets the node used to hold."""
+    return [set(node.tags_of_point(i)) for i in range(node.point_count)]
+
+
 # ---------------------------------------------------------------------------
 # Bulk leaves carry one set of tags per point
 # ---------------------------------------------------------------------------
@@ -38,12 +43,12 @@ LAT, LON = float_axis("latitude"), float_axis("longitude")
 class TestBulkMergedNodeTags:
     def test_default_point_tags_are_empty(self):
         node = BulkMergedTensorIndexNode([LAT, LON], [[0, 0], [1, 1]], [3, 4])
-        assert node.point_tags == [set(), set()]
+        assert point_tags(node) == [set(), set()]
         assert node.tags == set()
 
     def test_point_tags_are_aligned_and_unioned_on_node(self):
         node = BulkMergedTensorIndexNode([LAT, LON], [[0, 0], [1, 1]], [3, 4], [{"a"}, {"b", "c"}])
-        assert node.point_tags == [{"a"}, {"b", "c"}]
+        assert point_tags(node) == [{"a"}, {"b", "c"}]
         assert node.tags == {"a", "b", "c"}
 
     def test_point_tags_must_match_point_count(self):
@@ -54,7 +59,7 @@ class TestBulkMergedNodeTags:
         tags = [{"a"}]
         node = BulkMergedTensorIndexNode([LAT, LON], [[0, 0]], [3], tags)
         tags[0].add("x")
-        assert node.point_tags == [{"a"}]
+        assert point_tags(node) == [{"a"}]
 
     def test_merge_unions_tags_of_shared_points_and_keeps_alignment(self):
         first = BulkMergedTensorIndexNode([LAT, LON], [[2, 0], [0, 0]], [20, 0], [{"a"}, {"b"}])
@@ -63,7 +68,7 @@ class TestBulkMergedNodeTags:
         # sorted by (lat, lon), duplicates of index 0 merged with the union of their tags
         assert first.indexes.tolist() == [0, 10, 20]
         assert first.coordinates[:, 0].tolist() == [0, 1, 2]
-        assert first.point_tags == [{"b", "c"}, set(), {"a"}]
+        assert point_tags(first) == [{"b", "c"}, set(), {"a"}]
         assert first.tags == {"a", "b", "c"}
 
     def test_create_bulk_merged_child_merges_point_tags(self):
@@ -71,19 +76,19 @@ class TestBulkMergedNodeTags:
         parent.create_bulk_merged_child([LAT, LON], [[0, 0]], [0], [], point_tags=[{"a"}])
         node, _ = parent.create_bulk_merged_child([LAT, LON], [[0, 0], [1, 1]], [0, 1], [], point_tags=[{"b"}, {"c"}])
         assert len(parent.children) == 1
-        assert node.point_tags == [{"a", "b"}, {"c"}]
+        assert point_tags(node) == [{"a", "b"}, {"c"}]
 
 
 class TestBulkGridNodeTags:
     def test_default_point_tags_are_empty(self):
         node = BulkGridTensorIndexNode([LAT, LON], [0, 1], [[0, 1], [5]], [0, 1, 2])
-        assert node.point_tags == [set(), set(), set()]
+        assert point_tags(node) == [set(), set(), set()]
 
     def test_point_tags_follow_latitude_major_order(self):
         node = BulkGridTensorIndexNode([LAT, LON], [0, 1], [[0, 1], [5]], [0, 1, 2], [{"a"}, {"b"}, {"c"}])
         assert node.coordinates.tolist() == [[0, 0], [0, 1], [1, 5]]
-        assert node.point_tags[node.row_slice(0)] == [{"a"}, {"b"}]
-        assert node.point_tags[node.row_slice(1)] == [{"c"}]
+        assert point_tags(node)[node.row_slice(0)] == [{"a"}, {"b"}]
+        assert point_tags(node)[node.row_slice(1)] == [{"c"}]
         assert node.tags == {"a", "b", "c"}
 
     def test_point_leaf_exposes_point_tags(self):
@@ -174,7 +179,7 @@ def quadtree_leaf(*polytopes):
     if len(node.children) == 0:
         return {}
     bulk = next(iter(node.children))
-    return {tuple(c): t for c, t in zip(bulk.coordinates.tolist(), bulk.point_tags)}
+    return {tuple(c): set(bulk.tags_of_point(i)) for i, c in enumerate(bulk.coordinates.tolist())}
 
 
 def nearest(point, tag, k=1):

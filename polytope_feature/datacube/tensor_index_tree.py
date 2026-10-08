@@ -153,6 +153,53 @@ class MergedTensorIndexNode(object):
         return None
 
 
+def _tag_table(point_tags, n_points):
+    """``(tag_sets, tag_ids)`` of a sequence of per-point tag sets (``None`` meaning no tags anywhere)."""
+    if point_tags is None:
+        return [frozenset()], np.zeros(n_points, dtype=np.int32)
+    tag_sets = []
+    ids_of = {}
+    tag_ids = np.empty(len(point_tags), dtype=np.int32)
+    for i, tags in enumerate(point_tags):
+        key = frozenset(tags)
+        tag_id = ids_of.get(key)
+        if tag_id is None:
+            tag_id = ids_of[key] = len(tag_sets)
+            tag_sets.append(key)
+        tag_ids[i] = tag_id
+    return tag_sets, tag_ids
+
+
+def _merge_tag_tables(first, second, indexes):
+    """The tag table of two concatenated bulk nodes, unioning the tags of points sharing an index."""
+    tag_sets = list(first.tag_sets)
+    ids_of = {tags: i for i, tags in enumerate(tag_sets)}
+    offsets = np.empty(len(second.tag_sets), dtype=np.int32)
+    for i, tags in enumerate(second.tag_sets):
+        tag_id = ids_of.get(tags)
+        if tag_id is None:
+            tag_id = ids_of[tags] = len(tag_sets)
+            tag_sets.append(tags)
+        offsets[i] = tag_id
+    tag_ids = np.concatenate([first.tag_ids, offsets[second.tag_ids]])
+    # the tags of every occurrence of a repeated index are unioned onto its first occurrence
+    order = np.argsort(indexes, kind="stable")
+    sorted_indexes = indexes[order]
+    _, start, counts = np.unique(sorted_indexes, return_index=True, return_counts=True)
+    for group in np.flatnonzero(counts > 1):
+        positions = order[start[group] : start[group] + counts[group]]  # noqa: E203
+        group_ids = tag_ids[positions]
+        if np.all(group_ids == group_ids[0]):
+            continue
+        key = frozenset().union(*(tag_sets[i] for i in group_ids.tolist()))
+        tag_id = ids_of.get(key)
+        if tag_id is None:
+            tag_id = ids_of[key] = len(tag_sets)
+            tag_sets.append(key)
+        tag_ids[positions] = tag_id
+    return tag_sets, tag_ids
+
+
 class BulkMergedTensorIndexNode(MergedTensorIndexNode):
     """Array-backed coupled-axis leaf.
 
@@ -166,23 +213,31 @@ class BulkMergedTensorIndexNode(MergedTensorIndexNode):
     request combination of the compressed axes above this node, in the same
     order as the legacy leaves' flat ``result`` blocks.
 
+    Tags are stored per point without a Python object per point: ``tag_sets`` is
+    the list of distinct tag sets of the selection and ``tag_ids`` an int32 array
+    naming one of them per point. ``tags`` (inherited) holds their union.
+
     At most one bulk node exists per parent: bulk nodes on the same axes compare
     equal, so merging trees (eg. for unions) unions their points instead of
     adding siblings.
     """
 
-    def __init__(self, axes, coordinates, indexes, point_tags=None):
+    def __init__(self, axes, coordinates, indexes, point_tags=None, tag_ids=None, tag_sets=None):
         super().__init__(axes, ())
         self.coordinates = np.asarray(coordinates, dtype=np.float64).reshape(-1, 2)
         self.indexes = None if indexes is None else np.asarray(indexes, dtype=np.int64)
-        # One set of tags per point, aligned with ``coordinates``/``indexes``.
-        # ``tags`` (inherited) holds the union over all points.
-        if point_tags is None:
-            point_tags = [set() for _ in range(len(self.coordinates))]
-        self.point_tags = [set(t) for t in point_tags]
-        assert len(self.point_tags) == len(self.coordinates)
-        for t in self.point_tags:
+        if tag_ids is not None:
+            self.tag_sets = [frozenset(t) for t in tag_sets]
+            self.tag_ids = np.asarray(tag_ids, dtype=np.int32)
+        else:
+            self.tag_sets, self.tag_ids = _tag_table(point_tags, len(self.coordinates))
+        assert len(self.tag_ids) == len(self.coordinates)
+        for t in self.tag_sets:
             self.tags.update(t)
+
+    def tags_of_point(self, i):
+        """The tags of point ``i`` of this node (a frozenset; empty when the point carries none)."""
+        return self.tag_sets[self.tag_ids[i]]
 
     @property
     def point_count(self):
@@ -222,17 +277,16 @@ class BulkMergedTensorIndexNode(MergedTensorIndexNode):
             raise ValueError("Cannot merge bulk nodes which already hold retrieved results")
         coordinates = np.concatenate([self.coordinates, other.coordinates])
         indexes = np.concatenate([self.indexes, other.indexes])
+        tag_sets, tag_ids = _merge_tag_tables(self, other, indexes)
         # Points selected by both nodes keep the union of their tags
-        tags_by_index = {}
-        for idx, tags in zip(indexes.tolist(), self.point_tags + other.point_tags):
-            tags_by_index.setdefault(idx, set()).update(tags)
         _, first = np.unique(indexes, return_index=True)
         coordinates = coordinates[first]
-        indexes = indexes[first]
         order = np.lexsort((coordinates[:, 1], coordinates[:, 0]))
+        keep = first[order]
         self.coordinates = coordinates[order]
-        self.indexes = indexes[order]
-        self.point_tags = [tags_by_index[idx] for idx in self.indexes.tolist()]
+        self.indexes = indexes[keep]
+        self.tag_sets = tag_sets
+        self.tag_ids = tag_ids[keep]
 
 
 class BulkGridTensorIndexNode(BulkMergedTensorIndexNode):
@@ -242,19 +296,40 @@ class BulkGridTensorIndexNode(BulkMergedTensorIndexNode):
     holds the selected latitudes and ``lon_values[i]`` the (compressed)
     longitudes selected on latitude ``i``. The points, and so ``coordinates``,
     ``indexes`` and each ``result`` array, are ordered latitude-major, with the
-    points of row ``i`` at ``row_slice(i)``.
+    points of row ``i`` at ``row_slice(i)``; ``lon_values[i]`` is a view on
+    ``coordinates``, not a second copy of the longitudes.
+
+    Pass ``row_lengths`` together with flat ``coordinates`` to build the node from
+    arrays that are already concatenated (what folding a prepared tree gives);
+    otherwise ``lon_values`` is the list of per-row longitude arrays.
     """
 
-    def __init__(self, axes, lat_values, lon_values, indexes=None, point_tags=None):
+    def __init__(
+        self,
+        axes,
+        lat_values,
+        lon_values,
+        indexes=None,
+        point_tags=None,
+        tag_ids=None,
+        tag_sets=None,
+        row_lengths=None,
+        coordinates=None,
+    ):
         self.lat_values = np.asarray(lat_values, dtype=np.float64)
-        self.lon_values = [np.asarray(lons, dtype=np.float64) for lons in lon_values]
-        row_lengths = np.array([len(lons) for lons in self.lon_values], dtype=np.int64)
-        self.row_offsets = np.concatenate([[0], np.cumsum(row_lengths)])
-        if len(self.lon_values) == 0:
-            coordinates = np.empty((0, 2))
+        if row_lengths is None:
+            lon_values = [np.asarray(lons, dtype=np.float64) for lons in lon_values]
+            row_lengths = np.array([len(lons) for lons in lon_values], dtype=np.int64)
+            if len(lon_values) == 0:
+                coordinates = np.empty((0, 2))
+            else:
+                coordinates = np.column_stack((np.repeat(self.lat_values, row_lengths), np.concatenate(lon_values)))
         else:
-            coordinates = np.column_stack((np.repeat(self.lat_values, row_lengths), np.concatenate(self.lon_values)))
-        super().__init__(axes, coordinates, indexes, point_tags)
+            row_lengths = np.asarray(row_lengths, dtype=np.int64)
+        self.row_offsets = np.concatenate([[0], np.cumsum(row_lengths)])
+        super().__init__(axes, coordinates, indexes, point_tags, tag_ids, tag_sets)
+        # the longitudes of a row are a view on the node's coordinates
+        self.lon_values = [self.coordinates[self.row_slice(i), 1] for i in range(len(self.lat_values))]
 
     def row_slice(self, i):
         return slice(int(self.row_offsets[i]), int(self.row_offsets[i + 1]))
