@@ -13,8 +13,12 @@ The point order is the one ``prepare`` produces without the fold, which is the o
 CovJSON encoders read the tree in: the latitude rows in tree order and, within a row, the longitude
 leaves in tree order, each leaf's points in grid-index order (or, for the merged polygon rows of
 ``tree_rows.RowMerger``, in ascending longitude order, which is the order their results come back
-in).  Nothing is held per point: one index array per leaf is unmapped, and the rows are concatenated
-with numpy.
+in).
+
+Nothing is held per point.  The shape of the fold is counted first, so the coordinates and the
+indexes are written straight into their final arrays one leaf at a time: apart from the destination
+there is never more than one row's worth of values alive, and the only per-point Python object is the
+list of ints a mapper's ``unmap`` returns for one leaf.
 """
 
 import numpy as np
@@ -34,55 +38,100 @@ def _leaf_indexes(datacube, lon_child, leaf_path):
     return np.asarray(key_value_path["values"], dtype=np.int64)
 
 
-def _leaf_tags(lat_child, lon_child, order):
-    """``(tag_sets, tag_ids)`` of one longitude leaf's points, reordered like its values.
-
-    A leaf whose points carry different tags (the merged rows of a union of differently tagged shapes,
-    see ``tree_rows.RowMerger``) keeps them per point; otherwise all of its points share the tags of
-    the latitude and longitude nodes.
-    """
-    lat_tags = lat_child.tags
-    if lon_child.tag_ids is None:
-        return [frozenset(lat_tags | lon_child.tags)], None
-    tag_sets = [frozenset(lat_tags | tags) for tags in lon_child.tag_sets]
-    tag_ids = lon_child.tag_ids if order is None else lon_child.tag_ids[order]
-    return tag_sets, tag_ids
-
-
-def _row_leaves(datacube, lat_child, leaf_path):
-    """``(values, indexes, tag_sets, tag_ids)`` per longitude leaf of one latitude node, in tree order."""
+def _unmap_latitude(datacube, lat_child, leaf_path):
     key_value_path = {lat_child.axis.name: lat_child.values}
     key_value_path, leaf_path, datacube.unwanted_path = lat_child.axis.unmap_path_key(
         key_value_path, leaf_path, datacube.unwanted_path
     )
     leaf_path.update(key_value_path)
-    leaves = []
-    for lon_child in lat_child.children:
-        indexes = _leaf_indexes(datacube, lon_child, leaf_path)
-        values = np.asarray(lon_child.values, dtype=np.float64)
-        order = None
-        if not lon_child._keep_value_order and indexes.size > 1:
-            # a box leaf's points come back in grid-index order, as ``prepare`` leaves its values
-            order = np.argsort(indexes, kind="stable")
-            if np.array_equal(order, np.arange(indexes.size)):
-                order = None
-            else:
-                indexes = indexes[order]
-                values = values[order]
-        tag_sets, tag_ids = _leaf_tags(lat_child, lon_child, order)
-        leaves.append((values, indexes, tag_sets, tag_ids))
-    return leaves
 
 
-def _unique_first_seen(indexes):
-    """Positions of the first occurrence of each index, ascending, or None if there are no duplicates."""
+class _TagTable:
+    """The distinct tag sets of a fold, and which of them each span of points carries.
+
+    ``tag_ids`` is only materialised when the fold's points do not all carry the same tags, which is
+    the usual case (one shape, or several shapes sharing a tag).
+    """
+
+    def __init__(self, n_points):
+        self.n_points = n_points
+        self.tag_sets = []
+        self._ids_of = {}
+        self._spans = []
+
+    def _id(self, tags):
+        tag_id = self._ids_of.get(tags)
+        if tag_id is None:
+            tag_id = self._ids_of[tags] = len(self.tag_sets)
+            self.tag_sets.append(tags)
+        return tag_id
+
+    def add(self, start, stop, lat_tags, lon_child):
+        """Record the tags of the points ``start:stop``, which come from one longitude leaf."""
+        if lon_child.tag_ids is None:
+            self._spans.append((start, stop, self._id(frozenset(lat_tags | lon_child.tags))))
+            return
+        ids = np.asarray([self._id(frozenset(lat_tags | tags)) for tags in lon_child.tag_sets], dtype=np.int32)
+        self._spans.append((start, stop, ids[lon_child.tag_ids]))
+
+    def ids(self):
+        if len(self.tag_sets) < 2:
+            return None
+        tag_ids = np.empty(self.n_points, dtype=np.int32)
+        for start, stop, value in self._spans:
+            tag_ids[start:stop] = value
+        return tag_ids
+
+
+def _fold_rows(datacube, requests, leaf_path, rows, n_points):
+    """Fill the fold's arrays row by row; returns ``(coordinates, indexes, tag_sets, tag_ids)``."""
+    coordinates = np.empty((n_points, 2), dtype=np.float64)
+    indexes = np.empty(n_points, dtype=np.int64)
+    tags = _TagTable(n_points)
+    at = 0
+    for lat_child, row_length in rows:
+        _unmap_latitude(datacube, lat_child, leaf_path)
+        coordinates[at : at + row_length, 0] = lat_child.values[0]  # noqa: E203
+        for lon_child in lat_child.children:
+            leaf_indexes = _leaf_indexes(datacube, lon_child, leaf_path)
+            n = leaf_indexes.size
+            if n == 0:
+                continue
+            values = np.asarray(lon_child.values, dtype=np.float64)
+            if not lon_child._keep_value_order and n > 1:
+                # a box leaf's points come back in grid-index order, as ``prepare`` leaves its values
+                order = np.argsort(leaf_indexes, kind="stable")
+                if not np.array_equal(order, np.arange(n)):
+                    leaf_indexes = leaf_indexes[order]
+                    values = values[order]
+            coordinates[at : at + n, 1] = values  # noqa: E203
+            indexes[at : at + n] = leaf_indexes  # noqa: E203
+            tags.add(at, at + n, lat_child.tags, lon_child)
+            at += n
+    assert at == n_points
+    return coordinates, indexes, tags.tag_sets, tags.ids()
+
+
+def _drop_duplicate_indexes(coordinates, indexes, tag_ids, row_lengths):
+    """Keep the first occurrence of every grid index, as the per-row request planning does.
+
+    A point can be reached from two rows when a box overlaps itself across the longitude seam.
+    Returns the compacted arrays, or the originals when every index is unique.
+    """
     if indexes.size < 2:
-        return None
-    _, first = np.unique(indexes, return_index=True)
-    if first.size == indexes.size:
-        return None
-    first.sort()
-    return first
+        return coordinates, indexes, tag_ids, row_lengths
+    _, keep = np.unique(indexes, return_index=True)
+    if keep.size == indexes.size:
+        return coordinates, indexes, tag_ids, row_lengths
+    keep.sort()
+    row_of_point = np.searchsorted(np.cumsum(row_lengths), keep, side="right")
+    row_lengths = np.bincount(row_of_point, minlength=row_lengths.size)
+    return (
+        coordinates[keep],
+        indexes[keep],
+        None if tag_ids is None else tag_ids[keep],
+        row_lengths,
+    )
 
 
 def fold_into_bulk_grid(datacube, requests, leaf_path):
@@ -100,74 +149,46 @@ def fold_into_bulk_grid(datacube, requests, leaf_path):
     lat_ax = requests.children[0].axis
     lon_ax = requests.children[0].children[0].axis
 
+    # the shape of the fold, so that the points can be written straight into their final arrays
+    rows = []
     lat_values = []
     row_lengths = []
-    values = []
-    indexes = []
-    tag_id_blocks = []
-    tag_sets = []
-    ids_of = {}
-
-    def tag_id(tags):
-        found = ids_of.get(tags)
-        if found is None:
-            found = ids_of[tags] = len(tag_sets)
-            tag_sets.append(tags)
-        return found
-
+    n_points = 0
     for lat_child in requests.children:
-        row_length = 0
-        for leaf_values, leaf_indexes, leaf_tag_sets, leaf_tag_ids in _row_leaves(datacube, lat_child, leaf_path):
-            if leaf_values.size == 0:
-                continue
-            ids = np.asarray([tag_id(tags) for tags in leaf_tag_sets], dtype=np.int32)
-            values.append(leaf_values)
-            indexes.append(leaf_indexes)
-            if leaf_tag_ids is None:
-                tag_id_blocks.append(np.broadcast_to(ids, (leaf_values.size,)))
-            else:
-                tag_id_blocks.append(ids[leaf_tag_ids])
-            row_length += leaf_values.size
-        if row_length != 0:
-            lat_values.append(lat_child.values[0])
-            row_lengths.append(row_length)
+        row_length = sum(len(lon_child.values) for lon_child in lat_child.children)
+        if row_length == 0:
+            continue
+        rows.append((lat_child, row_length))
+        lat_values.append(lat_child.values[0])
+        row_lengths.append(row_length)
+        n_points += row_length
 
-    for lat_child in list(requests.children):
-        requests.children.remove(lat_child)
-        lat_child._parent = None
-    if len(lat_values) == 0:
+    if n_points == 0:
+        for lat_child in list(requests.children):
+            requests.children.remove(lat_child)
+            lat_child._parent = None
         requests.remove_branch()
         return None
 
+    coordinates, indexes, tag_sets, tag_ids = _fold_rows(datacube, requests, leaf_path, rows, n_points)
+    del rows
+    for lat_child in list(requests.children):
+        requests.children.remove(lat_child)
+        lat_child._parent = None
+
     lat_values = np.asarray(lat_values, dtype=np.float64)
     row_lengths = np.asarray(row_lengths, dtype=np.int64)
-    lon_values = np.concatenate(values) if len(values) > 1 else values[0]
-    del values
-    all_indexes = np.concatenate(indexes) if len(indexes) > 1 else indexes[0]
-    del indexes
-    tag_ids = np.concatenate(tag_id_blocks) if len(tag_id_blocks) > 1 else np.asarray(tag_id_blocks[0])
-    del tag_id_blocks
-
-    keep = _unique_first_seen(all_indexes)
-    if keep is not None:
-        # a point reached from two rows (eg. a box overlapping itself across the longitude seam) is
-        # kept where it was first seen, as the per-row planning does
-        row_of_point = np.searchsorted(np.cumsum(row_lengths), keep, side="right")
-        row_lengths = np.bincount(row_of_point, minlength=row_lengths.size)
-        kept_rows = row_lengths > 0
+    coordinates, indexes, tag_ids, row_lengths = _drop_duplicate_indexes(coordinates, indexes, tag_ids, row_lengths)
+    kept_rows = row_lengths > 0
+    if not np.all(kept_rows):
         lat_values = lat_values[kept_rows]
         row_lengths = row_lengths[kept_rows]
-        lon_values = lon_values[keep]
-        all_indexes = all_indexes[keep]
-        tag_ids = tag_ids[keep]
 
-    coordinates = np.column_stack((np.repeat(lat_values, row_lengths), lon_values))
-    del lon_values
     grid_node = BulkGridTensorIndexNode(
         [lat_ax, lon_ax],
         lat_values,
         None,
-        all_indexes,
+        indexes,
         tag_ids=tag_ids,
         tag_sets=tag_sets,
         row_lengths=row_lengths,

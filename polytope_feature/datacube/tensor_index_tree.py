@@ -155,9 +155,13 @@ class MergedTensorIndexNode(object):
 
 
 def _tag_table(point_tags, n_points):
-    """``(tag_sets, tag_ids)`` of a sequence of per-point tag sets (``None`` meaning no tags anywhere)."""
+    """``(tag_sets, tag_ids)`` of a sequence of per-point tag sets.
+
+    ``tag_ids`` is None when every point carries the same tags (the usual case), which keeps a fold of
+    one shape from paying 4 bytes a point for a constant.
+    """
     if point_tags is None:
-        return [frozenset()], np.zeros(n_points, dtype=np.int32)
+        return [frozenset()], None
     tag_sets = []
     ids_of = {}
     tag_ids = np.empty(len(point_tags), dtype=np.int32)
@@ -168,6 +172,8 @@ def _tag_table(point_tags, n_points):
             tag_id = ids_of[key] = len(tag_sets)
             tag_sets.append(key)
         tag_ids[i] = tag_id
+    if len(tag_sets) < 2:
+        return tag_sets or [frozenset()], None
     return tag_sets, tag_ids
 
 
@@ -182,7 +188,7 @@ def _merge_tag_tables(first, second, indexes):
             tag_id = ids_of[tags] = len(tag_sets)
             tag_sets.append(tags)
         offsets[i] = tag_id
-    tag_ids = np.concatenate([first.tag_ids, offsets[second.tag_ids]])
+    tag_ids = np.concatenate([first.expanded_tag_ids(), offsets[second.expanded_tag_ids()]])
     # the tags of every occurrence of a repeated index are unioned onto its first occurrence
     order = np.argsort(indexes, kind="stable")
     sorted_indexes = indexes[order]
@@ -227,18 +233,28 @@ class BulkMergedTensorIndexNode(MergedTensorIndexNode):
         super().__init__(axes, ())
         self.coordinates = np.asarray(coordinates, dtype=np.float64).reshape(-1, 2)
         self.indexes = None if indexes is None else np.asarray(indexes, dtype=np.int64)
-        if tag_ids is not None:
-            self.tag_sets = [frozenset(t) for t in tag_sets]
-            self.tag_ids = np.asarray(tag_ids, dtype=np.int32)
+        if tag_sets is not None:
+            self.tag_sets = [frozenset(t) for t in tag_sets] or [frozenset()]
+            self.tag_ids = None if tag_ids is None else np.asarray(tag_ids, dtype=np.int32)
         else:
             self.tag_sets, self.tag_ids = _tag_table(point_tags, len(self.coordinates))
-        assert len(self.tag_ids) == len(self.coordinates)
+            if point_tags is not None:
+                assert len(point_tags) == len(self.coordinates)
+        assert self.tag_ids is None or len(self.tag_ids) == len(self.coordinates)
         for t in self.tag_sets:
             self.tags.update(t)
 
     def tags_of_point(self, i):
         """The tags of point ``i`` of this node (a frozenset; empty when the point carries none)."""
+        if self.tag_ids is None:
+            return self.tag_sets[0]
         return self.tag_sets[self.tag_ids[i]]
+
+    def expanded_tag_ids(self):
+        """``tag_ids`` as an array, materialised when every point of the node shares one tag set."""
+        if self.tag_ids is not None:
+            return self.tag_ids
+        return np.zeros(self.point_count, dtype=np.int32)
 
     def copy_shared(self):
         """An unattached copy of this node holding no result and sharing all of its arrays.

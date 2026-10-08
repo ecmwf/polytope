@@ -759,13 +759,20 @@ class FDBDatacube(Datacube):
             path = deepcopy(leaf_path)
 
         indexes = bulk_node.indexes
-        sorted_output_positions = np.argsort(indexes, kind="stable")
-        sorted_indexes = indexes[sorted_output_positions]
-        if np.array_equal(sorted_output_positions, np.arange(len(indexes))):
-            # the node's points are already in ascending index order: nothing to un-sort on assignment
+        # the field's ranges are the gaps in its sorted indexes; on a grid stored row by row the node's
+        # points are already ascending, so neither the sort nor the un-sort on assignment is needed
+        if len(indexes) < 2 or bool(np.all(np.diff(indexes) > 0)):
             sorted_output_positions = None
-        if len(sorted_indexes) > 1 and np.any(np.diff(sorted_indexes) == 0):
-            raise ValueError("Bulk spatial selection contains duplicate canonical indexes")
+            sorted_indexes = indexes
+        else:
+            order = np.argsort(indexes, kind="stable")
+            sorted_indexes = indexes[order]
+            if len(indexes) <= np.iinfo(np.int32).max:
+                order = order.astype(np.int32)
+            sorted_output_positions = order
+            del order
+            if np.any(np.diff(sorted_indexes) == 0):
+                raise ValueError("Bulk spatial selection contains duplicate canonical indexes")
 
         cuts = np.flatnonzero(np.diff(sorted_indexes) > 1)
         starts = np.r_[sorted_indexes[0], sorted_indexes[cuts + 1]]
