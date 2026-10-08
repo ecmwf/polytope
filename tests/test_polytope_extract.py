@@ -1,5 +1,6 @@
 import numpy as np
 import xarray as xr
+from bulk_helpers import point_leaves
 
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box
@@ -56,4 +57,4 @@ class TestPolytopeExtract:
         result = self.API.retrieve(request)
 
         result.pprint()
-        assert len(result.leaves) == 12
+        assert len(point_leaves(result)) == 12

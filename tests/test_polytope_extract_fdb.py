@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+from bulk_helpers import point_leaves
 
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
@@ -105,10 +106,10 @@ class TestPolytopeExtract:
         )
         result = self.API.retrieve(request)
 
-        assert len(result.leaves) == 3
-        assert result.leaves[0].flatten()["longitude"] == list((0,))
-        assert result.leaves[0].flatten()["latitude"] == list((0.035149384216,))
-        assert result.leaves[1].flatten()["longitude"] == list((10,))
-        assert result.leaves[1].flatten()["latitude"] == list((5,))
-        assert result.leaves[2].flatten()["longitude"] == list((10,))
-        assert result.leaves[2].flatten()["latitude"] == list((10,))
+        assert len(point_leaves(result)) == 3
+        assert point_leaves(result)[0].flatten()["longitude"] == list((0,))
+        assert point_leaves(result)[0].flatten()["latitude"] == list((0.035149384216,))
+        assert point_leaves(result)[1].flatten()["longitude"] == list((10,))
+        assert point_leaves(result)[1].flatten()["latitude"] == list((5,))
+        assert point_leaves(result)[2].flatten()["longitude"] == list((10,))
+        assert point_leaves(result)[2].flatten()["latitude"] == list((10,))

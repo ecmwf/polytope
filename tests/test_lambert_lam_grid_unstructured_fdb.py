@@ -3,6 +3,7 @@ import math
 # import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
+from bulk_helpers import point_leaves
 from helper_functions import find_nearest_latlon
 
 from polytope_feature.polytope import Polytope, Request
@@ -81,7 +82,7 @@ class TestQuadTreeSlicer:
         )
 
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 440
+        assert len(point_leaves(result)) == 440
         result.pprint()
 
         lats = []
@@ -89,7 +90,7 @@ class TestQuadTreeSlicer:
         eccodes_lats = []
         eccodes_lons = []
         tol = 1e-3
-        leaves = result.leaves
+        leaves = point_leaves(result)
         for i in range(10):
             cubepath = leaves[i].flatten()
             lat = cubepath["latitude"][0]
@@ -135,7 +136,7 @@ class TestQuadTreeSlicer:
         )
 
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 1
+        assert len(point_leaves(result)) == 1
         result.pprint()
 
         lats = []
@@ -143,7 +144,7 @@ class TestQuadTreeSlicer:
         eccodes_lats = []
         eccodes_lons = []
         tol = 1e-3
-        leaves = result.leaves
+        leaves = point_leaves(result)
         for i in range(len(leaves)):
             cubepath = leaves[i].flatten()
             lat = cubepath["latitude"][0]
@@ -185,7 +186,7 @@ class TestQuadTreeSlicer:
         )
 
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 2
+        assert len(point_leaves(result)) == 2
         result.pprint()
 
         lats = []
@@ -193,7 +194,7 @@ class TestQuadTreeSlicer:
         eccodes_lats = []
         eccodes_lons = []
         tol = 1e-3
-        leaves = result.leaves
+        leaves = point_leaves(result)
         for i in range(len(leaves)):
             cubepath = leaves[i].flatten()
             lat = cubepath["latitude"][0]
@@ -230,7 +231,7 @@ class TestQuadTreeSlicer:
         )
 
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 4
+        assert len(point_leaves(result)) == 4
         result.pprint()
 
         lats = []
@@ -238,7 +239,7 @@ class TestQuadTreeSlicer:
         eccodes_lats = []
         eccodes_lons = []
         tol = 1e-3
-        leaves = result.leaves
+        leaves = point_leaves(result)
         for i in range(len(leaves)):
             cubepath = leaves[i].flatten()
             lat = cubepath["latitude"][0]

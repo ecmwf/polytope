@@ -151,25 +151,32 @@ class Point(Shape):
     def axes(self):
         return self._axes
 
+    def value_tag(self, i):
+        """Tag of the i-th value: a list of tags with one entry per value tags each value separately."""
+        if isinstance(self.tag, list) and len(self.tag) == len(self.values):
+            return self.tag[i]
+        return self.tag
+
     def polytope(self):
         # TODO: change this to use the Product instead and return a Product here of the two 1D selects
 
         polytopes = []
-        if self.decompose_1D:
-            for point in self.values:
-                poly_to_mult = []
-                for i in range(len(self._axes)):
-                    poly_to_mult.append(
-                        ConvexPolytope(
-                            [self._axes[i]], [[point[i]]], self.method, self.k, is_orthogonal=True, tag=self.tag
-                        )
-                    )
-                polytopes.append(Product(*poly_to_mult, method=self.method, k=self.k, value=[point], tag=self.tag))
-        else:
-            for point in self.values:
-                polytopes.append(
-                    ConvexPolytope(self._axes, [point], self.method, self.k, is_orthogonal=True, tag=self.tag)
-                )
+        for i, point in enumerate(self.values):
+            tag = self.value_tag(i)
+            if self.decompose_1D:
+                poly_to_mult = [
+                    ConvexPolytope([ax], [[point[j]]], self.method, self.k, is_orthogonal=True, tag=tag)
+                    for j, ax in enumerate(self._axes)
+                ]
+                polytopes.append(Product(*poly_to_mult, method=self.method, k=self.k, value=[point], tag=tag))
+            else:
+                polytopes.append(ConvexPolytope(self._axes, [point], self.method, self.k, is_orthogonal=True, tag=tag))
+        if len(polytopes) > 1:
+            # Several values are a union of independent points, not a cross product of
+            # their per-axis coordinates: treat them exactly like a Union of single-value
+            # Points so every engine resolves (and tags) each value on its own.
+            for poly in polytopes:
+                poly.add_to_union()
         self.polytopes = polytopes
 
         return self.polytopes
