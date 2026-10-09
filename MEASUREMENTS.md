@@ -107,7 +107,7 @@ fields in one gribjump call (the `step` axis stays compressed).  Fake gribjump, 
   ranges (1,295 points per range).
 
 "before" is the per-range assignment (`result.values[i]` per range, chunks of every leaf kept until the last field
-arrived), measured while it was still there (`--legacy`, which went with the per-row path -- see `CHANGES.md`);
+arrived), measured while it was still there (`--legacy`, which went with the per-row path);
 "after" is the flat one (`result.values_flat` once per field, scattered
 into pre-allocated leaf results); "get_iter" consumes the same call field by field and drops each field.
 
@@ -134,8 +134,8 @@ Where the rest of the peak is, and what polytope-mars should size with:
   `get_last_layer_before_leaf` collected
   every point's grid index as a Python `int` in a list and `sort_fdb_request_ranges` sorted `enumerate(...)` of
   those lists.  Measured (`request_bytes_per_value x fields`): **~210 B per point on HEALPix nested, ~88 B per
-  point on EFAS**, independent of the number of fields.  Both passes are gone with the per-row path
-  (`CHANGES.md`); the fold's own cost is in the section below.
+  point on EFAS**, independent of the number of fields.  Both passes are gone with the per-row path;
+  the fold's own cost is in the section below.
 - So the Python side of one call is about `n_points x 220 B + n_values x 24 B` on every grid measured (that bound
   holds for all six rows above, with room to spare on the row-ordered grid).  The 24 B/value term is the
   grid-independent constant; the per-point term is paid once per call however many fields it has, so it is
@@ -144,7 +144,7 @@ Where the rest of the peak is, and what polytope-mars should size with:
   and its peak is the lowest of the three (one field's arrays at a time instead of all twelve).
 
 The gribjump buffer itself (`extract_mb`: the fake builds every field's values before handing out the first
-result, as `GribJump::extract` does -- see `CHANGES.md`) shows up as 23-26 MB for a 12-field call, i.e. ~6 B/value
+result, as `GribJump::extract` does) shows up as 23-26 MB for a 12-field call, i.e. ~6 B/value
 against the 8 B/value of doubles it allocates: the rest is absorbed into memory the request bookkeeping had just
 freed.  For 1 and 4 fields it is entirely absorbed and measures 0.1 MB.
 
@@ -156,8 +156,7 @@ HEALPix 1024 Europe box with 4 compressed fields (753 leaves, 1,429,636 values) 
 
 One field, sliced as polytope-mars builds its features (`_merge_union_rows = True`), then `prepare` and `get`
 against polytope-mars' fake gribjump, with `bulk_grid_leaves` off and on (the `off` rows were measured while
-the option could still be turned off -- see `CHANGES.md`; `spatial_node_memory.py` now measures the one path that is
-left).  Each row is a fresh subprocess; peak
+the option could still be turned off; `spatial_node_memory.py` now measures the one path that is left).  Each row is a fresh subprocess; peak
 is `resource.getrusage(RUSAGE_SELF).ru_maxrss` of that process.  Reproduce the `on` rows with:
 
     python performance/spatial_node_memory.py            # every shape
@@ -277,5 +276,4 @@ What it says:
 6. **Requested points that snap to the same grid point are returned once**, on both paths: 26 of 10,000 and
    1,990 of 100,000 on O1280, 15 and 1,120 on HEALPix nested 1024 for these random points.  A request gets
    fewer coverages than it asked for with nothing saying which ones were merged; the resolved node now
-   carries `point_of_query` so that a consumer can report one coverage per requested point (see
-   `CHANGES.md`).
+   carries `point_of_query` so that a consumer can report one coverage per requested point.
