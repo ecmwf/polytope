@@ -339,8 +339,8 @@ meant keeping 570 lines of code and tests for a path no caller takes.
 
 ## Verification
 
-- `python -m pytest tests -m "not fdb and not internet and not non_stored_data" -q`: **416 passed, 6
-  skipped** (30 new in `tests/test_nearest_grid.py`).
+- `python -m pytest tests -m "not fdb and not internet and not non_stored_data" -q`: **418 passed, 6
+  skipped** (32 new in `tests/test_nearest_grid.py`).
 - polytope-mars `tests/golden`: **77 passed**, byte-identical -- every point feature (`o1280_timeseries_*`,
   `cdt_timeseries`, `*_position`, `*_verticalprofile`) goes through this path.
 - `performance/nearest_points.py` for the figures in `MEASUREMENTS.md`.
