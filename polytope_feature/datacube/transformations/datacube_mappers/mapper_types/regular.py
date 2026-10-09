@@ -1,5 +1,7 @@
 import bisect
 
+import numpy as np
+
 from ..datacube_mappers import DatacubeMapper
 
 
@@ -25,6 +27,8 @@ class RegularGridMapper(DatacubeMapper):
             assert set(axis_reversed.keys()) == set(mapped_axes)
             self._axis_reversed = axis_reversed
         self._first_axis_vals = self.first_axis_vals()
+        self._first_axis_cache = None
+        self._second_axis_cache = None
         self.compressed_grid_axes = [self._mapped_axes[1]]
         if md5_hash is not None:
             self.md5_hash = md5_hash
@@ -74,16 +78,38 @@ class RegularGridMapper(DatacubeMapper):
         return first_idx * 4 * self._resolution
 
     def unmap(self, first_val, second_vals, unmapped_idx=None):
+        """Grid indices of the points ``(first_val[0], v)`` for ``v`` in ``second_vals``, as a list of ints.
+
+        Each value is matched to the first grid line / grid point within ``1e-8`` of it (``IndexError`` if there is
+        none), in O(log n) per point against axis arrays built once per mapper.
+        """
         tol = 1e-8
-        first_val = [i for i in self._first_axis_vals if first_val[0] - tol <= i <= first_val[0] + tol][0]
-        first_idx = self._first_axis_vals.index(first_val)
-        return_idxs = []
-        for second_val in second_vals:
-            second_val = [i for i in self.second_axis_vals(first_val) if second_val - tol <= i <= second_val + tol][0]
-            second_idx = self.second_axis_vals(first_val).index(second_val)
-            final_index = self.axes_idx_to_regular_idx(first_idx, second_idx)
-            return_idxs.append(final_index)
-        return return_idxs
+        first_vals = self._first_axis_array()
+        matches = np.flatnonzero((first_vals >= first_val[0] - tol) & (first_vals <= first_val[0] + tol))
+        if len(matches) == 0:
+            raise IndexError(f"No {self._mapped_axes[0]} grid line within {tol} of {first_val[0]}")
+        first_idx = int(matches[0])
+        line = self._second_axis_array()
+        second_vals = np.asarray(second_vals, dtype=np.float64)
+        # first grid point >= value - tol, which must also be <= value + tol (the grid points are ascending)
+        second_idxs = np.searchsorted(line, second_vals - tol, side="left")
+        found = second_idxs < len(line)
+        found[found] = line[second_idxs[found]] <= second_vals[found] + tol
+        if not np.all(found):
+            missing = second_vals[~found][0]
+            raise IndexError(f"No {self._mapped_axes[1]} grid point within {tol} of {missing}")
+        return (first_idx * 4 * self._resolution + second_idxs).tolist()
+
+    def _first_axis_array(self):
+        if self._first_axis_cache is None:
+            self._first_axis_cache = np.asarray(self._first_axis_vals, dtype=np.float64)
+        return self._first_axis_cache
+
+    def _second_axis_array(self):
+        # the same on every line: second_axis_vals ignores its argument
+        if self._second_axis_cache is None:
+            self._second_axis_cache = np.asarray(self.second_axis_vals(None), dtype=np.float64)
+        return self._second_axis_cache
 
 
 # md5 grid hash in form {resolution : hash}

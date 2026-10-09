@@ -2,6 +2,7 @@
 # import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from bulk_helpers import point_leaves
 from earthkit import data
 from helper_functions import download_test_data, find_nearest_latlon
 
@@ -59,7 +60,7 @@ class TestQuadTreeSlicer:
             options=self.options,
         )
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 27
+        assert len(point_leaves(result)) == 27
         result.pprint()
 
         lats = []
@@ -67,7 +68,7 @@ class TestQuadTreeSlicer:
         eccodes_lats = []
         eccodes_lons = []
         tol = 1e-8
-        leaves = result.leaves
+        leaves = point_leaves(result)
         for i in range(len(leaves)):
             cubepath = leaves[i].flatten()
             lat = cubepath["latitude"][0]

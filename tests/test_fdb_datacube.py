@@ -140,4 +140,4 @@ class TestSlicingFDBDatacube:
         result.pprint()
         assert len(result.leaves) == 1
         assert len(result.leaves[0].result) == 2
-        assert result.leaves[0].flatten()["longitude"] == (0.0, 0.070093457944)
+        assert tuple(result.leaves[0].flatten()["longitude"]) == (0.0, 0.070093457944)

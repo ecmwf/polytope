@@ -8,6 +8,32 @@ from ..shapes import ConvexPolytope
 
 
 class Engine:
+    # When True, the engine resolves *all* polytopes defined on its axes in a single
+    # pass on a node (eg. the quadtree slicer resolving lat/lon jointly into one bulk
+    # leaf). Polytope.slice() can then share the tree prefix built by the other
+    # engines across every request combination that only differs on this engine's
+    # axes (eg. a Union of many Points), and hand all of those combinations'
+    # polytopes to this engine at once instead of rebuilding the prefix per point.
+    batches_polytopes = False
+
+    #: The polytopes ``Polytope.slice`` is handing this engine to resolve together on the axis it is
+    #: building, in request order (empty when there are none).  Set per axis of every combination group, so
+    #: an engine only reads it from the ``_build_branch`` call it was set for.
+    batched = ()
+
+    def batches_polytope(self, polytope, datacube, api=None):
+        """Whether this engine resolves ``polytope`` in a batch rather than one tree descent per polytope.
+
+        Per polytope, because an engine can batch some of the polytopes on its axes and not others: the
+        hullslicer resolves nearest ``Point`` queries on a structured grid's two axes in one pass
+        (:mod:`polytope_feature.engine.nearest_grid`) and everything else one descent at a time.
+        """
+        return self.batches_polytopes
+
+    def reset(self):
+        """Clear any per-slice state. Called once at the start of every Polytope.slice()."""
+        pass
+
     def __init__(self, engine_options=None):
         if engine_options is None:
             engine_options = {}

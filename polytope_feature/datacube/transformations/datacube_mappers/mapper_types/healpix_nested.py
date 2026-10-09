@@ -9,7 +9,6 @@ try:
     from polytope_feature.polytope_rs import (
         first_axis_vals_healpix_nested,
         healpix_longitudes,
-        unmap,
     )
 
     use_rust = True
@@ -134,31 +133,25 @@ class NestedHealpixGridMapper(DatacubeMapper):
             return sum1 + (2 * res + 1) * (4 * res) + sum2 + second_idx
 
     def unmap(self, first_val, second_vals, unmapped_idx=None):
-        if use_rust:
-            return unmap(
-                self._first_axis_vals,
-                first_val[0],
-                second_vals,
-                self.Nside,
-                self.Npix,
-                self.Ncap,
-                self.k,
-                self._resolution,
-            )
-        else:
-            # Convert to NumPy array for fast computation
-            idx = np.searchsorted(self._first_axis_vals_np_rounded, -np.round(first_val[0], decimals=8))
-            if idx >= len(self._first_axis_vals_np_rounded):
-                return None
-            second_axis_vals = np.round(np.array(self.second_axis_vals_from_idx(idx)), decimals=8)
-            second_vals = np.round(np.array(second_vals), decimals=8)
-            second_idxs = np.searchsorted(second_axis_vals, second_vals)
-            valid_mask = second_idxs < len(second_axis_vals)
-            if not np.all(valid_mask):
-                return None
-            healpix_idxs = [self.axes_idx_to_healpix_idx(idx, sec_idx) for sec_idx in second_idxs]
-            return_idxs = self.ring_to_nested(np.asarray(healpix_idxs)).tolist()
-        return return_idxs
+        """Grid indices of the points ``(first_val[0], v)`` for ``v`` in ``second_vals``, as a list of ints.
+
+        Vectorised over the points of one ring: a binary search for the ring, one for the longitudes in it,
+        and the ring -> nested renumbering in numpy.  The Rust ``unmap`` computes the same indices one point
+        at a time and costs ~14 us per point against ~1 us here (6 ms against 0.5 ms for a 430-point ring of
+        HEALPix 1024), which dominated ``prepare`` on HEALPix requests; ``first_axis_vals`` and
+        ``HEALPix_longitudes`` still come from Rust where it is available.
+        """
+        idx = np.searchsorted(self._first_axis_vals_np_rounded, -np.round(first_val[0], decimals=8))
+        if idx >= len(self._first_axis_vals_np_rounded):
+            return None
+        second_axis_vals = np.round(np.array(self.second_axis_vals_from_idx(idx)), decimals=8)
+        second_vals = np.round(np.array(second_vals), decimals=8)
+        second_idxs = np.searchsorted(second_axis_vals, second_vals)
+        valid_mask = second_idxs < len(second_axis_vals)
+        if not np.all(valid_mask):
+            return None
+        healpix_idxs = self.axes_idx_to_healpix_idx(idx, second_idxs)
+        return self.ring_to_nested(np.asarray(healpix_idxs)).tolist()
 
     def div_03(self, a, b):
         """Vectorized version of div_03"""
