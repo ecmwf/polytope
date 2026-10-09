@@ -876,7 +876,6 @@ class FDBDatacube(Datacube):
         """
         logging.debug("Assigning GribJump output to tree nodes")
         open_requests = None
-        returned_range_arrays = 0
         for k, result in enumerate(output_iterator):
             decoding = fdb_requests_decoding_info[k]
             if isinstance(decoding, BulkFDBDecoding):
@@ -895,7 +894,6 @@ class FDBDatacube(Datacube):
             del flat
         if open_requests is not None:
             open_requests.finish_and_release()
-        self.prototype_metrics["returned_range_arrays"] = returned_range_arrays
         logging.debug("Finished assigning GribJump output to tree nodes")
 
     @staticmethod

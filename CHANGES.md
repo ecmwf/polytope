@@ -182,8 +182,7 @@ With `bulk_grid_leaves` on, the leaves of a prepared tree are `BulkGridTensorInd
 - `tree.prune(select=...)` works on a tree holding bulk nodes and shares their arrays (`copy_shared`), so a
   per-field or per-group sub-tree costs nothing per point; `latitude_range` is refused (see above);
 - `datacube.prototype_metrics` after `prepare`/`get`: `ranges_per_field`, `request_planning_s`,
-  `uncompressed_requests`, `effective_range_arrays`, `gj_extract_call_s`, `iterator_and_assignment_s`,
-  `returned_range_arrays`.
+  `uncompressed_requests`, `effective_range_arrays`, `gj_extract_call_s`, `iterator_and_assignment_s`.
 
 ## Follow-ups (not in this branch)
 
