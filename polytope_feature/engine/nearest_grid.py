@@ -163,8 +163,8 @@ def batches_point(shape, datacube, api=None):
     return _is_nearest_query(shape.method, shape.k, shape.axes(), batched_axes(datacube, api))
 
 
-def batched_polytopes(node, ax, datacube, api):
-    """The nearest queries of ``node`` to resolve on axis ``ax``, in request order (empty when there are none).
+def batched_polytopes(engine, ax, datacube, api):
+    """The nearest queries ``engine`` is to resolve on axis ``ax``, in request order (empty when none).
 
     They are resolved on the first of the two spatial axes, which is where the engine reaches them with the
     tree prefix built: the second axis then has no nodes left to descend into.
@@ -172,7 +172,7 @@ def batched_polytopes(node, ax, datacube, api):
     names = batched_axes(datacube, api)
     if names is None or ax.name != names[0]:
         return ()
-    return [p for p in getattr(node, "batched_polytopes", ()) if batches_polytope(p, datacube, api)]
+    return [p for p in engine.batched if batches_polytope(p, datacube, api)]
 
 
 # ---------------------------------------------------------------------------------------------------------------------

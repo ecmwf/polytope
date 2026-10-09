@@ -16,6 +16,11 @@ class Engine:
     # polytopes to this engine at once instead of rebuilding the prefix per point.
     batches_polytopes = False
 
+    #: The polytopes ``Polytope.slice`` is handing this engine to resolve together on the axis it is
+    #: building, in request order (empty when there are none).  Set per axis of every combination group, so
+    #: an engine only reads it from the ``_build_branch`` call it was set for.
+    batched = ()
+
     def batches_polytope(self, polytope, datacube, api=None):
         """Whether this engine resolves ``polytope`` in a batch rather than one tree descent per polytope.
 

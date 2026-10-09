@@ -182,13 +182,12 @@ class Polytope:
             r["unsliced_polytopes"] = set(shared)
             current_nodes = [r]
             for ax, engine in zip(axes, engines):
-                on_axis = [p for p in batched if ax.name in p.axes()]
+                # The prefix is shared by every grouped combination, so hand all of their polytopes on this
+                # axis to the engine at once, in request order (Engine.batched).
+                engine.batched = on_axis = [p for p in batched if ax.name in p.axes()]
                 if on_axis:
-                    # The prefix is shared by every grouped combination, so hand all of
-                    # their polytopes on this axis to the engine at once, in request order.
                     for node in current_nodes:
                         node["unsliced_polytopes"] = node["unsliced_polytopes"] | set(on_axis)
-                        node["batched_polytopes"] = on_axis
                 next_nodes = []
                 for node in current_nodes:
                     engine._build_branch(ax, node, datacube, next_nodes, self)
