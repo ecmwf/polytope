@@ -95,6 +95,10 @@ def _compute_batched_axes(datacube, api):
     mapper = _structured_mapper(datacube)
     if mapper is None:
         return None
+    if not hasattr(datacube, "nearest_lat_lon_search"):
+        # Only the backend whose search this replaces.  An xarray datacube has no nearest search at all, so
+        # its nearest Points keep returning every candidate the slicer bracketed, as they always have.
+        return None
     names = tuple(mapper._mapped_axes())
     if len(names) != 2:
         return None
@@ -124,9 +128,9 @@ def _compute_batched_axes(datacube, api):
 def batched_axes(datacube, api=None):
     """The ``(first, second)`` axis names whose nearest queries this module resolves, or None.
 
-    None for a datacube without a structured grid mapper (a point cloud, an xarray datacube) and for one
-    whose spatial axes carry transformations whose effect on the sliced values is not reproduced here; the
-    caller then keeps the per-query path.
+    None for a datacube without a structured grid mapper (a point cloud), for a backend that has no nearest
+    search to replace (an xarray datacube) and for a datacube whose spatial axes carry transformations whose
+    effect on the sliced values is not reproduced here; the caller then keeps the per-query path.
 
     Answered once per datacube: ``Polytope.slice`` asks per polytope, and the answer depends on the datacube
     and on which engine slices its spatial axes, not on the request.  Only an answer that could see the
@@ -153,8 +157,8 @@ def batches_polytope(polytope, datacube, api=None):
 def batches_point(shape, datacube, api=None):
     """Whether a ``Point`` shape's values are nearest queries this module resolves.
 
-    Such a point must stay two-dimensional (``decompose_1D = False``) so that each of its values reaches
-    the engine as one polytope with both coordinates, as it does for the quadtree slicer.
+    Such a point must stay two-dimensional (``decompose_1D = False``) so that each of its values reaches the
+    engine as one polytope with both coordinates, as it does for the quadtree slicer.
     """
     return _is_nearest_query(shape.method, shape.k, shape.axes(), batched_axes(datacube, api))
 

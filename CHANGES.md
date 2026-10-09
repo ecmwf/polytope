@@ -308,8 +308,10 @@ meant keeping 570 lines of code and tests for a path no caller takes.
   change it.
 - **`k != 1` and grids this module does not model keep the old path.**  A nearest `Point` with `k > 1` on a
   structured grid (already unsupported: the old search printed a warning and used `k = 1`), a datacube
-  without a structured grid mapper (a point cloud, an xarray datacube) and spatial axes carrying
-  transformations other than mapper/cyclic/reverse are resolved exactly as before.
+  without a structured grid mapper (a point cloud) and spatial axes carrying transformations other than
+  mapper/cyclic/reverse are resolved exactly as before.  So is an xarray datacube, which has no nearest
+  search to replace: its nearest `Point`s still come back as every candidate the slicer bracketed, since
+  `nearest_lat_lon_search` only ever existed on `FDBDatacube`.
 - **A nearest query on an unstructured grid is mapped into the cyclic longitude range** before the point
   cloud is searched (`QuadTreeSlicer._query_points`), as it always was on a structured grid.  A query at -9
   degrees against a [0, 360] point cloud was nearest to the cloud's smallest longitude, so a request of
