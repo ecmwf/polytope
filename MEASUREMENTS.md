@@ -100,7 +100,6 @@ fields in one gribjump call (the `step` axis stays compressed).  Fake gribjump, 
 
     python performance/tree_memory.py --get --fields=12 healpix1024_europe_box            # flat, filling the tree
     python performance/tree_memory.py --get --fields=12 --iter healpix1024_europe_box     # flat, through get_iter
-    python performance/tree_memory.py --get --fields=12 --legacy healpix1024_europe_box   # per-range assignment
 
 - **HEALPix nested 1024, Europe box** `[35, -15]` to `[71, 40]`: 357,409 points in 223,602 index ranges (1.6
   points per range).
@@ -108,7 +107,8 @@ fields in one gribjump call (the `step` axis stays compressed).  Fake gribjump, 
   ranges (1,295 points per range).
 
 "before" is the per-range assignment (`result.values[i]` per range, chunks of every leaf kept until the last field
-arrived) kept in `tests/legacy_assign.py`; "after" is the flat one (`result.values_flat` once per field, scattered
+arrived), measured while it was still there (`--legacy`, which went with the per-row path -- see `CHANGES.md`);
+"after" is the flat one (`result.values_flat` once per field, scattered
 into pre-allocated leaf results); "get_iter" consumes the same call field by field and drops each field.
 
 | grid | fields | values | before | after | `get_iter` | before peak | after peak | `get_iter` peak |
@@ -130,10 +130,12 @@ Where the rest of the peak is, and what polytope-mars should size with:
   points a leaf does not cover in one ascending run, 4 B/value for the plan's positions.  Before, each index
   range cost a numpy view plus a list slot (~165 B measured), which on HEALPix is ~100 B per *value* and on a
   row-ordered grid ~0.1 B.
-- The **request side** is unchanged and is what a small call peaks on: `get_last_layer_before_leaf` collects
-  every point's grid index as a Python `int` in a list and `sort_fdb_request_ranges` sorts `enumerate(...)` of
+- The **request side** was what a small call peaked on while requests were planned row by row:
+  `get_last_layer_before_leaf` collected
+  every point's grid index as a Python `int` in a list and `sort_fdb_request_ranges` sorted `enumerate(...)` of
   those lists.  Measured (`request_bytes_per_value x fields`): **~210 B per point on HEALPix nested, ~88 B per
-  point on EFAS**, independent of the number of fields.  See the follow-up in `CHANGES.md`.
+  point on EFAS**, independent of the number of fields.  Both passes are gone with the per-row path
+  (`CHANGES.md`); the fold's own cost is in the section below.
 - So the Python side of one call is about `n_points x 220 B + n_values x 24 B` on every grid measured (that bound
   holds for all six rows above, with room to spare on the row-ordered grid).  The 24 B/value term is the
   grid-independent constant; the per-point term is paid once per call however many fields it has, so it is
@@ -153,10 +155,12 @@ HEALPix 1024 Europe box with 4 compressed fields (753 leaves, 1,429,636 values) 
 # One bulk spatial node per field: whole-field ranges instead of per-row ranges
 
 One field, sliced as polytope-mars builds its features (`_merge_union_rows = True`), then `prepare` and `get`
-against polytope-mars' fake gribjump, with `bulk_grid_leaves` off and on.  Each row is a fresh subprocess; peak
-is `resource.getrusage(RUSAGE_SELF).ru_maxrss` of that process.  Reproduce with:
+against polytope-mars' fake gribjump, with `bulk_grid_leaves` off and on (the `off` rows were measured while
+the option could still be turned off -- see `CHANGES.md`; `bulk_memory.py` now measures the one path that is
+left).  Each row is a fresh subprocess; peak
+is `resource.getrusage(RUSAGE_SELF).ru_maxrss` of that process.  Reproduce the `on` rows with:
 
-    python performance/bulk_memory.py            # every shape, fold off and on
+    python performance/bulk_memory.py            # every shape
     python performance/bulk_memory.py SHAPE ...  # see performance/bulk_memory.py SHAPES
 
 | shape | bulk | points | slice s | tree MB | tree B/pt | prepare s | get s | growth B/pt | peak growth B/pt | peak MB | ranges/field |
