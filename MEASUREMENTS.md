@@ -156,12 +156,12 @@ HEALPix 1024 Europe box with 4 compressed fields (753 leaves, 1,429,636 values) 
 
 One field, sliced as polytope-mars builds its features (`_merge_union_rows = True`), then `prepare` and `get`
 against polytope-mars' fake gribjump, with `bulk_grid_leaves` off and on (the `off` rows were measured while
-the option could still be turned off -- see `CHANGES.md`; `bulk_memory.py` now measures the one path that is
+the option could still be turned off -- see `CHANGES.md`; `spatial_node_memory.py` now measures the one path that is
 left).  Each row is a fresh subprocess; peak
 is `resource.getrusage(RUSAGE_SELF).ru_maxrss` of that process.  Reproduce the `on` rows with:
 
-    python performance/bulk_memory.py            # every shape
-    python performance/bulk_memory.py SHAPE ...  # see performance/bulk_memory.py SHAPES
+    python performance/spatial_node_memory.py            # every shape
+    python performance/spatial_node_memory.py SHAPE ...  # see performance/spatial_node_memory.py SHAPES
 
 | shape | bulk | points | slice s | tree MB | tree B/pt | prepare s | get s | growth B/pt | peak growth B/pt | peak MB | ranges/field |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |

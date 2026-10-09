@@ -63,7 +63,7 @@ __all__ = [
     "batched_polytopes",
     "batches_point",
     "batches_polytope",
-    "build_bulk_node",
+    "build_grid_node",
     "resolve",
 ]
 
@@ -474,7 +474,7 @@ def _points_of(mapper, rows, row_of_query, index_of_query, lat_of_query, lon_of_
 # The node the engine builds
 
 
-def build_bulk_node(node, polytopes, datacube, api):
+def build_grid_node(node, polytopes, datacube, api):
     """Resolve ``polytopes`` (nearest queries) and give ``node`` one bulk grid child holding their points.
 
     One node per tree prefix: the search itself is independent of the prefix, so it is run once per

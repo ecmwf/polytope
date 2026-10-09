@@ -1,16 +1,16 @@
 """Fold the latitude -> longitude layers of a prepared request tree into one array-backed node.
 
 ``FDBDatacube.prepare``/``get`` reach the spatial layers of a structured (hullslicer) tree as one
-latitude node per grid row, each holding one longitude leaf per piece of the request shape.  With
-``bulk_grid_leaves`` set, :func:`fold_into_bulk_grid` replaces those layers by a single
+latitude node per grid row, each holding one longitude leaf per piece of the request shape.
+:func:`fold_spatial_rows` replaces those layers by a single
 :class:`~polytope_feature.datacube.tensor_index_tree.BulkGridTensorIndexNode` holding the whole
 field's coordinates and canonical grid indexes as arrays, so that the request ranges come from one
 sort of the field's indexes instead of one sort per row (on HEALPix nested grids that is hundreds of
 ranges instead of hundreds of thousands) and the per-point Python of the legacy request planning
 disappears.
 
-The point order is the one ``prepare`` produces without the fold, which is the order the legacy
-CovJSON encoders read the tree in: the latitude rows in tree order and, within a row, the longitude
+The point order is the order of the sliced rows, which is the order the legacy CovJSON encoders
+read the tree in: the latitude rows in tree order and, within a row, the longitude
 leaves in tree order, each leaf's points in grid-index order (or, for the merged polygon rows of
 ``tree_rows.RowMerger``, in ascending longitude order, which is the order their results come back
 in).
@@ -25,7 +25,7 @@ import numpy as np
 
 from .tensor_index_tree import BulkGridTensorIndexNode
 
-__all__ = ["fold_into_bulk_grid"]
+__all__ = ["fold_spatial_rows"]
 
 
 def _leaf_indexes(datacube, lon_child, leaf_path):
@@ -134,7 +134,7 @@ def _drop_duplicate_indexes(coordinates, indexes, tag_ids, row_lengths):
     )
 
 
-def fold_into_bulk_grid(datacube, requests, leaf_path):
+def fold_spatial_rows(datacube, requests, leaf_path):
     """Replace the latitude -> longitude children of ``requests`` by one ``BulkGridTensorIndexNode``.
 
     ``requests`` is the node above the latitude layer and ``leaf_path`` the gribjump path built for

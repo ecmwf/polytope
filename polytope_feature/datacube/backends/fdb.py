@@ -11,7 +11,7 @@ from ..tensor_index_tree import (
     BulkGridTensorIndexNode,
     BulkMergedTensorIndexNode,
 )
-from ..tree_fold import fold_into_bulk_grid
+from ..tree_fold import fold_spatial_rows
 from ..tree_values import is_array, values_hash_key
 from .datacube import Datacube, TensorIndexTree
 
@@ -38,7 +38,7 @@ def field_values_flat(result):
     return np.asarray(flat, dtype=np.float64)
 
 
-class BulkFDBDecoding:
+class FDBDecoding:
     __slots__ = ("node", "sorted_output_positions")
 
     def __init__(self, node, sorted_output_positions):
@@ -72,9 +72,6 @@ class FDBDatacube(Datacube):
 
         self.unwanted_path = {}
         self.axis_options = axis_options
-        # The spatial layers of a prepared tree are always folded into one array-backed node per
-        # spatial sub-tree (see :meth:`prepare`).  Kept as an attribute because the slicers read it.
-        self.bulk_grid_leaves = True
 
         partial_request = config
         # Find values in the level 3 FDB datacube
@@ -263,7 +260,7 @@ class FDBDatacube(Datacube):
         iterator = self._gribjump_extract(uncompressed_requests, context)
         for k, result in enumerate(iterator):
             decoding = decoding_info[k]
-            values = self.bulk_field_values(result, decoding)
+            values = self.field_values(result, decoding)
             del result
             yield uncompressed_requests[k][0], None if values is None else [(decoding.node, values)]
             del values  # let the caller's field go before the next one is read
@@ -299,7 +296,7 @@ class FDBDatacube(Datacube):
     def _gribjump_requests(self, requests):
         """Build the gribjump extract requests for ``requests`` and their decoding info.
 
-        One request per field of every spatial sub-tree, and one :class:`BulkFDBDecoding` per sub-tree,
+        One request per field of every spatial sub-tree, and one :class:`FDBDecoding` per sub-tree,
         shared by all of its fields: it says which bulk node the values belong to and in which order.
         """
         # never carry unmapping state over from a previous get
@@ -356,7 +353,7 @@ class FDBDatacube(Datacube):
 
         Every spatial sub-tree is one array-backed node: either a bulk coupled-axis node, as the quadtree
         slicer builds it for an unstructured grid, or the latitude -> longitude layers of a structured grid
-        folded into one node here (:func:`~polytope_feature.datacube.tree_fold.fold_into_bulk_grid`).
+        folded into one node here (:func:`~polytope_feature.datacube.tree_fold.fold_spatial_rows`).
         """
         if leaf_path is None:
             leaf_path = {}
@@ -374,7 +371,7 @@ class FDBDatacube(Datacube):
         # Bulk coupled-axis leaves carry all selected canonical indexes in one array-backed node.
         if isinstance(requests.children[0], BulkMergedTensorIndexNode):
             for bulk_node in requests.children:
-                path, ranges, decoding = self.get_bulk_merged_values(bulk_node, leaf_path)
+                path, ranges, decoding = self.get_spatial_node_values(bulk_node, leaf_path)
                 fdb_requests.append((path, ranges))
                 fdb_requests_decoding_info.append(decoding)
         elif isinstance(requests.children[0].children[0], BulkMergedTensorIndexNode):
@@ -387,9 +384,9 @@ class FDBDatacube(Datacube):
                     f"Spatial leaves of kind {type(requests.children[0].children[0]).__name__} cannot be "
                     "fetched: a spatial sub-tree is one array-backed node"
                 )
-            grid_node = fold_into_bulk_grid(self, requests, leaf_path)
+            grid_node = fold_spatial_rows(self, requests, leaf_path)
             if grid_node is not None:
-                path, ranges, decoding = self.get_bulk_merged_values(grid_node, leaf_path)
+                path, ranges, decoding = self.get_spatial_node_values(grid_node, leaf_path)
                 fdb_requests.append((path, ranges))
                 fdb_requests_decoding_info.append(decoding)
         # Otherwise remap the path for this key and iterate again over children
@@ -519,7 +516,7 @@ class FDBDatacube(Datacube):
             node._keep_value_order = keep_value_order
             lat_child.add_child(node)
 
-    def get_bulk_merged_values(self, bulk_node, leaf_path=None):
+    def get_spatial_node_values(self, bulk_node, leaf_path=None):
         if leaf_path is None:
             leaf_path = {}
 
@@ -564,7 +561,7 @@ class FDBDatacube(Datacube):
 
         path.pop("values", None)
         path.pop("index", None)
-        return path, ranges, BulkFDBDecoding(bulk_node, sorted_output_positions)
+        return path, ranges, FDBDecoding(bulk_node, sorted_output_positions)
 
     def assign_fdb_output_to_nodes(self, output_iterator, fdb_requests_decoding_info):
         """Append every field of the gribjump output to the bulk node it was requested for.
@@ -574,16 +571,16 @@ class FDBDatacube(Datacube):
         """
         logging.debug("Assigning GribJump output to tree nodes")
         for k, result in enumerate(output_iterator):
-            self.assign_bulk_result(result, fdb_requests_decoding_info[k])
+            self.assign_result(result, fdb_requests_decoding_info[k])
         logging.debug("Finished assigning GribJump output to tree nodes")
 
     @staticmethod
-    def bulk_field_values(result, decoding):
+    def field_values(result, decoding):
         """One field's values in a bulk node's point order, or ``None`` when gribjump had no message for it.
 
         The field is read once, as the contiguous ``values_flat`` buffer over all of its index ranges (in
         ascending grid-index order), and scattered back into the node's point order with the positions
-        ``get_bulk_merged_values`` recorded when it sorted the node's indexes.
+        ``get_spatial_node_values`` recorded when it sorted the node's indexes.
         """
         flat = field_values_flat(result)
         if flat is None:
@@ -600,9 +597,9 @@ class FDBDatacube(Datacube):
         return values
 
     @classmethod
-    def assign_bulk_result(cls, result, decoding):
+    def assign_result(cls, result, decoding):
         """Append one field's values to a bulk node's ``result``, back in the node's point order."""
-        values = cls.bulk_field_values(result, decoding)
+        values = cls.field_values(result, decoding)
         if values is None:
             values = np.full(decoding.node.point_count, None, dtype=object)
         decoding.node.result.append(values)

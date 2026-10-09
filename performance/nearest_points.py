@@ -10,7 +10,7 @@ numpy and polytope baseline).
     python performance/nearest_points.py --path old --n 1000        # the per-query path only
     python performance/nearest_points.py --json
 
-The request is one field per grid, as ``performance/bulk_memory.py`` declares it: neither the slice nor
+The request is one field per grid, as ``performance/spatial_node_memory.py`` declares it: neither the slice nor
 ``prepare`` depends on how many instants the timeseries has, because the time axis is compressed and the
 spatial sub-tree is built once.
 
@@ -56,8 +56,8 @@ def query_points(n, seed=11):
 
 def measure(grid, n, batched, seed=11):
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    from bulk_memory import build_request
     from polytope_mars.testing import make_fake_gribjump
+    from spatial_node_memory import build_request
 
     from polytope_feature.polytope import Polytope
 

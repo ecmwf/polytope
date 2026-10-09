@@ -158,7 +158,7 @@ class HullSlicer(Engine):
         if batched:
             # All nearest queries of this prefix at once, into one array-backed node: no node is appended
             # to next_nodes, so the second spatial axis has nothing left to descend into.
-            nearest_grid.build_bulk_node(node, batched, datacube, api)
+            nearest_grid.build_grid_node(node, batched, datacube, api)
             del node["unsliced_polytopes"]
             return
         if ax.name not in api.compressed_axes:

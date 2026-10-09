@@ -4,9 +4,9 @@ Drives the real ``FDBDatacube`` against polytope-mars' fake gribjump (``polytope
 mapper options and MARS paths are the ones the deployments use.  Every shape runs in a fresh
 subprocess; peak memory is ``resource.getrusage(RUSAGE_SELF).ru_maxrss`` of that process.
 
-    python performance/bulk_memory.py                     # every shape
-    python performance/bulk_memory.py SHAPE [...]          # named shapes, see SHAPES
-    python performance/bulk_memory.py --json              # one JSON object per run instead of the table
+    python performance/spatial_node_memory.py                     # every shape
+    python performance/spatial_node_memory.py SHAPE [...]          # named shapes, see SHAPES
+    python performance/spatial_node_memory.py --json              # one JSON object per run instead of the table
 
 Columns: points, slice time, tree size after the slice (RSS growth and the ``getsizeof`` estimate),
 ``prepare`` time, the request planning time inside it, the growth and peak growth of ``prepare`` + ``get`` over

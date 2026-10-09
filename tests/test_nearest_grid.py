@@ -304,7 +304,6 @@ def test_a_quadtree_nearest_query_is_mapped_into_the_cyclic_longitude_range():
     slicer = QuadTreeSlicer(cloud)
     datacube = types.SimpleNamespace(
         _axes={"latitude": lat_ax, "longitude": cyclic_longitude_axis(lon_ax)},
-        bulk_grid_leaves=True,
         nearest_search={},
     )
     query = ConvexPolytope(["latitude", "longitude"], [[0.1, -9.0]], method="nearest", k=1)
@@ -312,6 +311,6 @@ def test_a_quadtree_nearest_query_is_mapped_into_the_cyclic_longitude_range():
     assert list(cloud[index]) == [0.0, 350.0]
 
     # without a cyclic axis the query keeps its own value, and the nearest point is the smallest longitude
-    plain = types.SimpleNamespace(_axes={"latitude": lat_ax, "longitude": lon_ax}, bulk_grid_leaves=True)
+    plain = types.SimpleNamespace(_axes={"latitude": lat_ax, "longitude": lon_ax})
     (index,) = slicer.extract_single(plain, query)
     assert list(cloud[index]) == [0.0, 0.0]

@@ -114,13 +114,5 @@ class QuadTreeSlicer(Engine):
         order = np.lexsort((coordinates[:, 1], coordinates[:, 0]))
         tags = [point_tags[int(i)] for i in indexes[order]]
         lon_ax = datacube._axes["longitude"]
-        if getattr(datacube, "bulk_grid_leaves", False):
-            # One array-backed leaf for the whole selection.
-            node.create_bulk_merged_child([ax, lon_ax], coordinates[order], indexes[order], [], point_tags=tags)
-            return
-        # One leaf per point, as the tree looked before bulk leaves existed.
-        for (lat_val, lon_val), index, point_tags_of_point in zip(coordinates[order], indexes[order], tags):
-            child, _ = node.create_merged_child([ax, lon_ax], (float(lat_val), float(lon_val)), [])
-            # NOTE: the index of the point is stashed in the branches' result
-            child.indexes = [int(index)]
-            child.tags.update(point_tags_of_point)
+        # One array-backed leaf for the whole selection.
+        node.create_bulk_merged_child([ax, lon_ax], coordinates[order], indexes[order], [], point_tags=tags)

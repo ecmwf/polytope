@@ -1,8 +1,9 @@
-"""The ``bulk_grid_leaves`` fold of a structured tree: same points, same order, same values.
+"""The fold of a structured tree's spatial rows into one node: same points, same order, same values.
 
-Drives the real ``FDBDatacube`` against the in-memory fake gribjump (``tests/fake_gribjump.py``) with
-the fold off and on and compares the ordered ``(latitude, longitude)`` list and the per-field values,
-which is what makes the CovJSON bytes of the two paths identical.
+Drives the real ``FDBDatacube`` against the in-memory fake gribjump (``tests/fake_gribjump.py``),
+reads the ordered ``(latitude, longitude)`` list off the sliced rows before ``prepare`` folds them,
+and compares it with the folded node's coordinates and per-field values; that order is what the
+CovJSON bytes depend on.
 """
 
 import numpy as np

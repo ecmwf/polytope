@@ -158,9 +158,6 @@ class TestRetagNearestLons:
 
 
 class _Cube:
-    # bulk leaves are opt-in on the datacube (the ``bulk_grid_leaves`` option)
-    bulk_grid_leaves = True
-
     def __init__(self):
         self._axes = {"latitude": LAT, "longitude": LON}
 
