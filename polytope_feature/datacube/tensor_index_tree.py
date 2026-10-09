@@ -335,6 +335,12 @@ class BulkGridTensorIndexNode(BulkMergedTensorIndexNode):
     otherwise ``lon_values`` is the list of per-row longitude arrays.
     """
 
+    #: Set on a node built by the batched nearest-point search (:mod:`polytope_feature.engine.nearest_grid`):
+    #: for every query point of the request, in request order, the index of the point of this node it
+    #: resolved to.  Several queries share a point when they are nearest to the same grid point, so this is
+    #: what a caller needs to report one result per *requested* point.  None on any other node.
+    point_of_query = None
+
     def __init__(
         self,
         axes,

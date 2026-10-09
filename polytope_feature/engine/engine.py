@@ -16,6 +16,15 @@ class Engine:
     # polytopes to this engine at once instead of rebuilding the prefix per point.
     batches_polytopes = False
 
+    def batches_polytope(self, polytope, datacube, api=None):
+        """Whether this engine resolves ``polytope`` in a batch rather than one tree descent per polytope.
+
+        Per polytope, because an engine can batch some of the polytopes on its axes and not others: the
+        hullslicer resolves nearest ``Point`` queries on a structured grid's two axes in one pass
+        (:mod:`polytope_feature.engine.nearest_grid`) and everything else one descent at a time.
+        """
+        return self.batches_polytopes
+
     def reset(self):
         """Clear any per-slice state. Called once at the start of every Polytope.slice()."""
         pass

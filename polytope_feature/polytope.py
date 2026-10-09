@@ -6,6 +6,7 @@ from .datacube.datacube_axis import UnsliceableDatacubeAxis
 from .datacube.tensor_index_tree import TensorIndexTree
 from .datacube.tree_rows import RowMerger
 from .engine.hullslicer import HullSlicer
+from .engine.nearest_grid import batches_point
 from .engine.optimised_point_in_polygon_slicer import OptimisedPointInPolygonSlicer
 from .engine.optimised_quadtree_slicer import OptimisedQuadTreeSlicer
 from .engine.point_in_polygon_slicer import PointInPolygonSlicer
@@ -138,6 +139,9 @@ class Polytope:
         self.leaf_axis_name = next(reversed(datacube.axes.keys()))
 
         merge_rows = self._compress_union_rows(datacube, polytopes)
+        # Leaves of merged union rows keep their values in ascending order instead of grid-index order
+        # (see tree_rows.RowMerger); the batched nearest search builds its node in the same order.
+        self.merge_leaf_rows = merge_rows
 
         # Convert the polytope points to float type to support triangulation and interpolation
         for p in polytopes:
@@ -154,18 +158,28 @@ class Polytope:
 
         axes = list(datacube.axes.values())
         engines = [self.find_engine(ax) for ax in axes]
-        batched_axes = {ax.name for ax, engine in zip(axes, engines) if engine.batches_polytopes}
+        engine_of_axis = dict(zip(datacube.axes.keys(), engines))
 
-        for shared, batched in self._group_combinations(tensor_product(groups), batched_axes):
+        def batches(polytope):
+            """Whether an engine resolves this polytope together with the others on its axes."""
+            return any(
+                engine.batches_polytope(polytope, datacube, self)
+                for engine in (engine_of_axis.get(name) for name in polytope.axes())
+                if engine is not None
+            )
+
+        for shared, batched in self._group_combinations(tensor_product(groups), batches):
             r = TensorIndexTree()
             r["unsliced_polytopes"] = set(shared)
             current_nodes = [r]
             for ax, engine in zip(axes, engines):
-                if engine.batches_polytopes:
+                on_axis = [p for p in batched if ax.name in p.axes()]
+                if on_axis:
                     # The prefix is shared by every grouped combination, so hand all of
-                    # their polytopes on this engine's axes to it at once.
+                    # their polytopes on this axis to the engine at once, in request order.
                     for node in current_nodes:
-                        node["unsliced_polytopes"] = node["unsliced_polytopes"] | batched
+                        node["unsliced_polytopes"] = node["unsliced_polytopes"] | set(on_axis)
+                        node["batched_polytopes"] = on_axis
                 next_nodes = []
                 for node in current_nodes:
                     engine._build_branch(ax, node, datacube, next_nodes, self)
@@ -215,22 +229,26 @@ class Polytope:
         return polys
 
     @classmethod
-    def _group_combinations(cls, combinations, batched_axes):
+    def _group_combinations(cls, combinations, batches_polytope):
         """Yield (shared_polytopes, batched_polytopes) per distinct tree prefix.
 
-        Polytopes on axes of a batching engine (see Engine.batches_polytopes) are split
-        off; combinations whose remaining polytopes are identical (eg. every Point of a
-        Union shares the same Selects) then only need their prefix built once.
+        Polytopes an engine batches (see Engine.batches_polytope) are split off; combinations whose
+        remaining polytopes are identical (eg. every Point of a Union shares the same Selects) then only
+        need their prefix built once.  The batched polytopes keep the order of the request, which is the
+        order the engine resolving them reports its result in.
         """
         grouped = {}
         for c in combinations:
-            shared, batched = [], []
+            shared, batched = [], {}
             for poly in cls._flatten_combination(c):
-                (batched if batched_axes.intersection(poly.axes()) else shared).append(poly)
-            key = frozenset(shared) if batched_axes else object()
-            entry = grouped.setdefault(key, (shared, set()))
+                if batches_polytope(poly):
+                    batched[poly] = None
+                else:
+                    shared.append(poly)
+            key = frozenset(shared) if batched else object()
+            entry = grouped.setdefault(key, (shared, {}))
             entry[1].update(batched)
-        return grouped.values()
+        return [(shared, list(batched)) for shared, batched in grouped.values()]
 
     def find_engine(self, ax):
         if ax.name not in self.engine_options:
@@ -239,17 +257,26 @@ class Polytope:
         return self.engines[slicer_type]
 
     def switch_polytope_dim(self, request):
-        # If we see a 2-dim slicer on an axis
-        # then make sure that if the shape is a point, we set decompose_1D to False
-        for ax, slicer in self.engine_options.items():
-            if slicer == "quadtree":
-                for shp in request.shapes:
-                    if ax in shp.axes() and isinstance(shp, Point):
-                        shp.decompose_1D = False
-                    elif isinstance(shp, Union):
-                        for s in shp._shapes:
-                            if ax in s.axes() and isinstance(s, Point):
-                                s.decompose_1D = False
+        """Keep a ``Point`` two-dimensional where the engine of its axes resolves both coordinates at once.
+
+        That is the quadtree slicer on any point, and the hullslicer on a nearest point of a structured
+        grid, which it resolves with every other nearest point of the request
+        (:mod:`polytope_feature.engine.nearest_grid`).  Otherwise a point is decomposed into one
+        1-D polytope per axis, which the engine then slices one axis at a time.
+        """
+        joint_axes = {ax for ax, slicer in self.engine_options.items() if slicer == "quadtree"}
+
+        def resolved_jointly(shape):
+            if not isinstance(shape, Point):
+                return False
+            if joint_axes.intersection(shape.axes()):
+                return True
+            return batches_point(shape, self.datacube, self)
+
+        for shp in request.shapes:
+            for shape in shp._shapes if isinstance(shp, Union) else [shp]:
+                if resolved_jointly(shape):
+                    shape.decompose_1D = False
 
     def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""

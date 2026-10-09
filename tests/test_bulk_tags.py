@@ -234,16 +234,18 @@ class TestEngineBatching:
         step = ConvexPolytope(["step"], [[0]], is_orthogonal=True)
         points = [nearest([i, i], f"t{i}") for i in range(3)]
         combinations = [([step], p) for p in points]
-        groups = list(Polytope._group_combinations(combinations, {"latitude", "longitude"}))
+        spatial = {"latitude", "longitude"}
+        groups = list(Polytope._group_combinations(combinations, lambda p: spatial.intersection(p.axes())))
         assert len(groups) == 1
         shared, batched = groups[0]
         assert shared == [step]
-        assert batched == set(points)
+        # the batched polytopes keep the order of the request
+        assert batched == points
 
     def test_group_combinations_without_batching_engine_keeps_every_combination(self):
         step = ConvexPolytope(["step"], [[0]], is_orthogonal=True)
         combinations = [([step], p) for p in (nearest([0, 0], None), nearest([1, 1], None))]
-        assert len(list(Polytope._group_combinations(combinations, set()))) == 2
+        assert len(list(Polytope._group_combinations(combinations, lambda p: False))) == 2
 
 
 # ---------------------------------------------------------------------------

@@ -3,6 +3,7 @@ from copy import copy
 
 from ..datacube.datacube_axis import FloatDatacubeAxis
 from ..utility.exceptions import UnsliceableShapeError
+from . import nearest_grid
 from .engine import Engine
 from .slicing_tools import slice
 
@@ -10,6 +11,19 @@ from .slicing_tools import slice
 class HullSlicer(Engine):
     def __init__(self):
         super().__init__()
+        self._nearest_points = None
+
+    def reset(self):
+        # the resolved points of a batched nearest search belong to one request only
+        self._nearest_points = None
+
+    def batches_polytope(self, polytope, datacube, api=None):
+        """Nearest ``Point`` queries on the two axes of a structured grid are resolved all at once.
+
+        Everything else keeps one tree descent per polytope.  See
+        :mod:`polytope_feature.engine.nearest_grid` for what the batched resolution does and why.
+        """
+        return nearest_grid.batches_polytope(polytope, datacube, api)
 
     def _build_unsliceable_child(self, polytope, ax, node, datacube, lowers, next_nodes, slice_axis_idx):
         if not polytope.is_flat:
@@ -139,6 +153,13 @@ class HullSlicer(Engine):
             child.add_values(compressed_values)
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):
+        batched = nearest_grid.batched_polytopes(node, ax, datacube, api)
+        if batched:
+            # All nearest queries of this prefix at once, into one array-backed node: no node is appended
+            # to next_nodes, so the second spatial axis has nothing left to descend into.
+            nearest_grid.build_bulk_node(node, batched, datacube, api)
+            del node["unsliced_polytopes"]
+            return
         if ax.name not in api.compressed_axes:
             parent_node = node.parent
             right_unsliced_polytopes = []
