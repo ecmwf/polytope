@@ -1,22 +1,41 @@
 import logging
-import operator
 import time
-from copy import copy, deepcopy
+from copy import deepcopy
 from itertools import product
 
 import numpy as np
 
 from ...utility.exceptions import BadGridError, BadRequestError, GribJumpNoIndexError
 from ...utility.geometry import nearest_pt
-from ..fdb_assign import FieldRequests, field_values_flat
 from ..tensor_index_tree import (
     BulkGridTensorIndexNode,
     BulkMergedTensorIndexNode,
-    MergedTensorIndexNode,
 )
 from ..tree_fold import fold_into_bulk_grid
-from ..tree_values import is_array, take, values_hash_key
+from ..tree_values import is_array, values_hash_key
 from .datacube import Datacube, TensorIndexTree
+
+
+def field_values_flat(result):
+    """One field's values as a contiguous float64 array, or ``None`` when gribjump had no data for the field.
+
+    Prefers pygribjump's ``values_flat`` (a view over the whole result, so no per-range objects are created) and
+    falls back to concatenating ``values`` for result objects that do not have it.  On a HEALPix nested grid a
+    bounding box asks for roughly one index range per 1.6 points, where the per-range ``values`` list costs a
+    numpy object plus a list slot per range and the flat buffer costs eight bytes per value.  Bitmap-missing
+    points are NaN in the buffer gribjump fills, exactly as they are in the per-range ``values`` views, which
+    are slices of the same buffer; ``masks_flat`` is therefore not needed to reproduce them.
+    """
+    flat = getattr(result, "values_flat", None)
+    if flat is None:
+        chunks = result.values
+        if len(chunks) == 0:
+            return None
+        flat = np.concatenate([np.asarray(c, dtype=np.float64) for c in chunks])
+    if flat.size == 0:
+        # a MARS path with no GRIB message behind it: gribjump returns an empty result for the whole field
+        return None
+    return np.asarray(flat, dtype=np.float64)
 
 
 class BulkFDBDecoding:
@@ -52,11 +71,10 @@ class FDBDatacube(Datacube):
         logging.info("Created an FDB datacube with options: " + str(axis_options))
 
         self.unwanted_path = {}
-        self._leaf_result_orders = {}
         self.axis_options = axis_options
-        # When True, the latitude -> longitude layers returned by the hullslicer are folded into a
-        # single BulkGridTensorIndexNode per path before retrieval
-        self.bulk_grid_leaves = False
+        # The spatial layers of a prepared tree are always folded into one array-backed node per
+        # spatial sub-tree (see :meth:`prepare`).  Kept as an attribute because the slicers read it.
+        self.bulk_grid_leaves = True
 
         partial_request = config
         # Find values in the level 3 FDB datacube
@@ -223,13 +241,11 @@ class FDBDatacube(Datacube):
 
         * ``field_path``: the MARS keys of one field, as given to gribjump -- one scalar value per key, the keys
           in the order the tree descends (outermost axis first);
-        * ``leaf_values``: ``[(leaf, values), ...]``, one entry per longitude leaf of the field's sub-tree in tree
-          order, ``values`` a fresh float64 array of ``len(leaf.values)`` points (NaN where a point is
-          bitmap-missing).  Concatenating them in order gives the field's points in the order ``get`` writes them
-          into the leaves.  It is ``None`` when gribjump has no message for the field (what ``get`` records as
-          ``None`` values), so that a caller can detect a missing field without reading any value.  When the
-          spatial layers are folded into bulk nodes (``bulk_grid_leaves``) the list holds one
-          ``(bulk node, values)`` entry per spatial sub-tree, ``values`` in the node's point order.
+        * ``leaf_values``: ``[(bulk node, values), ...]``, one entry per spatial sub-tree of the field in tree
+          order, ``values`` a fresh float64 array of the node's points in its point order (NaN where a point is
+          bitmap-missing).  Concatenating them in order gives the field's points in the order ``get`` writes
+          them into the nodes.  It is ``None`` when gribjump has no message for the field (what ``get`` records
+          as ``None`` values), so that a caller can detect a missing field without reading any value.
 
         Items come in gribjump's request order: the spatial sub-trees in tree order and, within a sub-tree, its
         fields as the cartesian product of the compressed axes' values in tree order -- outermost axis first,
@@ -247,32 +263,12 @@ class FDBDatacube(Datacube):
             return
         uncompressed_requests, decoding_info = self._gribjump_requests(requests)
         iterator = self._gribjump_extract(uncompressed_requests, context)
-        open_requests = None
         for k, result in enumerate(iterator):
             decoding = decoding_info[k]
-            if isinstance(decoding, BulkFDBDecoding):
-                values = self.bulk_field_values(result, decoding)
-                del result
-                yield uncompressed_requests[k][0], None if values is None else [(decoding.node, values)]
-                del values
-                continue
-            field_requests, field_index = decoding
-            if field_requests is not open_requests:
-                if open_requests is not None:
-                    open_requests.release()
-                open_requests = field_requests
-            flat = field_values_flat(result)
-            del result  # drop gribjump's result as soon as its values are readable
-            plan = field_requests.plan()
-            if flat is None:
-                yield uncompressed_requests[k][0], None
-            else:
-                values = plan.field_arrays(flat)
-                del flat
-                yield uncompressed_requests[k][0], values
-                del values  # let the caller's field go before the next one is read
-        if open_requests is not None:
-            open_requests.release()
+            values = self.bulk_field_values(result, decoding)
+            del result
+            yield uncompressed_requests[k][0], None if values is None else [(decoding.node, values)]
+            del values  # let the caller's field go before the next one is read
 
     def _gribjump_extract(self, uncompressed_requests, context):
         if logging.root.level <= logging.DEBUG:
@@ -312,15 +308,12 @@ class FDBDatacube(Datacube):
     def _gribjump_requests(self, requests):
         """Build the gribjump extract requests for ``requests`` and their decoding info.
 
-        Reorders and de-duplicates the longitude leaf values of ``requests`` in place (see :meth:`prepare`).  The
-        decoding info holds one entry per request: either a ``(FieldRequests, field index)`` pair -- the
-        ``FieldRequests`` of a spatial sub-tree is shared by all of its fields and knows where each field's values
-        belong -- or the :class:`BulkFDBDecoding` of a bulk spatial node, shared by all of its fields.
+        One request per field of every spatial sub-tree, and one :class:`BulkFDBDecoding` per sub-tree,
+        shared by all of its fields: it says which bulk node the values belong to and in which order.
         """
         # never carry unmapping state over from a previous get
         self.unwanted_path = {}
-        # id(leaf) -> positions of its values in grid-index order, for leaves whose values keep their order
-        self._leaf_result_orders = {}
+        self.prototype_metrics = {}
         self.prototype_metrics = {}
         fdb_requests = []
         fdb_requests_decoding_info = []
@@ -340,20 +333,8 @@ class FDBDatacube(Datacube):
             n_fields = 1
             for branch_values in interm_branch_tuple_values:
                 n_fields *= len(branch_values)
-            decoding = fdb_requests_decoding_info[j]
-            if isinstance(decoding, BulkFDBDecoding):
-                # one bulk node holds the whole spatial selection; every field decodes the same way
-                field_decodings = [decoding] * n_fields
-            else:
-                original_indices, fdb_node_ranges = decoding
-                field_requests = FieldRequests(
-                    original_indices,
-                    fdb_node_ranges,
-                    compressed_request[1],
-                    n_fields,
-                    self._leaf_result_orders,
-                )
-                field_decodings = [(field_requests, field_index) for field_index in range(n_fields)]
+            # one bulk node holds the whole spatial selection; every field decodes the same way
+            field_decodings = [fdb_requests_decoding_info[j]] * n_fields
 
             # Need to extract the possible requests and add them to the right nodes
             for field_index, combi in enumerate(product(*interm_branch_tuple_values)):
@@ -379,207 +360,51 @@ class FDBDatacube(Datacube):
         fdb_requests=[],
         fdb_requests_decoding_info=[],
         leaf_path=None,
-        merged_leaf=False,
     ):
+        """Descend ``requests`` and collect one ``(MARS path, index ranges)`` request per spatial sub-tree.
+
+        Every spatial sub-tree is one array-backed node: either a bulk coupled-axis node, as the quadtree
+        slicer builds it for an unstructured grid, or the latitude -> longitude layers of a structured grid
+        folded into one node here (:func:`~polytope_feature.datacube.tree_fold.fold_into_bulk_grid`).
+        """
         if leaf_path is None:
             leaf_path = {}
 
-        # First when request node is root, go to its children
-        # if isinstance(requests, TensorIndexTree):
-        if not merged_leaf:
-            if requests.axis.name == "root":
-                logging.debug("Looking for data for the tree")
+        if requests.axis.name == "root":
+            logging.debug("Looking for data for the tree")
+            for c in requests.children:
+                self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info)
+            return
 
-                for c in requests.children:
-                    self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info)
-            # If request node has no children, we have a leaf so need to assign fdb values to it
-            else:
-                key_value_path = {requests.axis.name: requests.values}
-                ax = requests.axis
-                key_value_path, leaf_path, self.unwanted_path = ax.unmap_path_key(
-                    key_value_path, leaf_path, self.unwanted_path
+        key_value_path = {requests.axis.name: requests.values}
+        ax = requests.axis
+        key_value_path, leaf_path, self.unwanted_path = ax.unmap_path_key(key_value_path, leaf_path, self.unwanted_path)
+        leaf_path.update(key_value_path)
+        # Bulk coupled-axis leaves carry all selected canonical indexes in one array-backed node.
+        if isinstance(requests.children[0], BulkMergedTensorIndexNode):
+            for bulk_node in requests.children:
+                path, ranges, decoding = self.get_bulk_merged_values(bulk_node, leaf_path)
+                fdb_requests.append((path, ranges))
+                fdb_requests_decoding_info.append(decoding)
+        elif isinstance(requests.children[0].children[0], BulkMergedTensorIndexNode):
+            for child in requests.children:
+                self.get_fdb_requests(child, fdb_requests, fdb_requests_decoding_info, leaf_path)
+        elif len(requests.children[0].children[0].children) == 0:
+            # the last two layers of a structured grid: fold them into one node for the whole sub-tree
+            if not isinstance(requests.children[0].children[0], TensorIndexTree):
+                raise BadRequestError(
+                    f"Spatial leaves of kind {type(requests.children[0].children[0]).__name__} cannot be "
+                    "fetched: a spatial sub-tree is one array-backed node"
                 )
-                leaf_path.update(key_value_path)
-                # Bulk coupled-axis leaves carry all selected canonical indexes
-                # in one array-backed node.
-                if isinstance(requests.children[0], BulkMergedTensorIndexNode):
-                    for bulk_node in requests.children:
-                        path, ranges, decoding = self.get_bulk_merged_values(bulk_node, leaf_path)
-                        fdb_requests.append((path, ranges))
-                        fdb_requests_decoding_info.append(decoding)
-                # Legacy merged lat-lon leaves are represented one point per node.
-                elif isinstance(requests.children[0], MergedTensorIndexNode):
-                    (
-                        path,
-                        current_start_idxs,
-                        fdb_node_ranges,
-                        lat_length,
-                    ) = self.get_merged_2nd_last_values(requests, leaf_path)
-                    (
-                        original_indices,
-                        sorted_request_ranges,
-                        fdb_node_ranges,
-                    ) = self.sort_fdb_request_ranges(current_start_idxs, lat_length, fdb_node_ranges)
-                    fdb_requests.append((path, sorted_request_ranges))
-                    fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
-                elif isinstance(requests.children[0].children[0], BulkMergedTensorIndexNode):
-                    for child in requests.children:
-                        self.get_fdb_requests(child, fdb_requests, fdb_requests_decoding_info, leaf_path)
-                elif len(requests.children[0].children[0].children) == 0:
-                    if self.bulk_grid_leaves and isinstance(requests.children[0].children[0], TensorIndexTree):
-                        grid_node = self.fold_into_bulk_grid(requests, leaf_path)
-                        if grid_node is not None:
-                            path, ranges, decoding = self.get_bulk_merged_values(grid_node, leaf_path)
-                            fdb_requests.append((path, ranges))
-                            fdb_requests_decoding_info.append(decoding)
-                    elif isinstance(requests.children[0].children[0], TensorIndexTree):
-                        # find the fdb_requests and associated nodes to which to add results
-                        (
-                            path,
-                            current_start_idxs,
-                            fdb_node_ranges,
-                            lat_length,
-                        ) = self.get_2nd_last_values(requests, leaf_path)
-                        (
-                            original_indices,
-                            sorted_request_ranges,
-                            fdb_node_ranges,
-                        ) = self.sort_fdb_request_ranges(current_start_idxs, lat_length, fdb_node_ranges)
-                        fdb_requests.append((path, sorted_request_ranges))
-                        fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
-                    else:
-                        merged_leaf = True
-                        for c in requests.children:
-                            self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path, merged_leaf)
-
-                # Otherwise remap the path for this key and iterate again over children
-                else:
-                    for c in requests.children:
-                        self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path)
-        if merged_leaf and len(requests.children[0].children) == 0:
-            if isinstance(requests, TensorIndexTree):
-                key_value_path = {requests.axis.name: requests.values}
-                ax = requests.axis
-                key_value_path, leaf_path, self.unwanted_path = ax.unmap_path_key(
-                    key_value_path, leaf_path, self.unwanted_path
-                )
-                leaf_path.update(key_value_path)
-
-                path, current_start_idxs, fdb_node_ranges, lat_length = self.get_merged_2nd_last_values(
-                    requests, leaf_path
-                )
-                original_indices, sorted_request_ranges, fdb_node_ranges = self.sort_fdb_request_ranges(
-                    current_start_idxs, lat_length, fdb_node_ranges
-                )
-                fdb_requests.append((path, sorted_request_ranges))
-                fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
-
-    def remove_duplicates_in_request_ranges(self, fdb_node_ranges, current_start_idxs):
-        # First pass: identify which (i, k) "wins" each index (first occurrence).
-        # seen_indices maps idx -> (i, k)
-        seen_indices = {}
-        # Track which (i,k,j) are duplicates of an earlier node
-        is_dup = {}
-
-        for i, idxs_list in enumerate(current_start_idxs):
-            for k, sub_lat_idxs in enumerate(idxs_list):
-                for j, idx in enumerate(sub_lat_idxs):
-                    if idx not in seen_indices:
-                        seen_indices[idx] = (i, k)
-                    else:
-                        is_dup[(i, k, j)] = True
-
-        # Second pass: build new structures
-        new_fdb_node_ranges = []
-        new_current_start_idxs = []
-        nodes_to_remove = []
-        nodes_to_update = []  # (node, kept value positions)
-        for i, idxs_list in enumerate(current_start_idxs):
-            new_idx_group = []
-            new_fdb_group = []
-            for k, sub_lat_idxs in enumerate(idxs_list):
-                actual_fdb_node = fdb_node_ranges[i][k]
-                node = actual_fdb_node[0]
-                # Collect non-duplicate indices and values for this node
-                filtered_idxs = []
-                kept_positions = []
-                for j, idx in enumerate(sub_lat_idxs):
-                    if (i, k, j) not in is_dup:
-                        filtered_idxs.append(idx)
-                        kept_positions.append(j)
-                if filtered_idxs:
-                    if len(kept_positions) != len(node.values):
-                        nodes_to_update.append((node, kept_positions))
-                    new_idx_group.append(filtered_idxs)
-                    new_fdb_group.append(actual_fdb_node)
-                else:
-                    # All indices were duplicates — remove this node from the result tree
-                    nodes_to_remove.append(node)
-            new_current_start_idxs.append(new_idx_group)
-            new_fdb_node_ranges.append(new_fdb_group)
-
-        # Remove empty nodes first (before mutating values, to preserve SortedList ordering)
-        for node in nodes_to_remove:
-            node.remove_branch()
-
-        # Now safely mutate winner node values (trim any partially-duplicate values)
-        for node, kept_positions in nodes_to_update:
-            node.values = take(node.values, kept_positions)
-
-        return new_fdb_node_ranges, new_current_start_idxs
-
-    def nearest_lat_lon_search_merged(self, requests):
-        if len(self.nearest_search) != 0:
-            first_ax_name = requests.children[0].axes[0].name
-            second_ax_name = requests.children[0].axes[1].name
-
-            axes_in_nearest_search = [
-                first_ax_name not in self.nearest_search.keys(),
-                second_ax_name not in self.nearest_search.keys(),
-            ]
-
-            if all(not item for item in axes_in_nearest_search):
-                raise Exception("nearest point search axes are wrong")
-
-            second_ax = requests.children[0].axes[1]
-
-            nearest_pts_k = self.nearest_search.get((first_ax_name, second_ax_name), None)
-            if nearest_pts_k is None:
-                nearest_pts_k = self.nearest_search.get((second_ax_name, first_ax_name), None)
-                # swap a copy: the registered points must stay as the caller gave them for the next get/prepare
-                nearest_pts_k = ([[pt[1], pt[0]] for pt in nearest_pts_k[0]], nearest_pts_k[1])
-
-            k = nearest_pts_k[1]
-            if k != 1 and not self.grid_transformation.is_irregular:
-                print("k nearest neighbour not supported in hullslicer, defaulting to nearest neighbour.")
-                k = 1
-
-            transformed_nearest_pts = []
-            for point in nearest_pts_k[0]:
-                transformed_nearest_pts.append([point[0], second_ax._remap_val_to_axis_range(point[1])])
-
-            found_latlon_pts = []
-            # print("AND HERE")
-            # print(requests)
-            for latlon_child in requests.children:
-                # print(latlon_child.values)
-                found_latlon_pts.append([[latlon_child.values[0]], [latlon_child.values[1]]])
-
-            # now find the nearest lat lon to the points requested
-            nearest_latlons = []
-            for pt in transformed_nearest_pts:
-                # print("LOOK NOW")
-                # print(found_latlon_pts)
-                # print(pt)
-                nearest_latlon = nearest_pt(found_latlon_pts, pt, k)
-                # print(nearest_latlon)
-                nearest_latlons.extend(nearest_latlon)
-
-            # need to remove the branches that do not fit
-            latlon_children_by_values = {child.values: child for child in requests.children}
-            for latlon_child_val, latlon_child in list(latlon_children_by_values.items()):
-                if latlon_child.values not in nearest_latlons:
-                    latlon_child.remove_branch()
+            grid_node = fold_into_bulk_grid(self, requests, leaf_path)
+            if grid_node is not None:
+                path, ranges, decoding = self.get_bulk_merged_values(grid_node, leaf_path)
+                fdb_requests.append((path, ranges))
+                fdb_requests_decoding_info.append(decoding)
+        # Otherwise remap the path for this key and iterate again over children
+        else:
+            for c in requests.children:
+                self.get_fdb_requests(c, fdb_requests, fdb_requests_decoding_info, leaf_path)
 
     def nearest_lat_lon_search(self, requests):
         if len(self.nearest_search) != 0:
@@ -703,39 +528,6 @@ class FDBDatacube(Datacube):
             node._keep_value_order = keep_value_order
             lat_child.add_child(node)
 
-    def get_2nd_last_values(self, requests, leaf_path=None):
-        if leaf_path is None:
-            leaf_path = {}
-        # In this function, we recursively loop over the last two layers of the tree and store the indices of the
-        # request ranges in those layers
-        self.nearest_lat_lon_search(requests)
-
-        lat_length = len(requests.children)
-        current_start_idxs = [False] * lat_length
-        fdb_node_ranges = [False] * lat_length
-        for i in range(len(requests.children)):
-            lat_child = requests.children[i]
-            lon_length = len(lat_child.children)
-            current_start_idxs[i] = [None] * lon_length
-            fdb_node_ranges[i] = [[TensorIndexTree.root for y in range(lon_length)] for x in range(lon_length)]
-            current_start_idx = deepcopy(current_start_idxs[i])
-            fdb_range_nodes = deepcopy(fdb_node_ranges[i])
-            key_value_path = {lat_child.axis.name: lat_child.values}
-            ax = lat_child.axis
-            key_value_path, leaf_path, self.unwanted_path = ax.unmap_path_key(
-                key_value_path, leaf_path, self.unwanted_path
-            )
-            leaf_path.update(key_value_path)
-            (
-                current_start_idxs[i],
-                fdb_node_ranges[i],
-            ) = self.get_last_layer_before_leaf(lat_child, leaf_path, current_start_idx, fdb_range_nodes)
-
-        leaf_path_copy = deepcopy(leaf_path)
-        leaf_path_copy.pop("values", None)
-        leaf_path_copy.pop("index")
-        return (leaf_path_copy, current_start_idxs, fdb_node_ranges, lat_length)
-
     def get_bulk_merged_values(self, bulk_node, leaf_path=None):
         if leaf_path is None:
             leaf_path = {}
@@ -783,117 +575,15 @@ class FDBDatacube(Datacube):
         path.pop("index", None)
         return path, ranges, BulkFDBDecoding(bulk_node, sorted_output_positions)
 
-    def fold_into_bulk_grid(self, requests, leaf_path):
-        """Replace the latitude -> longitude children of ``requests`` by one BulkGridTensorIndexNode.
-
-        See :func:`polytope_feature.datacube.tree_fold.fold_into_bulk_grid`: the rows are unmapped to
-        their canonical grid indexes one leaf at a time and concatenated with numpy, in the point
-        order ``prepare`` gives the tree without the fold.  Points whose index was already seen on an
-        earlier row (eg. a box overlapping itself across the longitude seam) are dropped where they
-        were first seen, as ``remove_duplicates_in_request_ranges`` does.  Returns None if no point
-        is left.
-        """
-        return fold_into_bulk_grid(self, requests, leaf_path)
-
-    def get_merged_2nd_last_values(self, requests, leaf_path=None):
-        if leaf_path is None:
-            leaf_path = {}
-        # requests is the parent TensorIndexTree node whose direct children are all
-        # MergedTensorIndexNodes (each holding values=(lat, lon) and indexes=[flat_idx]).
-        # Iterate over all of them so one FDB request covers the entire shared path.
-        self.nearest_lat_lon_search_merged(requests)
-
-        lat_length = len(requests.children)
-        current_start_idxs = [None] * lat_length
-        fdb_node_ranges = [None] * lat_length
-
-        # print("WHAT ABOUT HERE")
-        # print(requests)
-        # print(requests.children)
-
-        for i, merged_child in enumerate(requests.children):
-            # self.nearest_lat_lon_search_merged(requests)
-            # self.nearest_lat_lon_search_merged(merged_child)
-            lat_ax = merged_child.axes[0]
-            lon_ax = merged_child.axes[1]
-
-            # Two-pass unmapping mirroring get_2nd_last_values + get_last_layer_before_leaf:
-            # Pass 1 — lat: stash lat value in unwanted_path (no index produced yet)
-            kv_lat = {lat_ax.name: merged_child.values[0]}
-            kv_lat, leaf_path, self.unwanted_path = lat_ax.unmap_path_key(kv_lat, leaf_path, self.unwanted_path)
-            leaf_path.update(kv_lat)
-
-            # Pass 2 — lon: use stashed lat + pre-computed flat index to obtain FDB index
-            kv_lon = {lon_ax.name: merged_child.values[1]}
-            leaf_path["index"] = merged_child.indexes
-            kv_lon, leaf_path, self.unwanted_path = lon_ax.unmap_path_key(kv_lon, leaf_path, self.unwanted_path)
-            flat_indices = list(kv_lon["values"])
-
-            # Proxy protects merged_child.values=(lat, lon) from mutation by
-            # sort_fdb_request_ranges / remove_duplicates, while sharing .result so
-            # that assign_fdb_output_to_nodes writes back onto the real node.
-            proxy = copy(merged_child)
-            proxy.values = (merged_child.values[1],)  # length == len(flat_indices)
-            proxy.remove_branch = merged_child.remove_branch  # delegate tree removal
-            proxy._result_owner = merged_child  # assign_fdb_output_to_nodes writes results onto the real node
-
-            current_start_idxs[i] = [flat_indices]
-            # current_start_idxs = [[flat_indices]]
-            fdb_node_ranges[i] = [[proxy]]
-            # fdb_node_ranges = [[[proxy]]]
-
-        leaf_path_copy = deepcopy(leaf_path)
-        leaf_path_copy.pop("values", None)
-        leaf_path_copy.pop("index")
-        return (leaf_path_copy, current_start_idxs, fdb_node_ranges, lat_length)
-
-    def get_last_layer_before_leaf(self, requests, leaf_path, current_idx, fdb_range_n):
-        current_idx = [[] for i in range(len(requests.children))]
-        fdb_range_n = [[] for i in range(len(requests.children))]
-        for i, c in enumerate(requests.children):
-            # now c are the leaves of the initial tree
-            key_value_path = {c.axis.name: c.values}
-            leaf_path["index"] = c.indexes
-            ax = c.axis
-            key_value_path, leaf_path, self.unwanted_path = ax.unmap_path_key(
-                key_value_path, leaf_path, self.unwanted_path
-            )
-            # TODO: change this to accommodate non consecutive indexes being compressed too
-            current_idx[i].extend(key_value_path["values"])
-            fdb_range_n[i].append(c)
-        assert len(current_idx) == len(fdb_range_n)
-        for i, node in enumerate(fdb_range_n):
-            assert len(node[0].values) == len(current_idx[i])
-        return (current_idx, fdb_range_n)
-
     def assign_fdb_output_to_nodes(self, output_iterator, fdb_requests_decoding_info):
-        """Write every field of the gribjump output into the leaves of the tree it was requested for.
+        """Append every field of the gribjump output to the bulk node it was requested for.
 
-        Each result is consumed once, as one contiguous ``values_flat`` buffer sliced into the leaves' results by
-        the sub-tree's :class:`~polytope_feature.datacube.fdb_assign.ScatterPlan`, so that nothing is kept per
-        request range and no field's values outlive their result.  A leaf's result for the whole call is
-        pre-allocated (``n_points x n_fields``, float64, NaN-filled) and filled field by field.
+        Each result is consumed once, as one contiguous ``values_flat`` buffer scattered into the node's
+        point order, so that nothing is kept per request range and no field's values outlive their result.
         """
         logging.debug("Assigning GribJump output to tree nodes")
-        open_requests = None
         for k, result in enumerate(output_iterator):
-            decoding = fdb_requests_decoding_info[k]
-            if isinstance(decoding, BulkFDBDecoding):
-                self.assign_bulk_result(result, decoding)
-                continue
-            field_requests, field_index = decoding
-            if field_requests is not open_requests:
-                # the requests of a sub-tree are consecutive, so only its plan and leaf results are alive
-                if open_requests is not None:
-                    open_requests.finish_and_release()
-                open_requests = field_requests
-            plan = field_requests.plan(allocate=True)
-            flat = field_values_flat(result)
-            del result  # drop gribjump's result as soon as its values are readable
-            plan.assign_field(flat, field_index)
-            del flat
-        if open_requests is not None:
-            open_requests.finish_and_release()
+            self.assign_bulk_result(result, fdb_requests_decoding_info[k])
         logging.debug("Finished assigning GribJump output to tree nodes")
 
     @staticmethod
@@ -925,66 +615,6 @@ class FDBDatacube(Datacube):
         if values is None:
             values = np.full(decoding.node.point_count, None, dtype=object)
         decoding.node.result.append(values)
-
-    def sort_fdb_request_ranges(self, current_start_idx, lat_length, fdb_node_ranges):
-        # print("WHAT DO WE HAVE HERE THROUGH")
-        # print(current_start_idx)
-        # print(lat_length)
-        # print(fdb_node_ranges)
-        (
-            new_fdb_node_ranges,
-            new_current_start_idx,
-        ) = self.remove_duplicates_in_request_ranges(fdb_node_ranges, current_start_idx)
-        current_start_idx = new_current_start_idx
-        fdb_node_ranges = new_fdb_node_ranges
-        interm_request_ranges = []
-        # TODO: modify the start indexes to have as many arrays as the request ranges
-        new_fdb_node_ranges = []
-        for i in range(lat_length):
-            interm_fdb_nodes = fdb_node_ranges[i]
-            old_interm_start_idx = current_start_idx[i]
-            for j in range(len(old_interm_start_idx)):
-                # TODO: if we sorted the cyclic values in increasing order on the tree too,
-                # then we wouldn't have to sort here?
-                sorted_list = sorted(enumerate(old_interm_start_idx[j]), key=lambda x: x[1])
-                original_indices_idx, interm_start_idx = zip(*sorted_list)
-                for interm_fdb_nodes_obj in interm_fdb_nodes[j]:
-                    if getattr(interm_fdb_nodes_obj, "_keep_value_order", False):
-                        # merged polygon row: keep the values ascending, remember how to reorder the results
-                        if original_indices_idx != tuple(range(len(original_indices_idx))):
-                            self._leaf_result_orders[id(interm_fdb_nodes_obj)] = original_indices_idx
-                    else:
-                        interm_fdb_nodes_obj.values = take(interm_fdb_nodes_obj.values, original_indices_idx)
-                if abs(interm_start_idx[-1] + 1 - interm_start_idx[0]) <= len(interm_start_idx):
-                    current_request_ranges = (
-                        interm_start_idx[0],
-                        interm_start_idx[-1] + 1,
-                    )
-                    interm_request_ranges.append(current_request_ranges)
-                    new_fdb_node_ranges.append(interm_fdb_nodes[j])
-                else:
-                    jumps = list(map(operator.sub, interm_start_idx[1:], interm_start_idx[:-1]))
-                    last_idx = 0
-                    for k, jump in enumerate(jumps):
-                        if jump > 1:
-                            current_request_ranges = (
-                                interm_start_idx[last_idx],
-                                interm_start_idx[k] + 1,
-                            )
-                            new_fdb_node_ranges.append(interm_fdb_nodes[j])
-                            last_idx = k + 1
-                            interm_request_ranges.append(current_request_ranges)
-                        if k == len(interm_start_idx) - 2:
-                            current_request_ranges = (
-                                interm_start_idx[last_idx],
-                                interm_start_idx[-1] + 1,
-                            )
-                            interm_request_ranges.append(current_request_ranges)
-                            new_fdb_node_ranges.append(interm_fdb_nodes[j])
-        request_ranges_with_idx = list(enumerate(interm_request_ranges))
-        sorted_list = sorted(request_ranges_with_idx, key=lambda x: x[1][0])
-        original_indices, sorted_request_ranges = zip(*sorted_list)
-        return (original_indices, sorted_request_ranges, new_fdb_node_ranges)
 
     def datacube_natural_indexes(self, axis, subarray):
         indexes = subarray.get(axis.name, None)

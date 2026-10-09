@@ -90,25 +90,25 @@ explosion (300,315 ranges -> 1,388 for the climate-dt Europe box; 7,864,320 -> 1
 also gives every resolved point its own tags, fixes the nearest-point search to resolve each query on its own,
 and makes a multi-value `Point` behave as a `Union` of single-value `Point`s.
 
-### Opt-in: `bulk_grid_leaves`
+### How a spatial sub-tree is retrieved: `bulk_grid_leaves`
 
-Config option (`options["bulk_grid_leaves"]`, **default `False`**), carried by `Datacube.bulk_grid_leaves`. With
-it on:
+Every spatial sub-tree of a tree being retrieved is one array-backed node (the section at the end of this
+file retired the per-row alternative):
 
 - a structured (hullslicer) tree's `latitude -> longitude` layers are folded, in `FDBDatacube.prepare`, into one
   `BulkGridTensorIndexNode` per path (`datacube/tree_fold.py`): `coordinates` (N, 2), `indexes` (N,) and one
   `result` array per field, the rows in tree order and, within a row, the longitude leaves in tree order, each
-  leaf's points in the grid-index order `prepare` already gives them (ascending longitude for merged polygon
-  rows). That is exactly the order the legacy CovJSON encoders read the tree in, so the output is unchanged:
-  `performance/bulk_order.py` asserts the ordered `(lat, lon)` list and the per-field values are identical with
-  the fold off and on for all 28 polytope-mars golden cases;
+  leaf's points in grid-index order (ascending longitude for merged polygon rows). That is exactly the order
+  the legacy CovJSON encoders read the tree in, so the output is unchanged: polytope-mars' golden corpus is
+  byte-identical for all 28 cases, and `tests/test_bulk_fold.py` pins the rule itself against the rows of the
+  sliced tree;
 - an unstructured (quadtree) tree gets one `BulkMergedTensorIndexNode` per spatial sub-tree at slice time
   instead of one `MergedTensorIndexNode` per point;
 - `latitude_point_counts()`, `prune(latitude_range=)` and `get(latitude_range=)` raise: a field that fits the
-  memory budget is fetched whole. They are unchanged with the option off.
+  memory budget is fetched whole.
 
-With the option off the trees are exactly what they were, which is why the polytope-mars golden corpus is
-byte-identical and its 309 tests pass unchanged. Measurements: `MEASUREMENTS.md`.
+`options["bulk_grid_leaves"]` is accepted for configuration compatibility and ignored (`False` logs a warning).
+Measurements: `MEASUREMENTS.md`.
 
 ### Tags
 
@@ -186,12 +186,12 @@ With `bulk_grid_leaves` on, the leaves of a prepared tree are `BulkGridTensorInd
 
 ## Follow-ups (not in this branch)
 
-- **The request side still costs ~90-210 B/value with `bulk_grid_leaves` off.** `get_last_layer_before_leaf`
-  collects every point's grid index as a Python `int` in a list per leaf, and `sort_fdb_request_ranges` then
-  sorts `enumerate(...)` of those lists, which builds one tuple per point. That is what a one-field `get` peaks
-  on (`MEASUREMENTS.md`): ~90 B/value on the EFAS Danube box, ~210 B/value on a HEALPix 1024 Europe box. The
-  fold replaces both passes with numpy (24 B/point of node arrays, 66-75 B/point peak on every grid and shape
-  measured); the per-row path is what remains once polytope-mars turns the fold on.
+- **The request side costs ~0 per value now.** It used to cost ~90-210 B/value: `get_last_layer_before_leaf`
+  collected every point's grid index as a Python `int` in a list per leaf and `sort_fdb_request_ranges` sorted
+  `enumerate(...)` of those lists, building one tuple per point, which is what a one-field `get` peaked on
+  (`MEASUREMENTS.md`: ~90 B/value on the EFAS Danube box, ~210 B/value on a HEALPix 1024 Europe box). The fold
+  replaced both passes with numpy (24 B/point of node arrays, 66-75 B/point peak on every grid and shape
+  measured) and the per-row code is gone (see the section at the end).
 - **`extract_from_mask` / `extract_from_indices` would not help by themselves.** Both are pure client-side
   conveniences in pygribjump 0.12: they build the same `ExtractionRequest` list the current `extract` call
   builds, so the bytes on the wire, the grid-hash check and the server's work are identical and nothing needs
@@ -210,5 +210,48 @@ With `bulk_grid_leaves` on, the leaves of a prepared tree are `BulkGridTensorInd
   field before handing out the first result, and on HEALPix nested the ranges need an int64 permutation plus a
   sorted copy of the indexes (16 B/point transient). Writing the ranges from a sort that never materialises the
   permutation, or reading the field in pieces, would close the gap.
-- **Latitude bands are still there with `bulk_grid_leaves` off.** `latitude_range` / `latitude_point_counts` and
-  the banded `prepare` can be deleted once no caller fetches a field in latitude bands.
+- **Latitude bands.** `latitude_range` / `latitude_point_counts` and the banded `prepare` can be deleted once
+  no caller fetches a field in latitude bands.
+
+# One way to retrieve a spatial sub-tree
+
+## Behaviour changes
+
+- **A spatial sub-tree is always one array-backed node.** `FDBDatacube.get` / `get_iter` ask gribjump for one
+  field of one bulk node per request and scatter each result into that node's point order; the per-row
+  alternative -- one request per run of consecutive grid indices of a leaf, with the results written back into
+  the leaves of the tree -- is gone. What goes with it: `datacube/fdb_assign.py` (`FieldRequests`,
+  `ScatterPlan`), `FDBDatacube.get_2nd_last_values`, `get_last_layer_before_leaf`, `get_merged_2nd_last_values`,
+  `nearest_lat_lon_search_merged`, `sort_fdb_request_ranges`, `remove_duplicates_in_request_ranges`, the
+  `FDBDatacube.fold_into_bulk_grid` wrapper (callers use `tree_fold.fold_into_bulk_grid`), and
+  `tree_values.finalise_result` / `restore_value_order`. `field_values_flat` moved into
+  `datacube/backends/fdb.py`, next to its only caller. A leaf kind that cannot be folded raises
+  `BadRequestError` instead of being fetched row by row.
+- **`options["bulk_grid_leaves"]` is accepted and ignored** (`Datacube.bulk_grid_leaves` is `True`); `False`
+  logs a warning saying so. The option stays so that a deployment's configuration keeps validating.
+- **`prototype_metrics`** keeps `ranges_per_field`, `request_planning_s`, `uncompressed_requests`,
+  `effective_range_arrays`, `gj_extract_call_s` and `iterator_and_assignment_s`.
+
+## Why the per-row path went rather than staying as an alternative
+
+It was unreachable for the only consumer that drives this branch (polytope-mars sets the fold for every
+request) and it was the expensive side of every measurement in `MEASUREMENTS.md`: ~90-210 B/value of
+request-side Python objects and, on HEALPix nested, one index range per 1.6 points. Keeping it would have
+meant keeping 570 lines of code and tests for a path no caller takes.
+
+## Verification
+
+- `python -m pytest tests -m "not fdb and not internet and not non_stored_data" -q`: **385 passed,
+  6 skipped** (was 464 passed, 6 skipped). The 79 tests that go were the ones whose oracle *was* the per-row
+  path: `tests/test_flat_assign.py` and `tests/legacy_assign.py` (the per-range assignment it replaced), the
+  latitude-band parametrisations of `tests/test_pruned_get.py` and `tests/test_polygon_rows.py` (bands are
+  refused on a folded tree), and the fold-off arms of `tests/test_bulk_fold.py` and
+  `tests/test_bulk_point_tags.py`.
+- What replaces them: `tests/test_bulk_fold.py::test_folded_points_are_the_sliced_rows_in_order` states the
+  fold's rule against the rows of the sliced tree (rows in tree order, each row's points in grid-index order,
+  first occurrence of a duplicate index wins) for all five grid cases, and every value is checked to decode to
+  the grid index of the coordinate it sits at (the fake encodes it). `tests/test_pruned_get.py` keeps the
+  "pruned gets reproduce a full get" property with one sub-tree per field instead of per band.
+- `performance/bulk_order.py` is gone: it compared the fold against the per-row path for the 28 golden cases.
+  polytope-mars' corpus is the remaining end-to-end oracle for that order. `performance/bulk_memory.py` and
+  `performance/tree_memory.py` measure the one path that is left (no `--legacy`, no `bulk` column).

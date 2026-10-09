@@ -1,10 +1,10 @@
-"""Measure one field's slice, ``prepare`` and ``get`` with the spatial layers folded into a bulk node or not.
+"""Measure one field's slice, ``prepare`` and ``get`` with the spatial layers folded into a bulk node.
 
 Drives the real ``FDBDatacube`` against polytope-mars' fake gribjump (``polytope_mars.testing``), so the grids,
-mapper options and MARS paths are the ones the deployments use.  Every (shape, bulk) pair runs in a fresh
+mapper options and MARS paths are the ones the deployments use.  Every shape runs in a fresh
 subprocess; peak memory is ``resource.getrusage(RUSAGE_SELF).ru_maxrss`` of that process.
 
-    python performance/bulk_memory.py                     # every shape, fold off and on
+    python performance/bulk_memory.py                     # every shape
     python performance/bulk_memory.py SHAPE [...]          # named shapes, see SHAPES
     python performance/bulk_memory.py --json              # one JSON object per run instead of the table
 
@@ -156,14 +156,13 @@ def build_request(grid, shape_spec):
     return options, Request(*selects, shape)
 
 
-def measure(name, bulk):
+def measure(name):
     from polytope_mars.testing import make_fake_gribjump
 
     from polytope_feature.polytope import Polytope
 
     grid, shape_spec = SHAPES[name]
     options, request = build_request(grid, shape_spec)
-    options["bulk_grid_leaves"] = bulk
     gribjump = make_fake_gribjump(grid)
 
     api = Polytope(datacube=gribjump, options=options)
@@ -201,7 +200,6 @@ def measure(name, bulk):
     return {
         "shape": name,
         "grid": grid,
-        "bulk": bulk,
         "points": points,
         "sliced_points": sliced_points,
         "leaves_after_slice": sliced_leaves,
@@ -221,7 +219,6 @@ def measure(name, bulk):
 
 COLUMNS = [
     ("shape", "shape", "{}"),
-    ("bulk", "bulk", "{}"),
     ("points", "points", "{:,}"),
     ("slice s", "slice_s", "{}"),
     ("tree MB", "tree_rss_mb", "{}"),
@@ -247,9 +244,9 @@ def table(rows):
     return "\n".join(out)
 
 
-def run_child(name, bulk):
+def run_child(name):
     proc = subprocess.run(
-        [sys.executable, os.path.abspath(__file__), "--child", name, "1" if bulk else "0"],
+        [sys.executable, os.path.abspath(__file__), "--child", name],
         capture_output=True,
         text=True,
     )
@@ -257,29 +254,28 @@ def run_child(name, bulk):
         if line.startswith("{"):
             return json.loads(line)
     sys.stderr.write(proc.stdout + proc.stderr)
-    raise RuntimeError(f"{name} (bulk={bulk}) failed")
+    raise RuntimeError(f"{name} failed")
 
 
 def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument("shapes", nargs="*", default=[])
-    parser.add_argument("--child", nargs=2, metavar=("SHAPE", "BULK"))
+    parser.add_argument("--child", metavar="SHAPE")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
 
     if args.child:
-        print(json.dumps(measure(args.child[0], args.child[1] == "1")))
+        print(json.dumps(measure(args.child)))
         return 0
 
     rows = []
     for name in args.shapes or list(SHAPES):
-        for bulk in (False, True):
-            row = run_child(name, bulk)
-            rows.append(row)
-            if args.json:
-                print(json.dumps(row), flush=True)
-            else:
-                print(f"  {name} bulk={bulk}: {row['points']:,} points", flush=True)
+        row = run_child(name)
+        rows.append(row)
+        if args.json:
+            print(json.dumps(row), flush=True)
+        else:
+            print(f"  {name}: {row['points']:,} points", flush=True)
     if not args.json:
         print()
         print(table(rows))

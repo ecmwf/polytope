@@ -66,7 +66,7 @@ def test_repeated_prepare_and_get_find_the_same_point():
     for _ in range(3):
         tree = api.slice(datacube, request.polytopes())
         prepared = datacube.prepare(tree.prune())
-        assert [len(leaf.values) for leaf in prepared.leaves] == [1]
-        (leaf,) = prepared.leaves
-        assert [(leaf.parent.values[0], leaf.values[0])] == [(lat, lon) for lat, lon, _ in want_points]
+        (node,) = prepared.leaves
+        assert node.point_count == 1
+        assert node.coordinates.tolist() == [[lat, lon] for lat, lon, _ in want_points]
         assert records(datacube.get(tree)) == want

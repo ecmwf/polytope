@@ -82,7 +82,11 @@ class Polytope:
             use_catalogue,
             self.context,
         )
-        self.datacube.bulk_grid_leaves = bulk_grid_leaves
+        if bulk_grid_leaves is False:
+            logging.warning(
+                "options['bulk_grid_leaves'] = False is ignored: the spatial layers of a prepared tree are "
+                "always folded into one array-backed node per spatial sub-tree"
+            )
         if engine_options == {}:
             for ax_name in self.datacube._axes.keys():
                 engine_options[ax_name] = "hullslicer"

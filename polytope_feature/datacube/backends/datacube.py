@@ -13,11 +13,11 @@ from ..transformations.datacube_transformations import (
 
 
 class Datacube(ABC):
-    #: When True the spatial layers of a request tree are folded into array-backed bulk nodes:
-    #: one BulkMergedTensorIndexNode per spatial sub-tree on a point cloud (quadtree slicer), one
-    #: BulkGridTensorIndexNode per path on a structured grid (hullslicer). Set from the
-    #: ``bulk_grid_leaves`` option.
-    bulk_grid_leaves = False
+    #: The spatial layers of a request tree are folded into array-backed bulk nodes: one
+    #: BulkMergedTensorIndexNode per spatial sub-tree on a point cloud (quadtree slicer), one
+    #: BulkGridTensorIndexNode per path on a structured grid (hullslicer).  Always True; the
+    #: ``bulk_grid_leaves`` option is accepted for configuration compatibility and ignored.
+    bulk_grid_leaves = True
 
     def __init__(
         self,

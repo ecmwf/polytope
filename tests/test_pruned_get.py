@@ -10,7 +10,10 @@ import pytest
 from fake_gribjump import GribJump, index_of
 
 from polytope_feature.datacube.backends.fdb import FDBDatacube
-from polytope_feature.datacube.tensor_index_tree import TensorIndexTree
+from polytope_feature.datacube.tensor_index_tree import (
+    BulkMergedTensorIndexNode,
+    TensorIndexTree,
+)
 from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
 
@@ -209,22 +212,20 @@ def records(tree):
     """Expand a filled tree into {field: [(lat, lon, value), ...]} in traversal order.
 
     ``field`` is the tuple of (axis, value) pairs of the non-spatial axes, following the itertools.product layout
-    of a compressed leaf's ``result``.
+    of a bulk node's ``result`` (one array per field of the call).
     """
     out = {}
     for node, ancestors in iter_nodes(tree):
         if len(node.children) != 0 or node is tree:
             continue
-        *field_nodes, lat_node, _ = ancestors
-        assert isinstance(node.values, np.ndarray) and node.values.dtype == np.float64
-        assert isinstance(node.result, np.ndarray)
-        n = len(node.values)
-        combos = list(itertools.product(*[n_.values for n_ in field_nodes]))
-        assert len(node.result) == n * len(combos)
-        for c, combo in enumerate(combos):
-            field = tuple((n_.axis.name, v) for n_, v in zip(field_nodes, combo))
-            for p in range(n):
-                out.setdefault(field, []).append((lat_node.values[0], node.values[p], node.result[c * n + p]))
+        field_nodes = ancestors[:-1]
+        combos = list(itertools.product(*[n.values for n in field_nodes]))
+        assert len(node.result) == len(combos)
+        for values, combo in zip(node.result, combos):
+            field = tuple((n.axis.name, v) for n, v in zip(field_nodes, combo))
+            points = out.setdefault(field, [])
+            for (lat, lon), value in zip(node.coordinates, values):
+                points.append((lat, lon, value))
     return out
 
 
@@ -232,8 +233,12 @@ def snapshot(tree):
     """Structure, values and results of a tree, for checking that it was not mutated."""
     snap = []
     for node, ancestors in iter_nodes(tree):
-        values = tuple(node.values.tolist()) if isinstance(node.values, np.ndarray) else node.values
-        result = tuple(node.result.tolist()) if isinstance(node.result, np.ndarray) else tuple(node.result)
+        if isinstance(node, BulkMergedTensorIndexNode):
+            values = tuple(map(tuple, node.coordinates.tolist()))
+            result = tuple(tuple(np.asarray(f, dtype=np.float64).tolist()) for f in node.result)
+        else:
+            values = tuple(node.values.tolist()) if isinstance(node.values, np.ndarray) else node.values
+            result = tuple(node.result.tolist()) if isinstance(node.result, np.ndarray) else tuple(node.result)
         snap.append((len(ancestors), node.axis.name, values, result, len(node.children)))
     return snap
 
@@ -264,22 +269,17 @@ def axis_values(tree, axis):
     return vals
 
 
-def banded_records(datacube, tree, select_axes, band_size):
-    """Fetch every (select combination) x (latitude band) sub-tree and concatenate the results per field."""
+def selected_records(datacube, tree, select_axes):
+    """Fetch every select combination as its own sub-tree and concatenate the results per field."""
     out = {}
     value_lists = [axis_values(tree, a) for a in select_axes]
     for combo in itertools.product(*value_lists):
         select = dict(zip(select_axes, combo))
-        counts = tree.latitude_point_counts(select)
-        assert len(counts) > 1
-        for start in range(0, len(counts), band_size):
-            band = (start, min(start + band_size, len(counts)))
-            sub = tree.prune(select=select, latitude_range=band)
-            assert sum(len(leaf.values) for leaf in sub.leaves) == sum(counts[band[0] : band[1]])
-            filled = datacube.get(sub)
-            assert filled is sub
-            for field, points in records(sub).items():
-                out.setdefault(field, []).extend(points)
+        sub = tree.prune(select=select)
+        filled = datacube.get(sub)
+        assert filled is sub
+        for field, points in records(sub).items():
+            out.setdefault(field, []).extend(points)
     return out
 
 
@@ -294,8 +294,7 @@ def full_records(datacube, tree):
 
 
 @pytest.mark.parametrize("case", list(CASES))
-@pytest.mark.parametrize("band_size", [1, 2])
-def test_pruned_gets_reproduce_full_get(case, band_size):
+def test_pruned_gets_reproduce_full_get(case):
     datacube, tree, select_axes, _ = make_tree(case)
     before = snapshot(tree)
     _, full = full_records(datacube, tree)
@@ -308,21 +307,23 @@ def test_pruned_gets_reproduce_full_get(case, band_size):
             assert index_of(value) == mapper.unmap((lat,), [lon])[0]
 
     if case == "regular_overlap":
-        assert sum(len(points) for points in full.values()) < sum(tree.latitude_point_counts()) * len(full)
-    banded = banded_records(datacube, tree, select_axes, band_size)
-    assert_same_records(full, banded)
+        sliced = sum(len(leaf.values) for leaf in tree.leaves)
+        assert sum(len(points) for points in full.values()) < sliced * len(full)
+    pruned = selected_records(datacube, tree, select_axes)
+    assert_same_records(full, pruned)
     # sequential pruned gets never touch the parent tree
     assert snapshot(tree) == before
 
 
-def test_get_with_select_and_latitude_range_prunes_internally():
+def test_get_with_select_prunes_internally():
     datacube, tree, _, gj = make_tree("regular_seam")
     before = snapshot(tree)
-    counts = tree.latitude_point_counts({"param": "167", "step": 6, "number": 2})
-    sub = datacube.get(tree, select={"param": "167", "step": 6, "number": 2}, latitude_range=(1, 3))
+    select = {"param": "167", "step": 6, "number": 2}
+    points = sum(len(leaf.values) for leaf in tree.prune(select=select).leaves)
+    sub = datacube.get(tree, select=select)
     assert snapshot(tree) == before
     assert sub is not tree
-    assert sum(len(leaf.result) for leaf in sub.leaves) == sum(counts[1:3])
+    assert sum(leaf.point_count for leaf in sub.leaves) == points
     fields = records(sub)
     assert list(fields) == [
         (
@@ -365,8 +366,6 @@ def test_prune_to_absent_value_raises():
         tree.prune(select={"param": "167", "step": 12})
     with pytest.raises(ValueError, match="levelist"):
         tree.prune(select={"levelist": 500})
-    with pytest.raises(ValueError):
-        tree.latitude_point_counts({"param": "999"})
 
 
 def test_prune_rejects_spatial_select_and_non_root():
@@ -375,20 +374,6 @@ def test_prune_rejects_spatial_select_and_non_root():
         tree.prune(select={"latitude": 0.0})
     with pytest.raises(ValueError):
         tree.children[0].prune()
-    with pytest.raises(ValueError):
-        tree.prune(latitude_range=(3, 1))
-
-
-def test_prune_band_partition_and_empty_band():
-    _, tree, _, _ = make_tree("regular_seam")
-    counts = tree.latitude_point_counts()
-    total = sum(len(leaf.values) for leaf in tree.leaves)
-    assert sum(counts) == total
-    assert len(tree.prune(latitude_range=(len(counts), len(counts) + 5)).children) == 0
-    lats = [n.values[0] for n, _ in iter_nodes(tree) if n is not tree and n.axis.name == "latitude"]
-    band = tree.prune(latitude_range=(1, 3))
-    band_lats = [n.values[0] for n, _ in iter_nodes(band) if n is not band and n.axis.name == "latitude"]
-    assert band_lats == lats[1:3]
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -440,8 +425,7 @@ def test_numpy_leaf_values_survive_tree_operations():
     leaf2.remove_compressed_branch(first)
     assert isinstance(leaf2.values, np.ndarray) and first not in leaf2.values
 
-    # pprint, including results after get
-    datacube.get(tree_b)
+    # pprint of a sliced tree names the leaf's values, of a filled one its bulk node
     lines = []
     handler = logging.Handler(logging.DEBUG)
     handler.emit = lambda record: lines.append(record.getMessage())
@@ -451,10 +435,14 @@ def test_numpy_leaf_values_survive_tree_operations():
     root.setLevel(logging.DEBUG)
     try:
         tree_b.pprint()
+        sliced_lines = list(lines)
+        datacube.get(tree_b)
+        tree_b.pprint()
     finally:
         root.removeHandler(handler)
         root.setLevel(old_level)
-    assert any("longitude=[" in line for line in lines)
+    assert any("longitude=[" in line for line in sliced_lines)
+    assert any("points" in line for line in lines[len(sliced_lines) :])  # noqa: E203
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -474,20 +462,18 @@ def test_missing_field_matches_full_get(case):
         else:
             assert all(v is not None for v in values)
     for leaf in full_tree.leaves:
-        assert leaf.result.dtype == object
-        arr = leaf.result_array()
-        assert arr.dtype == np.float64 and np.isnan(arr).sum() == sum(v is None for v in leaf.result)
+        # one result array per field of the call; a missing field is an object array of None
+        assert any(np.asarray(f).dtype == object for f in leaf.result)
 
-    banded = banded_records(datacube, tree, select_axes, band_size=2)
-    assert_same_records(full, banded)
+    pruned = selected_records(datacube, tree, select_axes)
+    assert_same_records(full, pruned)
 
     sub = datacube.get(tree, select={"param": "165", "step": 6, "number": 1})
     for leaf in sub.leaves:
-        assert all(v is None for v in leaf.result)
-        assert np.all(np.isnan(leaf.result_array()))
+        assert all(v is None for values in leaf.result for v in values)
     sub = datacube.get(tree, select={"param": "167", "step": 6, "number": 1})
     for leaf in sub.leaves:
-        assert leaf.result.dtype == np.float64
+        assert all(np.asarray(values).dtype == np.float64 for values in leaf.result)
 
 
 def test_missing_field_on_split_ranges_gives_one_none_per_point():
@@ -495,18 +481,17 @@ def test_missing_field_on_split_ranges_gives_one_none_per_point():
     datacube, tree, _, _ = make_tree("regular_seam", missing=[{"param": "165"}])
     sub = datacube.get(tree, select={"param": "165", "step": 0, "number": 1})
     for leaf in sub.leaves:
-        assert len(leaf.result) == len(leaf.values)
-        assert all(v is None for v in leaf.result)
+        (values,) = leaf.result
+        assert len(values) == leaf.point_count
+        assert all(v is None for v in values)
 
 
-def test_bitmap_missing_points_are_nan_in_full_and_banded():
-    datacube, tree, select_axes, _ = make_tree("regular_seam", nan_indices=set(range(0, 10_000, 7)))
+def test_bitmap_missing_points_are_nan():
+    datacube, tree, _, _ = make_tree("regular_seam", nan_indices=set(range(0, 10_000, 7)))
     full_tree, full = full_records(datacube, tree)
     assert any(np.isnan(v) for points in full.values() for _, _, v in points)
     for leaf in full_tree.leaves:
-        assert leaf.result.dtype == np.float64
-    banded = banded_records(datacube, tree, select_axes, band_size=3)
-    assert_same_records(full, banded)
+        assert all(np.asarray(values).dtype == np.float64 for values in leaf.result)
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -514,14 +499,13 @@ def test_bitmap_missing_points_are_nan_in_full_and_banded():
 
 
 def leaf_coords(tree):
-    """[(non-spatial path, lat, (lon, ...)), ...] for every longitude leaf, in traversal order."""
+    """[(non-spatial path, ((lat, lon), ...)), ...] for every spatial node, in traversal order."""
     out = []
     for node, ancestors in iter_nodes(tree):
         if len(node.children) != 0 or node is tree:
             continue
-        *field_nodes, lat_node, _ = ancestors
-        path = tuple((n.axis.name, tuple(n.values)) for n in field_nodes)
-        out.append((path, lat_node.values[0], tuple(node.values.tolist())))
+        path = tuple((n.axis.name, tuple(n.values)) for n in ancestors[:-1])
+        out.append((path, tuple(map(tuple, node.coordinates.tolist()))))
     return out
 
 
@@ -541,13 +525,14 @@ def test_prepare_gives_the_coordinates_of_a_full_get(case):
     prepared = prepared_copy(datacube, tree)
     full_tree, _ = full_records(datacube, tree)
     assert leaf_coords(prepared) == leaf_coords(full_tree)
-    assert prepared.latitude_point_counts() == full_tree.latitude_point_counts()
     if case == "healpix_nested":
         # nested order differs from slice order: prepare really reorders
-        assert leaf_coords(prepared) != leaf_coords(tree)
+        sliced = [(leaf.parent.values[0], lon) for leaf in tree.leaves for lon in leaf.values.tolist()]
+        assert [point for _, points in leaf_coords(prepared) for point in points][: len(sliced)] != sliced
     if case == "regular_overlap":
-        # duplicate points dropped: counts of the prepared tree are the post-get counts
-        assert sum(prepared.latitude_point_counts()) < sum(tree.latitude_point_counts())
+        # duplicate points dropped: the prepared tree holds fewer points than the slice
+        sliced = sum(len(leaf.values) for leaf in tree.leaves)
+        assert sum(leaf.point_count for leaf in prepared.leaves) < sliced
 
 
 @pytest.mark.parametrize("case", list(CASES))
@@ -563,46 +548,40 @@ def test_prepare_is_idempotent(case):
     "case, missing",
     [(case, None) for case in CASES] + [("regular_overlap", [{"param": "165", "step": "6"}])],
 )
-@pytest.mark.parametrize("band_size", [1, 2])
-def test_bands_of_prepared_tree_are_slices_of_full_get(case, missing, band_size):
+def test_sub_trees_of_a_prepared_tree_are_slices_of_a_full_get(case, missing):
+    """One sub-tree per field, fetched from a prepared tree, holds exactly that field's slice of a full get."""
     datacube, tree, select_axes, _ = make_tree(case, missing=missing)
     _, full = full_records(datacube, tree)
     prepared = prepared_copy(datacube, tree)
     before = snapshot(prepared)
-    offsets = {}
     value_lists = [axis_values(prepared, a) for a in select_axes]
+    seen = {}
     for combo in itertools.product(*value_lists):
         select = dict(zip(select_axes, combo))
-        counts = prepared.latitude_point_counts(select)
-        for start in range(0, len(counts), band_size):
-            band = (start, min(start + band_size, len(counts)))
-            sub = prepared.prune(select=select, latitude_range=band)
-            coords = leaf_coords(sub)
-            assert datacube.get(sub) is sub
-            # get leaves the coordinates of a prepared band as they were
-            assert leaf_coords(sub) == coords
-            fields = records(sub)
-            assert len(fields) == 1
-            ((field, points),) = fields.items()
-            n = sum(counts[band[0] : band[1]])
-            assert len(points) == n
-            offset = offsets.get(field, 0)
-            assert_same_records({field: full[field][offset : offset + n]}, {field: points})
-            offsets[field] = offset + n
-    assert offsets == {field: len(points) for field, points in full.items()}
+        sub = prepared.prune(select=select)
+        coords = leaf_coords(sub)
+        assert datacube.get(sub) is sub
+        # get leaves the coordinates of a prepared sub-tree as they were
+        assert leaf_coords(sub) == coords
+        fields = records(sub)
+        assert len(fields) == 1
+        ((field, points),) = fields.items()
+        assert_same_records({field: full[field]}, {field: points})
+        seen[field] = len(points)
+    assert seen == {field: len(points) for field, points in full.items()}
     assert snapshot(prepared) == before
 
 
-def test_prepare_with_select_and_latitude_range_prunes_a_copy():
+def test_prepare_with_select_prunes_a_copy():
     datacube, tree, _, _ = make_tree("regular_overlap")
     before = snapshot(tree)
     select = {"param": "167", "step": 6, "number": 2}
-    band = datacube.prepare(tree, select=select, latitude_range=(1, 3))
+    sub = datacube.prepare(tree, select=select)
     assert snapshot(tree) == before
-    assert band is not tree
-    expected = prepared_copy(datacube, tree).prune(select=select, latitude_range=(1, 3))
-    assert leaf_coords(band) == leaf_coords(expected)
-    assert leaf_coords(datacube.get(band)) == leaf_coords(expected)
+    assert sub is not tree
+    expected = prepared_copy(datacube, tree).prune(select=select)
+    assert leaf_coords(sub) == leaf_coords(expected)
+    assert leaf_coords(datacube.get(sub)) == leaf_coords(expected)
 
 
 @pytest.mark.parametrize("case", list(CASES))
@@ -646,7 +625,7 @@ def test_tree_memory_per_point_for_1m_point_slice():
         Box(["latitude", "longitude"], [-90, 0], [90, 360]),
     )
     _, tree, _ = slice_request(mars_options({"type": "regular", "resolution": 360}), axes, request)
-    n_points = sum(tree.latitude_point_counts())
+    n_points = sum(len(leaf.values) for leaf in tree.leaves)
     assert n_points > 1_000_000
     per_point = tree_bytes(tree) / n_points
     assert per_point < 16, per_point

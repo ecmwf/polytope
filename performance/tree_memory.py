@@ -15,7 +15,6 @@ field's values, as gribjump's own non-lazy iterator holds them before the first 
 
     python performance/tree_memory.py --get --fields=12 healpix1024_europe_box   # 12 fields in one call
     python performance/tree_memory.py --get --fields=12 --iter healpix1024_europe_box    # consumed field by field
-    python performance/tree_memory.py --get --fields=12 --legacy healpix1024_europe_box  # per-range assignment
 """
 
 import gc
@@ -145,20 +144,6 @@ class _PeakRss:
         self.peak = max(self.peak, self.proc.memory_info().rss)
 
 
-def _use_legacy_assignment():
-    """Fetch with the per-range result assignment this branch replaced (``tests/legacy_assign.py``)."""
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tests", "legacy_assign.py")
-    spec = spec_from_file_location("legacy_assign", path)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"cannot load the legacy assignment from {path}")
-    module = module_from_spec(spec)
-    spec.loader.exec_module(module)
-
-    from polytope_feature.datacube.backends.fdb import FDBDatacube
-
-    FDBDatacube.assign_fdb_output_to_nodes = module.legacy_assign_fdb_output_to_nodes
-
-
 def _consume_get_iter(datacube, tree):
     """Read every field through ``get_iter``, dropping each one before asking for the next."""
     n_values = 0
@@ -171,7 +156,7 @@ def _consume_get_iter(datacube, tree):
     return n_values
 
 
-def measure(mapper, cyclic_range, shape_spec, per_point=False, with_get=False, n_fields=1, legacy=False, iter_=False):
+def measure(mapper, cyclic_range, shape_spec, per_point=False, with_get=False, n_fields=1, iter_=False):
     import psutil
 
     GribJump = _load_fake_gribjump().GribJump
@@ -258,8 +243,6 @@ def measure(mapper, cyclic_range, shape_spec, per_point=False, with_get=False, n
         "rss_after_slice_mb": round(proc.memory_info().rss / 2**20, 1),
     }
     if with_get:
-        if legacy:
-            _use_legacy_assignment()
         prepared = tree.prune() if hasattr(tree, "prune") else None
         if prepared is not None and hasattr(datacube, "prepare"):
             t0 = time.perf_counter()
@@ -318,7 +301,6 @@ def main(argv):
     args = [a for a in argv if not a.startswith("--")]
     with_get = "--get" in flags
     per_point = "--per-point" in flags
-    legacy = "--legacy" in flags
     iter_ = "--iter" in flags
     if "--fields" in flags:
         sys.exit("the number of fields is given as --fields=N")
@@ -340,7 +322,7 @@ def main(argv):
             except ValueError:
                 sys.exit(f"{resolution!r} is not a grid resolution")
             cyclic_range, shape = [0, 360], GLOBAL_BOX
-        print(json.dumps(measure(mapper, cyclic_range, shape, per_point, with_get, n_fields, legacy, iter_)))
+        print(json.dumps(measure(mapper, cyclic_range, shape, per_point, with_get, n_fields, iter_)))
         return
     if len(args) == 2 and args[1].isdigit():
         names = [f"{args[0]}:{args[1]}"]
@@ -355,7 +337,7 @@ def main(argv):
             result = json.loads(out.stdout.strip().splitlines()[-1])
         except (ValueError, IndexError):
             sys.exit(f"{name}: the measuring process printed no result\n{out.stdout}\n{out.stderr}")
-        extra = {"legacy": legacy, "iter": iter_} if with_get else {}
+        extra = {"iter": iter_} if with_get else {}
         print(json.dumps({"scenario": name, "per_point": per_point, **extra, **result}))
 
 

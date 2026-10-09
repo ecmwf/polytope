@@ -43,7 +43,7 @@ class TestBulkGridLeaves:
             "pre_path": {"class": "od", "expver": "0001", "levtype": "sfc", "stream": "oper"},
         }
 
-    def retrieve(self, bulk_grid_leaves):
+    def retrieve(self):
         import pygribjump as gj
 
         request = Request(
@@ -59,39 +59,31 @@ class TestBulkGridLeaves:
             # crosses the cyclic longitude seam
             Box(["latitude", "longitude"], [40, -2], [42, 2]),
         )
-        options = dict(self.options, bulk_grid_leaves=bulk_grid_leaves)
-        return Polytope(datacube=gj.GribJump(), options=options).retrieve(request)
+        return Polytope(datacube=gj.GribJump(), options=self.options).retrieve(request)
 
     @staticmethod
     def points(tree):
         # (lat, lon) -> values of the 3 compressed steps
         points = {}
         for leaf in tree.leaves:
-            if isinstance(leaf, BulkGridTensorIndexNode):
-                values = np.asarray(leaf.result, dtype=np.float64)
-                for i, (lat, lon) in enumerate(leaf.coordinates):
-                    points[(round(lat, 6), round(lon, 6))] = tuple(values[:, i])
-            else:
-                n = len(leaf.values)
-                for j, lon in enumerate(leaf.values):
-                    points[(round(leaf.parent.values[0], 6), round(lon, 6))] = tuple(leaf.result[j::n])
+            values = np.asarray(leaf.result, dtype=np.float64)
+            for i, (lat, lon) in enumerate(leaf.coordinates):
+                points[(round(lat, 6), round(lon, 6))] = tuple(values[:, i])
         return points
 
     @pytest.mark.fdb
-    def test_bulk_grid_matches_legacy_leaves(self):
-        legacy = self.retrieve(False)
-        grid = self.retrieve(True)
+    def test_one_bulk_grid_node_holds_the_whole_box(self):
+        """The box crosses the cyclic longitude seam: its rows fold into one node of 868 points."""
+        grid = self.retrieve()
 
         grid_leaves = grid.leaves
         assert len(grid_leaves) == 1
         grid_node = grid_leaves[0]
         assert isinstance(grid_node, BulkGridTensorIndexNode)
-        assert len(grid_node.lat_values) == len(legacy.leaves)
         assert grid_node.point_count == len(point_leaves(grid)) == 868
+        assert grid_node.point_count == sum(len(lons) for lons in grid_node.lon_values)
+        # one values array per compressed step, each value belonging to its own point
         assert len(grid_node.result) == 3
-
-        legacy_points = self.points(legacy)
-        grid_points = self.points(grid)
-        assert grid_points.keys() == legacy_points.keys()
-        for key, values in legacy_points.items():
-            assert np.allclose(grid_points[key], values)
+        points = self.points(grid)
+        assert len(points) == 868
+        assert all(len(values) == 3 and not np.isnan(values).any() for values in points.values())

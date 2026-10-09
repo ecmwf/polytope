@@ -11,10 +11,10 @@ from test_pruned_get import (
     HEALPIX_OPTIONS,
     MARS_AXES,
     assert_same_records,
-    banded_records,
     full_records,
     iter_nodes,
     mars_options,
+    selected_records,
     snapshot,
 )
 
@@ -119,6 +119,11 @@ def point_sequence(tree):
     for node, ancestors in iter_nodes(tree):
         if len(node.children) != 0 or node is tree:
             continue
+        if hasattr(node, "coordinates"):
+            # a prepared or filled tree: one bulk node per spatial sub-tree
+            path = tuple((n.axis.name, tuple(n.values)) for n in ancestors[:-1])
+            out.extend((path, lat, lon) for lat, lon in node.coordinates.tolist())
+            continue
         field_nodes, lat_node = ancestors[:-2], ancestors[-2]
         path = tuple((n.axis.name, tuple(n.values)) for n in field_nodes)
         out.extend((path, lat_node.values[0], lon) for lon in node.values.tolist())
@@ -150,7 +155,7 @@ def test_polygon_rows_hold_the_per_point_leaves_in_order(case):
         assert np.all(np.diff(leaf.values) > 0)
     assert [lat.values for lat in new_lats] == [lat.values for lat in latitude_nodes(old)]
     assert point_sequence(new) == point_sequence(old)
-    assert new.latitude_point_counts() == old.latitude_point_counts()
+    assert [len(leaf.values) for leaf in new.leaves] == [len(lat.children) for lat in latitude_nodes(old)]
     assert len(new.leaves) < len(old.leaves)
 
 
@@ -167,8 +172,9 @@ def test_polygon_get_matches_per_point_tree(case):
             grid_index = mapper.unmap([lat], [lon])[0]
             assert index_of(value) == grid_index
     if case.startswith("healpix"):
-        # nested grid indices are not ascending along a row: the results really were put back in value order
-        assert len(new_cube._leaf_result_orders) > 0
+        # nested grid indices are not ascending along a row, so the results of a merged row really were
+        # put back into the row's value order after being fetched in grid-index order
+        assert any(bool(np.any(np.diff(leaf.indexes) < 0)) for leaf in new_filled.leaves)
 
 
 @pytest.mark.parametrize("case", list(CASES))
@@ -177,7 +183,6 @@ def test_prepare_on_polygon_rows_matches_per_point_tree(case):
     old_prepared = prepared(old_cube, old)
     new_prepared = prepared(new_cube, new)
     assert point_sequence(new_prepared) == point_sequence(old_prepared)
-    assert new_prepared.latitude_point_counts() == old_prepared.latitude_point_counts()
     # prepare leaves the merged rows in ascending order and is idempotent
     assert point_sequence(new_prepared) == point_sequence(new)
     again = prepared(new_cube, new_prepared)
@@ -188,18 +193,17 @@ def test_prepare_on_polygon_rows_matches_per_point_tree(case):
 
 
 @pytest.mark.parametrize("case", list(CASES))
-@pytest.mark.parametrize("band_size", [1, 3])
-def test_pruned_gets_of_polygon_rows_reproduce_per_point_get(case, band_size):
+def test_pruned_gets_of_polygon_rows_reproduce_per_point_get(case):
     (old_cube, old, select_axes), (new_cube, new, _) = both_trees(case)
     _, old_full = full_records(old_cube, old)
     before = snapshot(new)
-    banded = banded_records(new_cube, new, select_axes, band_size)
-    assert_same_records(old_full, banded)
+    pruned = selected_records(new_cube, new, select_axes)
+    assert_same_records(old_full, pruned)
     assert snapshot(new) == before
-    # bands of the prepared tree too
+    # sub-trees of the prepared tree too
     new_prepared = prepared(new_cube, new)
-    banded = banded_records(new_cube, new_prepared, select_axes, band_size)
-    assert_same_records(old_full, banded)
+    pruned = selected_records(new_cube, new_prepared, select_axes)
+    assert_same_records(old_full, pruned)
 
 
 @pytest.mark.parametrize("case", ["regular_seam", "healpix_nested_notched"])
@@ -210,8 +214,8 @@ def test_polygon_rows_with_missing_field(case):
     _, new_full = full_records(new_cube, new)
     assert_same_records(old_full, new_full)
     assert any(v is None for points in new_full.values() for _, _, v in points)
-    banded = banded_records(new_cube, new, select_axes, band_size=2)
-    assert_same_records(old_full, banded)
+    pruned = selected_records(new_cube, new, select_axes)
+    assert_same_records(old_full, pruned)
 
 
 def test_polygon_rows_keep_the_polygon_tag():
