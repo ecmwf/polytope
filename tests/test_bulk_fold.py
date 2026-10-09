@@ -286,13 +286,12 @@ def test_prune_shares_the_bulk_arrays_and_fills_independently():
     assert [index_of(v) for v in pruned_node.result[0]] == node.indexes.tolist()
 
 
-def test_latitude_bands_are_refused_on_a_folded_tree():
+def test_spatial_axes_cannot_be_selected():
+    """A spatial sub-tree is copied whole: there is no way to prune a field to part of its points."""
     options, axes, request, _ = CASES["regular_seam"]
     datacube, tree = slice_tree(options, axes, request)
     datacube.prepare(tree)
-    with pytest.raises(ValueError, match="bulk"):
-        tree.latitude_point_counts()
-    with pytest.raises(ValueError, match="bulk"):
-        tree.prune(latitude_range=(0, 1))
-    with pytest.raises(ValueError, match="bulk"):
-        datacube.get(tree, latitude_range=(0, 1))
+    with pytest.raises(ValueError, match="spatial axis 'latitude'"):
+        tree.prune(select={"latitude": 0.0})
+    with pytest.raises(ValueError, match="spatial axis 'longitude'"):
+        datacube.get(tree, select={"longitude": 0.0})

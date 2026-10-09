@@ -36,14 +36,11 @@ changes are described under "Merged: bulk spatial nodes and per-point tags" belo
   uncompressed branches return the points nearest to each query, which differs from what they returned before.
 - **One gribjump result is read once, as one flat buffer.** `assign_fdb_output_to_nodes` took `result.values[i]`
   per index range -- a numpy object plus a list slot each -- and kept the chunks of every leaf of the call until
-  the last field had arrived. It now takes `result.values_flat` once per field and scatters it into the leaves by
-  a plan built per spatial sub-tree (`datacube/fdb_assign.py`), and a leaf's result for the whole call is
-  pre-allocated (`n_points x n_fields`, float64, NaN-filled) and filled field by field. Values, point order,
-  the object/`None` result of a missing field and the value order of merged polygon rows are unchanged
-  (`tests/test_flat_assign.py` compares every scenario against the per-range implementation, kept in
-  `tests/legacy_assign.py`). On grids whose points a bounding box covers in long runs (regular, octahedral,
-  local_regular) nothing changes measurably; on HEALPix nested grids, where a box breaks into roughly one range
-  per 1.6 points, the peak of a 12-field `get` falls from ~370 to ~40 B/value. See `MEASUREMENTS.md`.
+  the last field had arrived. It takes `result.values_flat` once per field and scatters it into the spatial
+  node's point order. Values, point order and the object/`None` result of a missing field are unchanged. On
+  grids whose points a bounding box covers in long runs (regular, octahedral, local_regular) nothing changes
+  measurably; on HEALPix nested grids, where a box breaks into roughly one range per 1.6 points, the peak of a
+  12-field `get` falls from ~370 to ~40 B/value. See `MEASUREMENTS.md`.
 - **HEALPix nested grid index lookup is vectorised.** `NestedHealpixGridMapper.unmap` called the Rust extension,
   which resolves one point at a time (~14 us per point, and superlinear in the points of a ring: 6.0 ms for a
   430-point ring of HEALPix 1024, 122 ms for a full 4,096-point ring); that was what `prepare`/`get` spent their
@@ -63,8 +60,8 @@ With the switch on the leaf axis stays compressed and the pieces' leaves under e
 one sorted, de-duplicated float64 array (`datacube/tree_rows.py`).
 
 - The flattened (latitude, longitude) point sequence is identical to the per-point tree, and so are `get`,
-  `prepare`, `prune` and `latitude_point_counts` results (`tests/test_polygon_rows.py`, regular / HEALPix nested
-  128 / O1280, notched and seam-crossing polygons, missing fields, bands).
+  `prepare` and `prune` results (`tests/test_polygon_rows.py`, regular / HEALPix nested
+  128 / O1280, notched and seam-crossing polygons, missing fields).
 - Merged leaves are flagged (`_keep_value_order`) so `get`/`prepare` keep their values ascending rather than
   reordering them by grid index as for box leaves, and put the results (fetched in index order) back into value
   order. On HEALPix nested grids this keeps the per-point (longitude) order instead of nested-index order.
@@ -104,8 +101,8 @@ file retired the per-row alternative):
   sliced tree;
 - an unstructured (quadtree) tree gets one `BulkMergedTensorIndexNode` per spatial sub-tree at slice time
   instead of one `MergedTensorIndexNode` per point;
-- `latitude_point_counts()`, `prune(latitude_range=)` and `get(latitude_range=)` raise: a field that fits the
-  memory budget is fetched whole.
+- spatial axes cannot be selected: a spatial sub-tree is copied whole, and a field that fits the memory budget
+  is fetched whole.
 
 `options["bulk_grid_leaves"]` is accepted for configuration compatibility and ignored (`False` logs a warning).
 Measurements: `MEASUREMENTS.md`.
@@ -138,19 +135,20 @@ to the engine together (`Polytope._group_combinations`). `Engine.reset()` is cal
 
 ## New API
 
-- `TensorIndexTree.prune(select=None, latitude_range=None, latitude_axis="latitude")`
-- `TensorIndexTree.latitude_point_counts(select=None, latitude_axis="latitude")`
+- `TensorIndexTree.prune(select=None, latitude_axis="latitude")`, where `select` maps an axis to one value or
+  to a sequence of values
 - `TensorIndexTree.result_array()` / `MergedTensorIndexNode.result_array()`
 - `TensorIndexTree.add_values(values)`
-- `FDBDatacube.get(requests, context=None, select=None, latitude_range=None)`
-- `FDBDatacube.prepare(requests, context=None, select=None, latitude_range=None)`: runs every step of `get` before
-  the gribjump call (pruning, nearest-point selection, grid-index lookup, de-duplication of grid points and
-  reordering of longitude leaf `values` by grid index) without fetching data or touching `result`. After `prepare`
-  the tree holds the exact coordinates, in order, that `get` fills, and `latitude_point_counts` counts the points
-  `get` returns. Idempotent; `get` on a prepared tree or on `prepared.prune(select, latitude_range)` gives the same
+- `FDBDatacube.get(requests, context=None, select=None)`
+- `FDBDatacube.prepare(requests, context=None, select=None)`: runs every step of `get` before
+  the gribjump call (pruning, nearest-point selection, grid-index lookup, de-duplication of grid points,
+  reordering of longitude leaf `values` by grid index and the fold into one node per spatial sub-tree) without
+  fetching data or touching `result`. After `prepare`
+  the tree holds the exact coordinates, in order, that `get` fills. Idempotent; `get` on a prepared tree or on
+  `prepared.prune(select)` gives the same
   values/result order as `get` on the unprepared tree. Grid indices are recomputed by the later `get` rather than
-  cached on the leaves, to keep the tree at ~8 B/point.
-- `FDBDatacube.get_iter(requests, context=None, select=None, latitude_range=None)`: builds the same gribjump call
+  cached on the leaves, to keep a sliced tree at ~8 B/point.
+- `FDBDatacube.get_iter(requests, context=None, select=None)`: builds the same gribjump call
   as `get` (same pruning, same requests, same order) but yields `(field_path, [(leaf, values), ...])` per field
   instead of filling the tree, so that a caller can hold one field (or one group) at a time. `field_path` is the
   MARS keys of one field with one scalar value each, in the order the tree descends; `values` is a fresh float64
@@ -165,7 +163,7 @@ to the engine together (`Polytope._group_combinations`). `Engine.reset()` is cal
 
 ### What a consumer reads from a bulk spatial node
 
-With `bulk_grid_leaves` on, the leaves of a prepared tree are `BulkGridTensorIndexNode` (structured grids) or
+The leaves of a prepared tree are `BulkGridTensorIndexNode` (structured grids) or
 `BulkMergedTensorIndexNode` (point clouds), one per spatial sub-tree, and the whole spatial walk is:
 
 - `node.coordinates`: float64 (N, 2) of `(latitude, longitude)` in output order;
@@ -180,7 +178,7 @@ With `bulk_grid_leaves` on, the leaves of a prepared tree are `BulkGridTensorInd
 - `get_iter` yields `(field_path, [(bulk_node, values), ...])`, one entry per spatial sub-tree, `values` a
   fresh float64 array in the node's point order, the second item `None` for a missing field;
 - `tree.prune(select=...)` works on a tree holding bulk nodes and shares their arrays (`copy_shared`), so a
-  per-field or per-group sub-tree costs nothing per point; `latitude_range` is refused (see above);
+  per-field or per-group sub-tree costs nothing per point;
 - `datacube.prototype_metrics` after `prepare`/`get`: `ranges_per_field`, `request_planning_s`,
   `uncompressed_requests`, `effective_range_arrays`, `gj_extract_call_s`, `iterator_and_assignment_s`.
 
@@ -210,8 +208,6 @@ With `bulk_grid_leaves` on, the leaves of a prepared tree are `BulkGridTensorInd
   field before handing out the first result, and on HEALPix nested the ranges need an int64 permutation plus a
   sorted copy of the indexes (16 B/point transient). Writing the ranges from a sort that never materialises the
   permutation, or reading the field in pieces, would close the gap.
-- **Latitude bands.** `latitude_range` / `latitude_point_counts` and the banded `prepare` can be deleted once
-  no caller fetches a field in latitude bands.
 
 # One way to retrieve a spatial sub-tree
 
@@ -255,3 +251,29 @@ meant keeping 570 lines of code and tests for a path no caller takes.
 - `performance/bulk_order.py` is gone: it compared the fold against the per-row path for the 28 golden cases.
   polytope-mars' corpus is the remaining end-to-end oracle for that order. `performance/bulk_memory.py` and
   `performance/tree_memory.py` measure the one path that is left (no `--legacy`, no `bulk` column).
+
+# Pruning a tree to a set of values per axis
+
+## Behaviour changes
+
+- **`TensorIndexTree.prune(select=...)` takes a value or a sequence of values per axis.** A node on a selected
+  axis keeps the listed values in its own order, so the compressed-axes expansion of `FDBDatacube.get` stays in
+  tree order; a branch whose node holds none of them is dropped; a value that is nowhere in the tree raises
+  `ValueError` naming the axis, as a single unknown value already did. One sub-tree can therefore carry several
+  field groups, which is what polytope-mars plans a multi-group gribjump call from (its own multi-value
+  `tree_units.prune_values`, a copy of this walk, is gone and with it three private names it imported from
+  `tree_pruning`).
+- **Latitude bands are gone**: `latitude_range` on `prune` / `get` / `get_iter` / `prepare`,
+  `TensorIndexTree.latitude_point_counts` and `tree_pruning`'s band machinery (`_NO_BANDS`,
+  `_subtree_points`). A spatial sub-tree is one array-backed node that is copied whole, so there is nothing to
+  count or cut: a field fits the memory budget whole or is refused by the caller
+  (polytope-mars `limits.max_points_per_field`). Selecting a spatial axis raises
+  `Cannot select on spatial axis 'latitude'`.
+
+## Verification
+
+- `python -m pytest tests -m "not fdb and not internet and not non_stored_data" -q`: **386 passed, 6 skipped**.
+  `tests/test_pruned_get.py::test_prune_selects_several_values_of_an_axis` pins the new form (the same records
+  as a full get, the tree's value order whatever the caller's, a one-element sequence equal to the single-value
+  form), and polytope-mars' golden corpus is byte-identical: every multi-group call it makes goes through this
+  walk.

@@ -366,6 +366,8 @@ def test_prune_to_absent_value_raises():
         tree.prune(select={"param": "167", "step": 12})
     with pytest.raises(ValueError, match="levelist"):
         tree.prune(select={"levelist": 500})
+    with pytest.raises(ValueError, match="step"):
+        tree.prune(select={"step": (0, 12)})  # one of the two values is not in the tree
 
 
 def test_prune_rejects_spatial_select_and_non_root():
@@ -374,6 +376,24 @@ def test_prune_rejects_spatial_select_and_non_root():
         tree.prune(select={"latitude": 0.0})
     with pytest.raises(ValueError):
         tree.children[0].prune()
+
+
+def test_prune_selects_several_values_of_an_axis():
+    """A sub-tree of several field groups: the selected axes keep the listed values, in the node's order."""
+    datacube, tree, _, _ = make_tree("regular_seam")
+    _, full = full_records(datacube, tree)
+    numbers = axis_values(tree, "number")
+    assert len(numbers) == 2 and len(axis_values(tree, "step")) == 2
+
+    sub = tree.prune(select={"number": numbers})
+    assert axis_values(sub, "number") == numbers
+    assert_same_records(full, records(datacube.get(sub)))
+
+    # a set of one value is the single-value form, and the order is the tree's, not the caller's
+    one = tree.prune(select={"number": [numbers[0]]})
+    assert axis_values(one, "number") == [numbers[0]]
+    assert axis_values(tree.prune(select={"number": list(reversed(numbers))}), "number") == numbers
+    assert records(datacube.get(one)).keys() == {field for field in full if dict(field)["number"] == numbers[0]}
 
 
 # ---------------------------------------------------------------------------------------------------------------------

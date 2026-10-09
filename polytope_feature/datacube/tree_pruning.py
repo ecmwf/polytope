@@ -1,14 +1,12 @@
 """Pruning a sliced ``TensorIndexTree`` into independent sub-trees for chunked extraction.
 
-A caller slices a request once, then repeatedly prunes the tree to one value on each compressed non-spatial axis
-(date/time/step/number/param/levelist...) and a contiguous band of latitude nodes, and calls ``datacube.get`` on
-each pruned tree.  The pruned trees share no mutable state with the parent, so ``get`` (which reorders and
-de-duplicates leaf values and fills ``result``) never touches the parent tree.  Calling ``FDBDatacube.prepare`` on
-the parent first puts its points into their final (``get``) order, so every pruned band's coordinates are known
-before any data is fetched.
+A caller slices a request once, then repeatedly prunes the tree to a value -- or a set of values -- on each
+compressed non-spatial axis (date/time/step/number/param/levelist...) and calls ``datacube.get`` on each pruned
+tree.  The pruned trees share no mutable state with the parent, so ``get`` (which reorders and de-duplicates
+leaf values and fills ``result``) never touches the parent tree.  Calling ``FDBDatacube.prepare`` on the parent
+first puts its points into their final (``get``) order, so every pruned sub-tree's coordinates are known before
+any data is fetched.
 """
-
-import math
 
 import numpy as np
 
@@ -16,12 +14,6 @@ from .tensor_index_tree import (
     BulkMergedTensorIndexNode,
     MergedTensorIndexNode,
     TensorIndexTree,
-)
-
-#: latitude bands count spatial nodes, which a bulk node does not expose: a field holding one is fetched whole.
-_NO_BANDS = (
-    "Latitude bands are not supported on bulk spatial nodes (bulk_grid_leaves): a field that fits the memory "
-    "budget is fetched whole"
 )
 
 
@@ -39,12 +31,30 @@ def _value_matches(node_value, wanted, axis):
     return False
 
 
-def _select_value(node, wanted):
-    """Return the element of ``node.values`` equal to ``wanted`` (the tree's own object), or None."""
+def _wanted_values(wanted):
+    """``wanted`` as a sequence of values: one value selects itself."""
+    if isinstance(wanted, (list, tuple, set, frozenset, np.ndarray)):
+        return list(wanted)
+    return [wanted]
+
+
+def _select_values(node, wanted):
+    """``(values, hits)``: the elements of ``node.values`` matching ``wanted`` and which of ``wanted`` matched.
+
+    ``wanted`` is one value or a sequence of them.  The values are the tree's own objects in the node's order,
+    so the compressed-axes expansion of ``FDBDatacube.get`` stays in tree order; ``hits`` are positions in
+    ``wanted``, so that a value the tree does not have anywhere can be named.
+    """
+    choices = _wanted_values(wanted)
+    values = []
+    hits = set()
     for v in node.values:
-        if _value_matches(v, wanted, node.axis):
-            return v
-    return None
+        for i, w in enumerate(choices):
+            if _value_matches(v, w, node.axis):
+                values.append(v)
+                hits.add(i)
+                break
+    return tuple(values), hits
 
 
 def _copy_node(node, values=None):
@@ -83,105 +93,65 @@ def _copy_subtree(node):
     return new
 
 
-def _subtree_points(node):
-    if isinstance(node, BulkMergedTensorIndexNode):
-        raise ValueError(_NO_BANDS)
-    if isinstance(node, MergedTensorIndexNode):
-        return 1
-    if len(node.children) == 0:
-        return len(node.values)
-    return sum(_subtree_points(c) for c in node.children)
-
-
 def _check_select(select, latitude_axis):
     select = dict(select or {})
     for name in select:
         if name in (latitude_axis, "longitude"):
-            raise ValueError(f"Cannot select on spatial axis {name!r}; use latitude_range instead")
+            raise ValueError(f"Cannot select on spatial axis {name!r}")
     return select
 
 
-def _walk(root, select, latitude_axis, on_spatial, build):
-    """Depth-first traversal of the branches matching ``select``.
-
-    ``on_spatial(node)`` is called for each latitude node / merged leaf in traversal order and returns a copy to
-    attach (or None).  When ``build`` is true a pruned copy of the tree is returned.
-    """
-    matched = set()
+def _walk(root, select, latitude_axis):
+    """Depth-first copy of the branches matching ``select``; spatial sub-trees are copied whole."""
+    matched: dict = {}
 
     def visit(src, dst):
         kept_any = False
         for child in src.children:
             if isinstance(child, MergedTensorIndexNode) or child.axis.name == latitude_axis:
-                copy = on_spatial(child)
-                if copy is not None:
-                    dst.add_child(copy)
-                    kept_any = True
+                dst.add_child(_copy_subtree(child))
+                kept_any = True
                 continue
             values = None
             name = child.axis.name
             if name in select:
-                v = _select_value(child, select[name])
-                if v is None:
+                values, hits = _select_values(child, select[name])
+                if not values:
                     continue
-                matched.add(name)
-                values = (v,)
-            new = _copy_node(child, values) if build else None
+                matched.setdefault(name, set()).update(hits)
+            new = _copy_node(child, values)
             if len(child.children) == 0:
                 # leaf above the latitude level (non-spatial tree): keep it whole
-                if build:
-                    dst.add_child(new)
+                dst.add_child(new)
                 kept_any = True
                 continue
             if visit(child, new):
-                if build:
-                    dst.add_child(new)
+                dst.add_child(new)
                 kept_any = True
         return kept_any
 
-    new_root = _copy_node(root) if build else None
+    new_root = _copy_node(root)
     visit(root, new_root)
-    missing = set(select) - matched
+    missing = {}
+    for name, wanted in select.items():
+        hits = matched.get(name, ())
+        absent = [w for i, w in enumerate(_wanted_values(wanted)) if i not in hits]
+        if absent:
+            missing[name] = absent
     if missing:
         raise ValueError(
-            "Values not found in tree: " + ", ".join(f"{name}={select[name]!r}" for name in sorted(missing))
+            "Values not found in tree: "
+            + ", ".join(
+                f"{name}={values[0]!r}" if len(values) == 1 else f"{name}={values!r}"
+                for name, values in sorted(missing.items())
+            )
         )
     return new_root
 
 
-def latitude_point_counts(tree, select=None, latitude_axis="latitude"):
-    select = _check_select(select, latitude_axis)
-    counts = []
-
-    def on_spatial(node):
-        counts.append(_subtree_points(node))
-        return None
-
-    _walk(tree, select, latitude_axis, on_spatial, build=False)
-    return counts
-
-
-def prune(tree, select=None, latitude_range=None, latitude_axis="latitude") -> TensorIndexTree:
+def prune(tree, select=None, latitude_axis="latitude") -> TensorIndexTree:
     if not tree.is_root():
         raise ValueError("prune() must be called on the root of a tree")
-    select = _check_select(select, latitude_axis)
-    if latitude_range is None:
-        lo, hi = 0, math.inf
-    else:
-        lo, hi = latitude_range
-        if lo < 0 or hi < lo:
-            raise ValueError(f"Invalid latitude_range {latitude_range!r}")
-    counter = [0]
-
-    def on_spatial(node):
-        if latitude_range is not None and isinstance(node, BulkMergedTensorIndexNode):
-            raise ValueError(_NO_BANDS)
-        k = counter[0]
-        counter[0] += 1
-        if lo <= k < hi:
-            return _copy_subtree(node)
-        return None
-
-    pruned = _walk(tree, select, latitude_axis, on_spatial, build=True)
+    pruned = _walk(tree, _check_select(select, latitude_axis), latitude_axis)
     assert pruned is not None
     return pruned

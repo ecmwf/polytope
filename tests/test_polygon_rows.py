@@ -269,7 +269,7 @@ def test_overlapping_polygons_give_each_point_once():
 
 def test_merged_rows_flag_survives_pruning():
     _, (new_cube, new, _) = both_trees("healpix_nested_seam")
-    leaves = new.prune(select={"param": "167"}, latitude_range=(1, 2)).leaves
+    leaves = new.prune(select={"param": "167"}).leaves
     assert len(leaves) > 0 and all(leaf._keep_value_order for leaf in leaves)
     _, fields = full_records(new_cube, new)
     assert len(fields) == len(list(itertools.product(["165", "167"], ["1", "2"])))

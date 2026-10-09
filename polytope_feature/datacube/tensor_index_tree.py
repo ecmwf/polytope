@@ -501,46 +501,27 @@ class TensorIndexTree(object):
         """This leaf's ``result`` as a float64 array, with missing values (``None``) as NaN."""
         return result_as_array(self.result)
 
-    def latitude_point_counts(self, select=None, latitude_axis="latitude"):
-        """Number of points under each latitude node, in traversal order.
+    def prune(self, select=None, latitude_axis="latitude") -> "TensorIndexTree":
+        """Return an independent copy of this (root) tree restricted to the selected field groups.
 
-        Only branches matching ``select`` are counted (see :meth:`prune`), so
-        ``tree.prune(select, latitude_range=(i, j))`` holds exactly ``sum(counts[i:j])`` points. A merged
-        (lat, lon) leaf counts as a latitude node holding one point. Use this to plan latitude bands.
+        :param select: ``{axis_name: value}`` or ``{axis_name: [value, ...]}``; on every node of each named
+            axis only the listed values are kept, in the node's own order (so the compressed-axes expansion
+            in ``FDBDatacube.get`` yields only those values, in tree order). Branches whose node on that
+            axis holds none of them are dropped; ``ValueError`` is raised if an axis matches nothing
+            anywhere in the tree. Values must compare equal to the values stored in the tree. Spatial axes
+            (latitude and below) cannot be selected: a spatial sub-tree is always copied whole.
+        :returns: a new tree with the same root path. Nodes are fresh objects, longitude leaf arrays are
+            copied and every ``result`` is empty, so ``datacube.get`` on the pruned tree never mutates this
+            tree, and several pruned trees of the same parent can be filled one after another.
 
-        Counts reflect the tree as it is. On a tree prepared with ``FDBDatacube.prepare`` they are exactly the
-        number of points ``get`` returns per latitude node (duplicate grid points already dropped), so bands
-        planned from them line up with the prepared coordinate list. On an unprepared tree they are taken before
-        ``get`` drops duplicate grid points (e.g. a box overlapping itself across the longitude seam), so a filled
-        band can hold fewer points.
-        """
-        from .tree_pruning import latitude_point_counts
-
-        return latitude_point_counts(self, select, latitude_axis)
-
-    def prune(self, select=None, latitude_range=None, latitude_axis="latitude") -> "TensorIndexTree":
-        """Return an independent copy of this (root) tree restricted to one field group and/or latitude band.
-
-        :param select: ``{axis_name: value}``; on every node of each named axis only ``value`` is kept (so the
-            compressed-axes expansion in ``FDBDatacube.get`` yields only that value). Branches whose node on
-            that axis does not contain ``value`` are dropped; ``ValueError`` is raised if ``value`` is not found
-            on that axis anywhere in the tree. Values must compare equal to the values stored in the tree.
-            Spatial axes (latitude and below) cannot be selected; use ``latitude_range``.
-        :param latitude_range: ``(i, j)``; keep only latitude nodes ``i <= k < j`` where ``k`` counts latitude
-            nodes in traversal order among the branches kept by ``select`` (see :meth:`latitude_point_counts`).
-        :returns: a new tree with the same root path. Nodes are fresh objects, longitude leaf arrays are copied
-            and every ``result`` is empty, so ``datacube.get`` on the pruned tree never mutates this tree, and
-            several pruned trees of the same parent can be filled one after another.
-
-        Concatenating the results of the bands ``[0, k1), [k1, k2), ...`` of a field reproduces the values and point
-        order of a ``get`` on the unpruned tree. Pruning a tree prepared with ``FDBDatacube.prepare`` keeps its
-        final point order, so a band's coordinates can be read before (and without) calling ``get``. Do not use
-        latitude bands when the datacube does nearest-point search (``FDBDatacube.nearest_search``): that search
-        only considers the points of the tree being fetched.
+        Concatenating the results of sub-trees that partition the tree's field groups reproduces the values
+        and point order of a ``get`` on the unpruned tree. Pruning a tree prepared with
+        ``FDBDatacube.prepare`` keeps its final point order, so a sub-tree's coordinates can be read before
+        (and without) calling ``get``.
         """
         from .tree_pruning import prune
 
-        return prune(self, select, latitude_range, latitude_axis)
+        return prune(self, select, latitude_axis)
 
     def create_merged_child(self, axes, values, next_nodes):
         node = MergedTensorIndexNode(axes, values)

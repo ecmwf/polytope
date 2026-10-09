@@ -175,54 +175,52 @@ class FDBDatacube(Datacube):
         for axis_name in axes_to_remove:
             self._axes.pop(axis_name, None)
 
-    def prepare(self, requests: TensorIndexTree, context=None, select=None, latitude_range=None):
+    def prepare(self, requests: TensorIndexTree, context=None, select=None):
         """Put ``requests`` into the point order ``get`` returns, without fetching any data.
 
-        Runs every step of :meth:`get` before the gribjump call: optional pruning (``select`` / ``latitude_range``,
-        as in ``get``), nearest-point selection, conversion of each leaf's coordinates to grid indices, dropping
-        duplicate grid points (e.g. a box that overlaps itself across the longitude seam) and reordering each
-        longitude leaf's ``values`` by grid index (HEALPix nested and other grids number points differently from
-        slice order).  ``gribjump.extract`` is not called and every ``result`` is left untouched.  The merged polygon
-        rows of ``Polytope._merge_union_rows`` keep their ascending values: ``get`` returns their results in that order,
-        as it did for the per-point leaves of a polygon.
+        Runs every step of :meth:`get` before the gribjump call: optional pruning (``select``, as in ``get``),
+        nearest-point selection, conversion of each leaf's coordinates to grid indices, dropping duplicate grid
+        points (e.g. a box that overlaps itself across the longitude seam), reordering each longitude leaf's
+        ``values`` by grid index (HEALPix nested and other grids number points differently from slice order) and
+        folding each spatial sub-tree into one array-backed node.  ``gribjump.extract`` is not called and every
+        ``result`` is left untouched.  The merged polygon rows of ``Polytope._merge_union_rows`` keep their
+        ascending values: ``get`` returns their results in that order, as it did for the per-point leaves of a
+        polygon.
 
         Use it to read the final coordinate list of a request before extracting any values: after ``prepare``
-        the latitude/longitude values in the tree are exactly those (and in the order) that ``get`` fills, and
-        ``latitude_point_counts`` counts the points ``get`` returns per latitude node.
+        every spatial sub-tree's ``coordinates`` are exactly those (and in the order) that ``get`` fills.
 
-        Like ``get``, the tree is modified in place and returned when neither ``select`` nor ``latitude_range``
-        is given; otherwise a pruned copy is prepared and returned and ``requests`` is left untouched.
-        ``prepare`` is idempotent, and ``get`` on a prepared tree, or on ``prepared.prune(select, latitude_range)``,
-        gives the same ``values`` and ``result`` order as ``get`` on the unprepared tree (bands of a prepared tree
-        concatenate to the full result).  Grid indices are not cached: ``get`` recomputes them for the (sub-)tree it
-        fetches, which keeps the tree at ~8 B/point.
+        Like ``get``, the tree is modified in place and returned when no ``select`` is given; otherwise a pruned
+        copy is prepared and returned and ``requests`` is left untouched.
+        ``prepare`` is idempotent, and ``get`` on a prepared tree, or on ``prepared.prune(select)``, gives the
+        same coordinates and ``result`` order as ``get`` on the unprepared tree (the sub-trees of a partition
+        concatenate to the full result).  Grid indices are not cached: ``get`` recomputes them for the
+        (sub-)tree it fetches, which keeps a sliced tree at ~8 B/point.
         """
-        requests = self._prune_for_get(requests, select, latitude_range)
+        requests = self._prune_for_get(requests, select)
         if len(requests.children) != 0:
             self._gribjump_requests(requests)
         return requests
 
-    def get(self, requests: TensorIndexTree, context=None, select=None, latitude_range=None):
-        """Fetch data from gribjump into the leaves of ``requests``; return the tree holding the results.
+    def get(self, requests: TensorIndexTree, context=None, select=None):
+        """Fetch data from gribjump into the nodes of ``requests``; return the tree holding the results.
 
         ``requests`` may be a full tree from ``Polytope.slice``, a sub-tree from ``TensorIndexTree.prune``, or
-        either of those after :meth:`prepare`.  Passing ``select`` and/or ``latitude_range`` prunes ``requests``
-        first (see ``TensorIndexTree.prune``) and fills and returns the pruned copy, leaving ``requests`` untouched.
-        Results for a pruned tree are exactly the corresponding slice of a full ``get``: the compressed axes expand
-        to the selected values only, point order within a band is the same, and a field gribjump does not have
+        either of those after :meth:`prepare`.  Passing ``select`` prunes ``requests`` first (see
+        ``TensorIndexTree.prune``) and fills and returns the pruned copy, leaving ``requests`` untouched.
+        Results for a pruned tree are exactly the corresponding slice of a full ``get``: the compressed axes
+        expand to the selected values only, the point order is the same, and a field gribjump does not have
         yields ``None`` values.  ``get`` keeps no state between calls, so pruned trees of the same parent can be
         fetched one after another.
 
-        After ``get`` each leaf's ``result`` is a ``np.ndarray``: float64 when every field was found, otherwise
-        object dtype with ``None`` for the missing values (use ``leaf.result_array()`` for float64 with NaN).
-        Leaf ``values`` are reordered by grid index and de-duplicated in place to line up with ``result`` (a no-op
-        on a prepared tree; use :meth:`prepare` to get the final coordinates before fetching).
-        Latitude bands are not supported together with nearest-point search, which selects among the points
-        present in the tree being fetched.
+        After ``get`` each spatial node's ``result`` holds one array per field of the call: float64 when the
+        field was found, an object array of ``None`` when it was not.
+        Leaf ``values`` are reordered by grid index and de-duplicated, and the spatial layers folded into one
+        node per sub-tree, exactly as :meth:`prepare` does it (a no-op on a prepared tree).
         """
         if context is None:
             context = {}
-        requests = self._prune_for_get(requests, select, latitude_range)
+        requests = self._prune_for_get(requests, select)
         if len(requests.children) == 0:
             return requests
         complete_list_complete_uncompressed_requests, complete_fdb_decoding_info = self._gribjump_requests(requests)
@@ -232,7 +230,7 @@ class FDBDatacube(Datacube):
         self.prototype_metrics["iterator_and_assignment_s"] = time.perf_counter() - assignment_start
         return requests
 
-    def get_iter(self, requests: TensorIndexTree, context=None, select=None, latitude_range=None):
+    def get_iter(self, requests: TensorIndexTree, context=None, select=None):
         """Fetch ``requests`` field by field, yielding ``(field_path, leaf_values)`` instead of filling the tree.
 
         Builds exactly the same gribjump call as :meth:`get` (same pruning, same requests, same order) but hands
@@ -258,7 +256,7 @@ class FDBDatacube(Datacube):
         """
         if context is None:
             context = {}
-        requests = self._prune_for_get(requests, select, latitude_range)
+        requests = self._prune_for_get(requests, select)
         if len(requests.children) == 0:
             return
         uncompressed_requests, decoding_info = self._gribjump_requests(requests)
@@ -291,17 +289,10 @@ class FDBDatacube(Datacube):
         logging.info("Requests extracted from GribJump for %s", context)
         return iterator
 
-    def _prune_for_get(self, requests: TensorIndexTree, select, latitude_range) -> TensorIndexTree:
-        if select is None and latitude_range is None:
+    def _prune_for_get(self, requests: TensorIndexTree, select) -> TensorIndexTree:
+        if select is None:
             return requests
-        if latitude_range is not None and len(self.nearest_search) != 0:
-            raise ValueError("latitude_range cannot be combined with nearest-point search")
-        if latitude_range is not None and self.bulk_grid_leaves:
-            raise ValueError(
-                "latitude_range cannot be combined with bulk_grid_leaves: a field that fits the memory budget "
-                "is fetched whole"
-            )
-        pruned = requests.prune(select=select, latitude_range=latitude_range)
+        pruned = requests.prune(select=select)
         assert pruned is not None
         return pruned
 
