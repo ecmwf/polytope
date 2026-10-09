@@ -7,10 +7,10 @@ then rebuilt and sorted *every* candidate of the request to pick the one nearest
 is O(N^2) in the number of query points: 2.3 s for 1 000 points on O1280, 420 s for 10 000, hours for
 100 000.
 
-Here all queries of one tree prefix are resolved together, in O(N log n_grid): the bracketing grid rows of
-every query come from one ``searchsorted`` over the mapper's row latitudes, the bracketing longitudes from
-one ``searchsorted`` per grid row touched (all queries of that row at once), and the nearest of the at most
-four candidates is picked in numpy.  The resolved points become one array-backed
+Here all queries of one tree prefix are resolved together, in O(N log N): the bracketing grid rows of every
+query come from one ``searchsorted`` over the mapper's row latitudes, the bracketing longitudes from one
+``searchsorted`` per grid row touched (all queries of that row at once), and the candidate nearest to each
+query from one k-d tree over all of them.  The resolved points become one array-backed
 :class:`~polytope_feature.datacube.tensor_index_tree.BulkGridTensorIndexNode` -- the node
 ``FDBDatacube.prepare`` folds the sliced latitude/longitude layers into anyway -- so nothing downstream
 changes and ``nearest_lat_lon_search`` never runs.
@@ -28,13 +28,13 @@ The values the node holds are the ones the old path produced, bit for bit:
 * several queries whose nearest point is the same grid point still produce that point once (the request
   then has fewer points than it asked for; see ``point_of_query`` below).
 
-One thing is deliberately *not* reproduced.  The old search handed ``nearest_pt`` the whole candidate tree,
-so every query was matched against the candidates of every *other* query too and could be resolved onto a
-grid point outside its own bracket -- which point a query got depended on the other points in the request.
-Here each query is resolved against its own bracket.  The two can only differ where a row's longitude
-spacing is wider than the latitude spacing of the rows bracketing the query, i.e. in the polar caps of a
-reduced grid (the first O1280 row has 20 points, 18 degrees apart), and then only when another query of the
-same request happens to bracket a nearby row.
+That includes a quirk worth knowing about: a query is matched against the candidates of the *whole*
+request, so it can be resolved onto a grid point outside its own four candidates and its result depends on
+the other points of the request.  It bites wherever a grid row's longitude spacing is wider than the
+latitude spacing of its neighbours -- on a reduced grid, everywhere but the equator (10:1 at 80 degrees on
+O1280, 250:1 on the first row) -- and 2 of 2 000 scattered points land on such a point.  It is reproduced
+rather than fixed because the coordinates of a point request are its output; ``_nearest_in_request``
+is where to change it.
 
 The node carries ``point_of_query``: for every query point, in request order, the index of the point of the
 node it resolved to.  Nothing in polytope-feature reads it; it is the mapping a caller needs to report one
@@ -45,6 +45,7 @@ import logging
 import math
 
 import numpy as np
+from scipy.spatial import cKDTree
 
 from ..datacube.tensor_index_tree import BulkGridTensorIndexNode
 from ..datacube.transformations.datacube_cyclic.datacube_cyclic import (
@@ -304,15 +305,33 @@ def _candidates(mapper, rows, row_lons, lon_axis, queries, row_start, row_count)
     )
 
 
-def _nearest_of(query_of, n_queries, distances, latitudes, longitudes):
-    """The candidate nearest to each query: the first minimum in (latitude, longitude) order, as the
-    per-query sort by distance of ``utility.geometry.nearest_pt`` picked it."""
-    by_point = np.lexsort((longitudes, latitudes))
-    by_query = np.lexsort((distances[by_point], query_of[by_point]))
-    chosen = by_point[by_query]
-    first = np.r_[0, np.flatnonzero(np.diff(query_of[chosen])) + 1]
-    assert first.size == n_queries
-    return chosen[first]
+def _nearest_in_request(latitudes, longitudes, query_lat, query_lon):
+    """For every query, the candidate of the *whole request* nearest to it.
+
+    ``nearest_lat_lon_search`` handed ``utility.geometry.nearest_pt`` the candidate tree of the entire
+    request, so every query was matched against every other query's candidates too, and a query can be
+    resolved onto a grid point its own four candidates do not contain.  That is not rare: wherever a grid
+    row's longitude spacing is wider than the latitude spacing of its neighbours -- everywhere but the
+    equator of a reduced grid, 10:1 at 80 degrees on O1280 -- a point two rows away can be nearer than the
+    query's own bracket, and 2 of 2 000 scattered points land on one.  Reproduced here with one k-d tree
+    over the distinct candidates instead of one sort of all of them per query, which is what cost O(N^2).
+
+    Returns the index into the candidate arrays of the point each query resolved to.
+    """
+    points = np.column_stack((latitudes, longitudes))
+    # unique sorts the rows, so `first` holds the candidates in (latitude, longitude) order
+    unique, first = np.unique(points, axis=0, return_index=True)
+    tree = cKDTree(unique)
+    queries = np.column_stack((query_lat, query_lon))
+    distance, chosen = tree.query(queries, k=min(2, unique.shape[0]), workers=-1)
+    if unique.shape[0] == 1:
+        return first[np.zeros(queries.shape[0], dtype=np.int64)]
+    picked = chosen[:, 0]
+    for i in np.flatnonzero(distance[:, 0] == distance[:, 1]).tolist():
+        # equidistant candidates: the old search sorted by distance alone, with Python's stable sort, so
+        # the first candidate in tree order won -- the lowest latitude, then the lowest longitude
+        picked[i] = min(tree.query_ball_point(queries[i], distance[i, 0]))
+    return first[picked]
 
 
 class NearestPoints:
@@ -366,7 +385,13 @@ def resolve(datacube, lat_ax, lon_ax, queries, keep_value_order=False):
     lat_decimals = int(-math.log10(lat_ax.tol)) if lat_ax.can_round else None
     row_latitudes = rows if lat_decimals is None else _round_values(rows, lat_decimals)
 
+    # The HEALPix mappers can give a row's longitudes by row index; their second_axis_vals looks the index
+    # up by scanning all 4 095 row latitudes, which costs more than building the row itself.
+    by_index = getattr(getattr(mapper, "_final_transformation", None), "second_axis_vals_from_idx", None)
+
     def row_lons(row):
+        if by_index is not None:
+            return np.asarray(by_index(row), dtype=np.float64)
         return np.asarray(mapper.second_axis_vals((rows[row],)), dtype=np.float64)
 
     lon_axis = _CyclicLongitude(lon_ax)
@@ -375,13 +400,11 @@ def resolve(datacube, lat_ax, lon_ax, queries, keep_value_order=False):
     )
     lat_of = row_latitudes[row_of]
 
-    # the distance the per-query search minimised: the query longitude in the axis range, the candidate as
-    # the tree stores it
+    # the distance the old search minimised: the query longitude in the axis range, the candidates as the
+    # tree stored them
     query_lat = queries[:, 0]
     query_lon = lon_axis.canonical(queries[:, 1])
-    d_lat = lat_of - query_lat[query_of]
-    d_lon = lon_of - query_lon[query_of]
-    chosen = _nearest_of(query_of, queries.shape[0], d_lat * d_lat + d_lon * d_lon, lat_of, lon_of)
+    chosen = _nearest_in_request(lat_of, lon_of, query_lat, query_lon)
 
     return _points_of(mapper, rows, row_of[chosen], index_of[chosen], lat_of[chosen], lon_of[chosen], keep_value_order)
 

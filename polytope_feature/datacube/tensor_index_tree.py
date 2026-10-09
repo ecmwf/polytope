@@ -1,6 +1,6 @@
 import logging
 from copy import copy
-from typing import OrderedDict
+from typing import Optional, OrderedDict
 
 import numpy as np
 from sortedcontainers import SortedList
@@ -339,7 +339,7 @@ class BulkGridTensorIndexNode(BulkMergedTensorIndexNode):
     #: for every query point of the request, in request order, the index of the point of this node it
     #: resolved to.  Several queries share a point when they are nearest to the same grid point, so this is
     #: what a caller needs to report one result per *requested* point.  None on any other node.
-    point_of_query = None
+    point_of_query: Optional[np.ndarray] = None
 
     def __init__(
         self,
