@@ -135,6 +135,10 @@ def test_many_scattered_points_resolve_exactly_as_the_per_query_search(grid):
         [51.5, 0.0],
         [0.0, 0.0],  # on the equator, and on a grid row of both grids
         [-0.000001, 359.9999],  # just below the seam
+        # the distance is not cyclic either: a query just short of 360 degrees is resolved onto the last
+        # longitude of its row, not onto the point at 0 degrees which is nearer the other way round
+        # (pinned on a real datacube by tests/test_point_nearest.py)
+        [0.035149384216, 359.97],
         [89.99, 180.0],
         [-89.99, -0.001],
         [90.0, 0.0],  # the pole: only one grid row brackets it
