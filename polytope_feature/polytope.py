@@ -160,13 +160,22 @@ class Polytope:
         engines = [self.find_engine(ax) for ax in axes]
         engine_of_axis = dict(zip(datacube.axes.keys(), engines))
 
+        batching = {}
+
         def batches(polytope):
-            """Whether an engine resolves this polytope together with the others on its axes."""
-            return any(
-                engine.batches_polytope(polytope, datacube, self)
-                for engine in (engine_of_axis.get(name) for name in polytope.axes())
-                if engine is not None
-            )
+            """Whether an engine resolves this polytope together with the others on its axes.
+
+            Answered once per polytope: a request of N points asks it for the same handful of Selects N
+            times over, once per combination.
+            """
+            answer = batching.get(id(polytope))
+            if answer is None:
+                answer = batching[id(polytope)] = any(
+                    engine.batches_polytope(polytope, datacube, self)
+                    for engine in (engine_of_axis.get(name) for name in polytope.axes())
+                    if engine is not None
+                )
+            return answer
 
         for shared, batched in self._group_combinations(tensor_product(groups), batches):
             r = TensorIndexTree()
@@ -315,6 +324,33 @@ class Polytope:
         self.compressed_axes.append(k)
 
     def remove_compressed_axis_in_union(self, polytopes):
+        """Drop one entry of the last compressed axis per union polytope defined on it.
+
+        ``find_compressed_axes`` appends the axis once per orthogonal polytope that defines it, so a union
+        of N orthogonal shapes (the points of a timeseries) leaves the leaf axis compressed while a union
+        of N non-orthogonal pieces (a polygon's triangles, which are not compressable) uncompresses it.
+        That is what decides whether a request's leaf values are one array per row or one node per point,
+        so the count of the entries matters, not just which axes are there.
+        """
+        if len(self.compressed_axes) == 0:
+            return
+        last = self.compressed_axes[-1]
+        removals = sum(1 for p in polytopes if p.is_in_union and last in p.axes())
+        if removals == 0:
+            return
+        if removals < self.compressed_axes.count(last):
+            # The axis survives every removal, so it stays the last one and each removal takes an earlier
+            # entry: drop the first ``removals`` of them in one pass instead of one O(n) list removal per
+            # polytope (which costs 15 s for the 100 000 points of a timeseries request).
+            kept = []
+            for axis in self.compressed_axes:
+                if removals and axis == last:
+                    removals -= 1
+                    continue
+                kept.append(axis)
+            self.compressed_axes = kept
+            return
+        # The last axis runs out mid-way and the one before it takes over, so replay the removals in order.
         for p in polytopes:
             if p.is_in_union:
                 for axis in p.axes():
