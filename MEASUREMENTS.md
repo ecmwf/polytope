@@ -211,3 +211,71 @@ What it says:
 4. The steady state is 24-56 B/point on every shape; the peak lands at 66-75 B/point.  32 B/point of that is
    the node and the values, 8 B/point is gribjump's own buffer, and the rest is the sort and allocator
    retention; see the breakdown above.
+
+# Many nearest points: one resolution per request instead of one search per point
+
+A timeseries request with N nearest `Point`s, sliced and prepared against polytope-mars' fake gribjump
+(`polytope_mars.testing`), with pseudo-random points over the globe.  Reproduce with:
+
+    python performance/nearest_points.py --path new --path old --n 1000 10000 100000
+
+Each row is a fresh subprocess (Python 3.11, numpy 2.4, Rust extension enabled, WSL2 x86_64, 32 cores);
+"peak MB" is `ru_maxrss` of that process and includes ~170 MB of interpreter, numpy, polytope and
+polytope-mars baseline.  `old` is this branch with the batching switched off, which leaves the path it
+replaces: one tree prefix descent per point in `slice`, then `FDBDatacube.nearest_lat_lon_search` rebuilding
+and sorting all 4N candidates of the request once per point in `prepare`.
+
+| grid | path | requested | points | slice s | prepare s | total s | peak MB |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| O1280 | old | 1,000 | 1,000 | 0.71 | 2.06 | 2.77 | 171 |
+| | **new** | | 1,000 | **0.24** | **0.00** | **0.24** | 171 |
+| O1280 | old | 10,000 | 9,974 | 7.60 | 365 | 373 | 221 |
+| | **new** | | 9,974 | **0.55** | **0.00** | **0.55** | 178 |
+| O1280 | old | 100,000 | 98,010 | 81 | ~10 h (extrapolated) | | 635 |
+| | **new** | | 98,010 | **1.76** | **0.02** | **1.78** | **324** |
+| HEALPix nested 1024 | old | 1,000 | 1,000 | 1.43 | 2.54 | 3.96 | 171 |
+| | **new** | | 1,000 | **0.69** | **0.00** | **0.69** | 171 |
+| HEALPix nested 1024 | old | 10,000 | 9,985 | 14.73 | 383 | 398 | 224 |
+| | **new** | | 9,985 | **2.47** | **0.00** | **2.47** | 177 |
+| HEALPix nested 1024 | old | 100,000 | 98,880 | 152 | ~10 h (extrapolated) | | 655 |
+| | **new** | | 98,880 | **3.93** | **0.02** | **3.95** | **323** |
+
+Both paths return the same points, in the same order: the `points` column is one figure per request, and
+`tests/test_nearest_grid.py` compares the two paths point by point.  The 100,000-point `old` rows are the
+slice alone, measured without `prepare` (which would take about 10 hours); their point count is the one the
+batched path returns.  The old slice of 100,000 points on HEALPix nested 1024 also leaves the interpreter
+segfaulting on exit, while freeing the 196,922 nodes it built (193,834 on O1280) -- the batched path builds
+one node.
+
+What it says:
+
+1. **The search was O(N^2)** and is the whole of the old `prepare`: 2.1 s, 8.6 s, 44.1 s, 365 s for 1,000,
+   2,000, 4,000 and 10,000 points on O1280 (2.5 s, 9.7 s, 48.0 s, 383 s on HEALPix nested 1024).  Fitting
+   `3.7e-6 s * N^2` to the 10,000-point figure puts 100,000 points at about 10 hours, and the growth above
+   4,000 points is slightly worse than quadratic.  The production consequence is the result store's 300 s
+   writer-inactivity timeout: a point feature emits the collection header and then nothing until the
+   extraction starts, so a request whose `prepare` takes longer than that is killed -- about 8,500 scattered
+   points today.
+2. **`prepare` has nothing left to do**: the points are resolved into their bulk node while slicing, so
+   `prepare` only plans the gribjump ranges (0.02 s for 98,010 points).
+3. **The slice is no longer per point either.** The N points of one `Union` share a tree prefix, so it is
+   built once instead of 100,000 times: 1.76 s against 81 s at 100,000 points on O1280 (3.93 s against 152 s
+   on HEALPix nested 1024), and one tree node against 193,834.  Peak memory follows: 324 MB against 635 MB,
+   i.e. 1.6 kB per requested point against 5.1 kB.  What is left is dominated by the request's own Python
+   objects (4 `ConvexPolytope`s per point across the three `request.polytopes()` calls a retrieve makes,
+   0.4 s at 100,000 points) rather than by the grid.
+4. **The resolution itself costs 1.1 s for 100,000 points on O1280** (3.0 s on HEALPix nested 1024) --
+   1.05 s of the 1.67 s slice, measured by timing `nearest_grid.resolve` alone.  At 1,000 points it is
+   0.22 s on O1280 and 0.68 s on HEALPix, nearly all of it building the grid rows the queries touch: the
+   search needs each row's longitudes to bracket a query in it, and 1,000 scattered points touch 1,343 of
+   the 2,560 O1280 rows and 1,539 of the 4,095 HEALPix rings (2.5M longitudes).  That cost is bounded by the
+   grid, not by N, which is why 100 times more points cost 2-4 times more rather than 100 times: the whole
+   grid is 6.6M (O1280) and 12.6M (HEALPix) longitudes.
+5. **Where the new path crosses 1 s**: about 35,000 points on O1280 (0.55 s at 10,000, 0.93 s at 30,000,
+   1.24 s at 50,000) and about 1,600 points on HEALPix nested 1024 (0.94 s at 1,500, 1.19 s at 2,000), the
+   HEALPix figure being the ring-building above.
+6. **Requested points that snap to the same grid point are returned once**, on both paths: 26 of 10,000 and
+   1,990 of 100,000 on O1280, 15 and 1,120 on HEALPix nested 1024 for these random points.  A request gets
+   fewer coverages than it asked for with nothing saying which ones were merged; the resolved node now
+   carries `point_of_query` so that a consumer can report one coverage per requested point (see
+   `CHANGES.md`).

@@ -124,11 +124,16 @@ def point_count(tree):
 
 
 def build_request(grid, shape_spec):
+    """``(options, Request)`` for one field of ``grid`` and one shape.
+
+    ``shape_spec`` is ``("box", lower, upper)``, ``("polygon", vertices)`` or ``("points", [(lat, lon), ...])``
+    -- the nearest points of a timeseries request (``performance/nearest_points.py``).
+    """
     import pandas as pd
     from polytope_mars.testing import fake_gribjump_config_dict
 
     from polytope_feature.polytope import Request
-    from polytope_feature.shapes import Box, Polygon, Select, Union
+    from polytope_feature.shapes import Box, Point, Polygon, Select, Union
 
     request = dict(REQUESTS[grid])
     config = fake_gribjump_config_dict(grid, {**request, "feature": {"type": "boundingbox"}})
@@ -151,6 +156,8 @@ def build_request(grid, shape_spec):
             selects.append(Select(key, [value]))
     if shape_spec[0] == "box":
         shape = Box(["latitude", "longitude"], shape_spec[1], shape_spec[2])
+    elif shape_spec[0] == "points":
+        shape = Point(["latitude", "longitude"], shape_spec[1], method="nearest")
     else:
         shape = Union(["latitude", "longitude"], Polygon(["latitude", "longitude"], shape_spec[1]))
     return options, Request(*selects, shape)

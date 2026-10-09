@@ -193,12 +193,12 @@ def test_point_of_query_names_the_point_each_requested_point_resolved_to(grid):
     node = prepared_points(GRIDS[grid], [nearest(points)], batched=True)
     assert node.point_of_query.shape == (50,)
     assert set(node.point_of_query.tolist()) == set(range(node.point_count))
-    # every query is nearest to the point it was mapped to
-    coordinates = node.coordinates
+    # the point a query is mapped to is the node's point nearest to it: the resolved points are candidates,
+    # and a query is resolved to the nearest candidate of the request
+    lat, lon = node.coordinates[:, 0], node.coordinates[:, 1]
     for query, point in zip(points, node.point_of_query.tolist()):
-        resolved = coordinates[point]
-        distance = np.hypot(resolved[0] - query[0], resolved[1] - query[1] % 360)
-        assert distance < 1.0
+        distances = np.hypot(lat - query[0], lon - query[1] % 360)
+        assert distances[point] == distances.min()
 
 
 def test_tags_reach_the_points_their_queries_resolved_to():

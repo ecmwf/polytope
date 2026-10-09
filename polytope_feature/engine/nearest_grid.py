@@ -23,8 +23,10 @@ The values the node holds are the ones the old path produced, bit for bit:
   disagree in the 12th decimal for about one O1280 longitude in 70, and a coordinate that differs in the
   12th decimal is a different coverage in the output;
 * the points come out in the order the fold produced them: grid rows by ascending latitude, and within a
-  row by ascending longitude when the slicer merges union rows (``tree_rows.RowMerger``, which is what
-  polytope-mars uses) or by grid index otherwise -- on a HEALPix nested grid the two differ;
+  row by grid index -- which on a HEALPix nested grid is not by longitude.  A union of nearest points keeps
+  the leaf axis compressed (``Polytope.remove_compressed_axis_in_union`` leaves one entry of it per point),
+  so the merged union rows of ``tree_rows.RowMerger``, which would keep a row's values in longitude order,
+  do not arise; ``resolve`` takes the order from ``Polytope.merge_leaf_rows`` rather than assuming it;
 * several queries whose nearest point is the same grid point still produce that point once (the request
   then has fewer points than it asked for; see ``point_of_query`` below).
 
@@ -124,12 +126,19 @@ def batched_axes(datacube, api=None):
 
     None for a datacube without a structured grid mapper (a point cloud, an xarray datacube) and for one
     whose spatial axes carry transformations whose effect on the sliced values is not reproduced here; the
-    caller then keeps the per-query path.  Computed once per datacube.
+    caller then keeps the per-query path.
+
+    Answered once per datacube: ``Polytope.slice`` asks per polytope, and the answer depends on the datacube
+    and on which engine slices its spatial axes, not on the request.  Only an answer that could see the
+    engines (``api``) is cached.
     """
     cached = getattr(datacube, "_nearest_grid_axes", None)
-    if cached is None:
-        cached = datacube._nearest_grid_axes = (_compute_batched_axes(datacube, api),)
-    return cached[0]
+    if cached is not None:
+        return cached[0]
+    names = _compute_batched_axes(datacube, api)
+    if api is not None:
+        datacube._nearest_grid_axes = (names,)
+    return names
 
 
 def _is_nearest_query(method, k, axes, names):
@@ -186,7 +195,6 @@ class _CyclicLongitude:
     """
 
     def __init__(self, axis):
-        self.axis = axis
         self.tol = axis.tol
         self.decimals = int(-math.log10(axis.tol)) if axis.can_round else None
         cyclic = _cyclic_of(axis)
@@ -230,7 +238,7 @@ class _CyclicLongitude:
         found = np.asarray(values, dtype=np.float64) + offsets
         if self.decimals is not None:
             found = _round_values(found, self.decimals)
-        if self.span is None:
+        if not self.cyclic:
             return found
         outside = (found < self.lower - self.tol) | (found > self.upper + self.tol) | (found == self.upper)
         if not outside.any():
@@ -437,12 +445,16 @@ def _points_of(mapper, rows, row_of_query, index_of_query, lat_of_query, lon_of_
             mapper.unmap((rows[row],), longitudes[where].tolist()),
             dtype=np.int64,
         )
-        position = np.arange(at, at + length, dtype=np.int64)
+        placed = np.arange(at, at + length, dtype=np.int64)
         if not keep_value_order and length > 1:
+            # a row's points come back in grid-index order, as the fold left a box leaf's values
             by_index = np.argsort(row_indexes, kind="stable")
             row_indexes = row_indexes[by_index]
             longitudes[where] = longitudes[where][by_index]
-            position[by_index] = position
+            position = np.empty(length, dtype=np.int64)
+            position[by_index] = placed
+        else:
+            position = placed
         indexes[where] = row_indexes
         final_position[where] = position
     return NearestPoints(

@@ -277,3 +277,83 @@ meant keeping 570 lines of code and tests for a path no caller takes.
   as a full get, the tree's value order whatever the caller's, a one-element sequence equal to the single-value
   form), and polytope-mars' golden corpus is byte-identical: every multi-group call it makes goes through this
   walk.
+
+# Many nearest points resolved in one pass
+
+## Behaviour changes
+
+- **A nearest `Point` on the two mapped axes of a structured grid is resolved for the whole request at once**
+  (`engine/nearest_grid.py`).  Such a point stays two-dimensional, as it already did for the quadtree slicer,
+  so `Polytope.slice` builds the tree prefix once for all of them and hands them to the hullslicer together;
+  the engine resolves them in O(N log N) and emits the one `BulkGridTensorIndexNode` that `prepare` would
+  otherwise fold the spatial layers into, so `FDBDatacube.nearest_lat_lon_search` never runs for them.  The
+  old path was O(N^2) -- 371 s of `prepare` for 10,000 points on O1280, about 10 hours for 100,000 -- and
+  descended the tree prefix once per point.  A request of 10,000 points costs 0.55 s instead of 379 s and
+  100,000 points 1.8 s instead of a day; see `MEASUREMENTS.md`.
+- **The resolved points, their order and their de-duplication are unchanged.**  Candidate longitudes go
+  through the same rounding and cyclic remapping as the slicer applied to them (with Python's `round`, which
+  differs from `numpy.round` in the 12th decimal for about 1.5% of O1280 longitudes), the points come out by
+  ascending grid-row latitude and, within a row, by grid index (ascending longitude for merged union rows),
+  and several requested points that are nearest to the same grid point still give that point once.  Checked
+  point by point against the old path for 2,000 random points on O1280 and HEALPix nested 1024, for negative,
+  seam-crossing and multi-turn longitudes, the poles, reversed `(longitude, latitude)` axes and collapsing
+  points (`tests/test_nearest_grid.py`); polytope-mars' golden corpus is byte-identical.
+- **A query is still matched against the candidates of the whole request.**  `nearest_lat_lon_search` handed
+  `nearest_pt` the candidate tree of the entire request, so a query can be resolved onto a grid point that
+  its own four candidates do not contain and its result depends on the other points of the request.  That is
+  not a corner case: wherever a grid row's longitude spacing is wider than the latitude spacing of its
+  neighbours -- on a reduced grid, everywhere but the equator -- a point two rows away can be nearer, and 2
+  of 2,000 scattered points on O1280 land on one.  It is reproduced rather than fixed, because the
+  coordinates of a point request are its output; `nearest_grid._nearest_in_request` is the one place to
+  change it.
+- **`k != 1` and grids this module does not model keep the old path.**  A nearest `Point` with `k > 1` on a
+  structured grid (already unsupported: the old search printed a warning and used `k = 1`), a datacube
+  without a structured grid mapper (a point cloud, an xarray datacube) and spatial axes carrying
+  transformations other than mapper/cyclic/reverse are resolved exactly as before.
+- **A nearest query on an unstructured grid is mapped into the cyclic longitude range** before the point
+  cloud is searched (`QuadTreeSlicer._query_points`), as it always was on a structured grid.  A query at -9
+  degrees against a [0, 360] point cloud was nearest to the cloud's smallest longitude, so a request of
+  10,000 scattered negative longitudes came back as 8 grid points.  Polygons are unaffected: their fragments
+  are already mapped into the axis range when they are split at the seam.
+- **`Polytope.remove_compressed_axis_in_union` is one pass over the compressed axes** instead of one O(n)
+  list removal per union polytope, which cost 15.6 s of the 18.4 s a 100,000-point request spent in `slice`.
+  The entries are still counted, not de-duplicated: `find_compressed_axes` appends the leaf axis once per
+  orthogonal polytope that defines it, and whether any are left over decides whether the leaf axis stays
+  compressed, which decides whether a row's points come out in grid-index or in longitude order.
+
+## New API
+
+- `BulkGridTensorIndexNode.point_of_query`: on a node built by the batched search, an int64 array with one
+  entry per query point of the request, in request order, naming the point of the node it resolved to.  It is
+  the mapping a consumer needs to report one result per *requested* point: today several requested points
+  that snap to the same grid point are merged into one coverage with nothing saying which, and polytope-mars
+  maps coverages to requested points by position (26 of 10,000 points collapse on O1280 locally, 6,438 of
+  10,000 on the coarse ICON grid of the LUMI dev cluster).  `None` on every other node.
+- `Engine.batches_polytope(polytope, datacube, api)` replaces the class-level `Engine.batches_polytopes` flag
+  in `Polytope.slice`: an engine can batch some of the polytopes on its axes and not others (the hullslicer
+  batches nearest grid queries and nothing else).  The flag is still what the default implementation returns,
+  so the quadtree slicer is unchanged.  `Polytope._group_combinations` takes the predicate instead of a set
+  of axis names and returns the batched polytopes as a list in request order.
+
+## Verification
+
+- `python -m pytest tests -m "not fdb and not internet and not non_stored_data" -q`: **416 passed, 6
+  skipped** (30 new in `tests/test_nearest_grid.py`).
+- polytope-mars `tests/golden`: **77 passed**, byte-identical -- every point feature (`o1280_timeseries_*`,
+  `cdt_timeseries`, `*_position`, `*_verticalprofile`) goes through this path.
+- `performance/nearest_points.py` for the figures in `MEASUREMENTS.md`.
+
+## Follow-ups (not in this branch)
+
+- **One coverage per requested point.**  polytope-mars reads a prepared tree's coordinates and emits one
+  coverage each, so a request of 10,000 points whose nearest points collapse onto 3,562 grid points returns
+  3,562 coverages, positionally mis-aligned with the points the client asked for.  With `point_of_query` (or
+  with `Point(..., tag=[...])`, which puts a per-point tag on the resolved points) polytope-mars can emit one
+  coverage per requested point, repeating the values of a shared grid point.
+- **`Polytope.find_compressed_axes` appends one entry per polytope per axis**, so a 100,000-point request
+  carries a 100,018-entry `compressed_axes` list whose length is load-bearing (see above).  Deciding
+  "compressed unless a union uncompresses it" from the shapes rather than from a count would remove both the
+  list and the one case `remove_compressed_axis_in_union` still has to replay one polytope at a time.
+- **Slicing a 100,000-point request on HEALPix nested 1024 through the old per-query path segfaults** while
+  building the tree (O1280 completes in 81 s, 193,834 nodes).  Not investigated: the batched path does not
+  build those nodes at all.
