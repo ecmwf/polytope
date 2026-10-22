@@ -32,89 +32,74 @@ class QuadTreeSlicer(Engine):
         self.points = points
         self.quad_tree = quad_tree
         self.points_array = np.asarray(points, dtype=np.float64).reshape(-1, 2)
-        # Paths for which the nearest point search was already done in this slice
-        self.bulk_nearest_paths = set()
 
-    def reset_bulk_state(self):
-        self.bulk_nearest_paths.clear()
+    # All lat/lon polytopes of a node are resolved together into a single bulk leaf.
+    batches_polytopes = True
+
+    def _query_points(self, polytope):
+        revert_axes = list(polytope.axes()) != ["latitude", "longitude"]
+        return [tuple(reversed(pt)) if revert_axes else tuple(pt) for pt in polytope.points]
 
     def extract_single(self, datacube, polytope):
-        # extract a single polygon
-        # if need to find nearest points, then take alternative slicing method using quadtree to find nearest point
+        """Return the point-cloud indexes selected by one polytope."""
         axes = polytope.axes()
         assert len(axes) == 2
         assert "latitude" in axes and "longitude" in axes
-        revert_axes = not (list(axes) == ["latitude", "longitude"])
+        if polytope.method == "nearest":
+            # Each nearest polytope carries its own query point(s) and k, so it can be
+            # resolved on its own: this keeps the result (and tag) tied to the request.
+            idxs = []
+            for query in self._query_points(polytope):
+                if use_rust:
+                    idxs.extend(self.quad_tree.k_nearest_neighbor(query, polytope.k) or [])
+                else:
+                    idxs.extend(self._python_knn(query, polytope.k))
+            return idxs
         if use_rust:
-            logging.debug("Using Rust for quadtree polygon query")
-            if len(datacube.nearest_search) == 0:
-                if revert_axes:
-                    polytope_points = [tuple(reversed(point)) for point in polytope.points]
-                else:
-                    polytope_points = [tuple(point) for point in polytope.points]
-                logging.debug("Querying quadtree")
-                polygon_points = self.quad_tree.query_polygon(self.points, 0, polytope_points)
-                logging.debug("Finished querying quadtree")
-            else:
-                k = datacube.nearest_search[tuple(polytope.axes())][1]
-                if revert_axes:
-                    nn_points = [tuple(reversed(pt)) for pt in datacube.nearest_search[tuple(polytope.axes())][0]]
-                else:
-                    nn_points = [tuple(pt) for pt in datacube.nearest_search[tuple(polytope.axes())][0]]
-                polygon_points = []
-                for nn_pt in nn_points:
-                    polygon_points.extend(self.quad_tree.k_nearest_neighbor(nn_pt, k))
-        else:
-            if revert_axes:
-                polytope.points = [tuple(reversed(point)) for point in polytope.points]
-            polygon_points = self.quad_tree.query_polygon(polytope)
-        return polygon_points
+            return self.quad_tree.query_polygon(self.points, 0, self._query_points(polytope))
+        if list(axes) != ["latitude", "longitude"]:
+            polytope.points = self._query_points(polytope)
+        return [node.index for node in self.quad_tree.query_polygon(polytope)]
 
-    def _build_branch(self, ax, node, datacube, next_nodes, api):
-        if len(datacube.nearest_search) == 0:
-            for polytope in node["unsliced_polytopes"]:
-                if ax.name in polytope._axes:
-                    self._build_sliceable_child(polytope, ax, node, datacube, next_nodes, api)
-            del node["unsliced_polytopes"]
-        else:
-            # The nearest search looks up all the requested nearest points at once, independently of the
-            # polytope, so each path only needs to be searched once across the sliced combinations.
-            path_key = tuple(node.flatten().items())
-            if path_key in self.bulk_nearest_paths:
-                node.remove_branch()
-                return
-            self.bulk_nearest_paths.add(path_key)
-            self._build_sliceable_child(node["unsliced_polytopes"].pop(), ax, node, datacube, next_nodes, api)
+    def _python_knn(self, query, k):
+        dists = np.sum((self.points_array - np.asarray(query)) ** 2, axis=1)
+        k = min(k, len(dists))
+        nearest = np.argpartition(dists, k - 1)[:k]
+        return nearest[np.argsort(dists[nearest])].tolist()
 
-    def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes, api):
+    def _sub_polytopes(self, polytope, datacube):
+        # A polygon crossing the cyclic longitude seam is split into canonical pieces
+        # before querying the point cloud. Nearest queries work on points directly.
         lon_ax = datacube._axes["longitude"]
-
-        # When the longitude axis is cyclic and the request polygon crosses the seam,
-        # split it into canonical sub-polytopes before querying the point cloud.
-        sub_polytopes = [polytope]
-        if lon_ax.is_cyclic and len(datacube.nearest_search) == 0:
+        if lon_ax.is_cyclic and polytope.method != "nearest":
             for t in lon_ax.transformations:
                 if isinstance(t, DatacubeAxisCyclic):
-                    sub_polytopes = t.split_polytope_at_boundary(polytope, "longitude", lon_ax)
-                    break
+                    return t.split_polytope_at_boundary(polytope, "longitude", lon_ax)
+        return [polytope]
 
-        # Query each sub-polytope and deduplicate by point-cloud index.
-        extracted_idxs = []
-        seen = set()
-        for sub_poly in sub_polytopes:
-            for value in self.extract_single(datacube, sub_poly):
-                idx = value if use_rust else value.index
-                if idx not in seen:
-                    seen.add(idx)
-                    extracted_idxs.append(idx)
+    def _build_branch(self, ax, node, datacube, next_nodes, api):
+        # Resolve every lat/lon polytope on this node in one pass, recording which
+        # polytope tags select each point, and store them in a single bulk leaf.
+        point_tags = {}
+        for polytope in node["unsliced_polytopes"]:
+            if ax.name not in polytope.axes():
+                continue
+            for sub_poly in self._sub_polytopes(polytope, datacube):
+                for idx in self.extract_single(datacube, sub_poly):
+                    tags = point_tags.setdefault(int(idx), set())
+                    if polytope.tag is not None:
+                        tags.add(polytope.tag)
+        del node["unsliced_polytopes"]
 
-        if len(extracted_idxs) == 0:
+        if len(point_tags) == 0:
             node.remove_branch()
             return
 
-        indexes = np.asarray(extracted_idxs, dtype=np.int64)
+        indexes = np.fromiter(point_tags.keys(), dtype=np.int64, count=len(point_tags))
         coordinates = self.points_array[indexes]
         # Sort by (lat, lon) to match the legacy per-point leaf order while retaining the
         # canonical backend index needed for range planning.
-        output_order = np.lexsort((coordinates[:, 1], coordinates[:, 0]))
-        node.create_bulk_merged_child([ax, lon_ax], coordinates[output_order], indexes[output_order], [])
+        order = np.lexsort((coordinates[:, 1], coordinates[:, 0]))
+        tags = [point_tags[int(i)] for i in indexes[order]]
+        lon_ax = datacube._axes["longitude"]
+        node.create_bulk_merged_child([ax, lon_ax], coordinates[order], indexes[order], [], point_tags=tags)

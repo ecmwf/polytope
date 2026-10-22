@@ -157,10 +157,18 @@ class BulkMergedTensorIndexNode(MergedTensorIndexNode):
     adding siblings.
     """
 
-    def __init__(self, axes, coordinates, indexes):
+    def __init__(self, axes, coordinates, indexes, point_tags=None):
         super().__init__(axes, ())
         self.coordinates = np.asarray(coordinates, dtype=np.float64).reshape(-1, 2)
         self.indexes = None if indexes is None else np.asarray(indexes, dtype=np.int64)
+        # One set of tags per point, aligned with ``coordinates``/``indexes``.
+        # ``tags`` (inherited) holds the union over all points.
+        if point_tags is None:
+            point_tags = [set() for _ in range(len(self.coordinates))]
+        self.point_tags = [set(t) for t in point_tags]
+        assert len(self.point_tags) == len(self.coordinates)
+        for t in self.point_tags:
+            self.tags.update(t)
 
     @property
     def point_count(self):
@@ -200,12 +208,17 @@ class BulkMergedTensorIndexNode(MergedTensorIndexNode):
             raise ValueError("Cannot merge bulk nodes which already hold retrieved results")
         coordinates = np.concatenate([self.coordinates, other.coordinates])
         indexes = np.concatenate([self.indexes, other.indexes])
+        # Points selected by both nodes keep the union of their tags
+        tags_by_index = {}
+        for idx, tags in zip(indexes.tolist(), self.point_tags + other.point_tags):
+            tags_by_index.setdefault(idx, set()).update(tags)
         _, first = np.unique(indexes, return_index=True)
         coordinates = coordinates[first]
         indexes = indexes[first]
         order = np.lexsort((coordinates[:, 1], coordinates[:, 0]))
         self.coordinates = coordinates[order]
         self.indexes = indexes[order]
+        self.point_tags = [tags_by_index[idx] for idx in self.indexes.tolist()]
 
 
 class BulkGridTensorIndexNode(BulkMergedTensorIndexNode):
@@ -218,7 +231,7 @@ class BulkGridTensorIndexNode(BulkMergedTensorIndexNode):
     points of row ``i`` at ``row_slice(i)``.
     """
 
-    def __init__(self, axes, lat_values, lon_values, indexes=None):
+    def __init__(self, axes, lat_values, lon_values, indexes=None, point_tags=None):
         self.lat_values = np.asarray(lat_values, dtype=np.float64)
         self.lon_values = [np.asarray(lons, dtype=np.float64) for lons in lon_values]
         row_lengths = np.array([len(lons) for lons in self.lon_values], dtype=np.int64)
@@ -227,7 +240,7 @@ class BulkGridTensorIndexNode(BulkMergedTensorIndexNode):
             coordinates = np.empty((0, 2))
         else:
             coordinates = np.column_stack((np.repeat(self.lat_values, row_lengths), np.concatenate(self.lon_values)))
-        super().__init__(axes, coordinates, indexes)
+        super().__init__(axes, coordinates, indexes, point_tags)
 
     def row_slice(self, i):
         return slice(int(self.row_offsets[i]), int(self.row_offsets[i + 1]))
@@ -335,8 +348,8 @@ class TensorIndexTree(object):
         self.add_child(node)
         return (node, next_nodes)
 
-    def create_bulk_merged_child(self, axes, coordinates, indexes, next_nodes):
-        node = BulkMergedTensorIndexNode(axes, coordinates, indexes)
+    def create_bulk_merged_child(self, axes, coordinates, indexes, next_nodes, point_tags=None):
+        node = BulkMergedTensorIndexNode(axes, coordinates, indexes, point_tags)
         existing_child = self.find_child(node)
         if existing_child is not None:
             existing_child.merge(node)

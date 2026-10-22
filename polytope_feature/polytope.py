@@ -126,9 +126,7 @@ class Polytope:
         """Low-level API which takes a polytope geometry object and uses it to slice the datacube"""
 
         for engine in set(self.engines.values()):
-            reset_bulk_state = getattr(engine, "reset_bulk_state", None)
-            if reset_bulk_state is not None:
-                reset_bulk_state()
+            engine.reset()
 
         self.find_compressed_axes(datacube, polytopes)
 
@@ -145,40 +143,57 @@ class Polytope:
         groups, input_axes = group(polytopes)
         datacube.validate(input_axes)
         request = TensorIndexTree()
-        combinations = tensor_product(groups)
 
-        # NOTE: could optimise here if we know combinations will always be for one request.
-        # Then we do not need to create a new index tree and merge it to request, but can just
-        # directly work on request and return it...
+        axes = list(datacube.axes.values())
+        engines = [self.find_engine(ax) for ax in axes]
+        batched_axes = {ax.name for ax, engine in zip(axes, engines) if engine.batches_polytopes}
 
-        for c in combinations:
+        for shared, batched in self._group_combinations(tensor_product(groups), batched_axes):
             r = TensorIndexTree()
-            new_c = []
-            for combi in c:
-                if isinstance(combi, list):
-                    new_c.extend(combi)
-                else:
-                    new_c.append(combi)
-            final_polys = []
-            for poly in new_c:
-                if isinstance(poly, Product):
-                    final_polys.extend(poly.polytope())
-                else:
-                    final_polys.append(poly)
-            r["unsliced_polytopes"] = set(final_polys)
+            r["unsliced_polytopes"] = set(shared)
             current_nodes = [r]
-            for ax in datacube.axes.values():
-                engine = self.find_engine(ax)
+            for ax, engine in zip(axes, engines):
+                if engine.batches_polytopes:
+                    # The prefix is shared by every grouped combination, so hand all of
+                    # their polytopes on this engine's axes to it at once.
+                    for node in current_nodes:
+                        node["unsliced_polytopes"] = node["unsliced_polytopes"] | batched
                 next_nodes = []
-                interm_next_nodes = []
                 for node in current_nodes:
-                    engine._build_branch(ax, node, datacube, interm_next_nodes, self)
-                    next_nodes.extend(interm_next_nodes)
-                    interm_next_nodes = []
+                    engine._build_branch(ax, node, datacube, next_nodes, self)
                 current_nodes = next_nodes
 
             request.merge(r)
         return request
+
+    @staticmethod
+    def _flatten_combination(combination):
+        polys = []
+        for combi in combination:
+            for poly in combi if isinstance(combi, list) else [combi]:
+                if isinstance(poly, Product):
+                    polys.extend(poly.polytope())
+                else:
+                    polys.append(poly)
+        return polys
+
+    @classmethod
+    def _group_combinations(cls, combinations, batched_axes):
+        """Yield (shared_polytopes, batched_polytopes) per distinct tree prefix.
+
+        Polytopes on axes of a batching engine (see Engine.batches_polytopes) are split
+        off; combinations whose remaining polytopes are identical (eg. every Point of a
+        Union shares the same Selects) then only need their prefix built once.
+        """
+        grouped = {}
+        for c in combinations:
+            shared, batched = [], []
+            for poly in cls._flatten_combination(c):
+                (batched if batched_axes.intersection(poly.axes()) else shared).append(poly)
+            key = frozenset(shared) if batched_axes else object()
+            entry = grouped.setdefault(key, (shared, set()))
+            entry[1].update(batched)
+        return grouped.values()
 
     def find_engine(self, ax):
         if ax.name not in self.engine_options:
@@ -204,20 +219,15 @@ class Polytope:
         logging.info("Starting request for %s ", self.context)
         self.datacube.check_branching_axes(request)
         self.switch_polytope_dim(request)
+        self.datacube.nearest_search = {}
         for polytope in request.polytopes():
-            method = polytope.method
-            if method == "nearest":
-                k = polytope.k
-                if polytope.is_flat:
-                    if self.datacube.nearest_search.get(tuple(polytope.axes()), None) is None:
-                        self.datacube.nearest_search[tuple(polytope.axes())] = (polytope.values, k)
-                    else:
-                        self.datacube.nearest_search[tuple(polytope.axes())][0].append(polytope.values[0])
-                else:
-                    if self.datacube.nearest_search.get(tuple(polytope.axes()), None) is None:
-                        self.datacube.nearest_search[tuple(polytope.axes())] = (polytope.points, k)
-                    else:
-                        self.datacube.nearest_search[tuple(polytope.axes())][0].append(polytope.points[0])
+            if polytope.method == "nearest":
+                # Register the query point(s) with the tag of the polytope they come from, so the
+                # backend can attach the right tag to each nearest point once it is resolved.
+                query_points = polytope.values if polytope.is_flat else polytope.points
+                points, _, tags = self.datacube.nearest_search.setdefault(tuple(polytope.axes()), ([], polytope.k, []))
+                points.extend(list(pt) for pt in query_points)
+                tags.extend([polytope.tag] * len(query_points))
         request_tree = self.slice(self.datacube, request.polytopes())
         logging.info("Created request tree for %s ", self.context)
         self.datacube.get(request_tree, self.context)
