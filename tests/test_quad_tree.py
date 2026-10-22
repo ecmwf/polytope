@@ -1,4 +1,5 @@
 import pytest
+from bulk_helpers import point_leaves
 
 from polytope_feature.datacube.backends.mock import MockDatacube
 from polytope_feature.datacube.quadtree.quad_tree import QuadNode
@@ -78,7 +79,7 @@ class TestQuadTreeSlicer:
         tree = TensorIndexTree()
         tree["unsliced_polytopes"] = [polytope]
         self.API.engines["quadtree"]._build_sliceable_child(polytope, lat_ax, tree, self.API.datacube, [], None)
-        assert len(tree.leaves) == 3
+        assert len(point_leaves(tree)) == 3
         points = [
             [10, 10],
             [80, 10],
@@ -93,7 +94,7 @@ class TestQuadTreeSlicer:
         tree = TensorIndexTree()
         tree["unsliced_polytopes"] = [polytope]
         self.API.engines["quadtree"]._build_sliceable_child(polytope, lat_ax, tree, self.API.datacube, [], None)
-        assert len(tree.leaves) == 4
+        assert len(point_leaves(tree)) == 4
 
     @pytest.mark.skip("performance test")
     @pytest.mark.fdb
@@ -171,7 +172,7 @@ class TestQuadTreeSlicer:
         tree["unsliced_polytopes"] = [polytope]
         self.API.engines["quadtree"]._build_sliceable_child(polytope, lat_ax, tree, self.API.datacube, [], None)
         print(time.time() - time1)
-        assert len(tree.leaves) == 55100
+        assert len(point_leaves(tree)) == 55100
 
 
 class TestQuadTreeSlicerWithoutFdb:

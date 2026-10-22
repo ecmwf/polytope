@@ -152,7 +152,7 @@ class TestSlicing3DXarrayDatacube:
 
         from polytope_feature.datacube.backends.mock import MockDatacube
         from polytope_feature.polytope import Polytope, Request
-        from polytope_feature.shapes import Point
+        from polytope_feature.shapes import Point, Union
 
         GRID = {"latitude": [50.70, 50.725, 50.74166666666788, 50.76, 60.0], "longitude": [7.0, 7.108, 7.2]}
 
@@ -164,8 +164,24 @@ class TestSlicing3DXarrayDatacube:
             cube,
         )
         points = [[50.725, 7.108], [50.7417, 7.1083]]
-        result = Polytope(cube).retrieve(Request(Point(["latitude", "longitude"], points, method="nearest")))
-        result.pprint()
-        assert len(result.leaves) == 4
-        for leaf in result.leaves:
-            assert len(leaf.values) == 5
+
+        def candidates(shape):
+            result = Polytope(cube).retrieve(Request(shape))
+            return {
+                (lat, lon)
+                for leaf in result.leaves
+                for lat in leaf.flatten()["latitude"]
+                for lon in leaf.flatten()["longitude"]
+            }
+
+        multi = candidates(Point(["latitude", "longitude"], points, method="nearest"))
+        # Each point gets its own surrounding candidates (no cross product of the two points' coordinates)
+        assert {lat for lat, _ in multi} == {50.7, 50.725, 50.741666666668, 50.76}
+        assert multi == {(lat, lon) for lat in (50.7, 50.725, 50.741666666668) for lon in (7.0, 7.108, 7.2)} | {
+            (lat, lon) for lat in (50.741666666668, 50.76) for lon in (7.108, 7.2)
+        }
+        # A multi-value Point is equivalent to a Union of single-value Points
+        union = candidates(
+            Union(["latitude", "longitude"], *[Point(["latitude", "longitude"], [p], method="nearest") for p in points])
+        )
+        assert multi == union

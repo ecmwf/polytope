@@ -359,3 +359,46 @@ class TestTagsOn3DTree:
 
         assert leaf_tags[(3, 2, 1)] == {"A"}
         assert leaf_tags[(9, 4, 0)] == {"B"}
+
+
+# ---------------------------------------------------------------------------
+# A single Point shape holding several values, with one tag per value
+# ---------------------------------------------------------------------------
+
+
+class TestPointPerValueTags:
+    def setup_method(self, method):
+        self.api = _make_2d_api(list(range(0, 20, 2)), list(range(1, 11)))
+
+    def _leaf_tags(self, request):
+        result = self.api.retrieve(request)
+        tags = {}
+        for leaf in result.leaves:
+            path = leaf.flatten()
+            for step in path["step"]:
+                for level in path["level"]:
+                    tags.setdefault((step, level), set()).update(leaf.tags)
+        return tags
+
+    def test_each_value_gets_its_own_tag(self):
+        values = [[0, 1], [4, 3], [8, 5], [12, 7], [16, 9]]
+        tags = ["t0", "t1", "t2", "t3", "t4"]
+        leaf_tags = self._leaf_tags(Request(Point(["step", "level"], values, tag=tags)))
+        # A multi-value Point selects exactly its points, not the cross product of their coordinates
+        assert set(leaf_tags) == {tuple(v) for v in values}
+        for value, tag in zip(values, tags):
+            assert leaf_tags[tuple(value)] == {tag}
+
+    def test_same_result_as_union_of_points(self):
+        values = [[18, 10], [2, 2], [10, 6]]
+        tags = ["end", "start", "middle"]
+        multi = self._leaf_tags(Request(Point(["step", "level"], values, tag=tags)))
+        union = self._leaf_tags(
+            Request(Union(["step", "level"], *[Point(["step", "level"], [v], tag=t) for v, t in zip(values, tags)]))
+        )
+        assert multi == union
+
+    def test_single_tag_shared_by_all_values(self):
+        values = [[0, 1], [4, 3]]
+        leaf_tags = self._leaf_tags(Request(Point(["step", "level"], values, tag="shared")))
+        assert all(t == {"shared"} for t in leaf_tags.values())
