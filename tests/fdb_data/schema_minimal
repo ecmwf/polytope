@@ -1,0 +1,20 @@
+# Schema for sample GRIB files that carry no conventional MARS "class"/"expver"/"stream"/"type"/
+# "domain" at all (eg. the Lambert LAM and ICON grib2 test fixtures): fdb5 raises outright, instead
+# of trying the next rule, on a key missing one of a rule's required (non-"?") keywords entirely, so
+# these files cannot share a schema/store with rules that require those keywords (tests/fdb_data/schema).
+#
+# Archived with an explicit identifier (conftest.fdb_minimal_store), not the GRIB-derived key: eccodes
+# adds a "timespan" key these files' tests do not select on, which Polytope then demands a value for.
+# No optional ("?") keyword either, even one neither file ever sets: GribJump.axes() reports one for
+# every rule it is schema-declared on regardless, with an empty value, which Polytope then demands a
+# value for just the same.
+
+param:      Param;
+step:       Step;
+date:       Date;
+time:       Time;
+
+[ date, time
+       [levtype
+               [ step, param ]]
+]

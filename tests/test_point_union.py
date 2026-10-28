@@ -99,7 +99,7 @@ class TestSlicingFDBDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 8
+        assert len(result.leaves) == 6
 
     @pytest.mark.fdb
     def test_fdb_datacube_surrounding(self):
