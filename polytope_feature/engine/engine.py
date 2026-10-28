@@ -8,6 +8,18 @@ from ..shapes import ConvexPolytope
 
 
 class Engine:
+    # When True, the engine resolves *all* polytopes defined on its axes in a single
+    # pass on a node (eg. the quadtree slicer resolving lat/lon jointly into one bulk
+    # leaf). Polytope.slice() can then share the tree prefix built by the other
+    # engines across every request combination that only differs on this engine's
+    # axes (eg. a Union of many Points), and hand all of those combinations'
+    # polytopes to this engine at once instead of rebuilding the prefix per point.
+    batches_polytopes = False
+
+    def reset(self):
+        """Clear any per-slice state. Called once at the start of every Polytope.slice()."""
+        pass
+
     def __init__(self, engine_options=None):
         if engine_options is None:
             engine_options = {}
