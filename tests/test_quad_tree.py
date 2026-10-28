@@ -78,7 +78,7 @@ class TestQuadTreeSlicer:
         lat_ax = self.API.datacube.axes["latitude"]
         tree = TensorIndexTree()
         tree["unsliced_polytopes"] = [polytope]
-        self.API.engines["quadtree"]._build_sliceable_child(polytope, lat_ax, tree, self.API.datacube, [], None)
+        self.API.engines["quadtree"]._build_branch(lat_ax, tree, self.API.datacube, [], None)
         assert len(point_leaves(tree)) == 3
         points = [
             [10, 10],
@@ -93,7 +93,7 @@ class TestQuadTreeSlicer:
         polytope = ConvexPolytope(["latitude", "longitude"], [[-10, 1], [20, 1], [5, 20]])
         tree = TensorIndexTree()
         tree["unsliced_polytopes"] = [polytope]
-        self.API.engines["quadtree"]._build_sliceable_child(polytope, lat_ax, tree, self.API.datacube, [], None)
+        self.API.engines["quadtree"]._build_branch(lat_ax, tree, self.API.datacube, [], None)
         assert len(point_leaves(tree)) == 4
 
     @pytest.mark.skip("performance test")
@@ -170,7 +170,7 @@ class TestQuadTreeSlicer:
         lat_ax = self.API.datacube.axes["latitude"]
         tree = TensorIndexTree()
         tree["unsliced_polytopes"] = [polytope]
-        self.API.engines["quadtree"]._build_sliceable_child(polytope, lat_ax, tree, self.API.datacube, [], None)
+        self.API.engines["quadtree"]._build_branch(lat_ax, tree, self.API.datacube, [], None)
         print(time.time() - time1)
         assert len(point_leaves(tree)) == 55100
 
