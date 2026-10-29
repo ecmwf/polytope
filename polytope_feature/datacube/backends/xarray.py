@@ -3,7 +3,7 @@ from copy import copy, deepcopy
 import numpy as np
 import xarray as xr
 
-from ..tensor_index_tree import TensorIndexTree
+from ..tensor_index_tree import BulkMergedTensorIndexNode, TensorIndexTree
 from .datacube import Datacube
 
 
@@ -108,13 +108,21 @@ class XArrayDatacube(Datacube):
         else:
             first_ax = requests.axes[0]
             second_ax = requests.axes[1]
-            key_value_path = {first_ax.name: requests.values[0]}
+            if isinstance(requests, BulkMergedTensorIndexNode):
+                # All points of a bulk leaf share the path above it and carry their own indexes,
+                # so unmap one representative point and select all indexes at once
+                values = tuple(requests.coordinates[0])
+                indexes = requests.indexes.tolist()
+            else:
+                values = requests.values
+                indexes = requests.indexes
+            key_value_path = {first_ax.name: values[0]}
             key_value_path, leaf_path, self.unwanted_path = first_ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )
             leaf_path.update(key_value_path)
-            leaf_path["index"] = requests.indexes
-            key_value_path = {second_ax.name: requests.values[1]}
+            leaf_path["index"] = indexes
+            key_value_path = {second_ax.name: values[1]}
             key_value_path, leaf_path, self.unwanted_path = second_ax.unmap_path_key(
                 key_value_path, leaf_path, self.unwanted_path
             )

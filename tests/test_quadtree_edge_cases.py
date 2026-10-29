@@ -1,4 +1,5 @@
 import pytest
+from bulk_helpers import point_leaves
 
 from polytope_feature.datacube.tensor_index_tree import TensorIndexTree
 from polytope_feature.polytope import Polytope
@@ -78,7 +79,7 @@ class TestQuadTreeSlicer:
         lat_ax = self.API.datacube.axes["latitude"]
         tree = TensorIndexTree()
         tree["unsliced_polytopes"] = [polytope]
-        self.API.engines["quadtree"]._build_sliceable_child(polytope, lat_ax, tree, self.API.datacube, [], None)
+        self.API.engines["quadtree"]._build_branch(lat_ax, tree, self.API.datacube, [], None)
         tree.pprint()
-        assert len(tree.leaves) == 3
-        assert set([tuple(leaf.indexes) for leaf in tree.leaves]) == set([(0,), (4,), (6,)])
+        assert len(point_leaves(tree)) == 3
+        assert set([tuple(leaf.indexes) for leaf in point_leaves(tree)]) == set([(0,), (4,), (6,)])
