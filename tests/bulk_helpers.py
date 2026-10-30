@@ -14,7 +14,7 @@ class PointLeaf:
 
     @property
     def tags(self):
-        return self.bulk_node.point_tags[self.i]
+        return set(self.bulk_node.tags_of_point(self.i))
 
     @property
     def result(self):

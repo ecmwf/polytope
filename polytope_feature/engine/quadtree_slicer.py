@@ -36,9 +36,21 @@ class QuadTreeSlicer(Engine):
     # All lat/lon polytopes of a node are resolved together into a single bulk leaf.
     batches_polytopes = True
 
-    def _query_points(self, polytope):
+    def _query_points(self, polytope, lon_ax=None):
+        """The polytope's points as (latitude, longitude) tuples.
+
+        With ``lon_ax``, every longitude is first mapped into that axis' range, which is what a nearest
+        query needs: the point cloud holds the grid's own longitudes, so against a [0, 360] axis a query at
+        -9 degrees is nearest to the smallest longitude of the cloud rather than to the point at 351 -- a
+        request of 10 000 scattered negative longitudes came back as 8 grid points.  Polygons do not go
+        through this: their fragments are already mapped into the axis range when they are split at the
+        seam (``_sub_polytopes``), and mapping them again would move a fragment edge at exactly 360 to 0.
+        """
         revert_axes = list(polytope.axes()) != ["latitude", "longitude"]
-        return [tuple(reversed(pt)) if revert_axes else tuple(pt) for pt in polytope.points]
+        points = [tuple(reversed(pt)) if revert_axes else tuple(pt) for pt in polytope.points]
+        if lon_ax is None:
+            return points
+        return [(lat, lon_ax._remap_val_to_axis_range(lon)) for lat, lon in points]
 
     def extract_single(self, datacube, polytope):
         """Return the point-cloud indexes selected by one polytope."""
@@ -49,7 +61,7 @@ class QuadTreeSlicer(Engine):
             # Each nearest polytope carries its own query point(s) and k, so it can be
             # resolved on its own: this keeps the result (and tag) tied to the request.
             idxs = []
-            for query in self._query_points(polytope):
+            for query in self._query_points(polytope, datacube._axes["longitude"]):
                 if use_rust:
                     idxs.extend(self.quad_tree.k_nearest_neighbor(query, polytope.k) or [])
                 else:
@@ -79,7 +91,7 @@ class QuadTreeSlicer(Engine):
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):
         # Resolve every lat/lon polytope on this node in one pass, recording which
-        # polytope tags select each point, and store them in a single bulk leaf.
+        # polytope tags select each point.
         point_tags = {}
         for polytope in node["unsliced_polytopes"]:
             if ax.name not in polytope.axes():
@@ -102,4 +114,5 @@ class QuadTreeSlicer(Engine):
         order = np.lexsort((coordinates[:, 1], coordinates[:, 0]))
         tags = [point_tags[int(i)] for i in indexes[order]]
         lon_ax = datacube._axes["longitude"]
+        # One array-backed leaf for the whole selection.
         node.create_bulk_merged_child([ax, lon_ax], coordinates[order], indexes[order], [], point_tags=tags)
