@@ -3,8 +3,7 @@ from typing import List
 
 from .datacube.backends.datacube import Datacube
 from .datacube.datacube_axis import UnsliceableDatacubeAxis
-from .datacube.tensor_index_tree import TensorIndexTree
-from .datacube.tree_rows import RowMerger
+from .datacube.tensor_index_tree import RowMerger, TensorIndexTree
 from .engine.hullslicer import HullSlicer
 from .engine.nearest_grid import batches_point
 from .engine.optimised_point_in_polygon_slicer import OptimisedPointInPolygonSlicer
@@ -134,7 +133,7 @@ class Polytope:
 
         merge_rows = self._compress_union_rows(datacube, polytopes)
         # Leaves of merged union rows keep their values in ascending order instead of grid-index order
-        # (see tree_rows.RowMerger); the batched nearest search builds its node in the same order.
+        # (see tensor_index_tree.RowMerger); the batched nearest search builds its node in the same order.
         self.merge_leaf_rows = merge_rows
 
         # Convert the polytope points to float type to support triangulation and interpolation
@@ -204,7 +203,7 @@ class Polytope:
 
         A union of non-orthogonal shapes (the convex pieces of a polygon, the segments of a path) otherwise leaves
         the leaf axis uncompressed, i.e. one tree node per point.  When the leaf axis holds array leaves it stays
-        compressed and the pieces' leaves are merged row by row (see ``tree_rows.RowMerger``), which gives the
+        compressed and the pieces' leaves are merged row by row (see ``tensor_index_tree.RowMerger``), which gives the
         merged leaf per-point tags where its pieces are tagged differently.  Returns whether rows must be merged.
         """
         before = list(self.compressed_axes)

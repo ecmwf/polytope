@@ -6,16 +6,75 @@ import numpy as np
 from sortedcontainers import SortedList
 
 from .datacube_axis import IntDatacubeAxis, UnsliceableDatacubeAxis
-from .tree_values import (
-    is_array,
-    merge_sorted,
-    remove_value,
-    result_as_array,
-    values_hash_key,
-    values_identical,
-    values_lt,
-    values_within_tol,
-)
+
+# ---------------------------------------------------------------------------
+# Value helpers: a node's ``values`` is either a tuple (the common case) or a 1-D ``np.ndarray``.
+#
+# Non-leaf nodes keep their values as small hashable tuples.  Leaf nodes on the last (longitude)
+# axis built by the hull slicer store their values as a float64 array instead (~8 B/point instead
+# of ~32 B/point for a tuple of Python floats).  These helpers give both representations the same
+# ordering, equality and hashing semantics that the tuple representation always had.
+# ---------------------------------------------------------------------------
+
+
+def is_array(values):
+    return isinstance(values, np.ndarray)
+
+
+def values_identical(a, b):
+    """Exact element-wise equality, equivalent to ``a == b`` for two tuples."""
+    if not is_array(a) and not is_array(b):
+        return a == b
+    if len(a) != len(b):
+        return False
+    return bool(np.array_equal(np.asarray(a), np.asarray(b)))
+
+
+def values_within_tol(a, b, tol):
+    """True unless some pair of elements differs by more than ``tol`` (NaN never counts as a difference)."""
+    diff = np.abs(np.asarray(a, dtype=np.float64) - np.asarray(b, dtype=np.float64))
+    return not bool(np.any(diff > tol))
+
+
+def values_lt(a, b):
+    """Lexicographic ``a < b``, equivalent to tuple comparison."""
+    if not is_array(a) and not is_array(b):
+        return a < b
+    a = np.asarray(a)
+    b = np.asarray(b)
+    n = min(len(a), len(b))
+    differing = np.flatnonzero(a[:n] != b[:n])
+    if differing.size:
+        i = differing[0]
+        return bool(a[i] < b[i])
+    return len(a) < len(b)
+
+
+def values_hash_key(values):
+    """A hashable key equal to the tuple of the same values (so tuple and array nodes hash alike)."""
+    if is_array(values):
+        return tuple(values.tolist())
+    return values
+
+
+def remove_value(values, value):
+    """Drop every element equal to ``value``, preserving the container type."""
+    if is_array(values):
+        return values[values != value]
+    return tuple(val for val in values if val != value)
+
+
+def merge_sorted(values, new_values):
+    """Return ``values`` extended with ``new_values`` and sorted, as a float64 array."""
+    combined = np.concatenate([np.asarray(values, dtype=np.float64), np.asarray(new_values, dtype=np.float64)])
+    return np.sort(combined, kind="stable")
+
+
+def result_as_array(result):
+    """Return a leaf ``result`` as a float64 array, with missing (``None``) values as NaN."""
+    if is_array(result) and result.dtype != object:
+        return result.astype(np.float64, copy=False)
+    return np.array([np.nan if v is None else v for v in result], dtype=np.float64)
 
 
 class DatacubePath(OrderedDict):
@@ -383,8 +442,8 @@ class BulkGridTensorIndexNode(BulkMergedTensorIndexNode):
 class TensorIndexTree(object):
     root = IntDatacubeAxis()
     root.name = "root"
-    # Set on the merged longitude leaves of polygons/paths (see tree_rows.py): FDBDatacube.get keeps their values in
-    # ascending order instead of reordering them by grid index.
+    # Set on the merged longitude leaves of polygons/paths (see RowMerger below): FDBDatacube.get keeps their
+    # values in ascending order instead of reordering them by grid index.
     _keep_value_order = False
     # Per-point tags of an array leaf whose points do not all carry the same tags (the merged rows of a union of
     # differently tagged shapes): an int32 id per value into ``tag_sets``.  ``tags`` holds their union, as for any
@@ -408,7 +467,7 @@ class TensorIndexTree(object):
 
     def __init__(self, axis=root, values=tuple()):
         # NOTE: the values here is a tuple so we can hash it. Leaves on the last (longitude) axis built by the hull
-        # slicer hold a float64 np.ndarray instead; see tree_values.py for the shared comparison semantics.
+        # slicer hold a float64 np.ndarray instead; see tensor_index_tree.py for the shared comparison semantics.
         self.values = values
         self.children = SortedList()
         self._parent = None
@@ -525,9 +584,11 @@ class TensorIndexTree(object):
         ``FDBDatacube.prepare`` keeps its final point order, so a sub-tree's coordinates can be read before
         (and without) calling ``get``.
         """
-        from .tree_pruning import prune
-
-        return prune(self, select, latitude_axis)
+        if not self.is_root():
+            raise ValueError("prune() must be called on the root of a tree")
+        pruned = _prune_walk(self, _prune_check_select(select, latitude_axis), latitude_axis)
+        assert pruned is not None
+        return pruned
 
     def create_merged_child(self, axes, values, next_nodes):
         node = MergedTensorIndexNode(axes, values)
@@ -673,3 +734,286 @@ class TensorIndexTree(object):
             ancestors.append(current_node)
             current_node = current_node.parent
         return ancestors[::-1]
+
+
+# ---------------------------------------------------------------------------
+# TensorIndexTree.prune(): depth-first copy of the branches matching a value selection, restricted
+# to a value -- or set of values -- on each compressed non-spatial axis (date/time/step/number/
+# param/levelist...). See TensorIndexTree.prune's docstring for the full contract.
+#
+# A caller slices a request once, then repeatedly prunes the tree and calls ``datacube.get`` on each
+# pruned tree.  The pruned trees share no mutable state with the parent, so ``get`` (which reorders
+# and de-duplicates leaf values and fills ``result``) never touches the parent tree.  Calling
+# ``FDBDatacube.prepare`` on the parent first puts its points into their final (``get``) order, so
+# every pruned sub-tree's coordinates are known before any data is fetched.
+# ---------------------------------------------------------------------------
+
+
+def _prune_value_matches(node_value, wanted, axis):
+    try:
+        if node_value == wanted:
+            return True
+    except (TypeError, ValueError):
+        return False
+    if getattr(axis, "can_round", False) and isinstance(node_value, (int, float, np.number)):
+        try:
+            return abs(node_value - wanted) <= 2 * axis.tol
+        except TypeError:
+            return False
+    return False
+
+
+def _prune_wanted_values(wanted):
+    """``wanted`` as a sequence of values: one value selects itself."""
+    if isinstance(wanted, (list, tuple, set, frozenset, np.ndarray)):
+        return list(wanted)
+    return [wanted]
+
+
+def _prune_select_values(node, wanted):
+    """``(values, hits)``: the elements of ``node.values`` matching ``wanted`` and which of ``wanted`` matched.
+
+    ``wanted`` is one value or a sequence of them.  The values are the tree's own objects in the node's order,
+    so the compressed-axes expansion of ``FDBDatacube.get`` stays in tree order; ``hits`` are positions in
+    ``wanted``, so that a value the tree does not have anywhere can be named.
+    """
+    choices = _prune_wanted_values(wanted)
+    values = []
+    hits = set()
+    for v in node.values:
+        for i, w in enumerate(choices):
+            if _prune_value_matches(v, w, node.axis):
+                values.append(v)
+                hits.add(i)
+                break
+    return tuple(values), hits
+
+
+def _prune_copy_node(node, values=None):
+    new = TensorIndexTree(node.axis, node.values if values is None else values)
+    if isinstance(new.values, np.ndarray):
+        new.values = new.values.copy()
+    new.indexes = list(node.indexes)
+    new.hidden = node.hidden
+    new.tags = set(node.tags)
+    if node._keep_value_order:
+        new._keep_value_order = True
+    if node.tag_ids is not None and values is None:
+        # per-point tags of an array leaf: shared, not copied per point
+        new.tag_sets = node.tag_sets
+        new.tag_ids = node.tag_ids
+    return new
+
+
+def _prune_copy_merged(node):
+    new = MergedTensorIndexNode(node.axes, node.values)
+    new.indexes = list(node.indexes)
+    new.hidden = node.hidden
+    new.tags = set(node.tags)
+    return new
+
+
+def _prune_copy_subtree(node):
+    if isinstance(node, BulkMergedTensorIndexNode):
+        # share the node's arrays: a bulk node holds the whole spatial selection
+        return node.copy_shared()
+    if isinstance(node, MergedTensorIndexNode):
+        return _prune_copy_merged(node)
+    new = _prune_copy_node(node)
+    for child in node.children:
+        new.add_child(_prune_copy_subtree(child))
+    return new
+
+
+def _prune_check_select(select, latitude_axis):
+    select = dict(select or {})
+    for name in select:
+        if name in (latitude_axis, "longitude"):
+            raise ValueError(f"Cannot select on spatial axis {name!r}")
+    return select
+
+
+def _prune_walk(root, select, latitude_axis):
+    """Depth-first copy of the branches matching ``select``; spatial sub-trees are copied whole."""
+    matched: dict = {}
+
+    def visit(src, dst):
+        kept_any = False
+        for child in src.children:
+            if isinstance(child, MergedTensorIndexNode) or child.axis.name == latitude_axis:
+                dst.add_child(_prune_copy_subtree(child))
+                kept_any = True
+                continue
+            values = None
+            name = child.axis.name
+            if name in select:
+                values, hits = _prune_select_values(child, select[name])
+                if not values:
+                    continue
+                matched.setdefault(name, set()).update(hits)
+            new = _prune_copy_node(child, values)
+            if len(child.children) == 0:
+                # leaf above the latitude level (non-spatial tree): keep it whole
+                dst.add_child(new)
+                kept_any = True
+                continue
+            if visit(child, new):
+                dst.add_child(new)
+                kept_any = True
+        return kept_any
+
+    new_root = _prune_copy_node(root)
+    visit(root, new_root)
+    missing = {}
+    for name, wanted in select.items():
+        hits = matched.get(name, ())
+        absent = [w for i, w in enumerate(_prune_wanted_values(wanted)) if i not in hits]
+        if absent:
+            missing[name] = absent
+    if missing:
+        raise ValueError(
+            "Values not found in tree: "
+            + ", ".join(
+                f"{name}={values[0]!r}" if len(values) == 1 else f"{name}={values!r}"
+                for name, values in sorted(missing.items())
+            )
+        )
+    return new_root
+
+
+# ---------------------------------------------------------------------------
+# RowMerger: one longitude leaf per latitude node for unions of non-orthogonal shapes (polygons, paths).
+#
+# A polygon is sliced as a union of convex pieces (triangles), each into its own tree, and the trees are merged.
+# Without RowMerger the leaf (longitude) axis is left uncompressed for such unions, so that merging
+# de-duplicates the points shared by neighbouring pieces, at the cost of one tree node per point (~1.4 KB/point).
+# With RowMerger the leaf axis stays compressed: each piece gives one float64 leaf per latitude node, and
+# merging concatenates the leaves under the same latitude node into one sorted, de-duplicated array.
+#
+# The merged leaf holds exactly the points, in the same (ascending) order, as the per-point leaves did.  Its
+# ``_keep_value_order`` flag tells ``FDBDatacube.get``/``prepare`` to keep that order instead of reordering the
+# values by grid index, as they do for box leaves (on HEALPix nested grids the two orders differ), so results come
+# out in the order the per-point leaves gave.
+#
+# Each piece's leaf carries that piece's tag, so a union of differently tagged shapes (several polygons, several
+# tagged Points on a structured grid) would lose information if the merged leaf carried one set of tags for all of
+# its points.  The merged leaf therefore gets per-point tags (``set_point_tags``) whenever its pieces disagree, and
+# a point selected by several pieces carries the union of their tags; this is what lets such unions stay compressed
+# instead of falling back to one node per point.
+# ---------------------------------------------------------------------------
+
+
+def _row_merge_is_array_leaf(node, leaf_axis_name):
+    return node.axis.name == leaf_axis_name and len(node.children) == 0 and is_array(node.values)
+
+
+def _row_merge_piece_tag_ids(pieces):
+    """``(tag_sets, ids)`` of the pieces of one row, or None when every piece carries the same tags."""
+    tag_sets = []
+    ids_of = {}
+    ids = []
+    for _, tags in pieces:
+        key = frozenset(tags)
+        tag_id = ids_of.get(key)
+        if tag_id is None:
+            tag_id = ids_of[key] = len(tag_sets)
+            tag_sets.append(key)
+        ids.append(tag_id)
+    if len(tag_sets) < 2:
+        return None, None
+    return tag_sets, np.asarray(ids, dtype=np.int32)
+
+
+def _row_merge_union_duplicate_tags(values, tag_sets, tag_ids):
+    """Tag ids of the unique ``values``, unioning the tags of every repeat of a value."""
+    unique, start, counts = np.unique(values, return_index=True, return_counts=True)
+    ids = tag_ids[start]
+    tag_sets = list(tag_sets)
+    ids_of = {tags: i for i, tags in enumerate(tag_sets)}
+    for group in np.flatnonzero(counts > 1):
+        at = start[group]
+        group_ids = tag_ids[at : at + counts[group]]  # noqa: E203
+        if np.all(group_ids == group_ids[0]):
+            continue
+        key = frozenset().union(*(tag_sets[i] for i in group_ids.tolist()))
+        tag_id = ids_of.get(key)
+        if tag_id is None:
+            tag_id = ids_of[key] = len(tag_sets)
+            tag_sets.append(key)
+        ids[group] = tag_id
+    return unique, tag_sets, ids
+
+
+class RowMerger:
+    """Merge per-piece slice trees, combining the leaves of each latitude node into one array leaf.
+
+    Call :meth:`merge` for every piece's tree and :meth:`finalise` once at the end.  Leaf arrays are only
+    concatenated in ``finalise``, so a row covered by many pieces is copied once.
+    """
+
+    def __init__(self, leaf_axis_name):
+        self.leaf_axis_name = leaf_axis_name
+        # id(leaf) -> (leaf, [(values array, tags) to combine])
+        self._pending = {}
+
+    def merge(self, mine, other):
+        mine.tags.update(other.tags)
+        my_leaf = None
+        for child in mine.children:
+            if _row_merge_is_array_leaf(child, self.leaf_axis_name):
+                my_leaf = child
+                break
+        for other_child in list(other.children):
+            if _row_merge_is_array_leaf(other_child, self.leaf_axis_name):
+                if my_leaf is None:
+                    mine.add_child(other_child)
+                    my_leaf = other_child
+                    continue
+                entry = self._pending.get(id(my_leaf))
+                if entry is None:
+                    entry = self._pending[id(my_leaf)] = (my_leaf, [(my_leaf.values, set(my_leaf.tags))])
+                entry[1].append((other_child.values, other_child.tags))
+                my_leaf.tags.update(other_child.tags)
+                continue
+            my_child = mine.find_child(other_child)
+            if my_child is None:
+                mine.add_child(other_child)
+            else:
+                self.merge(my_child, other_child)
+
+    def finalise(self, tree):
+        """Combine the pending leaves and give every leaf of ``tree`` sorted, unique values."""
+        for leaf, pieces in self._pending.values():
+            parent = leaf.parent
+            parent.children.remove(leaf)
+            tag_sets, piece_ids = _row_merge_piece_tag_ids(pieces)
+            values = np.concatenate([piece[0] for piece in pieces])
+            order = np.argsort(values, kind="stable")
+            leaf.values = values[order]
+            if piece_ids is not None:
+                lengths = np.asarray([len(piece[0]) for piece in pieces], dtype=np.int64)
+                leaf.set_point_tags(tag_sets, np.repeat(piece_ids, lengths)[order])
+            parent.add_child(leaf)
+        self._pending = {}
+        stack = [tree]
+        while stack:
+            node = stack.pop()
+            for child in list(node.children):
+                if _row_merge_is_array_leaf(child, self.leaf_axis_name):
+                    child._keep_value_order = True
+                    values = child.values
+                    if len(values) > 1 and bool(np.any(values[1:] == values[:-1])):
+                        # several pieces (or cyclic copies of one piece) gave the same point: keep it once
+                        node.children.remove(child)
+                        if child.tag_ids is None:
+                            child.values = np.unique(values)
+                        else:
+                            unique, tag_sets, tag_ids = _row_merge_union_duplicate_tags(
+                                values, child.tag_sets, child.tag_ids
+                            )
+                            child.values = unique
+                            child.set_point_tags(tag_sets, tag_ids)
+                        node.add_child(child)
+                elif len(child.children) != 0:
+                    stack.append(child)
+        return tree

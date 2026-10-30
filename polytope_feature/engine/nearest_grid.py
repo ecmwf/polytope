@@ -25,7 +25,7 @@ The values the node holds are the ones the old path produced, bit for bit:
 * the points come out in the order the fold produced them: grid rows by ascending latitude, and within a
   row by grid index -- which on a HEALPix nested grid is not by longitude.  A union of nearest points keeps
   the leaf axis compressed (``Polytope.remove_compressed_axis_in_union`` leaves one entry of it per point),
-  so the merged union rows of ``tree_rows.RowMerger``, which would keep a row's values in longitude order,
+  so the merged union rows of ``tensor_index_tree.RowMerger``, which would keep a row's values in longitude order,
   do not arise; ``resolve`` takes the order from ``Polytope.merge_leaf_rows`` rather than assuming it;
 * several queries whose nearest point is the same grid point still produce that point once (the request
   then has fewer points than it asked for; see ``point_of_query`` below).
@@ -387,7 +387,7 @@ def resolve(datacube, lat_ax, lon_ax, queries, keep_value_order=False):
 
     ``queries`` is an (N, 2) array of (first axis, second axis) values in request order.
     ``keep_value_order`` orders the points of a row by ascending longitude instead of by grid index, which
-    is what the merged union rows of ``tree_rows.RowMerger`` do to a sliced tree.
+    is what the merged union rows of ``tensor_index_tree.RowMerger`` do to a sliced tree.
     """
     mapper = datacube.grid_transformation
     queries = np.asarray(queries, dtype=np.float64).reshape(-1, 2)
