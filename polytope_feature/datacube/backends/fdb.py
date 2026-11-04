@@ -50,9 +50,6 @@ class FDBDatacube(Datacube):
 
         self.unwanted_path = {}
         self.axis_options = axis_options
-        # When True, the latitude -> longitude layers returned by the hullslicer are folded into a
-        # single BulkGridTensorIndexNode per path before retrieval
-        self.bulk_grid_leaves = False
 
         partial_request = config
         # Find values in the level 3 FDB datacube
@@ -273,27 +270,27 @@ class FDBDatacube(Datacube):
                     for child in requests.children:
                         self.get_fdb_requests(child, fdb_requests, fdb_requests_decoding_info, leaf_path)
                 elif len(requests.children[0].children[0].children) == 0:
-                    if self.bulk_grid_leaves and isinstance(requests.children[0].children[0], TensorIndexTree):
-                        grid_node = self.fold_into_bulk_grid(requests, leaf_path)
-                        if grid_node is not None:
-                            path, ranges, decoding = self.get_bulk_merged_values(grid_node, leaf_path)
-                            fdb_requests.append((path, ranges))
-                            fdb_requests_decoding_info.append(decoding)
-                    elif isinstance(requests.children[0].children[0], TensorIndexTree):
-                        # find the fdb_requests and associated nodes to which to add results
-                        (
-                            path,
-                            current_start_idxs,
-                            fdb_node_ranges,
-                            lat_length,
-                        ) = self.get_2nd_last_values(requests, leaf_path)
-                        (
-                            original_indices,
-                            sorted_request_ranges,
-                            fdb_node_ranges,
-                        ) = self.sort_fdb_request_ranges(current_start_idxs, lat_length, fdb_node_ranges)
-                        fdb_requests.append((path, sorted_request_ranges))
-                        fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
+                    # if self.bulk_grid_leaves and isinstance(requests.children[0].children[0], TensorIndexTree):
+                    grid_node = self.fold_into_bulk_grid(requests, leaf_path)
+                    if grid_node is not None:
+                        path, ranges, decoding = self.get_bulk_merged_values(grid_node, leaf_path)
+                        fdb_requests.append((path, ranges))
+                        fdb_requests_decoding_info.append(decoding)
+                    # elif isinstance(requests.children[0].children[0], TensorIndexTree):
+                    #     # find the fdb_requests and associated nodes to which to add results
+                    #     (
+                    #         path,
+                    #         current_start_idxs,
+                    #         fdb_node_ranges,
+                    #         lat_length,
+                    #     ) = self.get_2nd_last_values(requests, leaf_path)
+                    #     (
+                    #         original_indices,
+                    #         sorted_request_ranges,
+                    #         fdb_node_ranges,
+                    #     ) = self.sort_fdb_request_ranges(current_start_idxs, lat_length, fdb_node_ranges)
+                    #     fdb_requests.append((path, sorted_request_ranges))
+                    #     fdb_requests_decoding_info.append((original_indices, fdb_node_ranges))
                     else:
                         merged_leaf = True
                         for c in requests.children:

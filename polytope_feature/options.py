@@ -84,7 +84,7 @@ class Config(ConfigModel):
     alternative_axes: Optional[List[GribJumpAxesConfig]] = []
     use_catalogue: Optional[bool] = False
     engine_options: Optional[Dict[str, str]] = {}
-    bulk_grid_leaves: Optional[bool] = False
+    # bulk_grid_leaves: Optional[bool] = False
 
 
 class PolytopeOptions(ABC):
@@ -100,7 +100,7 @@ class PolytopeOptions(ABC):
         alternative_axes = config_options.alternative_axes
         use_catalogue = config_options.use_catalogue
         engine_options = config_options.engine_options
-        bulk_grid_leaves = config_options.bulk_grid_leaves
+        # bulk_grid_leaves = config_options.bulk_grid_leaves
 
         return (
             axis_config,
@@ -109,7 +109,7 @@ class PolytopeOptions(ABC):
             alternative_axes,
             use_catalogue,
             engine_options,
-            bulk_grid_leaves,
+            # bulk_grid_leaves,
         )
 
 

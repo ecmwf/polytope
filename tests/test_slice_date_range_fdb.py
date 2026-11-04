@@ -87,9 +87,9 @@ class TestSlicingFDBDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 3
-        for i in range(len(result.leaves)):
-            assert len(result.leaves[i].result) == 3
+        assert len(result.leaves[0].lat_values) == 3
+        for i in range(len(result.leaves[0].lat_values)):
+            assert result.leaves[0].lon_values[i].size == 3
 
     @pytest.mark.fdb
     def test_fdb_datacube_select_non_existing_last(self):
@@ -118,9 +118,9 @@ class TestSlicingFDBDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 3
-        for i in range(len(result.leaves)):
-            assert len(result.leaves[i].result) == 3
+        assert len(result.leaves[0].lat_values) == 3
+        for i in range(len(result.leaves[0].lat_values)):
+            assert result.leaves[0].lon_values[i].size == 3
 
     @pytest.mark.fdb
     def test_fdb_datacube_select_non_existing_first(self):
@@ -149,9 +149,9 @@ class TestSlicingFDBDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 3
-        for i in range(len(result.leaves)):
-            assert len(result.leaves[i].result) == 3
+        assert len(result.leaves[0].lat_values) == 3
+        for i in range(len(result.leaves[0].lat_values)):
+            assert result.leaves[0].lon_values[i].size == 3
 
     @pytest.mark.fdb
     def test_fdb_datacube_disk(self):
@@ -177,11 +177,9 @@ class TestSlicingFDBDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 2
-        assert len(result.leaves[0].result) == 3
-        assert len(result.leaves[1].result) == 3
-        assert len(result.leaves[0].values) == 3
-        assert len(result.leaves[1].values) == 3
+        assert len(result.leaves[0].lat_values) == 2
+        for i in range(len(result.leaves[0].lat_values)):
+            assert result.leaves[0].lon_values[i].size == 3
 
     @pytest.mark.fdb
     def test_fdb_datacube_disk_2(self):
@@ -207,13 +205,12 @@ class TestSlicingFDBDatacube:
         )
         result = self.API.retrieve(request)
         result.pprint()
-        assert len(result.leaves) == 3
-        assert len(result.leaves[0].result) == 3
-        assert len(result.leaves[1].result) == 5
-        assert len(result.leaves[2].result) == 3
-        assert len(result.leaves[0].values) == 3
-        assert len(result.leaves[1].values) == 5
-        assert len(result.leaves[2].values) == 3
+        assert len(result.leaves[0].lat_values) == 3
+        for i in range(len(result.leaves[0].lat_values)):
+            if i != 1:
+                assert result.leaves[0].lon_values[i].size == 3
+            else:
+                assert result.leaves[0].lon_values[i].size == 5
 
     @pytest.mark.fdb
     def test_fdb_datacube_select_completely_non_existing(self):
