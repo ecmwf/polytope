@@ -80,15 +80,19 @@ impl QuadTree {
         Some(results)
     }
 
-    fn nearest_neighbor(&self, query: (f64, f64), quadtree_points: Vec<(f64, f64)>) -> Option<usize> {
+    fn nearest_neighbor(&self, query: (f64, f64)) -> Option<usize> {
         if self.nodes.is_empty() {
             return None;
         }
-        let pts = if quadtree_points.is_empty() { &self.points } else { &quadtree_points };
         let mut best_idx = None;
         let mut best_dist2 = f64::INFINITY;
-        self.nn_search(0, query, &mut best_idx, &mut best_dist2, pts);
+        self.nn_search(0, query, &mut best_idx, &mut best_dist2, &self.points);
         best_idx
+    }
+
+    /// The points the tree was built from, in insertion order (their position is their index).
+    fn points(&self) -> Vec<(f64, f64)> {
+        self.points.clone()
     }
 
     fn sizeof(&self) -> usize {
@@ -133,16 +137,14 @@ impl QuadTree {
     }
 
 
-    fn query_polygon(&mut self, quadtree_points: Vec<(f64, f64)>, node_idx: usize, mut polygon_points: Option<Vec<(f64, f64)>>)  -> PyResult<HashSet<usize>> {
+    fn query_polygon(&self, node_idx: usize, mut polygon_points: Option<Vec<(f64, f64)>>)  -> PyResult<HashSet<usize>> {
         let mut results: HashSet<usize> = HashSet::new();
-
-        let processed_quadtree_points = self.process_points(quadtree_points);
 
         let mut processed_polygon_points: Option<Vec<[f64; 2]>> = polygon_points
             .take()
             .map(|pts| pts.into_iter().map(|(x, y)| [x, y]).collect());
 
-        let query_result: Result<(), Box<dyn Error>> = self._query_polygon(&processed_quadtree_points, node_idx, processed_polygon_points.as_mut(), &mut results);
+        let query_result: Result<(), Box<dyn Error>> = self._query_polygon(node_idx, processed_polygon_points.as_mut(), &mut results);
 
         query_result.map_err(|e| PyErr::new::<PyRuntimeError, _>(e.to_string()))?;
 
@@ -177,7 +179,7 @@ impl QuadTree {
         ))
     }
 
-    fn find_nodes_in(&mut self, node_idx: usize) -> Vec<usize> {
+    fn find_nodes_in(&self, node_idx: usize) -> Vec<usize> {
         let mut results = Vec::new();
         self.collect_points(&mut results, node_idx);
         results
@@ -200,10 +202,6 @@ impl QuadTree {
 
     const MAX: usize = 3;
     const MAX_DEPTH: i32 = 20;
-
-    fn process_points(&self, points: Vec<(f64, f64)>) -> Vec<[f64;2]> {
-        points.into_iter().map(|(x, y)| [x,y]).collect()
-    }
 
     fn knn_search(
         &self,
@@ -458,8 +456,7 @@ impl QuadTree {
     }
 
     fn _query_polygon(
-        &mut self,
-        quadtree_points: &Vec<[f64; 2]>,
+        &self,
         node_idx: usize,
         polygon_points: Option<&mut Vec<[f64; 2]>>,
         results: &mut HashSet<usize>,
@@ -483,22 +480,25 @@ impl QuadTree {
                     let (q3_polygon, q4_polygon) = slice_in_two(right_polygon.as_ref(), quadtree_center.1, 1)?;
     
                     if let Some(mut poly) = q1_polygon {
-                        self._query_polygon(quadtree_points, children_idxs[0], Some(poly.as_mut()), results)?;
+                        self._query_polygon(children_idxs[0], Some(poly.as_mut()), results)?;
                     }
                     if let Some(mut poly) = q2_polygon {
-                        self._query_polygon(quadtree_points, children_idxs[1], Some(poly.as_mut()), results)?;
+                        self._query_polygon(children_idxs[1], Some(poly.as_mut()), results)?;
                     }
                     if let Some(mut poly) = q3_polygon {
-                        self._query_polygon(quadtree_points, children_idxs[2], Some(poly.as_mut()), results)?;
+                        self._query_polygon(children_idxs[2], Some(poly.as_mut()), results)?;
                     }
                     if let Some(mut poly) = q4_polygon {
-                        self._query_polygon(quadtree_points, children_idxs[3], Some(poly.as_mut()), results)?;
+                        self._query_polygon(children_idxs[3], Some(poly.as_mut()), results)?;
                     }
                 } else {
                     let filtered_nodes: Vec<usize> = self
                         .get_point_idxs(node_idx)
                         .into_iter()
-                        .filter(|&node| is_contained_in(quadtree_points[node], &points))
+                        .filter(|&node| {
+                            let (x, y) = self.points[node];
+                            is_contained_in([x, y], &points)
+                        })
                         .collect();
                     results.extend(filtered_nodes);
                 }

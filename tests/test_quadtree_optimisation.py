@@ -64,7 +64,7 @@ class TestQuadTreeSlicer:
         points = [[10, 10], [80, 10], [-5, 5], [5, 20], [5, 10], [50, 10]]
         slicer = QuadTreeSlicer(points)
         polytope = Box(["lat", "lon"], [0, 0], [90, 45]).polytope()[0]
-        results = query_polygon(points, slicer.quad_tree, 0, polytope)
+        results = query_polygon(slicer.quad_tree, 0, polytope)
         assert len(results) == 5
         assert (10, 10) in [slicer.points[node] for node in results]
         assert (5, 10) in [slicer.points[node] for node in results]

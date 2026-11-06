@@ -16,9 +16,9 @@ def is_contained_in(point, polygon):
     return False
 
 
-def query_polygon(quadtree_points, quadtree, node_idx, polygon):
+def query_polygon(quadtree, node_idx, polygon):
     results = set()
-    _query_polygon(quadtree_points, quadtree, node_idx, polygon, results)
+    _query_polygon(quadtree.points(), quadtree, node_idx, polygon, results)
     return results
 
 

@@ -55,7 +55,7 @@ class OptimisedQuadTreeSlicer(Engine):
         # extract a single polygon
         if use_rust:
             polytope_points = [tuple(point) for point in polytope.points]
-            polygon_points = self.quad_tree.query_polygon(self.bbox_points, 0, polytope_points)
+            polygon_points = self.quad_tree.query_polygon(0, polytope_points)
         else:
             polygon_points = self.quad_tree.query_polygon(polytope)
 
