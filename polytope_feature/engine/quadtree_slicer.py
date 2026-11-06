@@ -56,7 +56,7 @@ class QuadTreeSlicer(Engine):
                     idxs.extend(self._python_knn(query, polytope.k))
             return idxs
         if use_rust:
-            return self.quad_tree.query_polygon(self.points, 0, self._query_points(polytope))
+            return self.quad_tree.query_polygon(0, self._query_points(polytope))
         if list(axes) != ["latitude", "longitude"]:
             polytope.points = self._query_points(polytope)
         return [node.index for node in self.quad_tree.query_polygon(polytope)]
