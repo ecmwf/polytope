@@ -71,21 +71,21 @@ class TestNearestNeighbor:
 
         # Test 1: Query at (1, 1) - should find point (0, 0)
         query = (1.0, 1.0)
-        result = quadtree.nearest_neighbor(query, points)
+        result = quadtree.nearest_neighbor(query)
         expected = 1
         assert result == expected, f"Query {query}: expected {expected}, got {result}"
         print(f"✓ Query {query} → index {result} (point {points[result]})")
 
         # Test 2: Query at (11, 11) - should find point (10, 10)
         query = (11.0, 11.0)
-        result = quadtree.nearest_neighbor(query, points)
+        result = quadtree.nearest_neighbor(query)
         expected = 3
         assert result == expected, f"Query {query}: expected {expected}, got {result}"
         print(f"✓ Query {query} → index {result} (point {points[result]})")
 
         # Test 3: Query at (5.1, 5.1) - should find point (5, 5)
         query = (5.1, 5.1)
-        result = quadtree.nearest_neighbor(query, points)
+        result = quadtree.nearest_neighbor(query)
         expected = 4
         assert result == expected, f"Query {query}: expected {expected}, got {result}"
         print(f"✓ Query {query} → index {result} (point {points[result]})")
@@ -105,7 +105,7 @@ class TestNearestNeighbor:
 
         # Query exactly at point (10, 10) - should find itself
         query = (10.0, 10.0)
-        result = quadtree.nearest_neighbor(query, points)
+        result = quadtree.nearest_neighbor(query)
         expected = 1
         assert result == expected, f"Query {query}: expected {expected}, got {result}"
         print(f"✓ Query exactly at {query} → index {result} (itself)")
@@ -133,7 +133,7 @@ class TestNearestNeighbor:
         ]
 
         for query in test_queries:
-            result = quadtree.nearest_neighbor(query, points)
+            result = quadtree.nearest_neighbor(query)
             expected_idx, expected_dist = find_expected_nearest(query, points)
 
             assert result == expected_idx, f"Query {query}: expected {expected_idx}, got {result}"
@@ -153,7 +153,7 @@ class TestNearestNeighbor:
         quadtree.build_point_tree(points)
 
         query = (0.0, 0.0)
-        result = quadtree.nearest_neighbor(query, points)
+        result = quadtree.nearest_neighbor(query)
         expected = 0
         assert result == expected, f"Query {query}: expected {expected}, got {result}"
         print(f"✓ Query {query} with single point → index {result}")
@@ -161,13 +161,11 @@ class TestNearestNeighbor:
     def test_empty_tree(self):
         """Test edge case: empty tree."""
         print("\n=== Test: Empty Tree ===")
-        points = []
-
         quadtree = QuadTree()
         # Don't call build_point_tree on empty list
 
         query = (5.0, 5.0)
-        result = quadtree.nearest_neighbor(query, points)
+        result = quadtree.nearest_neighbor(query)
         assert result is None, f"Query on empty tree should return None, got {result}"
 
     def test_distant_query(self):
@@ -184,7 +182,7 @@ class TestNearestNeighbor:
 
         # Query far away - should still find correct nearest
         query = (100.0, 100.0)
-        result = quadtree.nearest_neighbor(query, points)
+        result = quadtree.nearest_neighbor(query)
         expected = 2  # (2, 2) is closest
         assert result == expected, f"Query {query}: expected {expected}, got {result}"
         print(f"✓ Query {query} (distant) → index {result} (point {points[result]})")
@@ -203,7 +201,7 @@ class TestNearestNeighbor:
         quadtree.build_point_tree(points)
 
         query = (-6.0, -9.0)
-        result = quadtree.nearest_neighbor(query, points)
+        result = quadtree.nearest_neighbor(query)
         expected_idx, _ = find_expected_nearest(query, points)
 
         assert result == expected_idx, f"Query {query}: expected {expected_idx}, got {result}"
@@ -230,7 +228,7 @@ class TestNearestNeighbor:
         ]
 
         for query in test_queries:
-            result = quadtree.nearest_neighbor(query, points)
+            result = quadtree.nearest_neighbor(query)
             expected_idx, expected_dist = find_expected_nearest(query, points)
 
             result_dist = squared_distance(query, points[result])
