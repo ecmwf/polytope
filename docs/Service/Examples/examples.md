@@ -21,7 +21,7 @@
 * <a href="../circle_example">Circle</a>
 * <a href="../position_example">Position</a>
 
-### Open Data
+### Operational AIFS Data
 
 * <a href="../OpenData/od_timeseries_example">Timeseries</a>
 * <a href="../OpenData/od_polygon_example">Polygon</a>
