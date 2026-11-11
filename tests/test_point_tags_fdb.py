@@ -209,9 +209,7 @@ class TestPointTagsStructuredGrid(_PointTagTests):
 
 
 class TestPointTagsStructuredBulkGrid(TestPointTagsStructuredGrid):
-    """Same checks with the latitude/longitude layers folded into a BulkGridTensorIndexNode."""
-
-    options = dict(OCTAHEDRAL_OPTIONS, bulk_grid_leaves=True)
+    """The same checks, naming the folded leaves the structured grid always produces."""
 
     @pytest.mark.fdb
     def test_leaves_are_bulk_grid_nodes(self):
@@ -219,13 +217,6 @@ class TestPointTagsStructuredBulkGrid(TestPointTagsStructuredGrid):
 
         result = self.multi(self.values, ["A", "B", "C"])
         assert all(isinstance(leaf, BulkGridTensorIndexNode) for leaf in result.leaves)
-
-    @pytest.mark.fdb
-    def test_matches_legacy_leaves(self):
-        tags = [f"p{i}" for i in range(len(self.values))]
-        bulk = tags_by_point(self.multi(self.values, tags))
-        legacy = tags_by_point(self.multi(self.values, tags, bulk_grid_leaves=False))
-        assert bulk == legacy
 
 
 class TestPointTagsUnstructuredGrid(_PointTagTests):
