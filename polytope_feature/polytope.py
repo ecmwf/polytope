@@ -234,21 +234,20 @@ class Polytope:
     def _group_combinations(cls, combinations, batches_polytope):
         """Yield (shared_polytopes, batched_polytopes) per distinct tree prefix.
 
-        Polytopes an engine batches (see Engine.batches_polytope) are split off; combinations whose
-        remaining polytopes are identical (eg. every Point of a Union shares the same Selects) then only
-        need their prefix built once.  The batched polytopes keep the order of the request, which is the
-        order the engine resolving them reports its result in.
+        Polytopes whose axes all belong to a batching engine (see Engine.batches_polytopes)
+        are split off; combinations whose remaining polytopes are identical (eg. every Point
+        of a Union shares the same Selects) then only need their prefix built once.
+        Polytopes that also span other axes (eg. a 3D Path over latitude, longitude and
+        levelist) stay shared, because those other axes may be sliced before the batching
+        engine's axes and need them too.
         """
         grouped = {}
         for c in combinations:
             shared, batched = [], {}
             for poly in cls._flatten_combination(c):
-                if batches_polytope(poly):
-                    batched[poly] = None
-                else:
-                    shared.append(poly)
-            key = frozenset(shared) if batched else object()
-            entry = grouped.setdefault(key, (shared, {}))
+                (batched if set(poly.axes()) <= batched_axes else shared).append(poly)
+            key = frozenset(shared) if batched_axes else object()
+            entry = grouped.setdefault(key, (shared, set()))
             entry[1].update(batched)
         return [(shared, list(batched)) for shared, batched in grouped.values()]
 
