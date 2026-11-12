@@ -36,6 +36,10 @@ class Datacube(ABC):
         self.unwanted_path = {}
         self.compressed_axes = compressed_axes_options
         self.grid_md5_hash = None
+        # Optional `GridInterpolator` (see ..interpolation), set by Polytope
+        # when the "interpolation" option is used, to regrid fetched values
+        # from the datacube's native grid onto a requested output grid.
+        self.interpolator = None
 
     @abstractmethod
     def get(self, requests: TensorIndexTree, context: Dict) -> Any:
