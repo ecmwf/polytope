@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict
 
 from ...utility.combinatorics import validate_axes
+from ...utility.geometry import nearest_pt
 from ..datacube_axis import DatacubeAxis
 from ..tensor_index_tree import DatacubePath, TensorIndexTree
 from ..transformations.datacube_mappers.datacube_mappers import DatacubeMapper
@@ -36,6 +37,10 @@ class Datacube(ABC):
         self.unwanted_path = {}
         self.compressed_axes = compressed_axes_options
         self.grid_md5_hash = None
+        # Optional `GridInterpolator` (see ..interpolation), set by Polytope
+        # when the "interpolation" option is used, to regrid fetched values
+        # from the datacube's native grid onto a requested output grid.
+        self.interpolator = None
 
     @abstractmethod
     def get(self, requests: TensorIndexTree, context: Dict) -> Any:
@@ -199,6 +204,118 @@ class Datacube(ABC):
 
     def check_branching_axes(self, request):
         pass
+
+    def nearest_lat_lon_search(self, requests):
+        if len(self.nearest_search) != 0:
+            first_ax_name = requests.children[0].axis.name
+            second_ax_name = requests.children[0].children[0].axis.name
+
+            axes_in_nearest_search = [
+                first_ax_name not in self.nearest_search.keys(),
+                second_ax_name not in self.nearest_search.keys(),
+            ]
+
+            if all(not item for item in axes_in_nearest_search):
+                raise Exception("nearest point search axes are wrong")
+
+            second_ax = requests.children[0].children[0].axis
+
+            nearest_pts_k = self.nearest_search.get((first_ax_name, second_ax_name), None)
+            query_points = None
+            if nearest_pts_k is not None:
+                query_points = nearest_pts_k[0]
+            else:
+                nearest_pts_k = self.nearest_search.get((second_ax_name, first_ax_name), None)
+                query_points = [[pt[1], pt[0]] for pt in nearest_pts_k[0]]
+            query_tags = nearest_pts_k[2] if len(nearest_pts_k) > 2 else [None] * len(query_points)
+
+            k = nearest_pts_k[1]
+            if k != 1 and not self.grid_transformation.is_irregular:
+                print("k nearest neighbour not supported in hullslicer, defaulting to nearest neighbour.")
+                k = 1
+
+            transformed_nearest_pts = []
+            for point in query_points:
+                transformed_nearest_pts.append([point[0], second_ax._remap_val_to_axis_range(point[1])])
+
+            found_latlon_pts = []
+            for lat_child in requests.children:
+                for lon_child in lat_child.children:
+                    found_latlon_pts.append([lat_child.values, lon_child.values])
+
+            # now find the nearest lat lon to the points requested, remembering which query
+            # point (and so which tag) each resolved point is nearest to
+            nearest_latlons = []
+            point_tags = {}
+            for pt, tag in zip(transformed_nearest_pts, query_tags):
+                nearest_latlon = nearest_pt(found_latlon_pts, pt, k)
+                nearest_latlons.extend(nearest_latlon)
+                for latlon in nearest_latlon:
+                    tags = point_tags.setdefault(tuple(latlon), set())
+                    if tag is not None:
+                        tags.add(tag)
+            nearest_tags = {tag for tag in query_tags if tag is not None}
+
+            # need to remove the branches that do not fit
+            lat_children_by_values = {child.values: child for child in requests.children}
+            lat_children_values = list(lat_children_by_values.keys())
+            for lat_child_val in lat_children_values:
+                lat_child = lat_children_by_values[lat_child_val]
+                if lat_child.values not in [(latlon[0],) for latlon in nearest_latlons]:
+                    lat_child.remove_branch()
+                else:
+                    possible_lons = [latlon[1] for latlon in nearest_latlons if (latlon[0],) == lat_child.values]
+                    lon_children_by_values = {child.values: child for child in lat_child.children}
+                    lon_children_values = list(lon_children_by_values.keys())
+                    for lon_child_val in lon_children_values:
+                        lon_child = lon_children_by_values[lon_child_val]
+                        for value in lon_child.values:
+                            if value not in possible_lons:
+                                lon_child.remove_compressed_branch(value)
+                    if lat_child.parent is not None:
+                        self._retag_nearest_lons(lat_child, point_tags, nearest_tags)
+            return point_tags
+        return None
+
+    @staticmethod
+    def _retag_nearest_lons(lat_child, point_tags, nearest_tags):
+        """Re-attach nearest-search tags to the points that are actually nearest to each query.
+
+        While slicing, a nearest query's tag is stamped on every candidate it touches, so after
+        the nearest search we drop those tags and give each resolved point the tags of the
+        queries it is nearest to. A compressed longitude node carries one set of tags for all
+        its values, so the longitude nodes of this latitude are rebuilt as one node per distinct
+        set of tags (which also merges overlapping siblings coming from unions).
+        """
+        lat_child.tags -= nearest_tags
+        lat = lat_child.values[0]
+        values_by_tags = {}
+        lon_axis = None
+        for lon_child in list(lat_child.children):
+            lon_axis = lon_child.axis
+            base_tags = lon_child.tags - nearest_tags
+            for value in lon_child.values:
+                tags = frozenset(base_tags | point_tags.get((lat, value), set()))
+                values_by_tags.setdefault(tags, set()).add(value)
+        if lon_axis is None:
+            return
+        groups = list(values_by_tags.items())
+        # Keep the existing node when it already holds a single group of values
+        if len(groups) == 1 and len(lat_child.children) == 1:
+            next(iter(lat_child.children)).tags = set(groups[0][0])
+            return
+        for lon_child in list(lat_child.children):
+            lat_child.children.remove(lon_child)
+            lon_child._parent = None
+        seen = set()
+        for tags, values in groups:
+            values = tuple(sorted(values - seen))
+            seen.update(values)
+            if len(values) == 0:
+                continue
+            node = TensorIndexTree(lon_axis, values)
+            node.tags = set(tags)
+            lat_child.add_child(node)
 
     @abstractmethod
     def find_point_cloud(self):

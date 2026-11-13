@@ -55,6 +55,26 @@ class IrregularGridMapper(DatacubeMapper):
         # Suppose we get the idx value somehow from the tree, as an idx input
         return unmapped_idx[0]
 
+    def _cached_points(self):
+        """Cache the (lat, lon) point cloud: `grid_latlon_points()` can be expensive
+        (eg. involves reading an external grid definition for ICON), and the canonical
+        index of an unstructured/irregular grid point is just its position in this list.
+        """
+        if getattr(self, "_points_cache", None) is None:
+            self._points_cache = self.grid_latlon_points()
+        return self._points_cache
+
+    def point_count(self):
+        return len(self._cached_points())
+
+    def latlon_for_indices(self, indices):
+        import numpy as np
+
+        points = self._cached_points()
+        lats = np.asarray([p[0] for p in points], dtype=np.float64)
+        lons = np.asarray([p[1] for p in points], dtype=np.float64)
+        return lats[np.asarray(indices, dtype=np.int64)], lons[np.asarray(indices, dtype=np.int64)]
+
 
 _type_to_datacube_irregular_mapper_lookup = {
     "lambert_conformal": "LambertConformalGridMapper",

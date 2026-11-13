@@ -40,6 +40,7 @@ class NestedHealpixGridMapper(DatacubeMapper):
         self.k = int(math.log2(self.Nside))
         self.Npix = 12 * self.Nside * self.Nside
         self.Ncap = (self.Nside * (self.Nside - 1)) << 1
+        self._nest_to_ring = None
         if md5_hash is not None:
             self.md5_hash = md5_hash
         else:
@@ -252,6 +253,47 @@ class NestedHealpixGridMapper(DatacubeMapper):
         nested_result[south_mask] = nested_south[south_mask]
         nested_result[~(north_mask | south_mask)] = nested_equatorial[~(north_mask | south_mask)]
         return nested_result
+
+    def point_count(self):
+        return self.Npix
+
+    def ring_size(self, ring_idx):
+        return self.HEALPix_nj(ring_idx)
+
+    def ring_lon_start(self, ring_idx):
+        nj = self.HEALPix_nj(ring_idx)
+        step = 360.0 / nj
+        resolution = self._resolution
+        if ring_idx < resolution or 3 * resolution - 1 < ring_idx or (ring_idx + resolution) % 2:
+            return step / 2.0
+        return 0.0
+
+    def _nest_to_ring_table(self):
+        """Lazily build (and cache) the nested->ring index permutation for this grid.
+
+        Built from the already-vectorised, already-tested `ring_to_nested()` (ring index
+        i -> nested index) by applying it to every point once and inverting the resulting
+        permutation - this avoids re-deriving the nest->ring bit-manipulation algorithm
+        (notoriously easy to get subtly wrong at the polar caps) from scratch.
+
+        This is O(Npix) (a handful of vectorised numpy ops over the whole grid), which is
+        still far cheaper than the point-by-point Python loops `second_axis_vals()`/`unmap()`
+        would need to enumerate the same grid, but it is the dominant cost of interpolating
+        onto/from a nested HEALPix grid - cached so it is only paid once per mapper instance.
+        """
+        if self._nest_to_ring is None:
+            ring_major = np.arange(self.Npix)
+            nested = self.ring_to_nested(ring_major)
+            inverse = np.empty(self.Npix, dtype=np.int64)
+            inverse[nested] = ring_major
+            self._nest_to_ring = inverse
+        return self._nest_to_ring
+
+    def remap_canonical_index(self, indices):
+        """Convert nested-scheme canonical indices into the ring-major index used by
+        `ring_size`/`ring_lon_start` (ie. the same scheme as `HealpixGridMapper`).
+        """
+        return self._nest_to_ring_table()[np.asarray(indices, dtype=np.int64)]
 
 
 # md5 grid hash in form {resolution : hash}
