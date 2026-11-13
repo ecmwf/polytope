@@ -56,17 +56,21 @@ def mapper_config_to_grid_spec(mapper_config) -> object:
         reduced_gaussian, resolution=640    -> "N640"
         healpix, resolution=1024            -> "H1024_nested"
         regular, resolution=[0.1, 0.1]      -> {"grid": [0.1, 0.1]}
-        unstructured/icon/lambert_conformal -> {"latitudes": [...], "longitudes": [...]}
+        icon, uuid="..."                    -> "..." (the grid's own uuid, same identifier
+                                                mir/eckit-geo use to resolve a named/unstructured grid)
+        unstructured/lambert_conformal       -> {"latitudes": [...], "longitudes": [...]}
                                                 (built from the mapper's own point cloud)
     """
     if isinstance(mapper_config, dict):
         grid_type = mapper_config.get("type")
         resolution = mapper_config.get("resolution")
         points = mapper_config.get("points")
+        uuid = mapper_config.get("uuid")
     else:
         grid_type = getattr(mapper_config, "type", None)
         resolution = getattr(mapper_config, "resolution", None)
         points = getattr(mapper_config, "points", None)
+        uuid = getattr(mapper_config, "uuid", None)
 
     if grid_type == "octahedral":
         return f"O{resolution}"
@@ -86,7 +90,14 @@ def mapper_config_to_grid_spec(mapper_config) -> object:
         raise ValueError(
             "reduced_ll grids have no simple mir grid-spec name; " "use `grid_spec_from_points(lats, lons)` instead."
         )
-    if grid_type in ("unstructured", "icon", "lambert_conformal"):
+    if grid_type == "icon":
+        if not uuid:
+            raise ValueError("No 'uuid' available on mapper config for grid type 'icon'")
+        # The ICON mapper itself resolves this grid via `Grid({"grid": uuid})` (see
+        # `ICONGridMapper.grid_latlon_points()`); mir/eckit-geo use the same convention,
+        # so the uuid alone is already a valid grid spec string.
+        return uuid
+    if grid_type in ("unstructured", "lambert_conformal"):
         if points:
             lats = [p[0] for p in points]
             lons = [p[1] for p in points]
