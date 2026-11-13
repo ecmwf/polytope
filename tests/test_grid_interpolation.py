@@ -102,27 +102,6 @@ def test_mapper_config_to_grid_spec():
     assert mapper_config_to_grid_spec(FakeMapperConfig("healpix", 1024)) == "H1024_nested"
 
 
-def test_grid_points_octahedral_enumeration_and_bbox():
-    from polytope_feature.datacube import grid_points
-
-    mapper = grid_points.build_bare_mapper("octahedral", 4)
-    all_lats, all_lons, all_idx = grid_points.enumerate_all_points(mapper)
-    assert len(all_lats) == 208
-    np.testing.assert_array_equal(all_idx, np.arange(208))
-
-    # Round trip: looking up lat/lon for a subset of indices matches enumeration.
-    sub_idx = np.array([0, 5, 207])
-    sub_lats, sub_lons = grid_points.latlon_for_indices(mapper, sub_idx)
-    np.testing.assert_allclose(sub_lats, all_lats[sub_idx])
-    np.testing.assert_allclose(sub_lons, all_lons[sub_idx])
-
-    bbox_lats, bbox_lons, bbox_idx = grid_points.points_in_bbox(mapper, north=90, south=70, east=90, west=0)
-    assert len(bbox_idx) > 0
-    assert set(bbox_idx.tolist()) <= set(all_idx.tolist())
-    assert np.all(bbox_lats >= 70) and np.all(bbox_lats <= 90)
-    assert np.all(bbox_lons >= 0) and np.all(bbox_lons <= 90)
-
-
 def test_group_rows():
     from polytope_feature.datacube import grid_points
 
@@ -137,102 +116,87 @@ def test_group_rows():
     np.testing.assert_array_equal(flat_idx, [1, 3, 7, 8])
 
 
-def test_retrieve_interpolated_pipeline_identity_grid(monkeypatch):
-    """End-to-end test of the bbox -> needed-input-indices -> bulk fetch ->
-    interpolate -> output-grid-leaf pipeline, using an identity weight matrix
-    (in_grid == out_grid) so correctness is easy to check: output values at a
-    given output index must equal the (synthetic) input value at the same
-    index, and the output leaf's lat/lon must match the output grid's.
+def _brute_force_all_points(mapper):
+    """Ground truth: enumerate every point the slow way, via second_axis_vals()/unmap()."""
+    lats_out, lons_out, idxs_out = [], [], []
+    for lat in mapper.first_axis_vals():
+        lons = mapper.second_axis_vals([lat])
+        idxs = mapper.unmap([lat], lons)
+        lats_out.extend([lat] * len(lons))
+        lons_out.extend(lons)
+        idxs_out.extend(idxs)
+    order = np.argsort(idxs_out)
+    return np.asarray(lats_out)[order], np.asarray(lons_out)[order], np.asarray(idxs_out)[order]
+
+
+@pytest.mark.parametrize(
+    "grid_desc",
+    [
+        {"type": "octahedral", "resolution": 4},
+        {"type": "regular", "resolution": 4},
+        {"type": "healpix", "resolution": 4},
+    ],
+)
+def test_ring_index_matches_brute_force(grid_desc):
+    """`RingIndex`'s O(log num_rings) lookup must match the brute-force (O(num_points))
+    enumeration exactly, for every ring-based structured grid type.
     """
     from polytope_feature.datacube import grid_points
-    from polytope_feature.datacube.interpolated_retrieval import (
-        _replace_with_interpolated_leaf,
-    )
-    from polytope_feature.datacube.interpolation import GridInterpolator
-    from polytope_feature.datacube.tensor_index_tree import (
-        BulkGridTensorIndexNode,
-        TensorIndexTree,
-    )
 
-    mapper = grid_points.build_bare_mapper("octahedral", 4)
-    n_points = len(mapper.first_axis_vals()) and len(grid_points.enumerate_all_points(mapper)[0])
-    identity = np.eye(n_points)
-    _install_fake_mir(monkeypatch, identity)
+    mapper = grid_points.grid_spec_to_mapper(grid_desc)
+    all_lats, all_lons, all_idx = _brute_force_all_points(mapper)
+    assert np.array_equal(all_idx, np.arange(len(all_idx)))
 
-    grid_desc = {"type": "octahedral", "resolution": 4}
-    interpolator = GridInterpolator(
-        in_grid="O4",
-        out_grid="O4",
-        in_grid_desc=grid_desc,
-        out_grid_desc=grid_desc,
-    )
+    ri = grid_points.RingIndex(mapper)
+    assert ri.total_points == len(all_idx)
 
-    out_lats, out_lons, out_idx = grid_points.points_in_bbox(mapper, north=90, south=70, east=90, west=0)
-    out_unique_lats, out_lon_rows, out_flat_idx = grid_points.group_rows(out_lats, out_lons, out_idx)
-
-    needed_in_idx = interpolator.needed_input_indices(out_flat_idx.tolist())
-    # Identity matrix -> needed input indices are exactly the output indices.
-    np.testing.assert_array_equal(np.sort(needed_in_idx), np.sort(out_flat_idx))
-
-    in_lats, in_lons = grid_points.latlon_for_indices(mapper, needed_in_idx)
-    in_unique_lats, in_lon_rows, in_flat_idx = grid_points.group_rows(in_lats, in_lons, needed_in_idx)
-
-    class FakeAxis:
-        def __init__(self, name):
-            self.name = name
-
-    lat_ax, lon_ax = FakeAxis("latitude"), FakeAxis("longitude")
-
-    leaf = TensorIndexTree()
-    in_node = BulkGridTensorIndexNode([lat_ax, lon_ax], in_unique_lats, in_lon_rows, in_flat_idx)
-    leaf.add_child(in_node)
-
-    # Simulate GribJump having returned synthetic values: value == canonical index.
-    in_node.result = [in_node.indexes.astype(float)]
-
-    out_node = _replace_with_interpolated_leaf(
-        leaf, interpolator, out_unique_lats, out_lon_rows, out_flat_idx, lat_ax, lon_ax
-    )
-
-    assert len(leaf.children) == 1
-    assert leaf.children[0] is out_node
-    np.testing.assert_array_equal(out_node.indexes, out_flat_idx)
-    np.testing.assert_allclose(out_node.result[0], out_flat_idx.astype(float))
-
-    all_lats, all_lons, _ = grid_points.enumerate_all_points(mapper)
-    np.testing.assert_allclose(out_node.coordinates[:, 0], all_lats[out_node.indexes])
-    np.testing.assert_allclose(out_node.coordinates[:, 1], all_lons[out_node.indexes])
+    idx = np.random.default_rng(0).choice(len(all_idx), size=min(30, len(all_idx)), replace=False)
+    lats, lons = ri.latlon_for_indices(idx)
+    np.testing.assert_allclose(lats, all_lats[idx])
+    np.testing.assert_allclose(lons, all_lons[idx], atol=1e-8)
 
 
-def test_extract_grid_bbox_unwraps_single_box_union():
-    from polytope_feature.datacube.interpolated_retrieval import _split_grid_shapes
-    from polytope_feature.polytope import Request
-    from polytope_feature.shapes import Box, Select, Union
+def test_unstructured_grid_latlon_for_indices():
+    from polytope_feature.datacube import grid_points
 
-    req = Request(
-        Select("step", [0]),
-        Union(["latitude", "longitude"], Box(["latitude", "longitude"], [10, 20], [30, 40])),
-    )
-    grid_shapes, remaining = _split_grid_shapes(req, ("latitude", "longitude"))
-    assert len(grid_shapes) == 1
-    assert [type(s).__name__ for s in remaining] == ["Select"]
+    points = [(10.0, 20.0), (30.0, 40.0), (50.0, 60.0)]
+    mapper = grid_points.grid_spec_to_mapper({"type": "unstructured", "points": points})
+    assert mapper.is_irregular
+    assert mapper.point_count() == 3
+
+    ri = grid_points.RingIndex(mapper)
+    lats, lons = ri.latlon_for_indices([0, 2])
+    np.testing.assert_allclose(lats, [10.0, 50.0])
+    np.testing.assert_allclose(lons, [20.0, 60.0])
 
 
-def _make_bare_polytope(engine_options):
-    """A `Polytope` engine instance without a backing datacube, just enough
-    state for `.slice()` to work (used to test slicing against
-    `OutputGridDatacube` without needing a real FDB/xarray datacube).
+def test_nested_healpix_remap_round_trip():
+    """The nested->ring index remap must round-trip exactly through the
+    already-tested forward `ring_to_nested()`, and give lat/lon consistent
+    with the regular (ring-ordered) HEALPix grid.
     """
-    from polytope_feature.engine.hullslicer import HullSlicer
-    from polytope_feature.polytope import Polytope
+    from polytope_feature.datacube import grid_points
 
-    p = Polytope.__new__(Polytope)
-    p.compressed_axes = []
-    p.context = {}
-    p.engine_options = engine_options
-    p.engines = {"hullslicer": HullSlicer()}
-    p.ax_is_unsliceable = {}
-    return p
+    nested = grid_points.grid_spec_to_mapper({"type": "healpix_nested", "resolution": 8})
+    ring_major = np.arange(nested.point_count())
+    nest_idx = nested.ring_to_nested(ring_major)
+
+    back = nested.remap_canonical_index(nest_idx)
+    np.testing.assert_array_equal(back, ring_major)
+
+    # lat/lon for a nested index must match the equivalent ring-major point on the
+    # plain (ring-ordered) HEALPix grid of the same resolution.
+    ring_mapper = grid_points.grid_spec_to_mapper({"type": "healpix", "resolution": 8})
+    ri_ring = grid_points.RingIndex(ring_mapper)
+    ri_nested = grid_points.RingIndex(nested)
+
+    sample_ring_major = np.array([0, 5, 100, 300, nested.point_count() - 1])
+    sample_nest = nested.ring_to_nested(sample_ring_major)
+
+    lats_ring, lons_ring = ri_ring.latlon_for_indices(sample_ring_major)
+    lats_nested, lons_nested = ri_nested.latlon_for_indices(sample_nest)
+    np.testing.assert_allclose(lats_nested, lats_ring)
+    np.testing.assert_allclose(lons_nested, lons_ring)
 
 
 def _octahedral_axis_options(resolution=4):
@@ -250,105 +214,21 @@ def _octahedral_axis_options(resolution=4):
     ]
 
 
-class _FakeDatacube:
-    def __init__(self, axis_options):
-        self.axis_options = axis_options
-
-
-def test_output_grid_datacube_slices_box_shape():
-    from polytope_feature.datacube.interpolated_retrieval import _collect_latlon_pairs
-    from polytope_feature.datacube.output_grid_datacube import (
-        OutputGridDatacube,
-        build_output_grid_axis_options,
-    )
-    from polytope_feature.shapes import Box
-
-    datacube = _FakeDatacube(_octahedral_axis_options(4))
-    out_grid_desc = {"type": "octahedral", "resolution": 4}
-    axis_options, grid_axes = build_output_grid_axis_options(datacube, out_grid_desc)
-    assert grid_axes == ("latitude", "longitude")
-
-    output_dc = OutputGridDatacube(axis_options)
-    p = _make_bare_polytope({"latitude": "hullslicer", "longitude": "hullslicer"})
-
-    box = Box(["latitude", "longitude"], [70, 0], [90, 90])
-    tree = p.slice(output_dc, box.polytope())
-
-    pairs = _collect_latlon_pairs(tree)
-    assert len(pairs) > 0
-    for lat, lon in pairs:
-        assert 70 <= lat <= 90
-        assert 0 <= lon <= 90
-
-
-def test_output_grid_datacube_slices_disk_shape():
-    """Proves interpolation works with non-bounding-box shapes too (eg. Disk,
-    Polygon, Path, ...) since it reuses Polytope's normal slicing mechanism.
+def _make_fake_input_datacube(resolution=4, steps=(0, 1), levels=None):
+    """A minimal, real `Datacube` subclass standing in for `FDBDatacube`: a "step"
+    (and optionally "levelist") axis plus the standard octahedral lat/lon mapper,
+    with a `.get()` that fills bulk grid leaves with synthetic data (value ==
+    canonical grid index), so the whole interpolated-retrieve pipeline can be
+    exercised without FDB.
     """
-    from polytope_feature.datacube.interpolated_retrieval import _collect_latlon_pairs
-    from polytope_feature.datacube.output_grid_datacube import (
-        OutputGridDatacube,
-        build_output_grid_axis_options,
-    )
-    from polytope_feature.shapes import Box, Disk
-
-    datacube = _FakeDatacube(_octahedral_axis_options(4))
-    out_grid_desc = {"type": "octahedral", "resolution": 4}
-    axis_options, _ = build_output_grid_axis_options(datacube, out_grid_desc)
-
-    box_dc = OutputGridDatacube(axis_options)
-    disk_dc = OutputGridDatacube(axis_options)
-    p = _make_bare_polytope({"latitude": "hullslicer", "longitude": "hullslicer"})
-
-    box = Box(["latitude", "longitude"], [-90, 0], [90, 360])
-    box_tree = p.slice(box_dc, box.polytope())
-    box_pairs = set(_collect_latlon_pairs(box_tree))
-
-    disk = Disk(["latitude", "longitude"], centre=[80, 45], radius=[15, 15])
-    disk_tree = p.slice(disk_dc, disk.polytope())
-    disk_pairs = set(_collect_latlon_pairs(disk_tree))
-
-    assert len(disk_pairs) > 0
-    # The disk only selects points near its centre, so it must be a strict subset of
-    # every grid point (shown here via the full-globe Box), and much smaller than it.
-    assert disk_pairs <= box_pairs
-    assert len(disk_pairs) < len(box_pairs)
-
-
-def test_slice_grid_shapes_end_to_end():
-    """Full `_slice_grid_shapes` helper (as used by `retrieve_interpolated`),
-    using a real hullslicer engine and a real `OutputGridDatacube`.
-    """
-    from polytope_feature.datacube.interpolated_retrieval import _slice_grid_shapes
-    from polytope_feature.shapes import Box
-
-    datacube = _FakeDatacube(_octahedral_axis_options(4))
-    out_grid_desc = {"type": "octahedral", "resolution": 4}
-    p = _make_bare_polytope({"latitude": "hullslicer", "longitude": "hullslicer"})
-
-    box = Box(["latitude", "longitude"], [70, 0], [90, 90])
-    unique_lats, lon_rows, flat_idx = _slice_grid_shapes(p, [box], out_grid_desc, datacube)
-
-    assert len(flat_idx) > 0
-    assert len(unique_lats) == len(lon_rows)
-    assert len(flat_idx) == sum(len(row) for row in lon_rows)
-
-
-class _FakeInputDatacube:
-    """A minimal, real `Datacube` subclass standing in for `FDBDatacube` in
-    full `retrieve_interpolated()` tests: a "step" axis plus the standard
-    octahedral lat/lon mapper, with a `.get()` that fills bulk grid leaves
-    with synthetic data (value == canonical grid index), so the whole
-    "slice everything else -> attach input bulk leaf -> fetch -> interpolate
-    -> replace with output bulk leaf" pipeline can be exercised without FDB.
-    """
-
-
-def _make_fake_input_datacube(resolution=4, steps=(0, 1)):
     from polytope_feature.datacube.backends.datacube import Datacube
     from polytope_feature.datacube.tensor_index_tree import BulkGridTensorIndexNode
 
     axis_options = _octahedral_axis_options(resolution)
+    coordinates = {"step": list(steps)}
+    if levels is not None:
+        coordinates["levelist"] = list(levels)
+    coordinates["values"] = []
 
     class FakeInputDatacube(Datacube):
         def __init__(self):
@@ -357,7 +237,7 @@ def _make_fake_input_datacube(resolution=4, steps=(0, 1)):
             self.treated_axes = []
             self.complete_axes = []
             self.grid_transformation = None
-            self.coordinates = {"step": list(steps), "values": []}
+            self.coordinates = coordinates
 
             for name, values in self.coordinates.items():
                 opt = next((o for o in axis_options if o.axis_name == name), None)
@@ -393,54 +273,167 @@ def _make_fake_input_datacube(resolution=4, steps=(0, 1)):
     return FakeInputDatacube()
 
 
-def test_retrieve_interpolated_end_to_end(monkeypatch):
-    """Full `retrieve_interpolated()` run (slice output grid with a real Box shape,
-    slice remaining axes, fetch via a fake datacube, interpolate, replace leaves),
-    using an identity weight matrix so correctness is easy to check.
-    """
-    from polytope_feature.datacube import grid_points
-    from polytope_feature.datacube.interpolated_retrieval import retrieve_interpolated
-    from polytope_feature.datacube.interpolation import GridInterpolator
-    from polytope_feature.datacube.tensor_index_tree import BulkGridTensorIndexNode
+def _make_interpolated_polytope(datacube, interpolator, engine_options=None):
     from polytope_feature.engine.hullslicer import HullSlicer
-    from polytope_feature.polytope import Polytope, Request
-    from polytope_feature.shapes import Box, Select
+    from polytope_feature.polytope import Polytope
 
-    mapper = grid_points.build_bare_mapper("octahedral", 4)
-    n_points = len(grid_points.enumerate_all_points(mapper)[0])
-    identity = np.eye(n_points)
-    _install_fake_mir(monkeypatch, identity)
-
-    grid_desc = {"type": "octahedral", "resolution": 4}
-    interpolator = GridInterpolator(in_grid="O4", out_grid="O4", in_grid_desc=grid_desc, out_grid_desc=grid_desc)
-
-    datacube = _make_fake_input_datacube(resolution=4, steps=(0, 1))
     datacube.interpolator = interpolator
-
     p = Polytope.__new__(Polytope)
     p.datacube = datacube
     p.compressed_axes = []
     p.context = {}
-    p.engine_options = {"step": "hullslicer", "latitude": "hullslicer", "longitude": "hullslicer"}
+    p.engine_options = engine_options or {
+        "step": "hullslicer",
+        "levelist": "hullslicer",
+        "latitude": "hullslicer",
+        "longitude": "hullslicer",
+    }
     p.engines = {"hullslicer": HullSlicer()}
     p.ax_is_unsliceable = {}
+    return p
 
-    request = Request(
-        Select("step", [0, 1]),
-        Box(["latitude", "longitude"], [70, 0], [90, 90]),
-    )
-    tree = retrieve_interpolated(p, request)
 
-    leaves = tree.leaves
-    # One leaf per "step" value (not compressed in this fake datacube).
-    assert len(leaves) == 2
-    for leaf in leaves:
+def _identity_interpolator(monkeypatch, resolution=4):
+    from polytope_feature.datacube import grid_points
+    from polytope_feature.datacube.interpolation import GridInterpolator
+
+    mapper = grid_points.grid_spec_to_mapper({"type": "octahedral", "resolution": resolution})
+    n_points = grid_points.RingIndex(mapper).total_points
+    _install_fake_mir(monkeypatch, np.eye(n_points))
+
+    grid_desc = {"type": "octahedral", "resolution": resolution}
+    return GridInterpolator(in_grid="O4", out_grid="O4", in_grid_desc=grid_desc, out_grid_desc=grid_desc)
+
+
+class TestRetrieveWithInterpolation:
+    """`Polytope.retrieve()` itself, with `datacube.interpolator` set - these exercise
+    the real, unified retrieve path (mapper swap + single slice()/get() call), not a
+    separate reimplementation, for various shapes and dimensionalities.
+    """
+
+    def test_box_2d(self, monkeypatch):
+        from polytope_feature.datacube.tensor_index_tree import BulkGridTensorIndexNode
+        from polytope_feature.polytope import Request
+        from polytope_feature.shapes import Box, Select
+
+        interpolator = _identity_interpolator(monkeypatch)
+        datacube = _make_fake_input_datacube(resolution=4, steps=(0, 1))
+        p = _make_interpolated_polytope(datacube, interpolator)
+
+        request = Request(Select("step", [0, 1]), Box(["latitude", "longitude"], [70, 0], [90, 90]))
+        tree = p.retrieve(request)
+
+        leaves = tree.leaves
+        assert len(leaves) == 2  # one per "step" value (not compressed)
+        for leaf in leaves:
+            assert isinstance(leaf, BulkGridTensorIndexNode)
+            assert len(leaf.result) == 1
+            np.testing.assert_allclose(leaf.result[0], leaf.indexes.astype(float))
+            assert np.all(leaf.coordinates[:, 0] >= 70) and np.all(leaf.coordinates[:, 0] <= 90)
+            assert np.all(leaf.coordinates[:, 1] >= 0) and np.all(leaf.coordinates[:, 1] <= 90)
+
+    def test_disk_2d(self, monkeypatch):
+        from polytope_feature.datacube.tensor_index_tree import BulkGridTensorIndexNode
+        from polytope_feature.polytope import Request
+        from polytope_feature.shapes import Disk, Select
+
+        interpolator = _identity_interpolator(monkeypatch)
+        datacube = _make_fake_input_datacube(resolution=4, steps=(0,))
+        p = _make_interpolated_polytope(datacube, interpolator)
+
+        request = Request(Select("step", [0]), Disk(["latitude", "longitude"], centre=[80, 45], radius=[15, 15]))
+        tree = p.retrieve(request)
+
+        leaves = tree.leaves
+        assert len(leaves) == 1
+        leaf = leaves[0]
         assert isinstance(leaf, BulkGridTensorIndexNode)
-        out_node = leaf
-        # Identity weight matrix -> interpolated value == canonical index (same as the
-        # fake "GribJump" response).
-        assert len(out_node.result) == 1
-        np.testing.assert_allclose(out_node.result[0], out_node.indexes.astype(float))
-        # Only output-grid points, all within the requested box.
-        assert np.all(out_node.coordinates[:, 0] >= 70) and np.all(out_node.coordinates[:, 0] <= 90)
-        assert np.all(out_node.coordinates[:, 1] >= 0) and np.all(out_node.coordinates[:, 1] <= 90)
+        assert leaf.point_count > 0
+        np.testing.assert_allclose(leaf.result[0], leaf.indexes.astype(float))
+
+    def test_higher_dimensional_box_lat_lon_plus_levelist(self, monkeypatch):
+        """A single Box shape spanning latitude, longitude *and* levelist jointly -
+        the exact "higher-dimensional shape" case the mapper-swap/single-slice
+        design handles with no special-casing at all.
+        """
+        from polytope_feature.datacube.tensor_index_tree import BulkGridTensorIndexNode
+        from polytope_feature.polytope import Request
+        from polytope_feature.shapes import Box, Select
+
+        interpolator = _identity_interpolator(monkeypatch)
+        datacube = _make_fake_input_datacube(resolution=4, steps=(0,), levels=(1, 2, 3))
+        p = _make_interpolated_polytope(datacube, interpolator)
+
+        request = Request(
+            Select("step", [0]),
+            Box(["latitude", "longitude", "levelist"], [70, 0, 1], [90, 90, 2]),
+        )
+        tree = p.retrieve(request)
+
+        leaves = tree.leaves
+        # One leaf per (step, levelist) combination selected: step=0 (only one), levelist in {1,2}
+        assert len(leaves) == 2
+        for leaf in leaves:
+            assert isinstance(leaf, BulkGridTensorIndexNode)
+            np.testing.assert_allclose(leaf.result[0], leaf.indexes.astype(float))
+            assert np.all(leaf.coordinates[:, 0] >= 70) and np.all(leaf.coordinates[:, 0] <= 90)
+            assert np.all(leaf.coordinates[:, 1] >= 0) and np.all(leaf.coordinates[:, 1] <= 90)
+
+    def test_single_nearest_point(self, monkeypatch):
+        """A single `Point(method="nearest")` query (eg. polytope-mars's Position
+        feature) must resolve to exactly one output grid point and interpolate it
+        from the input grid correctly.
+        """
+        from polytope_feature.datacube import grid_points
+        from polytope_feature.datacube.tensor_index_tree import BulkGridTensorIndexNode
+        from polytope_feature.polytope import Request
+        from polytope_feature.shapes import Point, Select
+
+        interpolator = _identity_interpolator(monkeypatch)
+        datacube = _make_fake_input_datacube(resolution=4, steps=(0,))
+        p = _make_interpolated_polytope(datacube, interpolator)
+
+        mapper = grid_points.grid_spec_to_mapper({"type": "octahedral", "resolution": 4})
+        target_lat = mapper.first_axis_vals()[2]
+        target_lon = mapper.second_axis_vals([target_lat])[3]
+
+        request = Request(
+            Select("step", [0]),
+            Point(["latitude", "longitude"], [[target_lat + 0.01, target_lon + 0.01]], method="nearest"),
+        )
+        tree = p.retrieve(request)
+
+        leaves = tree.leaves
+        assert len(leaves) == 1
+        leaf = leaves[0]
+        assert isinstance(leaf, BulkGridTensorIndexNode)
+        assert leaf.point_count == 1
+        np.testing.assert_allclose(leaf.coordinates[0], [target_lat, target_lon])
+        # Identity weight matrix -> interpolated value == canonical index of that nearest point.
+        expected_idx = mapper.unmap([target_lat], [target_lon])[0]
+        np.testing.assert_allclose(leaf.result[0], [float(expected_idx)])
+        assert leaf.indexes[0] == expected_idx
+
+    def test_interpolation_does_not_leak_into_normal_requests(self, monkeypatch):
+        """After an interpolated retrieve, the datacube's grid mapper must be back to
+        the real input grid - a subsequent normal (non-interpolated) retrieve must
+        behave exactly as if interpolation had never been used.
+        """
+        from polytope_feature.polytope import Request
+        from polytope_feature.shapes import Box, Select
+
+        interpolator = _identity_interpolator(monkeypatch)
+        datacube = _make_fake_input_datacube(resolution=4, steps=(0,))
+        original_mapper = datacube.grid_transformation
+        p = _make_interpolated_polytope(datacube, interpolator)
+
+        p.retrieve(Request(Select("step", [0]), Box(["latitude", "longitude"], [70, 0], [90, 90])))
+        assert datacube.grid_transformation is original_mapper
+        for axis_name in ("latitude", "longitude"):
+            assert original_mapper in datacube._axes[axis_name].transformations
+
+        datacube.interpolator = None
+        tree = p.slice(
+            datacube, Request(Select("step", [0]), Box(["latitude", "longitude"], [70, 0], [90, 90])).polytopes()
+        )
+        assert len(tree.leaves) > 0

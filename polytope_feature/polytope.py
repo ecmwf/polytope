@@ -259,10 +259,6 @@ class Polytope:
     def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
         logging.info("Starting request for %s ", self.context)
-        if self.datacube.interpolator is not None:
-            from .datacube.interpolated_retrieval import retrieve_interpolated
-
-            return retrieve_interpolated(self, request)
         self.datacube.check_branching_axes(request)
         self.switch_polytope_dim(request)
         self.datacube.nearest_search = {}
@@ -274,6 +270,20 @@ class Polytope:
                 points, _, tags = self.datacube.nearest_search.setdefault(tuple(polytope.axes()), ([], polytope.k, []))
                 points.extend(list(pt) for pt in query_points)
                 tags.extend([polytope.tag] * len(query_points))
+
+        if self.datacube.interpolator is not None:
+            from .datacube.interpolated_retrieval import (
+                finish_interpolation,
+                slice_with_interpolation,
+            )
+
+            request_tree, attachments = slice_with_interpolation(self, self.datacube, request.polytopes())
+            logging.info("Created request tree for %s ", self.context)
+            self.datacube.get(request_tree, self.context)
+            logging.info("Retrieved data for %s ", self.context)
+            finish_interpolation(self.datacube, attachments, self.datacube.interpolator)
+            return request_tree
+
         request_tree = self.slice(self.datacube, request.polytopes())
         logging.info("Created request tree for %s ", self.context)
         self.datacube.get(request_tree, self.context)

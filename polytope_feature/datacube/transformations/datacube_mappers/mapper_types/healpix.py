@@ -158,6 +158,20 @@ class HealpixGridMapper(DatacubeMapper):
             return_idxs.append(healpix_index)
         return return_idxs
 
+    def point_count(self):
+        return 12 * self._resolution * self._resolution
+
+    def ring_size(self, ring_idx):
+        return self.HEALPix_nj(ring_idx)
+
+    def ring_lon_start(self, ring_idx):
+        nj = self.HEALPix_nj(ring_idx)
+        step = 360.0 / nj
+        resolution = self._resolution
+        if ring_idx < resolution or 3 * resolution - 1 < ring_idx or (ring_idx + resolution) % 2:
+            return step / 2.0
+        return 0.0
+
 
 # md5 grid hash in form {resolution : hash}
 _md5_hash = {}

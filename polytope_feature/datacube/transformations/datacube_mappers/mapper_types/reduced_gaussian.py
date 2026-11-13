@@ -1457,6 +1457,15 @@ class ReducedGaussianGridMapper(DatacubeMapper):
             return_idxs.append(reduced_gaussian_index)
         return return_idxs
 
+    def point_count(self):
+        return sum(self.lon_spacing())
+
+    def ring_size(self, ring_idx):
+        return self.lon_spacing()[ring_idx]
+
+    def ring_lon_start(self, ring_idx):
+        return 0.0
+
 
 # md5 grid hash in form {resolution : hash}
 _md5_hash = {
