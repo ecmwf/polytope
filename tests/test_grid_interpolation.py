@@ -93,13 +93,26 @@ def test_mapper_config_to_grid_spec():
     from polytope_feature.datacube.interpolation import mapper_config_to_grid_spec
 
     class FakeMapperConfig:
-        def __init__(self, type_, resolution):
+        def __init__(self, type_, resolution=None, uuid=None, points=None):
             self.type = type_
             self.resolution = resolution
+            self.uuid = uuid
+            self.points = points
 
     assert mapper_config_to_grid_spec(FakeMapperConfig("octahedral", 1280)) == "O1280"
     assert mapper_config_to_grid_spec(FakeMapperConfig("regular", [0.1, 0.1])) == {"grid": [0.1, 0.1]}
     assert mapper_config_to_grid_spec(FakeMapperConfig("healpix", 1024)) == "H1024_nested"
+
+
+def test_mapper_config_to_grid_spec_icon_uses_uuid():
+    from polytope_feature.datacube.interpolation import mapper_config_to_grid_spec
+
+    assert mapper_config_to_grid_spec({"type": "icon", "uuid": "0123-abcd"}) == "0123-abcd"
+
+    import pytest
+
+    with pytest.raises(ValueError):
+        mapper_config_to_grid_spec({"type": "icon"})
 
 
 def test_group_rows():
