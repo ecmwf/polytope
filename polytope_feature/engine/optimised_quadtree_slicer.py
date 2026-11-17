@@ -6,6 +6,7 @@ from copy import copy
 from ..datacube.transformations.datacube_cyclic.datacube_cyclic import (
     DatacubeAxisCyclic,
 )
+from ._quadtree_axes import canonical_polytope, reorder_points
 from .engine import Engine
 
 use_rust = False
@@ -33,13 +34,16 @@ class OptimisedQuadTreeSlicer(Engine):
         # self.quad_tree = quad_tree
 
     def find_points_in_bbox(self, polytope):
-        x_min, x_max = polytope.extents(polytope.axes()[0])[:2]
-        y_min, y_max = polytope.extents(polytope.axes()[1])[:2]
+        # self.points (from find_point_cloud) is always ordered (latitude, longitude), so we
+        # must look the bounds up by name rather than by the shape's own declared axis order
+        # (polytope.axes() / polytope.points may list longitude before latitude).
+        lat_min, lat_max = polytope.extents("latitude")[:2]
+        lon_min, lon_max = polytope.extents("longitude")[:2]
 
         filtered = [
             (i, point)
             for i, point in enumerate(self.points)
-            if x_min <= point[0] <= x_max and y_min <= point[1] <= y_max
+            if lat_min <= point[0] <= lat_max and lon_min <= point[1] <= lon_max
         ]
 
         self.bbox_indexes, self.bbox_points = zip(*filtered) if filtered else ([], [])
@@ -54,10 +58,9 @@ class OptimisedQuadTreeSlicer(Engine):
         self.build_local_quadtree(polytope)
         # extract a single polygon
         if use_rust:
-            polytope_points = [tuple(point) for point in polytope.points]
-            polygon_points = self.quad_tree.query_polygon(0, polytope_points)
+            polygon_points = self.quad_tree.query_polygon(0, reorder_points(polytope))
         else:
-            polygon_points = self.quad_tree.query_polygon(polytope)
+            polygon_points = self.quad_tree.query_polygon(canonical_polytope(polytope))
 
         # for point in polygon_points:
         #     assert self.bbox_points[point] in self.bbox_points
@@ -100,7 +103,11 @@ class OptimisedQuadTreeSlicer(Engine):
 
         if len(seen) == 0:
             node.remove_branch()
-        lat_ax = ax
+        # self.bbox_points (and therefore lat_val/lon_val above) are always in canonical
+        # (latitude, longitude) order, so the tree must branch on the real latitude axis here
+        # - not on `ax`, which may actually be the longitude axis depending on the datacube's
+        # internal axis registration order.
+        lat_ax = datacube._axes["latitude"]
         for actual_index, (lat_val, lon_val) in seen.items():
             exists, child, _ = node.create_child(lat_ax, lat_val, [])
             exists, grand_child, _ = child.create_child(lon_ax, lon_val, [])
