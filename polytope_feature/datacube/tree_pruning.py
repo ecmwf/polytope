@@ -83,22 +83,22 @@ def _copy_subtree(node):
     return new
 
 
-def _check_select(select, latitude_axis):
+def _check_select(select):
     select = dict(select or {})
     for name in select:
-        if name in (latitude_axis, "longitude"):
+        if name in ("latitude", "longitude"):
             raise ValueError(f"Cannot select on spatial axis {name!r}")
     return select
 
 
-def _walk(root, select, latitude_axis):
+def _walk(root, select):
     """Depth-first copy of the branches matching ``select``; spatial sub-trees are copied whole."""
     matched: dict = {}
 
     def visit(src, dst):
         kept_any = False
         for child in src.children:
-            if isinstance(child, MergedTensorIndexNode) or child.axis.name == latitude_axis:
+            if isinstance(child, MergedTensorIndexNode) or child.axis.name == "latitude":
                 dst.add_child(_copy_subtree(child))
                 kept_any = True
                 continue
@@ -139,9 +139,9 @@ def _walk(root, select, latitude_axis):
     return new_root
 
 
-def prune(tree, select=None, latitude_axis="latitude") -> TensorIndexTree:
+def prune(tree, select=None) -> TensorIndexTree:
     if not tree.is_root():
         raise ValueError("prune() must be called on the root of a tree")
-    pruned = _walk(tree, _check_select(select, latitude_axis), latitude_axis)
+    pruned = _walk(tree, _check_select(select))
     assert pruned is not None
     return pruned

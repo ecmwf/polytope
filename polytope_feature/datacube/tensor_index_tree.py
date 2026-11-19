@@ -498,7 +498,7 @@ class TensorIndexTree(object):
         """Add several values at once and store them as a sorted float64 array (used for longitude leaves)."""
         self.values = merge_sorted(self.values, values)
 
-    def prune(self, select=None, latitude_axis="latitude") -> "TensorIndexTree":
+    def prune(self, select=None) -> "TensorIndexTree":
         """Return an independent copy of this (root) tree restricted to the selected field groups.
 
         :param select: ``{axis_name: value}`` or ``{axis_name: [value, ...]}``; on every node of each named
@@ -518,7 +518,7 @@ class TensorIndexTree(object):
         """
         from .tree_pruning import prune
 
-        return prune(self, select, latitude_axis)
+        return prune(self, select)
 
     def create_merged_child(self, axes, values, next_nodes):
         node = MergedTensorIndexNode(axes, values)
