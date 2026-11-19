@@ -49,13 +49,6 @@ def values_hash_key(values):
     return values
 
 
-def take(values, positions):
-    """Select ``positions`` from ``values``, preserving the container type."""
-    if is_array(values):
-        return values[np.asarray(positions, dtype=np.intp)]
-    return tuple(values[k] for k in positions)
-
-
 def remove_value(values, value):
     """Drop every element equal to ``value``, preserving the container type."""
     if is_array(values):
@@ -67,10 +60,3 @@ def merge_sorted(values, new_values):
     """Return ``values`` extended with ``new_values`` and sorted, as a float64 array."""
     combined = np.concatenate([np.asarray(values, dtype=np.float64), np.asarray(new_values, dtype=np.float64)])
     return np.sort(combined, kind="stable")
-
-
-def result_as_array(result):
-    """Return a leaf ``result`` as a float64 array, with missing (``None``) values as NaN."""
-    if is_array(result) and result.dtype != object:
-        return result.astype(np.float64, copy=False)
-    return np.array([np.nan if v is None else v for v in result], dtype=np.float64)

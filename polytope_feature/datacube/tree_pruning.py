@@ -73,20 +73,10 @@ def _copy_node(node, values=None):
     return new
 
 
-def _copy_merged(node):
-    new = MergedTensorIndexNode(node.axes, node.values)
-    new.indexes = list(node.indexes)
-    new.hidden = node.hidden
-    new.tags = set(node.tags)
-    return new
-
-
 def _copy_subtree(node):
     if isinstance(node, BulkMergedTensorIndexNode):
         # share the node's arrays: a bulk node holds the whole spatial selection
         return node.copy_shared()
-    if isinstance(node, MergedTensorIndexNode):
-        return _copy_merged(node)
     new = _copy_node(node)
     for child in node.children:
         new.add_child(_copy_subtree(child))

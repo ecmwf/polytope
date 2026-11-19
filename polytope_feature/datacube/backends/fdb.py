@@ -302,7 +302,6 @@ class FDBDatacube(Datacube):
         # never carry unmapping state over from a previous get
         self.unwanted_path = {}
         self.prototype_metrics = {}
-        self.prototype_metrics = {}
         fdb_requests = []
         fdb_requests_decoding_info = []
         planning_start = time.perf_counter()

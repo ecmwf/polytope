@@ -10,7 +10,6 @@ from .tree_values import (
     is_array,
     merge_sorted,
     remove_value,
-    result_as_array,
     values_hash_key,
     values_identical,
     values_lt,
@@ -126,10 +125,6 @@ class MergedTensorIndexNode(object):
             self._parent = None
             if len(old_parent.children) == 0:
                 old_parent.remove_branch()
-
-    def result_array(self):
-        """This node's ``result`` as a float64 array, with missing values (``None``) as NaN."""
-        return result_as_array(self.result)
 
     def is_root(self):
         return self.parent is None
@@ -502,10 +497,6 @@ class TensorIndexTree(object):
     def add_values(self, values):
         """Add several values at once and store them as a sorted float64 array (used for longitude leaves)."""
         self.values = merge_sorted(self.values, values)
-
-    def result_array(self):
-        """This leaf's ``result`` as a float64 array, with missing values (``None``) as NaN."""
-        return result_as_array(self.result)
 
     def prune(self, select=None, latitude_axis="latitude") -> "TensorIndexTree":
         """Return an independent copy of this (root) tree restricted to the selected field groups.
