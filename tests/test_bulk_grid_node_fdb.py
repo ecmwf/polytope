@@ -8,7 +8,7 @@ from polytope_feature.polytope import Polytope, Request
 from polytope_feature.shapes import Box, Select
 
 
-class TestBulkGridLeaves:
+class TestBulkGridNode:
     def setup_method(self, method):
         self.options = {
             "axis_config": [
