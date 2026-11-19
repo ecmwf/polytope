@@ -77,7 +77,7 @@ _KNOWN_TRANSFORMATIONS = (DatacubeMapper, DatacubeAxisCyclic, DatacubeAxisRevers
 
 def _structured_mapper(datacube):
     mapper = getattr(datacube, "grid_transformation", None)
-    if mapper is None or getattr(mapper, "is_irregular", True):
+    if mapper is None or mapper.is_irregular:
         return None
     return mapper
 
@@ -120,7 +120,7 @@ def _compute_batched_axes(datacube, api):
         return None
     # A grid whose rows run from north to south is read through the reverse transformation; one without it
     # would be searched by the ascending formula and find nothing.
-    if (rows[0] > rows[-1]) != bool(getattr(lat_ax, "reorder", False)):
+    if (rows[0] > rows[-1]) != bool(lat_ax.reorder):
         return None
     return names
 
@@ -491,11 +491,11 @@ def build_grid_node(node, polytopes, datacube, api):
     tags = [polytope.tag for polytope in polytopes]
 
     engine = api.find_engine(lat_ax)
-    cached = getattr(engine, "_nearest_points", None)
+    cached = engine._nearest_points
     key = tuple(id(polytope) for polytope in polytopes)
     if cached is None or cached[0] != key:
         logging.debug("Resolving %d nearest points on the %s grid", len(polytopes), datacube.grid_md5_hash)
-        points = resolve(datacube, lat_ax, lon_ax, queries, keep_value_order=getattr(api, "merge_leaf_rows", False))
+        points = resolve(datacube, lat_ax, lon_ax, queries, keep_value_order=api.merge_leaf_rows)
         cached = (key, points, points.point_tags(tags))
         engine._nearest_points = cached
     _, points, point_tags = cached

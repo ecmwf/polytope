@@ -119,7 +119,7 @@ class HullSlicer(Engine):
         Values on this axis are neither cached per value nor per grid line: those caches would hold every point of
         the request as Python objects, several times the size of the tree itself.
         """
-        return ax.name == getattr(api, "leaf_axis_name", None) and isinstance(ax, FloatDatacubeAxis)
+        return ax.name == api.leaf_axis_name and isinstance(ax, FloatDatacubeAxis)
 
     def _build_sliceable_child(self, polytope, ax, node, datacube, values, next_nodes, slice_axis_idx, api):
         # Leaves on the last (longitude) float axis store their values as a float64 numpy array, filled in one go
