@@ -173,8 +173,6 @@ def measure(name):
     gribjump = make_fake_gribjump(grid)
 
     api = Polytope(datacube=gribjump, options=options)
-    # polytope-mars keeps one longitude leaf per latitude node for polygons
-    api._merge_union_rows = True
     datacube = api.datacube
     datacube.check_branching_axes(request)
     api.switch_polytope_dim(request)

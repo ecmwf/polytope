@@ -63,8 +63,6 @@ def measure(grid, n, batched, seed=11):
 
     options, request = build_request(grid, ("points", query_points(n, seed)))
     api = Polytope(datacube=make_fake_gribjump(grid), options=options)
-    # polytope-mars keeps one longitude leaf per latitude node where it can
-    api._merge_union_rows = True
     datacube = api.datacube
     if not batched:
         # the per-query path: with no axes to batch, Points stay 1-D per axis and the nearest search runs

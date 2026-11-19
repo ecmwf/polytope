@@ -33,9 +33,8 @@ SELECTS = [
 ]
 
 
-def retrieve(shape, merge_rows=False):
+def retrieve(shape):
     api = Polytope(datacube=GribJump({}), options=copy.deepcopy(HEALPIX_OPTIONS))
-    api._merge_union_rows = merge_rows
     return api.retrieve(Request(*SELECTS, shape))
 
 
@@ -121,14 +120,14 @@ def tagged_polygons():
 
 def test_merged_rows_carry_the_tag_of_each_piece():
     per_point = tags_by_point(retrieve(tagged_polygons()))
-    rows = tags_by_point(retrieve(tagged_polygons(), merge_rows=True))
+    rows = tags_by_point(retrieve(tagged_polygons()))
     assert rows == per_point
     assert {"a"} in rows.values() and {"b"} in rows.values()
 
 
 def test_merged_rows_of_one_tag_keep_node_tags():
     shape = Union(["latitude", "longitude"], Polygon(["latitude", "longitude"], SMALL, tag="only"))
-    tree = retrieve(shape, merge_rows=True)
+    tree = retrieve(shape)
     for leaf in tree.leaves:
         assert leaf.tag_ids is None
         assert leaf.tags == {"only"}

@@ -175,7 +175,7 @@ class FDBDatacube(Datacube):
         points (e.g. a box that overlaps itself across the longitude seam), reordering each longitude leaf's
         ``values`` by grid index (HEALPix nested and other grids number points differently from slice order) and
         folding each spatial sub-tree into one array-backed node.  ``gribjump.extract`` is not called and every
-        ``result`` is left untouched.  The merged polygon rows of ``Polytope._merge_union_rows`` keep their
+        ``result`` is left untouched.  The merged polygon rows (``tree_rows.RowMerger``) keep their
         ascending values: ``get`` returns their results in that order, as it did for the per-point leaves of a
         polygon.
 

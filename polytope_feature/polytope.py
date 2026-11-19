@@ -203,10 +203,6 @@ class Polytope:
             row_merger.finalise(request)
         return request
 
-    # Off by default: the legacy CovJSON step encoder (covjsonkit ``walk_tree_step``, used for climate-dt polygons)
-    # reads one point per leaf.  Set to True on an instance (or the class) to get one leaf per row for polygons/paths.
-    _merge_union_rows = False
-
     def _compress_union_rows(self, datacube, polytopes):
         """Apply ``remove_compressed_axis_in_union`` unless the union's rows can be merged instead.
 
@@ -218,7 +214,7 @@ class Polytope:
         before = list(self.compressed_axes)
         self.remove_compressed_axis_in_union(polytopes)
         leaf = self.leaf_axis_name
-        if not self._merge_union_rows or leaf not in before or leaf in self.compressed_axes:
+        if leaf not in before or leaf in self.compressed_axes:
             return False
         if self.engine_options.get(leaf) != "hullslicer":
             return False

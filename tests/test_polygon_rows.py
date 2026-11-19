@@ -90,11 +90,26 @@ CASES = {
 }
 
 
+def slice_one_node_per_point(api):
+    """Make ``api`` slice a union with its leaf axis uncompressed: one tree node per point, no row merging.
+
+    ``Polytope`` always merges a union's rows into one array leaf per latitude node; the tree it would build
+    without merging is the reference the merged rows are compared with.
+    """
+
+    def without_row_merging(datacube, polytopes):
+        api.remove_compressed_axis_in_union(polytopes)
+        return False
+
+    api._compress_union_rows = without_row_merging
+
+
 def slice_polygon(case, merge_rows, missing=None, shapes=None):
     options, axes, make_request, points, select_axes = CASES[case]
     gj = GribJump(axes or {}, missing=missing)
     api = Polytope(datacube=gj, options=options)
-    api._merge_union_rows = merge_rows
+    if not merge_rows:
+        slice_one_node_per_point(api)
     datacube = api.datacube
     assert isinstance(datacube, FDBDatacube)
     request = make_request(*(shapes or [polygon(points)]))

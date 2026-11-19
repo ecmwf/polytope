@@ -47,9 +47,9 @@ Reproduce with:
     python performance/tree_memory.py --get healpix1024_europe_polygon efas_danube_polygon              # merged rows
     python performance/tree_memory.py --get --per-point healpix1024_europe_polygon efas_danube_polygon  # per point
 
-"per point" is this branch with `Polytope._merge_union_rows = False` (the default, and what `develop` builds): the
+"per point" is the tree a union gives without its rows merged (what `develop` builds, and `--per-point`): the
 longitude axis is not compressed for unions, so every point is a tree node. "rows" is
-`_merge_union_rows = True`: one float64 leaf per latitude node. Both trees hold the same points in the same order.
+one float64 leaf per latitude node, which is how `Polytope` slices every union. Both trees hold the same points in the same order.
 
 - Europe: polytope-mars `tools/measure_memory.py` `EUROPE_POLYGON` (7 vertices, 35-71N, 15W-40E) on HEALPix
   nested 1024, cyclic longitude range [0, 360]. 321,936 points in 753 latitude nodes.
@@ -154,7 +154,7 @@ HEALPix 1024 Europe box with 4 compressed fields (753 leaves, 1,429,636 values) 
 
 # One bulk spatial node per field: whole-field ranges instead of per-row ranges
 
-One field, sliced as polytope-mars builds its features (`_merge_union_rows = True`), then `prepare` and `get`
+One field, sliced with the union rows merged, then `prepare` and `get`
 against polytope-mars' fake gribjump, with `bulk_grid_leaves` off and on (the `off` rows were measured while
 the option could still be turned off; `spatial_node_memory.py` now measures the one path that is left).  Each row is a fresh subprocess; peak
 is `resource.getrusage(RUSAGE_SELF).ru_maxrss` of that process.  Reproduce the `on` rows with:

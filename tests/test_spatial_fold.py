@@ -9,6 +9,7 @@ CovJSON bytes depend on.
 import numpy as np
 import pytest
 from fake_gribjump import GribJump, index_of
+from test_polygon_rows import slice_one_node_per_point
 from test_pruned_get import (
     CASES,
     HEALPIX_OPTIONS,
@@ -30,10 +31,11 @@ from polytope_feature.shapes import Polygon, Select, Union
 EUROPE_POLYGON = [[35, -10], [35, 30], [45, 40], [60, 40], [71, 30], [71, -10], [60, -15], [35, -10]]
 
 
-def slice_tree(options, axes, request, merge_rows=False, missing=None, nan_indices=None):
+def slice_tree(options, axes, request, per_point=False, missing=None, nan_indices=None):
     gj = GribJump(axes or {}, missing=missing, nan_indices=nan_indices)
     api = Polytope(datacube=gj, options=options)
-    api._merge_union_rows = merge_rows
+    if per_point:
+        slice_one_node_per_point(api)
     api.datacube.check_branching_axes(request)
     api.switch_polytope_dim(request)
     api.datacube.nearest_search = {}
@@ -115,13 +117,13 @@ def test_folded_values_decode_to_their_grid_index(case):
             assert [index_of(v) for v in values] == leaf.indexes.tolist()
 
 
-@pytest.mark.parametrize("merge_rows", [False, True], ids=["per-point", "merged-rows"])
-def test_a_polygon_folds_to_its_sliced_points(merge_rows):
+@pytest.mark.parametrize("per_point", [True, False], ids=["per-point", "merged-rows"])
+def test_a_polygon_folds_to_its_sliced_points(per_point):
     """A polygon sliced into one leaf per point, or one array leaf per row, folds to the same points."""
     request = healpix_polygon_request(EUROPE_POLYGON)
-    datacube, sliced = slice_tree(HEALPIX_OPTIONS, None, request, merge_rows=merge_rows)
-    expected = expected_points(datacube, sliced) if merge_rows else None
-    _, tree, folded = filled_records(HEALPIX_OPTIONS, None, request, merge_rows=merge_rows)
+    datacube, sliced = slice_tree(HEALPIX_OPTIONS, None, request, per_point=per_point)
+    expected = None if per_point else expected_points(datacube, sliced)
+    _, tree, folded = filled_records(HEALPIX_OPTIONS, None, request, per_point=per_point)
     assert [leaf.point_count for leaf in tree.leaves] == [5017] * 4  # 2 params x 2 realizations
     mapper = datacube.grid_transformation
     for points in folded.values():

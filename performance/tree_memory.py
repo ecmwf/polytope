@@ -196,8 +196,13 @@ def measure(mapper, cyclic_range, shape_spec, per_point=False, with_get=False, n
     }
     gj = GribJump(axes)
     api = Polytope(datacube=gj, options=options)
-    if hasattr(api, "_merge_union_rows"):
-        api._merge_union_rows = not per_point
+    if per_point:
+        # the tree a union gives without its rows merged: the leaf axis uncompressed, one node per point
+        def without_row_merging(datacube, polytopes):
+            api.remove_compressed_axis_in_union(polytopes)
+            return False
+
+        api._compress_union_rows = without_row_merging
     request = Request(
         Select("step", [6 * i for i in range(n_fields)]),
         Select("levtype", ["sfc"]),
