@@ -88,7 +88,8 @@ class TestSlicing4DXarrayDatacube:
             Select("level", [10]),
         )
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 24
+        # one lat leaf per step: the union's pieces are merged row by row (10 points)
+        assert len(result.leaves) == 7
 
     def test_circles_touching_float(self):
         disk1 = Disk(["step", "lat"], [6, 4.0], [3, 1.9])
@@ -99,7 +100,8 @@ class TestSlicing4DXarrayDatacube:
             Select("level", [10]),
         )
         result = self.API.retrieve(request)
-        assert len(result.leaves) == 101
+        # one lat leaf per step: the union's pieces are merged row by row (60 points)
+        assert len(result.leaves) == 6
 
     def test_pathsegment_swept_2D_box(self):
         box1 = Box(["step", "level"], [3, 0], [6, 1])
