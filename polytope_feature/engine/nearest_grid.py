@@ -106,7 +106,7 @@ def _compute_batched_axes(datacube, api):
     if axes is None or any(name not in axes for name in names):
         return None
     lat_ax, lon_ax = (axes[name] for name in names)
-    if api is not None and any(api.engine_options.get(name) != "hullslicer" for name in names):
+    if any(api.engine_options.get(name) != "hullslicer" for name in names):
         return None
     if any(name in datacube.complete_axes for name in names):
         # the bracket formulas below are those of a mapped (fake) axis, not of a pandas index
@@ -125,7 +125,7 @@ def _compute_batched_axes(datacube, api):
     return names
 
 
-def batched_axes(datacube, api=None):
+def batched_axes(datacube, api):
     """The ``(first, second)`` axis names whose nearest queries this module resolves, or None.
 
     None for a datacube without a structured grid mapper (a point cloud), for a backend that has no nearest
@@ -133,15 +133,13 @@ def batched_axes(datacube, api=None):
     effect on the sliced values is not reproduced here; the caller then keeps the per-query path.
 
     Answered once per datacube: ``Polytope.slice`` asks per polytope, and the answer depends on the datacube
-    and on which engine slices its spatial axes, not on the request.  Only an answer that could see the
-    engines (``api``) is cached.
+    and on which engine slices its spatial axes, not on the request.
     """
     cached = getattr(datacube, "_nearest_grid_axes", None)
     if cached is not None:
         return cached[0]
     names = _compute_batched_axes(datacube, api)
-    if api is not None:
-        datacube._nearest_grid_axes = (names,)
+    datacube._nearest_grid_axes = (names,)
     return names
 
 
@@ -149,12 +147,12 @@ def _is_nearest_query(method, k, axes, names):
     return method == "nearest" and k == 1 and names is not None and len(axes) == 2 and set(axes) == set(names)
 
 
-def batches_polytope(polytope, datacube, api=None):
+def batches_polytope(polytope, datacube, api):
     """Whether ``polytope`` is a nearest query this module resolves instead of the slicer."""
     return _is_nearest_query(polytope.method, polytope.k, polytope.axes(), batched_axes(datacube, api))
 
 
-def batches_point(shape, datacube, api=None):
+def batches_point(shape, datacube, api):
     """Whether a ``Point`` shape's values are nearest queries this module resolves.
 
     Such a point must stay two-dimensional (``decompose_1D = False``) so that each of its values reaches the

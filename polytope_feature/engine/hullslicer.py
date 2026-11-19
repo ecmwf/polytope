@@ -18,7 +18,7 @@ class HullSlicer(Engine):
         self._nearest_points = None
         self.batched = ()
 
-    def batches_polytope(self, polytope, datacube, api=None):
+    def batches_polytope(self, polytope, datacube, api):
         """Nearest ``Point`` queries on the two axes of a structured grid are resolved all at once.
 
         Everything else keeps one tree descent per polytope.  See

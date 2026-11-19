@@ -21,7 +21,7 @@ class Engine:
     #: an engine only reads it from the ``_build_branch`` call it was set for.
     batched = ()
 
-    def batches_polytope(self, polytope, datacube, api=None):
+    def batches_polytope(self, polytope, datacube, api):
         """Whether this engine resolves ``polytope`` in a batch rather than one tree descent per polytope.
 
         Per polytope, because an engine can batch some of the polytopes on its axes and not others: the
