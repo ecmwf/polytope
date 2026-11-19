@@ -5,6 +5,7 @@ import numpy as np
 from ..datacube.transformations.datacube_cyclic.datacube_cyclic import (
     DatacubeAxisCyclic,
 )
+from ._quadtree_axes import canonical_polytope, reorder_points
 from .engine import Engine
 
 use_rust = False
@@ -37,8 +38,9 @@ class QuadTreeSlicer(Engine):
     batches_polytopes = True
 
     def _query_points(self, polytope):
-        revert_axes = list(polytope.axes()) != ["latitude", "longitude"]
-        return [tuple(reversed(pt)) if revert_axes else tuple(pt) for pt in polytope.points]
+        """Return this polytope's points as plain (lat, lon) tuples, regardless of the axis
+        order the shape was originally declared with (see shapes.py)."""
+        return reorder_points(polytope)
 
     def extract_single(self, datacube, polytope):
         """Return the point-cloud indexes selected by one polytope."""
@@ -57,9 +59,7 @@ class QuadTreeSlicer(Engine):
             return idxs
         if use_rust:
             return self.quad_tree.query_polygon(0, self._query_points(polytope))
-        if list(axes) != ["latitude", "longitude"]:
-            polytope.points = self._query_points(polytope)
-        return [node.index for node in self.quad_tree.query_polygon(polytope)]
+        return [node.index for node in self.quad_tree.query_polygon(canonical_polytope(polytope))]
 
     def _python_knn(self, query, k):
         dists = np.sum((self.points_array - np.asarray(query)) ** 2, axis=1)
@@ -101,5 +101,11 @@ class QuadTreeSlicer(Engine):
         # canonical backend index needed for range planning.
         order = np.lexsort((coordinates[:, 1], coordinates[:, 0]))
         tags = [point_tags[int(i)] for i in indexes[order]]
+        # `coordinates` columns are always in canonical (latitude, longitude) order (it comes
+        # from self.points_array), so the child axis list must follow that same order too,
+        # regardless of whether `ax` (the axis that triggered this branch) is latitude or
+        # longitude - the datacube's internal axis registration order is not guaranteed to
+        # put latitude first.
+        lat_ax = datacube._axes["latitude"]
         lon_ax = datacube._axes["longitude"]
-        node.create_bulk_merged_child([ax, lon_ax], coordinates[order], indexes[order], [], point_tags=tags)
+        node.create_bulk_merged_child([lat_ax, lon_ax], coordinates[order], indexes[order], [], point_tags=tags)
