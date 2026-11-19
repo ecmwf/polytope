@@ -19,19 +19,14 @@ from .datacube import Datacube, TensorIndexTree
 def field_values_flat(result):
     """One field's values as a contiguous float64 array, or ``None`` when gribjump had no data for the field.
 
-    Prefers pygribjump's ``values_flat`` (a view over the whole result, so no per-range objects are created) and
-    falls back to concatenating ``values`` for result objects that do not have it.  On a HEALPix nested grid a
-    bounding box asks for roughly one index range per 1.6 points, where the per-range ``values`` list costs a
-    numpy object plus a list slot per range and the flat buffer costs eight bytes per value.  Bitmap-missing
+    Reads pygribjump's ``values_flat``, a view over the whole result, so no per-range objects are created.  On
+    a HEALPix nested grid a bounding box asks for roughly one index range per 1.6 points, where the per-range
+    ``values`` list costs a numpy object plus a list slot per range and the flat buffer costs eight bytes per
+    value.  Bitmap-missing
     points are NaN in the buffer gribjump fills, exactly as they are in the per-range ``values`` views, which
     are slices of the same buffer; ``masks_flat`` is therefore not needed to reproduce them.
     """
-    flat = getattr(result, "values_flat", None)
-    if flat is None:
-        chunks = result.values
-        if len(chunks) == 0:
-            return None
-        flat = np.concatenate([np.asarray(c, dtype=np.float64) for c in chunks])
+    flat = result.values_flat
     if flat.size == 0:
         # a MARS path with no GRIB message behind it: gribjump returns an empty result for the whole field
         return None
