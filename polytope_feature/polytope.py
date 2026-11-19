@@ -157,17 +157,25 @@ class Polytope:
         batching = {}
 
         def batches(polytope):
-            """Whether an engine resolves this polytope together with the others on its axes.
+            """Whether one engine resolves this polytope together with the others on its axes.
+
+            Both conditions matter.  All of the polytope's axes must be served by the same engine, because
+            an axis served by another engine may be sliced before the batching engine's axes and needs the
+            polytope on the tree to slice it (a 3D Path over latitude, longitude and levelist, whose
+            latitude and longitude are on the quadtree slicer and whose levelist is on the hullslicer).
+            And that engine must batch this particular polytope: the hullslicer batches a nearest Point of
+            a structured grid and nothing else on the same two axes.
 
             Answered once per polytope: a request of N points asks it for the same handful of Selects N
             times over, once per combination.
             """
             answer = batching.get(id(polytope))
             if answer is None:
-                answer = batching[id(polytope)] = any(
-                    engine.batches_polytope(polytope, datacube, self)
-                    for engine in (engine_of_axis.get(name) for name in polytope.axes())
-                    if engine is not None
+                of_axes = {engine_of_axis.get(name) for name in polytope.axes()}
+                answer = batching[id(polytope)] = (
+                    len(of_axes) == 1
+                    and None not in of_axes
+                    and next(iter(of_axes)).batches_polytope(polytope, datacube, self)
                 )
             return answer
 
@@ -234,20 +242,24 @@ class Polytope:
     def _group_combinations(cls, combinations, batches_polytope):
         """Yield (shared_polytopes, batched_polytopes) per distinct tree prefix.
 
-        Polytopes whose axes all belong to a batching engine (see Engine.batches_polytopes)
-        are split off; combinations whose remaining polytopes are identical (eg. every Point
-        of a Union shares the same Selects) then only need their prefix built once.
-        Polytopes that also span other axes (eg. a 3D Path over latitude, longitude and
-        levelist) stay shared, because those other axes may be sliced before the batching
-        engine's axes and need them too.
+        A polytope is batched when ``batches_polytope`` says one engine resolves it together with the
+        others on its axes (a nearest Point of a structured grid, any polytope of the quadtree slicer),
+        and stays shared otherwise -- in particular when it spans an axis of another engine, which may be
+        sliced first and needs the polytope on the tree.  Combinations whose remaining polytopes are
+        identical (eg. every Point of a Union shares the same Selects) then only need their prefix built
+        once.  The batched polytopes keep the order of the request, which is the order the engine
+        resolving them reports its result in.
         """
         grouped = {}
         for c in combinations:
             shared, batched = [], {}
             for poly in cls._flatten_combination(c):
-                (batched if set(poly.axes()) <= batched_axes else shared).append(poly)
-            key = frozenset(shared) if batched_axes else object()
-            entry = grouped.setdefault(key, (shared, set()))
+                if batches_polytope(poly):
+                    batched[poly] = None
+                else:
+                    shared.append(poly)
+            key = frozenset(shared) if batched else object()
+            entry = grouped.setdefault(key, (shared, {}))
             entry[1].update(batched)
         return [(shared, list(batched)) for shared, batched in grouped.values()]
 
