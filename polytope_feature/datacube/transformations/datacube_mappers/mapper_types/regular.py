@@ -111,6 +111,15 @@ class RegularGridMapper(DatacubeMapper):
             self._second_axis_cache = np.asarray(self.second_axis_vals(None), dtype=np.float64)
         return self._second_axis_cache
 
+    def point_count(self):
+        return len(self._first_axis_vals) * 4 * self._resolution
+
+    def ring_size(self, ring_idx):
+        return 4 * self._resolution
+
+    def ring_lon_start(self, ring_idx):
+        return 0.0
+
 
 # md5 grid hash in form {resolution : hash}
 _md5_hash = {}

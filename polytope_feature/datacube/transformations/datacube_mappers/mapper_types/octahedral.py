@@ -7921,6 +7921,18 @@ class OctahedralGridMapper(DatacubeMapper):
                 return_idxs.append(octahedral_index)
             return return_idxs
 
+    def point_count(self):
+        return self._first_idx_map[len(self._first_axis_vals) - 1] + self.ring_size(len(self._first_axis_vals) - 1)
+
+    def ring_size(self, ring_idx):
+        """Number of points on ring `ring_idx` (0-indexed), without materializing its longitudes."""
+        lat = self._first_axis_vals[ring_idx]
+        spacing, _ = self.second_axis_spacing([lat])
+        return round(360.0 / spacing)
+
+    def ring_lon_start(self, ring_idx):
+        return 0.0
+
 
 # md5 grid hash in form {resolution : hash}
 _md5_hash = {

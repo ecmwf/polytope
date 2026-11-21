@@ -77,6 +77,24 @@ class GribJumpAxesConfig(ConfigModel):
     values: List[str] = [""]
 
 
+class InterpolationConfig(ConfigModel):
+    # Describes a regridding/interpolation step to apply to retrieved values,
+    # from an explicit input grid to a user-requested output grid.
+    # Both "in_grid" and "out_grid" are dicts of the form
+    # {"type": "octahedral", "resolution": 1280}, mirroring the datacube's own
+    # `MapperConfig` grid description, so Polytope's own grid-mapper classes
+    # can enumerate points for either grid (used to work out which input grid
+    # points are needed, and to report output grid lat/lon values).
+    # If "in_grid" is omitted, it defaults to the datacube's own native grid
+    # (as declared by its "mapper" transformation) - but an explicit value
+    # always takes precedence, so the input grid used for interpolation is
+    # never ambiguous.
+    method: str = "linear"
+    in_grid: Optional[Dict] = None
+    out_grid: Dict = {}
+    kwargs: Optional[Dict] = {}
+
+
 class Config(ConfigModel):
     axis_config: List[AxisConfig] = []
     compressed_axes_config: List[str] = [""]
@@ -85,6 +103,7 @@ class Config(ConfigModel):
     use_catalogue: Optional[bool] = False
     engine_options: Optional[Dict[str, str]] = {}
     bulk_grid_leaves: Optional[bool] = False
+    interpolation: Optional[InterpolationConfig] = None
 
 
 class PolytopeOptions(ABC):
@@ -101,6 +120,7 @@ class PolytopeOptions(ABC):
         use_catalogue = config_options.use_catalogue
         engine_options = config_options.engine_options
         bulk_grid_leaves = config_options.bulk_grid_leaves
+        interpolation = config_options.interpolation
 
         return (
             axis_config,
@@ -110,6 +130,7 @@ class PolytopeOptions(ABC):
             use_catalogue,
             engine_options,
             bulk_grid_leaves,
+            interpolation,
         )
 
 

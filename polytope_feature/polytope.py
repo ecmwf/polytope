@@ -3,6 +3,7 @@ from typing import List
 
 from .datacube.backends.datacube import Datacube
 from .datacube.datacube_axis import UnsliceableDatacubeAxis
+from .datacube.interpolation import GridInterpolator, mapper_config_to_grid_spec
 from .datacube.tensor_index_tree import TensorIndexTree
 from .engine.hullslicer import HullSlicer
 from .engine.optimised_point_in_polygon_slicer import OptimisedPointInPolygonSlicer
@@ -71,6 +72,7 @@ class Polytope:
             use_catalogue,
             engine_options,
             bulk_grid_leaves,
+            interpolation_options,
         ) = PolytopeOptions.get_polytope_options(options)
         self.datacube = Datacube.create(
             datacube,
@@ -82,12 +84,44 @@ class Polytope:
             self.context,
         )
         self.datacube.bulk_grid_leaves = bulk_grid_leaves
+        self.datacube.interpolator = self.create_interpolator(interpolation_options)
         if engine_options == {}:
             for ax_name in self.datacube._axes.keys():
                 engine_options[ax_name] = "hullslicer"
         self.engine_options = engine_options
         self.engines = self.create_engines()
         self.ax_is_unsliceable = {}
+
+    def create_interpolator(self, interpolation_options):
+        """Build a `GridInterpolator` from the "interpolation" Polytope option,
+        if one was provided. The input grid is always the one explicitly given
+        in `interpolation_options.in_grid`; if omitted, it falls back to the
+        datacube's own native grid mapper configuration.
+        """
+        if interpolation_options is None:
+            return None
+
+        if interpolation_options.in_grid is not None:
+            in_grid_desc = dict(interpolation_options.in_grid)
+        else:
+            if getattr(self.datacube, "grid_transformation", None) is None:
+                raise ValueError(
+                    "Interpolation was requested without an explicit 'in_grid' option, but the "
+                    "datacube has no grid mapper transformation to fall back on."
+                )
+            mapper_options = self.datacube.grid_transformation.mapper_options
+            in_grid_desc = {"type": mapper_options.type, "resolution": mapper_options.resolution}
+
+        out_grid_desc = dict(interpolation_options.out_grid)
+
+        return GridInterpolator(
+            in_grid=mapper_config_to_grid_spec(in_grid_desc),
+            out_grid=mapper_config_to_grid_spec(out_grid_desc),
+            method=interpolation_options.method,
+            kwargs=interpolation_options.kwargs,
+            in_grid_desc=in_grid_desc,
+            out_grid_desc=out_grid_desc,
+        )
 
     def create_engines(self):
         engines = {}
@@ -122,8 +156,13 @@ class Polytope:
         # Remove duplicate points
         unique(p.points)
 
-    def slice(self, datacube, polytopes: List[ConvexPolytope]):
-        """Low-level API which takes a polytope geometry object and uses it to slice the datacube"""
+    def slice(self, datacube, polytopes: List[ConvexPolytope], exclude_axes=frozenset()):
+        """Low-level API which takes a polytope geometry object and uses it to slice the datacube.
+
+        `exclude_axes` lets a caller skip slicing a subset of the datacube's own axes (eg. the grid
+        lat/lon axes, when interpolation handles them separately); those axes must still be covered
+        by `polytopes` as far as `datacube.validate()` is concerned, so they are injected manually.
+        """
 
         for engine in set(self.engines.values()):
             engine.reset()
@@ -141,10 +180,10 @@ class Polytope:
                 self._unique_continuous_points(p, datacube)
 
         groups, input_axes = group(polytopes)
-        datacube.validate(input_axes)
+        datacube.validate(list(input_axes) + list(exclude_axes))
         request = TensorIndexTree()
 
-        axes = list(datacube.axes.values())
+        axes = [ax for ax in datacube.axes.values() if ax.name not in exclude_axes]
         engines = [self.find_engine(ax) for ax in axes]
         batched_axes = {ax.name for ax, engine in zip(axes, engines) if engine.batches_polytopes}
 
@@ -231,6 +270,20 @@ class Polytope:
                 points, _, tags = self.datacube.nearest_search.setdefault(tuple(polytope.axes()), ([], polytope.k, []))
                 points.extend(list(pt) for pt in query_points)
                 tags.extend([polytope.tag] * len(query_points))
+
+        if self.datacube.interpolator is not None:
+            from .datacube.interpolated_retrieval import (
+                finish_interpolation,
+                slice_with_interpolation,
+            )
+
+            request_tree, attachments = slice_with_interpolation(self, self.datacube, request.polytopes())
+            logging.info("Created request tree for %s ", self.context)
+            self.datacube.get(request_tree, self.context)
+            logging.info("Retrieved data for %s ", self.context)
+            finish_interpolation(self.datacube, attachments, self.datacube.interpolator)
+            return request_tree
+
         request_tree = self.slice(self.datacube, request.polytopes())
         logging.info("Created request tree for %s ", self.context)
         self.datacube.get(request_tree, self.context)
