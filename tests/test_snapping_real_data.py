@@ -83,6 +83,6 @@ class TestSlicingEra5Data:
         # plt.show()
         assert len(longs) == 1
         for lon in longs:
-            assert lon == (0.0, 3.0, 357.0)
+            assert tuple(lon) == (0.0, 3.0, 357.0)
         for lat in lats:
             assert lat == (-3.0, 0.0, 3.0)

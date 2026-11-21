@@ -4,7 +4,9 @@ from typing import List
 from .datacube.backends.datacube import Datacube
 from .datacube.datacube_axis import UnsliceableDatacubeAxis
 from .datacube.tensor_index_tree import TensorIndexTree
+from .datacube.tree_rows import RowMerger
 from .engine.hullslicer import HullSlicer
+from .engine.nearest_grid import batches_point
 from .engine.optimised_point_in_polygon_slicer import OptimisedPointInPolygonSlicer
 from .engine.optimised_quadtree_slicer import OptimisedQuadTreeSlicer
 from .engine.point_in_polygon_slicer import PointInPolygonSlicer
@@ -70,7 +72,6 @@ class Polytope:
             alternative_axes,
             use_catalogue,
             engine_options,
-            bulk_grid_leaves,
         ) = PolytopeOptions.get_polytope_options(options)
         self.datacube = Datacube.create(
             datacube,
@@ -81,7 +82,6 @@ class Polytope:
             use_catalogue,
             self.context,
         )
-        self.datacube.bulk_grid_leaves = bulk_grid_leaves
         if engine_options == {}:
             for ax_name in self.datacube._axes.keys():
                 engine_options[ax_name] = "hullslicer"
@@ -129,8 +129,13 @@ class Polytope:
             engine.reset()
 
         self.find_compressed_axes(datacube, polytopes)
+        # the last datacube axis holds the tree leaves (e.g. longitude); the slicer stores those as numpy arrays
+        self.leaf_axis_name = next(reversed(datacube.axes.keys()))
 
-        self.remove_compressed_axis_in_union(polytopes)
+        merge_rows = self._compress_union_rows(datacube, polytopes)
+        # Leaves of merged union rows keep their values in ascending order instead of grid-index order
+        # (see tree_rows.RowMerger); the batched nearest search builds its node in the same order.
+        self.merge_leaf_rows = merge_rows
 
         # Convert the polytope points to float type to support triangulation and interpolation
         for p in polytopes:
@@ -143,28 +148,80 @@ class Polytope:
         groups, input_axes = group(polytopes)
         datacube.validate(input_axes)
         request = TensorIndexTree()
+        row_merger = RowMerger(self.leaf_axis_name) if merge_rows else None
 
         axes = list(datacube.axes.values())
         engines = [self.find_engine(ax) for ax in axes]
-        batched_axes = {ax.name for ax, engine in zip(axes, engines) if engine.batches_polytopes}
+        engine_of_axis = dict(zip(datacube.axes.keys(), engines))
 
-        for shared, batched in self._group_combinations(tensor_product(groups), batched_axes):
+        batching = {}
+
+        def batches(polytope):
+            """Whether one engine resolves this polytope together with the others on its axes.
+
+            Both conditions matter.  All of the polytope's axes must be served by the same engine, because
+            an axis served by another engine may be sliced before the batching engine's axes and needs the
+            polytope on the tree to slice it (a 3D Path over latitude, longitude and levelist, whose
+            latitude and longitude are on the quadtree slicer and whose levelist is on the hullslicer).
+            And that engine must batch this particular polytope: the hullslicer batches a nearest Point of
+            a structured grid and nothing else on the same two axes.
+
+            Answered once per polytope: a request of N points asks it for the same handful of Selects N
+            times over, once per combination.
+            """
+            answer = batching.get(id(polytope))
+            if answer is None:
+                of_axes = {engine_of_axis.get(name) for name in polytope.axes()}
+                answer = batching[id(polytope)] = (
+                    len(of_axes) == 1
+                    and None not in of_axes
+                    and next(iter(of_axes)).batches_polytope(polytope, datacube, self)
+                )
+            return answer
+
+        for shared, batched in self._group_combinations(tensor_product(groups), batches):
             r = TensorIndexTree()
             r["unsliced_polytopes"] = set(shared)
             current_nodes = [r]
             for ax, engine in zip(axes, engines):
-                if engine.batches_polytopes:
-                    # The prefix is shared by every grouped combination, so hand all of
-                    # their polytopes on this engine's axes to it at once.
+                # The prefix is shared by every grouped combination, so hand all of their polytopes on this
+                # axis to the engine at once, in request order (Engine.batched).
+                engine.batched = on_axis = [p for p in batched if ax.name in p.axes()]
+                if on_axis:
                     for node in current_nodes:
-                        node["unsliced_polytopes"] = node["unsliced_polytopes"] | batched
+                        node["unsliced_polytopes"] = node["unsliced_polytopes"] | set(on_axis)
                 next_nodes = []
                 for node in current_nodes:
                     engine._build_branch(ax, node, datacube, next_nodes, self)
                 current_nodes = next_nodes
 
-            request.merge(r)
+            if row_merger is None:
+                request.merge(r)
+            else:
+                row_merger.merge(request, r)
+        if row_merger is not None:
+            row_merger.finalise(request)
         return request
+
+    def _compress_union_rows(self, datacube, polytopes):
+        """Apply ``remove_compressed_axis_in_union`` unless the union's rows can be merged instead.
+
+        A union of non-orthogonal shapes (the convex pieces of a polygon, the segments of a path) otherwise leaves
+        the leaf axis uncompressed, i.e. one tree node per point.  When the leaf axis holds array leaves it stays
+        compressed and the pieces' leaves are merged row by row (see ``tree_rows.RowMerger``), which gives the
+        merged leaf per-point tags where its pieces are tagged differently.  Returns whether rows must be merged.
+        """
+        before = list(self.compressed_axes)
+        self.remove_compressed_axis_in_union(polytopes)
+        leaf = self.leaf_axis_name
+        if leaf not in before or leaf in self.compressed_axes:
+            return False
+        if self.engine_options.get(leaf) != "hullslicer":
+            return False
+        if not HullSlicer.is_array_leaf_axis(datacube.axes[leaf], self):
+            return False
+        self.compressed_axes = before
+        return True
 
     @staticmethod
     def _flatten_combination(combination):
@@ -178,25 +235,29 @@ class Polytope:
         return polys
 
     @classmethod
-    def _group_combinations(cls, combinations, batched_axes):
+    def _group_combinations(cls, combinations, batches_polytope):
         """Yield (shared_polytopes, batched_polytopes) per distinct tree prefix.
 
-        Polytopes whose axes all belong to a batching engine (see Engine.batches_polytopes)
-        are split off; combinations whose remaining polytopes are identical (eg. every Point
-        of a Union shares the same Selects) then only need their prefix built once.
-        Polytopes that also span other axes (eg. a 3D Path over latitude, longitude and
-        levelist) stay shared, because those other axes may be sliced before the batching
-        engine's axes and need them too.
+        A polytope is batched when ``batches_polytope`` says one engine resolves it together with the
+        others on its axes (a nearest Point of a structured grid, any polytope of the quadtree slicer),
+        and stays shared otherwise -- in particular when it spans an axis of another engine, which may be
+        sliced first and needs the polytope on the tree.  Combinations whose remaining polytopes are
+        identical (eg. every Point of a Union shares the same Selects) then only need their prefix built
+        once.  The batched polytopes keep the order of the request, which is the order the engine
+        resolving them reports its result in.
         """
         grouped = {}
         for c in combinations:
-            shared, batched = [], []
+            shared, batched = [], {}
             for poly in cls._flatten_combination(c):
-                (batched if set(poly.axes()) <= batched_axes else shared).append(poly)
-            key = frozenset(shared) if batched_axes else object()
-            entry = grouped.setdefault(key, (shared, set()))
+                if batches_polytope(poly):
+                    batched[poly] = None
+                else:
+                    shared.append(poly)
+            key = frozenset(shared) if batched else object()
+            entry = grouped.setdefault(key, (shared, {}))
             entry[1].update(batched)
-        return grouped.values()
+        return [(shared, list(batched)) for shared, batched in grouped.values()]
 
     def find_engine(self, ax):
         if ax.name not in self.engine_options:
@@ -205,17 +266,26 @@ class Polytope:
         return self.engines[slicer_type]
 
     def switch_polytope_dim(self, request):
-        # If we see a 2-dim slicer on an axis
-        # then make sure that if the shape is a point, we set decompose_1D to False
-        for ax, slicer in self.engine_options.items():
-            if slicer == "quadtree":
-                for shp in request.shapes:
-                    if ax in shp.axes() and isinstance(shp, Point):
-                        shp.decompose_1D = False
-                    elif isinstance(shp, Union):
-                        for s in shp._shapes:
-                            if ax in s.axes() and isinstance(s, Point):
-                                s.decompose_1D = False
+        """Keep a ``Point`` two-dimensional where the engine of its axes resolves both coordinates at once.
+
+        That is the quadtree slicer on any point, and the hullslicer on a nearest point of a structured
+        grid, which it resolves with every other nearest point of the request
+        (:mod:`polytope_feature.engine.nearest_grid`).  Otherwise a point is decomposed into one
+        1-D polytope per axis, which the engine then slices one axis at a time.
+        """
+        joint_axes = {ax for ax, slicer in self.engine_options.items() if slicer == "quadtree"}
+
+        def resolved_jointly(shape):
+            if not isinstance(shape, Point):
+                return False
+            if joint_axes.intersection(shape.axes()):
+                return True
+            return batches_point(shape, self.datacube, self)
+
+        for shp in request.shapes:
+            for shape in shp._shapes if isinstance(shp, Union) else [shp]:
+                if resolved_jointly(shape):
+                    shape.decompose_1D = False
 
     def retrieve(self, request: Request, method="standard"):
         """Higher-level API which takes a request and uses it to slice the datacube"""
@@ -254,6 +324,33 @@ class Polytope:
         self.compressed_axes.append(k)
 
     def remove_compressed_axis_in_union(self, polytopes):
+        """Drop one entry of the last compressed axis per union polytope defined on it.
+
+        ``find_compressed_axes`` appends the axis once per orthogonal polytope that defines it, so a union
+        of N orthogonal shapes (the points of a timeseries) leaves the leaf axis compressed while a union
+        of N non-orthogonal pieces (a polygon's triangles, which are not compressable) uncompresses it.
+        That is what decides whether a request's leaf values are one array per row or one node per point,
+        so the count of the entries matters, not just which axes are there.
+        """
+        if len(self.compressed_axes) == 0:
+            return
+        last = self.compressed_axes[-1]
+        removals = sum(1 for p in polytopes if p.is_in_union and last in p.axes())
+        if removals == 0:
+            return
+        if removals < self.compressed_axes.count(last):
+            # The axis survives every removal, so it stays the last one and each removal takes an earlier
+            # entry: drop the first ``removals`` of them in one pass instead of one O(n) list removal per
+            # polytope (which costs 15 s for the 100 000 points of a timeseries request).
+            kept = []
+            for axis in self.compressed_axes:
+                if removals and axis == last:
+                    removals -= 1
+                    continue
+                kept.append(axis)
+            self.compressed_axes = kept
+            return
+        # The last axis runs out mid-way and the one before it takes over, so replay the removals in order.
         for p in polytopes:
             if p.is_in_union:
                 for axis in p.axes():
