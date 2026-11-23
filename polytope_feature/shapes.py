@@ -577,8 +577,9 @@ class Polygon(Shape):
 class PolygonWithHoles(Shape):
     """2-D polygon defined by a set of exterior points and optional holes"""
 
-    def __init__(self, axes, points, holes=None):
+    def __init__(self, axes, points, holes=None, tag=None):
         self._axes = axes
+        self.tag = tag
         assert len(axes) == 2
 
         for p in points:
@@ -612,7 +613,7 @@ class PolygonWithHoles(Shape):
         triangle_indices = earcut.triangulate_float64(vertices, ring_end_indices)
 
         if len(triangle_indices) == 0:
-            self.polytopes = [ConvexPolytope(self.axes(), points)]
+            self.polytopes = [ConvexPolytope(self.axes(), points, tag=self.tag)]
             return
 
         for i in range(0, len(triangle_indices), 3):
@@ -622,7 +623,7 @@ class PolygonWithHoles(Shape):
                 vertices[triangle_indices[i + 2]].tolist(),
             ]
 
-            poly = ConvexPolytope(self.axes(), tri_points)
+            poly = ConvexPolytope(self.axes(), tri_points, tag=self.tag)
             poly.add_to_union()
             self.polytopes.append(poly)
 
