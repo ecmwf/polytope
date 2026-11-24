@@ -1,5 +1,7 @@
 from copy import copy
 
+import numpy as np
+
 from ..datacube.datacube_axis import IntDatacubeAxis
 from ..datacube.tensor_index_tree import TensorIndexTree
 from .engine import Engine
@@ -17,11 +19,14 @@ except (ModuleNotFoundError, ImportError) as e:
 
 
 class OptimisedPointInPolygonSlicer(Engine):
+    resolves_axes_jointly = True
+
     def __init__(self, points):
         points = [tuple(point) for point in points]
         self.points = points
         self.bbox_points = []
         self._points = {point: i for i, point in enumerate(self.points)}
+        self.points_array = np.asarray(self.points, dtype=np.float64).reshape(-1, 2)
 
     def find_point_index(self, point):
         index = self._points[point]
@@ -68,6 +73,24 @@ class OptimisedPointInPolygonSlicer(Engine):
 
         # But here, we only consider the points in the bounding box of the polygon
 
+        if polytope.method == "nearest":
+            # Point shapes queried with method="nearest" carry raw query points rather than
+            # a polygon, so a bbox pre-filter on the query point's own (degenerate) extents
+            # would wrongly exclude nearby points. Resolve them with a brute-force
+            # k-nearest search over the full point cloud instead, as the quadtree slicer does.
+            found_points = []
+            for query in polytope.points:
+                found_points.extend(self._nearest_points(query, polytope.k))
+            return found_points
+
+        if len(polytope.points) == 1:
+            # A single-vertex "polygon" is really a Point shape querying an exact
+            # location, not a real polygon: a containment test needs at least 3
+            # vertices, so resolve this as an exact coordinate match instead.
+            self.find_points_in_bbox(polytope)
+            qx, qy = polytope.points[0]
+            return [p for p in self.bbox_points if p[0] == qx and p[1] == qy]
+
         if use_rust:
             polytope_points = [tuple(point) for point in polytope.points]
             found_points = extract_point_in_poly_bbox(self.points, polytope_points)
@@ -81,6 +104,13 @@ class OptimisedPointInPolygonSlicer(Engine):
                 if polygon.contains(new_point):
                     found_points.append(point)
         return found_points
+
+    def _nearest_points(self, query, k):
+        dists = np.sum((self.points_array - np.asarray(query)) ** 2, axis=1)
+        k = min(k, len(dists))
+        nearest = np.argpartition(dists, k - 1)[:k]
+        nearest = nearest[np.argsort(dists[nearest])]
+        return [self.points[i] for i in nearest.tolist()]
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):
         for polytope in node["unsliced_polytopes"]:

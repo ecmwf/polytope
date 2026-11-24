@@ -16,6 +16,12 @@ class Engine:
     # polytopes to this engine at once instead of rebuilding the prefix per point.
     batches_polytopes = False
 
+    # When True, the engine resolves two axes (eg. latitude/longitude) jointly as a single
+    # 2-D shape, rather than slicing each axis independently one dimension at a time. Point
+    # shapes must therefore not be decomposed into per-axis 1-D polytopes on such engines
+    # (see Polytope.switch_polytope_dim).
+    resolves_axes_jointly = False
+
     def reset(self):
         """Clear any per-slice state. Called once at the start of every Polytope.slice()."""
         pass

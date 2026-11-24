@@ -205,10 +205,12 @@ class Polytope:
         return self.engines[slicer_type]
 
     def switch_polytope_dim(self, request):
-        # If we see a 2-dim slicer on an axis
-        # then make sure that if the shape is a point, we set decompose_1D to False
+        # If we see an engine that resolves two axes jointly (eg. a 2-D unstructured
+        # slicer handling latitude/longitude together), then make sure that if the shape
+        # is a Point, we set decompose_1D to False so it is resolved as a single 2-D
+        # polytope instead of being split into independent 1-D polytopes per axis.
         for ax, slicer in self.engine_options.items():
-            if slicer == "quadtree":
+            if self.engines[slicer].resolves_axes_jointly:
                 for shp in request.shapes:
                     if ax in shp.axes() and isinstance(shp, Point):
                         shp.decompose_1D = False

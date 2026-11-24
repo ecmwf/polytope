@@ -35,6 +35,7 @@ class QuadTreeSlicer(Engine):
 
     # All lat/lon polytopes of a node are resolved together into a single bulk leaf.
     batches_polytopes = True
+    resolves_axes_jointly = True
 
     def _query_points(self, polytope):
         revert_axes = list(polytope.axes()) != ["latitude", "longitude"]

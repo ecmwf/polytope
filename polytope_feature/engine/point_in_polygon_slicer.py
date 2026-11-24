@@ -1,5 +1,7 @@
 from copy import copy
 
+import numpy as np
+
 from ..datacube.datacube_axis import IntDatacubeAxis
 from ..datacube.tensor_index_tree import TensorIndexTree
 from ..datacube.transformations.datacube_cyclic.datacube_cyclic import (
@@ -69,9 +71,12 @@ def _point_in_convex_hull(point, hull):
 
 
 class PointInPolygonSlicer(Engine):
+    resolves_axes_jointly = True
+
     def __init__(self, points):
         self.points = points
         self._points = {point: i for i, point in enumerate(self.points)}
+        self.points_array = np.asarray(self.points, dtype=np.float64).reshape(-1, 2)
 
     def find_point_index(self, point):
         index = self._points[point]
@@ -106,6 +111,14 @@ class PointInPolygonSlicer(Engine):
 
         # need to find points of the datacube contained within the polytope
         # We do this by intersecting the datacube point cloud quad tree with the polytope here
+        if polytope.method == "nearest":
+            # Point shapes queried with method="nearest" carry raw query points rather
+            # than a polygon hull: resolve them with a brute-force k-nearest search,
+            # the same approach used by the quadtree slicer.
+            found_points = []
+            for query in polytope.points:
+                found_points.extend(self._nearest_points(query, polytope.k))
+            return found_points
         if use_rust:
             polytope_points = [tuple(point) for point in polytope.points]
             found_points = extract_point_in_poly(self.points, polytope_points)
@@ -113,6 +126,13 @@ class PointInPolygonSlicer(Engine):
             hull = _convex_hull(polytope.points)
             found_points = [p for p in self.points if _point_in_convex_hull(p, hull)]
         return found_points
+
+    def _nearest_points(self, query, k):
+        dists = np.sum((self.points_array - np.asarray(query)) ** 2, axis=1)
+        k = min(k, len(dists))
+        nearest = np.argpartition(dists, k - 1)[:k]
+        nearest = nearest[np.argsort(dists[nearest])]
+        return [self.points[i] for i in nearest.tolist()]
 
     def _build_branch(self, ax, node, datacube, next_nodes, api):
         for polytope in node["unsliced_polytopes"]:
@@ -129,9 +149,10 @@ class PointInPolygonSlicer(Engine):
     def _build_sliceable_child(self, polytope, ax, node, datacube, next_nodes, api):
         lon_ax = datacube._axes["longitude"]
 
-        # Split across the cyclic seam when needed.
+        # Split across the cyclic seam when needed. Nearest queries work on raw points
+        # directly, so skip the polygon seam-splitting for them.
         sub_polytopes = [polytope]
-        if lon_ax.is_cyclic:
+        if lon_ax.is_cyclic and polytope.method != "nearest":
             for t in lon_ax.transformations:
                 if isinstance(t, DatacubeAxisCyclic):
                     sub_polytopes = t.split_polytope_at_boundary(polytope, "longitude", lon_ax)
