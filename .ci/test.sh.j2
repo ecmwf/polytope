@@ -30,3 +30,8 @@ host="$(rustc -vV | sed -n 's/^host: //p')"
 export "CARGO_TARGET_$(tr 'a-z-' 'A-Z_' <<<"$host")_LINKER=$CC"
 export USE_RUST=1
 {% endblock %}
+{% block test %}
+cd "$CI_SOURCE_DIR"
+# Not python -m pytest: that would import the source tree, which lacks the Rust extension.
+pytest {{ pytest_args }}
+{% endblock %}
