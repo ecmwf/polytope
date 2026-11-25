@@ -3,6 +3,8 @@
 
 from copy import copy
 
+import numpy as np
+
 from ..datacube.transformations.datacube_cyclic.datacube_cyclic import (
     DatacubeAxisCyclic,
 )
@@ -20,6 +22,8 @@ except (ModuleNotFoundError, ImportError) as e:
 
 
 class OptimisedQuadTreeSlicer(Engine):
+    resolves_axes_jointly = True
+
     def __init__(self, points):
         # here need to construct quadtree, which is specific to datacube
         # NOTE: should this be inside of the datacube instead that we create the quadtree?
@@ -27,6 +31,7 @@ class OptimisedQuadTreeSlicer(Engine):
         # to the slicer somehow?
         # quad_tree = QuadTree()
         self.points = [tuple(point) for point in points]
+        self.points_array = np.asarray(self.points, dtype=np.float64).reshape(-1, 2)
         # self.find_points_in_bbox(points, polytope)
         # quad_tree.build_point_tree(points)
         # self.points = points
@@ -51,6 +56,16 @@ class OptimisedQuadTreeSlicer(Engine):
         self.quad_tree = quad_tree
 
     def extract_single(self, datacube, polytope):
+        if polytope.method == "nearest":
+            # Point shapes queried with method="nearest" carry raw query points rather than
+            # a polygon, so a bbox pre-filter on the query point's own (degenerate) extents
+            # would wrongly exclude nearby points. Resolve them with a brute-force
+            # k-nearest search over the full point cloud instead.
+            idxs = []
+            for query in polytope.points:
+                idxs.extend(self._nearest_indices(query, polytope.k))
+            return idxs
+
         self.build_local_quadtree(polytope)
         # extract a single polygon
         if use_rust:
@@ -63,6 +78,12 @@ class OptimisedQuadTreeSlicer(Engine):
         #     assert self.bbox_points[point] in self.bbox_points
         return polygon_points
 
+    def _nearest_indices(self, query, k):
+        dists = np.sum((self.points_array - np.asarray(query)) ** 2, axis=1)
+        k = min(k, len(dists))
+        nearest = np.argpartition(dists, k - 1)[:k]
+        return nearest[np.argsort(dists[nearest])].tolist()
+
     def _build_branch(self, ax, node, datacube, next_nodes, api):
         for polytope in node["unsliced_polytopes"]:
             if ax.name in polytope._axes:
@@ -73,8 +94,9 @@ class OptimisedQuadTreeSlicer(Engine):
         lon_ax = datacube._axes["longitude"]
 
         # When the longitude axis is cyclic, split the polygon at the seam first.
+        # Nearest queries work on raw points directly, so skip seam-splitting for them.
         sub_polytopes = [polytope]
-        if lon_ax.is_cyclic and len(datacube.nearest_search) == 0:
+        if lon_ax.is_cyclic and polytope.method != "nearest":
             for t in lon_ax.transformations:
                 if isinstance(t, DatacubeAxisCyclic):
                     sub_polytopes = t.split_polytope_at_boundary(polytope, "longitude", lon_ax)
@@ -86,6 +108,13 @@ class OptimisedQuadTreeSlicer(Engine):
         seen = {}  # global_index -> (lat_val, lon_val)
         for sub_poly in sub_polytopes:
             local_points = self.extract_single(datacube, sub_poly)
+            if sub_poly.method == "nearest":
+                # extract_single already returned global indices into self.points.
+                for actual_index in local_points:
+                    if actual_index not in seen:
+                        lat_val, lon_val = self.points[actual_index]
+                        seen[actual_index] = (lat_val, lon_val)
+                continue
             for value in local_points:
                 if use_rust:
                     actual_index = self.bbox_indexes[value]
