@@ -27,11 +27,11 @@ build-type-input = "python-build-type"
 [matrix.test]
 triggers = ["upstream-change", "rebuild-request"]
 
-# The container and compiler of gribjump's build, whose libraries the tests load.
+# gribjump's Ubuntu 24.04 and gcc 13, plus Rust for polytope's extension.
 [matrix.test.defaults]
 job-script = "./.ci/test.sh.j2"
 runs-on = "ubuntu-latest"
-container = "eccr.ecmwf.int/public-ci-images/ubuntu24.04-gcc13-gfortran13"
+container = "eccr.ecmwf.int/public-ci-images/ubuntu24.04-gcc13-gfortran13-boost-qt6-rust1.90"
 platform = "ubuntu-24.04"
 cxx-compiler = "g++-13"
 c-compiler = "gcc-13"

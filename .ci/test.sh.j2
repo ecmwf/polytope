@@ -17,14 +17,7 @@ for prefix in ${dep_prefixes[@]+"${dep_prefixes[@]}"}; do
 done
 export FINDLIBS_DISABLE_PACKAGE=yes
 
-# The Rust extension (setuptools-rust) needs cargo, which the container lacks.
-rust_root="${RUNNER_TEMP:-${TMPDIR:-/tmp}}"
-export CARGO_TARGET_DIR="$rust_root/cargo"
-if ! command -v cargo >/dev/null; then
-  export RUSTUP_HOME="$rust_root/rustup" CARGO_HOME="$rust_root/cargo-home"
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --no-modify-path
-  export PATH="$CARGO_HOME/bin:$PATH"
-fi
+export CARGO_TARGET_DIR="${RUNNER_TEMP:-${TMPDIR:-/tmp}}/cargo"
 export CC="$(command -v {{ c_compiler_binary | sh }})" CXX="$(command -v {{ cxx_compiler_binary | sh }})"
 host="$(rustc -vV | sed -n 's/^host: //p')"
 export "CARGO_TARGET_$(tr 'a-z-' 'A-Z_' <<<"$host")_LINKER=$CC"
