@@ -11,7 +11,6 @@ for prefix in ${dep_prefixes[@]+"${dep_prefixes[@]}"}; do
 done
 export FINDLIBS_DISABLE_PACKAGE=yes
 
-export CARGO_TARGET_DIR="${RUNNER_TEMP:-${TMPDIR:-/tmp}}/cargo"
 export CC="$(command -v {{ c_compiler_binary | sh }})" CXX="$(command -v {{ cxx_compiler_binary | sh }})"
 host="$(rustc -vV | sed -n 's/^host: //p')"
 export "CARGO_TARGET_$(tr 'a-z-' 'A-Z_' <<<"$host")_LINKER=$CC"

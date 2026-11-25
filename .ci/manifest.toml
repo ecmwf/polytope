@@ -3,6 +3,7 @@ name = "polytope"
 repo = "ecmwf/polytope"
 visibility = "public"
 fork-pull-requests = false
+allow-stale-deps = true
 compiler-inputs = []
 ci-pre-commit = false
 full-history = true
