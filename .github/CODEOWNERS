@@ -2,6 +2,7 @@
 
 # BEGIN org baseline: maintainers own .github/ and CODEOWNERS (ci-infrastructure scripts/apply-codeowners.sh)
 /.github/ @jameshawkes @mathleur
+/.ci/ @jameshawkes @mathleur
 /CODEOWNERS @jameshawkes @mathleur
 /docs/CODEOWNERS @jameshawkes @mathleur
 # END org baseline
