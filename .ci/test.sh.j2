@@ -1,0 +1,23 @@
+{% extends "ci-infrastructure/python-runner.sh.j2" %}
+{% block set_environment %}
+# fetch-deps puts each dep's lib dirs on LD_LIBRARY_PATH, where findlibs finds them;
+# eccodes still needs its definitions and samples.
+IFS=';:' read -ra dep_prefixes <<<"${CMAKE_PREFIX_PATH:-}"
+for prefix in ${dep_prefixes[@]+"${dep_prefixes[@]}"}; do
+  if [ -d "$prefix/share/eccodes/definitions" ]; then
+    export ECCODES_DEFINITION_PATH="$prefix/share/eccodes/definitions"
+    export ECCODES_SAMPLES_PATH="$prefix/share/eccodes/samples"
+  fi
+done
+export FINDLIBS_DISABLE_PACKAGE=yes
+
+export CC="$(command -v {{ c_compiler_binary | sh }})" CXX="$(command -v {{ cxx_compiler_binary | sh }})"
+host="$(rustc -vV | sed -n 's/^host: //p')"
+export "CARGO_TARGET_$(tr 'a-z-' 'A-Z_' <<<"$host")_LINKER=$CC"
+export USE_RUST=1
+{% endblock %}
+{% block test %}
+cd "$CI_SOURCE_DIR"
+# Not python -m pytest: that would import the source tree, which lacks the Rust extension.
+pytest {{ pytest_args }}
+{% endblock %}
